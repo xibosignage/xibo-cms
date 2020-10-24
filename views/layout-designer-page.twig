@@ -246,12 +246,6 @@
                         }
                     },
                     uploadDoneEvent: function (data) {
-                        if (data.result.files[0].error != null
-                            && data.result.files[0].error !== ""
-                        ) {
-                            return;
-                        }
-
                         // Get the mediaId
                         var mediaId = data.result.files[0].mediaId;
 

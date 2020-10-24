@@ -171,7 +171,6 @@
 
             // Bind to the attachment add button click
             $("#attachmentAddButton").on("click", function(e) {
-                $(this).addClass("disabled");
                 notificationAddFormAttachmentButtonClicked(e, dialog);
             });
 
@@ -204,122 +203,48 @@
         function notificationAddFormAttachmentButtonClicked(e, dialog) {
             e.preventDefault();
 
-            // Hide the original button
-            dialog.find('.attachment-add-button').hide();
-            dialog.find('#notificationAddFormAttachmentUpload').show();
+            // Open an upload form
+            var upload = openUploadForm({
+                url: "{{ url_for("notification.addattachment") }}",
+                title: "{% trans "Browse/Add attachment" %}",
+                multi: false,
+                videoImageCovers: false,
+                animateDialog: false,
+                className: "second-dialog",
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function () {
+                            upload.modal('hide');
+                        }
+                    }
+                },
+                templateOptions: {
+                    trans: {
+                        addFiles: "{% trans "Browse/Add Attachment" %}",
+                        startUpload: "{% trans "Start Upload" %}",
+                        cancelUpload: "{% trans "Cancel Upload" %}"
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
+                        validExt: "jpg|jpeg|png|bmp|gif|zip|pdf"
+                    }
+                },
+                uploadDoneEvent: function (data) {
+                    // Get the attachment filename
+                    var filename = data.result.files[0].name;
 
-            // Append a background upload button to the dialog footer.
-            var template = Handlebars.compile($("#attachment-upload-template").html());
-            var footer = dialog.find("#notificationAddFormAttachmentUpload");
+                    dialog.find("input[name='attachedFilename']").remove();
 
-            footer.append(template());
+                    // Create a hidden field with the filename
+                    $("#notificationForm").append($("<input type='hidden' name='attachedFilename' value='" + filename + "'/>"));
 
-            var form = footer.find("form");
-            var url = form.prop("action");
-            var refreshSessionInterval;
-
-            // Initialize the jQuery File Upload widget:
-            form.fileupload({
-                url: url,
-                uploadTemplateId: 'template-upload-simple',
-                disableImageResize: true,
-                previewMaxWidth: 100,
-                previewMaxHeight: 100,
-                previewCrop: true
-            });
-
-            // Upload server status check for browsers with CORS support:
-            if ($.support.cors) {
-                $.ajax({
-                    url: url,
-                    type: 'HEAD'
-                }).fail(function () {
-                    $('<span class="alert alert-error"/>')
-                        .text('Upload server currently unavailable - ' + new Date())
-                        .appendTo(form);
-                });
-            }
-
-            // Enable iframe cross-domain access via redirect option:
-            form.fileupload(
-                'option',
-                'redirect',
-                window.location.href.replace(
-                    /\/[^\/]*$/,
-                    '/cors/result.html?%s'
-                )
-            );
-
-            form.bind('fileuploadsubmit', function (e, data) {
-
-                // Disable the buttons on the form
-                footer.find("button").addClass("disabled");
-
-            }).bind('fileuploadstart', function (e, data) {
-
-                // Show progress data
-                form.find('.fileupload-progress .progress-extended').show();
-                form.find('.fileupload-progress .progress-end').hide();
-
-                if (form.fileupload("active") <= 0)
-                    refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
-
-                return true;
-
-            }).bind('fileuploaddone', function (e, data) {
-
-                // Enable the buttons on the form
-                footer.find("button").removeClass("disabled");
-
-                if (refreshSessionInterval != null && form.fileupload("active") <= 0)
-                    clearInterval(refreshSessionInterval);
-
-                console.log(data.result);
-
-                if (data.result.files[0].error != null && data.result.files[0].error != "") {
-                    return;
+                    // Close
+                    upload.modal('hide');
                 }
-
-                // Take the image URL from the response, and use it to replace the background image fields
-                dialog.find(".attachment-fields").slideUp();
-
-                console.log(' hidefileinput-button');
-
-                dialog.find(".fileinput-button").hide();
-                dialog.find(".fileinput-close-button").removeClass('hidden');
-                // Get the attachment filename
-                var filename = data.result.files[0].name;
-
-                dialog.find("input[name='attachedFilename']").remove();
-
-                // Create a hidden field with the filename
-                $("#notificationForm").append($("<input type='hidden' name='attachedFilename' value='" + filename + "'/>"));
-
-                // Hide the stuff we've added
-                // form.slideUp();
-            }).bind('fileuploadprogressall', function(e, data) {
-                // Hide progress data and show processing
-                if(data.total > 0 && data.loaded == data.total) {
-                    form.find('.fileupload-progress .progress-extended').hide();
-                    form.find('.fileupload-progress .progress-end').show();
-                }
-            });
-
-            // Click the browse button
-            dialog.find('.fileinput-button input').click();
-
-            // Click the close button
-            dialog.find('.fileinput-close-button').click(function() {
-
-                // dialog.find(".fileinput-button").show();
-                // dialog.find(".fileinput-close-button").hide();
-                dialog.find("input[name='attachedFilename']").remove();
-                dialog.find('.attachment-add-button').show();
-                dialog.find('#attachmentAddButton').removeClass('disabled');
-                dialog.find('#notificationAddFormAttachmentUpload').hide();
-                footer.html('');
             });
         }
-
     </script>
 {% endblock %}

@@ -264,18 +264,33 @@
 
         });
 
-        $("#layoutUploadForm").click(function() {
+        $("#layoutUploadForm").click(function(e) {
+            e.preventDefault();
 
-            var template = Handlebars.compile($("#template-layout-upload").html());
-
-            // Handle bars and open a dialog
-            bootbox.dialog({
-                message: template({
+            // Open the upload dialog with our options.
+            openUploadForm({
+                url: "{{ url_for("layout.import") }}",
+                title: "{% trans "Upload Layout" %}",
+                multi: true,
+                videoImageCovers: false,
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function () {
+                            table.ajax.reload();
+                            XiboDialogClose();
+                        }
+                    }
+                },
+                templateOptions: {
+                    layoutImport: true,
+                    updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %},
+                    deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %},
                     trans: {
-                        addFiles: "{% trans "Add ZIP Files" %}",
-                        startUpload: "{% trans "Start upload" %}",
-                        cancelUpload: "{% trans "Cancel upload" %}",
-                        processing: "{% trans "Processing..." %}",
+                        addFiles: "{% trans "Add Layout Export ZIP Files" %}",
+                        startUpload: "{% trans "Start Import" %}",
+                        cancelUpload: "{% trans "Cancel Import" %}",
                         replaceExistingMediaMessage: "{% trans "Replace Existing Media?" %}",
                         importTagsMessage: "{% trans "Import Tags?" %}",
                         useExistingDataSetsMessage: "{% trans "Use existing DataSets matched by name?" %}",
@@ -283,97 +298,20 @@
                     },
                     upload: {
                         maxSize: {{ libraryUpload.maxSize }},
-                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
-                        validExt: "{{ libraryUpload.validExt }}"
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
+                        validExt: "zip"
                     }
-                }),
-                title: "{% trans "Upload Layout" %}",
-                buttons: {
-                    main: {
-                        label: "{% trans "Done" %}",
-                        className: "btn-primary",
-                        callback: function() {
-                            table.ajax.reload();
-                            XiboDialogClose();
-                        }
-                    }
-                }
-            }).on('shown.bs.modal', function() {
-                // Configure the upload form
-                var url = "{{ url_for("layout.import") }}";
-                var form = $(this).find("form");
-                var refreshSessionInterval;
-
-                // Initialize the jQuery File Upload widget:
-                form.fileupload({
-                    url: url,
-                    disableImageResize: true
-                });
-
-                // Upload server status check for browsers with CORS support:
-                if ($.support.cors) {
-                    $.ajax({
-                        url: url,
-                        type: 'HEAD'
-                    }).fail(function () {
-                        $('<span class="alert alert-error"/>')
-                                .text('Upload server currently unavailable - ' + new Date())
-                                .appendTo(form);
+                },
+                formOpenedEvent: function () {
+                    // Configure the active behaviour of the checkboxes
+                    $("#useExistingDataSets").on("click", function () {
+                        $("#importDataSetData").prop("disabled", ($(this).is(":checked")));
                     });
+                },
+                uploadDoneEvent: function (data) {
+                    XiboDialogClose();
+                    table.ajax.reload();
                 }
-
-                // Enable iframe cross-domain access via redirect option:
-                form.fileupload(
-                        'option',
-                        'redirect',
-                        window.location.href.replace(
-                                /\/[^\/]*$/,
-                                '/cors/result.html?%s'
-                        )
-                );
-
-                form.bind('fileuploadsubmit', function (e, data) {
-                    var inputs = data.context.find(':input');
-                    if (inputs.filter('[required][value=""]').first().focus().length) {
-                        return false;
-                    }
-                    data.formData = inputs.serializeArray().concat(form.serializeArray());
-
-                    inputs.filter("input").prop("disabled", true);
-                }).bind('fileuploadstart', function (e, data) {
-                    // Show progress data
-                    form.find('.fileupload-progress .progress-extended').show();
-                    form.find('.fileupload-progress .progress-end').hide();
-
-                    if (form.fileupload("active") <= 0)
-                        refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
-
-                    return true;
-                }).bind('fileuploaddone', function (e, data) {
-                    if (refreshSessionInterval != null && form.fileupload("active") <= 0)
-                        clearInterval(refreshSessionInterval);
-                }).bind('fileuploadprogressall', function(e, data) {
-                    // Hide progress data and show processing
-                    if(data.total > 0 && data.loaded == data.total) {
-                        form.find('.fileupload-progress .progress-extended').hide();
-                        form.find('.fileupload-progress .progress-end').show();
-                    }
-                }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
-                    // Get uploaded and downloaded files and toggle Done button
-                    var filesToUploadCount = form.find('tr.template-upload').length;
-                    var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
-
-                    if(filesToUploadCount == 0) {
-                        $button.removeAttr('disabled');
-                    } else {
-                        $button.attr('disabled', 'disabled');
-                    }
-                });
-
-                // Configure the active behaviour of the checkboxes
-                $("#useExistingDataSets").on("click", function () {
-                    $("#importDataSetData").prop("disabled", ($(this).is(":checked")));
-                });
             });
         });
 
@@ -440,143 +378,4 @@
         }
 
     </script>
-{% endblock %}
-
-{% block javaScriptTemplates %}
-    {{ parent() }}
-
-    {% verbatim %}
-
-        <script type="text/x-handlebars-template" id="template-layout-upload">
-            <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)zip$/i">
-                <div class="row fileupload-buttonbar">
-                    <div class="col-md-7">
-                        <div class="well">
-                            {{ upload.maxSizeMessage }}
-                        </div>
-                        <!-- The fileinput-button span is used to style the file input field as button -->
-                    <span class="btn btn-success fileinput-button">
-                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
-                        <span>{{ trans.addFiles }}</span>
-                        <input type="file" name="files[]" multiple>
-                    </span>
-                        <button type="submit" class="btn btn-primary start">
-                            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
-                            <span>{{ trans.startUpload }}</span>
-                        </button>
-                        <button type="reset" class="btn btn-warning cancel">
-                            <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
-                            <span>{{ trans.cancelUpload }}</span>
-                        </button>
-                        <!-- The loading indicator is shown during file processing -->
-                        <span class="fileupload-loading"></span>
-                    </div>
-                    <!-- The global progress information -->
-                    <div class="col-md-4 fileupload-progress fade">
-                        <!-- The global progress bar -->
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
-                                <div class="sr-only"></div>
-                            </div>
-                        </div>
-                        <!-- The extended global progress information -->
-                        <div class="progress-extended">&nbsp;</div>
-                        <!-- Processing info container -->
-                    <div class="progress-end" style="display:none;">{{ trans.processing }}</div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <label for="replaceExisting" title="If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.">
-                            <input type="checkbox" id="replaceExisting" name="replaceExisting">
-                            {{ trans.replaceExistingMediaMessage }}
-                        </label>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="importTags" title="Would you like to import any tags contained on the layout.">
-                            <input type="checkbox" id="importTags" name="importTags">
-                            {{ trans.importTagsMessage }}
-                        </label>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <label for="useExistingDataSets">
-                            <input type="checkbox" id="useExistingDataSets" name="useExistingDataSets" checked>
-                            {{ trans.useExistingDataSetsMessage }}
-                        </label>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="importDataSetData">
-                            <input type="checkbox" id="importDataSetData" name="importDataSetData" disabled>
-                            {{ trans.dataSetDataMessage }}
-                        </label>
-                    </div>
-                </div>
-                <!-- The table listing the files available for upload/download -->
-                <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
-            </form>
-        </script>
-
-        <!-- The template to display files available for upload -->
-        <script id="template-layout-upload" type="text/x-tmpl">
-        {% for (var i=0, file; file=o.files[i]; i++) { %}
-            <tr class="template-upload fade">
-                <td>
-                    <span class="fileupload-preview"></span>
-                </td>
-                <td class="title">
-                    {% if (file.error) { %}
-                        <div><span class="label label-danger">{%=file.error%}</span></div>
-                    {% } %}
-                    {% if (!file.error) { %}
-                    <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
-                    {% } %}
-                </td>
-                <td>
-                    <p class="size">{%=o.formatFileSize(file.size)%}</p>
-                    {% if (!o.files.error) { %}
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
-                                <div class="sr-only"></div>
-                            </div>
-                        </div>
-                    </div>
-                    {% } %}
-                </td>
-                <td>
-                    {% if (!o.files.error && !i && !o.options.autoUpload) { %}
-                        <button class="btn btn-primary start">
-                            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
-                        </button>
-                    {% } %}
-                    {% if (!i) { %}
-                        <button class="btn btn-warning cancel">
-                            <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
-                        </button>
-                    {% } %}
-                </td>
-            </tr>
-        {% } %}
-        </script>
-        <!-- The template to display files available for download -->
-        <script id="template-layout-download" type="text/x-tmpl">
-        {% for (var i=0, file; file=o.files[i]; i++) { %}
-            <tr class="template-download fade">
-               <td>
-                    <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
-                        {%=file.name%}
-                    </p>
-                    {% if (file.error) { %}
-                        <div><span class="label label-danger">{%=file.error%}</span></div>
-                    {% } %}
-                </td>
-                <td>
-                    <span class="size">{%=o.formatFileSize(file.size)%}</span>
-                </td>
-            </tr>
-        {% } %}
-        </script>
-
-    {% endverbatim %}
 {% endblock %}

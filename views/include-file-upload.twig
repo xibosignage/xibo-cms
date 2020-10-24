@@ -16,6 +16,7 @@
 <script src="{{ theme.rootUri() }}dist/core/file-upload.js?v={{ version }}&rev={{revision}}"></script>
 
 {# Handlebars Templates #}
+
 {# Upload dialog - template-file-upload #}
 {% verbatim %}
 <script type="text/x-handlebars-template" id="template-file-upload">
@@ -44,10 +45,10 @@
                 <span class="btn btn-success fileinput-button">
                     <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
                     <span>{{ trans.addFiles }}</span>
-                    {{#if oldMediaId }}
-                    <input type="file" name="files[]" id="files">
-                    {{else}}
+                    {{#if multi }}
                     <input type="file" name="files[]" id="files" multiple>
+                    {{else}}
+                    <input type="file" name="files[]" id="files">
                     {{/if}}
                 </span>
                 <button type="submit" class="btn btn-primary start">
@@ -89,6 +90,36 @@
                     {{ trans.deleteOldRevisions.title }}
                 </label>
                 <span class="help-block">{{ trans.deleteOldRevisions.helpText }}</span>
+            </div>
+        </div>
+        {{/if}}
+        {{#if layoutImport }}
+        <div class="row">
+            <div class="col-md-6">
+                <label for="replaceExisting" title="If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.">
+                    <input type="checkbox" id="replaceExisting" name="replaceExisting">
+                    {{ trans.replaceExistingMediaMessage }}
+                </label>
+            </div>
+            <div class="col-md-6">
+                <label for="importTags" title="Would you like to import any tags contained on the layout.">
+                    <input type="checkbox" id="importTags" name="importTags">
+                    {{ trans.importTagsMessage }}
+                </label>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label for="useExistingDataSets">
+                    <input type="checkbox" id="useExistingDataSets" name="useExistingDataSets" checked>
+                    {{ trans.useExistingDataSetsMessage }}
+                </label>
+            </div>
+            <div class="col-md-6">
+                <label for="importDataSetData">
+                    <input type="checkbox" id="importDataSetData" name="importDataSetData" disabled>
+                    {{ trans.dataSetDataMessage }}
+                </label>
             </div>
         </div>
         {{/if}}
@@ -198,42 +229,3 @@
 {% } %}
 </script>
 {% endverbatim %}
-
-{# Attachments, to be removed. #}
-<script type="text/x-handlebars-template" id="attachment-upload-template">
-    <form method="post" action="{{ url_for("notification.addattachment") }}" enctype="multipart/form-data" data-max-file-size="{{ libraryUpload.maxSize }}" data-accept-file-types="/(\.|\/)jpg|jpeg|png|bmp|gif|zip|pdf$/i">
-        <div class="row">
-            <div class="text-center">
-                <span class="btn btn-success fileinput-button">
-                    <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
-                    <span>{% trans "Browse/Add attachment" %}</span>
-                    <input type="file" name="files[]">
-                </span>
-                <span class="btn btn-danger hidden fileinput-close-button">
-                    <i class="glyphicon glyphicon-remove glyphicon glyphicon-white"></i>
-                </span>
-            </div>
-
-            <div>
-                <!-- The table listing the files available for upload/download -->
-                <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
-            </div>
-
-            <div>
-                <span class="fileupload-loading"></span>
-                <div class="fileupload-progress fade">
-                    <!-- The global progress bar -->
-                    <div class="progress">
-                        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
-                            <div class="sr-only"></div>
-                        </div>
-                    </div>
-                    <!-- The extended global progress information -->
-                    <div class="progress-extended">&nbsp;</div>
-                    <!-- Processing info container -->
-                    <div class="progress-end" style="display:none;">{% trans "Processing..." %}</div>
-                </div>
-            </div>
-        </div>
-    </form>
-</script>

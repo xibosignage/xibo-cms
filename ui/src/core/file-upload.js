@@ -32,7 +32,9 @@ function openUploadForm(options) {
         multi: true,
         videoImageCovers: true,
         className: null,
-        animateDialog: true
+        animateDialog: true,
+        formOpenedEvent: null,
+        layoutImport: false
     }, options);
 
     // Keep a cache of the upload template (unless we are a non-standard form)
@@ -47,10 +49,16 @@ function openUploadForm(options) {
         buttons: options.buttons,
         className: options.className,
         animate: options.animateDialog
-    }).on('shown.bs.modal', function() {
-        // Modal is open
+    }).on('hidden.bs.modal', function () {
+        // Reset video image covers.
+        videoImageCovers = {};
+    }).attr("id", Date.now());
+
+    setTimeout(function() {
+        console.log("Timeout fired, we should be shown by now");
+
         // Configure the upload form
-        var form = $(this).find("form");
+        var form = $(dialog).find("form");
         var uploadOptions = {
             url: options.url,
             disableImageResize: true,
@@ -64,7 +72,7 @@ function openUploadForm(options) {
 
         // Video thumbnail capture.
         if (options.videoImageCovers) {
-            $('#files').on('change', handleVideoCoverImage);
+            $(dialog).find('#files').on('change', handleVideoCoverImage);
         }
 
         // If we are not a multi-upload, then limit to 1
@@ -98,6 +106,13 @@ function openUploadForm(options) {
                     return true;
                 })
             .bind('fileuploaddone', function (e, data) {
+
+                    // If the upload was an error, then don't process the remaining methods.
+                    if (data.result.files[0].error != null && data.result.files[0].error !== "") {
+                        toastr.error(data.result.files[0].error);
+                        return;
+                    }
+
                     if (options.videoImageCovers) {
                         saveVideoCoverImage(data);
                     }
@@ -107,7 +122,11 @@ function openUploadForm(options) {
                     }
 
                     if (options.uploadDoneEvent !== undefined && options.uploadDoneEvent !== null) {
-                        eval(options.uploadDoneEvent)(data);
+                        // Run in a short while.
+                        // this gives time for file-upload's own deferreds to run
+                        setTimeout(function () {
+                            eval(options.uploadDoneEvent)(data);
+                        });
                     }
                 })
             .bind('fileuploadprogressall', function (e, data) {
@@ -131,10 +150,12 @@ function openUploadForm(options) {
                 })
             .bind('fileuploaddrop', handleVideoCoverImage);
 
-    }).on('hidden.bs.modal', function () {
-        // Reset video image covers.
-        videoImageCovers = {};
-    });
+        // Handle any form opened event
+        if (options.formOpenedEvent !== null && options.formOpenedEvent !== undefined) {
+            eval(options.formOpenedEvent)(dialog);
+        }
+
+    }, 500);
 
     return dialog;
 }

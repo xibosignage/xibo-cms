@@ -399,12 +399,13 @@ class Notification extends Base
      * Add attachment
      * @param Request $request
      * @param Response $response
-     * @return AttachmentUploadHandler
-     * @throws ConfigurationException
+     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function addAttachment(Request $request, Response $response)
     {
-
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
@@ -424,10 +425,12 @@ class Notification extends Base
         // Output handled by UploadHandler
         $this->setNoOutput(true);
 
-        $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
+        $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        return new AttachmentUploadHandler($options);
+        new AttachmentUploadHandler($options);
+
+        return $this->render($request, $response);
     }
 
     /**
