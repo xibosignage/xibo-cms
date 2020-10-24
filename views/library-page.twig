@@ -344,7 +344,8 @@
                         upload: {
                             maxSize: {{ libraryUpload.maxSize }},
                             maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
-                            validExt: validExtensions
+                            validExt: validExtensions,
+                            validExtensionsMessage: "{{ "Valid extensions are %s" }}".replace("%s", validExtensions).replace(/\|/g, ", ")
                         }
                     },
                     uploadDoneEvent: function () {

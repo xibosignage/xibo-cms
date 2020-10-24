@@ -252,8 +252,9 @@
                         // Create a hidden field with the mediaId
                         $("#layoutEditForm").append($("<input type='hidden' name='backgroundImageId' value='" + mediaId + "'/>"));
 
-                        dialog.find("#bg_image_image")
-                            .prop("src", bgImagePreview.data().url.replace(":id", mediaId))
+                        var $bgImagePreview = dialog.find("#bg_image_image");
+                        $bgImagePreview
+                            .prop("src", $bgImagePreview.data().url.replace(":id", mediaId))
                             .show();
 
                         dialog.find("#bg_not_found_icon").hide();

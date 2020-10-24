@@ -157,7 +157,7 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
                     upload: {
                         maxSize: $(draggable).data().maxSize,
                         maxSizeMessage: $(draggable).data().maxSizeMessage,
-                        validExtensionsMessage: translations.validExtensions + ': ' + $(draggable).data('validExt'),
+                        validExtensionsMessage: translations.validExtensions.replace("%s", $(draggable).data('validExt')),
                         validExt: validExt
                     },
                     playlistId: playlistId,

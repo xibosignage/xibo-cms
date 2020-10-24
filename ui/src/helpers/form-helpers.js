@@ -888,7 +888,7 @@ let formHelpers = function() {
                         upload: {
                             maxSize: $(this).data().maxSize,
                             maxSizeMessage: $(this).data().maxSizeMessage,
-                            validExtensionsMessage: translations.validExtensions + ': ' + dialog.find('form').data().validExtensions,
+                            validExtensionsMessage: translations.validExtensions.replace("%s", validExtensions).replace(/\|/g, ", "),
                             validExt: validExtensions
                         }
                     },

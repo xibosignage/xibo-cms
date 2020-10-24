@@ -1368,7 +1368,7 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
                 upload: {
                     maxSize: moduleData.maxSize,
                     maxSizeMessage: moduleData.maxSizeMessage,
-                    validExtensionsMessage: translations.validExtensions + ': ' + moduleData.validExt,
+                    validExtensionsMessage: translations.validExtensions.replace("%s", moduleData.validExt),
                     validExt: validExt
                 },
                 playlistId: playlistId,
