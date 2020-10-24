@@ -32,8 +32,13 @@ use Xibo\Storage\PdoStorageService;
  */
 class DatabaseLogHandler extends AbstractProcessingHandler
 {
+    /** @var \PDO */
+    private static $pdo;
+
     /** @var \PDOStatement|null */
     private static $statement;
+
+    /** @var int Log Level */
     protected $level = Logger::ERROR;
 
     /** @var int Track the number of failures since a success */
@@ -75,13 +80,13 @@ class DatabaseLogHandler extends AbstractProcessingHandler
     protected function write(array $record)
     {
         if (self::$statement == NULL) {
-            $pdo = PdoStorageService::newConnection();
+            self::$pdo = PdoStorageService::newConnection();
 
             $SQL = 'INSERT INTO log (runNo, logdate, channel, type, page, function, message, userid, displayid)
                       VALUES (:runNo, :logdate, :channel, :type, :page, :function, :message, :userid, :displayid)
                   ';
 
-            self::$statement = $pdo->prepare($SQL);
+            self::$statement = self::$pdo->prepare($SQL);
         }
 
         $params = array(
@@ -118,10 +123,23 @@ class DatabaseLogHandler extends AbstractProcessingHandler
 
                 // Try again.
                 $this->write($record);
-            } else {
-                // Throw this message out (failing to log is still a failure we should know about)
-                throw $e;
             }
+            // If the failureCount is > 1, then we ignore the error.
         }
+    }
+
+    /**
+     * @param string $cutOff
+     */
+    public static function tidyLogs($cutOff)
+    {
+        try {
+            if (self::$pdo === null) {
+                self::$pdo = PdoStorageService::newConnection();
+            }
+            $statement = self::$pdo->prepare('DELETE FROM `log` WHERE logdate < :maxage');
+            $statement->execute(['maxage' => $cutOff]);
+
+        } catch (\PDOException $ignored) {}
     }
 }

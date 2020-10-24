@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Xibo\Controller\Library;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\GeneralException;
 
@@ -70,7 +71,6 @@ class MaintenanceDailyTask implements TaskInterface
         $this->installModuleFiles();
 
         // Tidy logs
-        // TODO: this can cause a deadlock!
         $this->tidyLogs();
 
         // Tidy Cache
@@ -84,21 +84,17 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Tidy Logs') . PHP_EOL;
 
-        if ($this->config->getSetting('MAINTENANCE_LOG_MAXAGE') != 0) {
+        $maxage = $this->config->getSetting('MAINTENANCE_LOG_MAXAGE');
+        if ($maxage != 0) {
+            // Run this in the log handler so that we share the same connection and don't deadlock.
+            DatabaseLogHandler::tidyLogs(
+                Carbon::now()
+                    ->subDays(intval($maxage))
+                    ->format(DateFormatHelper::getSystemFormat())
+            );
 
-            $maxage = Carbon::now()->subSeconds(86400 * intval($this->config->getSetting('MAINTENANCE_LOG_MAXAGE')))->format(DateFormatHelper::getSystemFormat());
-
-            try {
-                $this->store->update('DELETE FROM `log` WHERE logdate < :maxage', ['maxage' => $maxage]);
-
-                $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
-            }
-            catch (\PDOException $e) {
-                $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
-                $this->log->error($e->getMessage());
-            }
-        }
-        else {
+            $this->runMessage .= ' - ' . __('Done') . PHP_EOL . PHP_EOL;
+        } else {
             $this->runMessage .= ' - ' . __('Disabled') . PHP_EOL . PHP_EOL;
         }
     }
