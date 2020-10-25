@@ -936,8 +936,7 @@ function permissionsFormSubmit(id) {
     var $formContainer = form.closest(".permissions-form");
     var permissions = {
         "groupIds": $(form).data().permissions,
-        "ownerId": $formContainer.find("select[name=ownerId]").val(),
-        "cascade": $formContainer.find("#cascade").is(":checked")
+        "ownerId": $formContainer.find("select[name=ownerId]").val()
     };
     var data = $.param(permissions);
 

@@ -421,12 +421,6 @@ class Campaign extends Base
 
         $campaign->save();
 
-        // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($campaign), $campaign->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
-
         // Assign layouts
         $this->assignLayout($request, $response, $campaign->campaignId);
 

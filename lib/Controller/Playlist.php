@@ -607,12 +607,6 @@ class Playlist extends Base
 
         $playlist->save();
 
-        // Default permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
-
         // Should we assign any existing media
         if (!empty($nameFilter) || !empty($tagFilter)) {
             $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter, 'assignable' => 1]);
@@ -649,24 +643,6 @@ class Playlist extends Base
 
                 // Save the playlist
                 $playlist->save();
-
-                // Handle permissions
-                foreach ($widgets as $widget) {
-                    /* @var Widget $widget */
-                    if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
-                        // Apply permissions from the Parent
-                        foreach ($playlist->permissions as $permission) {
-                            /* @var Permission $permission */
-                            $permission = $this->permissionFactory->create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
-                            $permission->save();
-                        }
-                    } else {
-                        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                            /* @var Permission $permission */
-                            $permission->save();
-                        }
-                    }
-                }
             }
         }
 
@@ -1019,20 +995,6 @@ class Playlist extends Base
         // Save the new playlist
         $playlist->save();
 
-        // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
-
-        foreach ($playlist->widgets as $widget) {
-            /* @var Widget $widget */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-        }
-
         // Clone the closure table for the original playlist
         $originalPlaylist->cloneClosureTable($playlist->getId());
 
@@ -1305,24 +1267,6 @@ class Playlist extends Base
 
         // Save the playlist
         $playlist->save(['saveTags' => false]);
-
-        // Handle permissions
-        foreach ($newWidgets as $widget) {
-            /* @var Widget $widget */
-            if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
-                // Apply permissions from the Parent
-                foreach ($playlist->permissions as $permission) {
-                    /* @var Permission $permission */
-                    $permission = $this->permissionFactory->create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
-                    $permission->save();
-                }
-            } else {
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                    /* @var Permission $permission */
-                    $permission->save();
-                }
-            }
-        }
 
         // Add new widgets to playlist for return values
         $playlist->newWidgets = $newWidgets;

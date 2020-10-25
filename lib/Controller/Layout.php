@@ -401,12 +401,6 @@ class Layout extends Base
         // Save
         $layout->save();
 
-        // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
-
         foreach ($layout->regions as $region) {
             /* @var Region $region */
 
@@ -1928,35 +1922,6 @@ class Layout extends Base
 
             // Make sure Playlist closure table from the published one are copied over
             $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
-        }
-
-        // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
-
-        foreach ($allRegions as $region) {
-            /* @var Region $region */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-
-            $playlist = $region->getPlaylist();
-            /* @var Playlist $playlist */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-
-            foreach ($playlist->widgets as $widget) {
-                /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                    /* @var Permission $permission */
-                    $permission->save();
-                }
-            }
         }
 
         // Return

@@ -370,22 +370,6 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Configure widgetId is reponse
                 $file->widgetId = $widget->widgetId;
-
-                // Handle permissions
-                // https://github.com/xibosignage/xibo/issues/1274
-                if ($controller->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
-                    // Apply permissions from the Parent
-                    foreach ($playlist->permissions as $permission) {
-                        /* @var Permission $permission */
-                        $permission = $controller->getPermissionFactory()->create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
-                        $permission->save();
-                    }
-                } else {
-                    foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($widget), $widget->getId(), $controller->getConfig()->getSetting('LAYOUT_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
-                        /* @var Permission $permission */
-                        $permission->save();
-                    }
-                }
             }
         } catch (Exception $e) {
             $controller->getLog()->error('Error uploading media: %s', $e->getMessage());

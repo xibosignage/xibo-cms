@@ -268,10 +268,6 @@ class Settings extends Base
             $this->getConfig()->changeSetting('LIBRARY_MEDIA_DELETEOLDVER_CHECKB', $sanitizedParams->getCheckbox('LIBRARY_MEDIA_DELETEOLDVER_CHECKB'));
         }
 
-        if ($this->getConfig()->isSettingEditable('DEFAULT_CASCADE_PERMISSION_CHECKB')) {
-            $this->getConfig()->changeSetting('DEFAULT_CASCADE_PERMISSION_CHECKB', $sanitizedParams->getCheckbox('DEFAULT_CASCADE_PERMISSION_CHECKB'));
-        }
-
         if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB')) {
             $this->getConfig()->changeSetting('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB', $sanitizedParams->getCheckbox('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB'));
         }
@@ -546,14 +542,6 @@ class Settings extends Base
             $this->getConfig()->changeSetting('WHITELIST_LOAD_BALANCERS', $sanitizedParams->getString('WHITELIST_LOAD_BALANCERS'));
         }
 
-        if ($this->getConfig()->isSettingEditable('LAYOUT_DEFAULT')) {
-            $this->getConfig()->changeSetting('LAYOUT_DEFAULT', $sanitizedParams->getString('LAYOUT_DEFAULT'));
-        }
-
-        if ($this->getConfig()->isSettingEditable('MEDIA_DEFAULT')) {
-            $this->getConfig()->changeSetting('MEDIA_DEFAULT', $sanitizedParams->getString('MEDIA_DEFAULT'));
-        }
-
         if ($this->getConfig()->isSettingEditable('REGION_OPTIONS_COLOURING')) {
             $this->getConfig()->changeSetting('REGION_OPTIONS_COLOURING', $sanitizedParams->getString('REGION_OPTIONS_COLOURING'));
         }
@@ -564,10 +552,6 @@ class Settings extends Base
 
         if ($this->getConfig()->isSettingEditable('SCHEDULE_SHOW_LAYOUT_NAME')) {
             $this->getConfig()->changeSetting('SCHEDULE_SHOW_LAYOUT_NAME', $sanitizedParams->getCheckbox('SCHEDULE_SHOW_LAYOUT_NAME'));
-        }
-
-        if ($this->getConfig()->isSettingEditable('INHERIT_PARENT_PERMISSIONS')) {
-            $this->getConfig()->changeSetting('INHERIT_PARENT_PERMISSIONS', $sanitizedParams->getCheckbox('INHERIT_PARENT_PERMISSIONS'));
         }
 
         if ($this->getConfig()->isSettingEditable('MODULE_CONFIG_LOCKED_CHECKB')) {
