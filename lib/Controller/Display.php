@@ -493,6 +493,13 @@ class Display extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1221,6 +1228,13 @@ class Display extends Base
      *      in="formData",
      *      description="The Webkey serial number for this Display, if applicable",
      *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Response(

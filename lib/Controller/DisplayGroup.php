@@ -2412,6 +2412,34 @@ class DisplayGroup extends Base
     }
 
     /**
+     *
+     * @SWG\Put(
+     *  path="/displaygroup/{id}/selectfolder",
+     *  operationId="displayGroupSelectFolder",
+     *  tags={"displayGroup"},
+     *  summary="Display Group Select folder",
+     *  description="Select Folder for Display Group, can also be used with Display specific Display Group ID",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The Display Group ID or Display specific Display Group ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *  )
+     * )
+     *
      * @param Request $request
      * @param Response $response
      * @param $id

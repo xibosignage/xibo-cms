@@ -1734,6 +1734,33 @@ class Playlist extends Base
     }
 
     /**
+     * @SWG\Put(
+     *  path="/playlist/{id}/selectfolder",
+     *  operationId="playlistSelectFolder",
+     *  tags={"playlist"},
+     *  summary="Playlist Select folder",
+     *  description="Select Folder for Playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *  )
+     * )
+     *
      * @param Request $request
      * @param Response $response
      * @param $id

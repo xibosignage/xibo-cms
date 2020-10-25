@@ -180,6 +180,13 @@ class Campaign extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -390,6 +397,13 @@ class Campaign extends Base
      *      type="string",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -512,6 +526,13 @@ class Campaign extends Base
      *      description="Name for this Campaign",
      *      type="string",
      *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
      *   ),
      *  @SWG\Response(
      *      response=200,
@@ -1059,6 +1080,35 @@ class Campaign extends Base
     }
 
     /**
+     * Select Folder
+     *
+     * @SWG\Put(
+     *  path="/campaign/{id}/selectfolder",
+     *  operationId="campaignSelectFolder",
+     *  tags={"campaign"},
+     *  summary="Campaign Select folder",
+     *  description="Select Folder for Campaign, can also be used with Layout specific Campaign ID",
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="path",
+     *      description="The Campaign ID or Layout specific Campaign ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *  )
+     * )
+     *
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -1069,6 +1119,7 @@ class Campaign extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\DuplicateEntityException
+     *
      */
     public function selectFolder(Request $request, Response $response, $id)
     {

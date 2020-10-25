@@ -2729,6 +2729,33 @@ class Library extends Base
     }
 
     /**
+     * @SWG\Put(
+     *  path="/library/{id}/selectfolder",
+     *  operationId="librarySelectFolder",
+     *  tags={"library"},
+     *  summary="Media Select folder",
+     *  description="Select Folder for Media",
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *  )
+     * )
+     *
      * @param Request $request
      * @param Response $response
      * @param $id
