@@ -489,6 +489,7 @@ class DataSetView extends ModuleWidget
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-dataset-render.js')
             ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
@@ -569,7 +570,7 @@ class DataSetView extends ModuleWidget
                     $("#DataSetTableContainer").find("img").xiboImageRender(options);
 
                     const runOnVisible = function() { $("#DataSetTableContainer").dataSetRender(options);  };
-                    (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
+                    (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                     
                     // Do we have a freshnessTimeout?
                     if (options.freshnessTimeout > 0) {

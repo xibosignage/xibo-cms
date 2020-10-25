@@ -27,6 +27,10 @@ var VERSION = "1.8.3";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
+
+/* Global preview object ( Layout ) */
+var previewLayout;
+
 function dsInit(layoutid, options, layoutPreview) {
     LOG_LEVEL = 10;
     /* Hide the info and log divs */
@@ -49,7 +53,7 @@ function dsInit(layoutid, options, layoutPreview) {
         }
     };
 
-    new Layout(layoutid, options, preload, layoutPreview);
+    previewLayout = new Layout(layoutid, options, preload, layoutPreview);
 }
 
 /* Generate a unique ID for region DIVs, media nodes etc */
@@ -942,8 +946,53 @@ function ActionController(parent, actions, options) {
     };
 }
 
-function triggerAction(path, data) {
-    console.log('TODO: Previewer: Trigger action');
-    console.log(path);
-    console.log(data);
+/**
+ * 
+ * @param {string} path - request path
+ * @param {Object} [data] - optional data object
+ * @param {callback} [done] - done callback
+ */
+function previewActionTrigger(path, data, done) {
+    /**
+     * Find media by ID
+     * @param {string} id 
+     */
+    var findMediaById = function(id) {
+        var newMedia;
+
+        // Find media in all regions
+        main:
+        for (i = 0; i < previewLayout.regionObjects.length; i++) {
+            const region = previewLayout.regionObjects[i];
+            for (j = 0; j < region.mediaObjects.length; j++) {
+                const media = region.mediaObjects[j];
+                if(media.id == id) {
+                    newMedia = media;
+                    break main; // break to main loop
+                }
+            }
+        }
+
+        return newMedia;
+    };
+
+
+    // ACTIONS
+    // Set media duration
+    if(path == '/setduration') {
+        var mediaToChange = findMediaById(data.id);
+        if(mediaToChange != undefined) {
+            // Change duration
+            mediaToChange.duration = data.duration;
+
+            // Update timeout
+            clearTimeout(mediaToChange.timeoutId);
+            mediaToChange.timeoutId = setTimeout(mediaToChange.region.nextMedia, mediaToChange.duration * 1000);
+        }
+    }
+
+    // Call callback if exists
+    if(typeof done == 'function') {
+        done();
+    }
 }

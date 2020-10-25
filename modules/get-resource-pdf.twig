@@ -172,16 +172,35 @@
         PDFJS.getDocument(url).then(function (pdfDoc_) {
             pdfDoc = pdfDoc_;
 
+            var startInterval = function(interval) {
+                // Set a timer
+                setInterval(function () {
+                    onNextPage();
+                }, interval * 1000);
+            };
+
             // Initial/first page rendering
             renderPage(pageNum);
 
-            // Interval
-            interval = options.duration / pdfDoc.numPages;
-
-            // Set a timer
-            setInterval(function () {
-                onNextPage();
-            }, interval * 1000);
+            if(options.durationIsPerItem) {
+                // Set new widget duration by number of pages
+                xiboIC.setWidgetDuration(
+                    (options.duration * pdfDoc.numPages),
+                    {
+                        done: () => { // Callback after the request
+                            // Start interval ( the defined duration )
+                            startInterval(options.duration);
+                        },
+                        error: () => {
+                            // If the call fails, keep the defalt behaviour
+                            startInterval(options.duration / pdfDoc.numPages);
+                        }
+                    }
+                );
+            } else {
+                // Start interval ( total duration divided by the number of pages )
+                startInterval(options.duration / pdfDoc.numPages);
+            }
         });
     </script>
 </body>

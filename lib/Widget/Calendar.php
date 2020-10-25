@@ -448,6 +448,7 @@ class Calendar extends ModuleWidget
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScriptFile('xibo-text-render.js')
+            ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendFontCss()
             ->appendCss($headContent)
@@ -495,8 +496,8 @@ class Calendar extends ModuleWidget
                     $("body").find("img").xiboImageRender(options);
                     $("body").xiboLayoutScaler(options);
 
-                    const runOnVisible = function() { $("#content").xiboTextRender(options, items); };
-                    (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
+                    const runOnVisible = function() { $("#content").xiboTextRender(options, parsedItems); };
+                    (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                 });
             ')
             ->appendItems($items);

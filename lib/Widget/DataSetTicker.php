@@ -479,6 +479,7 @@ class DataSetTicker extends ModuleWidget
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-text-render.js')
             ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
@@ -584,7 +585,7 @@ class DataSetTicker extends ModuleWidget
                     $("#content").find("img").xiboImageRender(options);
 
                     const runOnVisible = function() { $("#content").xiboTextRender(options, items); };
-                    (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
+                    (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                     
                     // Do we have a freshnessTimeout?
                     if (options.freshnessTimeout > 0) {
