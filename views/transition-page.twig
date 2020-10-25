@@ -66,6 +66,7 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
+            responsive: true,
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
@@ -78,13 +79,14 @@
                 }
             },
             "columns": [
-                { "data": "transition" },
-                { "data": "hasDuration", "render": dataTableTickCrossColumn },
-                { "data": "hasDirection", "render": dataTableTickCrossColumn },
-                { "data": "availableAsIn", "render": dataTableTickCrossColumn },
-                { "data": "availableAsOut", "render": dataTableTickCrossColumn },
+                { "data": "transition", responsivePriority: 2 },
+                { "data": "hasDuration", "render": dataTableTickCrossColumn, responsivePriority: 3 },
+                { "data": "hasDirection", "render": dataTableTickCrossColumn, responsivePriority: 3 },
+                { "data": "availableAsIn", "render": dataTableTickCrossColumn, responsivePriority: 3 },
+                { "data": "availableAsOut", "render": dataTableTickCrossColumn, responsivePriority: 3 },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]

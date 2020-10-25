@@ -81,6 +81,7 @@
                 "language": dataTablesLanguage,
                 serverSide: true,
                 stateSave: true,
+                responsive: true,
                 stateDuration: 0,
                 stateLoadCallback: dataTableStateLoadCallback,
                 stateSaveCallback: dataTableStateSaveCallback,
@@ -94,14 +95,15 @@
                     }
                 },
                 "columns": [
-                    {"data": "lastAccessed", "render": dataTableDateFromIso},
-                    {"data": "isExpired", "render": dataTableTickCrossInverseColumn},
-                    {"data": "userName"},
-                    {"data": "remoteAddress"},
-                    {"data": "userAgent"},
-                    {"data": "expiresAt", "render": dataTableDateFromUnix},
+                    {"data": "lastAccessed", "render": dataTableDateFromIso, responsivePriority: 2},
+                    {"data": "isExpired", "render": dataTableTickCrossInverseColumn, responsivePriority: 2},
+                    {"data": "userName", responsivePriority: 3},
+                    {"data": "remoteAddress", responsivePriority: 4},
+                    {"data": "userAgent", responsivePriority: 4},
+                    {"data": "expiresAt", "render": dataTableDateFromUnix, responsivePriority: 3},
                     {
                         "orderable": false,
+                         responsivePriority: 1,
                         "data": dataTableButtonsColumn
                     }
                 ]

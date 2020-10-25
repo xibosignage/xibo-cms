@@ -322,6 +322,7 @@
                 serverSide: true, 
                 stateSave: true, stateDuration: 0,
                 filter: false,
+                responsive: true,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
@@ -332,10 +333,11 @@
                     }
                 },
                 "columns": [
-                    { "data": "displayId"},
-                    { "data": "display" },
+                    { "data": "displayId", responsivePriority: 2},
+                    { "data": "display", responsivePriority: 2 },
                     {
                         "data": "mediaInventoryStatus",
+                        responsivePriority: 2,
                         "render": function (data, type, row) {
                             if (type != "display")
                                 return data;
@@ -351,9 +353,10 @@
                             return "<span class='fa " + icon + "'></span>";
                         }
                     },
-                    { "data": "loggedIn", "render": dataTableTickCrossColumn},
+                    { "data": "loggedIn", "render": dataTableTickCrossColumn, responsivePriority: 3},
                     {
                         "name": "clientSort",
+                        responsivePriority: 3,
                         "data": function (data) {
                             return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
                         },
@@ -361,6 +364,7 @@
                     },
                     {
                         "name": "member",
+                         responsivePriority: 2,
                         "data": function (data, type, row) {
                             if (type != "display")
                                 return data;
@@ -397,6 +401,7 @@
                 "language": dataTablesLanguage,
                 serverSide: true, stateSave: true, stateDuration: 0,
                 filter: false,
+                responsive: true,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
                 ajax: {
@@ -407,10 +412,11 @@
                     }
                 },
                 "columns": [
-                    { "data": "displayGroupId"},
-                    { "data": "displayGroup"},
+                    { "data": "displayGroupId", responsivePriority: 2},
+                    { "data": "displayGroup", responsivePriority: 2},
                     {
                         "name": "member",
+                        responsivePriority: 2,
                         "data": function (data, type, row) {
                             if (type != "display")
                                 return data;

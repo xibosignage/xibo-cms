@@ -79,6 +79,7 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
+            responsive: true,
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
@@ -91,7 +92,7 @@
                 }
             },
             "columns": [
-                { "data": "name" },
+                { "data": "name" , responsivePriority: 2},
                 { "data": "description" },
                 { "data": "regionSpecific", "render": dataTableTickCrossInverseColumn },
                 { "data": "defaultDuration" },
@@ -101,6 +102,7 @@
                 { "data": "enabled", "render": dataTableTickCrossColumn },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]

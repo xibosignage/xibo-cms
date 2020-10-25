@@ -137,6 +137,7 @@
                 "language": dataTablesLanguage,
                 serverSide: true,
                 stateSave: true,
+                responsive: true,
                 stateDuration: 0,
                 stateLoadCallback: dataTableStateLoadCallback,
                 stateSaveCallback: dataTableStateSaveCallback,
@@ -150,12 +151,12 @@
                     }
                 },
                 "columns": [
-                    {"data": "logId"},
-                    {"data": "logDate", "render": dataTableDateFromUnix},
-                    {"data": "userName"},
-                    {"data": "entity"},
-                    {"data": "entityId"},
-                    {"data": "message"},
+                    {"data": "logId", responsivePriority: 2},
+                    {"data": "logDate", "render": dataTableDateFromUnix, responsivePriority: 2},
+                    {"data": "userName", responsivePriority: 2},
+                    {"data": "entity", responsivePriority: 2},
+                    {"data": "entityId", responsivePriority: 2},
+                    {"data": "message", responsivePriority: 1},
                     {
                         "data": function (data, type, row, meta) {
                             if (type != "display")
@@ -163,7 +164,8 @@
 
                             return arrayViewer({"col1": "{% trans "Property" %}", "col2": "{% trans "Value" %}", "items": data.objectAfter});
                         },
-                        "sortable": false
+                        "sortable": false,
+                         responsivePriority: 1
                     }
                 ]
             });

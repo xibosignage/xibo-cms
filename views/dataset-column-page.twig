@@ -79,6 +79,7 @@
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
+            responsive: true,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             ajax: {
@@ -95,6 +96,7 @@
                 { "data": "columnOrder" },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]

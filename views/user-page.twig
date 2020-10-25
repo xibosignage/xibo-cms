@@ -104,6 +104,7 @@
                 "language": dataTablesLanguage,
                 serverSide: true,
                 stateSave: true,
+                responsive: true,
                 stateDuration: 0,
                 stateLoadCallback: dataTableStateLoadCallback,
                 stateSaveCallback: dataTableStateSaveCallback,
@@ -117,27 +118,31 @@
                     }
                 },
                 "columns": [
-                    {"data": "userName"},
-                    {"data": "homePage"},
-                    {"data": "email"},
+                    {"data": "userName", responsivePriority: 2},
+                    {"data": "homePage", responsivePriority: 3},
+                    {"data": "email", responsivePriority: 3},
                     {
                         "name": "libraryQuota",
+                         responsivePriority: 3,
                         "data": null,
                         "render": {"_": "libraryQuota", "display": "libraryQuotaFormatted", "sort": "libraryQuota"}
                     },
-                    {"data": "lastAccessed", "visible": false},
+                    {"data": "lastAccessed", "visible": false, responsivePriority: 4},
                     {
                         "data": "loggedIn",
+                        responsivePriority: 3,
                         "render": dataTableTickCrossColumn,
                         "visible": false,
                         "sortable": false
                     },
                     {
                         "data": "retired",
+                         responsivePriority: 3,
                         "render": dataTableTickCrossColumn
                     },
                     {
                         "data": "twoFactorTypeId",
+                         responsivePriority: 5,
                         "visible": false,
                         "render": function (data, type, row) {
                             if (type != "display")
@@ -154,16 +159,17 @@
                             return '<span class="fa ' + icon + '" title="' + (row.twoFactorDescription) + '"></span>';
                         }
                     },
-                    {"data": "firstName", "visible": false},
-                    {"data": "lastName", "visible": false},
-                    {"data": "phone", "visible": false},
-                    {"data": "ref1", "visible": false},
-                    {"data": "ref2", "visible": false},
-                    {"data": "ref3", "visible": false},
-                    {"data": "ref4", "visible": false},
-                    {"data": "ref5", "visible": false},
+                    {"data": "firstName", "visible": false, responsivePriority: 5},
+                    {"data": "lastName", "visible": false, responsivePriority: 5},
+                    {"data": "phone", "visible": false, responsivePriority: 5},
+                    {"data": "ref1", "visible": false, responsivePriority: 5},
+                    {"data": "ref2", "visible": false, responsivePriority: 5},
+                    {"data": "ref3", "visible": false, responsivePriority: 5},
+                    {"data": "ref4", "visible": false, responsivePriority: 5},
+                    {"data": "ref5", "visible": false, responsivePriority: 5},
                     {
                         "orderable": false,
+                        responsivePriority: 1,
                         "data": dataTableButtonsColumn
                     }
                 ]
