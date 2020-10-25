@@ -166,9 +166,8 @@
                 { "data": "description", responsivePriority: 3 },
                 { "data": "isDynamic", "render": dataTableTickCrossColumn, responsivePriority: 3 },
                 { "data": "dynamicCriteria", responsivePriority: 4 },
-                { "data": "dynamicCriteriaTags", responsivePriority: 4 },
                 {% if currentUser.featureEnabled("tag.tagging") %}
-                { "data": "dynamicCriteriaTags" },
+                { "data": "dynamicCriteriaTags", responsivePriority: 4},
                 {
                     "name": "tags",
                     "sortable": false,

@@ -1193,6 +1193,11 @@ class Library extends Base
         $media->enableStat = $sanitizedParams->getString('enableStat');
         $media->folderId = $sanitizedParams->getInt('folderId', ['default' => $media->folderId]);
 
+        if ($media->hasPropertyChanged('folderId')) {
+            $folder = $this->folderFactory->getById($media->folderId);
+            $media->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        }
+
         if ($sanitizedParams->getDate('expires') != null ) {
 
             if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
@@ -2749,12 +2754,15 @@ class Library extends Base
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
 
         $media->folderId = $folderId;
+        $folder = $this->folderFactory->getById($media->folderId);
+        $media->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
         $media->save(['saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('Media %s moved to Folder %d'), $media->name, $folderId)
+            'message' => sprintf(__('Media %s moved to Folder %s'), $media->name, $folder->text)
         ]);
 
         return $this->render($request, $response);

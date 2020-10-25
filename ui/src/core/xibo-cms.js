@@ -2918,6 +2918,8 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
     let state = {};
     if ($(container).length) {
 
+        // difference here is, that for grid trees we don't set ttl at all
+        // add/edit forms have short ttl, multi select will be cached for couple of minutes
         if (isForm) {
             state = {"key" : table + "_folder_tree", "ttl": ttl};
         } else {
@@ -2929,6 +2931,9 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
             "plugins" : ["contextmenu", "state", "unique"],
             "contextmenu":{
                 "items": function($node, checkContextMenuPermissions) {
+                    // items in context menu need to check user permissions before we render them
+                    // as such each click on the node will execute the below ajax to check what permissions user has
+                    // permission may be different per node, therefore we cannot look this up just once for whole tree.
                     let items = {};
                     let tree = $(container).jstree(true);
                     let buttonPermissions = null;
@@ -2994,6 +2999,7 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
                 }},
             'core' : {
                 "check_callback" : function (operation, node, parent, position, more) {
+                    // prevent edit/delete of the root node.
                     if(operation === "delete_node" || operation === "rename_node") {
                         if(node.id === "#" || node.id === "1") {
                             toastr.error(translations.folderTreeError);
@@ -3009,6 +3015,8 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
         });
 
         $(container).on('loaded.jstree', function(e, data) {
+            // if we are on the form, we need to select tree node (currentWorkingFolder)
+            // this is set/passed to twigs on render time
             if (isForm) {
                 let folderIdInputSelector = '#'+table+' #folderId';
 
@@ -3053,6 +3061,9 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
             dataObject['text'] = data.node.text;
             let node = data.node;
 
+            // when we create a new node, by default it will get jsTree default id
+            // we need to change it to the folderId we have in our folder table
+            // rename happens just after add, therefore this needs to be set as soon as possible
             $.ajax({
                 url: "/folders",
                 method: "POST",
@@ -3070,6 +3081,9 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
             dataObject['parentId'] = data.parent;
             dataObject['text'] = data.node.text;
             let folderId = data.node.id;
+
+            // delete has a check built-in, if it fails to remove node, it will show suitable message in toast
+            // and reload the tree
             $.ajax({
                 url: "/folders/"+folderId,
                 method: "DELETE",
@@ -3098,6 +3112,7 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
                 folderIdInputSelector = '#formFolderId';
             }
 
+            // on grids, depending on the selected folder, we need to handle the breadcrumbs
             if ($(folderIdInputSelector).val() != selectedFolderId && isForm === false) {
 
                 if (selectedFolderId !== undefined) {
@@ -3113,6 +3128,7 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
                 $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
             }
 
+            // on form we always want to show the breadcrumbs to current and selected folder
             if (isForm && $(folderIdInputSelector).val() != selectedFolderId && selectedFolderId !== undefined) {
                 $(folderIdInputSelector).val(selectedFolderId).trigger('change');
                 if ($('#selectedFormFolder').length) {
@@ -3122,28 +3138,36 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
 
         });
 
+        // on froms that have more than one modal active, this is needed to not confuse bootstrap
+        // the (X) needs to close just the inner modal
+        // clicking outside of the tree select modal will work as well.
         $(".btnCloseInnerModal").on('click', function(e) {
             e.preventDefault();
             let FolderTreeModalId = (isForm) ? '#folder-tree-form-modal' : '#folder-tree-modal';
             $(FolderTreeModalId).modal('hide');
         });
 
+        // this handler for the search everywhere checkbox on grid pages
         $("#folder-tree-clear-selection-button").on('click', function() {
             $(this).prop('checked', true);
             $(container).jstree("deselect_all");
         });
 
+        // this is handler for the hamburger button on grid pages
         $('#folder-tree-select-folder-button').off("click").on('click', function() {
             $('#grid-folder-filter').toggle('fast', function() {
                 if ($(this).is(":hidden")) {
 
                     if (!$("#folder-tree-clear-selection-button").is(':checked')) {
+                        // if folder tree is hidden and select everywhere is not checked, then show breadcrumbs
                         $("#breadcrumbs").show('slow');
                     }
 
+                    // if the folder tree is hidden, then make it so datatable can take whole available width
                     $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
                     $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
                 } else {
+                    // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
                     $("#breadcrumbs").hide('slow');
                     $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
                     $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
@@ -3154,6 +3178,8 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
 }
 
 function disableFolders () {
+    // if user does not have Folders feature enabled, then we need to remove couple of elements from the page
+    // to prevent jsTree from executing, make the datatable take whole available width as well.
     $('#folder-tree-select-folder-button').parent().remove();
     $('#container-folder-tree').remove();
     $('#grid-folder-filter').remove();

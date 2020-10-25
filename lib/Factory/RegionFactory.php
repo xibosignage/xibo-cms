@@ -55,6 +55,9 @@ class RegionFactory extends BaseFactory
     /** @var ActionFactory */
     private $actionFactory;
 
+    /** @var CampaignFactory */
+    private $campaignFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -65,13 +68,14 @@ class RegionFactory extends BaseFactory
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory)
+    public function __construct($store, $log, $sanitizerService, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory, $campaignFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->permissionFactory = $permissionFactory;
         $this->regionOptionFactory = $regionOptionFactory;
         $this->playlistFactory = $playlistFactory;
         $this->actionFactory = $actionFactory;
+        $this->campaignFactory = $campaignFactory;
     }
 
     /**
@@ -86,7 +90,8 @@ class RegionFactory extends BaseFactory
             $this->permissionFactory,
             $this->regionOptionFactory,
             $this->playlistFactory,
-            $this->actionFactory
+            $this->actionFactory,
+            $this->campaignFactory
         );
     }
 

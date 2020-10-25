@@ -180,12 +180,14 @@ class Folder
 
     private function add()
     {
+        $parent = $this->folderFactory->getById($this->parentId);
+
         $this->id = $this->getStore()->insert('INSERT INTO `folder` (folderName, parentId, isRoot, permissionsFolderId) VALUES (:folderName, :parentId, :isRoot, :permissionsFolderId)',
             [
                 'folderName' => $this->text,
                 'parentId' => $this->parentId,
                 'isRoot' => 0,
-                'permissionsFolderId' => $this->parentId
+                'permissionsFolderId' => ($parent->permissionsFolderId == null) ? $this->parentId : $parent->permissionsFolderId
             ]);
 
         $this->manageChildren('add');
@@ -238,41 +240,105 @@ class Folder
 
     public function managePermissions()
     {
-        // TODO this needs to be a bit more clever regarding child folders, we also need to handle case of removing permissions on folder
-        // add/edit/selectfolder on objects needs to be updated to correctly set permissionsFolderId in their tables - like media has on add at the moment.
-
-        $this->getStore()->update('UPDATE `folder` SET permissionsFolderId = NULL WHERE folderId = :folderId', [
-                'folderId' => $this->id
+        // this function happens after permissions are inserted into permission table
+        // with that we can look up if there are any permissions for edited folder and act accordingly.
+        $permissionExists = $this->getStore()->exists('SELECT permissionId FROM permission INNER JOIN permissionentity ON permission.entityId = permissionentity.entityId WHERE objectId = :folderId AND permissionentity.entity = :folderEntity', [
+            'folderId' => $this->id,
+            'folderEntity' => 'Xibo\Entity\Folder'
         ]);
 
+        if ($permissionExists) {
+            // if we added/edited permission on this folder, then new ACL starts here, cascade this folderId as permissionFolderId to all children
+            $this->getStore()->update('UPDATE `folder` SET permissionsFolderId = NULL WHERE folderId = :folderId', [
+                'folderId' => $this->id
+            ]);
+            $permissionFolderId = $this->id;
+        } else {
+            // if there are no permissions for this folder, basically reset the permissions on this folder and its children
+            if ($this->id === 1 && $this->isRoot()) {
+                $permissionFolderId = 1;
+            } else {
+                $parent = $this->folderFactory->getById($this->parentId);
+                $permissionFolderId = ($parent->permissionsFolderId == null) ? $parent->id : $parent->permissionsFolderId;
+            }
+
+            $this->getStore()->update('UPDATE `folder` SET permissionsFolderId = :permissionFolderId WHERE folderId = :folderId', [
+                'folderId' => $this->id,
+                'permissionFolderId' => $permissionFolderId
+            ]);
+        }
+
         $this->getStore()->update('UPDATE `folder` SET permissionsFolderId = :permissionsFolderId WHERE parentId = :folderId',[
-            'permissionsFolderId' => $this->id,
+            'permissionsFolderId' => $permissionFolderId,
             'folderId' => $this->id
         ]);
 
         $this->getStore()->update('UPDATE `media` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
-            'permissionsFolderId' => $this->id,
+            'permissionsFolderId' => $permissionFolderId,
             'folderId' => $this->id
         ]);
 
         $this->getStore()->update('UPDATE `campaign` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
-            'permissionsFolderId' => $this->id,
+            'permissionsFolderId' => $permissionFolderId,
             'folderId' => $this->id
         ]);
 
         $this->getStore()->update('UPDATE `displaygroup` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
-            'permissionsFolderId' => $this->id,
+            'permissionsFolderId' => $permissionFolderId,
             'folderId' => $this->id
         ]);
 
         $this->getStore()->update('UPDATE `dataset` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
-            'permissionsFolderId' => $this->id,
+            'permissionsFolderId' => $permissionFolderId,
             'folderId' => $this->id
         ]);
 
         $this->getStore()->update('UPDATE `playlist` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
-            'permissionsFolderId' => $this->id,
+            'permissionsFolderId' => $permissionFolderId,
             'folderId' => $this->id
         ]);
+
+        $this->manageChildPermissions($permissionFolderId);
+    }
+
+    public function manageChildPermissions($permissionFolderId)
+    {
+        $children = array_filter(explode(',', $this->children));
+
+        foreach ($children as $child) {
+
+            $this->getStore()->update('UPDATE `folder` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $child
+            ]);
+
+            $this->getStore()->update('UPDATE `media` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $child
+            ]);
+
+            $this->getStore()->update('UPDATE `campaign` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $child
+            ]);
+
+            $this->getStore()->update('UPDATE `displaygroup` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $child
+            ]);
+
+            $this->getStore()->update('UPDATE `dataset` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $child
+            ]);
+
+            $this->getStore()->update('UPDATE `playlist` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+                'permissionsFolderId' => $permissionFolderId,
+                'folderId' => $child
+            ]);
+
+            $childObject = $this->folderFactory->getById($child);
+            $childObject->manageChildPermissions($permissionFolderId);
+        }
     }
 }

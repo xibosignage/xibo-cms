@@ -417,26 +417,12 @@ class Layout extends Base
                 // Make sure Playlist closure table from the published one are copied over
                 $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
             }
-
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
+            $campaign = $this->campaignFactory->getById($layout->campaignId);
 
             $playlist = $region->getPlaylist();
-
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-
-            foreach ($playlist->widgets as $widget) {
-                /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                    /* @var Permission $permission */
-                    $permission->save();
-                }
-            }
+            $playlist->folderId = $campaign->folderId;
+            $playlist->permissionsFolderId = $campaign->permissionsFolderId;
+            $playlist->save();
         }
 
         $this->getLog()->debug('Layout Added');
@@ -555,6 +541,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
         $isTemplate = false;
         $sanitizedParams = $this->getSanitizer($request->getParams());
+        $folderChanged = false;
 
         // check if we're dealing with the template
         $currentTags = explode(',', $layout->tags);
@@ -596,6 +583,10 @@ class Layout extends Base
             }
         }
 
+        if ($layout->hasPropertyChanged('folderId')) {
+            $folderChanged = true;
+        }
+
         // Save
         $layout->save([
             'saveLayout' => true,
@@ -604,6 +595,18 @@ class Layout extends Base
             'setBuildRequired' => false,
             'notify' => false
         ]);
+
+        if ($folderChanged) {
+            $savedLayout = $this->layoutFactory->getById($layout->layoutId);
+            $savedLayout->load();
+            foreach ($savedLayout->regions as $region) {
+                /* @var Region $region */
+                $playlist = $region->getPlaylist();
+                $playlist->folderId = $savedLayout->folderId;
+                $playlist->permissionsFolderId = $savedLayout->permissionsFolderId;
+                $playlist->save();
+            }
+        }
 
         // Return
         $this->getState()->hydrate([

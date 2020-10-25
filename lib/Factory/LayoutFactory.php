@@ -109,6 +109,9 @@ class LayoutFactory extends BaseFactory
     /** @var ActionFactory */
     private $actionFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -133,7 +136,7 @@ class LayoutFactory extends BaseFactory
      */
     public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $dispatcher, $permissionFactory,
                                 $regionFactory, $tagFactory, $campaignFactory, $mediaFactory, $moduleFactory, $resolutionFactory,
-                                $widgetFactory, $widgetOptionFactory, $playlistFactory, $widgetAudioFactory, $actionFactory)
+                                $widgetFactory, $widgetOptionFactory, $playlistFactory, $widgetAudioFactory, $actionFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -151,6 +154,7 @@ class LayoutFactory extends BaseFactory
         $this->playlistFactory = $playlistFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->actionFactory = $actionFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -172,7 +176,8 @@ class LayoutFactory extends BaseFactory
             $this->mediaFactory,
             $this->moduleFactory,
             $this->playlistFactory,
-            $this->actionFactory
+            $this->actionFactory,
+            $this->folderFactory
         );
     }
 
@@ -2155,6 +2160,7 @@ class LayoutFactory extends BaseFactory
             $layout->autoApplyTransitions = $parsedRow->getInt('autoApplyTransitions');
             $layout->code = $parsedRow->getString('code');
             $layout->folderId = $parsedRow->getInt('folderId');
+            $layout->permissionsFolderId = $parsedRow->getInt('permissionsFolderId');
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();

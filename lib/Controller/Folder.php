@@ -78,6 +78,7 @@ class Folder extends Base
             'folderId' => $parsedParams->getInt('folderId'),
             'folderName' => $parsedParams->getString('folderName'),
             'isRoot' => $parsedParams->getInt('isRoot'),
+            'includeRoot' => 1
         ], $request));
 
         foreach ($folders as $folder) {

@@ -812,7 +812,7 @@ class Playlist implements \JsonSerializable
             'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : $this->requiresDurationUpdate,
             'enableStat' => $this->enableStat,
             'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
-            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
         ));
 
         // Insert my self link

@@ -364,7 +364,8 @@ class State implements Middleware
                     $c->get('permissionFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('tagFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\Clock' => function(ContainerInterface $c) {
@@ -402,7 +403,8 @@ class State implements Middleware
                     $c->get('dataSetFactory'),
                     $c->get('dataSetColumnFactory'),
                     $c->get('view'),
-                    $c->get('userFactory')
+                    $c->get('userFactory'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\DataSetColumn' => function(ContainerInterface $c) {
@@ -513,7 +515,8 @@ class State implements Middleware
                     $c->get('scheduleFactory'),
                     $c->get('tagFactory'),
                     $c->get('campaignFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\DisplayProfile' => function(ContainerInterface $c) {
@@ -809,7 +812,8 @@ class State implements Middleware
                     $c->get('view'),
                     $c->get('layoutFactory'),
                     $c->get('displayFactory'),
-                    $c->get('scheduleFactory')
+                    $c->get('scheduleFactory'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\Preview' => function(ContainerInterface $c) {
@@ -1286,7 +1290,8 @@ class State implements Middleware
                     $c->get('widgetOptionFactory'),
                     $c->get('playlistFactory'),
                     $c->get('widgetAudioFactory'),
-                    $c->get('actionFactory')
+                    $c->get('actionFactory'),
+                    $c->get('folderFactory')
                 );
             },
             'logFactory' => function(ContainerInterface $c) {
@@ -1383,7 +1388,8 @@ class State implements Middleware
                     $c->get('permissionFactory'),
                     $c->get('regionOptionFactory'),
                     $c->get('playlistFactory'),
-                    $c->get('actionFactory')
+                    $c->get('actionFactory'),
+                    $c->get('campaignFactory')
                 );
             },
             'regionOptionFactory' => function(ContainerInterface $c) {

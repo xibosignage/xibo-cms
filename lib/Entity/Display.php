@@ -794,7 +794,11 @@ class Display implements \JsonSerializable
         $displayGroup = $this->displayGroupFactory->create();
         $displayGroup->displayGroup = $this->display;
         $displayGroup->tags = $this->tags;
+
+        // this is added from xmds, by default new displays will end up in root folder.
         $displayGroup->folderId = 1;
+        $displayGroup->permissionsFolderId = 1;
+
         $displayGroup->setDisplaySpecificDisplay($this);
 
         $this->getLog()->debug('Creating display specific group with userId ' . $displayGroup->userId);

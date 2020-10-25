@@ -30,6 +30,7 @@ use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -112,6 +113,9 @@ class Playlist extends Base
     /** @var ScheduleFactory */
     private $scheduleFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -134,9 +138,10 @@ class Playlist extends Base
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param FolderFactory $folderFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
-        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view, $layoutFactory, $displayFactory, $scheduleFactory)
+        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view, $layoutFactory, $displayFactory, $scheduleFactory, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -153,6 +158,7 @@ class Playlist extends Base
         $this->layoutFactory = $layoutFactory;
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -582,6 +588,9 @@ class Playlist extends Base
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
         $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
+        $folder = $this->folderFactory->getById($playlist->folderId);
+        $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
         }
@@ -787,6 +796,11 @@ class Playlist extends Base
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
         $playlist->folderId = $sanitizedParams->getInt('folderId');
+
+        if ($playlist->hasPropertyChanged('folderId')) {
+            $folder = $this->folderFactory->getById($playlist->folderId);
+            $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
@@ -1800,6 +1814,8 @@ class Playlist extends Base
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
 
         $playlist->folderId = $folderId;
+        $folder = $this->folderFactory->getById($playlist->folderId);
+        $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
 
         // Save
         $playlist->save();
@@ -1807,7 +1823,7 @@ class Playlist extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('Playlist %s moved to Folder %d'), $playlist->name, $folderId)
+            'message' => sprintf(__('Playlist %s moved to Folder %s'), $playlist->name, $folder->text)
         ]);
 
         return $this->render($request, $response);

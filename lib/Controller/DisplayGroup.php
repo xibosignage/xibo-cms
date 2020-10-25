@@ -29,6 +29,7 @@ use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -104,6 +105,9 @@ class DisplayGroup extends Base
      */
     private $campaignFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -123,8 +127,9 @@ class DisplayGroup extends Base
      * @param TagFactory $tagFactory
      * @param CampaignFactory $campaignFactory
      * @param Twig $view
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory, $campaignFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory, $campaignFactory, Twig $view, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -138,6 +143,7 @@ class DisplayGroup extends Base
         $this->scheduleFactory = $scheduleFactory;
         $this->tagFactory = $tagFactory;
         $this->campaignFactory = $campaignFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -606,6 +612,9 @@ class DisplayGroup extends Base
         $displayGroup->dynamicCriteria = $sanitizedParams->getString('dynamicCriteria');
         $displayGroup->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
+        $folder = $this->folderFactory->getById($displayGroup->folderId);
+        $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $displayGroup->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
             $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
@@ -713,6 +722,11 @@ class DisplayGroup extends Base
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteria') : null;
         $displayGroup->folderId = $parsedRequestParams->getInt('folderId');
+
+        if ($displayGroup->hasPropertyChanged('folderId')) {
+            $folder = $this->folderFactory->getById($displayGroup->folderId);
+            $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $displayGroup->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
@@ -2422,13 +2436,16 @@ class DisplayGroup extends Base
 
         $displayGroup->folderId = $folderId;
 
+        $folder = $this->folderFactory->getById($displayGroup->folderId);
+        $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
         // Save
         $displayGroup->save();
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('Display %s moved to Folder %d'), $displayGroup->displayGroup, $folderId)
+            'message' => sprintf(__('Display %s moved to Folder %s'), $displayGroup->displayGroup, $folder->text)
         ]);
 
         return $this->render($request, $response);

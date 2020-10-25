@@ -26,6 +26,7 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\TagFactory;
@@ -70,6 +71,9 @@ class Campaign extends Base
      */
     private $userGroupFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -85,7 +89,7 @@ class Campaign extends Base
      * @param TagFactory $tagFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory, $tagFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory, $tagFactory, Twig $view, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -94,6 +98,7 @@ class Campaign extends Base
         $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->tagFactory = $tagFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -411,6 +416,9 @@ class Campaign extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $campaign = $this->campaignFactory->create($sanitizedParams->getString('name'), $this->getUser()->userId, $sanitizedParams->getString('tags'), $sanitizedParams->getInt('folderId'));
+        $folder = $this->folderFactory->getById($campaign->folderId);
+        $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
         $campaign->save();
 
         // Permissions
@@ -529,6 +537,11 @@ class Campaign extends Base
 
         $campaign->campaign = $parsedRequestParams->getString('name');
         $campaign->folderId = $parsedRequestParams->getInt('folderId');
+
+        if ($campaign->hasPropertyChanged('folderId')) {
+            $folder = $this->folderFactory->getById($campaign->folderId);
+            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
@@ -1065,7 +1078,7 @@ class Campaign extends Base
      */
     public function selectFolder(Request $request, Response $response, $id)
     {
-        // Get the Layout
+        // Get the Campaign
         $campaign = $this->campaignFactory->getById($id);
 
         // Check Permissions
@@ -1076,6 +1089,23 @@ class Campaign extends Base
         $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
 
         $campaign->folderId = $folderId;
+        $folder = $this->folderFactory->getById($campaign->folderId);
+        $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
+        if ($campaign->isLayoutSpecific === 1) {
+            $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
+
+            foreach ($layouts as $layout) {
+                $layout->load();
+                foreach ($layout->regions as $region) {
+                    /* @var Region $region */
+                    $playlist = $region->getPlaylist();
+                    $playlist->folderId = $campaign->folderId;
+                    $playlist->permissionsFolderId = $campaign->permissionsFolderId;
+                    $playlist->save();
+                }
+            }
+        }
 
         // Save
         $campaign->save();
@@ -1083,7 +1113,7 @@ class Campaign extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('Layout %s moved to Folder %d'), $campaign->campaign, $folderId)
+            'message' => sprintf(__('Layout %s moved to Folder %s'), $campaign->campaign, $folder->text)
         ]);
 
         return $this->render($request, $response);

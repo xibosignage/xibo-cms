@@ -139,6 +139,11 @@ class FolderFactory extends BaseFactory
             $params['isRoot'] = $sanitizedFilter->getInt('isRoot');
         }
 
+        // for the "grid" ie tree view, we need the root folder to keep the tree structure
+        if ($sanitizedFilter->getInt('includeRoot') === 1) {
+            $body .= 'OR folder.isRoot = 1';
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))

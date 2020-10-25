@@ -28,6 +28,7 @@ use Xibo\Event\LayoutBuildRegionEvent;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -354,6 +355,9 @@ class Layout implements \JsonSerializable
     /** @var ActionFactory */
     private $actionFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -369,8 +373,9 @@ class Layout implements \JsonSerializable
      * @param ModuleFactory $moduleFactory
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $config, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory)
+    public function __construct($store, $log, $config, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
@@ -385,6 +390,7 @@ class Layout implements \JsonSerializable
         $this->moduleFactory = $moduleFactory;
         $this->playlistFactory = $playlistFactory;
         $this->actionFactory = $actionFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     public function __clone()
@@ -794,12 +800,6 @@ class Layout implements \JsonSerializable
 
         } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
             $this->update($options);
-
-            if ($this->hasPropertyChanged('folderId')) {
-               $options['saveRegions'] = true;
-               $options['folderId'] = $this->folderId;
-               $this->load();
-            }
 
             if ($options['audit']) {
                 $change = $this->getChangedProperties();
@@ -2136,6 +2136,10 @@ class Layout implements \JsonSerializable
             $campaign->isLayoutSpecific = 1;
             $campaign->ownerId = $this->getOwnerId();
             $campaign->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+
+            $folder = $this->folderFactory->getById($this->folderId);
+            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
             $campaign->assignLayout($this);
 
             // Ready to save the Campaign
@@ -2232,6 +2236,9 @@ class Layout implements \JsonSerializable
             $campaign->campaign = $this->layout;
             $campaign->ownerId = $this->ownerId;
             $campaign->folderId = $this->folderId;
+            $folder = $this->folderFactory->getById($this->folderId);
+            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
             $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow'], 'layoutCode' => $this->code]);
         }
     }
