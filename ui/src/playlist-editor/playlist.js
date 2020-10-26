@@ -136,8 +136,8 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
                 url: libraryAddUrl,
                 title: uploadTrans.uploadMessage,
                 animateDialog: false,
+                initialisedBy: "playlist-editor-upload",
                 className: "second-dialog",
-                currentWorkingFolderId: pE.folderId,
                 buttons: {
                     viewLibrary: {
                         label: uploadTrans.viewLibrary,
@@ -164,6 +164,7 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
                     },
                     playlistId: playlistId,
                     displayOrder: addToPosition,
+                    currentWorkingFolderId: pE.folderId,
                     showWidgetDates: true
                 }
             }).attr('data-test', 'uploadFormModal');

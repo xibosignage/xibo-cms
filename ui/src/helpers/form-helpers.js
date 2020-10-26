@@ -878,6 +878,7 @@ let formHelpers = function() {
                     url: libraryAddUrl,
                     title: uploadTrans.uploadMessage,
                     animateDialog: false,
+                    initialisedBy: "library-upload",
                     className: self.namespace.getUploadDialogClassName(),
                     multi: false,
                     templateOptions: {

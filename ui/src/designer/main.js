@@ -1353,7 +1353,7 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
             url: libraryAddUrl,
             title: uploadTrans.uploadMessage,
             animateDialog: false,
-            currentWorkingFolderId: lD.folderId,
+            initialisedBy: "layout-designer-upload",
             buttons: {
                 viewLibrary: {
                     label: uploadTrans.viewLibrary,
@@ -1381,6 +1381,7 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
                 },
                 playlistId: playlistId,
                 displayOrder: addToPosition,
+                currentWorkingFolderId: lD.folderId,
                 showWidgetDates: true
             }
         }).attr('data-test', 'uploadFormModal');

@@ -309,7 +309,7 @@
             openUploadForm({
                 url: "{{ url_for("library.add") }}",
                 title: "{% trans "Add Media" %}",
-                currentWorkingFolderId: currentWorkingFolderId,
+                initialisedBy: "library-upload",
                 buttons: {
                     main: {
                         label: "{% trans "Done" %}",
@@ -334,7 +334,8 @@
                         validExt: "{{ validExt }}"
                     },
                     updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %},
-                    deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %}
+                    deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %},
+                    currentWorkingFolderId: currentWorkingFolderId
                 }
             });
         });

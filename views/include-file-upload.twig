@@ -29,6 +29,9 @@
         {{/if}}
         {{#if oldMediaId}}
             <input type="hidden" name="oldMediaId" value="{{ oldMediaId }}" />
+            <input name="folderId" type="hidden" id="folderId" value="{{oldFolderId}}">
+        {{else}}
+            <input name="folderId" type="hidden" id="formFolderId" value="{{currentWorkingFolderId}}">
         {{/if}}
         {{#if displayOrder}}
             <input type="hidden" name="displayOrder" value="{{ displayOrder }}" />
@@ -39,6 +42,19 @@
                     <p>{{ upload.maxSizeMessage }}</p>
                     {{#if upload.validExtensionsMessage}}
                         <p><strong>{{ upload.validExtensionsMessage }}</strong></p>
+                    {{/if}}
+                    {{#if oldMediaId}}
+                    {{else}}
+                    {% endverbatim %}   {% if currentUser.featureEnabled('folder.view') %} {% verbatim %}
+                    <div class="row">
+                        <div class="col-sm-2" style="padding:0">
+                            <p>{{ trans.selectedFolder }}</p>
+                        </div>
+                         <div class="col-sm-10" style="padding:0">
+                            <span id="selectedFormFolder"></span>
+                        </div>
+                    </div>
+                    {% endverbatim %}  {% endif %} {% verbatim %}
                     {{/if}}
                 </div>
                 <!-- The fileinput-button span is used to style the file input field as button -->
@@ -59,6 +75,12 @@
                     <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
                     <span>{{ trans.cancelUpload }}</span>
                 </button>
+                {{#if oldMediaId}}
+                {{else}}
+                 {% endverbatim %}   {% if currentUser.featureEnabled('folder.view') %} {% verbatim %}
+                    <button type="button" class="btn btn-info pull-right" data-toggle="modal" data-target="#folder-tree-form-modal">{{trans.selectFolder}}</button>
+                 {% endverbatim %}  {% endif %} {% verbatim %}
+                {{/if}}
                 <!-- The loading indicator is shown during file processing -->
                 <span class="fileupload-loading"></span>
             </div>
