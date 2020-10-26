@@ -377,12 +377,12 @@ class DisplayGroup extends Base
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
-                    'text' => __('Permissions'),
+                    'text' => __('Share'),
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'displaygroup_button_permissions'],
-                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $group->displayGroup],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],

@@ -212,12 +212,12 @@ class DayPart extends Base
                 $dayPart->buttons[] = [
                     'id' => 'daypart_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId]),
-                    'text' => __('Permissions'),
+                    'text' => __('Share'),
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'daypart_button_permissions'],
-                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $dayPart->name],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],

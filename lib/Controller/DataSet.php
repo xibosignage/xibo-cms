@@ -292,12 +292,12 @@ class DataSet extends Base
                     $dataSet->buttons[] = [
                         'id' => 'dataset_button_permissions',
                         'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
-                        'text' => __('Permissions'),
+                        'text' => __('Share'),
                         'dataAttributes' => [
                             ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId])],
                             ['name' => 'commit-method', 'value' => 'post'],
                             ['name' => 'id', 'value' => 'dataset_button_permissions'],
-                            ['name' => 'text', 'value' => __('Permissions')],
+                            ['name' => 'text', 'value' => __('Share')],
                             ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
                             ['name' => 'sort-group', 'value' => 2],
                             ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],

@@ -730,12 +730,12 @@ class Library extends Base
                 $media->buttons[] = [
                     'id' => 'content_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
-                    'text' => __('Permissions'),
+                    'text' => __('Share'),
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Media', 'id' => $media->mediaId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'content_button_permissions'],
-                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $media->name],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],

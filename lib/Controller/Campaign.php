@@ -335,13 +335,13 @@ class Campaign extends Base
                 $campaign->buttons[] = [
                     'id' => 'campaign_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $campaign->campaignId]),
-                    'text' => __('Permissions'),
+                    'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $campaign->campaignId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'campaign_button_permissions'],
-                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $campaign->campaign],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],

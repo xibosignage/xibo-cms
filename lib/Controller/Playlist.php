@@ -454,12 +454,12 @@ class Playlist extends Base
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Playlist', 'id' => $playlist->playlistId]),
-                    'text' => __('Permissions'),
+                    'text' => __('Share'),
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Playlist', 'id' => $playlist->playlistId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'playlist_button_permissions'],
-                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $playlist->name],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
