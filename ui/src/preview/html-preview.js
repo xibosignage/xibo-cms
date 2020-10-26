@@ -976,11 +976,11 @@ function previewActionTrigger(path, data, done) {
         return newMedia;
     };
 
-
     // ACTIONS
-    // Set media duration
-    if(path == '/setduration') {
+    if(path == '/setduration') { 
+        // Set duration action
         var mediaToChange = findMediaById(data.id);
+        
         if(mediaToChange != undefined) {
             // Change duration
             mediaToChange.duration = data.duration;
@@ -988,6 +988,14 @@ function previewActionTrigger(path, data, done) {
             // Update timeout
             clearTimeout(mediaToChange.timeoutId);
             mediaToChange.timeoutId = setTimeout(mediaToChange.region.nextMedia, mediaToChange.duration * 1000);
+        }
+    } else if(path == '/trigger') {
+        // trigger action
+        var $actionDOMObj = $('.action[triggercode=' + data.trigger + ']');
+
+        // If action object exists, click to simulate behaviour
+        if($actionDOMObj.length) {
+            $actionDOMObj.click();
         }
     }
 
