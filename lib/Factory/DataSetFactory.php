@@ -217,6 +217,8 @@ class DataSetFactory extends BaseFactory
             dataset.`ignoreFirstRow`,
             dataset.`rowLimit`,
             dataset.`limitPolicy`,
+            dataset.`folderId`,
+            dataset.`permissionsFolderId`,
             user.userName AS owner,
             (
               SELECT GROUP_CONCAT(DISTINCT `group`.group)
@@ -239,7 +241,7 @@ class DataSetFactory extends BaseFactory
         ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy, '`dataset`.permissionsFolderId');
 
         if ($parsedFilter->getInt('dataSetId') !== null) {
             $body .= ' AND dataset.dataSetId = :dataSetId ';
@@ -269,6 +271,11 @@ class DataSetFactory extends BaseFactory
         if ($parsedFilter->getString('code') != null) {
             $body .= ' AND `dataset`.`code` = :code ';
             $params['code'] = $parsedFilter->getString('code');
+        }
+
+        if ($parsedFilter->getInt('folderId') !== null) {
+            $body .= ' AND dataset.folderId = :folderId ';
+            $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
         // Sorting?

@@ -285,28 +285,6 @@ class Region extends Base
             'saveTags' => false
         ]);
 
-        // Permissions
-        if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
-
-            $this->getLog()->debug('Applying permissions from parent, there are ' . count($layout->permissions));
-
-            // Apply permissions from the Parent
-            foreach ($layout->permissions as $permission) {
-                /* @var Permission $permission */
-                $permission = $this->permissionFactory->create($permission->groupId, get_class($region), $region->getId(), $permission->view, $permission->edit, $permission->delete);
-                $permission->save();
-            }
-        }
-        else {
-            $this->getLog()->debug('Applying default permissions');
-
-            // Apply the default permissions
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-        }
-
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
@@ -820,28 +798,6 @@ class Region extends Base
         $layout->save([
             'saveTags' => false
         ]);
-
-        // Permissions
-        if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
-
-            $this->getLog()->debug('Applying permissions from parent, there are ' . count($layout->permissions));
-
-            // Apply permissions from the Parent
-            foreach ($layout->permissions as $permission) {
-                /* @var Permission $permission */
-                $permission = $this->permissionFactory->create($permission->groupId, get_class($drawer), $drawer->getId(), $permission->view, $permission->edit, $permission->delete);
-                $permission->save();
-            }
-        }
-        else {
-            $this->getLog()->debug('Applying default permissions');
-
-            // Apply the default permissions
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($drawer), $drawer->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-        }
 
         // Return
         $this->getState()->hydrate([

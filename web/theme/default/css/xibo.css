@@ -1138,6 +1138,19 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
     padding-left: 5px;
 }
 
+.vakata-context {
+    z-index: 1050;
+}
+
+.jstree-anchor {
+    /*enable wrapping*/
+    white-space: normal !important;
+    /*ensure lower nodes move down*/
+    height: auto !important;
+    /*offset icon width*/
+    padding-right: 24px;
+}
+
 td.feature-group-header-cell {
     cursor: pointer;
 }

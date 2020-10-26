@@ -93,6 +93,8 @@ window.lD = {
 
     // Drawer
     drawer: {},
+
+    folderId: '',
 };
 
 // Get Xibo app
@@ -126,6 +128,9 @@ $(document).ready(function() {
 
                 // Update main object id
                 lD.mainObjectId = lD.layout.layoutId;
+
+                // get Layout folder id
+                lD.folderId = lD.layout.folderId;
 
                 // Initialize timeline
                 lD.timeline = new Timeline(
@@ -495,6 +500,8 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
                 // Update main object id
                 lD.mainObjectId = lD.layout.layoutId;
+                // get Layout folder id
+                lD.folderId = lD.layout.folderId;
 
                 // To select an object that still doesn't exist
                 if(refreshBeforeSelect) {
@@ -1346,6 +1353,7 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
             url: libraryAddUrl,
             title: uploadTrans.uploadMessage,
             animateDialog: false,
+            currentWorkingFolderId: lD.folderId,
             buttons: {
                 viewLibrary: {
                     label: uploadTrans.viewLibrary,

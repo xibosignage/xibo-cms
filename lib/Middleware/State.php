@@ -364,7 +364,8 @@ class State implements Middleware
                     $c->get('permissionFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('tagFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\Clock' => function(ContainerInterface $c) {
@@ -402,7 +403,8 @@ class State implements Middleware
                     $c->get('dataSetFactory'),
                     $c->get('dataSetColumnFactory'),
                     $c->get('view'),
-                    $c->get('userFactory')
+                    $c->get('userFactory'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\DataSetColumn' => function(ContainerInterface $c) {
@@ -513,7 +515,8 @@ class State implements Middleware
                     $c->get('scheduleFactory'),
                     $c->get('tagFactory'),
                     $c->get('campaignFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\DisplayProfile' => function(ContainerInterface $c) {
@@ -544,6 +547,18 @@ class State implements Middleware
                     $c->get('logFactory'),
                     $c->get('displayFactory'),
                     $c->get('view')
+                );
+            },
+            '\Xibo\Controller\Folder' => function(ContainerInterface $c) {
+                return new \Xibo\Controller\Folder(
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('state'),
+                    $c->get('user'),
+                    $c->get('helpService'),
+                    $c->get('configService'),
+                    $c->get('folderFactory'),
+                    $c->get('permissionFactory')
                 );
             },
             '\Xibo\Controller\Help' => function(ContainerInterface $c) {
@@ -623,7 +638,8 @@ class State implements Middleware
                     $c->get('dayPartFactory'),
                     $c->get('playerVersionFactory'),
                     $c->get('view'),
-                    $c->get('httpCache')
+                    $c->get('httpCache'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\Logging' => function(ContainerInterface $c) {
@@ -796,7 +812,8 @@ class State implements Middleware
                     $c->get('view'),
                     $c->get('layoutFactory'),
                     $c->get('displayFactory'),
-                    $c->get('scheduleFactory')
+                    $c->get('scheduleFactory'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\Preview' => function(ContainerInterface $c) {
@@ -1044,7 +1061,8 @@ class State implements Middleware
                     $c->get('playlistFactory'),
                     $c->get('view'),
                     $c,
-                    $c->get('dataSetFactory')
+                    $c->get('dataSetFactory'),
+                    $c->get('folderFactory')
                 );
             },
             '\Xibo\Controller\UserGroup' => function(ContainerInterface $c) {
@@ -1205,7 +1223,8 @@ class State implements Middleware
                     $c->get('displayNotifyService'),
                     $c->get('configService'),
                     $c->get('displayGroupFactory'),
-                    $c->get('displayProfileFactory')
+                    $c->get('displayProfileFactory'),
+                    $c->get('folderFactory')
                 );
             },
             'displayEventFactory' => function(ContainerInterface $c) {
@@ -1236,6 +1255,16 @@ class State implements Middleware
                     $c->get('commandFactory')
                 );
             },
+            'folderFactory' => function(ContainerInterface $c) {
+                return new \Xibo\Factory\FolderFactory(
+                    $c->get('store'),
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('permissionFactory'),
+                    $c->get('user'),
+                    $c->get('userFactory')
+                );
+            },
             'helpFactory' => function(ContainerInterface $c) {
                 return new \Xibo\Factory\HelpFactory(
                     $c->get('store'),
@@ -1263,7 +1292,8 @@ class State implements Middleware
                     $c->get('widgetOptionFactory'),
                     $c->get('playlistFactory'),
                     $c->get('widgetAudioFactory'),
-                    $c->get('actionFactory')
+                    $c->get('actionFactory'),
+                    $c->get('folderFactory')
                 );
             },
             'logFactory' => function(ContainerInterface $c) {
@@ -1360,7 +1390,8 @@ class State implements Middleware
                     $c->get('permissionFactory'),
                     $c->get('regionOptionFactory'),
                     $c->get('playlistFactory'),
-                    $c->get('actionFactory')
+                    $c->get('actionFactory'),
+                    $c->get('campaignFactory')
                 );
             },
             'regionOptionFactory' => function(ContainerInterface $c) {

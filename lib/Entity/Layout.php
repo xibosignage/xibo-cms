@@ -28,6 +28,7 @@ use Xibo\Event\LayoutBuildRegionEvent;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -279,6 +280,18 @@ class Layout implements \JsonSerializable
 
     public $tagValues;
 
+    /**
+     * @SWG\Property(description="The id of the Folder this Layout belongs to")
+     * @var int
+     */
+    public $folderId;
+
+    /**
+     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Layout")
+     * @var int
+     */
+    public $permissionsFolderId;
+
     // Private
     private $unassignTags = [];
 
@@ -351,6 +364,9 @@ class Layout implements \JsonSerializable
     /** @var ActionFactory */
     private $actionFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -366,8 +382,9 @@ class Layout implements \JsonSerializable
      * @param ModuleFactory $moduleFactory
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $config, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory)
+    public function __construct($store, $log, $config, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
@@ -382,6 +399,7 @@ class Layout implements \JsonSerializable
         $this->moduleFactory = $moduleFactory;
         $this->playlistFactory = $playlistFactory;
         $this->actionFactory = $actionFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     public function __clone()
@@ -434,6 +452,11 @@ class Layout implements \JsonSerializable
     public function getId()
     {
         return $this->campaignId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -1984,6 +2007,8 @@ class Layout implements \JsonSerializable
         $this->description = $parent->description;
         $this->retired = $parent->retired;
         $this->enableStat = $parent->enableStat;
+        $this->code = $parent->code;
+        $this->folderId = $parent->folderId;
 
         // Swap all tags over, any changes we've made to the parents tags should be moved to the child.
         $this->getStore()->update('UPDATE `lktaglayout` SET layoutId = :layoutId WHERE layoutId = :parentId', [
@@ -2119,6 +2144,16 @@ class Layout implements \JsonSerializable
             $campaign->campaign = $this->layout;
             $campaign->isLayoutSpecific = 1;
             $campaign->ownerId = $this->getOwnerId();
+            $campaign->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+
+            // if user has disabled folder feature, presumably said user also has no permissions to folder
+            // getById would fail here and prevent adding new Layout in web ui
+            try {
+                $folder = $this->folderFactory->getById($campaign->folderId);
+                $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            } catch (NotFoundException $exception) {
+                $campaign->permissionsFolderId = 1;
+            }
             $campaign->assignLayout($this);
 
             // Ready to save the Campaign
@@ -2214,6 +2249,16 @@ class Layout implements \JsonSerializable
             $campaign = $this->campaignFactory->getById($this->campaignId);
             $campaign->campaign = $this->layout;
             $campaign->ownerId = $this->ownerId;
+            $campaign->folderId = $this->folderId;
+
+            // if user has disabled folder feature, presumably said user also has no permissions to folder
+            // getById would fail here and prevent adding new Layout in web ui
+            try {
+                $folder = $this->folderFactory->getById($campaign->folderId);
+                $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            } catch (NotFoundException $exception) {
+                $campaign->permissionsFolderId = 1;
+            }
             $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow'], 'layoutCode' => $this->code]);
         }
     }

@@ -81,15 +81,6 @@
                 </div>
             </div>
         </div>
-        {% if entity == "Campaign" or entity == "Playlist" %}
-        <div class="row">
-            <div class="col-md-12">
-                {% set title %}{% trans %}Cascade permissions to all items underneath this one.{% endtrans %}{% endset %}
-                {% set helpText %}{% trans %}For example, if this is a Layout then update the permissions on all Regions, Playlists and Widgets.{% endtrans %}{% endset %}
-                {{ forms.checkbox("cascade", title, theme.getSetting('DEFAULT_CASCADE_PERMISSION_CHECKB', 1), helpText) }}
-            </div>
-        </div>
-        {% endif %}
         {% if canSetOwner %}
         <div class="row">
             <div class="col-md-12">

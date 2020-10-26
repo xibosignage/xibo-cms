@@ -110,7 +110,8 @@ var dt_extras = [
          require("datatables.net-buttons"),
          require("datatables.net-buttons/js/buttons.colVis.min.js"),
          require("datatables.net-buttons/js/buttons.html5.min.js"),
-         require("datatables.net-buttons/js/buttons.print.min.js")
+         require("datatables.net-buttons/js/buttons.print.min.js"),
+         require('datatables.net-responsive')
      ];
 dt_extras.forEach(function(e) {e(window, window.$);});
 
@@ -132,3 +133,6 @@ window.leafletPip = require('@mapbox/leaflet-pip');
 window.Bloodhound = require('corejs-typeahead/dist/bloodhound.min.js');
 require('corejs-typeahead/dist/typeahead.jquery.min.js');
 
+// jsTree
+require('jstree/dist/jstree.min.js');
+require('jstree/dist/themes/default/style.min.css');

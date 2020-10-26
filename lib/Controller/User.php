@@ -38,6 +38,7 @@ use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
@@ -136,6 +137,9 @@ class User extends Base
     /** @var DataSetFactory */
     private $dataSetFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -162,10 +166,12 @@ class User extends Base
      * @param Twig $view
      * @param ContainerInterface $container
      * @param DataSetFactory $dataSetFactory
+     * @param FolderFactory $folderFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory)
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory,
+                                $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -186,6 +192,7 @@ class User extends Base
         $this->playlistFactory = $playlistFactory;
         $this->container = $container;
         $this->dataSetFactory = $dataSetFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -1910,52 +1917,10 @@ class User extends Base
             }
         }
 
-        // Cascade permissions
-        if ($object->permissionsClass() == 'Xibo\Entity\Campaign' && $sanitizedParams->getCheckbox('cascade') == 1) {
-            /* @var Campaign $object */
-            $this->getLog()->debug('Cascade permissions down');
+        if ($object->permissionsClass() === 'Xibo\Entity\Folder') {
+            $folder = $this->folderFactory->getById($object->getId());
+            $folder->managePermissions();
 
-            // Define a function that can be called for each layout we find
-            $updatePermissionsOnLayout = function($layout) use ($object, $groupIds, $request) {
-
-                // Regions
-                foreach ($layout->regions as $region) {
-                    /* @var Region $region */
-                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($region), $region->getId()), $groupIds);
-                    // Playlists
-                    /* @var Playlist $playlist */
-                    $playlist = $region->regionPlaylist;
-                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
-                    // Widgets
-                    foreach ($playlist->widgets as $widget) {
-                        /* @var Widget $widget */
-                        $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
-                    }
-                }
-            };
-
-            foreach ($this->layoutFactory->getByCampaignId($object->campaignId, true, true) as $layout) {
-                /* @var Layout $layout */
-                // Assign the same permissions to the Layout
-                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $layout->campaignId), $groupIds);
-
-                // Load the layout
-                $layout->load();
-
-                $updatePermissionsOnLayout($layout);
-            }
-        } else if ($object->permissionsClass() == 'Xibo\Entity\Region') {
-            // We always cascade region permissions down to the Playlist
-            $object->load(['loadPlaylists' => true]);
-
-            $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object->regionPlaylist), $object->regionPlaylist->getId()), $groupIds);
-        } else if ($object->permissionsClass() == 'Xibo\Entity\Playlist' && $sanitizedParams->getCheckbox('cascade') == 1) {
-            $object->load();
-
-            // Push the permissions down to each Widget
-            foreach ($object->widgets as $widget) {
-                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
-            }
         } else if ($object->permissionsClass() == 'Xibo\Entity\Media') {
             // Are we a font?
             /** @var $object Media */

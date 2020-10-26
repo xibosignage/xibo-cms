@@ -30,6 +30,7 @@ use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Factory\DisplayFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -112,6 +113,9 @@ class Playlist extends Base
     /** @var ScheduleFactory */
     private $scheduleFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -134,9 +138,10 @@ class Playlist extends Base
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
+     * @param FolderFactory $folderFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
-        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view, $layoutFactory, $displayFactory, $scheduleFactory)
+        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view, $layoutFactory, $displayFactory, $scheduleFactory, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -153,6 +158,7 @@ class Playlist extends Base
         $this->layoutFactory = $layoutFactory;
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -240,6 +246,13 @@ class Playlist extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -274,7 +287,8 @@ class Playlist extends Base
             'playlistId' => $sanitizedParams->getInt('playlistId'),
             'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
-            'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0])
+            'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
+            'folderId' => $sanitizedParams->getInt('folderId')
         ], $request));
 
         foreach ($playlists as $playlist) {
@@ -372,6 +386,24 @@ class Playlist extends Base
                     'text' => __('Copy')
                 ];
 
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    // Select Folder
+                    $playlist->buttons[] = [
+                        'id' => 'playlist_button_selectfolder',
+                        'url' => $this->urlFor($request,'playlist.selectfolder.form', ['id' => $playlist->playlistId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'playlist.selectfolder', ['id' => $playlist->playlistId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'playlist_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $playlist->name],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
+
                 // Set Enable Stat
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_setenablestat',
@@ -422,12 +454,12 @@ class Playlist extends Base
                 $playlist->buttons[] = [
                     'id' => 'playlist_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Playlist', 'id' => $playlist->playlistId]),
-                    'text' => __('Permissions'),
+                    'text' => __('Share'),
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Playlist', 'id' => $playlist->playlistId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'playlist_button_permissions'],
-                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $playlist->name],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
@@ -515,6 +547,13 @@ class Playlist extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -547,6 +586,14 @@ class Playlist extends Base
         $playlist = $this->playlistFactory->create($sanitizedParams->getString('name'), $this->getUser()->getId());
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
+        $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($playlist->folderId);
+            $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        } else {
+            $playlist->permissionsFolderId = 1;
+        }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
@@ -563,12 +610,6 @@ class Playlist extends Base
         }
 
         $playlist->save();
-
-        // Default permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
 
         // Should we assign any existing media
         if (!empty($nameFilter) || !empty($tagFilter)) {
@@ -606,24 +647,6 @@ class Playlist extends Base
 
                 // Save the playlist
                 $playlist->save();
-
-                // Handle permissions
-                foreach ($widgets as $widget) {
-                    /* @var Widget $widget */
-                    if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
-                        // Apply permissions from the Parent
-                        foreach ($playlist->permissions as $permission) {
-                            /* @var Permission $permission */
-                            $permission = $this->permissionFactory->create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
-                            $permission->save();
-                        }
-                    } else {
-                        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                            /* @var Permission $permission */
-                            $permission->save();
-                        }
-                    }
-                }
             }
         }
 
@@ -716,6 +739,13 @@ class Playlist extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -745,6 +775,12 @@ class Playlist extends Base
         $playlist->name = $sanitizedParams->getString('name');
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
+        $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => $playlist->folderId]);
+
+        if ($playlist->hasPropertyChanged('folderId')) {
+            $folder = $this->folderFactory->getById($playlist->folderId);
+            $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
@@ -962,20 +998,6 @@ class Playlist extends Base
 
         // Save the new playlist
         $playlist->save();
-
-        // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
-
-        foreach ($playlist->widgets as $widget) {
-            /* @var Widget $widget */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-        }
 
         // Clone the closure table for the original playlist
         $originalPlaylist->cloneClosureTable($playlist->getId());
@@ -1249,24 +1271,6 @@ class Playlist extends Base
 
         // Save the playlist
         $playlist->save(['saveTags' => false]);
-
-        // Handle permissions
-        foreach ($newWidgets as $widget) {
-            /* @var Widget $widget */
-            if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
-                // Apply permissions from the Parent
-                foreach ($playlist->permissions as $permission) {
-                    /* @var Permission $permission */
-                    $permission = $this->permissionFactory->create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
-                    $permission->save();
-                }
-            } else {
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                    /* @var Permission $permission */
-                    $permission->save();
-                }
-            }
-        }
 
         // Add new widgets to playlist for return values
         $playlist->newWidgets = $newWidgets;
@@ -1696,6 +1700,106 @@ class Playlist extends Base
 
         $this->getState()->template = 'playlist-form-setenablestat';
         $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+
+
+    /**
+     * Select Folder Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolderForm(Request $request, Response $response, $id)
+    {
+        // Get the Playlist
+        $playlist = $this->playlistFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($playlist)) {
+            throw new AccessDeniedException();
+        }
+
+        $data = [
+            'playlist' => $playlist
+        ];
+
+        $this->getState()->template = 'playlist-form-selectfolder';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Put(
+     *  path="/playlist/{id}/selectfolder",
+     *  operationId="playlistSelectFolder",
+     *  tags={"playlist"},
+     *  summary="Playlist Select folder",
+     *  description="Select Folder for Playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The Playlist ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     */
+    public function selectFolder(Request $request, Response $response, $id)
+    {
+        // Get the Layout
+        $playlist = $this->playlistFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($playlist)) {
+            throw new AccessDeniedException();
+        }
+
+        $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        $playlist->folderId = $folderId;
+        $folder = $this->folderFactory->getById($playlist->folderId);
+        $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
+        // Save
+        $playlist->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Playlist %s moved to Folder %s'), $playlist->name, $folder->text)
+        ]);
 
         return $this->render($request, $response);
     }

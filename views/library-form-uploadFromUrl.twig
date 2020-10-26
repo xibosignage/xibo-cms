@@ -42,6 +42,17 @@
                     {{ uploadSizeMessage }}
                 </div>
 
+                {% if currentUser.featureEnabled('folder.view') %}
+                <div class="form-group">
+                    <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
+                    <div class="col-sm-10">
+                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                        <span id="selectedFormFolder"></span>
+                    </div>
+                </div>
+                {{ forms.hidden('folderId') }}
+                {% endif %}
+
                 {% set title %}{% trans "URL" %}{% endset %}
                 {% set helpText %}{% trans "Please provide the remote URL to the file" %}{% endset %}
                 {{ forms.input("url", title, "", helpText) }}

@@ -110,6 +110,9 @@ class LayoutFactory extends BaseFactory
     /** @var ActionFactory */
     private $actionFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -134,7 +137,7 @@ class LayoutFactory extends BaseFactory
      */
     public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $dispatcher, $permissionFactory,
                                 $regionFactory, $tagFactory, $campaignFactory, $mediaFactory, $moduleFactory, $resolutionFactory,
-                                $widgetFactory, $widgetOptionFactory, $playlistFactory, $widgetAudioFactory, $actionFactory)
+                                $widgetFactory, $widgetOptionFactory, $playlistFactory, $widgetAudioFactory, $actionFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -152,6 +155,7 @@ class LayoutFactory extends BaseFactory
         $this->playlistFactory = $playlistFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->actionFactory = $actionFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -173,7 +177,8 @@ class LayoutFactory extends BaseFactory
             $this->mediaFactory,
             $this->moduleFactory,
             $this->playlistFactory,
-            $this->actionFactory
+            $this->actionFactory,
+            $this->folderFactory
         );
     }
 
@@ -1773,6 +1778,8 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.publishedDate, ";
         $select .= "        layout.autoApplyTransitions, ";
         $select .= "        layout.code, ";
+        $select .= "        campaign.folderId,  ";
+        $select .= "        campaign.permissionsFolderId,  ";
 
         if ($parsedFilter->getInt('campaignId') !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -1910,7 +1917,7 @@ class LayoutFactory extends BaseFactory
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
 
         // Layout Like
         if ($parsedFilter->getString('layout') != '') {
@@ -2103,6 +2110,11 @@ class LayoutFactory extends BaseFactory
                        AND ( schedule.fromDt < '. $date . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $date;
         }
 
+        if ($parsedFilter->getInt('folderId') !== null) {
+            $body .= " AND campaign.folderId = :folderId ";
+            $params['folderId'] = $parsedFilter->getInt('folderId');
+        }
+
         // Sorting?
         $order = '';
 
@@ -2153,6 +2165,8 @@ class LayoutFactory extends BaseFactory
             $layout->publishedDate = $parsedRow->getString('publishedDate');
             $layout->autoApplyTransitions = $parsedRow->getInt('autoApplyTransitions');
             $layout->code = $parsedRow->getString('code');
+            $layout->folderId = $parsedRow->getInt('folderId');
+            $layout->permissionsFolderId = $parsedRow->getInt('permissionsFolderId');
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();
@@ -2245,6 +2259,7 @@ class LayoutFactory extends BaseFactory
         $draft->publishedStatus = __('Draft');
         $draft->autoApplyTransitions = $layout->autoApplyTransitions;
         $draft->code = $layout->code;
+        $draft->folderId = $layout->folderId;
 
         // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
         $draft->tags = [];

@@ -142,13 +142,6 @@
                                     {{ forms.checkbox("DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB", title, theme.getSetting("DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB"), helpText, "", "", not theme.isSettingEditable("DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB")) }}
                                 {% endif %}
 
-                                {% if theme.isSettingVisible("DEFAULT_CASCADE_PERMISSION_CHECKB") %}
-                                    {% set title %}{% trans "Default for \"Cascade permissions to all items underneath this one.\" checkbox. Shown when editing Permissions." %}{% endset %}
-                                    {% set helpText %}{% trans "Default the checkbox for \"Cascade permissions to all items underneath this one.\" when assigning permisions to content" %}{% endset %}
-
-                                    {{ forms.checkbox("DEFAULT_CASCADE_PERMISSION_CHECKB", title, theme.getSetting("DEFAULT_CASCADE_PERMISSION_CHECKB"), helpText, "", "", not theme.isSettingEditable("DEFAULT_CASCADE_PERMISSION_CHECKB")) }}
-                                {% endif %}
-
                                 {% if theme.isSettingVisible("DEFAULT_TRANSITION_IN") %}
                                     {% set title %}{% trans "Default Transition In" %}{% endset %}
                                     {% set helpText %}{% trans "Default Transition In that should be applied to widgets" %}{% endset %}
@@ -863,56 +856,6 @@
                             <div class="tab-pane" id="tab_permissions">
                                 <h3 class="section-heading">{% trans "Permissions" %}</h3>
 
-                                {% if theme.isSettingVisible("LAYOUT_DEFAULT") %}
-                                    {% set title %}{% trans "Layout Permissions" %}{% endset %}
-                                    {% set helpText %}{% trans "New layouts will be created with these settings. If public everyone will be able to view and use this layout." %}{% endset %}
-
-                                    {% set privateOption %}{% trans "Private" %}{% endset %}
-                                    {% set groupOption %}{% trans "Group Read" %}{% endset %}
-                                    {% set groupWriteOption %}{% trans "Group Write" %}{% endset %}
-                                    {% set groupDeleteOption %}{% trans "Group Delete" %}{% endset %}
-                                    {% set publicOption %}{% trans "Public Read" %}{% endset %}
-                                    {% set publicWriteOption %}{% trans "Public Write" %}{% endset %}
-                                    {% set options = [
-                                        { id: "private", value: privateOption },
-                                        { id: "group", value: groupOption },
-                                        { id: "group write", value: groupWriteOption },
-                                        { id: "group delete", value: groupDeleteOption },
-                                        { id: "public", value: publicOption },
-                                        { id: "public write", value: publicWriteOption }
-                                    ] %}
-                                    {% if theme.isSettingEditable("LAYOUT_DEFAULT") %}
-                                        {{ forms.dropdown("LAYOUT_DEFAULT", "single", title, theme.getSetting("LAYOUT_DEFAULT", "private"), options, "id", "value", helpText) }}
-                                    {% else %}
-                                        {{ forms.disabled("LAYOUT_DEFAULT", title, theme.getSetting("LAYOUT_DEFAULT", "private"), helpText) }}
-                                    {% endif %}
-                                {% endif %}
-
-                                {% if theme.isSettingVisible("MEDIA_DEFAULT") %}
-                                    {% set title %}{% trans "Media Permissions" %}{% endset %}
-                                    {% set helpText %}{% trans "Media will be created with these settings. If public everyone will be able to view and use this media." %}{% endset %}
-
-                                    {% set privateOption %}{% trans "Private" %}{% endset %}
-                                    {% set groupOption %}{% trans "Group Read" %}{% endset %}
-                                    {% set groupWriteOption %}{% trans "Group Write" %}{% endset %}
-                                    {% set groupDeleteOption %}{% trans "Group Delete" %}{% endset %}
-                                    {% set publicOption %}{% trans "Public Read" %}{% endset %}
-                                    {% set publicWriteOption %}{% trans "Public Write" %}{% endset %}
-                                    {% set options = [
-                                        { id: "private", value: privateOption },
-                                        { id: "group", value: groupOption },
-                                        { id: "group write", value: groupWriteOption },
-                                        { id: "group delete", value: groupDeleteOption },
-                                        { id: "public", value: publicOption },
-                                        { id: "public write", value: publicWriteOption }
-                                    ] %}
-                                    {% if theme.isSettingEditable("MEDIA_DEFAULT") %}
-                                        {{ forms.dropdown("MEDIA_DEFAULT", "single", title, theme.getSetting("MEDIA_DEFAULT", "private"), options, "id", "value", helpText) }}
-                                    {% else %}
-                                        {{ forms.disabled("MEDIA_DEFAULT", title, theme.getSetting("MEDIA_DEFAULT", "private"), helpText) }}
-                                    {% endif %}
-                                {% endif %}
-
                                 {% if theme.isSettingVisible("REGION_OPTIONS_COLOURING") %}
                                     {% set title %}{% trans "How to colour Media on the Region Timeline" %}{% endset %}
 
@@ -939,12 +882,6 @@
                                     {% set title %}{% trans "Show event Layout regardless of User permission?" %}{% endset %}
                                     {% set helpText %}{% trans "If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout." %}{% endset %}
                                     {{ forms.checkbox("SCHEDULE_SHOW_LAYOUT_NAME", title, theme.getSetting("SCHEDULE_SHOW_LAYOUT_NAME", 0), helpText, "", "", not theme.isSettingEditable("SCHEDULE_SHOW_LAYOUT_NAME")) }}
-                                {% endif %}
-
-                                {% if theme.isSettingVisible("INHERIT_PARENT_PERMISSIONS") %}
-                                    {% set title %}{% trans "Inherit permissions" %}{% endset %}
-                                    {% set helpText %}{% trans "Inherit permissions from Parent when adding a new item?" %}{% endset %}
-                                    {{ forms.checkbox("INHERIT_PARENT_PERMISSIONS", title, theme.getSetting("INHERIT_PARENT_PERMISSIONS", 1), helpText, "", "", not theme.isSettingEditable("INHERIT_PARENT_PERMISSIONS")) }}
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("MODULE_CONFIG_LOCKED_CHECKB") %}

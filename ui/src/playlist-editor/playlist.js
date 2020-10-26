@@ -17,6 +17,7 @@ let Playlist = function(id, data) {
 
     this.widgets = {};
     this.duration = null;
+    this.folderId = data.folderId;
 
     // Create data structure based on the API data
     this.createDataStructure(data);
@@ -136,6 +137,7 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
                 title: uploadTrans.uploadMessage,
                 animateDialog: false,
                 className: "second-dialog",
+                currentWorkingFolderId: pE.folderId,
                 buttons: {
                     viewLibrary: {
                         label: uploadTrans.viewLibrary,

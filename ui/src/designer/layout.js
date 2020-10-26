@@ -39,6 +39,9 @@ let Layout = function(id, data) {
     this.backgroundImage = data.backgroundImageId;
     this.backgroundColor = data.backgroundColor;
 
+    this.code = data.code;
+    this.folderId = data.folderId;
+
     // Get background image if exists, if not, get the background color
     this.backgroundCss = function(width = this.width, height = this.height) {       
         if(this.backgroundImage === null) {

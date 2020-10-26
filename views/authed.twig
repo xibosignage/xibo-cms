@@ -382,6 +382,57 @@
         </div>
     </script>
 
+    <script type="text/x-handlebars-template" id="folder-tree-template">
+        <!-- Modal -->
+        {% verbatim %}
+        <div id="{{ modal }}" class="modal fade" role="dialog">
+         {% endverbatim %}
+            <div class="modal-dialog modal-sm" style="width:450px;">
+
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <button type="button" class="close btnCloseInnerModal">&times;</button>
+
+                        <h4 class="modal-title">{% trans "Select Folder" %}</h4>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group well">
+                            {% verbatim %}
+                                <div id="{{ container }}"></div>
+                            {% endverbatim %}
+                        </div>
+                    </div>
+                    {% verbatim %}
+                    {{#eq container "container-folder-tree"}}
+                    {% endverbatim %}
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-default btnCloseInnerModal">{% trans "Close" %}</button>
+                    </div>
+                    {% verbatim %}
+                    {{/eq}}
+                    {% endverbatim %}
+                </div>
+
+            </div>
+        </div>
+    </script>
+
+    <script  type="text/javascript">
+        function moveFolderMultiSelectFormOpen(dialog) {
+            let folderContainer = '<div class="well" id="container-folder-form-tree"></div>';
+            let $hiddenInput = $('<input name="folderId" type="hidden" id="formFolderId">');
+
+            $hiddenInput.on('change', function() {
+                dialog.data().commitData = {folderId: $(this).val()};
+            });
+
+            $(dialog).find('.modal-body').append(folderContainer);
+            $(dialog).find('.modal-body').append($hiddenInput);
+            initJsTreeAjax('#container-folder-form-tree', "multi-select-folder", true, 600000);
+        }
+    </script>
+
     {# File upload templates and scripts #}
     {% include "include-file-upload.twig" %}
 {% endblock %}

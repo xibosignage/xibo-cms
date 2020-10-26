@@ -159,7 +159,7 @@ class StatusDashboard extends Base
             // doesn't add any SQL.
             // However, that is probably desirable, as otherwise deleted Displays the user never had permissions for
             // will be counted in the SUM. Not desirable for a multi-tenant CMS
-            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
+            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId', null, [], 'permissionsFolderId');
 
             $sql .= ' GROUP BY MONTH(FROM_UNIXTIME(month)) ORDER BY MIN(month); ';
 
@@ -240,7 +240,7 @@ class StatusDashboard extends Base
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId', [], 'media.permissionsFolderId');
             $sql .= ' GROUP BY type ';
 
             $sth = $dbh->prepare($sql);
@@ -521,7 +521,7 @@ class StatusDashboard extends Base
                 }
             }
 
-            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
+            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId', null, [], 'permissionsFolderId');
 
             $sql .= ' ORDER BY displaygroup.DisplayGroup ';
 

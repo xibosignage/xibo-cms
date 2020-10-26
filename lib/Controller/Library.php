@@ -40,6 +40,7 @@ use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -155,6 +156,9 @@ class Library extends Base
     /** @var HttpCacheProvider */
     private $cacheProvider;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -184,8 +188,9 @@ class Library extends Base
      * @param PlayerVersionFactory $playerVersionFactory
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -209,6 +214,7 @@ class Library extends Base
         $this->dayPartFactory = $dayPartFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->cacheProvider = $cacheProvider;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -340,6 +346,14 @@ class Library extends Base
     public function getTagFactory()
     {
         return $this->tagFactory;
+    }
+
+    /**
+     * @return FolderFactory
+     */
+    public function getFolderFactory()
+    {
+        return $this->folderFactory;
     }
 
     /**
@@ -538,6 +552,13 @@ class Library extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -575,6 +596,7 @@ class Library extends Base
             'fileSize' => $parsedQueryParams->getString('fileSize'),
             'ownerUserGroupId' => $parsedQueryParams->getInt('ownerUserGroupId'),
             'assignable' => $parsedQueryParams->getInt('assignable'),
+            'folderId' => $parsedQueryParams->getInt('folderId'),
             'notPlayerSoftware' => 1,
             'notSavedReport' => 1
         ], $request));
@@ -662,6 +684,24 @@ class Library extends Base
                     'url' => $this->urlFor($request,'library.copy.form', ['id' => $media->mediaId]),
                     'text' => __('Copy')
                 );
+
+                // Select Folder
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    $media->buttons[] = [
+                        'id' => 'library_button_selectfolder',
+                        'url' => $this->urlFor($request,'library.selectfolder.form', ['id' => $media->mediaId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'library.selectfolder', ['id' => $media->mediaId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'library_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $media->name],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
             }
 
             if ($this->getUser()->featureEnabled('library.modify')
@@ -692,12 +732,12 @@ class Library extends Base
                 $media->buttons[] = [
                     'id' => 'content_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
-                    'text' => __('Permissions'),
+                    'text' => __('Share'),
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Media', 'id' => $media->mediaId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'content_button_permissions'],
-                        ['name' => 'text', 'value' => __('Permissions')],
+                        ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $media->name],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
@@ -954,6 +994,13 @@ class Library extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation"
@@ -964,6 +1011,7 @@ class Library extends Base
     {
         $parsedBody = $this->getSanitizer($request->getParams());
         $options = $parsedBody->getArray('options', ['default' => []]);
+        $oldFolderId = 1;
 
         $options = array_merge([
             'oldMediaId' => null,
@@ -996,6 +1044,7 @@ class Library extends Base
         // Get Valid Extensions
         if ($parsedBody->getInt('oldMediaId') !== null) {
             $media = $this->mediaFactory->getById($parsedBody->getInt('oldMediaId'));
+            $oldFolderId = $media->folderId;
             $validExt = $this->moduleFactory->getValidExtensions(['type' => $media->mediaType]);
         } else {
             $validExt = $this->moduleFactory->getValidExtensions();
@@ -1025,7 +1074,8 @@ class Library extends Base
             'expires' => $expires === null ? null : $expires->format('U'),
             'widgetFromDt' => $widgetFromDt === null ? null : $widgetFromDt->format('U'),
             'widgetToDt' => $widgetToDt === null ? null : $widgetToDt->format('U'),
-            'deleteOnExpiry' => $parsedBody->getCheckbox('deleteOnExpiry', ['checkboxReturnInteger' => true])
+            'deleteOnExpiry' => $parsedBody->getCheckbox('deleteOnExpiry', ['checkboxReturnInteger' => true]),
+            'oldFolderId' => $parsedBody->getInt('folderId', ['default' => $oldFolderId])
         ];
 
         // Output handled by UploadHandler
@@ -1130,6 +1180,13 @@ class Library extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this media should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1171,6 +1228,12 @@ class Library extends Base
         }
 
         $media->enableStat = $sanitizedParams->getString('enableStat');
+        $media->folderId = $sanitizedParams->getInt('folderId', ['default' => $media->folderId]);
+
+        if ($media->hasPropertyChanged('folderId')) {
+            $folder = $this->folderFactory->getById($media->folderId);
+            $media->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        }
 
         if ($sanitizedParams->getDate('expires') != null ) {
 
@@ -2433,6 +2496,13 @@ class Library extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this media should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -2469,7 +2539,15 @@ class Library extends Base
         $optionalName = $sanitizedParams->getString('optionalName');
         $extension = $sanitizedParams->getString('extension');
         $enableStat = $sanitizedParams->getString('enableStat', ['default' => $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT')]);
-        
+        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($folderId);
+            $permissionsFolderId = ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
+        } else {
+            $permissionsFolderId = 1;
+        }
+
         if ($sanitizedParams->getDate('expires') != null ) {
 
             if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
@@ -2533,7 +2611,7 @@ class Library extends Base
         }
 
         // add our media to queueDownload and process the downloads
-        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), $expires, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat]);
+        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), $expires, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat, 'folderId' => $folderId, 'permissionsFolderId' => $permissionsFolderId]);
         $this->mediaFactory->processDownloads(function($media) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
@@ -2659,5 +2737,103 @@ class Library extends Base
         file_put_contents($libraryLocation . "{$mediaId}_{$media->mediaType}cover.{$type}", $image);
 
         return $response->withStatus(204);
+    }
+
+    /**
+     * Select Folder Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolderForm(Request $request, Response $response, $id)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($media)) {
+            throw new AccessDeniedException();
+        }
+
+        $data = [
+            'media' => $media
+        ];
+
+        $this->getState()->template = 'library-form-selectfolder';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Put(
+     *  path="/library/{id}/selectfolder",
+     *  operationId="librarySelectFolder",
+     *  tags={"library"},
+     *  summary="Media Select folder",
+     *  description="Select Folder for Media",
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     */
+    public function selectFolder(Request $request, Response $response, $id)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($media)) {
+            throw new AccessDeniedException();
+        }
+
+        $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        $media->folderId = $folderId;
+        $folder = $this->folderFactory->getById($media->folderId);
+        $media->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
+        $media->save(['saveTags' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Media %s moved to Folder %s'), $media->name, $folder->text)
+        ]);
+
+        return $this->render($request, $response);
     }
 }

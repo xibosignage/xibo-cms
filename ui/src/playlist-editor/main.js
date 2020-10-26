@@ -79,7 +79,10 @@ window.pE = {
     selectedObject: {},
 
     // Bottom toolbar
-    toolbar: {}
+    toolbar: {},
+
+    //folderId
+    folderId: ''
 };
 
 // Load Playlist and build app structure
@@ -119,7 +122,6 @@ pE.loadEditor = function() {
 
                 // Append layout html to the main div
                 pE.editorContainer.html(playlistEditorTemplate());
-
                 // Initialise dropabble containers
                 pE.editorContainer.find('#playlist-timeline, #dropzone-container').droppable({
                     accept: '[drop-to="region"]',
@@ -138,8 +140,10 @@ pE.loadEditor = function() {
 
                 // Initialize timeline and create data structure
                 pE.playlist = new Playlist(playlistId, res.data[0]);
+                // folder Id
+                pE.folderId = pE.playlist.folderId;
 
-                // Initialize properties panel
+                    // Initialize properties panel
                 pE.propertiesPanel = new PropertiesPanel(
                     pE,
                     pE.editorContainer.find('#playlist-properties-panel')
@@ -759,7 +763,8 @@ pE.reloadData = function() {
 
             if(res.data != null && res.data.length > 0) {
                 pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
-
+                // folder Id
+                pE.folderId = pE.playlist.folderId;
                 pE.refreshDesigner();
             } else {
                 if(res.login) {

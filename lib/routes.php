@@ -192,6 +192,7 @@ $app->group('/region', function (RouteCollectorProxy $group) {
  * )
  */
 $app->get('/playlist', ['\Xibo\Controller\Playlist','grid'])->setName('playlist.search');
+// Widgets Order
 $app->get('/playlist/widget', ['\Xibo\Controller\Playlist','widgetGrid'])->setName('playlist.widget.search');
 
 $app->post('/playlist', ['\Xibo\Controller\Playlist','add'])
@@ -203,7 +204,7 @@ $app->group('', function (RouteCollectorProxy $group) use ($app) {
     $group->delete('/playlist/{id}', ['\Xibo\Controller\Playlist','delete'])->setName('playlist.delete');
     $group->post('/playlist/copy/{id}', ['\Xibo\Controller\Playlist','copy'])->setName('playlist.copy');
     $group->put('/playlist/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStat'])->setName('playlist.setenablestat');
-
+    $group->put('/playlist/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolder'])->setName('playlist.selectfolder');
     $group->group('', function (RouteCollectorProxy $group) {
         $group->post('/playlist/order/{id}', ['\Xibo\Controller\Playlist','order'])->setName('playlist.order');
         $group->post('/playlist/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssign'])->setName('playlist.library.assign');
@@ -241,7 +242,6 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
  * )
  */
 $app->get('/campaign', ['\Xibo\Controller\Campaign','grid'])->setName('campaign.search');
-
 $app->post('/campaign', ['\Xibo\Controller\Campaign','add'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.add']))
     ->setName('campaign.add');
@@ -250,7 +250,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/campaign/{id}', ['\Xibo\Controller\Campaign','edit'])->setName('campaign.edit');
     $group->delete('/campaign/{id}', ['\Xibo\Controller\Campaign','delete'])->setName('campaign.delete');
     $group->post('/campaign/{id}/copy', ['\Xibo\Controller\Campaign','copy'])->setName('campaign.copy');
-
+    $group->put('/campaign/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolder'])->setName('campaign.selectfolder');
     // We use POST requests so that we can support multiple records
     $group->post('/campaign/layout/assign/{id}', ['\Xibo\Controller\Campaign','assignLayout'])->setName('campaign.assign.layout');
     $group->post('/campaign/layout/unassign/{id}', ['\Xibo\Controller\Campaign','unassignLayout'])->setName('campaign.unassign.layout');
@@ -316,6 +316,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->delete('/library/tidy', ['\Xibo\Controller\Library','tidy'])->setName('library.tidy');
     $group->delete('/library/{id}', ['\Xibo\Controller\Library','delete'])->setName('library.delete');
     $group->post('/library/copy/{id}', ['\Xibo\Controller\Library','copy'])->setName('library.copy');
+    $group->put('/library/{id}/selectfolder', ['\Xibo\Controller\Library','selectFolder'])->setName('library.selectfolder');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['layout.modify']));
 
 // Tagging
@@ -362,6 +363,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  * )
  */
 $app->get('/displaygroup', ['\Xibo\Controller\DisplayGroup','grid'])->setName('displayGroup.search');
+
 $app->post('/displaygroup', ['\Xibo\Controller\DisplayGroup','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displaygroup.add']))
     ->setName('displayGroup.add');
@@ -387,13 +389,13 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/displaygroup/{id}/action/revertToSchedule', ['\Xibo\Controller\DisplayGroup','revertToSchedule'])->setName('displayGroup.action.revertToSchedule');
     $group->post('/displaygroup/{id}/copy', ['\Xibo\Controller\DisplayGroup','copy'])->setName('displayGroup.copy');
     $group->post('/displaygroup/{id}/action/clearStatsAndLogs', ['\Xibo\Controller\DisplayGroup','clearStatsAndLogs'])->setName('displayGroup.action.clearStatsAndLogs');
+    $group->put('/displaygroup/{id}/selectfolder', ['\Xibo\Controller\DisplayGroup','selectFolder'])->setName('displayGroup.selectfolder');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displaygroup.modify']));
 
 $app->post('/displaygroup/{id}/action/command', ['\Xibo\Controller\DisplayGroup','command'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displaygroup.modify']))
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['command.view']))
     ->setName('displayGroup.action.command');
-
 /**
  * Display Profile
  * @SWG\Tag(
@@ -456,6 +458,23 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/dataset/data/{id}/{rowId}', ['\Xibo\Controller\DataSetData','edit'])->setName('dataSet.data.edit');
     $group->delete('/dataset/data/{id}/{rowId}', ['\Xibo\Controller\DataSetData','delete'])->setName('dataSet.data.delete');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['dataset.data']));
+
+/**
+ *  Folders
+ */
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.edit');
+    $group->get('/folders/contextButtons/{folderId}', ['\Xibo\Controller\Folder', 'getContextMenuButtons'])->setName('folders.context.buttons');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.view']));
+
+$app->post('/folders', ['\Xibo\Controller\Folder', 'add'])
+    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['folder.add']))
+    ->setName('folders.add');
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->put('/folders/{folderId}', ['\Xibo\Controller\Folder', 'edit'])->setName('folders.edit');
+    $group->delete('/folders/{folderId}', ['\Xibo\Controller\Folder', 'delete'])->setName('folders.delete');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.modify']));
 
 /**
  * Statistics

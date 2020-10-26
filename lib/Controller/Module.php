@@ -601,21 +601,6 @@ class Module extends Base
             $playlist->save();
         }
 
-        // Permissions
-        if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
-            // Apply permissions from the Parent
-            foreach ($playlist->permissions as $permission) {
-                /* @var Permission $permission */
-                $permission = $this->permissionFactory->create($permission->groupId, get_class($module->widget), $module->widget->getId(), $permission->view, $permission->edit, $permission->delete);
-                $permission->save();
-            }
-        } else {
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($module->widget), $module->widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-        }
-
         // Successful
         $this->getState()->hydrate([
             'httpStatus' => 201,

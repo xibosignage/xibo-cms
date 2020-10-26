@@ -27,6 +27,7 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Helper\DataSetUploadHandler;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
@@ -52,6 +53,9 @@ class DataSet extends Base
     /** @var \Xibo\Factory\UserFactory */
     private $userFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -64,14 +68,16 @@ class DataSet extends Base
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param Twig $view
      * @param \Xibo\Factory\UserFactory $userFactory
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetFactory, $dataSetColumnFactory, Twig $view, $userFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetFactory, $dataSetColumnFactory, Twig $view, $userFactory, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->userFactory = $userFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -149,6 +155,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -173,6 +186,7 @@ class DataSet extends Base
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'code' => $sanitizedParams->getString('code'),
             'userId' => $sanitizedParams->getInt('userId'),
+            'folderId' => $sanitizedParams->getInt('folderId'),
         ];
 
         $dataSets = $this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
@@ -278,12 +292,12 @@ class DataSet extends Base
                     $dataSet->buttons[] = [
                         'id' => 'dataset_button_permissions',
                         'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
-                        'text' => __('Permissions'),
+                        'text' => __('Share'),
                         'dataAttributes' => [
                             ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId])],
                             ['name' => 'commit-method', 'value' => 'post'],
                             ['name' => 'id', 'value' => 'dataset_button_permissions'],
-                            ['name' => 'text', 'value' => __('Permissions')],
+                            ['name' => 'text', 'value' => __('Share')],
                             ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
                             ['name' => 'sort-group', 'value' => 2],
                             ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
@@ -478,6 +492,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -508,6 +529,14 @@ class DataSet extends Base
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
         $dataSet->userId = $this->getUser()->userId;
+        $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($dataSet->folderId);
+            $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        } else {
+            $dataSet->permissionsFolderId = 1;
+        }
 
         // Fields for remote
         if ($dataSet->isRemote === 1) {
@@ -759,6 +788,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -779,6 +815,12 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
+        $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
+
+        if ($dataSet->hasPropertyChanged('folderId')) {
+            $folder = $this->folderFactory->getById($dataSet->folderId);
+            $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        }
 
         if ($dataSet->isRemote === 1) {
             $dataSet->method = $sanitizedParams->getString('method');
