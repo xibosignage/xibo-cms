@@ -171,16 +171,21 @@ const xiboIC = (function() {
         /**
          * Trigger a predefined action
          * @param  {string} code - The trigger code
+         * @param  {string} [options.targetId] - target id
          * @param  {Object[]} [options] - Request options
          * @param  {callback} [options.done]
          * @param  {callback} [options.error]
          */
-        trigger(code, { done, error } = {}) {
+        trigger(code, { targetId, done, error } = {}) {
+            // Get target id from the request option or from the global lib var
+            var id = (typeof targetId != 'undefined') ? targetId : _lib.targetId;
+
             _lib.makeRequest(
                 '/trigger',
                 {
                     type: 'POST',
                     data: {
+                        id: id,
                         trigger: code
                     },
                     done: done,
@@ -192,7 +197,7 @@ const xiboIC = (function() {
         /**
          * Expire widget
          * @param  {Object[]} [options] - Request options
-         * @param  {string[]} [options.targetId] - target id
+         * @param  {string} [options.targetId] - target id
          * @param  {callback} [options.done]
          * @param  {callback} [options.error]
          */
@@ -217,7 +222,7 @@ const xiboIC = (function() {
          * Extend widget duration
          * @param  {string} extend - Duration value to extend
          * @param  {Object[]} [options] - Request options
-         * @param  {string[]} [options.targetId] - target id
+         * @param  {string} [options.targetId] - target id
          * @param  {callback} [options.done]
          * @param  {callback} [options.error]
          */
@@ -243,7 +248,7 @@ const xiboIC = (function() {
          * Set widget duration
          * @param  {string} duration - New widget duration
          * @param  {Object[]} [options] - Request options
-         * @param  {string[]} [options.targetId] - target id
+         * @param  {string} [options.targetId] - target id
          * @param  {callback} [options.done]
          * @param  {callback} [options.error]
          */

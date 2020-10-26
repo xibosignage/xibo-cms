@@ -47,6 +47,7 @@
                 </ul>
             </li>
             <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+            <li><a href="#triggerTab" role="tab" data-toggle="tab"><span>{% trans "Trigger" %}</span></a></li>
         </ul>
 
         <div class="col-md-12">
@@ -378,6 +379,21 @@
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+                    </div>
+
+                    <div class="tab-pane" id="triggerTab">
+                        {% set calendarTriggerExplanation %}
+                            {% trans "Web Hook triggers can be executed when certain conditions are detected. If you would like to execute a trigger, enter the trigger code below against each event." %}<br>
+                        {% endset %}
+                        {{ forms.message(calendarTriggerExplanation) }}
+
+                        {% set title %}{% trans "Current Event" %}{% endset %}
+                        {% set helpText %}{% trans "Code to be triggered when a event is currently ongoing." %}{% endset %}
+                        {{ forms.input("currentEventTrigger", title, module.getOption("currentEventTrigger"), helpText) }}
+
+                        {% set title %}{% trans "No Event" %}{% endset %}
+                        {% set helpText %}{% trans "Code to be triggered when no events are ongoing at the moment." %}{% endset %}
+                        {{ forms.input("noEventTrigger", title, module.getOption("noEventTrigger"), helpText) }}
                     </div>
                 </div>
             </form>

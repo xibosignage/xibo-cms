@@ -308,6 +308,20 @@ class Calendar extends ModuleWidget
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="noEventTrigger",
+     *      in="formData",
+     *      description="Trigger code for a no event action",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="currentEventTrigger",
+     *      in="formData",
+     *      description="Trigger code for a current event action",
+     *      type="string",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -359,6 +373,9 @@ class Calendar extends ModuleWidget
         $this->setOption('useDateRange', $sanitizedParams->getCheckbox('useDateRange'));
         $this->setOption('rangeStart', $sanitizedParams->getDate('rangeStart'));
         $this->setOption('rangeEnd', $sanitizedParams->getDate('rangeEnd'));
+
+        $this->setOption('noEventTrigger', $sanitizedParams->getString('noEventTrigger'));
+        $this->setOption('currentEventTrigger', $sanitizedParams->getString('currentEventTrigger'));
 
         $this->isValid();
         $this->saveWidget();
@@ -469,10 +486,15 @@ class Calendar extends ModuleWidget
                     var excludeCurrent = ' . ($this->getOption('excludeCurrent', 0) == 0 ? 'false' : 'true') . ';
                     var parsedItems = [];
                     var now = moment();
-                
+                    var ongoingEvent = false;
+                    
+                    var noEventTrigger = ' . ($this->getOption('noEventTrigger', '') == '' ? 'false' : $this->getOption('noEventTrigger')) . ';
+                    var currentEventTrigger = ' . ($this->getOption('currentEventTrigger', '') == '' ? 'false' : $this->getOption('currentEventTrigger')) . ';
+
                     // Prepare the items array, sorting it and removing any items that have expired.
                     $.each(items, function(index, element) {
                         // Parse the item and add it to the array if it has not finished yet
+                        var startDate = moment(element.startDate);
                         var endDate = moment(element.endDate);
                         
                         // If its the no data message element and the item array already have some elements
@@ -480,6 +502,9 @@ class Calendar extends ModuleWidget
                         if(parsedItems.length > 0 && element.noDataMessage === 1) {
                             return true;
                         }
+
+                        // Check if there is an event ongoing
+                        ongoingEvent = (startDate.isBefore(now) && endDate.isAfter(now) && element.noDataMessage != 1);
                         
                         if (endDate.isAfter(now)) {
                             if (moment(element.startDate).isBefore(now)) {
@@ -495,9 +520,17 @@ class Calendar extends ModuleWidget
                 
                     $("body").find("img").xiboImageRender(options);
                     $("body").xiboLayoutScaler(options);
-
+                    
                     const runOnVisible = function() { $("#content").xiboTextRender(options, parsedItems); };
                     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
+
+                    if(ongoingEvent && currentEventTrigger) {
+                        // If there is an event now, send the Current Event trigger ( if exists )
+                        xiboIC.trigger(currentEventTrigger);
+                    } else if(noEventTrigger) {
+                        // If there is no event now, send the No Event trigger
+                        xiboIC.trigger(noEventTrigger);
+                    }
                 });
             ')
             ->appendItems($items);
