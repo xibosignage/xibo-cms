@@ -156,8 +156,7 @@
     <script type="text/javascript">
         var table;
         $(document).ready(function() {
-            {% if currentUser.featureEnabled("folder.view") %}
-            {% else %}
+            {% if not currentUser.featureEnabled("folder.view") %}
             disableFolders();
             {% endif %}
 
@@ -417,6 +416,25 @@
         });
 
         function layoutAddFormOpen() {
+
+            if ($('#folder-tree-form-modal').length === 0) {
+                // compile tree folder modal and append it to Form
+                let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+                let treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+                $("#layoutAddForm").append(folderTreeModal(treeConfig));
+
+                $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                    $(this).data('bs.modal', null);
+                });
+            }
+
+            // select current working folder if one is selected in the grid
+            if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined) {
+                $('#layoutAddForm' + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
+            }
+
+            initJsTreeAjax('#container-folder-form-tree', 'layoutAddForm', true, 600);
+
             $("#layoutAddForm").submit(function(e) {
                 e.preventDefault();
                 var form = $(this);
