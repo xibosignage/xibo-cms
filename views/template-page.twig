@@ -83,6 +83,7 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
+            responsive: true,
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
@@ -95,18 +96,20 @@
                 }
             },
             "columns": [
-                { "data": "layout"},
-                { "data": "owner"},
-                { "data": "descriptionWithMarkup"},
+                { "data": "layout", responsivePriority: 2},
+                { "data": "owner", responsivePriority: 3},
+                { "data": "descriptionWithMarkup", responsivePriority: 4},
                 {% if currentUser.featureEnabled("tag.tagging") %}{
                     "sortable": false,
                     "visible": false,
-                    "data": dataTableCreateTags
+                    "data": dataTableCreateTags,
+                    responsivePriority: 3
                 },{% endif %}
-                { "data": "thumbnail"},
-                { "data": "permissions", "sortable": false},
+                { "data": "thumbnail", responsivePriority: 3},
+                { "data": "permissions", "sortable": false, responsivePriority: 3},
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]

@@ -1315,12 +1315,16 @@ class User implements \JsonSerializable, UserEntityInterface
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
+        $folderPermissions = $this->loadPermissions('Xibo\Entity\Folder');
 
         // Check to see if our object is in the list
-        if (array_key_exists($object->getId(), $permissions))
+        if (array_key_exists($object->getId(), $permissions)) {
             return ($permissions[$object->getId()]->view == 1);
-        else
+        } else if (method_exists($object, 'getPermissionFolderId') && array_key_exists($object->getPermissionFolderId(), $folderPermissions)) {
+            return ($folderPermissions[$object->getPermissionFolderId()]->view == 1);
+        } else {
             return false;
+        }
     }
 
     /**
@@ -1345,12 +1349,16 @@ class User implements \JsonSerializable, UserEntityInterface
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
+        $folderPermissions = $this->loadPermissions('Xibo\Entity\Folder');
 
         // Check to see if our object is in the list
-        if (array_key_exists($object->getId(), $permissions))
+        if (array_key_exists($object->getId(), $permissions)) {
             return ($permissions[$object->getId()]->edit == 1);
-        else
+        } else if (method_exists($object, 'getPermissionFolderId') && array_key_exists($object->getPermissionFolderId(), $folderPermissions)) {
+            return ($folderPermissions[$object->getPermissionFolderId()]->edit == 1);
+        } else {
             return false;
+        }
     }
 
     /**
@@ -1377,12 +1385,16 @@ class User implements \JsonSerializable, UserEntityInterface
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
+        $folderPermissions = $this->loadPermissions('Xibo\Entity\Folder');
 
         // Check to see if our object is in the list
-        if (array_key_exists($object->getId(), $permissions))
+        if (array_key_exists($object->getId(), $permissions)) {
             return ($permissions[$object->getId()]->delete == 1);
-        else
+        }  else if (method_exists($object, 'getPermissionFolderId') && array_key_exists($object->getPermissionFolderId(), $folderPermissions)) {
+            return ($folderPermissions[$object->getPermissionFolderId()]->delete == 1);
+        } else {
             return false;
+        }
     }
 
     /**

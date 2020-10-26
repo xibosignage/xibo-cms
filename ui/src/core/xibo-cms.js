@@ -147,6 +147,9 @@ function XiboInitialise(scope) {
         // Bind the filter form
         $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
+
+        // init the jsTree
+        initJsTreeAjax('#container-folder-tree',  gridName, false)
     });
 
     // Search for any Buttons / Links on the page that are used to load forms
@@ -1494,9 +1497,27 @@ function XiboFormRender(sourceObj, data) {
                         $(this).closest(".modal").addClass("modal-big");
                 });
 
+                if ($('#folder-tree-form-modal').length === 0 && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').length) {
+                    // compile tree folder modal and append it to Form
+                    let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+                    let treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+                    $('.XiboForm').append(folderTreeModal(treeConfig));
+
+                    $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                        $(this).data('bs.modal', null);
+                    });
+                }
+
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
-                
+
+                // if this is add form and we have some folderId selected in grid view, put that as the working folder id for this form
+                // edit forms will get the current folderId assigned to the edited object.
+                if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val() == '') {
+                    $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
+                }
+                initJsTreeAjax('#container-folder-form-tree', dialog.find('.XiboForm').attr('id'), true, 600);
+
                 // Do we have to call any functions due to this success?
                 if (response.callBack !== "" && response.callBack !== undefined) {
                     eval(response.callBack)(dialog);
@@ -2890,4 +2911,277 @@ function saveVideoCoverImage(data)
             data: thumbnailData
         });
     }
+}
+
+function initJsTreeAjax(container, table, isForm = false, ttl = false)
+{
+    let state = {};
+    if ($(container).length) {
+
+        // difference here is, that for grid trees we don't set ttl at all
+        // add/edit forms have short ttl, multi select will be cached for couple of minutes
+        if (isForm) {
+            state = {"key" : table + "_folder_tree", "ttl": ttl};
+        } else {
+            state = {"key" : table + "_folder_tree"}
+        }
+
+        $(container).jstree({
+            "state" : state,
+            "plugins" : ["contextmenu", "state", "unique"],
+            "contextmenu":{
+                "items": function($node, checkContextMenuPermissions) {
+                    // items in context menu need to check user permissions before we render them
+                    // as such each click on the node will execute the below ajax to check what permissions user has
+                    // permission may be different per node, therefore we cannot look this up just once for whole tree.
+                    let items = {};
+                    let tree = $(container).jstree(true);
+                    let buttonPermissions = null;
+
+                    $.ajax({
+                        url: "/folders/contextButtons/"+$node.id,
+                        method: "GET",
+                        dataType: "json",
+                        success: function (data) {
+                            console.log(data);
+                            buttonPermissions = data;
+
+                            if (buttonPermissions.create) {
+                                items['Create'] = {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeCreate,
+                                    "action": function (obj) {
+                                        $node = tree.create_node($node);
+                                        tree.edit($node);
+                                    }
+                                }
+                            }
+
+                            if (buttonPermissions.modify) {
+                                items['Rename'] = {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeEdit,
+                                    "action": function (obj) {
+                                        tree.edit($node);
+                                    }
+                                };
+                            }
+
+                            if (buttonPermissions.delete) {
+                                items['Remove'] = {
+                                    "separator_before": true,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeDelete,
+                                    "action": function (obj) {
+                                        tree.delete_node($node);
+                                    }
+                                }
+                            }
+
+                            if (isForm === false && buttonPermissions.share) {
+                                items['Share'] = {
+                                    "separator_before": true,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeShare,
+                                    "_class": "XiboFormRender",
+                                    "action": function (obj) {
+                                        XiboFormRender('/user/permissions/form/Folder/'+$node.id);
+                                    }
+                                }
+                            }
+                        },
+                        complete: function (data) {
+                            checkContextMenuPermissions(items);
+                        }
+                    });
+                }},
+            'core' : {
+                "check_callback" : function (operation, node, parent, position, more) {
+                    // prevent edit/delete of the root node.
+                    if(operation === "delete_node" || operation === "rename_node") {
+                        if(node.id === "#" || node.id === "1") {
+                            toastr.error(translations.folderTreeError);
+                            return false;
+                        }
+                    }
+                    return true;
+                    },
+                'data' : {
+                    "url": "/folders"
+                }
+            }
+        });
+
+        $(container).on('loaded.jstree', function(e, data) {
+            // if we are on the form, we need to select tree node (currentWorkingFolder)
+            // this is set/passed to twigs on render time
+            if (isForm) {
+                let folderIdInputSelector = '#'+table+' #folderId';
+
+                // for upload forms
+                if ($(folderIdInputSelector).length === 0) {
+                    folderIdInputSelector = '#formFolderId';
+                }
+
+                let selectedFolder = $(folderIdInputSelector).val();
+
+                if (selectedFolder !== undefined && selectedFolder !== '') {
+                    $(this).jstree('select_node', selectedFolder);
+                    if ($('#originalFormFolder').length) {
+                        $('#originalFormFolder').text($(this).jstree().get_path($(this).jstree("get_selected", true)[0], ' > '));
+                    }
+
+                    if ($('#selectedFormFolder').length && folderIdInputSelector === '#formFolderId') {
+                        $('#selectedFormFolder').text($(this).jstree().get_path($(this).jstree("get_selected", true)[0], ' > '));
+                    }
+                }
+            }
+        });
+
+        $(container).on("rename_node.jstree", function (e, data) {
+
+            let dataObject = {};
+            let folderId  = data.node.id;
+            dataObject['text'] = data.text;
+
+            $.ajax({
+                url: "/folders/"+folderId,
+                method: "PUT",
+                dataType: "json",
+                data: dataObject
+            });
+        });
+
+        $(container).on("create_node.jstree", function (e, data) {
+
+            let dataObject = {};
+            dataObject['parentId'] = data.parent;
+            dataObject['text'] = data.node.text;
+            let node = data.node;
+
+            // when we create a new node, by default it will get jsTree default id
+            // we need to change it to the folderId we have in our folder table
+            // rename happens just after add, therefore this needs to be set as soon as possible
+            $.ajax({
+                url: "/folders",
+                method: "POST",
+                dataType: "json",
+                data: dataObject,
+                success: function (data) {
+                    $(container).jstree(true).set_id(node, data.data.id);
+                },
+            });
+        });
+
+        $(container).on("delete_node.jstree", function (e, data) {
+
+            let dataObject = {};
+            dataObject['parentId'] = data.parent;
+            dataObject['text'] = data.node.text;
+            let folderId = data.node.id;
+
+            // delete has a check built-in, if it fails to remove node, it will show suitable message in toast
+            // and reload the tree
+            $.ajax({
+                url: "/folders/"+folderId,
+                method: "DELETE",
+                dataType: "json",
+                data: dataObject,
+                success: function (data) {
+                    if (data.success) {
+                        toastr.success(translations.done)
+                    } else {
+                        toastr.error(translations.folderWithContent);
+                        console.log(data.message);
+                        $(container).jstree(true).refresh();
+                    }
+
+                }
+            });
+        });
+
+        $(container).on("changed.jstree", function (e, data) {
+            let selectedFolderId = data.selected[0];
+            let folderIdInputSelector = (isForm) ? '#'+table+' #folderId' : '#folderId';
+            let node = $(container).jstree("get_selected", true);
+
+            // for upload and multi select forms.
+            if (isForm && $(folderIdInputSelector).length === 0) {
+                folderIdInputSelector = '#formFolderId';
+            }
+
+            // on grids, depending on the selected folder, we need to handle the breadcrumbs
+            if ($(folderIdInputSelector).val() != selectedFolderId && isForm === false) {
+
+                if (selectedFolderId !== undefined) {
+                    $("#breadcrumbs").text($(container).jstree().get_path(node[0], ' > ')).hide();
+
+                    $('#folder-tree-clear-selection-button').prop('checked', false)
+                } else {
+                    $("#breadcrumbs").text('');
+                    $('#folder-tree-clear-selection-button').prop('checked', true)
+                }
+
+                $(folderIdInputSelector).val(selectedFolderId);
+                $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+            }
+
+            // on form we always want to show the breadcrumbs to current and selected folder
+            if (isForm && $(folderIdInputSelector).val() != selectedFolderId && selectedFolderId !== undefined) {
+                $(folderIdInputSelector).val(selectedFolderId).trigger('change');
+                if ($('#selectedFormFolder').length) {
+                    $('#selectedFormFolder').text($(container).jstree().get_path(node[0], ' > '));
+                }
+            }
+
+        });
+
+        // on froms that have more than one modal active, this is needed to not confuse bootstrap
+        // the (X) needs to close just the inner modal
+        // clicking outside of the tree select modal will work as well.
+        $(".btnCloseInnerModal").on('click', function(e) {
+            e.preventDefault();
+            let FolderTreeModalId = (isForm) ? '#folder-tree-form-modal' : '#folder-tree-modal';
+            $(FolderTreeModalId).modal('hide');
+        });
+
+        // this handler for the search everywhere checkbox on grid pages
+        $("#folder-tree-clear-selection-button").on('click', function() {
+            $(this).prop('checked', true);
+            $(container).jstree("deselect_all");
+        });
+
+        // this is handler for the hamburger button on grid pages
+        $('#folder-tree-select-folder-button').off("click").on('click', function() {
+            $('#grid-folder-filter').toggle('fast', function() {
+                if ($(this).is(":hidden")) {
+
+                    if (!$("#folder-tree-clear-selection-button").is(':checked')) {
+                        // if folder tree is hidden and select everywhere is not checked, then show breadcrumbs
+                        $("#breadcrumbs").show('slow');
+                    }
+
+                    // if the folder tree is hidden, then make it so datatable can take whole available width
+                    $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
+                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                } else {
+                    // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
+                    $("#breadcrumbs").hide('slow');
+                    $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
+                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                }
+            });
+        })
+    }
+}
+
+function disableFolders () {
+    // if user does not have Folders feature enabled, then we need to remove couple of elements from the page
+    // to prevent jsTree from executing, make the datatable take whole available width as well.
+    $('#folder-tree-select-folder-button').parent().remove();
+    $('#container-folder-tree').remove();
+    $('#grid-folder-filter').remove();
+    $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
 }

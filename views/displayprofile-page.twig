@@ -99,6 +99,7 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
+            responsive: true,
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
@@ -111,11 +112,12 @@
                 }
             },
             "columns": [
-                { "data": "name", "render": dataTableSpacingPreformatted },
+                { "data": "name", "render": dataTableSpacingPreformatted , responsivePriority: 2},
                 { "data": "type" },
                 { "data": "isDefault", "render": dataTableTickCrossColumn },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]

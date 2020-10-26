@@ -211,6 +211,9 @@ class Widget implements \JsonSerializable
      */
     public $isNew = false;
 
+    public $folderId;
+    public $permissionsFolderId;
+
     /** @var int[] Original Module Media Ids */
     private $originalModuleMediaIds = [];
 
@@ -311,6 +314,11 @@ class Widget implements \JsonSerializable
     public function __toString()
     {
         return sprintf('Widget. %s on playlist %d in position %d. WidgetId = %d', $this->type, $this->playlistId, $this->displayOrder, $this->widgetId);
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**

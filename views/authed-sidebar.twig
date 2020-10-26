@@ -49,7 +49,7 @@
         {% set countViewable = currentUser.featureEnabledCount(["displays.view", "displaygroup.view", "displayprofile.view", "playersoftware.view", "command.view"]) %}
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Displays" %}</a></li>
-            {% if currentUser.featureEnabled("display.view") %}
+            {% if currentUser.featureEnabled("displays.view") %}
                 <li class="sidebar-list"><a href="{{ url_for("display.view") }}">{% trans "Displays" %}</a></li>
             {% endif %}
 

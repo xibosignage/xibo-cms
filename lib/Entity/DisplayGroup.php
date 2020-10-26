@@ -141,6 +141,18 @@ class DisplayGroup implements \JsonSerializable
     public $modifiedDt;
 
     /**
+     * @SWG\Property(description="The id of the Folder this Display Group belongs to")
+     * @var int
+     */
+    public $folderId;
+
+    /**
+     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Display Group")
+     * @var int
+     */
+    public $permissionsFolderId;
+
+    /**
      * Minimum save options
      * @var array
      */
@@ -260,6 +272,11 @@ class DisplayGroup implements \JsonSerializable
     public function getId()
     {
         return $this->displayGroupId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -822,8 +839,8 @@ class DisplayGroup implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $this->displayGroupId = $this->getStore()->insert('
-          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `userId`, `createdDt`, `modifiedDt`)
-            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId, :createdDt, :modifiedDt)
+          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `userId`, `createdDt`, `modifiedDt`, `folderId`, `permissionsFolderId`)
+            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId, :createdDt, :modifiedDt, :folderId, :permissionsFolderId)
         ', [
             'displayGroup' => $this->displayGroup,
             'isDisplaySpecific' => $this->isDisplaySpecific,
@@ -833,7 +850,9 @@ class DisplayGroup implements \JsonSerializable
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
             'userId' => $this->userId,
             'createdDt' => $time,
-            'modifiedDt' => $time
+            'modifiedDt' => $time,
+            'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
         ]);
 
         // Insert my self link
@@ -856,7 +875,9 @@ class DisplayGroup implements \JsonSerializable
               `dynamicCriteriaTags` = :dynamicCriteriaTags,
               `bandwidthLimit` = :bandwidthLimit,
               `userId` = :userId,
-              `modifiedDt` = :modifiedDt
+              `modifiedDt` = :modifiedDt,
+              `folderId` = :folderId,
+              `permissionsFolderId` = :permissionsFolderId
            WHERE DisplayGroupID = :displayGroupId
           ', [
             'displayGroup' => $this->displayGroup,
@@ -867,7 +888,9 @@ class DisplayGroup implements \JsonSerializable
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
             'bandwidthLimit' => $this->bandwidthLimit,
             'userId' => $this->userId,
-            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            'folderId' => $this->folderId,
+            'permissionsFolderId' => $this->permissionsFolderId
         ]);
     }
 

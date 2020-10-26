@@ -70,6 +70,7 @@
             "language": dataTablesLanguage,
             serverSide: true,
             stateSave: true,
+            responsive: true,
             stateDuration: 0,
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
@@ -88,6 +89,7 @@
                 { "data": "link"},
                 {
                     "orderable": false,
+                     responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]

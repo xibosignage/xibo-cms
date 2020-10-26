@@ -125,59 +125,6 @@ class PermissionFactory extends BaseFactory
     }
 
     /**
-     * Create Permissions for new Entity
-     * @param User $user
-     * @param string $entity
-     * @param int $objectId
-     * @param string $level
-     * @param UserGroupFactory $userGroupFactory
-     * @return array[Permission]
-     * @throws NotFoundException
-     * @throws InvalidArgumentException
-     */
-    public function createForNewEntity($user, $entity, $objectId, $level, $userGroupFactory)
-    {
-        $permissions = [];
-
-        switch ($level) {
-
-            case 'public':
-                $permissions[] = $this->createForEveryone($userGroupFactory, $entity, $objectId, 1, 0, 0);
-                break;
-
-            case 'public write':
-                $permissions[] = $this->createForEveryone($userGroupFactory, $entity, $objectId, 1, 1, 0);
-                break;
-
-            case 'group':
-                foreach ($user->groups as $group) {
-                    $this->create($group->groupId, $entity, $objectId, 1, 0, 0)->save();
-                }
-                break;
-
-            case 'group write':
-                foreach ($user->groups as $group) {
-                    $this->create($group->groupId, $entity, $objectId, 1, 1, 0)->save();
-                }
-                break;
-
-            case 'group delete':
-                foreach ($user->groups as $group) {
-                    $this->create($group->groupId, $entity, $objectId, 1, 1, 1)->save();
-                }
-                break;
-
-            case 'private':
-                break;
-
-            default:
-                throw new InvalidArgumentException(__('Unknown Permissions Level: ' . $level));
-        }
-
-        return $permissions;
-    }
-
-    /**
      * Get Permissions by Entity ObjectId
      * @param string $entity
      * @param int $objectId

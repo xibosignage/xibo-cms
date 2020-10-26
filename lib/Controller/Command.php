@@ -185,13 +185,13 @@ class Command extends Base
                     $command->buttons[] = [
                         'id' => 'command_button_permissions',
                         'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Command', 'id' => $command->commandId]),
-                        'text' => __('Permissions'),
+                        'text' => __('Share'),
                         'multi-select' => true,
                         'dataAttributes' => [
                             ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Command', 'id' => $command->commandId])],
                             ['name' => 'commit-method', 'value' => 'post'],
                             ['name' => 'id', 'value' => 'command_button_permissions'],
-                            ['name' => 'text', 'value' => __('Permissions')],
+                            ['name' => 'text', 'value' => __('Share')],
                             ['name' => 'rowtitle', 'value' => $command->command],
                             ['name' => 'sort-group', 'value' => 2],
                             ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],

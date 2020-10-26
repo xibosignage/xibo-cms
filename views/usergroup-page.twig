@@ -86,6 +86,7 @@
                 serverSide: true,
                 stateSave: true,
                 stateDuration: 0,
+                responsive: true,
                 stateLoadCallback: dataTableStateLoadCallback,
                 stateSaveCallback: dataTableStateSaveCallback,
                 searchDelay: 3000,
@@ -98,7 +99,7 @@
                     }
                 },
                 "columns": [
-                    {"data": "group", "render": dataTableSpacingPreformatted },
+                    {"data": "group", "render": dataTableSpacingPreformatted, responsivePriority: 2 },
                     {
                         "name": "libraryQuota",
                         "data": null,
@@ -114,6 +115,7 @@
                     },
                     {
                         "orderable": false,
+                        responsivePriority: 1,
                         "data": dataTableButtonsColumn
                     }
                 ]

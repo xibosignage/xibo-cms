@@ -78,6 +78,7 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
+            responsive: true,
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
@@ -90,10 +91,11 @@
                 }
             },
             "columns": [
-                { "data": "command", "render": dataTableSpacingPreformatted },
-                { "data": "code" },
+                { "data": "command", "render": dataTableSpacingPreformatted , responsivePriority: 2},
+                { "data": "code" , responsivePriority: 2},
                 {
                     "data": "availableOn",
+                     responsivePriority: 3,
                     "render": function(data, type) {
 
                         if (type !== "display")
@@ -120,13 +122,15 @@
                         return returnData;
                     }
                 },
-                { "data": "description" },
+                { "data": "description", responsivePriority: 3 },
                 {
                     "data": "groupsWithPermissions",
+                     responsivePriority: 3,
                     "render": dataTableCreatePermissions
                 },
                 {
                     "orderable": false,
+                     responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]

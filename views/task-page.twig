@@ -78,6 +78,7 @@
             "language": dataTablesLanguage,
             serverSide: true,
             stateSave: true,
+            responsive: true,
             stateDuration: 0,
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
@@ -91,10 +92,11 @@
                 }
             },
             "columns": [
-                { "data": "taskId" },
-                { "data": "name" },
+                { "data": "taskId" , responsivePriority: 2},
+                { "data": "name" , responsivePriority: 2},
                 {
                     "data": "isActive",
+                    responsivePriority: 2,
                     "render": dataTableTickCrossColumn
                 },
                 {
@@ -167,6 +169,7 @@
                 },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]

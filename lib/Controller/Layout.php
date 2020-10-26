@@ -315,6 +315,13 @@ class Layout extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -347,6 +354,7 @@ class Layout extends Base
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
+        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
@@ -399,14 +407,11 @@ class Layout extends Base
         // Set auto apply transitions flag
         $layout->autoApplyTransitions = $autoApplyTransitions;
 
+        // set folderId
+        $layout->folderId = $folderId;
+
         // Save
         $layout->save();
-
-        // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
 
         foreach ($layout->regions as $region) {
             /* @var Region $region */
@@ -418,26 +423,12 @@ class Layout extends Base
                 // Make sure Playlist closure table from the published one are copied over
                 $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
             }
-
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
+            $campaign = $this->campaignFactory->getById($layout->campaignId);
 
             $playlist = $region->getPlaylist();
-
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-
-            foreach ($playlist->widgets as $widget) {
-                /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                    /* @var Permission $permission */
-                    $permission->save();
-                }
-            }
+            $playlist->folderId = $campaign->folderId;
+            $playlist->permissionsFolderId = $campaign->permissionsFolderId;
+            $playlist->save();
         }
 
         $this->getLog()->debug('Layout Added');
@@ -521,6 +512,13 @@ class Layout extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -533,6 +531,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
         $isTemplate = false;
         $sanitizedParams = $this->getSanitizer($request->getParams());
+        $folderChanged = false;
 
         // check if we're dealing with the template
         $currentTags = explode(',', $layout->tags);
@@ -561,6 +560,7 @@ class Layout extends Base
         $layout->retired = $sanitizedParams->getCheckbox('retired');
         $layout->enableStat = $sanitizedParams->getCheckbox('enableStat');
         $layout->code = $sanitizedParams->getString('code');
+        $layout->folderId = $sanitizedParams->getInt('folderId', ['default' => $layout->folderId]);
 
         $tags = $sanitizedParams->getString('tags');
         $tagsArray = explode(',', $tags);
@@ -573,6 +573,10 @@ class Layout extends Base
             }
         }
 
+        if ($layout->hasPropertyChanged('folderId')) {
+            $folderChanged = true;
+        }
+
         // Save
         $layout->save([
             'saveLayout' => true,
@@ -581,6 +585,18 @@ class Layout extends Base
             'setBuildRequired' => false,
             'notify' => false
         ]);
+
+        if ($folderChanged) {
+            $savedLayout = $this->layoutFactory->getById($layout->layoutId);
+            $savedLayout->load();
+            foreach ($savedLayout->regions as $region) {
+                /* @var Region $region */
+                $playlist = $region->getPlaylist();
+                $playlist->folderId = $savedLayout->folderId;
+                $playlist->permissionsFolderId = $savedLayout->permissionsFolderId;
+                $playlist->save();
+            }
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -1165,6 +1181,13 @@ class Layout extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1220,6 +1243,7 @@ class Layout extends Base
             'publishedStatusId' => $parsedQueryParams->getInt('publishedStatusId'),
             'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId'),
             'campaignId' => $parsedQueryParams->getInt('campaignId'),
+            'folderId' => $parsedQueryParams->getInt('folderId')
         ], $request));
 
         foreach ($layouts as $layout) {
@@ -1482,6 +1506,24 @@ class Layout extends Base
                     'text' => __('Edit')
                 );
 
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    // Select Folder
+                    $layout->buttons[] = [
+                        'id' => 'campaign_button_selectfolder',
+                        'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $layout->campaignId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $layout->campaignId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $layout->layout],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
+
                 // Copy Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_copy',
@@ -1574,13 +1616,13 @@ class Layout extends Base
                     $layout->buttons[] = [
                         'id' => 'layout_button_permissions',
                         'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
-                        'text' => __('Permissions'),
+                        'text' => __('Share'),
                         'multi-select' => true,
                         'dataAttributes' => [
                             ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $layout->campaignId])],
                             ['name' => 'commit-method', 'value' => 'post'],
                             ['name' => 'id', 'value' => 'layout_button_permissions'],
-                            ['name' => 'text', 'value' => __('Permissions')],
+                            ['name' => 'text', 'value' => __('Share')],
                             ['name' => 'rowtitle', 'value' => $layout->layout],
                             ['name' => 'sort-group', 'value' => 2],
                             ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
@@ -1878,35 +1920,6 @@ class Layout extends Base
 
             // Make sure Playlist closure table from the published one are copied over
             $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
-        }
-
-        // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
-
-        foreach ($allRegions as $region) {
-            /* @var Region $region */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-
-            $playlist = $region->getPlaylist();
-            /* @var Playlist $playlist */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-
-            foreach ($playlist->widgets as $widget) {
-                /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                    /* @var Permission $permission */
-                    $permission->save();
-                }
-            }
         }
 
         // Return

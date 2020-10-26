@@ -70,6 +70,7 @@
         var table = $("#applications").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             stateSave: true,
+            responsive: true,
             stateDuration: 0,
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
@@ -82,6 +83,7 @@
                 { "data": "owner" },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]

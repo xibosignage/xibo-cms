@@ -28,6 +28,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -380,6 +381,18 @@ class Display implements \JsonSerializable
      */
     public $modifiedDt;
 
+    /**
+     * @SWG\Property(description="The id of the Folder this Display belongs to")
+     * @var int
+     */
+    public $folderId;
+
+    /**
+     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Display")
+     * @var int
+     */
+    public $permissionsFolderId;
+
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
 
@@ -432,6 +445,9 @@ class Display implements \JsonSerializable
      */
     private $scheduleFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -441,7 +457,7 @@ class Display implements \JsonSerializable
      * @param DisplayProfileFactory $displayProfileFactory
      * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $config, $displayGroupFactory, $displayProfileFactory, $displayFactory)
+    public function __construct($store, $log, $config, $displayGroupFactory, $displayProfileFactory, $displayFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('mediaInventoryXml');
@@ -452,6 +468,7 @@ class Display implements \JsonSerializable
         $this->displayGroupFactory = $displayGroupFactory;
         $this->displayProfileFactory = $displayProfileFactory;
         $this->displayFactory = $displayFactory;
+        $this->folderFactory = $folderFactory;
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -478,6 +495,11 @@ class Display implements \JsonSerializable
     public function getId()
     {
         return $this->displayGroupId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -786,6 +808,11 @@ class Display implements \JsonSerializable
         $displayGroup = $this->displayGroupFactory->create();
         $displayGroup->displayGroup = $this->display;
         $displayGroup->tags = $this->tags;
+
+        // this is added from xmds, by default new displays will end up in root folder.
+        $displayGroup->folderId = 1;
+        $displayGroup->permissionsFolderId = 1;
+
         $displayGroup->setDisplaySpecificDisplay($this);
 
         $this->getLog()->debug('Creating display specific group with userId ' . $displayGroup->userId);
@@ -893,7 +920,7 @@ class Display implements \JsonSerializable
         ]);
 
         // Maintain the Display Group
-        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description') || $this->hasPropertyChanged('tags') || $this->hasPropertyChanged('bandwidthLimit')) {
+        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description') || $this->hasPropertyChanged('tags') || $this->hasPropertyChanged('bandwidthLimit') || $this->hasPropertyChanged('folderId')) {
             $this->getLog()->debug('Display specific DisplayGroup properties need updating');
 
             $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
@@ -901,6 +928,17 @@ class Display implements \JsonSerializable
             $displayGroup->description = $this->description;
             $displayGroup->replaceTags($this->tags);
             $displayGroup->bandwidthLimit = $this->bandwidthLimit;
+            $displayGroup->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+
+            // if user has disabled folder feature, presumably said user also has no permissions to folder
+            // getById would fail here and prevent submitting edit form in web ui
+            try {
+                $folder = $this->folderFactory->getById($displayGroup->folderId);
+                $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            } catch (NotFoundException $exception) {
+                $displayGroup->permissionsFolderId = 1;
+            }
+
             $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
         } else {
             $this->store->update('UPDATE displaygroup SET `modifiedDt` = :modifiedDt WHERE displayGroupId = :displayGroupId', [

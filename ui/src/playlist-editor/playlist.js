@@ -17,6 +17,7 @@ let Playlist = function(id, data) {
 
     this.widgets = {};
     this.duration = null;
+    this.folderId = data.folderId;
 
     // Create data structure based on the API data
     this.createDataStructure(data);
@@ -139,7 +140,8 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
                     validExt: validExt
                 },
                 playlistId: playlistId,
-                displayOrder: addToPosition
+                displayOrder: addToPosition,
+                currentWorkingFolderId: pE.folderId,
             },
             {
                 viewLibrary: {

@@ -79,6 +79,7 @@
                 "language": dataTablesLanguage,
                 serverSide: true,
                 stateSave: true,
+                responsive: true,
                 stateDuration: 0,
                 stateLoadCallback: dataTableStateLoadCallback,
                 stateSaveCallback: dataTableStateSaveCallback,
@@ -92,13 +93,14 @@
                     }
                 },
                 "columns": [
-                    {"data": "resolutionId"},
+                    {"data": "resolutionId", responsivePriority: 2},
                     {"data": "resolution"},
                     {"data": "width"},
                     {"data": "height"},
                     {"data": "enabled"},
                     {
                         "orderable": false,
+                        responsivePriority: 1,
                         "data": dataTableButtonsColumn
                     }
                 ]

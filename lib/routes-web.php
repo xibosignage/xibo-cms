@@ -218,6 +218,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/playlist/form/copy/{id}', ['\Xibo\Controller\Playlist', 'copyForm'])->setName('playlist.copy.form');
     $group->get('/playlist/form/delete/{id}', ['\Xibo\Controller\Playlist', 'deleteForm'])->setName('playlist.delete.form');
     $group->get('/playlist/form/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStatForm'])->setName('playlist.setenablestat.form');
+    $group->get('/playlist/form/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolderForm'])->setName('playlist.selectfolder.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.modify']));
 
 // What permissions do we need to be able to see the timeline form?
@@ -245,6 +246,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/library/form/tidy', ['\Xibo\Controller\Library', 'tidyForm'])->setName('library.tidy.form');
     $group->get('/library/form/copy/{id}', ['\Xibo\Controller\Library','copyForm'])->setName('library.copy.form');
     $group->get('/library/form/setenablestat/{id}', ['\Xibo\Controller\Library','setEnableStatForm'])->setName('library.setenablestat.form');
+    $group->get('/library/form/{id}/selectfolder', ['\Xibo\Controller\Library','selectFolderForm'])->setName('library.selectfolder.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['library.modify']));
 
 $app->get('/library/form/usage/{id}', ['\Xibo\Controller\Library','usageForm'])
@@ -337,6 +339,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/campaign/form/delete/{id}', ['\Xibo\Controller\Campaign', 'deleteForm'])->setName('campaign.delete.form');
     $group->get('/campaign/form/retire/{id}', ['\Xibo\Controller\Campaign', 'retireForm'])->setName('campaign.retire.form');
     $group->get('/campaign/form/layouts/{id}', ['\Xibo\Controller\Campaign', 'layoutsForm'])->setName('campaign.layouts.form');
+    $group->get('/campaign/form/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolderForm'])->setName('campaign.selectfolder.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify']));
 
 $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
@@ -431,6 +434,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/displaygroup/form/media/{id}', ['\Xibo\Controller\DisplayGroup','mediaForm'])->setName('displayGroup.media.form');
     $group->get('/displaygroup/form/layout/{id}', ['\Xibo\Controller\DisplayGroup','layoutsForm'])->setName('displayGroup.layout.form');
     $group->get('/displaygroup/form/copy/{id}', ['\Xibo\Controller\DisplayGroup','copyForm'])->setName('displayGroup.copy.form');
+    $group->get('/displaygroup/form/{id}/selectfolder', ['\Xibo\Controller\DisplayGroup','selectFolderForm'])->setName('displayGroup.selectfolder.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['displaygroup.modify']));
 
 //

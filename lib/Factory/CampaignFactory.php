@@ -91,13 +91,16 @@ class CampaignFactory extends BaseFactory
      * @param string $name
      * @param int $userId
      * @param string $tags
+     * @param int $folderId
      * @return Campaign
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function create($name, $userId, $tags)
+    public function create($name, $userId, $tags, $folderId)
     {
         $campaign = $this->createEmpty();
         $campaign->ownerId = $userId;
         $campaign->campaign = $name;
+        $campaign->folderId = $folderId;
         
         // Create some tags
         $campaign->tags = $this->tagFactory->tagsFromString($tags);
@@ -168,7 +171,7 @@ class CampaignFactory extends BaseFactory
         $params = [];
 
         $select = '
-        SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId,
+        SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId, `campaign`.folderId, campaign.permissionsFolderId,
             (
                 SELECT COUNT(*)
                 FROM lkcampaignlayout
@@ -202,7 +205,7 @@ class CampaignFactory extends BaseFactory
         ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy, '`campaign`.permissionsFolderId');
 
         if ($sanitizedFilter->getInt('isLayoutSpecific', ['default' => 0]) != -1) {
             // Exclude layout specific campaigns
@@ -279,6 +282,11 @@ class CampaignFactory extends BaseFactory
             } else {
                 $body .= " AND `campaign`.campaignId IN (SELECT `campaignId` FROM `lkcampaignlayout` WHERE layoutId IN (SELECT layoutId FROM lktaglayout INNER JOIN tag ON lktaglayout.tagId = tag.tagId WHERE tag = 'template')) ";
             }
+        }
+
+        if ($sanitizedFilter->getInt('folderId') !== null) {
+            $body .= " AND campaign.folderId = :folderId ";
+            $params['folderId'] = $sanitizedFilter->getInt('folderId');
         }
 
         $group = 'GROUP BY `campaign`.CampaignID, Campaign, IsLayoutSpecific, `campaign`.userId ';

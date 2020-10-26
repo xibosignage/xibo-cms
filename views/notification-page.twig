@@ -74,6 +74,7 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
+            responsive: true,
             stateLoadCallback: dataTableStateLoadCallback,
             stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
@@ -86,21 +87,25 @@
                 }
             },
             "columns": [
-                { "data": "subject" },
+                { "data": "subject", responsivePriority: 2 },
                 {
                     "data": "releaseDt",
+                    responsivePriority: 2,
                     "render": dataTableDateFromUnix
                 },
                 {
                     "data": "isEmail",
+                    responsivePriority: 3,
                     "render": dataTableTickCrossColumn
                 },
                 {
                     "data": "isInterrupt",
+                    responsivePriority: 3,
                     "render": dataTableTickCrossColumn
                 },
                 {
                     "orderable": false,
+                    responsivePriority : 1,
                     "data": dataTableButtonsColumn
                 }
             ]

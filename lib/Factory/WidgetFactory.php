@@ -252,7 +252,9 @@ class WidgetFactory extends BaseFactory
               `widget`.createdDt, 
               `widget`.modifiedDt,
               `widget`.calculatedDuration,
-              `playlist`.name AS playlist
+              `playlist`.name AS playlist,
+              `playlist`.folderId,
+              `playlist`.permissionsFolderId
         ';
 
         if (is_array($sortOrder) && (in_array('`widget`', $sortOrder) || in_array('`widget` DESC', $sortOrder))) {
@@ -303,7 +305,7 @@ class WidgetFactory extends BaseFactory
         }
 
         // Permissions
-        $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy, 'playlist.permissionsFolderId');
 
         if ($sanitizedFilter->getInt('playlistId') !== null) {
             $body .= ' AND `widget`.playlistId = :playlistId';
