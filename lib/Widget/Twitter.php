@@ -866,6 +866,7 @@ class Twitter extends TwitterBase
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
 
         $javaScriptContent .= '<script type="text/javascript">';
@@ -876,7 +877,7 @@ class Twitter extends TwitterBase
 
         // Run based only if the element is visible or not
         $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
-        $javaScriptContent .= '       (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+        $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
 
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;

@@ -289,6 +289,7 @@ class NotificationView extends ModuleWidget
         $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-text-render.js') . '"></script>';// Need the marquee plugin?
+        $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
 
         $effect = $this->getOption('effect');
@@ -326,7 +327,7 @@ class NotificationView extends ModuleWidget
 
         // Run based only if the element is visible or not
         $javaScriptContent .= '     const runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
-        $javaScriptContent .= '     (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+        $javaScriptContent .= '     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
         
         $javaScriptContent .= '   });';
         $javaScriptContent .= '</script>';

@@ -191,6 +191,7 @@ class Text extends ModuleWidget
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-text-render.js')
             ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.js')
             ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
@@ -281,7 +282,7 @@ class Text extends ModuleWidget
 
         // Run based only if the element is visible or not
         $javaScriptContent .= '     const runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
-        $javaScriptContent .= '     (xiboIC.isVisible) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
+        $javaScriptContent .= '     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
 
         if ($clock)
             $javaScriptContent .= ' moment.locale("' . Translate::GetJsLocale() . '"); updateClock(); setInterval(updateClock, 1000); ';

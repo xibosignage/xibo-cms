@@ -1330,7 +1330,7 @@ class Module extends Base
             )
         ;
 
-        if ($module->getModule()->regionSpecific == 0) {
+        if ($module->getModule()->regionSpecific == 0 && $module->getModule()->renderAs != 'html') {
             // Non region specific module - no caching required as this is only ever called via preview.
             $response = $module->download($request, $response);
         } else {
