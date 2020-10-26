@@ -354,9 +354,10 @@ $app->get('/template/view', ['\Xibo\Controller\Template','displayPage'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['template.view']))
     ->setName('template.view');
 
-$app->get('/template/form/layout/{id}', ['\Xibo\Controller\Template','addTemplateForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['template.add']))
-    ->setName('template.from.layout.form');
+$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+    $group->get('/template/form/layout/{id}', ['\Xibo\Controller\Template', 'addTemplateForm'])->setName('template.from.layout.form');
+    $group->get('/template/form/add', ['\Xibo\Controller\Template', 'addForm'])->setName('template.add.form');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['template.add']));
 
 //
 // resolution

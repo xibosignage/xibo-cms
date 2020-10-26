@@ -264,9 +264,10 @@ $app->group('', function (RouteCollectorProxy $group) {
  * )
  */
 $app->get('/template', ['\Xibo\Controller\Template','grid'])->setName('template.search');
-$app->post('/template/{id}', ['\Xibo\Controller\Template','add'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['template.add']))
-    ->setName('template.add.from.layout');
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->post('/template', ['\Xibo\Controller\Template', 'add'])->setName('template.add');
+    $group->post('/template/{id}', ['\Xibo\Controller\Template', 'addFromLayout'])->setName('template.add.from.layout');
+})->addMiddleware(new FeatureAuth($app->getContainer(), ['template.add']));
 
 /**
  * Resolutions
@@ -316,15 +317,13 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->delete('/library/{id}', ['\Xibo\Controller\Library','delete'])->setName('library.delete');
     $group->post('/library/copy/{id}', ['\Xibo\Controller\Library','copy'])->setName('library.copy');
     $group->put('/library/{id}/selectfolder', ['\Xibo\Controller\Library','selectFolder'])->setName('library.selectfolder');
-});
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['layout.modify']));
 
 // Tagging
 $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/library/{id}/tag', ['\Xibo\Controller\Library','tag'])->setName('library.tag');
     $group->post('/library/{id}/untag', ['\Xibo\Controller\Library','untag'])->setName('library.untag');
-})
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['layout.modify']))
-    ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['tag.tagging']));
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['tag.tagging']));
 
 /**
  * Displays

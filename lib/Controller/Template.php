@@ -31,6 +31,8 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Template
@@ -49,6 +51,11 @@ class Template extends Base
     private $tagFactory;
 
     /**
+     * @var \Xibo\Factory\ResolutionFactory
+     */
+    private $resolutionFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerService $sanitizerService
@@ -59,13 +66,15 @@ class Template extends Base
      * @param LayoutFactory $layoutFactory
      * @param TagFactory $tagFactory
      * @param Twig $view
+     * @param \Xibo\Factory\ResolutionFactory $resolutionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, $tagFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, $tagFactory, Twig $view, $resolutionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->layoutFactory = $layoutFactory;
         $this->tagFactory = $tagFactory;
+        $this->resolutionFactory = $resolutionFactory;
     }
 
     /**
@@ -272,6 +281,110 @@ class Template extends Base
 
         return $this->render($request, $response);
     }
+    /**
+     * Add a Template
+     * @SWG\Post(
+     *  path="/template",
+     *  operationId="templateAdd",
+     *  tags={"template"},
+     *  summary="Add a Template",
+     *  description="Add a new Template to the CMS",
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The layout name",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="The layout description",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="resolutionId",
+     *      in="formData",
+     *      description="If a Template is not provided, provide the resolutionId for this Layout.",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="returnDraft",
+     *      in="formData",
+     *      description="Should we return the Draft Layout or the Published Layout on Success?",
+     *      type="boolean",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    function add(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $name = $sanitizedParams->getString('name');
+        $description = $sanitizedParams->getString('description');
+        $resolutionId = $sanitizedParams->getInt('resolutionId');
+        $enableStat = $sanitizedParams->getCheckbox('enableStat');
+        $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
+
+        // Tags
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        } else {
+            $tags = [];
+        }
+        $tags[] = $this->tagFactory->getByTag('template');
+
+        $layout = $this->layoutFactory->createFromResolution($resolutionId,
+            $this->getUser()->userId,
+            $name,
+            $description,
+            $tags,
+            null
+        );
+
+        // Set layout enableStat flag
+        $layout->enableStat = $enableStat;
+
+        // Set auto apply transitions flag
+        $layout->autoApplyTransitions = $autoApplyTransitions;
+
+        // Save
+        $layout->save();
+
+        // Automatically checkout the new layout for edit
+        $layout = $this->layoutFactory->checkoutLayout($layout, $sanitizedParams->getCheckbox('returnDraft'));
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $layout->layout),
+            'id' => $layout->layoutId,
+            'data' => $layout
+        ]);
+
+        return $this->render($request, $response);
+    }
 
     /**
      * Add template
@@ -336,7 +449,7 @@ class Template extends Base
      *  )
      * )
      */
-    function add(Request $request, Response $response, $id)
+    function addFromLayout(Request $request, Response $response, $id)
     {
         // Get the layout
         $layout = $this->layoutFactory->getById($id);
@@ -392,6 +505,25 @@ class Template extends Base
             'message' => sprintf(__('Saved %s'), $layout->layout),
             'id' => $layout->layoutId,
             'data' => $layout
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Displays an Add/Edit form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    function addForm(Request $request, Response $response)
+    {
+        $this->getState()->template = 'template-form-add';
+        $this->getState()->setData([
+            'resolutions' => $this->resolutionFactory->query(['resolution']),
+            'help' => $this->getHelp()->link('Layout', 'Add')
         ]);
 
         return $this->render($request, $response);

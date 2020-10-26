@@ -82,7 +82,7 @@ interface TimeSeriesStoreInterface
 
     /**
      * Get the earliest date
-     * @return array
+     * @return \Carbon\Carbon|null
      */
     public function getEarliestDate();
 

@@ -25,6 +25,14 @@
 
 {% block title %}{{ "Templates"|trans }} | {% endblock %}
 
+{% block actionMenu %}
+    {% if currentUser.featureEnabled("template.add") %}
+        <ul class="nav nav-pills pull-right">
+            <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Template and jump to the layout designer." %}" href="{{ url_for("template.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Template" %}</a></li>
+        </ul>
+    {% endif %}
+{% endblock %}
+
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Templates" %}</div>
@@ -111,5 +119,31 @@
         table.on('draw', { form: $("#templates").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#templates_wrapper').find('.col-sm-6').eq(1));
+
+        function templateFormOpen() {
+            $("#templateAddForm").submit(function(e) {
+                e.preventDefault();
+                var form = $(this);
+
+                var url = $(this).data().redirect;
+
+                $.ajax({
+                    type: $(this).attr("method"),
+                    url: $(this).attr("action"),
+                    data: $(this).serialize(),
+                    cache: false,
+                    dataType:"json",
+                    success: function(xhr, textStatus, error) {
+
+                        XiboSubmitResponse(xhr, form);
+
+                        if (xhr.success) {
+                            // Reload the designer
+                            XiboRedirect(url.replace(":id", xhr.id));
+                        }
+                    }
+                });
+            });
+        }
     </script>
 {% endblock %}

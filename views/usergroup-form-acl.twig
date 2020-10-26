@@ -83,7 +83,7 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="active"><a href="#mediaTab" role="tab" data-toggle="tab"><span>{% trans "Content" %}</span></a></li>
                 <li><a href="#displaysTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
-                <li><a href="#homepagesTab" role="tab" data-toggle="tab"><span>{% trans "Homepages and Reports" %}</span></a></li>
+                <li><a href="#homepagesTab" role="tab" data-toggle="tab"><span>{% trans "Reports" %}</span></a></li>
                 <li><a href="#usersTab" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
                 <li><a href="#systemTab" role="tab" data-toggle="tab"><span>{% trans "System" %}</span></a></li>
                 <li><a href="#customTab" role="tab" data-toggle="tab"><span>{% trans "Custom" %}</span></a></li>
@@ -107,13 +107,6 @@
                                     {% endif %}
                                 </tr>
                             </thead>
-
-                            <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Dashboards"|trans, "Bring together key features onto a user's dashboard."|trans, isUserSpecific) }}
-                                {% for customFeature in userGroupFactory.getFeaturesByGroup("dashboards") %}
-                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
-                                {% endfor %}
-                            </tbody>
 
                             <tbody class="feature-group">
                                 {{ flow.featureTitleRow("Reporting"|trans, "Run reporting on a variety of different KPI's and metrics applicable to the Features enabled."|trans, isUserSpecific) }}
@@ -156,7 +149,7 @@
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Playlist Design"|trans, "Design Playlists which exist independently from a Layout and can be reused across multiple Layouts."|trans, isUserSpecific) }}
+                                {{ flow.featureTitleRow("Playlist Design"|trans, "Create Playlists to be applied to multiple Layouts using the Sub-Playlist widget"|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("playlist-design") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
@@ -253,6 +246,13 @@
                             <tbody class="feature-group">
                                 {{ flow.featureTitleRow("User Management"|trans, "Manage users that can authenticate with the CMS, organise them into groups and then enable features for them."|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("users-management") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Dashboards"|trans, "Bring together key features onto a user's dashboard."|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("dashboards") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>

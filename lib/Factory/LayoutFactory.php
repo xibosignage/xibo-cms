@@ -30,6 +30,7 @@ use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Playlist;
+use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Helper\SanitizerService;
@@ -187,7 +188,7 @@ class LayoutFactory extends BaseFactory
      * @param int $ownerId
      * @param string $name
      * @param string $description
-     * @param string $tags
+     * @param string|array $tags
      * @param string $code
      * @return Layout
      *
@@ -215,7 +216,11 @@ class LayoutFactory extends BaseFactory
         $layout->setOwner($ownerId);
 
         // Create some tags
-        $layout->tags = $this->tagFactory->tagsFromString($tags);
+        if (is_array($tags)) {
+            $layout->tags = $tags;
+        } else {
+            $layout->tags = $this->tagFactory->tagsFromString($tags);
+        }
 
         // Add a blank, full screen region
         $layout->regions[] = $this->regionFactory->create($ownerId, $name . '-1', $layout->width, $layout->height, 0, 0);
@@ -1050,35 +1055,35 @@ class LayoutFactory extends BaseFactory
         $regionActions = false;
         $widgetActions = false;
 
-        // check if we have any actions in regions and/or widgets.
-        if (!empty($layoutDetails['layoutDefinitions']['drawers'])) {
-            $allRegions = array_merge($layoutDetails['layoutDefinitions']['regions'], $layoutDetails['layoutDefinitions']['drawers']);
-        } else {
-            $allRegions = $layoutDetails['layoutDefinitions']['regions'];
-        }
-
-        foreach ($allRegions as $region) {
-            $regionActions = (!empty($region['actions'])) ? true : false;
-
-            if ($regionActions) {
-                break;
-            }
-
-            foreach ($region['regionPlaylist']['widgets'] as $widget) {
-                $widgetActions = (!empty($widget['actions'])) ? true : false;
-
-                if ($widgetActions) {
-                    break;
-                }
-            }
-        }
-
-        $actionsExist = (!empty($layoutDetails['layoutDefinitions']['actions']) || $regionActions || $widgetActions) ? true : false;
+        $actionsExist = !empty($layoutDetails['layoutDefinitions']['actions']) || $regionActions || $widgetActions;
 
         // should we use json import?
-        $useJsonImport = (!empty($layoutDetails['layoutDefinitions']['drawers']) || $playlistDetails !== false || $actionsExist) ? true : false;
+        $useJsonImport = !empty($layoutDetails['layoutDefinitions']['drawers']) || $playlistDetails !== false || $actionsExist;
 
         if ($useJsonImport) {
+            // check if we have any actions in regions and/or widgets.
+            if (!empty($layoutDetails['layoutDefinitions']['drawers'])) {
+                $allRegions = array_merge($layoutDetails['layoutDefinitions']['regions'], $layoutDetails['layoutDefinitions']['drawers']);
+            } else {
+                $allRegions = $layoutDetails['layoutDefinitions']['regions'];
+            }
+
+            foreach ($allRegions as $region) {
+                $regionActions = (!empty($region['actions'])) ? true : false;
+
+                if ($regionActions) {
+                    break;
+                }
+
+                foreach ($region['regionPlaylist']['widgets'] as $widget) {
+                    $widgetActions = (!empty($widget['actions'])) ? true : false;
+
+                    if ($widgetActions) {
+                        break;
+                    }
+                }
+            }
+
             // Construct the Layout
             if ($playlistDetails !== false) {
                 $playlistDetails = json_decode(($playlistDetails), true);
@@ -1091,11 +1096,21 @@ class LayoutFactory extends BaseFactory
             $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
+
+            // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
+            // if the code does not exist, then persist it on import.
+            try {
+                $this->getByCode($layoutDetails['layoutDefinitions']['code']);
+                $layout->code = null;
+            } catch (NotFoundException $exception) {
+                $layout->code = $layoutDetails['layoutDefinitions']['code'];
+            }
         } else {
             $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
         }
 
         $this->getLog()->debug('Layout Loaded: ' . $layout);
+
         // Ensure width and height are integer type for resolution validation purpose xibosignage/xibo#1648
         $layout->width = (int)$layout->width;
         $layout->height = (int)$layout->height;
@@ -1104,15 +1119,6 @@ class LayoutFactory extends BaseFactory
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
 
-        // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
-        // if the code does not exist, then persist it on import.
-        try {
-            $this->getByCode($layoutDetails['layoutDefinitions']['code']);
-            $layout->code = null;
-        } catch (NotFoundException $exception) {
-            $layout->code = $layoutDetails['layoutDefinitions']['code'];
-        }
-
         // Get global stat setting of layout to on/off proof of play statistics
         $layout->enableStat = $this->config->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
 
@@ -1120,11 +1126,11 @@ class LayoutFactory extends BaseFactory
 
         // Check that the resolution we have in this layout exists, and if not create it.
         try {
-            if ($layout->schemaVersion < 2)
+            if ($layout->schemaVersion < 2) {
                 $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
-            else
+            } else {
                 $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
-
+            }
         } catch (NotFoundException $notFoundException) {
             $this->getLog()->info('Import is for an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
 
@@ -2229,5 +2235,93 @@ class LayoutFactory extends BaseFactory
         }
 
         return $newPlaylist;
+    }
+
+    /**
+     * Checkout a Layout
+     * @param \Xibo\Entity\Layout $layout
+     * @param bool $returnDraft Should we return the Draft or the pre-checkout Layout
+     * @return \Xibo\Entity\Layout
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function checkoutLayout($layout, $returnDraft = true)
+    {
+        // Load the Layout
+        $layout->load();
+
+        // Make a skeleton copy of the Layout
+        $draft = clone $layout;
+        $draft->parentId = $layout->layoutId;
+        $draft->campaignId = $layout->campaignId;
+        $draft->publishedStatusId = 2; // Draft
+        $draft->publishedStatus = __('Draft');
+        $draft->autoApplyTransitions = $layout->autoApplyTransitions;
+        $draft->code = $layout->code;
+        $draft->folderId = $layout->folderId;
+
+        // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
+        $draft->tags = [];
+
+        // Save without validation or notification.
+        $draft->save([
+            'validate' => false,
+            'notify' => false
+        ]);
+
+        // Update the original
+        $layout->publishedStatusId = 2; // Draft
+        $layout->publishedStatus = __('Draft');
+        $layout->save([
+            'saveLayout' => true,
+            'saveRegions' => false,
+            'saveTags' => false,
+            'setBuildRequired' => false,
+            'validate' => false,
+            'notify' => false
+        ]);
+
+        /** @var Region[] $allRegions */
+        $allRegions = array_merge($draft->regions, $draft->drawers);
+        $draft->copyActions($draft, $layout);
+
+        // Permissions && Sub-Playlists
+        // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
+        // Regions/Widgets need to copy down our layout permissions
+        foreach ($allRegions as $region) {
+            // Match our original region id to the id in the parent layout
+            $original = $layout->getRegionOrDrawer($region->getOriginalValue('regionId'));
+
+            // Make sure Playlist closure table from the published one are copied over
+            $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
+
+            // Copy over original permissions
+            foreach ($original->permissions as $permission) {
+                $new = clone $permission;
+                $new->objectId = $region->regionId;
+                $new->save();
+            }
+
+            // Playlist
+            foreach ($original->getPlaylist()->permissions as $permission) {
+                $new = clone $permission;
+                $new->objectId = $region->getPlaylist()->playlistId;
+                $new->save();
+            }
+
+            // Widgets
+            foreach ($region->getPlaylist()->widgets as $widget) {
+                $originalWidget = $original->getPlaylist()->getWidget($widget->getOriginalValue('widgetId'));
+                // Copy over original permissions
+                foreach ($originalWidget->permissions as $permission) {
+                    $new = clone $permission;
+                    $new->objectId = $widget->widgetId;
+                    $new->save();
+                }
+            }
+        }
+
+        return $returnDraft ? $draft : $layout;
     }
 }

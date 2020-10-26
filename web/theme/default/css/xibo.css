@@ -1144,9 +1144,13 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
 
 .jstree-anchor {
     /*enable wrapping*/
-    white-space : normal !important;
+    white-space: normal !important;
     /*ensure lower nodes move down*/
-    height : auto !important;
+    height: auto !important;
     /*offset icon width*/
-    padding-right : 24px;
+    padding-right: 24px;
+}
+
+td.feature-group-header-cell {
+    cursor: pointer;
 }

@@ -356,6 +356,12 @@ class Layout extends Base
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
         $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        } else {
+            $tags = [];
+        }
+
         $template = null;
 
         if ($templateId != 0) {
@@ -373,7 +379,7 @@ class Layout extends Base
 
             // Create some tags (overwriting the old ones)
             if ($this->getUser()->featureEnabled('tag.tagging')) {
-                $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+                $layout->tags = $tags;
             }
 
             // Set the owner
@@ -384,9 +390,15 @@ class Layout extends Base
                 // Set the ownership of this region to the user creating from template
                 $region->setOwner($this->getUser()->userId, true);
             }
-        }
-        else {
-            $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $sanitizedParams->getString('tags'), $code);
+        } else {
+            $layout = $this->layoutFactory->createFromResolution(
+                $resolutionId,
+                $this->getUser()->userId,
+                $name,
+                $description,
+                $tags,
+                $code
+            );
         }
 
         // Set layout enableStat flag
@@ -421,32 +433,16 @@ class Layout extends Base
 
         $this->getLog()->debug('Layout Added');
 
-        // automatically checkout the new layout for edit
-        $this->checkout($request, $response, $layout->layoutId);
+        // Automatically checkout the new layout for edit
+        $layout = $this->layoutFactory->checkoutLayout($layout, $sanitizedParams->getCheckbox('returnDraft'));
 
-        if ($sanitizedParams->getCheckbox('returnDraft')) {
-            // This is a workaround really - the call to checkout above ought to be separated into a public/private
-            // method, with the private method returning the draft layout
-            // is it stands the checkout method will have already set the draft layout id to the state data property
-            // we just need to set the message.
-            $this->getState()->hydrate([
-                'httpStatus' => 201,
-                'message' => sprintf(__('Added %s'), $layout->layout),
-            ]);
-        } else {
-            // Make sure we adjust the published status
-            // again, this is a workaround because checkout doesn't return a Layout object
-            $layout->publishedStatus = __('Draft');
-            $layout->publishedStatusId = 2;
-
-            // Return
-            $this->getState()->hydrate([
-                'httpStatus' => 201,
-                'message' => sprintf(__('Added %s'), $layout->layout),
-                'id' => $layout->layoutId,
-                'data' => $layout
-            ]);
-        }
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $layout->layout),
+            'id' => $layout->layoutId,
+            'data' => $layout
+        ]);
 
         return $this->render($request, $response);
     }
@@ -2471,78 +2467,8 @@ class Layout extends Base
             throw new InvalidArgumentException(__('Layout is already checked out'), 'statusId');
         }
 
-        // Load the Layout
-        $layout->load();
-
-        // Make a skeleton copy of the Layout
-        $draft = clone $layout;
-        $draft->parentId = $layout->layoutId;
-        $draft->campaignId = $layout->campaignId;
-        $draft->publishedStatusId = 2; // Draft
-        $draft->publishedStatus = __('Draft');
-        $draft->autoApplyTransitions = $layout->autoApplyTransitions;
-        $draft->code = $layout->code;
-        $draft->folderId = $layout->folderId;
-
-        // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
-        $draft->tags = [];
-
-        // Save without validation or notification.
-        $draft->save([
-            'validate' => false,
-            'notify' => false
-        ]);
-
-        // Update the original
-        $layout->publishedStatusId = 2; // Draft
-        $layout->save([
-            'saveLayout' => true,
-            'saveRegions' => false,
-            'saveTags' => false,
-            'setBuildRequired' => false,
-            'validate' => false,
-            'notify' => false
-        ]);
-
-        /** @var Region[] $allRegions */
-        $allRegions = array_merge($draft->regions, $draft->drawers);
-        $draft->copyActions($draft, $layout);
-
-        // Permissions && Sub-Playlists
-        // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
-        // Regions/Widgets need to copy down our layout permissions
-        foreach ($allRegions as $region) {
-            // Match our original region id to the id in the parent layout
-            $original = $layout->getRegionOrDrawer($region->getOriginalValue('regionId'));
-
-            // Make sure Playlist closure table from the published one are copied over
-            $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
-
-            // Copy over original permissions
-            foreach ($original->permissions as $permission) {
-                $new = clone $permission;
-                $new->objectId = $region->regionId;
-                $new->save();
-            }
-
-            // Playlist
-            foreach ($original->getPlaylist()->permissions as $permission) {
-                $new = clone $permission;
-                $new->objectId = $region->getPlaylist()->playlistId;
-                $new->save();
-            }
-
-            // Widgets
-            foreach ($region->getPlaylist()->widgets as $widget) {
-                $originalWidget = $original->getPlaylist()->getWidget($widget->getOriginalValue('widgetId'));
-                // Copy over original permissions
-                foreach ($originalWidget->permissions as $permission) {
-                    $new = clone $permission;
-                    $new->objectId = $widget->widgetId;
-                    $new->save();
-                }
-            }
-        }
+        // Checkout this Layout
+        $draft = $this->layoutFactory->checkoutLayout($layout);
 
         // Return
         $this->getState()->hydrate([
