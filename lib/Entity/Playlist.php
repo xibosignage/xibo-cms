@@ -166,6 +166,10 @@ class Playlist implements \JsonSerializable
      */
     public $folderId;
 
+    /**
+     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Playlist")
+     * @var int
+     */
     public $permissionsFolderId;
 
     private $unassignTags = [];

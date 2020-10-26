@@ -230,6 +230,10 @@ class DataSet implements \JsonSerializable
      */
     public $folderId;
 
+    /**
+     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this DataSet")
+     * @var int
+     */
     public $permissionsFolderId;
 
     /** @var array Permissions */

@@ -146,6 +146,10 @@ class DisplayGroup implements \JsonSerializable
      */
     public $folderId;
 
+    /**
+     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Display Group")
+     * @var int
+     */
     public $permissionsFolderId;
 
     /**

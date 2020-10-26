@@ -216,6 +216,10 @@ class Media implements \JsonSerializable
      */
     public $folderId;
 
+    /**
+     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Media")
+     * @var int
+     */
     public $permissionsFolderId;
 
     private $widgets = [];
