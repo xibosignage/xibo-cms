@@ -123,6 +123,50 @@
             </div>
         </div>
         {{/if}}
+        {{#if showWidgetDates }}
+        <div class="row row-widget-dates">
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" for="widgetFromDt">{{ trans.widgetFromDt }}</label>
+                    <div class="col-sm-10">
+                        <div class="input-group">
+                            <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
+                            <input class="form-control dateTimePicker dateControl" type="text" name="widgetFromDt" id="widgetFromDt" />
+                            <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
+                        </div>
+                        <span class="help-block">{{ trans.widgetFromDtMessage }}</span>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" for="widgetToDt">{{ trans.widgetToDt }}</label>
+                    <div class="col-sm-10">
+                        <div class="input-group">
+                            <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
+                            <input class="form-control dateTimePicker dateControl" type="text" name="widgetToDt" id="widgetToDt" />
+                            <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
+                        </div>
+                        <span class="help-block">{{ trans.widgetToDtMessage }}</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <label for="deleteOnExpiry">
+                    <input type="checkbox" id="deleteOnExpiry" name="deleteOnExpiry">
+                    {{ trans.deleteOnExpiryMessage }}
+                </label>
+            </div>
+            <div class="col-md-6">
+                <label for="applyToMedia">
+                    <input type="checkbox" id="applyToMedia" name="applyToMedia">
+                    {{ trans.applyToMediaMessage }}
+                </label>
+            </div>
+        </div>
+        {{/if}}
         <!-- The table listing the files available for upload/download -->
         <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
     </form>

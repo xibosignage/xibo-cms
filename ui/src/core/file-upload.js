@@ -83,6 +83,11 @@ function openUploadForm(options) {
             });
         }
 
+        // Widget dates?
+        if (options.templateOptions.showWidgetDates) {
+            XiboInitialise(".row-widget-dates");
+        }
+
         // Ready to initialise the widget and bind to some events
         form
             .fileupload(uploadOptions)

@@ -890,7 +890,8 @@ let formHelpers = function() {
                             maxSizeMessage: $(this).data().maxSizeMessage,
                             validExtensionsMessage: translations.validExtensions.replace("%s", validExtensions).replace(/\|/g, ", "),
                             validExt: validExtensions
-                        }
+                        },
+                        showWidgetDates: false
                     },
                     buttons: {
                         main: {

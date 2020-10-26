@@ -1373,8 +1373,7 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
                 },
                 playlistId: playlistId,
                 displayOrder: addToPosition,
-                updateInAllChecked: uploadFormUpdateAllDefault,
-                deleteOldRevisionsChecked: uploadFormDeleteOldDefault
+                showWidgetDates: true
             }
         }).attr('data-test', 'uploadFormModal');
 
