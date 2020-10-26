@@ -771,7 +771,7 @@ class Playlist extends Base
         $playlist->name = $sanitizedParams->getString('name');
         $playlist->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
-        $playlist->folderId = $sanitizedParams->getInt('folderId');
+        $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => $playlist->folderId]);
 
         if ($playlist->hasPropertyChanged('folderId')) {
             $folder = $this->folderFactory->getById($playlist->folderId);

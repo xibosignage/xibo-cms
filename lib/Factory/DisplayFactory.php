@@ -56,6 +56,9 @@ class DisplayFactory extends BaseFactory
      */
     private $displayProfileFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -67,8 +70,9 @@ class DisplayFactory extends BaseFactory
      * @param ConfigServiceInterface $config
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayProfileFactory $displayProfileFactory
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $displayNotifyService, $config, $displayGroupFactory, $displayProfileFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $displayNotifyService, $config, $displayGroupFactory, $displayProfileFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -77,6 +81,7 @@ class DisplayFactory extends BaseFactory
         $this->config = $config;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->displayProfileFactory = $displayProfileFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -94,7 +99,7 @@ class DisplayFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Display($this->getStore(), $this->getLog(), $this->config, $this->displayGroupFactory, $this->displayProfileFactory, $this);
+        return new Display($this->getStore(), $this->getLog(), $this->config, $this->displayGroupFactory, $this->displayProfileFactory, $this, $this->folderFactory);
     }
 
     /**

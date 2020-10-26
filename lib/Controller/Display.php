@@ -1280,7 +1280,7 @@ class Display extends Base
         $display->bandwidthLimit = $sanitizedParams->getInt('bandwidthLimit');
         $display->teamViewerSerial = $sanitizedParams->getString('teamViewerSerial');
         $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
-        $display->folderId = $sanitizedParams->getInt('folderId');
+        $display->folderId = $sanitizedParams->getInt('folderId', ['default' => $display->folderId]);
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config

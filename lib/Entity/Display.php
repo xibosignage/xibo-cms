@@ -28,6 +28,7 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -435,6 +436,9 @@ class Display implements \JsonSerializable
      */
     private $scheduleFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -444,7 +448,7 @@ class Display implements \JsonSerializable
      * @param DisplayProfileFactory $displayProfileFactory
      * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $config, $displayGroupFactory, $displayProfileFactory, $displayFactory)
+    public function __construct($store, $log, $config, $displayGroupFactory, $displayProfileFactory, $displayFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('mediaInventoryXml');
@@ -455,6 +459,7 @@ class Display implements \JsonSerializable
         $this->displayGroupFactory = $displayGroupFactory;
         $this->displayProfileFactory = $displayProfileFactory;
         $this->displayFactory = $displayFactory;
+        $this->folderFactory = $folderFactory;
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
@@ -914,7 +919,9 @@ class Display implements \JsonSerializable
             $displayGroup->description = $this->description;
             $displayGroup->replaceTags($this->tags);
             $displayGroup->bandwidthLimit = $this->bandwidthLimit;
-            $displayGroup->folderId = $this->folderId;
+            $displayGroup->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+            $folder = $this->folderFactory->getById($this->folderId);
+            $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
             $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
         } else {
             $this->store->update('UPDATE displaygroup SET `modifiedDt` = :modifiedDt WHERE displayGroupId = :displayGroupId', [

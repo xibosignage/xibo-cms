@@ -811,7 +811,7 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
-        $dataSet->folderId = $sanitizedParams->getInt('folderId');
+        $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
 
         if ($dataSet->hasPropertyChanged('folderId')) {
             $folder = $this->folderFactory->getById($dataSet->folderId);

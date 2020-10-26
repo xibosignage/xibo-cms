@@ -721,7 +721,7 @@ class DisplayGroup extends Base
         $displayGroup->description = $parsedRequestParams->getString('description');
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteria') : null;
-        $displayGroup->folderId = $parsedRequestParams->getInt('folderId');
+        $displayGroup->folderId = $parsedRequestParams->getInt('folderId', ['default' => $displayGroup->folderId]);
 
         if ($displayGroup->hasPropertyChanged('folderId')) {
             $folder = $this->folderFactory->getById($displayGroup->folderId);

@@ -1222,7 +1222,8 @@ class State implements Middleware
                     $c->get('displayNotifyService'),
                     $c->get('configService'),
                     $c->get('displayGroupFactory'),
-                    $c->get('displayProfileFactory')
+                    $c->get('displayProfileFactory'),
+                    $c->get('folderFactory')
                 );
             },
             'displayEventFactory' => function(ContainerInterface $c) {
