@@ -934,7 +934,7 @@ class Library extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="WidgetToDt",
+     *      name="widgetToDt",
      *      in="formData",
      *      description="Date in Y-m-d H:i:s format, will set widget end date",
      *      type="string",

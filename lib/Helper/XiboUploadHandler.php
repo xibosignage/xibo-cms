@@ -399,7 +399,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
     {
         if ($index === null) {
             if (isset($_REQUEST[$param])) {
-                return  $_REQUEST[$param];
+                return $_REQUEST[$param];
             } else {
                 return $default;
             }
