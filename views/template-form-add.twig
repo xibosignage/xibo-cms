@@ -1,0 +1,98 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Add Template" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#templateAddForm").submit()
+{% endblock %}
+
+{% block callBack %}templateFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li><a href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
+            </ul>
+            <form id="templateAddForm" class="form-horizontal" method="post" action="{{ url_for("template.add") }}" data-redirect="{{ url_for("layout.designer", {id: ':id'}) }}" data-gettag="{{ url_for("tag.getByName") }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "The Name of the Template - (1 - 50 characters)" %}{% endset %}
+                        {{ forms.input("name", title, "", helpText) }}
+
+                        {% if currentUser.featureEnabled("tag.tagging") %}
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "Tags for this Template - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
+                            {{ forms.inputWithTags("tags", title, "", helpText, 'tags-with-value') }}
+
+                            <p id="loadingValues" style="margin-left: 17%"></p>
+
+                            {% set title %}{% trans "Tag value" %}{% endset %}
+                            {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
+
+                            <div id="tagValueContainer">
+                                {% set title %}{% trans "Tag value" %}{% endset %}
+                                {% set helpText %}{% trans "Please provide the value for this Tag and confirm by pressing enter on your keyboard." %}{% endset %}
+                                {{ forms.input("tagValueInput", title, "", helpText) }}
+                            </div>
+
+                            <div id="tagValueRequired" class="alert alert-info">
+                                <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
+                            </div>
+                        {% endif %}
+
+                        {% set title %}{% trans "Resolution" %}{% endset %}
+                        {% set helpText %}{% trans "Choose the resolution this Template should be designed for." %}{% endset %}
+                        {{ forms.dropdown("resolutionId", "single", title, "", resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
+
+                        {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
+                        {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Template. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+                        {{ forms.checkbox("enableStat", title, theme.getSetting("LAYOUT_STATS_ENABLED_DEFAULT"), helpText) }}
+
+                        {% set title %}{% trans "Automatically apply Transitions?" %}{% endset %}
+                        {% set helpText %}{% trans "When enabled, the default Transition type and duration will be applied to all widgets on this Template." %}{% endset %}
+                        {{ forms.checkbox("autoApplyTransitions", title, theme.getSetting("DEFAULT_TRANSITION_AUTO_APPLY"), helpText) }}
+
+                        {{ forms.message("You can also add a template from an existing Layout from the Layout Designer."|trans, "alert alert-info") }}
+                    </div>
+                    <div class="tab-pane" id="description">
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "An optional description of the Template. (1 - 250 characters)" %}{% endset %}
+                        {{ forms.textarea("description", title, "", helpText) }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

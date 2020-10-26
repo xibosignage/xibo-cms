@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Carbon\Carbon;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
@@ -163,7 +164,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         unset($statData['fromDt']);
         unset($statData['toDt']);
         unset($statData['tag']);
-        
+
         // Make an empty array to collect layout/media/display tags into
         $tagFilter = [];
 
@@ -430,29 +431,27 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     {
         $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
         try {
-            $earliestDate = $collection->aggregate([
-                [
-                    '$group' => [
-                        '_id' => [],
-                        'minDate' => ['$min' => '$statDate'],
-                    ]
-                ]
+            // _id is the same as statDate for the purposes of sorting (stat date being the date/time of stat insert)
+            $earliestDate = $collection->find([], [
+                'limit' => 1,
+                'sort' => ['start' => 1]
             ])->toArray();
 
-            if(count($earliestDate) > 0) {
-                return [
-                    'minDate' => $earliestDate[0]['minDate']->toDateTime()->format('U')
-                ];
+            if (count($earliestDate) > 0) {
+                return Carbon::instance($earliestDate[0]['start']->toDateTime());
             }
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
 
-        return [];
+        return null;
     }
 
-    /** @inheritdoc */
+    /**
+     * @inheritdoc
+     * @throws \Xibo\Exception\GeneralException|\Xibo\Exception\InvalidArgumentException
+     */
     public function getStats($filterBy = [])
     {
         // do we consider that the fromDt and toDt will always be provided?
@@ -563,36 +562,45 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['mediaId'] = [ '$in' => $mediaIds ];
         }
 
+        // Select collection
         $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
 
-        $group = [
-            '$group' => [
-                '_id'=> null,
-                'count' => ['$sum' => 1],
-            ]
-        ];
-
-        if (count($match) > 0) {
-            $totalQuery = [
-                $match,
-                $group,
+        // Paging
+        // ------
+        // Check whether or not we've requested a page, if we have then we need a count of records total for paging
+        // if we haven't then we don't bother getting a count
+        $total = 0;
+        if ($start !== null && $length !== null) {
+            // We add a group pipeline to get a total count of records
+            $group = [
+                '$group' => [
+                    '_id' => null,
+                    'count' => ['$sum' => 1],
+                ]
             ];
-        } else {
-            $totalQuery = [
-                $group,
-            ];
-        }
 
-        // Get total
-        try {
-            $totalCursor = $collection->aggregate($totalQuery, ['allowDiskUse' => true]);
+            if (count($match) > 0) {
+                $totalQuery = [
+                    $match,
+                    $group,
+                ];
+            } else {
+                $totalQuery = [
+                    $group,
+                ];
+            }
 
-            $totalCount = $totalCursor->toArray();
-            $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+            // Get total
+            try {
+                $totalCursor = $collection->aggregate($totalQuery, ['allowDiskUse' => true]);
 
-        } catch (\Exception $e) {
-            $this->log->error('Error: Total Count. '. $e->getMessage());
-            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+                $totalCount = $totalCursor->toArray();
+                $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+
+            } catch (\Exception $e) {
+                $this->log->error('Error: Total Count. ' . $e->getMessage());
+                throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+            }
         }
 
         try {
@@ -632,10 +640,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ];
             }
 
-            // Sort by id (statId) - we must sort before we do pagination as mongo stat has descending order indexing on start/end
-            $query[]['$sort'] = ['id'=> 1];
-
+            // Paging
             if ($start !== null && $length !== null) {
+                // Sort by id (statId) - we must sort before we do pagination as mongo stat has descending order indexing on start/end
+                $query[]['$sort'] = ['id'=> 1];
                 $query[]['$skip'] =  $start;
                 $query[]['$limit'] = $length;
             }
@@ -644,7 +652,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $result = new TimeSeriesMongoDbResults($cursor);
 
-            // Total
+            // Total (we have worked this out above if we have paging enabled, otherwise its 0)
             $result->totalCount = $total;
 
         } catch (\Exception $e) {
@@ -709,60 +717,30 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function deleteStats($maxage, $fromDt = null, $options = [])
     {
-        // Set default options
-        $options = array_merge([
-            'maxAttempts' => 10,
-            'statsDeleteSleep' => 3,
-            'limit' => 1000,
-        ], $options);
-
+        // Filter the records we want to delete.
         // we dont use $options['limit'] anymore.
         // we delete all the records at once based on filter criteria (no-limit approach)
+        $filter = [
+            'start' => ['$lte' => new UTCDateTime($maxage->format('U')*1000)],
+        ];
 
-        $toDt = new UTCDateTime($maxage->format('U')*1000);
-
-        $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
-
-        $rows = 1;
-        $count = 0;
-
-        if ($fromDt != null) {
-
-            $start = new UTCDateTime($fromDt->format('U')*1000);
-            $filter =  [
-                'start' => ['$lte' => $toDt],
-                'end' => ['$gt' => $start]
-            ];
-
-        } else {
-
-            $filter =  [
-                'start' => ['$lte' => $toDt]
-            ];
+        // Do we also limit the from date?
+        if ($fromDt !== null) {
+            $filter['end'] = ['$gt' => new UTCDateTime($fromDt->format('U')*1000)];
         }
 
+        // Run the delete and return the number of records we deleted.
         try {
-            $deleteResult = $collection->deleteMany(
-                $filter
-            );
-            $rows = $deleteResult->getDeletedCount();
+            $deleteResult = $this->getClient()
+                ->selectCollection($this->config['database'], $this->table)
+                ->deleteMany($filter);
 
+            return $deleteResult->getDeletedCount();
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
+            throw new GeneralException('Stats cannot be deleted.');
         }
-
-        $count += $rows;
-
-        // Give MongoDB time to recover
-        if ($rows > 0) {
-            $this->log->debug('Stats delete effected ' . $rows . ' rows, sleeping.');
-            sleep($options['statsDeleteSleep']);
-        }
-
-
-        return $count;
-
     }
 
     /** @inheritdoc */

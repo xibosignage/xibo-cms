@@ -20,9 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Helper;
-
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Monolog\Logger;
@@ -34,8 +32,17 @@ use Xibo\Storage\PdoStorageService;
  */
 class DatabaseLogHandler extends AbstractProcessingHandler
 {
+    /** @var \PDO */
+    private static $pdo;
+
+    /** @var \PDOStatement|null */
     private static $statement;
+
+    /** @var int Log Level */
     protected $level = Logger::ERROR;
+
+    /** @var int Track the number of failures since a success */
+    private $failureCount = 0;
 
     /**
      * @param int $level The minimum logging level at which this handler will be triggered
@@ -67,21 +74,19 @@ class DatabaseLogHandler extends AbstractProcessingHandler
     }
 
     /**
-     * Writes the record down to the log of the implementing handler
-     *
-     * @param  array $record
-     * @return void
+     * @inheritDoc
+     * @throws \Exception
      */
     protected function write(array $record)
     {
         if (self::$statement == NULL) {
-            $pdo = PdoStorageService::newConnection();
+            self::$pdo = PdoStorageService::newConnection();
 
             $SQL = 'INSERT INTO log (runNo, logdate, channel, type, page, function, message, userid, displayid)
                       VALUES (:runNo, :logdate, :channel, :type, :page, :function, :message, :userid, :displayid)
                   ';
 
-            self::$statement = $pdo->prepare($SQL);
+            self::$statement = self::$pdo->prepare($SQL);
         }
 
         $params = array(
@@ -97,11 +102,44 @@ class DatabaseLogHandler extends AbstractProcessingHandler
         );
 
         try {
-            PdoStorageService::incrementStatStatic('log', 'insert');
+            // Insert
             self::$statement->execute($params);
+
+            // Reset failure count
+            $this->failureCount = 0;
+
+            // Successful write
+            PdoStorageService::incrementStatStatic('log', 'insert');
+
+        } catch (\Exception $e) {
+            // Increment failure count
+            $this->failureCount++;
+
+            // Try to create a new statement
+            if ($this->failureCount <= 1) {
+                // Clear the stored statement, and try again
+                // this will rebuild the connection
+                self::$statement = null;
+
+                // Try again.
+                $this->write($record);
+            }
+            // If the failureCount is > 1, then we ignore the error.
         }
-        catch (\PDOException $e) {
-            // Not sure what we can do here?
-        }
+    }
+
+    /**
+     * @param string $cutOff
+     */
+    public static function tidyLogs($cutOff)
+    {
+        try {
+            if (self::$pdo === null) {
+                self::$pdo = PdoStorageService::newConnection();
+            }
+            $statement = self::$pdo->prepare('DELETE FROM `log` WHERE logdate < :maxage');
+            $statement->execute(['maxage' => $cutOff]);
+
+        } catch (\PDOException $ignored) {}
     }
 }

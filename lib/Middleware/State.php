@@ -1003,7 +1003,8 @@ class State implements Middleware
                     $c->get('configService'),
                     $c->get('layoutFactory'),
                     $c->get('tagFactory'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c->get('resolutionFactory')
                 );
             },
             '\Xibo\Controller\Transition' => function(ContainerInterface $c) {

@@ -62,6 +62,11 @@ $container->set('logger', function () {
     $logger->pushProcessor($uidProcessor);
     $logger->pushHandler($dbhandler);
 
+    // Optionally allow console logging
+    if (isset($_SERVER['LOG_TO_CONSOLE']) && $_SERVER['LOG_TO_CONSOLE']) {
+        $logger->pushHandler(new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG));
+    }
+
     return $logger;
 });
 

@@ -484,7 +484,7 @@ class Task extends Base
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_SUCCESS;
         }
         catch (\Exception $e) {
-            $this->getLog()->error($e->getMessage());
+            $this->getLog()->error($e->getMessage() . ' Exception Type: ' . get_class($e));
             $this->getLog()->debug($e->getTraceAsString());
 
             // We should rollback anything we've done so far
