@@ -311,21 +311,23 @@ class DisplayGroup extends Base
                     'text' => __('Copy')
                 );
 
-                // Select Folder
-                $group->buttons[] = [
-                    'id' => 'displaygroup_button_selectfolder',
-                    'url' => $this->urlFor($request,'displayGroup.selectfolder.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Select Folder'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $group->displayGroupId])],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
-                        ['name' => 'text', 'value' => __('Move to Folder')],
-                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
-                        ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                    ]
-                ];
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    // Select Folder
+                    $group->buttons[] = [
+                        'id' => 'displaygroup_button_selectfolder',
+                        'url' => $this->urlFor($request,'displayGroup.selectfolder.form', ['id' => $group->displayGroupId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $group->displayGroupId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $group->displayGroup],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
             }
 
             if ($this->getUser()->featureEnabled('displaygroup.modify')
@@ -612,8 +614,12 @@ class DisplayGroup extends Base
         $displayGroup->dynamicCriteria = $sanitizedParams->getString('dynamicCriteria');
         $displayGroup->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
-        $folder = $this->folderFactory->getById($displayGroup->folderId);
-        $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($displayGroup->folderId);
+            $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        } else {
+            $displayGroup->permissionsFolderId = 1;
+        }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $displayGroup->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));

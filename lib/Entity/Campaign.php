@@ -83,7 +83,13 @@ class Campaign implements \JsonSerializable
 
     public $tags = [];
     public $tagValues;
+
+    /**
+     * @SWG\Property(description="The id of the Folder this Campaign belongs to")
+     * @var int
+     */
     public $folderId;
+
     public $permissionsFolderId;
 
     /**
@@ -574,7 +580,7 @@ class Campaign implements \JsonSerializable
             'isLayoutSpecific' => $this->isLayoutSpecific,
             'userId' => $this->ownerId,
             'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
-            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
         ));
     }
 

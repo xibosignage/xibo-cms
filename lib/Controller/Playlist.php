@@ -386,23 +386,23 @@ class Playlist extends Base
                     'text' => __('Copy')
                 ];
 
-
-                // Select Folder
-                $playlist->buttons[] = [
-                    'id' => 'playlist_button_selectfolder',
-                    'url' => $this->urlFor($request,'playlist.selectfolder.form', ['id' => $playlist->playlistId]),
-                    'text' => __('Select Folder'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'playlist.selectfolder', ['id' => $playlist->playlistId])],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'id', 'value' => 'playlist_button_selectfolder'],
-                        ['name' => 'text', 'value' => __('Move to Folder')],
-                        ['name' => 'rowtitle', 'value' => $playlist->name],
-                        ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                    ]
-                ];
-
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    // Select Folder
+                    $playlist->buttons[] = [
+                        'id' => 'playlist_button_selectfolder',
+                        'url' => $this->urlFor($request,'playlist.selectfolder.form', ['id' => $playlist->playlistId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'playlist.selectfolder', ['id' => $playlist->playlistId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'playlist_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $playlist->name],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
 
                 // Set Enable Stat
                 $playlist->buttons[] = [
@@ -588,8 +588,12 @@ class Playlist extends Base
         $playlist->enableStat = $sanitizedParams->getString('enableStat');
         $playlist->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
-        $folder = $this->folderFactory->getById($playlist->folderId);
-        $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($playlist->folderId);
+            $playlist->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        } else {
+            $playlist->permissionsFolderId = 1;
+        }
 
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $playlist->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));

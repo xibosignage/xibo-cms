@@ -738,21 +738,23 @@ class Display extends Base
                     )
                 );
 
-                // Select Folder
-                $display->buttons[] = [
-                    'id' => 'displaygroup_button_selectfolder',
-                    'url' => $this->urlFor($request,'displayGroup.selectfolder.form', ['id' => $display->displayGroupId]),
-                    'text' => __('Select Folder'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $display->displayGroupId])],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
-                        ['name' => 'text', 'value' => __('Move to Folder')],
-                        ['name' => 'rowtitle', 'value' => $display->display],
-                        ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                    ]
-                ];
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    // Select Folder
+                    $display->buttons[] = [
+                        'id' => 'displaygroup_button_selectfolder',
+                        'url' => $this->urlFor($request,'displayGroup.selectfolder.form', ['id' => $display->displayGroupId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $display->displayGroupId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $display->display],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
 
                 if (in_array($display->clientType, ['android', 'lg', 'sssp'])) {
                     $display->buttons[] = array(

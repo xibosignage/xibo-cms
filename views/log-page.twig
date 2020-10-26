@@ -195,7 +195,6 @@
                 "language": dataTablesLanguage,
                 serverSide: true,
                 stateSave: true,
-                responsive: true,
                 stateDuration: 0,
                 stateLoadCallback: dataTableStateLoadCallback,
                 stateSaveCallback: dataTableStateSaveCallback,
@@ -209,15 +208,15 @@
                     }
                 },
                 "columns": [
-                    {"data": "logId", responsivePriority: 2},
-                    {"data": "runNo", responsivePriority: 3},
-                    {"data": "logDate", "render": dataTableDateFromIso, responsivePriority: 2},
-                    {"data": "channel", responsivePriority: 3},
-                    {"data": "function", responsivePriority: 3},
-                    {"data": "type", responsivePriority: 4},
-                    {"data": "display", responsivePriority: 4},
-                    {"data": "page", responsivePriority: 3},
-                    {"data": "message", responsivePriority: 2}
+                    {"data": "logId"},
+                    {"data": "runNo"},
+                    {"data": "logDate", "render": dataTableDateFromIso},
+                    {"data": "channel"},
+                    {"data": "function"},
+                    {"data": "type"},
+                    {"data": "display"},
+                    {"data": "page"},
+                    {"data": "message"}
                 ]
             });
 

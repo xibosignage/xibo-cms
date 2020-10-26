@@ -280,21 +280,23 @@ class Campaign extends Base
                     'text' => __('Edit')
                 );
 
-                // Select Folder
-                $campaign->buttons[] = [
-                    'id' => 'campaign_button_selectfolder',
-                    'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $campaign->campaignId]),
-                    'text' => __('Select Folder'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $campaign->campaignId])],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
-                        ['name' => 'text', 'value' => __('Move to Folder')],
-                        ['name' => 'rowtitle', 'value' => $campaign->campaign],
-                        ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                    ]
-                ];
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    // Select Folder
+                    $campaign->buttons[] = [
+                        'id' => 'campaign_button_selectfolder',
+                        'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $campaign->campaignId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $campaign->campaignId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $campaign->campaign],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
 
                 // Copy the campaign
                 $campaign->buttons[] = [
@@ -429,9 +431,14 @@ class Campaign extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $campaign = $this->campaignFactory->create($sanitizedParams->getString('name'), $this->getUser()->userId, $sanitizedParams->getString('tags'), $sanitizedParams->getInt('folderId'));
-        $folder = $this->folderFactory->getById($campaign->folderId);
-        $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        $campaign = $this->campaignFactory->create($sanitizedParams->getString('name'), $this->getUser()->userId, $sanitizedParams->getString('tags'), $sanitizedParams->getInt('folderId', ['default' => 1]));
+
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($campaign->folderId);
+            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        } else {
+            $campaign->permissionsFolderId = 1;
+        }
 
         $campaign->save();
 

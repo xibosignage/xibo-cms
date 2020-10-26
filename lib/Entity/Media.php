@@ -209,7 +209,13 @@ class Media implements \JsonSerializable
     public $cloned = false;
     public $newExpiry;
     public $alwaysCopy = false;
+
+    /**
+     * @SWG\Property(description="The id of the Folder this Media belongs to")
+     * @var int
+     */
     public $folderId;
+
     public $permissionsFolderId;
 
     private $widgets = [];

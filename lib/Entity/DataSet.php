@@ -224,7 +224,12 @@ class DataSet implements \JsonSerializable
      */
     public $limitPolicy;
 
+    /**
+     * @SWG\Property(description="The id of the Folder this DataSet belongs to")
+     * @var int
+     */
     public $folderId;
+
     public $permissionsFolderId;
 
     /** @var array Permissions */

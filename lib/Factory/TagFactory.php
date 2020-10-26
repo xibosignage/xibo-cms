@@ -157,7 +157,6 @@ class TagFactory extends BaseFactory
         $tag->isSystem = $sanitizedRow->getInt('isSystem');
         $tag->isRequired = $sanitizedRow->getInt('isRequired');
         $tag->options = $sanitizedRow->getString('options');
-        $tag->folderId = $sanitizedRow->getInt('folderId');
 
         return $tag;
     }
@@ -183,7 +182,6 @@ class TagFactory extends BaseFactory
             $tag->isRequired = $sanitizedRow->getInt('isRequired');
             $tag->options = $sanitizedRow->getString('options');
             $tag->value = $sanitizedRow->getString('value');
-            $tag->folderId = $sanitizedRow->getInt('folderId');
 
             $tags[] = $tag;
         }
@@ -212,7 +210,6 @@ class TagFactory extends BaseFactory
             $tag->isRequired = $sanitizedRow->getInt('isRequired');
             $tag->options = $sanitizedRow->getString('options');
             $tag->value = $sanitizedRow->getString('value');
-            $tag->folderId = $sanitizedRow->getInt('folderId');
 
             $tags[] = $tag;
         }
@@ -241,7 +238,6 @@ class TagFactory extends BaseFactory
             $tag->isRequired = $sanitizedRow->getInt('isRequired');
             $tag->options = $sanitizedRow->getString('options');
             $tag->value = $sanitizedRow->getString('value');
-            $tag->folderId = $sanitizedRow->getInt('folderId');
 
             $tags[] = $tag;
         }
@@ -270,7 +266,6 @@ class TagFactory extends BaseFactory
             $tag->isRequired = $sanitizedRow->getInt('isRequired');
             $tag->options = $sanitizedRow->getString('options');
             $tag->value = $sanitizedRow->getString('value');
-            $tag->folderId = $sanitizedRow->getInt('folderId');
 
             $tags[] = $tag;
         }
@@ -299,7 +294,6 @@ class TagFactory extends BaseFactory
             $tag->isRequired = $sanitizedRow->getInt('isRequired');
             $tag->options = $sanitizedRow->getString('options');
             $tag->value = $sanitizedRow->getString('value');
-            $tag->folderId = $sanitizedRow->getInt('folderId');
 
             $tags[] = $tag;
         }

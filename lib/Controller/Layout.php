@@ -1506,21 +1506,23 @@ class Layout extends Base
                     'text' => __('Edit')
                 );
 
-                // Select Folder
-                $layout->buttons[] = [
-                    'id' => 'campaign_button_selectfolder',
-                    'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $layout->campaignId]),
-                    'text' => __('Select Folder'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $layout->campaignId])],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
-                        ['name' => 'text', 'value' => __('Move to Folder')],
-                        ['name' => 'rowtitle', 'value' => $layout->layout],
-                        ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                    ]
-                ];
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    // Select Folder
+                    $layout->buttons[] = [
+                        'id' => 'campaign_button_selectfolder',
+                        'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $layout->campaignId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $layout->campaignId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $layout->layout],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
 
                 // Copy Button
                 $layout->buttons[] = array(

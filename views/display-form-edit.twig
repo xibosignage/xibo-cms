@@ -52,7 +52,7 @@
             <form id="displayEditForm" class="DisplayForm XiboForm form-horizontal" method="put" action="{{ url_for("display.edit", {id: display.displayId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
-
+                        {% if currentUser.featureEnabled('folder.view') %}
                         <div class="form-group">
                             <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
                             <div class="col-sm-10" style="padding-top: 7px">
@@ -69,6 +69,7 @@
                         </div>
 
                         {{ forms.hidden('folderId', display.folderId) }}
+                        {% endif %}
 
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% if displayLockName %}

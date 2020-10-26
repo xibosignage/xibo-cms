@@ -156,8 +156,7 @@
         var table;
         $(document).ready(function() {
 
-            {% if currentUser.featureEnabled("folder.view") %}
-            {% else %}
+            {% if not currentUser.featureEnabled("folder.view") %}
             disableFolders();
             {% endif %}
 

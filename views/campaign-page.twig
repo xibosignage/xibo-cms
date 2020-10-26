@@ -113,8 +113,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        {% if currentUser.featureEnabled("folder.view") %}
-        {% else %}
+        {% if not currentUser.featureEnabled("folder.view") %}
         disableFolders();
         {% endif %}
 

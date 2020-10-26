@@ -280,6 +280,10 @@ class Layout implements \JsonSerializable
 
     public $tagValues;
 
+    /**
+     * @SWG\Property(description="The id of the Folder this Layout belongs to")
+     * @var int
+     */
     public $folderId;
     public $permissionsFolderId;
 
@@ -2137,9 +2141,14 @@ class Layout implements \JsonSerializable
             $campaign->ownerId = $this->getOwnerId();
             $campaign->folderId = ($this->folderId == null) ? 1 : $this->folderId;
 
-            $folder = $this->folderFactory->getById($this->folderId);
-            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
-
+            // if user has disabled folder feature, presumably said user also has no permissions to folder
+            // getById would fail here and prevent adding new Layout in web ui
+            try {
+                $folder = $this->folderFactory->getById($campaign->folderId);
+                $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            } catch (NotFoundException $exception) {
+                $campaign->permissionsFolderId = 1;
+            }
             $campaign->assignLayout($this);
 
             // Ready to save the Campaign
@@ -2236,9 +2245,15 @@ class Layout implements \JsonSerializable
             $campaign->campaign = $this->layout;
             $campaign->ownerId = $this->ownerId;
             $campaign->folderId = $this->folderId;
-            $folder = $this->folderFactory->getById($this->folderId);
-            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
 
+            // if user has disabled folder feature, presumably said user also has no permissions to folder
+            // getById would fail here and prevent adding new Layout in web ui
+            try {
+                $folder = $this->folderFactory->getById($campaign->folderId);
+                $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            } catch (NotFoundException $exception) {
+                $campaign->permissionsFolderId = 1;
+            }
             $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow'], 'layoutCode' => $this->code]);
         }
     }

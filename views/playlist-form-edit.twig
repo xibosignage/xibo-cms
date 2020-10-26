@@ -86,6 +86,7 @@
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 
+                        {% if currentUser.featureEnabled('folder.view') %}
                         <div class="form-group">
                             <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
                             <div class="col-sm-10" style="padding-top: 7px">
@@ -100,6 +101,7 @@
                             </div>
                         </div>
                         {{ forms.hidden('folderId', playlist.folderId) }}
+                        {% endif %}
 
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "The Name of the Playlist - (1 - 50 characters)" %}{% endset %}

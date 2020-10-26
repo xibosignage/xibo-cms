@@ -531,8 +531,12 @@ class DataSet extends Base
         $dataSet->userId = $this->getUser()->userId;
         $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
-        $folder = $this->folderFactory->getById($dataSet->folderId);
-        $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($dataSet->folderId);
+            $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        } else {
+            $dataSet->permissionsFolderId = 1;
+        }
 
         // Fields for remote
         if ($dataSet->isRemote === 1) {

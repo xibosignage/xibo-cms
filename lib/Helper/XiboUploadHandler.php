@@ -304,8 +304,12 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $media->folderId = $this->options['oldFolderId'];
 
                 // Permissions
-                $folder = $controller->getFolderFactory()->getById($this->options['oldFolderId']);
-                $media->permissionsFolderId = ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
+                try {
+                    $folder = $controller->getFolderFactory()->getById($this->options['oldFolderId']);
+                    $media->permissionsFolderId = ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
+                } catch (NotFoundException $exception) {
+                    $media->permissionsFolderId = 1;
+                }
 
                 // Save
                 $media->save();

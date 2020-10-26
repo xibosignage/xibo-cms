@@ -77,6 +77,7 @@
         <div class="col-md-12">
             <form id="displayGroupEditForm" class="XiboForm form-horizontal displayGroupForm" method="put" action="{{ url_for("displayGroup.edit", {"id": displayGroup.displayGroupId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
 
+                {% if currentUser.featureEnabled('folder.view') %}
                 <div class="form-group">
                     <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
                     <div class="col-sm-10" style="padding-top: 7px">
@@ -92,6 +93,7 @@
                     </div>
                 </div>
                 {{ forms.hidden('folderId', displayGroup.folderId) }}
+                {% endif %}
 
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name for this Display Group" %}{% endset %}

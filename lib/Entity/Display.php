@@ -381,7 +381,12 @@ class Display implements \JsonSerializable
      */
     public $modifiedDt;
 
+    /**
+     * @SWG\Property(description="The id of the Folder this Display belongs to")
+     * @var int
+     */
     public $folderId;
+
     public $permissionsFolderId;
 
     /** @var array The configuration from the Display Profile  */
@@ -920,8 +925,16 @@ class Display implements \JsonSerializable
             $displayGroup->replaceTags($this->tags);
             $displayGroup->bandwidthLimit = $this->bandwidthLimit;
             $displayGroup->folderId = ($this->folderId == null) ? 1 : $this->folderId;
-            $folder = $this->folderFactory->getById($this->folderId);
-            $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
+            // if user has disabled folder feature, presumably said user also has no permissions to folder
+            // getById would fail here and prevent submitting edit form in web ui
+            try {
+                $folder = $this->folderFactory->getById($displayGroup->folderId);
+                $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            } catch (NotFoundException $exception) {
+                $displayGroup->permissionsFolderId = 1;
+            }
+
             $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
         } else {
             $this->store->update('UPDATE displaygroup SET `modifiedDt` = :modifiedDt WHERE displayGroupId = :displayGroupId', [

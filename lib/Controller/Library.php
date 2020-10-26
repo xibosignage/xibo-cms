@@ -686,20 +686,22 @@ class Library extends Base
                 );
 
                 // Select Folder
-                $media->buttons[] = [
-                    'id' => 'library_button_selectfolder',
-                    'url' => $this->urlFor($request,'library.selectfolder.form', ['id' => $media->mediaId]),
-                    'text' => __('Select Folder'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'library.selectfolder', ['id' => $media->mediaId])],
-                        ['name' => 'commit-method', 'value' => 'put'],
-                        ['name' => 'id', 'value' => 'library_button_selectfolder'],
-                        ['name' => 'text', 'value' => __('Move to Folder')],
-                        ['name' => 'rowtitle', 'value' => $media->name],
-                        ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
-                    ]
-                ];
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    $media->buttons[] = [
+                        'id' => 'library_button_selectfolder',
+                        'url' => $this->urlFor($request,'library.selectfolder.form', ['id' => $media->mediaId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'library.selectfolder', ['id' => $media->mediaId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'library_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $media->name],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
             }
 
             if ($this->getUser()->featureEnabled('library.modify')
@@ -2503,9 +2505,14 @@ class Library extends Base
         $extension = $sanitizedParams->getString('extension');
         $enableStat = $sanitizedParams->getString('enableStat', ['default' => $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT')]);
         $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
-        $folder = $this->folderFactory->getById($folderId);
-        $permissionsFolderId = ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
-        
+
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($folderId);
+            $permissionsFolderId = ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
+        } else {
+            $permissionsFolderId = 1;
+        }
+
         if ($sanitizedParams->getDate('expires') != null ) {
 
             if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {

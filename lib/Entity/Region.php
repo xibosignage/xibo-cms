@@ -451,7 +451,7 @@ class Region implements \JsonSerializable
                 $this->audit($this->regionId, 'Added', ['regionId' => $this->regionId, 'campaignId' => $campaignId, 'details' => (string)$this]);
             }
         }
-        else if ($this->hash != $this->hash() || array_key_exists('folderId', $options)) {
+        else if ($this->hash != $this->hash()) {
             $this->update();
 
             // There are 3 cases that we need to consider
