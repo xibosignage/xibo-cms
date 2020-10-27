@@ -155,22 +155,24 @@ function openUploadForm(options) {
                 })
             .bind('fileuploaddrop', handleVideoCoverImage);
 
-        // Handle creating a folder selector
-        // compile tree folder modal and append it to Form
-        if ($('#folder-tree-form-modal').length === 0) {
-            let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-            form.append(folderTreeModal({
-                container: "container-folder-form-tree",
-                modal: "folder-tree-form-modal"
-            }));
+        if (options.templateOptions.folderSelector) {
+            // Handle creating a folder selector
+            // compile tree folder modal and append it to Form
+            if ($('#folder-tree-form-modal').length === 0) {
+                let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+                form.append(folderTreeModal({
+                    container: "container-folder-form-tree",
+                    modal: "folder-tree-form-modal"
+                }));
 
-            $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
-                $(this).data('bs.modal', null);
-            });
+                $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                    $(this).data('bs.modal', null);
+                });
+            }
+
+            // Init JS Tree
+            initJsTreeAjax('#container-folder-form-tree', options.initialisedBy, true, 600);
         }
-
-        // Init JS Tree
-        initJsTreeAjax('#container-folder-form-tree', options.initialisedBy, true, 600);
 
         // Handle any form opened event
         if (options.formOpenedEvent !== null && options.formOpenedEvent !== undefined) {

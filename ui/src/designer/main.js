@@ -1382,7 +1382,8 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
                 playlistId: playlistId,
                 displayOrder: addToPosition,
                 currentWorkingFolderId: lD.folderId,
-                showWidgetDates: true
+                showWidgetDates: true,
+                folderSelector: true
             }
         }).attr('data-test', 'uploadFormModal');
 

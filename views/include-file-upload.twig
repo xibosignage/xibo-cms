@@ -29,9 +29,9 @@
         {{/if}}
         {{#if oldMediaId}}
             <input type="hidden" name="oldMediaId" value="{{ oldMediaId }}" />
-            <input name="folderId" type="hidden" id="folderId" value="{{oldFolderId}}">
+            <input type="hidden" name="folderId" type="hidden" id="folderId" value="{{oldFolderId}}">
         {{else}}
-            <input name="folderId" type="hidden" id="formFolderId" value="{{currentWorkingFolderId}}">
+            <input type="hidden" name="folderId" type="hidden" id="formFolderId" value="{{currentWorkingFolderId}}">
         {{/if}}
         {{#if displayOrder}}
             <input type="hidden" name="displayOrder" value="{{ displayOrder }}" />
@@ -43,8 +43,7 @@
                     {{#if upload.validExtensionsMessage}}
                         <p><strong>{{ upload.validExtensionsMessage }}</strong></p>
                     {{/if}}
-                    {{#if oldMediaId}}
-                    {{else}}
+                    {{#if folderSelector}}
                     {% endverbatim %}   {% if currentUser.featureEnabled('folder.view') %} {% verbatim %}
                     <div class="row">
                         <div class="col-sm-2" style="padding:0">
@@ -75,8 +74,7 @@
                     <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
                     <span>{{ trans.cancelUpload }}</span>
                 </button>
-                {{#if oldMediaId}}
-                {{else}}
+                {{#if folderSelector}}
                  {% endverbatim %}   {% if currentUser.featureEnabled('folder.view') %} {% verbatim %}
                     <button type="button" class="btn btn-info pull-right" data-toggle="modal" data-target="#folder-tree-form-modal">{{trans.selectFolder}}</button>
                  {% endverbatim %}  {% endif %} {% verbatim %}

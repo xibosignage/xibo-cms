@@ -892,7 +892,8 @@ let formHelpers = function() {
                             validExtensionsMessage: translations.validExtensions.replace("%s", validExtensions).replace(/\|/g, ", "),
                             validExt: validExtensions
                         },
-                        showWidgetDates: false
+                        showWidgetDates: false,
+                        folderSelector: true
                     },
                     buttons: {
                         main: {

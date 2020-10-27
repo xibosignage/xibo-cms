@@ -165,7 +165,8 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
                     playlistId: playlistId,
                     displayOrder: addToPosition,
                     currentWorkingFolderId: pE.folderId,
-                    showWidgetDates: true
+                    showWidgetDates: true,
+                    folderSelector: true
                 }
             }).attr('data-test', 'uploadFormModal');
 
