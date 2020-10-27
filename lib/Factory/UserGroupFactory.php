@@ -387,182 +387,182 @@ class UserGroupFactory extends BaseFactory
                 'schedule.view' => [
                     'feature' => 'schedule.view',
                     'group' => 'scheduling',
-                    'title' => __('View the Calendar')
+                    'title' => __('Page which shows all Events added to the Calendar for the purposes of Schedule Management')
                 ],
                 'schedule.agenda' => [
                     'feature' => 'schedule.agenda',
                     'group' => 'scheduling',
-                    'title' => __('When on the Calendar show the Agenda')
+                    'title' => __('Include the Agenda View on the Calendar')
                 ],
                 'schedule.add' => [
                     'feature' => 'schedule.add',
                     'group' => 'scheduling',
-                    'title' => __('Create new Scheduled Events')
+                    'title' => __('Include "Add Event" button to allow for the creation of new Scheduled Events')
                 ],
                 'schedule.modify' => [
                     'feature' => 'schedule.modify',
                     'group' => 'scheduling',
-                    'title' => __('Edit and Delete existing Scheduled Events')
+                    'title' => __('Allow edits including deletion of exsiting Scheduled Events')
                 ],
                 'schedule.now' => [
                     'feature' => 'schedule.now',
                     'group' => 'scheduling',
-                    'title' => __('Use Schedule Now to create short events which play straight away')
+                    'title' => __('Add "Schedule Now" function to allow for the creation of short events to play immediately')
                 ],
                 'daypart.view' => [
                     'feature' => 'daypart.view',
                     'group' => 'scheduling',
-                    'title' => __('View Day parts')
+                    'title' => __('Page which shows all Dayparts that have been created')
                 ],
                 'daypart.add' => [
                     'feature' => 'daypart.add',
                     'group' => 'scheduling',
-                    'title' => __('Add Day parts')
+                    'title' => __('Include "Add Daypart" button to allow for the creation of new Dayparts')
                 ],
                 'daypart.modify' => [
                     'feature' => 'daypart.modify',
                     'group' => 'scheduling',
-                    'title' => __('Modify Day parts')
+                    'title' => __('Allow edits including deletion to be made to all created Dayparts')
                 ],
                 'library.view' => [
                     'feature' => 'library.view',
                     'group' => 'library',
-                    'title' => __('View the Media Library')
+                    'title' => __('Page which shows all items that have been uploaded to the Library for the purposes of Media Management')
                 ],
                 'library.add' => [
                     'feature' => 'library.add',
                     'group' => 'library',
-                    'title' => __('Add to the Media Library')
+                    'title' => __('Include "Add Media" buttons to allow for addtional content to be uploaded to the Media Library')
                 ],
                 'library.modify' => [
                     'feature' => 'library.modify',
                     'group' => 'library',
-                    'title' => __('Modify media in the Media Library')
+                    'title' => __('Allow edits including deletion to all items uploaded to the Media Library')
                 ],
                 'dataset.view' => [
                     'feature' => 'dataset.view',
                     'group' => 'library',
-                    'title' => __('View DataSets')
+                    'title' => __('Page which shows all DataSets that have been created which can be used in multiple Layouts')
                 ],
                 'dataset.add' => [
                     'feature' => 'dataset.add',
                     'group' => 'library',
-                    'title' => __('Add DataSets')
+                    'title' => __('Include "Add DataSet" button to allow for additional DataSets to be created independantly to Layouts')
                 ],
                 'dataset.modify' => [
                     'feature' => 'dataset.modify',
                     'group' => 'library',
-                    'title' => __('Modify DataSets')
+                    'title' => __('Allow edits including deletion to all created DataSets independantly to Layouts')
                 ],
                 'dataset.data' => [
                     'feature' => 'dataset.data',
                     'group' => 'library',
-                    'title' => __('Modify data held within DataSets')
+                    'title' => __('Allow edits including deletion to all data contained within a DataSet independantly to Layouts')
                 ],
                 'layout.view' => [
                     'feature' => 'layout.view',
                     'group' => 'layout-design',
-                    'title' => __('View Layouts')
+                    'title' => __('Page which shows all Layouts that have been created for the purposes of Layout Management')
                 ],
                 'layout.add' => [
                     'feature' => 'layout.add',
                     'group' => 'layout-design',
-                    'title' => __('Create new Layouts')
+                    'title' => __('Include "Add Layout" button to allow for additional Layouts to be created')
                 ],
                 'layout.modify' => [
                     'feature' => 'layout.modify',
                     'group' => 'layout-design',
-                    'title' => __('Modify existing Layouts')
+                    'title' => __('Allow edits including deletion to be made to all created Layouts')
                 ],
                 'layout.export' => [
                     'feature' => 'layout.export',
                     'group' => 'layout-design',
-                    'title' => __('Export Layouts')
+                    'title' => __('Add "Export" function for all Layouts')
                 ],
                 'campaign.view' => [
                     'feature' => 'campaign.view',
                     'group' => 'campaigns',
-                    'title' => __('View Campaigns')
+                    'title' => __('Page which shows all Campaigns that have been created for the purposes of Campaign Management')
                 ],
                 'campaign.add' => [
                     'feature' => 'campaign.add',
                     'group' => 'campaigns',
-                    'title' => __('Add Campaigns')
+                    'title' => __('Include "Add Campaign" button to allow for additional Campaigns to be created')
                 ],
                 'campaign.modify' => [
                     'feature' => 'campaign.modify',
                     'group' => 'campaigns',
-                    'title' => __('Modify Campaigns')
+                    'title' => __('Allow edits including deletion to all created Campaigns')
                 ],
                 'template.view' => [
                     'feature' => 'template.view',
                     'group' => 'layout-design',
-                    'title' => __('View Templates')
+                    'title' => __('Page which shows all Templates that have been saved')
                 ],
                 'template.add' => [
                     'feature' => 'template.add',
                     'group' => 'layout-design',
-                    'title' => __('Create new Templates')
+                    'title' => __('Add "Save Template" function for all Layouts')
                 ],
                 'template.modify' => [
                     'feature' => 'template.modify',
                     'group' => 'layout-design',
-                    'title' => __('Modify existing Templates')
+                    'title' => __('Allow edits to be made to all saved Templates')
                 ],
                 'resolution.view' => [
                     'feature' => 'resolution.view',
                     'group' => 'layout-design',
-                    'title' => __('View Resolutions')
+                    'title' => __('Page which shows all Resolutions that have been added to the platform')
                 ],
                 'resolution.add' => [
                     'feature' => 'resolution.add',
                     'group' => 'layout-design',
-                    'title' => __('Add Resolutions')
+                    'title' => __('Add Resolution button to allow for addtional Resolutions to be added')
                 ],
                 'resolution.modify' => [
                     'feature' => 'resolution.modify',
                     'group' => 'layout-design',
-                    'title' => __('Modify Resolutions')
+                    'title' => __('Allow edits including deletion to all added Resolutions')
                 ],
                 'tag.view' => [
                     'feature' => 'tag.view',
                     'group' => 'tagging',
-                    'title' => __('Tag Management')
+                    'title' => __('Page which shows all Tags that have been added for the purposes of Tag Management')
                 ],
                 'tag.tagging' => [
                     'feature' => 'tag.tagging',
                     'group' => 'tagging',
-                    'title' => __('Add/Edit tags on items')
+                    'title' => __('Ability to add and edit Tags when assigning to items')
                 ],
                 'playlist.view' => [
                     'feature' => 'playlist.view',
                     'group' => 'playlist-design',
-                    'title' => __('Reusable Playlists that can be added to multiple Layouts')
+                    'title' => __('Page which shows all Playlists that have been created which can be used in multiple Layouts')
                 ],
                 'playlist.add' => [
                     'feature' => 'playlist.add',
                     'group' => 'playlist-design',
-                    'title' => __('Create new Playlists independent of a Layout')
+                    'title' => __('Include "Add Playlist" button to allow for additional Layouts to be created independantly to Layouts')
                 ],
                 'playlist.modify' => [
                     'feature' => 'playlist.modify',
                     'group' => 'playlist-design',
-                    'title' => __('Modify existing Playlists independent of a Layouts')
+                    'title' => __('Allow edits including deletion to all created Playlists independantly to Layouts')
                 ],
                 'user.profile' => [
                     'feature' => 'user.profile',
                     'group' => 'users',
-                    'title' => __('Update their profile, including password and authentication preferences.')
+                    'title' => __('Ability to update own Profile, including changing passwords and authentication preferences')
                 ],
                 'drawer' => [
                     'feature' => 'drawer',
                     'group' => 'users',
-                    'title' => __('Get Notifications appear in the navigation bar')
+                    'title' => __('Notifications appear in the navigation bar')
                 ],
                 'notification.centre' => [
                     'feature' => 'notification.centre',
-                    'group' => 'users',
-                    'title' => __('Access the Notification Centre to read old notifications')
+                    'group' => 'notifications',
+                    'title' => __('Access to the Notification Centre to view past notifications')
                 ],
                 'application.view' => [
                     'feature' => 'application.view',
@@ -572,177 +572,177 @@ class UserGroupFactory extends BaseFactory
                 'notification.add' => [
                     'feature' => 'notification.add',
                     'group' => 'notifications',
-                    'title' => __('Add new Notifications')
+                    'title' => __('Include "Add Notification" button to allow for the creation of new notifications')
                 ],
                 'notification.modify' => [
                     'feature' => 'notification.modify',
                     'group' => 'notifications',
-                    'title' => __('Edit Notifications')
+                    'title' => __('Allow edits including deletion for all notifications in the Notification Centre')
                 ],
                 'users.view' => [
                     'feature' => 'users.view',
                     'group' => 'users-management',
-                    'title' => __('View Users')
+                    'title' => __('Page which shows all Users in the platform for the purposes of User Management')
                 ],
                 'users.add' => [
                     'feature' => 'users.add',
                     'group' => 'users-management',
-                    'title' => __('Add Users')
+                    'title' => __('Include "Add User" button to allow for additional Users to be added to the platform')
                 ],
                 'users.modify' => [
                     'feature' => 'users.modify',
                     'group' => 'users-management',
-                    'title' => __('Modify Users')
+                    'title' => __('Allow edits including deletion for all added Users')
                 ],
                 'usergroup.view' => [
                     'feature' => 'usergroup.view',
                     'group' => 'users-management',
-                    'title' => __('View User Groups')
+                    'title' => __('Page which shows all User Groups that have been created')
                 ],
                 'usergroup.add' => [
                     'feature' => 'usergroup.add',
                     'group' => 'users-management',
-                    'title' => __('Add User Groups')
+                    'title' => __('Include "Add User Group" button to allow for additional User Groups to be added')
                 ],
                 'usergroup.modify' => [
                     'feature' => 'usergroup.modify',
                     'group' => 'users-management',
-                    'title' => __('Modify User Groups')
+                    'title' => __('Allow edits including deletion for all created User Groups')
                 ],
                 'dashboard.status' => [
                     'feature' => 'dashboard.status',
                     'group' => 'dashboards',
-                    'title' => __('Status Dashboard showing key platform metrics, usually for an administrator.')
+                    'title' => __('Status Dashboard showing key platform metrics, suitable for an Administrator.')
                 ],
                 'dashboard.media.manager' => [
                     'feature' => 'dashboard.media.manager',
                     'group' => 'dashboards',
-                    'title' => __('Media Manager Dashboard showing all Widgets the user has access to modify.')
+                    'title' => __('Media Manager Dashboard showing only the Widgets the user has access to modify.')
                 ],
                 'dashboard.playlist' => [
                     'feature' => 'dashboard.playlist',
                     'group' => 'dashboards',
-                    'title' => __('Playlist Dashboard showing all Playlists configured in Layouts the user has access to modify.')
+                    'title' => __('Playlist Dashboard showing only the Playlists configured in Layouts the user has access to modify.')
                 ],
                 'displays.view' => [
                     'feature' => 'displays.view',
                     'group' => 'displays',
-                    'title' => __('View Displays')
+                    'title' => __('Page which shows all Displays added to the platform for the purposes of Display Management')
                 ],
                 'displays.add' => [
                     'feature' => 'displays.add',
                     'group' => 'displays',
-                    'title' => __('Add Displays')
+                    'title' => __('Include "Add Display" button to allow additional Displays to be added to the platform')
                 ],
                 'displays.modify' => [
                     'feature' => 'displays.modify',
                     'group' => 'displays',
-                    'title' => __('Modify Displays')
+                    'title' => __('Allow edits including deletion for all added Displays')
                 ],
                 'displaygroup.view' => [
                     'feature' => 'displaygroup.view',
                     'group' => 'displays',
-                    'title' => __('View Display Groups')
+                    'title' => __('Page which shows all Display Groups that have been created')
                 ],
                 'displaygroup.add' => [
                     'feature' => 'displaygroup.add',
                     'group' => 'displays',
-                    'title' => __('Add Display Groups')
+                    'title' => __('Include "Add Display Group" button to allow for the creation of additional Display Groups')
                 ],
                 'displaygroup.modify' => [
                     'feature' => 'displaygroup.modify',
                     'group' => 'displays',
-                    'title' => __('Modify Display Groups')
+                    'title' => __('Allow edits including deletion for all created Display Groups')
                 ],
                 'displayprofile.view' => [
                     'feature' => 'displayprofile.view',
                     'group' => 'displays',
-                    'title' => __('View Display Settings Profiles')
+                    'title' => __('Page which shows all Display Setting Profiles that have been added')
                 ],
                 'displayprofile.add' => [
                     'feature' => 'displayprofile.add',
                     'group' => 'displays',
-                    'title' => __('Add Display Settings Profiles')
+                    'title' => __('Include "Add Profile" button to allow for addtional Display Setting Profiles to be added to the platform')
                 ],
                 'displayprofile.modify' => [
                     'feature' => 'displayprofile.modify',
                     'group' => 'displays',
-                    'title' => __('Modify Display Settings Profiles')
+                    'title' => __('Allow edits including deletion for all created Display Setting Profiles')
                 ],
                 'playersoftware.view' => [
                     'feature' => 'playersoftware.view',
                     'group' => 'displays',
-                    'title' => __('View Player Software Versions')
+                    'title' => __('Page to view/add/edit/delete/download Player Software Versions')
                 ],
                 'command.view' => [
                     'feature' => 'command.view',
                     'group' => 'displays',
-                    'title' => __('View Commands')
+                    'title' => __('Page to view/add/edit/delete Commands')
                 ],
                 'fault.view' => [
                     'feature' => 'fault.view',
                     'group' => 'troubleshooting',
-                    'title' => __('Report Fault wizard for collection a report to send to the support team for analysis. (may contain sensitive data)')
+                    'title' => __('Access to a Report Fault wizard for collecting reports to forward to the support team for analysis, which may contain sensitive data.')
                 ],
                 'log.view' => [
                     'feature' => 'log.view',
                     'group' => 'troubleshooting',
-                    'title' => __('Debug and Error logging (may contain sensitive data)')
+                    'title' => __('Page to show debug and error logging which may contain sensitive data')
                 ],
                 'session.view' => [
                     'feature' => 'session.view',
                     'group' => 'troubleshooting',
-                    'title' => __('User sessions')
+                    'title' => __('Page to show all User Sessions throughout the platform')
                 ],
                 'auditlog.view' => [
                     'feature' => 'auditlog.view',
                     'group' => 'troubleshooting',
-                    'title' => __('Audit trail of created/modified and removed items.')
+                    'title' => __('Page to show the Audit Trail for all created/modified and removed items throughout the platform')
                 ],
                 'module.view' => [
                     'feature' => 'module.view',
                     'group' => 'system',
-                    'title' => __('Module management')
+                    'title' => __('Page which allows for Module Management for the platform')
                 ],
                 'transition.view' => [
                     'feature' => 'transition.view',
                     'group' => 'system',
-                    'title' => __('Transition management')
+                    'title' => __('Page which allows for Transition Management for the platform')
                 ],
                 'task.view' => [
                     'feature' => 'task.view',
                     'group' => 'system',
-                    'title' => __('Task management')
+                    'title' => __('Page which allows for Task Management for the platform')
                 ],
                 'help.view' => [
                     'feature' => 'help.view',
                     'group' => 'system',
-                    'title' => __('Help Link Management')
+                    'title' => __('Page which allows for Help Link Management for the platform')
                 ],
                 'report.view' => [
                     'feature' => 'report.view',
                     'group' => 'reporting',
-                    'title' => __('Reporting')
-                ],
-                'report.scheduling' => [
-                    'feature' => 'report.scheduling',
-                    'group' => 'reporting',
-                    'title' => __('Scheduled Reports')
-                ],
-                'report.saving' => [
-                    'feature' => 'report.saving',
-                    'group' => 'reporting',
-                    'title' => __('Saved Reports')
+                    'title' => __('Dashboard which shows all available Reports')
                 ],
                 'displays.reporting' => [
                     'feature' => 'displays.reporting',
                     'group' => 'reporting',
-                    'title' => __('Display Reporting which shows bandwidth usage and time connected.')
+                    'title' => __('Display Reports to show bandwidth usage and time connected / disconnected')
                 ],
                 'proof-of-play' => [
                     'feature' => 'proof-of-play',
                     'group' => 'reporting',
-                    'title' => __('Proof of Play reporting, summary and distribution')
+                    'title' => __('Proof of Play Reports which include summary and distribution by Layout, Media or Event')
+                ],
+                'report.scheduling' => [
+                    'feature' => 'report.scheduling',
+                    'group' => 'reporting',
+                    'title' => __('Page which shows all Reports that have been Scheduled')
+                ],
+                'report.saving' => [
+                    'feature' => 'report.saving',
+                    'group' => 'reporting',
+                    'title' => __('Page which shows all Reports that have been Saved')
                 ],
                 'folder.view' => [
                     'feature' => 'folder.view',
