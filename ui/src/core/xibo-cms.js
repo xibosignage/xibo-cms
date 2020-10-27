@@ -148,7 +148,7 @@ function XiboInitialise(scope) {
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
 
         // init the jsTree
-        initJsTreeAjax('#container-folder-tree',  gridName, false)
+        initJsTreeAjax('#container-folder-tree',  'grid-folder-tree-state', false)
     });
 
     // Search for any Buttons / Links on the page that are used to load forms
@@ -2837,7 +2837,7 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
 
         $(container).jstree({
             "state" : state,
-            "plugins" : ["contextmenu", "state", "unique"],
+            "plugins" : ["contextmenu", "state", "unique", "sort"],
             "contextmenu":{
                 "items": function($node, checkContextMenuPermissions) {
                     // items in context menu need to check user permissions before we render them
