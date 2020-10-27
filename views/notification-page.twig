@@ -115,5 +115,142 @@
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#notifications_wrapper').find('.col-sm-6').eq(1));
 
+        var attachmentFormSubmit = function(dialog) {
+
+            var form = $(dialog);
+
+            // Pull any text editor instances we have
+            for (var editor in CKEDITOR.instances) {
+
+                // Parse the data for library preview references, and replace those with their original values
+                // /\/library\/download\/(.[0-9]+)\?preview=1/;
+                var regex = new RegExp(CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&").replace(":id", "([0-9]+)"), "g");
+
+                var data = CKEDITOR.instances[editor].getData().replace(regex, function (match, group1) {
+                    var replacement = "[" + group1 + "]";
+                    //console.log("match = " + match + ". replacement = " + replacement);
+                    return replacement;
+                });
+
+                // Set the appropriate text editor field with this data.
+                $("#" + editor).val(data);
+            }
+
+            // Submit via ajax - change the attachment color on success
+            $.ajax({
+                type: form.attr("method"),
+                url: form.attr("action"),
+                cache: false,
+                dataType: "json",
+                data: $(form).serialize(),
+                success: function(xhr, textStatus, error) {
+
+                    XiboSubmitResponse(xhr, form);
+
+                    if (xhr.success) {
+
+                        console.log('success');
+
+                    }
+                },
+                error: function(xhr, textStatus, errorThrown) {
+                    SystemMessage(xhr.responseText, false);
+                }
+            });
+        }
+
+        var attachmentFormSetup = function(dialog) {
+
+            // Conjure up a text editor
+            CKEDITOR.replace("body", CKEDITOR_DEFAULT_CONFIG);
+
+            // Make sure when we close the dialog we also destroy the editor
+            dialog.on("hide.bs.modal", function(event) {
+                if (event.target.className == "bootbox modal in" && CKEDITOR.instances["body"] != undefined) {
+                    CKEDITOR.instances["body"].destroy();
+                }
+            });
+
+            var attachmentImageList = $('#attachmentImageId');
+            var attachmentChanged = false;
+
+            // Bind to the attachment add button click
+            $("#attachmentAddButton").on("click", function(e) {
+                notificationAddFormAttachmentButtonClicked(e, dialog);
+            });
+
+            // Search for any forms that will need submitting
+            // NOTE: The validation plugin does not like binding to multiple forms at once.
+            dialog.find("#notificationForm").validate({
+                submitHandler: attachmentFormSubmit,
+                errorElement: "span",
+                highlight: function(element) {
+                    $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
+                },
+                success: function(element) {
+                    $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
+                },
+                invalidHandler: function(event, validator) {
+                    // Remove the spinner
+                    $(this).closest(".modal-dialog").find(".saving").remove();
+                    // https://github.com/xibosignage/xibo/issues/1589
+                    $(this).closest(".modal-dialog").find(".save-button").removeClass("disabled");
+                }
+            });
+
+        };
+
+        /**
+         * Add notification attachment add image button
+         * @param e the event
+         * @param dialog the dialog
+         */
+        function notificationAddFormAttachmentButtonClicked(e, dialog) {
+            e.preventDefault();
+
+            // Open an upload form
+            var upload = openUploadForm({
+                url: "{{ url_for("notification.addattachment") }}",
+                title: "{% trans "Browse/Add attachment" %}",
+                multi: false,
+                videoImageCovers: false,
+                animateDialog: false,
+                className: "second-dialog",
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary",
+                        callback: function () {
+                            upload.modal('hide');
+                        }
+                    }
+                },
+                templateOptions: {
+                    trans: {
+                        addFiles: "{% trans "Browse/Add Attachment" %}",
+                        startUpload: "{% trans "Start Upload" %}",
+                        cancelUpload: "{% trans "Cancel Upload" %}"
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
+                        validExt: "jpg|jpeg|png|bmp|gif|zip|pdf"
+                    },
+                    folderSelector: false
+                },
+                uploadDoneEvent: function (data) {
+                    // Get the attachment filename
+                    var filename = data.result.files[0].name;
+
+                    dialog.find("input[name='attachedFilename']").remove();
+
+                    // Create a hidden field with the filename
+                    $("#notificationForm").append($("<input type='hidden' name='attachedFilename' value='" + filename + "'/>"));
+
+                    // Close
+                    upload.modal('hide');
+                }
+            });
+        }
     </script>
 {% endblock %}

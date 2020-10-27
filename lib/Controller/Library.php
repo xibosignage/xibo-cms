@@ -967,6 +967,34 @@ class Library extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="widgetFromDt",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s format, will set widget start date",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="widgetToDt",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s format, will set widget end date",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="deleteOnExpiry",
+     *      in="formData",
+     *      description="Flag (0, 1), set to 1 to remove the Widget from the Playlist when the widgetToDt has been reached",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="applyToMedia",
+     *      in="formData",
+     *      description="Flag (0, 1), set to 1 to apply the widgetFromDt as the expiry date on the Media",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -994,15 +1022,20 @@ class Library extends Base
 
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
-        if ($parsedBody->getDate('expires') != null ) {
+        // Handle any expiry date provided.
+        // this can come from the API via `expires` or via a widgetToDt
+        $expires = $parsedBody->getDate('expires');
+        $widgetFromDt = $parsedBody->getDate('widgetFromDt');
+        $widgetToDt = $parsedBody->getDate('widgetToDt');
 
-            if ($parsedBody->getDate('expires')->format('U') > Carbon::now()->format('U')) {
-                $expires = $parsedBody->getDate('expires')->format('U');
-            } else {
-                throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
-            }
-        } else {
-            $expires = 0;
+        // If applyToMedia has been selected, and we have a widgetToDt, then use that as our expiry
+        if ($widgetToDt !== null && $parsedBody->getCheckbox('applyToMedia', ['checkboxReturnInteger' => false])) {
+            $expires = $widgetToDt;
+        }
+
+        // Validate that this date is in the future.
+        if ($expires !== null && $expires->isBefore(Carbon::now())) {
+            throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
         }
 
         // Make sure the library exists
@@ -1013,15 +1046,14 @@ class Library extends Base
             $media = $this->mediaFactory->getById($parsedBody->getInt('oldMediaId'));
             $oldFolderId = $media->folderId;
             $validExt = $this->moduleFactory->getValidExtensions(['type' => $media->mediaType]);
-        }
-        else {
+        } else {
             $validExt = $this->moduleFactory->getValidExtensions();
         }
 
         // Make sure there is room in the library
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
-        $options = array(
+        $options = [
             'userId' => $this->getUser()->userId,
             'controller' => $this,
             'oldMediaId' => $parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]),
@@ -1035,13 +1067,16 @@ class Library extends Base
             'download_via_php' => true,
             'script_url' => $this->urlFor($request,'library.add'),
             'upload_url' => $this->urlFor($request,'library.add'),
-            'image_versions' => array(),
+            'image_versions' => [],
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit),
-            'expires' => $expires,
+            'expires' => $expires === null ? null : $expires->format('U'),
+            'widgetFromDt' => $widgetFromDt === null ? null : $widgetFromDt->format('U'),
+            'widgetToDt' => $widgetToDt === null ? null : $widgetToDt->format('U'),
+            'deleteOnExpiry' => $parsedBody->getCheckbox('deleteOnExpiry', ['checkboxReturnInteger' => true]),
             'oldFolderId' => $parsedBody->getInt('folderId', ['default' => $oldFolderId])
-        );
+        ];
 
         // Output handled by UploadHandler
         $this->setNoOutput(true);

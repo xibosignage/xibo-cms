@@ -49,31 +49,11 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $controller->getUser()->isQuotaFullByUser(true);
 
             // Get some parameters
-            if ($index === null) {
-                if (isset($_REQUEST['name'])) {
-                    $name = $_REQUEST['name'];
-                } else {
-                    $name = $fileName;
-                }
+            $name = $this->getParam($index, 'name', $fileName);
+            $tags = $controller->getUser()->featureEnabled('tag.tagging')
+                ? $this->getParam($index, 'tags', '')
+                : '';
 
-                if ($controller->getUser()->featureEnabled('tag.tagging') && isset($_REQUEST['tags'])) {
-                    $tags = $_REQUEST['tags'];
-                } else {
-                    $tags = '';
-                }
-            } else {
-                if (isset($_REQUEST['name'][$index])) {
-                    $name = $_REQUEST['name'][$index];
-                } else {
-                    $name = $fileName;
-                }
-
-                if (isset($_REQUEST['tags'][$index])) {
-                    $tags = $_REQUEST['tags'][$index];
-                } else {
-                    $tags = '';
-                }
-            }
             // Guess the type
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
@@ -300,6 +280,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 }
 
+                // Media library expiry.
                 $media->expires = $this->options['expires'];
                 $media->folderId = $this->options['oldFolderId'];
 
@@ -352,13 +333,23 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $playlist = $controller->getPlaylistFactory()->getById($this->options['playlistId']);
 
                 // Create a Widget and add it to our region
-                $widget = $controller->getWidgetFactory()->create($this->options['userId'], $playlist->playlistId, $module->getModuleType(), $media->duration);
+                $widget = $controller->getWidgetFactory()->create(
+                    $this->options['userId'],
+                    $playlist->playlistId,
+                    $module->getModuleType(),
+                    $media->duration
+                );
 
                 // Assign the widget to the module
                 $module->setWidget($widget);
 
                 // Set default options (this sets options on the widget)
                 $module->setDefaultWidgetOptions();
+
+                // From/To dates?
+                $widget->fromDt = $this->options['widgetFromDt'];
+                $widget->toDt = $this->options['widgetToDt'];
+                $widget->setOptionValue('deleteOnExpiry', 'attrib', $this->options['deleteOnExpiry']);
 
                 // Assign media
                 $widget->assignMedia($media->mediaId);
@@ -376,13 +367,37 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $file->widgetId = $widget->widgetId;
             }
         } catch (Exception $e) {
-            $controller->getLog()->error('Error uploading media: %s', $e->getMessage());
+            $controller->getLog()->error('Error uploading media: ' . $e->getMessage());
             $controller->getLog()->debug($e->getTraceAsString());
 
             // Unlink the temporary file
             @unlink($filePath);
 
             $file->error = $e->getMessage();
+        }
+    }
+
+    /**
+     * Get Param from File Input, taking into account multi-upload index if applicable
+     * @param int $index
+     * @param string $param
+     * @param mixed $default
+     * @return mixed
+     */
+    private function getParam($index, $param, $default)
+    {
+        if ($index === null) {
+            if (isset($_REQUEST[$param])) {
+                return $_REQUEST[$param];
+            } else {
+                return $default;
+            }
+        } else {
+            if (isset($_REQUEST[$param][$index])) {
+                return $_REQUEST[$param][$index];
+            } else {
+                return $default;
+            }
         }
     }
 }

@@ -119,6 +119,151 @@
                 };
             {% endautoescape %}
         </script>
+        <script type="text/javascript">
+            /**
+             * Setup the background form.
+             */
+            function backGroundFormSetup(dialog) {
+                $('#backgroundColor').colorpicker({format: "hex"});
+
+                var backgroundImageList = $('#backgroundImageId');
+                var notFoundIcon = $('#bg_not_found_icon');
+                var backgroundImage = $('#bg_image_image');
+                var initialBackgroundImageId = backgroundImageList.val();
+                var backgroundChanged = false;
+
+                function backgroundImageChange() {
+                    // Want to attach an onchange event to the drop down for the bg-image
+                    var id = backgroundImageList.val();
+
+                    var src;
+                    // If the image is not defined
+                    if ([0, ''].indexOf(id) !== -1) {
+
+                        // Show not found icon and hide image
+                        notFoundIcon.show();
+                        backgroundImage.hide();
+                    } else {
+
+                        // Hide not found icon and show image
+                        notFoundIcon.hide();
+                        backgroundImage.show();
+
+                        // Replace image source
+                        src = backgroundImage.data().url.replace(":id", id);
+                        backgroundImage.attr("src", src);
+                    }
+
+                    if (id !== initialBackgroundImageId) {
+                        backgroundChanged = true;
+                    }
+                }
+
+                backgroundImageList.change(backgroundImageChange);
+
+                backgroundImageChange();
+
+                // Bind to the background add button click
+                $("#backgroundAddButton").on("click", function(e) {
+                    layoutEditBackgroundButtonClicked(e, dialog);
+                });
+
+                // Bind to the layout form submit
+                $("#layoutEditForm").submit(function(e) {
+                    e.preventDefault();
+
+                    var form = $(this);
+
+                    // Submit via ajax - change the background color on success
+                    $.ajax({
+                        type: form.attr("method"),
+                        url: form.attr("action"),
+                        cache: false,
+                        dataType: "json",
+                        data: $(form).serialize(),
+                        success: function(xhr, textStatus, error) {
+
+                            XiboSubmitResponse(xhr, form);
+
+                            if (xhr.success) {
+                                var layout = $("div#layout");
+
+                                if (layout.length > 0) {
+                                    var color = form.find("#backgroundColor").val();
+                                    layout.data().backgroundColor = color;
+                                    layout.css("background-color", color);
+
+                                    if (backgroundChanged)
+                                        window.location.reload();
+                                } else {
+                                    // We assume we're on the layout page - call render
+                                    // If we're not, table is a Chrome/Safari/FireBug global function
+                                    if (backgroundChanged && typeof(table) !== 'undefined' && table.hasOwnProperty('ajax'))
+                                        table.ajax.reload(null, false);
+                                }
+                            }
+                        },
+                        error: function(xhr, textStatus, errorThrown) {
+                            SystemMessage(xhr.responseText, false);
+                        }
+                    });
+                })
+            };
+
+            /**
+             * Layout edit background add image button
+             * @param e the event
+             * @param dialog the dialog
+             */
+            function layoutEditBackgroundButtonClicked(e, dialog) {
+                e.preventDefault();
+
+                // Open an upload form
+                openUploadForm({
+                    url: $(e.target).data().addNewBackgroundUrl,
+                    title: "{% trans "Add Background Image" %}",
+                    multi: false,
+                    videoImageCovers: false,
+                    buttons: {
+                        main: {
+                            label: "{% trans "Done" %}",
+                            className: "btn-primary",
+                            callback: function () {
+                                XiboDialogClose();
+                            }
+                        }
+                    },
+                    templateOptions: {
+                        trans: {
+                            addFiles: "{% trans "Browse/Add Image" %}",
+                            startUpload: "{% trans "Start Upload" %}",
+                            cancelUpload: "{% trans "Cancel Upload" %}"
+                        },
+                        upload: {
+                            maxSize: {{ libraryUpload.maxSize }},
+                            maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
+                            validExt: "{{ libraryUpload.validImageExt }}"
+                        }
+                    },
+                    uploadDoneEvent: function (data) {
+                        // Get the mediaId
+                        var mediaId = data.result.files[0].mediaId;
+
+                        // Create a hidden field with the mediaId
+                        $("#layoutEditForm").append($("<input type='hidden' name='backgroundImageId' value='" + mediaId + "'/>"));
+
+                        var $bgImagePreview = dialog.find("#bg_image_image");
+                        $bgImagePreview
+                            .prop("src", $bgImagePreview.data().url.replace(":id", mediaId))
+                            .show();
+
+                        dialog.find("#bg_not_found_icon").hide();
+
+                        XiboDialogClose();
+                    }
+                });
+            }
+        </script>
 
         {% for module in modules %}
             {% if module.layoutDesignerJavaScript() != "" %}

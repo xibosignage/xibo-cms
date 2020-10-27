@@ -1326,6 +1326,14 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
 };
 
 /**
+ * Get the class name for the upload dialog, used by form-helpers.
+ * @return {null}
+ */
+lD.getUploadDialogClassName = function() {
+    return null;
+};
+
+/**
  * Add module to playlist
  * @param {number} playlistId 
  * @param {string} moduleType 
@@ -1337,35 +1345,47 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
     if(moduleData.regionSpecific == 0) { // Upload form if not region specific
 
         const validExt = moduleData.validExt.replace(/,/g, "|");
-        lD.openUploadForm({
-            trans: uploadTrans,
-            upload: {
-                maxSize: moduleData.maxSize,
-                maxSizeMessage: moduleData.maxSizeMessage,
-                validExtensionsMessage: translations.validExtensions + ': ' + moduleData.validExt,
-                validExt: validExt
-            },
-            playlistId: playlistId,
-            displayOrder: addToPosition,
-            currentWorkingFolderId: lD.folderId,
-        }, 
-        {
-            viewLibrary: {
-                label: uploadTrans.viewLibrary,
-                className: "btn-white",
-                callback: function() {
-                    lD.toolbar.openNewTabAndSearch(moduleType);
+
+        // Close the current dialog
+        bootbox.hideAll();
+
+        openUploadForm({
+            url: libraryAddUrl,
+            title: uploadTrans.uploadMessage,
+            animateDialog: false,
+            initialisedBy: "layout-designer-upload",
+            buttons: {
+                viewLibrary: {
+                    label: uploadTrans.viewLibrary,
+                    className: "btn-white",
+                    callback: function() {
+                        lD.toolbar.openNewTabAndSearch(moduleType);
+                    }
+                },
+                main: {
+                    label: translations.done,
+                    className: "btn-primary",
+                    callback: function() {
+                        lD.timeline.resetZoom();
+                        lD.reloadData(lD.layout);
+                    }
                 }
             },
-            main: {
-                label: translations.done,
-                className: "btn-primary",
-                callback: function() {
-                    lD.timeline.resetZoom();
-                    lD.reloadData(lD.layout);
-                }
+            templateOptions: {
+                trans: uploadTrans,
+                upload: {
+                    maxSize: moduleData.maxSize,
+                    maxSizeMessage: moduleData.maxSizeMessage,
+                    validExtensionsMessage: translations.validExtensions.replace("%s", moduleData.validExt),
+                    validExt: validExt
+                },
+                playlistId: playlistId,
+                displayOrder: addToPosition,
+                currentWorkingFolderId: lD.folderId,
+                showWidgetDates: true,
+                folderSelector: true
             }
-        });
+        }).attr('data-test', 'uploadFormModal');
 
     } else { // Add widget to a region
 
@@ -1510,117 +1530,6 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
         // Show toast message
         toastr.error(errorMessagesTrans.addMediaFailed.replace('%error%', errorMessage));
     });
-};
-
-/**
- * Open Upload Form
- * @param {object} templateOptions
- * @param {object} buttons
- */
-lD.openUploadForm = function(templateOptions, buttons) {
-
-    // Close the current dialog
-    bootbox.hideAll();
-
-    var template = Handlebars.compile($("#template-file-upload").html());
-
-    // Handle bars and open a dialog
-    bootbox.dialog({
-        message: template(templateOptions),
-        title: uploadTrans.uploadMessage,
-        buttons: buttons,
-        animate: false,
-        updateInAllChecked: uploadFormUpdateAllDefault,
-        deleteOldRevisionsChecked: uploadFormDeleteOldDefault
-    }).attr('data-test', 'uploadFormModal');
-
-    this.openUploadFormModelShown($(".modal-body").find("form"));
-};
-
-/**
- * Modal shown
- * @param {object} form
- */
-lD.openUploadFormModelShown = function(form) {
-
-    // Configure the upload form
-    var url = libraryAddUrl;
-
-    // Initialize the jQuery File Upload widget:
-    form.fileupload({
-        url: url,
-        disableImageResize: true
-    });
-
-    // Upload server status check for browsers with CORS support:
-    if($.support.cors) {
-        $.ajax({
-            url: url,
-            type: 'HEAD'
-        }).fail(function() {
-            $('<span class="alert alert-error"/>')
-                .text('Upload server currently unavailable - ' + new Date())
-                .appendTo(form);
-        });
-    }
-
-    // Enable iframe cross-domain access via redirect option:
-    form.fileupload(
-        'option',
-        'redirect',
-        window.location.href.replace(
-            /\/[^\/]*$/,
-            '/cors/result.html?%s'
-        )
-    );
-
-    $('#files').on('change', handleVideoCoverImage);
-
-    form.bind('fileuploadsubmit', function(e, data) {
-        var inputs = data.context.find(':input');
-        if(inputs.filter('[required][value=""]').first().focus().length) {
-            return false;
-        }
-        data.formData = inputs.serializeArray().concat(form.serializeArray());
-
-        inputs.filter("input").prop("disabled", true);
-    }).bind('fileuploadstart', function(e, data) {
-        // Show progress data
-        form.find('.fileupload-progress .progress-extended').show();
-        form.find('.fileupload-progress .progress-end').hide();
-    }).bind('fileuploadprogressall', function(e, data) {
-        // Hide progress data and show processing
-        if(data.total > 0 && data.loaded == data.total) {
-            form.find('.fileupload-progress .progress-extended').hide();
-            form.find('.fileupload-progress .progress-end').show();
-        }
-    }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function(e, data) {
-        // Get uploaded and downloaded files and toggle Done button
-        var filesToUploadCount = form.find('tr.template-upload').length;
-        var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
-
-        if(filesToUploadCount == 0) {
-            $button.removeAttr('disabled');
-            videoImageCovers = {};
-        } else {
-            $button.attr('disabled', 'disabled');
-        }
-    }).bind('fileuploaddone', function (e, data) {
-        saveVideoCoverImage(data);
-    }).bind('fileuploaddrop', handleVideoCoverImage);
-
-    // compile tree folder modal and append it to Form
-    if ($('#folder-tree-form-modal').length === 0) {
-        let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-        let treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
-        form.append(folderTreeModal(treeConfig));
-
-        $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
-            $(this).data('bs.modal', null);
-        });
-    }
-
-    initJsTreeAjax('#container-folder-form-tree', 'layout-designer-upload', true, 600);
 };
 
 /**
