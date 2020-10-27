@@ -87,9 +87,6 @@ class DatabaseLogHandler extends AbstractProcessingHandler
 
                 // Try again.
                 $this->write($record);
-            } else {
-                // Throw this message out (failing to log is still a failure we should know about)
-                throw $e;
             }
         }
     }
