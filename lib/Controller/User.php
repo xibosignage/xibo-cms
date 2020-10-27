@@ -26,13 +26,8 @@ use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Entity\Campaign;
-use Xibo\Entity\Layout;
 use Xibo\Entity\Media;
 use Xibo\Entity\Permission;
-use Xibo\Entity\Playlist;
-use Xibo\Entity\Region;
-use Xibo\Entity\Widget;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -391,7 +386,12 @@ class User extends Base
             $user->includeProperty('buttons');
 
             // Deal with the home page
-            $user->homePage = $this->userGroupFactory->getHomepageByName($user->homePageId)->title;
+            try {
+                $user->homePage = $this->userGroupFactory->getHomepageByName($user->homePageId)->title;
+            } catch (NotFoundException $exception) {
+                $this->getLog()->error('User has homepage which does not exist. userId: ' . $user->userId . ', homepage: ' . $user->homePageId);
+                $user->homePage = __('Unknown homepage, please edit to update.');
+            }
 
             // Super admins have some buttons
             if ($this->getUser()->featureEnabled('users.modify')
