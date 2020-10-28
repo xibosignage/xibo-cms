@@ -480,7 +480,7 @@ class DataSetTicker extends ModuleWidget
             ->appendJavaScriptFile('xibo-text-render.js')
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
-            ->appendJavaScriptFile('xibo-interactive-control.js')
+            ->appendJavaScriptFile('xibo-interactive-control.min.js')
             ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
         ;

@@ -289,15 +289,15 @@
 {% block javaScript %}
     <script type="text/javascript">
 
-        let displayGroupStatusChart = null;
-        let displayGroupContentStatusChart = null;
+        var displayGroupStatusChart = null;
+        var displayGroupContentStatusChart = null;
 
-        let displayGroupId = null;
-        let loggedInStatus = null;
-        let mediaInventoryStatus = null;
+        var displayGroupId = null;
+        var loggedInStatus = null;
+        var mediaInventoryStatus = null;
 
-        let displayGroupIdsContent = [];
-        let displayGroupIdsStatus = [];
+        var displayGroupIdsContent = [];
+        var displayGroupIdsStatus = [];
 
         // Create our chart
         var bandwidthChart = new Chart($("#bandwidthChart"), {
@@ -611,7 +611,7 @@
             }
         );
 
-        let table2 = $("#displaysGrid").DataTable({
+        var table2 = $("#displaysGrid").DataTable({
             "language": dataTablesLanguage,
             serverSide: true,
             stateSave: true,

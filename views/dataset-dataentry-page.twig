@@ -84,7 +84,7 @@
 
         var imageUrl = $("#datasets").data("imageUrl");
         var cols = [];
-        let editMode = 'Edit';
+        var editMode = 'Edit';
 
         cols.push({ "name": "id", "data": "id" });
         {% for col in dataSet.getColumn() %}
@@ -149,7 +149,7 @@
                 complete: function (response) {
 
                     if (response.responseJSON.data.exception != '' && response.responseJSON.data.exception != undefined) {
-                        let error = response.responseJSON.data.exception;
+                        var error = response.responseJSON.data.exception;
                         $("#datasets tbody").html(error)
                     }
                 }
@@ -184,10 +184,10 @@
                 $(this).text('Multi Select Mode');
                 $("#datasets tbody").off('click', 'tr');
                 $(".deleteRowsControl").show();
-                $('#datasets tbody').on('click', 'tr', (ev) => {
+                $('#datasets tbody').on('click', 'tr', function(ev) {
 
                     // See if element has class already
-                    let hasClass = $(ev.currentTarget).hasClass('selected')
+                    var hasClass = $(ev.currentTarget).hasClass('selected')
 
                     // Add class to the clicked one ( or remove it if there was already there )
                     $(ev.currentTarget).toggleClass('selected', !hasClass);
@@ -208,15 +208,15 @@
         $('#deleteSelectedRows').on("click", function(e) {
             e.preventDefault();
 
-            let rows = [];
-            let rowIds = [];
-            let processedRows = 0;
+            var rows = [];
+            var rowIds = [];
+            var processedRows = 0;
 
-            $('#datasets tbody tr[role="row"].selected').each((idx, ele) => {
+            $('#datasets tbody tr[role="row"].selected').each(function(idx, ele) {
                 rows.push(table.row(ele).data());
             });
 
-            for (let i = 0; i < rows.length; i++) {
+            for (var i = 0; i < rows.length; i++) {
                 rowIds.push(rows[i].id);
             }
 

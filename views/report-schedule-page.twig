@@ -111,10 +111,10 @@
         var table;
         $(document).ready(function() {
 
-            let url_string = window.location.href;
-            let url = new URL(url_string);
-            let reportScheduleId = url.searchParams.get("reportScheduleId");
-            let reportName = url.searchParams.get("reportName");
+            var url_string = window.location.href;
+            var url = new URL(url_string);
+            var reportScheduleId = url.searchParams.get("reportScheduleId");
+            var reportName = url.searchParams.get("reportName");
 
             if (reportScheduleId !== undefined && reportScheduleId != null) {
                 $('#reportScheduleId').val(reportScheduleId);

@@ -230,12 +230,12 @@
             var eventTagCls =$(".tag-text");
 
             // Calculate the difference of number of days of a selected range
-            const calculateDaysShowHideWarn = function() {
+            var calculateDaysShowHideWarn = function() {
 
-                let fromDt = moment($("#statsFromDt").val());
-                let toDt = moment($("#statsToDt").val());
+                var fromDt = moment($("#statsFromDt").val());
+                var toDt = moment($("#statsToDt").val());
 
-                let days = toDt.diff(fromDt, 'days');
+                var days = toDt.diff(fromDt, 'days');
 
                 warning.hide();
                 if ( days >= 30) {
@@ -254,7 +254,7 @@
             });
 
             // Enable/Disable Schedule Btn
-            const checkEnableSchedule = function() {
+            var checkEnableSchedule = function() {
 
                 // Schedule button enable/disable - start
                 var mediaVal = $("#mediaId").val();
@@ -312,7 +312,7 @@
                 }
             }
 
-            const checkFilterAndApply = function() {
+            var checkFilterAndApply = function() {
 
                 reportFilter.off('change').change( function() {
 

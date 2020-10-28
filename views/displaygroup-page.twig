@@ -189,10 +189,10 @@
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#displaygroups_wrapper').find('.col-sm-6').eq(1));
 
-        let displayTable;
-        let criteria;
-        let criteriaTag;
-        let useRegexForName;
+        var displayTable;
+        var criteria;
+        var criteriaTag;
+        var useRegexForName;
 
         function setDeleteMultiSelectFormOpen(dialog) {
             $(dialog).find('.save-button').prop('disabled', false);
@@ -232,7 +232,7 @@
                 displayGroupQueryDynamicMembers(dialog);
             });
 
-            const $form = $('#displayGroupAddForm');
+            var $form = $('#displayGroupAddForm');
 
             // First time in there
             displayGroupQueryDynamicMembers(dialog);

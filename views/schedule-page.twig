@@ -900,9 +900,9 @@
         // Init campaign select2
         $(function() {
             // Select lists
-            const dialog = 'body';
+            var dialog = 'body';
 
-            let $campaignSelect = $('.xibo-calendar-controls #campaignId');
+            var $campaignSelect = $('.xibo-calendar-controls #campaignId');
             $campaignSelect.select2({
                 dropdownParent: $(dialog),
                 ajax: {
@@ -997,7 +997,7 @@
                 setTimeout(calendar.view(), 1000);
             });
 
-            let $displaySelect = $('#DisplayList', dialog);
+            var $displaySelect = $('#DisplayList', dialog);
             $displaySelect.select2({
                 dropdownParent: $(dialog),
                 dropdownAutoWidth: true,
@@ -1005,7 +1005,7 @@
                     url: $displaySelect.data("searchUrl"),
                     dataType: "json",
                     data: function(params) {
-                        const query = {
+                        var query = {
                             isDisplaySpecific: -1,
                             forSchedule: 1,
                             displayGroup: params.term,

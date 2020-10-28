@@ -20,17 +20,17 @@
  */
 jQuery.fn.extend({
     xiboWorldClockRender: function(options, body) {
-        const worldClocks = options.worldClocks;
-        const self = this;
+        var worldClocks = options.worldClocks;
+        var self = this;
 
         // Update clocks
-        const updateClocks = function() {
-            const timeNow = moment();
+        var updateClocks = function() {
+            var timeNow = moment();
 
-            for(let index = 0;index < worldClocks.length; index++) {
+            for(var index = 0;index < worldClocks.length; index++) {
                 // Get time according to timezone
-                const t = timeNow.tz(worldClocks[index].clockTimezone);
-                const $clockContainer = $(self).find('#clock' + index);
+                var t = timeNow.tz(worldClocks[index].clockTimezone);
+                var $clockContainer = $(self).find('#clock' + index);
 
                 $clockContainer.find('.year').html(t.year());
                 $clockContainer.find('.month').html(t.month() + 1);
@@ -44,9 +44,9 @@ jQuery.fn.extend({
                     $(this).html(t.format($(this).attr("format")));
                 });
 
-                const secondAnalog = t.seconds() * 6;
-                const minuteAnalog = t.minutes() * 6 + secondAnalog / 60;
-                const hourAnalog = ((t.hours() % 12) / 12) * 360 + 90 + minuteAnalog / 12;
+                var secondAnalog = t.seconds() * 6;
+                var minuteAnalog = t.minutes() * 6 + secondAnalog / 60;
+                var hourAnalog = ((t.hours() % 12) / 12) * 360 + 90 + minuteAnalog / 12;
 
                 $clockContainer.find('.analogue-clock-hour').css("transform", "rotate(" + hourAnalog + "deg)");
                 $clockContainer.find('.analogue-clock-minute').css("transform", "rotate(" + minuteAnalog + "deg)");
@@ -67,9 +67,9 @@ jQuery.fn.extend({
         // For each matched element
         this.each(function() {
 
-            for(let index = 0;index < worldClocks.length; index++) {
+            for(var index = 0;index < worldClocks.length; index++) {
                 // Append template to the preview
-                let $newItem = $('<div>').attr('id', 'clock' + index).addClass('world-clock').addClass('multi-element').append(body);
+                var $newItem = $('<div>').attr('id', 'clock' + index).addClass('world-clock').addClass('multi-element').append(body);
 
                 // Add label or timezone name
                 $newItem.find('.world-clock-label').html((worldClocks[index].clockLabel != '') ? worldClocks[index].clockLabel : worldClocks[index].clockTimezone);

@@ -129,7 +129,7 @@
 
         // Custom submit for display profile form
         function displayProfileEditFormSubmit() {
-            let $form = $("#displayProfileForm");
+            var $form = $("#displayProfileForm");
 
             // Remove temp fields and enable checkbox after submit
             $form.submit(function(event) {
@@ -150,8 +150,8 @@
             // Replace all checkboxes with hidden input fields
             $form.find('input[type="checkbox"]').each(function () {
                 // Get checkbox values
-                let value = $(this).is(':checked') ? 'on' : 'off';
-                let id = $(this).attr('id');
+                var value = $(this).is(':checked') ? 'on' : 'off';
+                var id = $(this).attr('id');
 
                 // Create hidden input
                 $('<input type="hidden" class="temp-input">')

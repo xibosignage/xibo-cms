@@ -379,7 +379,7 @@ function Region(parent, id, xml, options, preload) {
     
     self.finished = function() {
         // Remove temporary media elements
-        self.mediaObjects = self.mediaObjects.filter(media => !media.singlePlay);
+        self.mediaObjects = self.mediaObjects.filter(function(media) { return !media.singlePlay; });
 
         // Mark as complete
         self.complete = true;
@@ -963,9 +963,9 @@ function previewActionTrigger(path, data, done) {
         // Find media in all regions
         main:
         for (i = 0; i < previewLayout.regionObjects.length; i++) {
-            const region = previewLayout.regionObjects[i];
+            var region = previewLayout.regionObjects[i];
             for (j = 0; j < region.mediaObjects.length; j++) {
-                const media = region.mediaObjects[j];
+                var media = region.mediaObjects[j];
                 if(media.id == id) {
                     newMedia = media;
                     break main; // break to main loop

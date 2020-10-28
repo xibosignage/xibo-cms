@@ -1019,8 +1019,8 @@
         });
 
         // Add degault delayOnElement to all the non set steps
-        Object.values(cmsTours).forEach((tour) => {
-            for (let index = 0; index < tour.getStepCount(); index++) {
+        Object.values(cmsTours).forEach(function(tour) {
+            for (var index = 0; index < tour.getStepCount(); index++) {
                 var step = tour.getStep(index);
                 if(step.delayOnElement == null) {
                     step.delayOnElement = {
@@ -1066,7 +1066,7 @@
             tour.restart();
         } else if(fromStep != undefined && (fromStep != tour.getCurrentStepIndex() || tour.getCurrentStepIndex() == null)) {
             tour.restart();
-            setTimeout(() => { tour.goTo(fromStep); }, 500);
+            setTimeout(function() { tour.goTo(fromStep); }, 500);
         } else {
             // Start tour
             tour.start();

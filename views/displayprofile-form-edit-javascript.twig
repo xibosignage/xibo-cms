@@ -122,7 +122,7 @@
     * Init/Update timePicker fields
     */
     function timersFormInit(container) {
-        const customTimeFormat = 'HH:mm';
+        var customTimeFormat = 'HH:mm';
         container.find('.input-group:not(.timerInit) .timePickerDisplayEditForm').each(function() {
             if(calendarType == 'Jalali') {
                 initDatePicker(
@@ -138,7 +138,7 @@
                             }
                         },
                         altFieldFormatter: function(unixTime) {
-                            let newDate = moment.unix(unixTime / 1000);
+                            var newDate = moment.unix(unixTime / 1000);
                             newDate.set('second', 0);
 
                             return newDate.format(customTimeFormat);
@@ -197,18 +197,18 @@
         }
 
         // Add empty template to the container
-        const template = Handlebars.compile($('#template-picture-options-slider').html());
+        var template = Handlebars.compile($('#template-picture-options-slider').html());
         row.find('.multiSelectInputs').html(template({
             index: row.find('.multiSelect').data('index')
         }));
         
-        let propertyValue = values[selProperty];
-        let sliderOptions = propertyOptions.sliderOptions;
+        var propertyValue = values[selProperty];
+        var sliderOptions = propertyOptions.sliderOptions;
 
         // Find respective index
         if(typeof(propertyValue) == "string") {
-            for (let index = 0; index < sliderOptions.ticks_labels.length; index++) {
-                const label = sliderOptions.ticks_labels[index];
+            for (var index = 0; index < sliderOptions.ticks_labels.length; index++) {
+                var label = sliderOptions.ticks_labels[index];
                 
                 if(label == propertyValue) {
                     propertyValue = index;
@@ -223,7 +223,7 @@
         row.find('.pictureControlsSlider').bootstrapSlider(sliderOptions); 
 
         // Refresh on tab switch to fix broken labels
-        $('a[data-toggle="tab"]').on('shown.bs.tab', () =>  {
+        $('a[data-toggle="tab"]').on('shown.bs.tab', function() {
             row.find('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
         });
     }

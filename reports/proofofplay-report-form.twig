@@ -253,28 +253,28 @@
                             if (type != "display")
                                 return "";
 
-                            let durationData = moment.duration(data, "seconds");
-                            let dataM = '';
+                            var durationData = moment.duration(data, "seconds");
+                            var dataM = '';
 
-                            let months = durationData.months();
+                            var months = durationData.months();
                             if (months > 0) {
                                 durationData.subtract(moment.duration(months,'months'));
                                 dataM += months + '{% trans "month" %} ';
                             }
 
-                            let days = durationData.days();
+                            var days = durationData.days();
                             durationData.subtract(moment.duration(days,'days'));
                             dataM += days + '{% trans "day" %} ';
 
-                            let hours = durationData.hours();
+                            var hours = durationData.hours();
                             durationData.subtract(moment.duration(hours,'hours'));
                             dataM += hours + '{% trans "hr" %} ';
 
-                            let minutes = durationData.minutes();
+                            var minutes = durationData.minutes();
                             durationData.subtract(moment.duration(minutes,'minutes'));
                             dataM += minutes + '{% trans "min" %} ';
 
-                            let seconds = durationData.seconds();
+                            var seconds = durationData.seconds();
                             dataM += seconds + '{% trans "sec" %} ';
 
                             return  dataM;
@@ -315,12 +315,12 @@
             }
 
             // Calculate the difference of number of days of a selected range
-            const calculateDaysShowHideWarn = function() {
+            var calculateDaysShowHideWarn = function() {
 
-                let fromDt = moment($("#statsFromDt").val());
-                let toDt = moment($("#statsToDt").val());
+                var fromDt = moment($("#statsFromDt").val());
+                var toDt = moment($("#statsToDt").val());
                 
-                let days = toDt.diff(fromDt, 'days');
+                var days = toDt.diff(fromDt, 'days');
 
                 warning.hide();
                 if ( days >= 30) {
@@ -338,7 +338,7 @@
                 calculateDaysShowHideWarn();
             });
 
-            const checkFilterAndApply = function() {
+            var checkFilterAndApply = function() {
 
                 reportFilter.off('change').change( function() {
                     var value = reportFilter.val();
@@ -372,12 +372,12 @@
 
         function proofOfPlayScheduleCallback() {
 
-            const $displayId = $('#proofofplayReport #displayId');
-            const $layoutId = $('#proofofplayReport [id="layoutId[]"]');
-            const $mediaId = $('#proofofplayReport [id="mediaId[]"]');
-            const $newDisplayId = $('#proofofplayScheduleAddForm #displayId');
-            const $newLayoutId = $('#proofofplayScheduleAddForm [id="layoutId[]"]');
-            const $newMediaId = $('#proofofplayScheduleAddForm [id="mediaId[]"]');
+            var $displayId = $('#proofofplayReport #displayId');
+            var $layoutId = $('#proofofplayReport [id="layoutId[]"]');
+            var $mediaId = $('#proofofplayReport [id="mediaId[]"]');
+            var $newDisplayId = $('#proofofplayScheduleAddForm #displayId');
+            var $newLayoutId = $('#proofofplayScheduleAddForm [id="layoutId[]"]');
+            var $newMediaId = $('#proofofplayScheduleAddForm [id="mediaId[]"]');
 
             appendOptions($newDisplayId, $displayId.find('option:selected').clone());
             appendOptions($newLayoutId, $layoutId.find('option:selected').clone());
@@ -388,7 +388,7 @@
 
             for (var i = 0; i < options.length; i++) {
 
-                let option = options[i];
+                var option = options[i];
                 element.append(option).trigger('change');
                 $(option).prop('selected', true);
                 element.trigger({

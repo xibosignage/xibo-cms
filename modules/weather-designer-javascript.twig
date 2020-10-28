@@ -22,7 +22,7 @@
 #}
 <script type="text/javascript">
 
-    const weatherType = {
+    var weatherType = {
         forecast: 'Forecast', 
         current: 'Current'
         };
@@ -68,7 +68,7 @@
             });
         }
 
-        const setFilter = function (refresh) {
+        var setFilter = function (refresh) {
             // Set dropdown filter option
             $(this).find('.weather-type-targets select').data('filterClass', $(this).find('#weatherType').val());
 

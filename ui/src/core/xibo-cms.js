@@ -48,7 +48,7 @@ $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
     event.preventDefault();
     $(this).ekkoLightbox({
         onContentLoaded: function() {
-            let container = $('.ekko-lightbox-container');
+            var container = $('.ekko-lightbox-container');
             container.css({'max-height': container.height(), "height": ""});
         }
     });
@@ -281,7 +281,7 @@ function XiboInitialise(scope) {
                 jsDateOnlyFormat,
                 {
                     altFieldFormatter: function(unixTime) {
-                        let newDate = moment.unix(unixTime / 1000);
+                        var newDate = moment.unix(unixTime / 1000);
                         newDate.set('hour', 0);
                         newDate.set('minute', 0);
                         newDate.set('second', 0);
@@ -299,7 +299,7 @@ function XiboInitialise(scope) {
     });
 
     $(scope + ' .dateTimePicker:not(.datePickerHelper)').each(function() {
-        const enableSeconds = dateFormat.includes('s');
+        var enableSeconds = dateFormat.includes('s');
 
         if(calendarType == 'Jalali') {
             initDatePicker(
@@ -331,7 +331,7 @@ function XiboInitialise(scope) {
 
     $(scope + ' .dateMonthPicker:not(.datePickerHelper)').each(function() {
         if(calendarType == 'Jalali') {
-            const linkedFormat = $(this).data().linkFormat;
+            var linkedFormat = $(this).data().linkFormat;
             initDatePicker(
                 $(this),
                 systemDateFormat,
@@ -343,7 +343,7 @@ function XiboInitialise(scope) {
                         enabled: false
                     },
                     altFieldFormatter: function(unixTime) {
-                        let newDate = moment.unix(unixTime / 1000);
+                        var newDate = moment.unix(unixTime / 1000);
                         newDate.set('date', 1);
                         newDate.set('hour', 0);
                         newDate.set('minute', 0);
@@ -363,10 +363,10 @@ function XiboInitialise(scope) {
                         shorthand: false,
                         dateFormat: systemDateFormat,
                         altFormat: 'MMMM Y',
-                        parseDate: (datestr, format) => {
+                        parseDate: function(datestr, format) {
                             return moment(datestr, format, true).toDate();
                         },
-                        formatDate: (date, format, locale) => {
+                        formatDate: function(date, format, locale) {
                             return moment(date).format(format);
                         }
                     })]
@@ -376,7 +376,7 @@ function XiboInitialise(scope) {
     });
 
     $(scope + ' .timePicker:not(.datePickerHelper)').each(function() {
-        const enableSeconds = dateFormat.includes('s');
+        var enableSeconds = dateFormat.includes('s');
 
         if(calendarType == 'Jalali') {
             initDatePicker(
@@ -392,7 +392,7 @@ function XiboInitialise(scope) {
                         }
                     },
                     altFieldFormatter: function(unixTime) {
-                        let newDate = moment.unix(unixTime / 1000);
+                        var newDate = moment.unix(unixTime / 1000);
                         newDate.set('second', 0);
 
                         return newDate.format(systemTimeFormat);
@@ -435,8 +435,8 @@ function XiboInitialise(scope) {
 
     // make a vanilla layout, display and media selector for reuse
     $(scope + " .pagedSelect select.form-control").each(function() {
-        let $this = $(this);
-        let anchor = $this.data("anchorElement");
+        var $this = $(this);
+        var anchor = $this.data("anchorElement");
         if (anchor !== undefined && anchor !== "") {
             makePagedSelect($(this), $(anchor));
         } else {
@@ -530,15 +530,15 @@ function XiboInitialise(scope) {
 
     $(scope + " .XiboCommand").each(function() {
         // Get main container
-        const $mainContainer = $(this);
+        var $mainContainer = $(this);
 
         // Get input and its value
-        const $input = $mainContainer.find('input');
+        var $input = $mainContainer.find('input');
 
         // Hide main input
         $input.hide();
 
-        const commandTypes = {
+        var commandTypes = {
             'freetext': translations.freeTextCommand,
             'tpv_led': 'Philips Android',
             'rs232': 'RS232',
@@ -546,11 +546,11 @@ function XiboInitialise(scope) {
         };
 
         // Scope functions
-        const changeTypeTemplate = function(type) {
-            let initVal = $input.val();
-            let parsedVal = parseValue($input.val());
+        var changeTypeTemplate = function(type) {
+            var initVal = $input.val();
+            var parsedVal = parseValue($input.val());
             
-            const $targetContainer = $mainContainer.find('.command-inputs');
+            var $targetContainer = $mainContainer.find('.command-inputs');
 
             // Create template for the inputs
             var inputTemplate = Handlebars.compile($('#command-input-' + type + '-template').html());
@@ -591,14 +591,14 @@ function XiboInitialise(scope) {
         };
 
         // Parse and set value to main input
-        const parseValue = function(value) {
-            let valueObj = {};
+        var parseValue = function(value) {
+            var valueObj = {};
 
             if(value == '' || value == undefined) {
                 valueObj.type = 'freetext';
                 valueObj.value = '';
             } else {
-                let splitValue = value.split('|');
+                var splitValue = value.split('|');
 
                 if(splitValue.length == 1) {
                     // free text
@@ -624,8 +624,8 @@ function XiboInitialise(scope) {
                             break;
                         case 'rs232':
                             // rs232|<connection string>|<command>
-                            const connectionStringRaw = splitValue[1].split(',');
-                            const connectionString = {
+                            var connectionStringRaw = splitValue[1].split(',');
+                            var connectionString = {
                                 deviceName: connectionStringRaw[0],
                                 baudRate: connectionStringRaw[1],
                                 dataBits: connectionStringRaw[2],
@@ -658,10 +658,10 @@ function XiboInitialise(scope) {
             return valueObj;
         };
 
-        const updateValue = function(type) {
-            let builtString = '';
-            let invalidValue = false;
-            const $container = $mainContainer.find('.command-inputs');
+        var updateValue = function(type) {
+            var builtString = '';
+            var invalidValue = false;
+            var $container = $mainContainer.find('.command-inputs');
 
             // Reset invalid class
             $container.removeClass('invalid');
@@ -674,14 +674,14 @@ function XiboInitialise(scope) {
                 case 'rs232':
 
                     // Get values
-                    const deviceNameVal = $container.find('.rs232-device-name').val();
-                    const baudRateVal = $container.find('.rs232-baud-rate').val();
-                    const dataBitsVal = $container.find('.rs232-data-bits').val();
-                    const parityVal = $container.find('.rs232-parity').val();
-                    const stopBitsVal = $container.find('.rs232-stop-bits').val();
-                    const handshakeVal = $container.find('.rs232-handshake').val();
-                    const hexSupportVal = $container.find('.rs232-hex-support').val();
-                    const commandVal = $container.find('.rs232-command').val();
+                    var deviceNameVal = $container.find('.rs232-device-name').val();
+                    var baudRateVal = $container.find('.rs232-baud-rate').val();
+                    var dataBitsVal = $container.find('.rs232-data-bits').val();
+                    var parityVal = $container.find('.rs232-parity').val();
+                    var stopBitsVal = $container.find('.rs232-stop-bits').val();
+                    var handshakeVal = $container.find('.rs232-handshake').val();
+                    var hexSupportVal = $container.find('.rs232-hex-support').val();
+                    var commandVal = $container.find('.rs232-command').val();
 
                     if([deviceNameVal, baudRateVal, dataBitsVal].includes('')) {
                         $container.addClass('invalid');
@@ -701,26 +701,31 @@ function XiboInitialise(scope) {
                 case 'intent':
                     builtString = 'intent|' + $container.find('.intent-type').val() + '|activity';
                     // Extra values array
-                    let extraValues = [];
+                    var extraValues = [];
 
                     // Get values from input fields
                     $container.find('.intent-extra-element').each(function() {
-                        const $el = $(this);
+                        var $el = $(this);
                         $el.removeClass('invalid');
-                        let extraName = $el.find('.extra-name').val();
-                        let extraType = $el.find('.extra-type').val();
-                        let extraValue = $el.find('.extra-value').val();
+                        var extraName = $el.find('.extra-name').val();
+                        var extraType = $el.find('.extra-type').val();
+                        var extraValue = $el.find('.extra-value').val();
 
                         // Validate values
                         if(extraType == 'intArray') {
                             // Transform the value into an array
-                            extraValue = extraValue.replace(' ', '').split(',').map((x) => {
+                            extraValue = extraValue.replace(' ', '').split(',').map(function(x) {
                                 return (x != '') ? Number(x) : '';
                             });
                             
                             // Check if all the array elements are numbers ( and non empty )
-                            if(extraValue.find(x => isNaN(x) || x == '') != undefined) {
-                                extraValue = '';
+                            for (var index = 0; index < extraValue.length; index++) {
+                                var element = extraValue[index];
+                                
+                                if(isNaN(element) || element == '') {
+                                    extraValue = '';
+                                    break;
+                                }
                             }
                         } else if(extraType == 'int' && extraValue != '') {
                             extraValue = isNaN(Number(extraValue)) ? '' : Number(extraValue);
@@ -762,7 +767,7 @@ function XiboInitialise(scope) {
         };
 
         // Get init command type
-        const initType = parseValue($input.val()).type;
+        var initType = parseValue($input.val()).type;
 
         // Create basic type element
         var optionsTemplate = Handlebars.compile($('#command-input-main-template').html());
@@ -861,8 +866,8 @@ function dataTableDraw(e, settings) {
         // Add separators
         var groupAux = 0;
         if(buttons.length > 1) {
-            for (let index = 0; index < buttons.length; index++) {
-                const btn = buttons[index];
+            for (var index = 0; index < buttons.length; index++) {
+                var btn = buttons[index];
 
                 // If there's a new group ( and it's not the first element on the list)
                 if(btn.sortGroup > groupAux && index > 0) {
@@ -1016,7 +1021,7 @@ function dataTableCreateTags(data, type) {
     var returnData = '';
 
     if(typeof data.tags != undefined && data.tags != null ) {
-        let arrayOfValues = [];
+        var arrayOfValues = [];
         var arrayOfTags = data.tags.split(',');
 
         if(typeof data.tagValues != undefined && data.tagValues != null) {
@@ -1025,7 +1030,7 @@ function dataTableCreateTags(data, type) {
 
         returnData += '<div id="tagDiv">';
 
-        for (let i = 0; i < arrayOfTags.length; i++) {
+        for (var i = 0; i < arrayOfTags.length; i++) {
             if(arrayOfTags[i] != '' && (arrayOfValues[i] == undefined || arrayOfValues[i] === 'NULL')) {
                 returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '</span></li>'
             } else if (arrayOfTags[i] != '' && (arrayOfValues[i] != '' || arrayOfValues[i] !== 'NULL')) {
@@ -1362,7 +1367,7 @@ function XiboFormRender(sourceObj, data) {
                             extrabutton.click(function(e) {
                                 e.preventDefault();
 
-                                let $button = $(this);
+                                var $button = $(this);
 
                                 if ($button.hasClass("save-button")) {
                                     if ($button.hasClass("disabled")) {
@@ -1498,8 +1503,8 @@ function XiboFormRender(sourceObj, data) {
 
                 if ($('#folder-tree-form-modal').length === 0 && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').length) {
                     // compile tree folder modal and append it to Form
-                    let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-                    let treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+                    var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+                    var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
                     $('.XiboForm').append(folderTreeModal(treeConfig));
 
                     $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
@@ -1895,14 +1900,14 @@ function XiboMultiSelectTagFormRender(button) {
             // Add match id to the array
             matchIds.push(rowData[elementIdName]);
 
-            let arrayOfValues = [];
+            var arrayOfValues = [];
             if(typeof rowData.tagValues != undefined && rowData.tagValues != null) {
                 arrayOfValues = rowData.tagValues.split(',');
             }
 
             // Add existing tags to the array
             if(['', null].indexOf(rowData.tags) === -1) {
-                let arrayOfTags = rowData.tags.split(',');
+                var arrayOfTags = rowData.tags.split(',');
 
                 arrayOfTags.forEach(function(tag, index) {
                     if(existingTags.indexOf(tag) === -1 && (arrayOfValues[index] == undefined || arrayOfValues[index] == 'NULL')) {
@@ -2215,7 +2220,7 @@ function XiboSubmitResponse(response, form) {
         if (!apply) {
             // Next form URL is provided
             if ($(form).data("nextFormUrl") !== undefined) {
-                let responseId = ($(form).data("nextFormIdProperty") === undefined)
+                var responseId = ($(form).data("nextFormIdProperty") === undefined)
                     ? response.id
                     : response.data[$(form).data("nextFormIdProperty")];
                 XiboFormRender($(form).data().nextFormUrl.replace(":id", responseId));
@@ -2565,10 +2570,10 @@ function makePagedSelect(element, parent) {
     // Set initial value if exists
     if(element.data("initialValue") != undefined && element.data("initialKey") != undefined) {
 
-        const initialValue = element.data("initialValue");
-        const initialKey = element.data("initialKey");
+        var initialValue = element.data("initialValue");
+        var initialKey = element.data("initialKey");
 
-        let dataObj = {};
+        var dataObj = {};
         dataObj[initialKey] = initialValue;
 
         $.ajax({
@@ -2601,10 +2606,10 @@ function makeLocalSelect(element, parent) {
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         matcher: function(params, data) {
             // If filterClass is defined, try to filter the elements by it
-            const mainFilterClass = $(data.element.parentElement).data().filterClass;
+            var mainFilterClass = $(data.element.parentElement).data().filterClass;
 
             // Get element class array ( one or more elements split by comma)
-            const elementClassArray = ($(data.element).data().filterClass != undefined ) ? $(data.element).data().filterClass.replace(' ', '').split(',') : [];
+            var elementClassArray = ($(data.element).data().filterClass != undefined ) ? $(data.element).data().filterClass.replace(' ', '').split(',') : [];
 
             // If filter exists and it's not in one of the element filters, return empty data
             if(mainFilterClass != undefined && mainFilterClass != '' && !elementClassArray.includes(mainFilterClass)) {
@@ -2634,16 +2639,16 @@ function makeLocalSelect(element, parent) {
             queryTags = queryTags.replace(' ', '').split(',');
 
             // Find by text
-            for(let index = 0;index < queryText.length; index++) {
-                const text = queryText[index];
+            for(var index = 0;index < queryText.length; index++) {
+                var text = queryText[index];
                 if(text != '' && data.text.indexOf(text) > -1) {
                     return data;
                 }
             }
             
             // Find by tag ( data-tag )
-            for(let index = 0;index < queryTags.length;index++) {
-                const tag = queryTags[index];
+            for(var index = 0;index < queryTags.length;index++) {
+                var tag = queryTags[index];
                 if(tag != '' && $(data.element).data('tags') != undefined && $(data.element).data('tags').indexOf(tag) > -1) {
                     return data;
                 }
@@ -2670,12 +2675,12 @@ function makeLocalSelect(element, parent) {
 
 // Custom submit for user preferences
 function userPreferencesFormSubmit() {
-    let $form = $("#userPreferences");
+    var $form = $("#userPreferences");
     // Replace all checkboxes with hidden input fields
     $form.find('input[type="checkbox"]').each(function () {
         // Get checkbox values
-        let value = $(this).is(':checked') ? 'on' : 'off';
-        let id = $(this).attr('id');
+        var value = $(this).is(':checked') ? 'on' : 'off';
+        var id = $(this).attr('id');
 
         // Create hidden input
         $('<input type="hidden">')
@@ -2691,15 +2696,21 @@ function userPreferencesFormSubmit() {
 }
 
 // Initialise date time picker
-function initDatePicker($element, baseFormat, displayFormat, options = {}, onChangeCallback = null, clearButtonActive = true, onClearCallback = null) {
+function initDatePicker($element, baseFormat, displayFormat, options, onChangeCallback, clearButtonActive, onClearCallback) {
+    // Default values
+    options = (typeof options == 'undefined') ? {} : options;
+    onChangeCallback = (typeof onChangeCallback == 'undefined') ? null : onChangeCallback;
+    clearButtonActive = (typeof clearButtonActive == 'undefined') ? true : clearButtonActive;
+    onClearCallback = (typeof onClearCallback == 'undefined') ? null : onClearCallback;
+
     // Check for date format
     if(baseFormat == undefined || displayFormat == undefined) {
         console.error('baseFormat and displayFormat needs to be defined!');
         return false;
     }
 
-    let $inputElement = $element;
-    const initialValue = $element.val();
+    var $inputElement = $element;
+    var initialValue = $element.val();
 
     if(calendarType == 'Jalali') {
 
@@ -2738,17 +2749,17 @@ function initDatePicker($element, baseFormat, displayFormat, options = {}, onCha
             altFormat: displayFormat,
             dateFormat: baseFormat,
             locale: language,
-            parseDate: (datestr, format) => {
+            parseDate: function(datestr, format) {
                 return moment(datestr, format, true).toDate();
             },
-            formatDate: (date, format, locale) => {
+            formatDate: function(date, format, locale) {
                 return moment(date).format(format);
             }
         }, options));
     }
 
     // Callback for on change event
-    $inputElement.change(()=> {
+    $inputElement.change(function() {
         // Callback if exists
         if(onChangeCallback != null && typeof onChangeCallback == 'function') {
             onChangeCallback();
@@ -2780,7 +2791,10 @@ function initDatePicker($element, baseFormat, displayFormat, options = {}, onCha
 }
 
 // Update date picker/pickers
-function updateDatePicker($element, date, format, triggerChange = false) {
+function updateDatePicker($element, date, format, triggerChange) {
+    // Default values
+    triggerChange = (typeof triggerChange == 'undefined') ? false : triggerChange;
+    
     if(calendarType == 'Gregorian') {
         // Update gregorian calendar
         if($element[0]._flatpickr != undefined) {
@@ -2824,7 +2838,7 @@ function destroyDatePicker($element) {
 
 function initJsTreeAjax(container, table, isForm = false, ttl = false)
 {
-    let state = {};
+    var state = {};
     if ($(container).length) {
 
         // difference here is, that for grid trees we don't set ttl at all
@@ -2843,9 +2857,9 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
                     // items in context menu need to check user permissions before we render them
                     // as such each click on the node will execute the below ajax to check what permissions user has
                     // permission may be different per node, therefore we cannot look this up just once for whole tree.
-                    let items = {};
-                    let tree = $(container).jstree(true);
-                    let buttonPermissions = null;
+                    var items = {};
+                    var tree = $(container).jstree(true);
+                    var buttonPermissions = null;
 
                     $.ajax({
                         url: "/folders/contextButtons/"+$node.id,
@@ -2927,14 +2941,14 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
             // if we are on the form, we need to select tree node (currentWorkingFolder)
             // this is set/passed to twigs on render time
             if (isForm) {
-                let folderIdInputSelector = '#'+table+' #folderId';
+                var folderIdInputSelector = '#'+table+' #folderId';
 
                 // for upload forms
                 if ($(folderIdInputSelector).length === 0) {
                     folderIdInputSelector = '#formFolderId';
                 }
 
-                let selectedFolder = $(folderIdInputSelector).val();
+                var selectedFolder = $(folderIdInputSelector).val();
 
                 if (selectedFolder !== undefined && selectedFolder !== '') {
                     $(this).jstree('select_node', selectedFolder);
@@ -2951,8 +2965,8 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
 
         $(container).on("rename_node.jstree", function (e, data) {
 
-            let dataObject = {};
-            let folderId  = data.node.id;
+            var dataObject = {};
+            var folderId  = data.node.id;
             dataObject['text'] = data.text;
 
             $.ajax({
@@ -2965,10 +2979,10 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
 
         $(container).on("create_node.jstree", function (e, data) {
 
-            let dataObject = {};
+            var dataObject = {};
             dataObject['parentId'] = data.parent;
             dataObject['text'] = data.node.text;
-            let node = data.node;
+            var node = data.node;
 
             // when we create a new node, by default it will get jsTree default id
             // we need to change it to the folderId we have in our folder table
@@ -2986,10 +3000,10 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
 
         $(container).on("delete_node.jstree", function (e, data) {
 
-            let dataObject = {};
+            var dataObject = {};
             dataObject['parentId'] = data.parent;
             dataObject['text'] = data.node.text;
-            let folderId = data.node.id;
+            var folderId = data.node.id;
 
             // delete has a check built-in, if it fails to remove node, it will show suitable message in toast
             // and reload the tree
@@ -3012,9 +3026,9 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
         });
 
         $(container).on("changed.jstree", function (e, data) {
-            let selectedFolderId = data.selected[0];
-            let folderIdInputSelector = (isForm) ? '#'+table+' #folderId' : '#folderId';
-            let node = $(container).jstree("get_selected", true);
+            var selectedFolderId = data.selected[0];
+            var folderIdInputSelector = (isForm) ? '#'+table+' #folderId' : '#folderId';
+            var node = $(container).jstree("get_selected", true);
 
             // for upload and multi select forms.
             if (isForm && $(folderIdInputSelector).length === 0) {
@@ -3052,7 +3066,7 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
         // clicking outside of the tree select modal will work as well.
         $(".btnCloseInnerModal").on('click', function(e) {
             e.preventDefault();
-            let FolderTreeModalId = (isForm) ? '#folder-tree-form-modal' : '#folder-tree-modal';
+            var FolderTreeModalId = (isForm) ? '#folder-tree-form-modal' : '#folder-tree-modal';
             $(FolderTreeModalId).modal('hide');
         });
 

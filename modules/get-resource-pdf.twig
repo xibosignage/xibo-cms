@@ -187,11 +187,11 @@
                 xiboIC.setWidgetDuration(
                     (options.duration * pdfDoc.numPages),
                     {
-                        done: () => { // Callback after the request
+                        done: function() { // Callback after the request
                             // Start interval ( the defined duration )
                             startInterval(options.duration);
                         },
-                        error: () => {
+                        error: function() {
                             // If the call fails, keep the defalt behaviour
                             startInterval(options.duration / pdfDoc.numPages);
                         }
