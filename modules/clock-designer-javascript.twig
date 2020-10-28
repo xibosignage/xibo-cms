@@ -48,7 +48,7 @@
         };
 
         // On select input change, check clock type
-        $(this).find('form #clockTypeId').on('change input', () => {
+        $(this).find('form #clockTypeId').on('change input', function() {
             clockTypeChangeBehaviour($(this));
         });
 

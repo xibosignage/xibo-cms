@@ -220,7 +220,7 @@ class Clock extends ModuleWidget
                 $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
                 $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
 
                 // Replace the After body Content
                 $data['javaScript'] = $javaScriptContent;
@@ -249,7 +249,7 @@ class Clock extends ModuleWidget
                 $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/moment.js') . '"></script>';
                 $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
                 $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
                 $javaScriptContent .= '<script type="text/javascript">
                     var locale = "' . Translate::GetJsLocale() . '";
                     var options = ' . json_encode($options) . ';
@@ -294,7 +294,7 @@ class Clock extends ModuleWidget
                 $javaScriptContent  = '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/jquery.min.js') . '" ></script > ';
                 $javaScriptContent .= '<script type = "text/javascript" src = "' . $this->getResourceUrl('vendor/flipclock.min.js') . '" ></script > ';
                 $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
-                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.js') . '"></script>';
+                $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
 
                 // Replace the After body Content
                 $data['javaScript'] = $javaScriptContent;
