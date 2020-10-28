@@ -51,7 +51,7 @@
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
                         {% set title %}{% trans "Terminate the command once the duration elapses?" %}{% endset %}
-                        {% set helpText %}{% trans "Should the player forcefully terminate the command after the duration specified. Leave unchecked to let the command terminate naturally." %}{% endset %}
+                        {% set helpText %}{% trans "Should the player forcefully terminate the command after the duration specified. Leave unchecked to var the command terminate naturally." %}{% endset %}
                         {{ forms.checkbox("terminateCommand", title, module.getOption("terminateCommand"), helpText, "duration-fields") }}
 
                         {% set title %}{% trans "Use taskkill to terminate commands?" %}{% endset %}

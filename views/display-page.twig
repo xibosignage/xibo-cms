@@ -587,7 +587,7 @@
         function setMoveCmsMultiSelectFormOpen(dialog) {
             console.log('Multi-select form opened for move CMS');
 
-            let $message = $(
+            var $message = $(
                 '<div class="col-sm-12 alert alert-info">' +
                     "<p>{% trans 'Please note: Once the CMS Address and Key are authenticated in this form the Display will attempt to register with the CMS Instance details entered. Once transferred the Display will stop communicating with this CMS Instance.' %}</p>" +
                 '</div>'
@@ -595,7 +595,7 @@
 
             $(dialog).find('.modal-body').append($message);
 
-            let $cmsAddress =   $(
+            var $cmsAddress =   $(
                 '<div class="form-group">' +
                     '<label class="col-sm-2 control-label" for="newCmsAddress" accesskey="">New CMS Address</label>' +
                     '<div class="col-sm-10">' +
@@ -605,7 +605,7 @@
                 '</div>'
             );
 
-            let $cmsKey = $(
+            var $cmsKey = $(
                 '<div class="form-group">' +
                     '<label class="col-sm-2 control-label" for="newCmsKey" accesskey="">New CMS Key</label>' +
                     '<div class="col-sm-10">' +
@@ -615,7 +615,7 @@
                 '</div>'
             );
 
-            let $authenticationCode =   $(
+            var $authenticationCode =   $(
                 '<div class="form-group">' +
                     '<label class="col-sm-2 control-label" for="twoFactorCode" accesskey="">Two Factor Code</label>' +
                     '<div class="col-sm-10">' +
@@ -650,7 +650,7 @@
             // Parse special fields
             override.forEach(function(field, index) {
                 if(['lockOptions','pictureOptions', 'timers'].includes(field.name)) {
-                    let parsedValues = JSON.parse(field.value);
+                    var parsedValues = JSON.parse(field.value);
                     
                     // Add values to the override array
                     $.each(parsedValues, function(name, value){
@@ -677,15 +677,15 @@
             });
 
             // Method to create a new input field based on the hidden form
-            const createInputField = function(target, inputName, newValue = null) {
-                let select2FixFlag = false;
-                let timepickerFixFlag = false;
-                let timepickerOptionsFixFlag = false;
-                let sliderFixFlag = false;
-                let sliderFixOptions = {};
+            var createInputField = function(target, inputName, newValue = null) {
+                var select2FixFlag = false;
+                var timepickerFixFlag = false;
+                var timepickerOptionsFixFlag = false;
+                var sliderFixFlag = false;
+                var sliderFixOptions = {};
 
                 // Grab input field from hidden table
-                let $inputFields = $settings.find('#' + inputName);
+                var $inputFields = $settings.find('#' + inputName);
 
                 // If no input field is capture by ID, get special fields
                 if($inputFields.length == 0) {
@@ -693,7 +693,7 @@
                         // Copy special fields ( timers, pictureOptions ) by selected option
                         $inputFields = $settings.find('.multiSelect option:selected[value="' + inputName + '"]').parents('.form-group:first').find('.multiSelect, .multiSelectInputs');
                         
-                        $inputFields.each((key, el) => {
+                        $inputFields.each(function(key, el) {
                             if($(el).find('.timePickerDisplayEditForm').length > 0) {
                                 timepickerOptionsFixFlag = true;
 
@@ -783,7 +783,7 @@
                 // Style multi selects
                 if($(target).find('.multiSelectInputs').length > 0) {
                     // Calculate column size for bootstrap
-                    let colSize = Math.round(12/$(target).find('.multiSelectInputs').length);
+                    var colSize = Math.round(12/$(target).find('.multiSelectInputs').length);
                     
                     //Remove all style classes and add the new size class
                     $(target).find('.multiSelectInputs').attr('class', 'multiSelectInputs col-sm-' + colSize)
@@ -800,7 +800,7 @@
                 $(target).find('.slider').addClass('scaled-slider');
                 $(target).find('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
 
-                let $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
+                var $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
                     e.stopPropagation();
                     restoreInputField(target, inputName);
                  });
@@ -809,7 +809,7 @@
 
 
             // Method to restore the input field to the edit button
-            const restoreInputField = function(target, inputName) {
+            var restoreInputField = function(target, inputName) {
 
                 $(target).html('<button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button>');
 
@@ -885,7 +885,7 @@
                 var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong>' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
 
                 // Get override element
-                var overrideEl = override.find((x) => { return x.name === over; });
+                var overrideEl = override.find(function(x) { return x.name === over; });
                 if(overrideEl != undefined) { //If element was found, create an input
 
                     // Create input with override value
@@ -895,12 +895,12 @@
 
             // Handlers for field edit
             $(dialog).find('.override-input[data-editing="false"]').click(function() {
-                const inputName = $(this).data('inputName');
+                var inputName = $(this).data('inputName');
                 createInputField($(this), inputName);
             });
 
             // Refresh on tab switch to fix broken labels
-            $('a[data-toggle="tab"]').on('shown.bs.tab', () =>  {
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function() {
                 $('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
             });
 
@@ -910,11 +910,11 @@
 
         // Custom submit for display form
         function displayEditFormSubmit() {
-            let $form = $('#displayEditForm');
+            var $form = $('#displayEditForm');
             // Grab and alter the value in the bandwidth limit field
-            let bandwidthLimitField = $form.find("input[name=bandwidthLimit]");
-            let bandwidthLimitUnitsField = $form.find("select[name=bandwidthLimitUnits]");
-            let bandwidthLimit = bandwidthLimitField.val();
+            var bandwidthLimitField = $form.find("input[name=bandwidthLimit]");
+            var bandwidthLimitUnitsField = $form.find("select[name=bandwidthLimitUnits]");
+            var bandwidthLimit = bandwidthLimitField.val();
 
             if (bandwidthLimitUnitsField.val() == 'mb') {
                 bandwidthLimit = bandwidthLimit * 1024;
@@ -943,8 +943,8 @@
             // Replace all checkboxes with hidden input fields
             $form.find('input[type="checkbox"]').each(function () {
                 // Get checkbox values
-                let value = $(this).is(':checked') ? 'on' : 'off';
-                let id = $(this).attr('id');
+                var value = $(this).is(':checked') ? 'on' : 'off';
+                var id = $(this).attr('id');
 
                 // Create hidden input
                 $('<input type="hidden" class="temp-input">')
@@ -962,10 +962,10 @@
         }
 
         $('body').on('click', '.display-screenshot', function(el) {
-            let displayId = el.target.dataset.displayId;
-            let displayType = el.target.dataset.type;
+            var displayId = el.target.dataset.displayId;
+            var displayType = el.target.dataset.type;
 
-            let statusWindowData = {};
+            var statusWindowData = {};
 
             $.ajax({
                 url: "/display/status/" + displayId,
@@ -974,7 +974,7 @@
                 success: function (data) {
                     statusWindowData['data'] = data;
                     statusWindowData['type'] = displayType;
-                    let statusWindowTemplate = Handlebars.compile($('#display-status-window-template').html());
+                    var statusWindowTemplate = Handlebars.compile($('#display-status-window-template').html());
                     $('.modal-body').append(statusWindowTemplate(statusWindowData));
                 }
             });

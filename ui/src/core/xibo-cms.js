@@ -1503,8 +1503,8 @@ function XiboFormRender(sourceObj, data) {
 
                 if ($('#folder-tree-form-modal').length === 0 && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').length) {
                     // compile tree folder modal and append it to Form
-                    let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-                    let treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+                    var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+                    var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
                     $('.XiboForm').append(folderTreeModal(treeConfig));
 
                     $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
@@ -2836,10 +2836,9 @@ function destroyDatePicker($element) {
     }
 }
 
-<<<<<<< HEAD
 function initJsTreeAjax(container, table, isForm = false, ttl = false)
 {
-    let state = {};
+    var state = {};
     if ($(container).length) {
 
         // difference here is, that for grid trees we don't set ttl at all
@@ -2858,9 +2857,9 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
                     // items in context menu need to check user permissions before we render them
                     // as such each click on the node will execute the below ajax to check what permissions user has
                     // permission may be different per node, therefore we cannot look this up just once for whole tree.
-                    let items = {};
-                    let tree = $(container).jstree(true);
-                    let buttonPermissions = null;
+                    var items = {};
+                    var tree = $(container).jstree(true);
+                    var buttonPermissions = null;
 
                     $.ajax({
                         url: "/folders/contextButtons/"+$node.id,
@@ -2934,33 +2933,6 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
                 },
                 'data' : {
                     "url": "/folders"
-=======
-function handleVideoCoverImage(e, data) {
-    // handle click and drag&drop ways
-    var files = data === undefined ? this.files : data.files;
-    var video = null;
-
-    // wait a little bit for the preview to be in the form
-    var checkExist = setInterval(function() {
-        if ($('.preview').find('video').length) {
-
-            // iterate through our files, check if we have videos
-            // if we do, then set params on video object, convert 2nd second of the video to an image
-            // and register onseeked and onpause events
-            Array.from(files).forEach(function(file, index) {
-                if (file.type.includes('video')) {
-                    video = file.preview;
-                    video.name = file.name;
-                    video.setAttribute('id', file.name);
-                    video.preload = 'metadata';
-
-                    //show help text describing this feature.
-                    var helpText = translations.videoImageCoverHelpText;
-                    $('.template-upload').find('video').closest("tr").find("td.title")[0].append(helpText);
-
-                    getVideoImage(video, 2);
-                    video.addEventListener('seeked, pause', seekImage);
->>>>>>> 87fe9eed0... Fix Internet Explorer JavaScript ES6 compatibility
                 }
             }
         });
@@ -2969,14 +2941,14 @@ function handleVideoCoverImage(e, data) {
             // if we are on the form, we need to select tree node (currentWorkingFolder)
             // this is set/passed to twigs on render time
             if (isForm) {
-                let folderIdInputSelector = '#'+table+' #folderId';
+                var folderIdInputSelector = '#'+table+' #folderId';
 
                 // for upload forms
                 if ($(folderIdInputSelector).length === 0) {
                     folderIdInputSelector = '#formFolderId';
                 }
 
-                let selectedFolder = $(folderIdInputSelector).val();
+                var selectedFolder = $(folderIdInputSelector).val();
 
                 if (selectedFolder !== undefined && selectedFolder !== '') {
                     $(this).jstree('select_node', selectedFolder);
@@ -2993,8 +2965,8 @@ function handleVideoCoverImage(e, data) {
 
         $(container).on("rename_node.jstree", function (e, data) {
 
-            let dataObject = {};
-            let folderId  = data.node.id;
+            var dataObject = {};
+            var folderId  = data.node.id;
             dataObject['text'] = data.text;
 
             $.ajax({
@@ -3007,10 +2979,10 @@ function handleVideoCoverImage(e, data) {
 
         $(container).on("create_node.jstree", function (e, data) {
 
-            let dataObject = {};
+            var dataObject = {};
             dataObject['parentId'] = data.parent;
             dataObject['text'] = data.node.text;
-            let node = data.node;
+            var node = data.node;
 
             // when we create a new node, by default it will get jsTree default id
             // we need to change it to the folderId we have in our folder table
@@ -3026,25 +2998,12 @@ function handleVideoCoverImage(e, data) {
             });
         });
 
-<<<<<<< HEAD
         $(container).on("delete_node.jstree", function (e, data) {
 
-            let dataObject = {};
+            var dataObject = {};
             dataObject['parentId'] = data.parent;
             dataObject['text'] = data.node.text;
-            let folderId = data.node.id;
-=======
-function createImage() {
-    // this will actually create the image and save it to an object with file name as a key
-    var canvas = document.createElement('canvas');
-    canvas.height = this.videoHeight;
-    canvas.width = this.videoWidth;
-    var ctx = canvas.getContext('2d');
-    ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
-
-    var videoImageCover = new Image();
-    videoImageCover.src = canvas.toDataURL();
->>>>>>> 87fe9eed0... Fix Internet Explorer JavaScript ES6 compatibility
+            var folderId = data.node.id;
 
             // delete has a check built-in, if it fails to remove node, it will show suitable message in toast
             // and reload the tree
@@ -3062,23 +3021,14 @@ function createImage() {
                         $(container).jstree(true).refresh();
                     }
 
-<<<<<<< HEAD
                 }
             });
         });
-=======
-function saveVideoCoverImage(data)
-{
-    // this is called when fileUpload is finished
-    // reason being that we need mediaId to save videoCover image correctly.
-    var results = data.result.files[0];
-    var thumbnailData = {};
->>>>>>> 87fe9eed0... Fix Internet Explorer JavaScript ES6 compatibility
 
         $(container).on("changed.jstree", function (e, data) {
-            let selectedFolderId = data.selected[0];
-            let folderIdInputSelector = (isForm) ? '#'+table+' #folderId' : '#folderId';
-            let node = $(container).jstree("get_selected", true);
+            var selectedFolderId = data.selected[0];
+            var folderIdInputSelector = (isForm) ? '#'+table+' #folderId' : '#folderId';
+            var node = $(container).jstree("get_selected", true);
 
             // for upload and multi select forms.
             if (isForm && $(folderIdInputSelector).length === 0) {
@@ -3116,7 +3066,7 @@ function saveVideoCoverImage(data)
         // clicking outside of the tree select modal will work as well.
         $(".btnCloseInnerModal").on('click', function(e) {
             e.preventDefault();
-            let FolderTreeModalId = (isForm) ? '#folder-tree-form-modal' : '#folder-tree-modal';
+            var FolderTreeModalId = (isForm) ? '#folder-tree-form-modal' : '#folder-tree-modal';
             $(FolderTreeModalId).modal('hide');
         });
 

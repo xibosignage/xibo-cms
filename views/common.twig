@@ -6,9 +6,9 @@
     <script type="text/javascript">
 
         // COMMON VARIABLES
-        const serverMode = "{{ settings.SERVER_MODE }}";
-        let playlistRegionColouring =  "{{ settings.REGION_OPTIONS_COLOURING }}";
-        let libraryUpload = {{ libraryUpload|json_encode|raw }};
+        var serverMode = "{{ settings.SERVER_MODE }}";
+        var playlistRegionColouring =  "{{ settings.REGION_OPTIONS_COLOURING }}";
+        var libraryUpload = {{ libraryUpload|json_encode|raw }};
         var librarySearchUrl = "{{ url_for("library.search") }}";
         var libraryAddUrl = "{{ url_for("library.add") }}";
         var imageDownloadUrl = "{{ url_for("library.download", {id: ':id'}) }}?preview=1";
@@ -37,7 +37,7 @@
         {% endfor %}
 
         // Structure with API URLs
-        let urlsForApi = {
+        var urlsForApi = {
             layout: {
                 designer: {
                     url: "{{ url_for("layout.designer", {id: ':id'}) }}",

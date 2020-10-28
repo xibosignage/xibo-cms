@@ -129,10 +129,10 @@
 
         function statsExportFormSubmit() {
 
-            let form = $("#statisticsExportForm");
-            let valid = true;
+            var form = $("#statisticsExportForm");
+            var valid = true;
 
-            const validateForm = function(element) {
+            var validateForm = function(element) {
                 if (element.val() == null || element.val() == '') {
                     valid = false;
                     element.closest('.form-group').removeClass('has-success').addClass('has-error');

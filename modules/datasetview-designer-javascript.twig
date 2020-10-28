@@ -28,7 +28,7 @@
 
         if($(this).find('form').data('formStep') === 1) {
             // If data set exists, set the drop-down to that value
-            let dataSetId = $(this).find('form').data().elementOptions.dataSetId;
+            var dataSetId = $(this).find('form').data().elementOptions.dataSetId;
             
             if(dataSetId !== undefined) {
                 $(this).find('#dataSetId').val(dataSetId);

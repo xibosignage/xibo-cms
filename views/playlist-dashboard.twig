@@ -70,8 +70,8 @@
     <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
     <script type="text/javascript">
         // Define some global variables to keep hold of
-        let template;
-        let uploadUrl;
+        var template;
+        var uploadUrl;
 
         $(document).ready(function() {
 
@@ -117,7 +117,7 @@
             }
 
             // Make an AJAX call to the spots backend for this, and dump the resulting HTML into our target div.
-            let $spotElement = $("#spots");
+            var $spotElement = $("#spots");
 
             $spotElement.html("<span class=\"fa fa-cogs fa-spin\"></span>");
 
@@ -141,7 +141,7 @@
 
                         // Bind click event to delete a playlist widget
                         $spotElement.find(".delete-widget").click(function(e) {
-                            let $anchor = $(this).children();
+                            var $anchor = $(this).children();
                             e.preventDefault();
                             XiboFormRender($anchor);
                         });
@@ -159,9 +159,9 @@
         function spotActionButtonClick(button) {
 
             // Whip away the current button
-            let $container = button.parent();
-            let $imgDiv = $container.prev();
-            let $delButtonDiv = $container.next();
+            var $container = button.parent();
+            var $imgDiv = $container.prev();
+            var $delButtonDiv = $container.next();
 
             // Remove the button, thumbnail and whatever else
             button.remove();
@@ -181,7 +181,7 @@
 
             // Hand over to blue-imp
             // Configure the upload form
-            let form = $container.find("form");
+            var form = $container.find("form");
 
             // Initialize the jQuery File Upload widget:
             form.fileupload({
@@ -199,7 +199,7 @@
             form.bind('fileuploadalways', function (e, data) {
                 if (data.textStatus === "success") {
                     // Take the data and update our form back to a replace button
-                    let result = data.result.files[0];
+                    var result = data.result.files[0];
 
                     // Pull the results out
                     if (result.error !== undefined) {
@@ -216,7 +216,7 @@
                             $container.data("buttonType", "replace");
 
                             // Change Empty to Add in the next row down (if there is one)
-                            let $next = $container.parent().next().find("button");
+                            var $next = $container.parent().next().find("button");
                             $next.addClass("spot-action").addClass("btn-success").removeClass("btn-default").prop("disabled", false).html("Add");
                             $next.on("click", function () {
                                 spotActionButtonClick($next);
@@ -227,7 +227,7 @@
                     toastr.error(data.result);
                 }
 
-                let button;
+                var button;
                 if ($container.data("widgetName") !== undefined) {
                     // Switch back to a button
                     button = $("<button class=\"btn btn-block btn-warning spot-action-button\">" + $container.data("widgetName") + "</button>");
@@ -241,8 +241,8 @@
                     }));
 
                     if ($container.data("mediaType") === "image") {
-                        let previewUrl = $container.data("widgetPreview").replace(":id", $container.data("mediaId"));
-                        let thumbnail = $("<a class=\"img-replace\" data-toggle=\"lightbox\" data-type=\"image\" href=\"" + previewUrl + "\">" +
+                        var previewUrl = $container.data("widgetPreview").replace(":id", $container.data("mediaId"));
+                        var thumbnail = $("<a class=\"img-replace\" data-toggle=\"lightbox\" data-type=\"image\" href=\"" + previewUrl + "\">" +
                             "<img src=\"" + previewUrl + "&width=50&height=50&cache=1\" style=\"max-height: 50px; max-width: 50px;\"/>" +
                             "</a>");
 

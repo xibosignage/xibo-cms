@@ -272,10 +272,10 @@
                         responsivePriority: 6,
                         "data": function (data, type) {
                             if (data.expires != null && data.expires != 0) {
-                                let now = moment();
-                                let expiresIn = moment.unix(data.expires);
-                                let differenceMinutes = expiresIn.diff(now, 'minutes');
-                                let momentDifference = moment(now).to(expiresIn);
+                                var now = moment();
+                                var expiresIn = moment.unix(data.expires);
+                                var differenceMinutes = expiresIn.diff(now, 'minutes');
+                                var momentDifference = moment(now).to(expiresIn);
 
                                 if (differenceMinutes < -10 ) {
                                     return data.mediaExpiryFailed;
@@ -304,7 +304,7 @@
 
         $("#libraryUploadForm").click(function(e) {
             e.preventDefault();
-            let currentWorkingFolderId = $('#folderId').val();
+            var currentWorkingFolderId = $('#folderId').val();
 
             openUploadForm({
                 url: "{{ url_for("library.add") }}",

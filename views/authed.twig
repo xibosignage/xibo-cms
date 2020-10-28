@@ -420,8 +420,8 @@
 
     <script  type="text/javascript">
         function moveFolderMultiSelectFormOpen(dialog) {
-            let folderContainer = '<div class="well" id="container-folder-form-tree"></div>';
-            let $hiddenInput = $('<input name="folderId" type="hidden" id="formFolderId">');
+            var folderContainer = '<div class="well" id="container-folder-form-tree"></div>';
+            var $hiddenInput = $('<input name="folderId" type="hidden" id="formFolderId">');
 
             $hiddenInput.on('change', function() {
                 dialog.data().commitData = {folderId: $(this).val()};
