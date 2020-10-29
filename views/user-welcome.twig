@@ -627,15 +627,11 @@
             ]
         });
 
-        console.log(hasSeenNewUserWizard);
-
         if (hasSeenNewUserWizard === 0) {
-            console.log('Start 1!!!');
             restartTour(tour);
         }
 
         $("#reshowWelcomeMenuItem").on("click", function() {
-            console.log('Start 2!!!');
             restartTour(tour);
         });
     });
@@ -654,7 +650,6 @@
         }
 
         if(saveToPrefs) {
-            console.log('Save state');
             setNewUserWizardState(false);
         }
 
@@ -671,11 +666,7 @@
     }
 
     function cmsOnElementUnavailable(tour, step) {
-        console.log('cmsOnElementUnavailable');
         var currentStep = tour.getStep(step);
-
-        console.log(currentStep);
-        console.log(currentStep.onElementUnavailableStep);
 
         if(currentStep.onElementUnavailableStep != undefined) {
             restartTour(tour, currentStep.onElementUnavailableStep);
