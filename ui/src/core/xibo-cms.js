@@ -836,12 +836,10 @@ function dataTableDraw(e, settings) {
         };
 
         // Bind a click event to our table
-        if (target.data().initialised == undefined) {
-            target.find("tbody").on("click", "tr", function () {
-                $(this).toggleClass("selected");
-                target.data().initialised = true;
-            });
-        }
+        target.find("tbody").off("click", "tr").on("click", "tr", function () {
+            $(this).toggleClass("selected");
+            target.data().initialised = true;
+        });
 
         // Add a button set to the table
         var template = Handlebars.compile($("#multiselect-button-template").html());
@@ -857,7 +855,7 @@ function dataTableDraw(e, settings) {
         if($tagsElement.length > 0 && userRoutePermissions.tags == 1) {
             buttons.push({id: $tagsElement.attr("id"), gridId: e.target.id, text: translations.editTags, contentType: target.data('contentType'), contentIdName: target.data('contentIdName'), customHandler: "XiboMultiSelectTagFormRender", sortGroup: 0});
         }
-
+        
         // Sort buttons by groups/importance
         buttons = buttons.sort(function(a, b) {
             return ((a.sortGroup > b.sortGroup) ? 1 : -1);
