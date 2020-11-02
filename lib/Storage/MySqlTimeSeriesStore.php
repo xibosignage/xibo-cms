@@ -178,6 +178,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
+        $statDateLessThan = isset($filterBy['statDateLessThan']) ? $filterBy['statDateLessThan'] : null;
 
         // In the case of user switches from  mongo to mysql - laststatId were saved as Mongo ObjectId string
         if (isset($filterBy['statId'])) {
@@ -292,6 +293,10 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         // get the next stats from the given date
         if ($statDate != null) {
             $body .= ' AND stat.statDate >= ' . $statDate->format('U');
+        }
+        
+        if ($statDateLessThan != null) {
+            $body .= ' AND stat.statDate < ' . $statDateLessThan->format('U');
         }
 
         if ($statId != null) {
