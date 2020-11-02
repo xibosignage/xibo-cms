@@ -144,10 +144,16 @@
             <ul class="dropdown-menu">
                 {{#each buttons}}
                     {{#if divider}}
-                    <li class="divider"></li>
+                        <li class="divider"></li>
+                    {{else multiSelectOnly}}
+                        <li {{#each dataAttributes}}
+                            data-{{ name }}="{{ value }}"
+                            {{/each}}
+                            class="{{#if class}}{{ class }}{{else}}XiboMultiHiddenButton{{/if}} {{ id }}" style="display: none;"><a tabindex="-1" href="#">{{ text }}</a>
+                        </li>
                     {{else}}
                         {{#if external}}
-                        <li class="{{ id }}"><a tabindex="-1" target="{{ linkType }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a></li>
+                            <li class="{{ id }}"><a tabindex="-1" target="{{ linkType }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a></li>
                         {{/if}}
 
                         {{#unless external}}

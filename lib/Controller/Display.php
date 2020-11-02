@@ -906,6 +906,22 @@ class Display extends Base
                         ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
                     ]
                 ];
+
+                $display->buttons[] = [
+                    'multi-select' => true,
+                    'multiSelectOnly' => true, // Show button only on multi-select menu
+                    'id' => 'display_button_set_bandwidth',
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'display.setBandwidthLimitMultiple')],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'display_button_set_bandwidth'],
+                        ['name' => 'text', 'value' => __('Set Bandwidth')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'display.setBandwidthLimitMultiple.form')],
+                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
+                    ]
+                ];
             }
         }
 
@@ -1443,6 +1459,101 @@ class Display extends Base
 
         return $this->render($request, $response);
     }
+
+    /**
+     * Set Bandwidth to one or more displays
+     * @param Request $request
+     * @param Response $response
+     * @param $ids
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function setBandwidthLimitMultipleForm(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Check if the array of ids is passed
+        if($sanitizedParams->getString('ids') == '') {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Get array of ids
+        $ids = $sanitizedParams->getString('ids');
+
+        $this->getState()->template = 'display-form-set-bandwidth';
+        $this->getState()->setData([
+            'ids' => $ids,
+            'help' =>  $this->getHelp()->link('Display', 'setBandwidthLimit')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+        /**
+     * Set Bandwidth to one or more displays
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function setBandwidthLimitMultiple(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Get array of ids
+        $ids = ($sanitizedParams->getString('ids') != '') ? explode(',', $sanitizedParams->getString('ids')) : [];
+        $bandwidthLimit = intval($sanitizedParams->getString('bandwidthLimit'));
+        $bandwidthLimitUnits = $sanitizedParams->getString('bandwidthLimitUnits');
+
+        // Check if the array of ids is passed
+        if (count($ids) == 0) {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Check if the bandwidth value has something
+        if ($bandwidthLimit == '') {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        foreach ($ids as $id) {
+            // get display
+            $display = $this->displayFactory->getById($id);
+
+            // check if the display is accessible by user
+            if (!$this->getUser()->checkViewable($display)) {
+                throw new AccessDeniedException();
+            }
+
+            // get respective display group
+            $displayGroup = $this->displayGroupFactory->getById($display->displayGroupId);
+
+            // convert bandwidth to kb based on form units
+            if ($bandwidthLimitUnits == 'mb') {
+                $bandwidthLimit = $bandwidthLimit * 1024;
+            } else if ($bandwidthLimitUnits == 'gb') {
+                $bandwidthLimit = $bandwidthLimit * 1024 * 1024;
+            }
+
+            // save display group
+            $displayGroup->bandwidthLimit = $bandwidthLimit;
+            $displayGroup->save(['validate' => false, 'audit' => false]);
+        }
+
+        // Return
+        $this->getState()->hydrate([
+            'httpCode' => 204,
+            'message' => __('Displays Updated')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
 
     /**
      * Assign Display to Display Groups
