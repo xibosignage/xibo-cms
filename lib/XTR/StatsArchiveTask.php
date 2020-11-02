@@ -141,7 +141,7 @@ class StatsArchiveTask implements TaskInterface
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
         $out = fopen($fileName, 'w');
-        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
+        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId', 'Engagements']);
 
         while ($row = $resultSet->getNextRow() ) {
 
@@ -150,11 +150,13 @@ class StatsArchiveTask implements TaskInterface
                 $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
                 $start = $this->date->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
                 $end = $this->date->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
             } else {
 
                 $statDate = isset($row['statDate']) ?$this->date->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
                 $start = $this->date->parse($row['start'], 'U')->format('Y-m-d H:i:s');
                 $end = $this->date->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+                $engagements = isset($row['engagements']) ? $row['engagements'] : '[]';
             }
 
             // Read the columns
@@ -173,6 +175,7 @@ class StatsArchiveTask implements TaskInterface
                 isset($row['layoutId']) ? $this->sanitizer->int($row['layoutId']) :'',
                 isset($row['widgetId']) ? $this->sanitizer->int($row['widgetId']) :'',
                 isset($row['mediaId']) ? $this->sanitizer->int($row['mediaId']) :'',
+                $engagements
             ]);
         }
 

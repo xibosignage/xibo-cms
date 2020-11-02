@@ -265,6 +265,13 @@ class Stats extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="statDateLessThan",
+     *      in="query",
+     *      description="The statDate filter returns records that are less than a particular date",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="statId",
      *      in="query",
      *      description="The statId filter returns records that are greater than a particular statId",
@@ -361,6 +368,7 @@ class Stats extends Base
         $layoutIds = $this->getSanitizer()->getIntArray('layoutId');
         $mediaIds = $this->getSanitizer()->getIntArray('mediaId');
         $statDate = $this->getSanitizer()->getDate('statDate');
+        $statDateLessThan = $this->getSanitizer()->getDate('statDateLessThan');
         $statId = $this->getSanitizer()->getString('statId');
         $campaignId = $this->getSanitizer()->getInt('campaignId');
         $eventTag = $this->getSanitizer()->getString('eventTag');
@@ -395,6 +403,7 @@ class Stats extends Base
                 'layoutIds' => $layoutIds,
                 'mediaIds' => $mediaIds,
                 'statDate' => $statDate,
+                'statDateLessThan' => $statDateLessThan,
                 'statId' => $statId,
                 'campaignId' => $campaignId,
                 'eventTag' => $eventTag,
