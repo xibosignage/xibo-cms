@@ -481,9 +481,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $statDate = new UTCDateTime($statDate->format('U')*1000);
             $statDateQuery['$gte'] = $statDate;
         }
+        
         if ($statDateLessThan != null) {
             $statDateLessThan = new UTCDateTime($statDateLessThan->format('U')*1000);
-            $statDateQuery ['$lt'] = $statDateLessThan;
+            $statDateQuery['$lt'] = $statDateLessThan;
         }
 
         if (count($statDateQuery) > 0) {
