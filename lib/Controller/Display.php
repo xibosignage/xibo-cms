@@ -1521,6 +1521,16 @@ class Display extends Base
             throw new InvalidArgumentException(__('The array of ids is empty!'));
         }
 
+        // convert bandwidth to kb based on form units
+        if ($bandwidthLimitUnits == 'mb') {
+            $bandwidthLimit = $bandwidthLimit * 1024;
+        } else if ($bandwidthLimitUnits == 'gb') {
+            $bandwidthLimit = $bandwidthLimit * 1024 * 1024;
+        }
+
+        // display group ids to be updated
+        $displayGroupIds = [];
+
         foreach ($ids as $id) {
             // get display
             $display = $this->displayFactory->getById($id);
@@ -1530,20 +1540,17 @@ class Display extends Base
                 throw new AccessDeniedException();
             }
 
-            // get respective display group
-            $displayGroup = $this->displayGroupFactory->getById($display->displayGroupId);
-
-            // convert bandwidth to kb based on form units
-            if ($bandwidthLimitUnits == 'mb') {
-                $bandwidthLimit = $bandwidthLimit * 1024;
-            } else if ($bandwidthLimitUnits == 'gb') {
-                $bandwidthLimit = $bandwidthLimit * 1024 * 1024;
-            }
-
-            // save display group
-            $displayGroup->bandwidthLimit = $bandwidthLimit;
-            $displayGroup->save(['validate' => false, 'audit' => false]);
+            $displayGroupIds[] = $display->displayGroupId;
         }
+        
+        // update bandwidth limit to the array of ids
+        $this->displayGroupFactory->setBandwidth($bandwidthLimit, $displayGroupIds);
+
+        // Audit Log message
+        $this->getLog()->audit('DisplayGroup', 0, 'Batch update of bandwidth limit for ' . count($displayGroupIds) . ' items', [
+            'bandwidthLimit' => $bandwidthLimit,
+            'displayGroupIds' => $displayGroupIds
+        ]);
 
         // Return
         $this->getState()->hydrate([
