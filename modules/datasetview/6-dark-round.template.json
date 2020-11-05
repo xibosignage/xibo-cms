@@ -1,0 +1,5 @@
+{
+  "id": "dark-round",
+  "value": "A dark table with round borders and yeallow heading text.",
+  "css": "table.DataSetTable {\nfont-family: Montserrat, sans-serif;\n-webkit-font-smoothing: antialiased;\ntext-rendering: optimizeLegibility;\nfont-size: 14px;\nwidth: 100%;\ntable-layout: fixed;\nborder-radius: 12px;\nbackground-color: #333333;\npadding: 8px;\noverflow: hidden;\nopacity: 0.85;\n}\n\ntr.HeaderRow {\nfont-size:1.1em;\ntext-align:left;\ncolor: #dd5;\n}\n\ntr#row_1 {\n\n}\n\ntd#col_1 {\n\n}\n\ntd.DataSetColumn {\npadding: 6px !important;\ncolor: #f9f9f9;\n}\n\ntd.DataSetColumn img {\nmax-width: 100%;\nmax-height: 50px;\ndisplay: block;\n}\n\ntr.DataSetRow {\n\n}\n\nth.DataSetColumnHeaderCell {\npadding: 4px 6px !important;\n}\n\nspan#1_1 {\n\n}\n\nspan.DataSetColumnSpan {\n\n}"
+}

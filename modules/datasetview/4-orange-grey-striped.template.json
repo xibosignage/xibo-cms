@@ -1,0 +1,5 @@
+{
+  "id": "orange-grey-striped",
+  "value": "White striped table with orange header.",
+  "css": "table.DataSetTable {\nfont-family:\"Trebuchet MS\", Arial, Helvetica, sans-serif;  \nwidth:100%;\nborder-collapse:collapse;\nbox-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);\ntable-layout: fixed;\nfont-size: 14px;\ncolor: #3b3b3b;\n}\n\ntr.HeaderRow {\nfont-size:1.1em;\nfont-weight: 900;\nbackground-color:#ea6153;\ncolor:#fff;\n}\n\ntr#row_1 {\n\n}\n\ntd#col_1 {\n\n}\n\ntd.DataSetColumn {\npadding: 6px;\n}\n\ntd.DataSetColumn img {\nmax-width: 100%;\nmax-height: 50px;\ndisplay: block;\nmargin-left: auto;\nmargin-right: auto;\n}\n\ntr.DataSetRow {\nbackground-color:#f6f6f6;\n}\n\ntr.DataSetRow:nth-child(even) {\nbackground-color:#e9e9e9;\n}\n\nth.DataSetColumnHeaderCell {\npadding-top: 8px;\npadding-bottom: 6px;\n}\n\nspan#1_1 {\n\n}\n\nspan.DataSetColumnSpan {\n\n}"
+}
