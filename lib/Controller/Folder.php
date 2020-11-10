@@ -83,6 +83,7 @@ class Folder extends Base
 
         foreach ($folders as $folder) {
             if ($folder->id === 1) {
+                $folder->a_attr['title'] = __("Right click a Folder for further Options");
                 $this->buildTreeView($folder);
                 array_push($treeJson, $folder);
             }

@@ -46,10 +46,10 @@
                     {{#if folderSelector}}
                     {% endverbatim %}   {% if currentUser.featureEnabled('folder.view') %} {% verbatim %}
                     <div class="row">
-                        <div class="col-sm-2" style="padding:0">
-                            <p>{{ trans.selectedFolder }}</p>
+                        <div class="col-sm-3" style="padding:0">
+                            <p title="{{trans.selectedFolderTitle}}">{{ trans.selectedFolder }}</p>
                         </div>
-                         <div class="col-sm-10" style="padding:0">
+                         <div class="col-sm-9" style="padding:0">
                             <span id="selectedFormFolder"></span>
                         </div>
                     </div>
@@ -76,7 +76,7 @@
                 </button>
                 {{#if folderSelector}}
                  {% endverbatim %}   {% if currentUser.featureEnabled('folder.view') %} {% verbatim %}
-                    <button type="button" class="btn btn-info pull-right" data-toggle="modal" data-target="#folder-tree-form-modal">{{trans.selectFolder}}</button>
+                    <button type="button" class="btn btn-info pull-right" data-toggle="modal" data-target="#folder-tree-form-modal" title="{{trans.selectFolderTitle}}">{{trans.selectFolder}}</button>
                  {% endverbatim %}  {% endif %} {% verbatim %}
                 {{/if}}
                 <!-- The loading indicator is shown during file processing -->
