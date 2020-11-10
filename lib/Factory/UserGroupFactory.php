@@ -747,17 +747,17 @@ class UserGroupFactory extends BaseFactory
                 'folder.view' => [
                     'feature' => 'folder.view',
                     'group' => 'folders',
-                    'title' => __('See the Folder tree')
+                    'title' => __('View Folder Tree on Grids and Forms')
                 ],
                 'folder.add' => [
                     'feature' => 'folder.add',
                     'group' => 'folders',
-                    'title' => __('Add new Folders')
+                    'title' => __('Create new Folders')
                 ],
                 'folder.modify' => [
                     'feature' => 'folder.modify',
                     'group' => 'folders',
-                    'title' => __('Rename and delete Folders')
+                    'title' => __('Rename and Delete existing Folders')
                 ],
             ];
         }

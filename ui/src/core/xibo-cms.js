@@ -2849,7 +2849,7 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
 
         $(container).jstree({
             "state" : state,
-            "plugins" : ["contextmenu", "state", "unique", "sort"],
+            "plugins" : ["contextmenu", "state", "unique", "sort", "themes"],
             "contextmenu":{
                 "items": function($node, checkContextMenuPermissions) {
                     // items in context menu need to check user permissions before we render them
@@ -2864,7 +2864,6 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
                         method: "GET",
                         dataType: "json",
                         success: function (data) {
-                            console.log(data);
                             buttonPermissions = data;
 
                             if (buttonPermissions.create) {
@@ -2918,6 +2917,9 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
                         }
                     });
                 }},
+            "themes" : {
+                "responsive" : true
+            },
             'core' : {
                 "check_callback" : function (operation, node, parent, position, more) {
                     // prevent edit/delete of the root node.
