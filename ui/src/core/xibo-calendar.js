@@ -529,6 +529,9 @@ $(document).ready(function() {
                 // Get the template and render it on the div
                 $('.cal-event-breadcrumb-trail #content').append(calendar._breadcrumbTrail($self.data("elemId"), events, $self.data("eventId")));
                 
+                // Create mini layout preview
+                createMiniLayoutPreview(layoutPreviewUrl.replace(':id', $self.data("elemId")));
+
                 XiboInitialise("");
             }
             

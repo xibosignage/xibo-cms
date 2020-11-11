@@ -153,7 +153,7 @@
                         </li>
                     {{else}}
                         {{#if external}}
-                            <li class="{{ id }}"><a tabindex="-1" target="{{ linkType }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a></li>
+                            <li class="{{ id }}"><a tabindex="-1" target="{{ linkType }}" onclick="{{ onclick }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a></li>
                         {{/if}}
 
                         {{#unless external}}
@@ -421,6 +421,16 @@
                 </div>
 
             </div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="mini-player-template">
+        <div id="miniLayoutPreview" class="mini-layout-preview">
+            <div id="playBtn" class="fa fa-play preview-button" title="{% trans "Play Preview" %}"></div>
+            <div id="closeBtn" class="fa fa-close preview-button" title="{% trans "Close Preview" %}"></div>
+            <div id="sizeBtn" class="fa fa-plus-square preview-button" title="{% trans "Change window size" %}"></div>
+            <div id="newTabBtn" class="fa fa-external-link-square preview-button" title="{% trans "Preview in new window" %}"></div>
+            <div id="content"></div>
         </div>
     </script>
 

@@ -37,7 +37,7 @@ div.preview-screen {
 div.preview-splash {
     height: 100%;
     background:#000000 url('../preview/img/xibologo.png') no-repeat center center;
-    background-size: 50%;
+    background-size: 45%;
 }
 
 div.preview-loader {
@@ -45,7 +45,7 @@ div.preview-loader {
     width: 220px;
     position: relative;
     margin:0 auto;
-    top: 80%;
+    top: 75%;
     background:#000000 url('../preview/img/loader.gif') no-repeat center center;
     background-size: 100%;
 }
@@ -55,7 +55,8 @@ div.preview-loaderCaption p {
     font-family: sans-serif;
     color: #ffffff;
     text-align:center;
-    top: 85%;
+    top: 82%;
+    margin: 10px 0;
     width: 100%;
 }
 
@@ -88,12 +89,22 @@ div.preview-end {
     background:#000000;
     font-family: sans-serif;
     color:#ffffff;
-    font-size: 300%;
+    font-size: 2em;
     margin:0 auto;
     z-index: 100;
     text-align: center;
-    vertical-align: middle;
-    line-height: 400px;
+}
+
+div.preview-end a {
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    left: 0;
+    -webkit-transform: translateY(-50%);
+    -moz-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    -o-transform: translateY(-50%);
+    transform: translateY(-50%);
 }
 
 video {
