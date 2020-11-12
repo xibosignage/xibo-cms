@@ -88,6 +88,21 @@ function openUploadForm(options) {
             XiboInitialise(".row-widget-dates");
         }
 
+        // Handle expiry dates fields
+        var expiryDatesStatus = function() {
+            var setExpiryFlag = form.find('#setExpiryDates').is(":checked");
+
+            // Hide and disable fiels ( to avoid form submitting)
+            form.find('.row-widget-set-expiry').toggleClass('hide', !setExpiryFlag);
+            form.find('.row-widget-set-expiry input').prop('disabled', !setExpiryFlag);
+        };
+
+        // Call when checkbox changes
+        form.find('#setExpiryDates').on('change', expiryDatesStatus);
+
+        // Call on start
+        expiryDatesStatus();
+
         // Ready to initialise the widget and bind to some events
         form
             .fileupload(uploadOptions)
