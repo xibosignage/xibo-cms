@@ -1466,9 +1466,9 @@ class Layout extends Base
             if ($this->getUser()->featureEnabled('layout.view')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_preview',
-                    'linkType' => '_blank',
                     'external' => true,
-                    'url' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
+                    'url' => '#',
+                    'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '");',
                     'text' => __('Preview Layout')
                 );
 

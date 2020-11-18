@@ -199,7 +199,7 @@
 
                     $.each(response.extra.table.timeConnected, function(index, displayStat) {
 
-                        let $displayHeader = $('<tr>');
+                        var $displayHeader = $('<tr>');
                         $.each(response.extra.table.displays[index], function(i, displayName) {
                             $displayHeader.append($('<th colspan="2">').text(displayName));
                             $displayHeader.appendTo('#records_table').html();
@@ -207,17 +207,17 @@
 
                         // Display Statistics
                         $.each(displayStat, function(periodId, item) {
-                            let $tr = $('<tr>');
+                            var $tr = $('<tr>');
 
                             $.each(item, function(displayId, displayData) {
 
-                                let percent= '';
+                                var percent= '';
                                 if (displayData.percent > 0) {
                                     percent = displayData.percent + "%";
                                 }
 
-                                let $label = $('<td class="display-label" style="width:300px">').text(displayData.label);
-                                let $percentage = $('<td class="display-percent" style="width:300px">').css({"background-color": "#03a9f4",  "color": "white"}).append(
+                                var $label = $('<td class="display-label" style="width:300px">').text(displayData.label);
+                                var $percentage = $('<td class="display-percent" style="width:300px">').css({"background-color": "#03a9f4",  "color": "white"}).append(
                                     $('<div>').css({"background-color": "#5cb85c", "width": percent}).text(percent)
                                 );
 
@@ -244,7 +244,7 @@
             var applyBtn = $("#applyBtn");
 
             // Enable/Disable Schedule Btn
-            const checkEnableSchedule = function() {
+            var checkEnableSchedule = function() {
 
                 // Schedule button enable/disable - start
                 var anchorReportAddBtn = $("a#reportAddBtn");
@@ -267,7 +267,7 @@
                 }
             }
 
-            const checkFilterAndApply = function() {
+            var checkFilterAndApply = function() {
                 reportFilter.off('change').change( function() {
                     var value = reportFilter.val();
                     // Hide / Show FromDt and ToDt

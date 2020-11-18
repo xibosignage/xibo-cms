@@ -97,7 +97,7 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm"><i class="fas fa-bars fa-1x"></i></button>
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
                     </div>
                     <div class="form-group col-sm-11" style="padding: 0">
                         <div id="breadcrumbs" style="margin-top: 5px;"></div>
@@ -108,14 +108,14 @@
                     <div class="col-sm-2 well" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                            <label class="form-check-label" for="folder-tree-clear-selection-button">{% trans "Search everywhere?" %}</label>
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
 
                     <div id="datatable-container" class="col-sm-10">
                         <div class="XiboData">
-                            <table id="libraryItems" class="table table-striped responsive nowrap" data-content-type="media" data-content-id-name="mediaId" data-state-preference-name="libraryGrid">
+                            <table id="libraryItems" class="table table-striped responsive nowrap" data-content-type="media" data-content-id-name="mediaId" data-state-preference-name="libraryGrid" style="width: 100%;">
                                 <thead>
                                 <tr>
                                     <th>{% trans "ID" %}</th>
@@ -272,10 +272,10 @@
                         responsivePriority: 6,
                         "data": function (data, type) {
                             if (data.expires != null && data.expires != 0) {
-                                let now = moment();
-                                let expiresIn = moment.unix(data.expires);
-                                let differenceMinutes = expiresIn.diff(now, 'minutes');
-                                let momentDifference = moment(now).to(expiresIn);
+                                var now = moment();
+                                var expiresIn = moment.unix(data.expires);
+                                var differenceMinutes = expiresIn.diff(now, 'minutes');
+                                var momentDifference = moment(now).to(expiresIn);
 
                                 if (differenceMinutes < -10 ) {
                                     return data.mediaExpiryFailed;
@@ -304,7 +304,7 @@
 
         $("#libraryUploadForm").click(function(e) {
             e.preventDefault();
-            let currentWorkingFolderId = $('#folderId').val();
+            var currentWorkingFolderId = $('#folderId').val();
 
             openUploadForm({
                 url: "{{ url_for("library.add") }}",
@@ -326,7 +326,9 @@
                         startUpload: "{% trans "Start upload" %}",
                         cancelUpload: "{% trans "Cancel upload" %}",
                         selectFolder: "{% trans "Select Folder" %}",
-                        selectedFolder: "{% trans "Folder" %}:"
+                        selectFolderTitle: "{% trans "Change Current Folder location" %}",
+                        selectedFolder: "{% trans "Current Folder" %}:",
+                        selectedFolderTitle: "{% trans "Upload files to this Folder" %}",
                     },
                     upload: {
                         maxSize: {{ libraryUpload.maxSize }},

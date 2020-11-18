@@ -21,7 +21,7 @@
 jQuery.fn.extend({
     xiboCountdownRender: function(options, body) {
         // Check if the given input is a number/offset, or a date, and return the object
-        const getDate = function(inputDate) {
+        var getDate = function(inputDate) {
             if($.isNumeric(inputDate)) {
                 return moment().add(inputDate, 's');
             } else if(moment(inputDate).isValid()) {
@@ -32,7 +32,7 @@ jQuery.fn.extend({
         };
 
         // Ge remaining time
-        const getTimeRemaining = function(endtime) {
+        var getTimeRemaining = function(endtime) {
             var timeNow = moment();
             var duration = moment.duration(endtime.diff(timeNow));
 
@@ -53,7 +53,7 @@ jQuery.fn.extend({
         };
 
         // Initialize clock
-        const initialiseClock = function(clock, deadlineDate, warningDate) {
+        var initialiseClock = function(clock, deadlineDate, warningDate) {
             var yearsSpan = clock.find('.years');
             var monthsSpan = clock.find('.months');
             var weeksSpan = clock.find('.weeks');
@@ -118,7 +118,7 @@ jQuery.fn.extend({
         this.each(function() {
 
             // Calculate duration (use widget or given)
-            let initDuration = options.duration;
+            var initDuration = options.duration;
             if (options.countdownType == 2) {
                 initDuration = options.countdownDuration;
             } else if(options.countdownType == 3) {
@@ -126,17 +126,17 @@ jQuery.fn.extend({
             }
 
             // Get deadline date
-            let deadlineDate = getDate(initDuration);
+            var deadlineDate = getDate(initDuration);
 
             // Calculate warning duration ( use widget or given)
-            let warningDuration = 0;
+            var warningDuration = 0;
             if(options.countdownType == 1 || options.countdownType == 2) {
                 warningDuration = options.countdownWarningDuration;
             } else if(options.countdownType == 3) {
                 warningDuration = options.countdownWarningDate;
             }
             // Get warning date
-            let warningDate = (warningDuration == 0 || warningDuration == '' || warningDuration == null) ? false : getDate(warningDuration);
+            var warningDate = (warningDuration == 0 || warningDuration == '' || warningDuration == null) ? false : getDate(warningDuration);
 
             // Append template to the preview
             $("#content").append(body);

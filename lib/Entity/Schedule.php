@@ -32,6 +32,7 @@ use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -995,10 +996,10 @@ class Schedule implements \JsonSerializable
                         $daysSelected = explode(',', $this->recurrenceRepeatsOn);
 
                         // Are we on the start day of this week already?
-                        $onStartOfWeek = ($start->copy()->setTimeFromTimeString('00:00:00') == $start->copy()->startOfWeek()->setTimeFromTimeString('00:00:00'));
+                        $onStartOfWeek = ($start->copy()->setTimeFromTimeString('00:00:00') == $start->copy()->locale(Translate::GetLocale())->startOfWeek()->setTimeFromTimeString('00:00:00'));
 
                         // What is the end of this week
-                        $endOfWeek = $start->copy()->endOfWeek();
+                        $endOfWeek = $start->copy()->locale(Translate::GetLocale())->endOfWeek();
 
                         $this->getLog()->debug('Days selected: ' . $this->recurrenceRepeatsOn . '. End of week = ' . $endOfWeek . ' start date ' . $start . ' [eventId:' . $this->eventId . ']');
 

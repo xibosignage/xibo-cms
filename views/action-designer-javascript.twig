@@ -43,8 +43,8 @@
     }
 
     function onTargetChange(dialog) {
-        let target = $(dialog).find("#target").val();
-        let targetId = $(dialog).find(".targetid-control");
+        var target = $(dialog).find("#target").val();
+        var targetId = $(dialog).find(".targetid-control");
 
         if (target === 'region') {
             targetId.removeClass("hidden");
@@ -55,11 +55,11 @@
     }
 
     function onActionTypeChange(dialog) {
-        let actionType = $(dialog).find('#actionType').val();
+        var actionType = $(dialog).find('#actionType').val();
 
-        let navLayout = $(dialog).find(".nav-control-layout");
-        let navWidget = $(dialog).find(".nav-control-widget");
-        let target = $(dialog).find(".target-control");
+        var navLayout = $(dialog).find(".nav-control-layout");
+        var navWidget = $(dialog).find(".nav-control-widget");
+        var target = $(dialog).find(".target-control");
 
         if (actionType === 'navLayout') {
             // nav Layout, hide Widget and Target dropdowns and clear corresponding values
@@ -86,8 +86,8 @@
     }
 
     function onTriggerChange(dialog) {
-        let triggerType = $(dialog).find("#triggerType").val();
-        let triggerCode = $(dialog).find(".trigger-code-control");
+        var triggerType = $(dialog).find("#triggerType").val();
+        var triggerCode = $(dialog).find(".trigger-code-control");
 
         if (triggerType === 'webhook') {
             triggerCode.removeClass('hidden');
@@ -107,7 +107,7 @@
                 // initialize the table only if it's not already initialized
                 if (!$.fn.DataTable.isDataTable('#actions')) {
                     // Configure the DataTable
-                    let table = $("#actions").DataTable({
+                    var table = $("#actions").DataTable({
                         "language": dataTablesLanguage,
                         serverSide: true,
                         stateSave: true,

@@ -94,9 +94,9 @@
         var table;
         $(document).ready(function() {
 
-            let url_string = window.location.href;
-            let url = new URL(url_string);
-            let reportName = url.searchParams.get("reportName");
+            var url_string = window.location.href;
+            var url = new URL(url_string);
+            var reportName = url.searchParams.get("reportName");
 
             if (reportName !== undefined && reportName != null) {
                 $('#reportName').val(reportName).trigger('change');

@@ -17,6 +17,7 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
@@ -308,7 +309,7 @@ class LibraryUsage implements ReportInterface
 
                 break;
             case 'lastweek':
-                $fromDt = $now->copy()->startOfWeek()->subWeek();
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek()->subWeek();
                 $toDt = $fromDt->copy()->addWeek();
 
                 break;

@@ -198,7 +198,7 @@ class Embedded extends ModuleWidget
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
-            ->appendJavaScriptFile('xibo-interactive-control.js')
+            ->appendJavaScriptFile('xibo-interactive-control.min.js')
             ->appendRaw('javaScript', $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedScript', null)))
             ->appendCss($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedStyle', null)))
             ->appendFontCss()

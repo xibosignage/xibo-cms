@@ -1154,3 +1154,84 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
 td.feature-group-header-cell {
     cursor: pointer;
 }
+
+/* Layout Mini Preview */
+.mini-layout-preview {
+    position: fixed;
+    padding: 0 5px;
+    z-index: 1060;
+    height: 240px;
+    width: 460px;
+    bottom: -240px;
+    right: 10px;
+    text-align: center;
+    transition: bottom 300ms ease-out, width 250ms ease-out, height 250ms ease-out, background-color 250ms ease-out;
+}
+
+.mini-layout-preview:hover:before {
+    background-color: #222;
+    content: "";
+    display: block;
+    width: 100%;
+    height: 30px;
+    position: absolute;
+    opacity: 0.5;
+    left: 0;
+}
+
+.mini-layout-preview #content, .mini-layout-preview .preview-button {
+    transition: opacity 200ms ease-out;
+    opacity: 0;
+}
+
+.mini-layout-preview .preview-button {
+    position: absolute;
+    color: #cecece;
+    cursor: pointer;
+    font-size: 20px;
+}
+
+.mini-layout-preview .preview-button:hover {
+    color: #fff;
+    text-shadow: 0 0 5px white;
+}
+
+.mini-layout-preview #playBtn {
+    top: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 30px;
+}
+
+.mini-layout-preview #closeBtn {
+    right: 6px;
+    top: 6px;
+}
+
+.mini-layout-preview #newTabBtn {
+    top: 6px;
+    left: 26px;
+}
+
+.mini-layout-preview #sizeBtn {
+    left: 6px;
+    top: 6px;
+}
+
+.mini-layout-preview.show {
+    bottom: 10px;
+    background: #222;
+}
+
+.mini-layout-preview.show:hover #closeBtn, .mini-layout-preview.show:hover #sizeBtn, .mini-layout-preview.show:hover #newTabBtn {
+    opacity: 1;
+}
+
+.mini-layout-preview.show.large {
+    width: 780px;
+    height: 420px;
+    background: #222;
+}
+
+.mini-layout-preview.show #content, .mini-layout-preview.show #playBtn {
+    opacity: 1;
+}

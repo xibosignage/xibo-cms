@@ -25,15 +25,15 @@
     // Runs after form opens
     function video_form_edit_open() {
 
-        let form = $(this).find('form');
+        var form = $(this).find('form');
         // Set command code field, using the helper ()
         formHelpers.setupConditionalInputFields(
             form.find('#duration, #useDuration'), //triggerFields
             form.find('.loop-fields'), //targetFields
             form.data('mediaDuration'), //compareValue
-            (compare) => {
-                const valueComparison = parseFloat(form.find('#duration').val()) > parseFloat(compare);
-                const useDurationIsChecked = form.find('#useDuration').is(':checked');
+            function (compare) {
+                var valueComparison = parseFloat(form.find('#duration').val()) > parseFloat(compare);
+                var useDurationIsChecked = form.find('#useDuration').is(':checked');
                 return valueComparison && useDurationIsChecked;
             } //conditionTest
         );

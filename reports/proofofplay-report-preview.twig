@@ -105,28 +105,28 @@
                             if (type != "display")
                                 return "";
 
-                            let durationData = moment.duration(data, "seconds");
-                            let dataM = '';
+                            var durationData = moment.duration(data, "seconds");
+                            var dataM = '';
 
-                            let months = durationData.months();
+                            var months = durationData.months();
                             if (months > 0) {
                                 durationData.subtract(moment.duration(months,'months'));
                                 dataM += months + '{% trans "month" %} ';
                             }
 
-                            let days = durationData.days();
+                            var days = durationData.days();
                             durationData.subtract(moment.duration(days,'days'));
                             dataM += days + '{% trans "day" %} ';
 
-                            let hours = durationData.hours();
+                            var hours = durationData.hours();
                             durationData.subtract(moment.duration(hours,'hours'));
                             dataM += hours + '{% trans "hr" %} ';
 
-                            let minutes = durationData.minutes();
+                            var minutes = durationData.minutes();
                             durationData.subtract(moment.duration(minutes,'minutes'));
                             dataM += minutes + '{% trans "min" %} ';
 
-                            let seconds = durationData.seconds();
+                            var seconds = durationData.seconds();
                             dataM += seconds + '{% trans "sec" %} ';
 
                             return  dataM;

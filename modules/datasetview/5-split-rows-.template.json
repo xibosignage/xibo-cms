@@ -1,0 +1,5 @@
+{
+  "id": "split-rows",
+  "value": "White and grey table with split rows.",
+  "css": "table.DataSetTable {\nfont-family:\"Trebuchet MS\", Arial, Helvetica, sans-serif;  \nwidth:100%;\nborder-collapse:collapse;\nbox-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);\ntable-layout: fixed;\nfont-size: 14px;\ncolor: #3b3b3b;\n}\n\ntr.HeaderRow {\nfont-size: 1.1em;\nfont-weight: 900;\nbackground-color: #95A5A6;\ncolor: #222;\ntext-align: left;\n}\n\ntr#row_1 {\n\n}\n\ntd#col_1 {\n\n}\n\ntd.DataSetColumn {\npadding: 8px;\n}\n\ntd.DataSetColumn img {\nmax-width: 100%;\nmax-height: 50px;\ndisplay: block;\nmargin-left: auto;\nmargin-right: auto;\n}\n\ntr.DataSetRow {\nbackground-color: #f6f6f6;\nborder-bottom: 6px solid #95a5a6;\n}\n\ntr.DataSetRow:nth-child(even) {\n\n}\n\nth.DataSetColumnHeaderCell {\npadding: 8px;\npadding-top: 8px;\n}\n\nspan#1_1 {\n\n}\n\nspan.DataSetColumnSpan {\n\n}"
+}

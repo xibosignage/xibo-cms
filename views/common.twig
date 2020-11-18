@@ -6,9 +6,9 @@
     <script type="text/javascript">
 
         // COMMON VARIABLES
-        const serverMode = "{{ settings.SERVER_MODE }}";
-        let playlistRegionColouring =  "{{ settings.REGION_OPTIONS_COLOURING }}";
-        let libraryUpload = {{ libraryUpload|json_encode|raw }};
+        var serverMode = "{{ settings.SERVER_MODE }}";
+        var playlistRegionColouring =  "{{ settings.REGION_OPTIONS_COLOURING }}";
+        var libraryUpload = {{ libraryUpload|json_encode|raw }};
         var librarySearchUrl = "{{ url_for("library.search") }}";
         var libraryAddUrl = "{{ url_for("library.add") }}";
         var imageDownloadUrl = "{{ url_for("library.download", {id: ':id'}) }}?preview=1";
@@ -37,7 +37,7 @@
         {% endfor %}
 
         // Structure with API URLs
-        let urlsForApi = {
+        var urlsForApi = {
             layout: {
                 designer: {
                     url: "{{ url_for("layout.designer", {id: ':id'}) }}",
@@ -285,12 +285,19 @@
                 viewLibrary: "{{ "View Library" |trans }}",
                 widgetFromDt: "{{ "Start time" |trans }}",
                 widgetToDt: "{{ "End time" |trans }}",
+                widgetExpiryDates: "{{ "Set Expiry Dates" |trans }}",
+                widgetExpiryDatesMessage: "{{ "Use the check box to set Start and End dates and times for Widgets" |trans }}",
                 widgetFromDtMessage: "{{ "Select the start time for this widget" |trans }}",
                 widgetToDtMessage: "{{ "Select the end time for this widget" |trans }}",
+                deleteOnExpiry: "{{ "Delete on Expiry" |trans }}",
                 deleteOnExpiryMessage: "{{ "When the End Time for this Widget passes should the Widget be removed from the Playlist?" |trans }}",
-                applyToMediaMessage: "{{ "Also delete from the Media Library?" |trans }}",
+                applyToMedia: "{{ "Delete from Library" |trans }}",
+                applyToMediaMessage: "{{ "Remove file from the Media Library" |trans }}",
+
                 selectFolder: "{{ "Select Folder"|trans }}",
-                selectedFolder: "{{ "Folder"|trans }}:"
+                selectFolderTitle: "{{ "Change Current Folder location"|trans }}",
+                selectedFolder: "{{ "Current Folder"|trans }}:",
+                selectedFolderTitle: "{{ "Upload files to this Folder"|trans }}:"
             };
 
             var deleteMenuTrans = {
@@ -443,10 +450,13 @@
                     title: "{{ "Delete the old version?" |trans }}",
                     helpText: "{{ "Completely remove the old version of this media item if a new file is being uploaded."|trans }}"
                 },
+                widgetExpiryDates: "{{ "Set Expiry Dates" |trans }}",
+                widgetExpiryDatesMessage: "{{ "Use the check box to set Start and End dates and times for Widgets" |trans }}",
                 widgetFromDtMessage: "{{ "Select the start time for this widget" |trans }}",
                 widgetToDtMessage: "{{ "Select the end time for this widget" |trans }}",
+                deleteOnExpiry: "{{ "Delete on Expiry" |trans }}",
                 deleteOnExpiryMessage: "{{ "When the End Time for this Widget passes should the Widget be removed from the Playlist?" |trans }}",
-                applyToMediaMessage: "{{ "Also delete from the Media Library?" |trans }}",
+                
             };
 
             var errorMessagesTrans = {

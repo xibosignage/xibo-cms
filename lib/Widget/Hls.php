@@ -219,7 +219,7 @@ class Hls extends ModuleWidget
             ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('vendor/hls/hls.min.js')
             ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
-            ->appendJavaScriptFile('xibo-interactive-control.js')
+            ->appendJavaScriptFile('xibo-interactive-control.min.js')
             ->appendJavaScript('
                 $(document).ready(function() {
             

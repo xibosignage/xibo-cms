@@ -103,7 +103,7 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm"><i class="fas fa-bars fa-1x"></i></button>
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
                     </div>
                     <div class="form-group col-sm-11" style="padding: 0">
                         <div id="breadcrumbs" style="margin-top: 5px;"></div>
@@ -114,13 +114,13 @@
                     <div class="col-sm-2 well" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                            <label class="form-check-label" for="folder-tree-clear-selection-button">{% trans "Search everywhere?" %}</label>
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
                     <div id="datatable-container" class="col-sm-10">
                         <div class="XiboData">
-                            <table id="layouts" class="table table-striped responsive nowrap" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="layoutGrid">
+                            <table id="layouts" class="table table-striped responsive nowrap" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="layoutGrid" style="width: 100%;">
                                 <thead>
                                     <tr>
                                         <th>{% trans "ID" %}</th>
@@ -191,10 +191,10 @@
                         responsivePriority: 2,
                         "data": function (data, type) {
                             if (data.publishedDate != null) {
-                                let now = moment();
-                                let published = moment(data.publishedDate);
-                                let differenceMinutes = published.diff(now, 'minutes');
-                                let momentDifference = moment(now).to(published);
+                                var now = moment();
+                                var published = moment(data.publishedDate);
+                                var differenceMinutes = published.diff(now, 'minutes');
+                                var momentDifference = moment(now).to(published);
 
                                 if (differenceMinutes < -5) {
                                     return data.publishedStatus.concat(" - ", data.publishedStatusFailed);
@@ -358,8 +358,8 @@
 
             if ($('#folder-tree-form-modal').length === 0) {
                 // compile tree folder modal and append it to Form
-                let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-                let treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+                var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+                var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
                 $("#layoutAddForm").append(folderTreeModal(treeConfig));
 
                 $("#folder-tree-form-modal").on('hidden.bs.modal', function () {

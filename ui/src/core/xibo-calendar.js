@@ -22,8 +22,8 @@
 // Global calendar object
 var calendar;
 var events = [];
-let mymap;
-let mymapmarker;
+var mymap;
+var mymapmarker;
 
 $(document).ready(function() {
 
@@ -62,7 +62,7 @@ $(document).ready(function() {
         var calendarOptions = $("#CalendarContainer").data();
 
         // Callback function to navigate to calendar date with the date picker
-        const navigateToCalendarDate = function() {
+        var navigateToCalendarDate = function() {
             if(calendar != undefined) {
                 // Add event to the picker to update the calendar
                 calendar.navigate('date', moment($('#dateInput input[data-input]').val()));
@@ -70,14 +70,14 @@ $(document).ready(function() {
         };
 
         // Select picker options
-        let pickerOptions = {};
+        var pickerOptions = {};
 
         if( calendarType == 'Jalali') {
             pickerOptions = {
                 autoClose: true,
                 altField: '#dateInputLink',
                 altFieldFormatter: function(unixTime) {
-                    let newDate = moment.unix(unixTime / 1000);
+                    var newDate = moment.unix(unixTime / 1000);
                     newDate.set('hour', 0);
                     newDate.set('minute', 0);
                     newDate.set('second', 0);
@@ -108,11 +108,11 @@ $(document).ready(function() {
         );
 
         // Location filter init
-        const $map = $('.cal-event-location-map #geoFilterAgendaMap');
+        var $map = $('.cal-event-location-map #geoFilterAgendaMap');
 
         // Get location button
         $('#getLocation').off().click(function() {
-            const $self = $(this);
+            var $self = $(this);
 
             // Disable button
             $self.prop('disabled', true);
@@ -128,7 +128,7 @@ $(document).ready(function() {
                 // Redraw map
                 generateFilterGeoMap();
             }, function error(err) { // error
-                console.warn(`ERROR(${err.code}): ${err.message}`);
+                console.warn('ERROR(' + err.code + '): ' + err.message);
 
                 // Reenable button
                 $self.prop('disabled', false);
@@ -179,7 +179,7 @@ $(document).ready(function() {
                 var calendarOptions = $("#CalendarContainer").data();               
 
                 // Append display groups and layouts
-                let isShowAll = $('#showAll').is(':checked');
+                var isShowAll = $('#showAll').is(':checked');
 
                 // Enable or disable the display list according to whether show all is selected
                 // we do this before we serialise because serialising a disabled list gives nothing
@@ -283,9 +283,9 @@ $(document).ready(function() {
                     // Show time slider on agenda view and call the calendar view on slide stop event
                     $('.cal-event-agenda-filter').show();
 
-                    const $timePicker = $('#timePicker');
+                    var $timePicker = $('#timePicker');
 
-                    let momentNow = moment().tz ? moment().tz(timezone) : moment();
+                    var momentNow = moment().tz ? moment().tz(timezone) : moment();
 
                     $timePicker.slider({
                         value: (momentNow.hour() * 60) + momentNow.minute(),
@@ -416,7 +416,7 @@ $(document).ready(function() {
                         getJsonRequestControl = $.getJSON(url, params)
                             .done(function(data) {
 
-                                let noEvents = true;
+                                var noEvents = true;
 
                                 if(!jQuery.isEmptyObject(data.data) && data.data.events != undefined && data.data.events.length > 0){
                                     events['results'][String(selectedDisplayGroup)] = data.data;
@@ -529,6 +529,9 @@ $(document).ready(function() {
                 // Get the template and render it on the div
                 $('.cal-event-breadcrumb-trail #content').append(calendar._breadcrumbTrail($self.data("elemId"), events, $self.data("eventId")));
                 
+                // Create mini layout preview
+                createMiniLayoutPreview(layoutPreviewUrl.replace(':id', $self.data("elemId")));
+
                 XiboInitialise("");
             }
             
@@ -545,8 +548,8 @@ var setupScheduleForm = function(dialog) {
     console.log("Setup schedule form");
 
     // geo schedule
-    let $geoAware = $('#isGeoAware');
-    let isGeoAware = $geoAware.is(':checked');
+    var $geoAware = $('#isGeoAware');
+    var isGeoAware = $geoAware.is(':checked');
 
     if (isGeoAware) {
 
@@ -637,7 +640,7 @@ var setupScheduleForm = function(dialog) {
                 return query;
             },
             processResults: function(data, params) {
-                let results = [];
+                var results = [];
 
                 $.each(data.data, function(index, el) {
                     results.push({
@@ -646,7 +649,7 @@ var setupScheduleForm = function(dialog) {
                     });
                 });
 
-                let page = params.page || 1;
+                var page = params.page || 1;
                 page = (page > 1) ? page - 1 : page;
 
                 return {
@@ -792,10 +795,10 @@ var setupScheduleForm = function(dialog) {
     $(dialog).find('[data-toggle="popover"]').popover();
 
     // Post processing on the schedule-edit form.
-    let $scheduleEditForm = $(dialog).find("#scheduleEditForm");
+    var $scheduleEditForm = $(dialog).find("#scheduleEditForm");
     if ($scheduleEditForm.length > 0) {
         // Add a button for duplicating this event
-        let $button = $("<button>").addClass("btn btn-info")
+        var $button = $("<button>").addClass("btn btn-info")
             .attr("id", "scheduleDuplateButton")
             .html(translations.duplicate)
             .on("click", function() {
@@ -937,7 +940,7 @@ var processScheduleFormElements = function(el) {
             var dayPartControlDisplay = (fieldVal == 2) ? "none" : "block";
             var commandControlDisplay = (fieldVal == 2) ? "block" : "none";
             var scheduleSyncControlDisplay = (fieldVal == 1) ? "block" : "none";
-            let interruptControlDisplay = (fieldVal == 4) ? "block" : "none";
+            var interruptControlDisplay = (fieldVal == 4) ? "block" : "none";
 
 
             $(".layout-control").css('display', layoutControlDisplay);
@@ -951,8 +954,8 @@ var processScheduleFormElements = function(el) {
             // If the fieldVal is 2 (command), then we should set the dayPartId to be 0 (custom)
             if (fieldVal === 2) {
                 // Determine what the custom day part is.
-                let $dayPartId = $("#dayPartId");
-                let customDayPartId = 0;
+                var $dayPartId = $("#dayPartId");
+                var customDayPartId = 0;
                 $dayPartId.find("option").each(function(i, el) {
                     if ($(el).data("isCustom") === 1) {
                         customDayPartId = $(el).val();
@@ -971,9 +974,9 @@ var processScheduleFormElements = function(el) {
             processScheduleFormElements($('#dayPartId'));
 
             // Change the help text and label of the campaignId dropdown
-            let $campaignSelect = el.closest("form").find("#campaignId");
-            let $layoutControl = $(".layout-control");
-            let searchIsLayoutSpecific = -1;
+            var $campaignSelect = el.closest("form").find("#campaignId");
+            var $layoutControl = $(".layout-control");
+            var searchIsLayoutSpecific = -1;
 
             if (fieldVal === "1" || fieldVal === "3" || fieldVal === "4") {
                 // Load Layouts only
@@ -1193,14 +1196,14 @@ var agendaSelectLinkedElements = function(elemType, elemID, data, eventId) {
     
 };
 
-let generateGeoMap = function () {
+var generateGeoMap = function () {
 
     if (mymap !== undefined && mymap !== null) {
         mymap.remove();
     }
 
-    let defaultLat = $('#scheduleAddForm , #scheduleEditForm').data().defaultLat;
-    let defaultLong = $('#scheduleAddForm , #scheduleEditForm').data().defaultLong;
+    var defaultLat = $('#scheduleAddForm , #scheduleEditForm').data().defaultLat;
+    var defaultLong = $('#scheduleAddForm , #scheduleEditForm').data().defaultLong;
 
     // base map
     mymap = L.map('geoScheduleMap').setView([defaultLat, defaultLong], 13);
@@ -1212,11 +1215,11 @@ let generateGeoMap = function () {
     }).addTo( mymap );
 
     // Add a layer for drawn items
-    let drawnItems = new L.FeatureGroup();
+    var drawnItems = new L.FeatureGroup();
     mymap.addLayer(drawnItems);
 
     // Add draw control (toolbar)
-    let drawControl = new L.Control.Draw({
+    var drawControl = new L.Control.Draw({
         position: 'topright',
         draw: {
             polyline: false,
@@ -1229,7 +1232,7 @@ let generateGeoMap = function () {
         }
     });
 
-    let drawControlEditOnly = new L.Control.Draw({
+    var drawControlEditOnly = new L.Control.Draw({
         position: 'topright',
         draw: false,
         edit: {
@@ -1240,7 +1243,7 @@ let generateGeoMap = function () {
     mymap.addControl(drawControl);
 
     // add search Control - allows searching by country/city and automatically moves map to that location
-    let searchControl = new L.Control.Search({
+    var searchControl = new L.Control.Search({
         url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
         jsonpParam: 'json_callback',
         propertyName: 'display_name',
@@ -1254,9 +1257,9 @@ let generateGeoMap = function () {
 
     mymap.addControl(searchControl);
 
-    let json = '';
-    let layer = null;
-    let layers = null;
+    var json = '';
+    var layer = null;
+    var layers = null;
 
     // when user draws a new polygon it will be added as a layer to the map and as GeoJson to hidden field
     mymap.on('draw:created', function(e) {
@@ -1303,7 +1306,7 @@ let generateGeoMap = function () {
     // if we are editing an event with existing Geo JSON, make sure we load it and add the layer to the map
     if ($('#geoLocation').val() != null && $('#geoLocation').val() !== '') {
 
-        let geoJSON = JSON.parse($('#geoLocation').val());
+        var geoJSON = JSON.parse($('#geoLocation').val());
 
         L.geoJSON(geoJSON, {
             onEachFeature: onEachFeature
@@ -1320,14 +1323,14 @@ let generateGeoMap = function () {
     }
 };
 
-const generateFilterGeoMap = function() {
+var generateFilterGeoMap = function() {
     if(mymap !== undefined && mymap !== null) {
         mymap.remove();
     }
 
     // Get location values
-    let defaultLat = $('#geoLatitude').val();
-    let defaultLong = $('#geoLongitude').val();
+    var defaultLat = $('#geoLatitude').val();
+    var defaultLong = $('#geoLongitude').val();
 
     // If values are not set, get system default location
     if(defaultLat == undefined || defaultLat == '' || defaultLong == undefined || defaultLong == '') {
@@ -1345,7 +1348,7 @@ const generateFilterGeoMap = function() {
     }).addTo(mymap);
 
     // add search Control - allows searching by country/city and automatically moves map to that location
-    let searchControl = new L.Control.Search({
+    var searchControl = new L.Control.Search({
         url: 'https://nominatim.openstreetmap.org/search?format=json&q={s}',
         jsonpParam: 'json_callback',
         propertyName: 'display_name',
@@ -1359,7 +1362,7 @@ const generateFilterGeoMap = function() {
 
     mymap.addControl(searchControl);
 
-    const setMarker = function(lat, lng) {
+    var setMarker = function(lat, lng) {
         if(mymapmarker != undefined) {
             mymap.removeLayer(mymapmarker);
         }
@@ -1381,19 +1384,19 @@ const generateFilterGeoMap = function() {
     }
 };
 
-const filterEventsByLocation = function(events) {
-    let eventsResult = [];
+var filterEventsByLocation = function(events) {
+    var eventsResult = [];
 
-    for(let index = 0;index < events.length; index++) {
+    for(var index = 0;index < events.length; index++) {
 
-        let event = events[index];
+        var event = events[index];
 
         if(event.geoLocation != '') {
-            let geoJSON = JSON.parse(event.geoLocation);
-            let point = [$('#geoLongitude').val(), $('#geoLatitude').val()];
-            let polygon = L.geoJSON(geoJSON);
+            var geoJSON = JSON.parse(event.geoLocation);
+            var point = [$('#geoLongitude').val(), $('#geoLatitude').val()];
+            var polygon = L.geoJSON(geoJSON);
 
-            let test = leafletPip.pointInLayer(point, polygon);
+            var test = leafletPip.pointInLayer(point, polygon);
 
             if(test.length > 0) {
                 eventsResult.push(event);

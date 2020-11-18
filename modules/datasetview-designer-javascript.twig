@@ -28,7 +28,7 @@
 
         if($(this).find('form').data('formStep') === 1) {
             // If data set exists, set the drop-down to that value
-            let dataSetId = $(this).find('form').data().elementOptions.dataSetId;
+            var dataSetId = $(this).find('form').data().elementOptions.dataSetId;
             
             if(dataSetId !== undefined) {
                 $(this).find('#dataSetId').val(dataSetId);
@@ -38,6 +38,9 @@
 
             // Set override template field, using the helper ()
             formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
+
+            // Set clock type input field, using the helper ()
+            formHelpers.setupObjectValueInputFields($(this), '#templateId', ['.template-selector-default'], ['empty']);
 
             // Set order and filtering clauses fields, using the helper ()
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useOrderingClause', '.order-clause-field', '#orderClause');

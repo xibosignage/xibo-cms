@@ -490,13 +490,14 @@ class DataSetView extends ModuleWidget
             ->appendJavaScriptFile('xibo-dataset-render.js')
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
-            ->appendJavaScriptFile('xibo-interactive-control.js')
+            ->appendJavaScriptFile('xibo-interactive-control.min.js')
             ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
         ;
     
         // Get CSS from the original template or from the input field
         $styleSheet = '';
+        $templateOverrode = false;
         if ($this->getOption('overrideTemplate', 1) == 0) {
             
             $template = $this->getTemplateById($this->getOption('templateId'));
@@ -506,19 +507,20 @@ class DataSetView extends ModuleWidget
             }
         } else {
             $styleSheet = $this->getRawNode('styleSheet', '');
+            $templateOverrode = true;
         }
         
         // Get the embedded HTML out of RAW
         $styleSheet = $this->parseLibraryReferences($this->isPreview(), $styleSheet);
 
         // If we have some options then add them to the end of the style sheet
-        if ($this->getOption('backgroundColor') != '') {
+        if ($this->getOption('backgroundColor') != '' && $this->getOption('templateId') == 'empty' && !$templateOverrode) {
             $styleSheet .= 'table.DataSetTable { background-color: ' . $this->getOption('backgroundColor') . '; }';
         }
-        if ($this->getOption('borderColor') != '') {
+        if ($this->getOption('borderColor') != '' && $this->getOption('templateId') == 'empty' && !$templateOverrode) {
             $styleSheet .= 'table.DataSetTable, table.DataSetTable tr, table.DataSetTable th, table.DataSetTable td { border: 1px solid ' . $this->getOption('borderColor') . '; }';
         }
-        if ($this->getOption('fontColor') != '') {
+        if ($this->getOption('fontColor') != '' && $this->getOption('templateId') == 'empty' && !$templateOverrode) {
             $styleSheet .= 'table.DataSetTable { color: ' . $this->getOption('fontColor') . '; }';
         }
         if ($this->getOption('fontFamily') != '') {
