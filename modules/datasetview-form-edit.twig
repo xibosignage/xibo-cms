@@ -135,24 +135,26 @@
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
-                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", "1"), helpText) }}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", "0"), helpText) }}
 
                         {% set useTemplatesMessage %}
                            {% trans "With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above." %}                     
                         {% endset %}
                         {{ forms.message(useTemplatesMessage, 'template-override-controls') }}
 
-                        {% set title %}{% trans "Background Colour" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText) }}
+                        <div class="template-selector-default">
+                            {% set title %}{% trans "Background Colour" %}{% endset %}
+                            {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
+                            {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "template-selector-control") }}
 
-                        {% set title %}{% trans "Border Colour" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the border colour" %}{% endset %}
-                        {{ forms.input("borderColor", title, module.getOption("borderColor"), helpText) }}
+                            {% set title %}{% trans "Border Colour" %}{% endset %}
+                            {% set helpText %}{% trans "Use the colour picker to select the border colour" %}{% endset %}
+                            {{ forms.input("borderColor", title, module.getOption("borderColor"), helpText, "template-selector-control") }}
 
-                        {% set title %}{% trans "Font Colour" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
-                        {{ forms.input("fontColor", title, module.getOption("fontColor"), helpText) }}
+                            {% set title %}{% trans "Font Colour" %}{% endset %}
+                            {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
+                            {{ forms.input("fontColor", title, module.getOption("fontColor"), helpText, "template-selector-control") }}
+                        </div>
 
                         {% set title %}{% trans "Font" %}{% endset %}
                         {% set attributes = [
@@ -160,11 +162,11 @@
                             { name: "data-value", value: module.getOption("fontFamily") }
                         ] %}
                         {% set helpText %}{% trans "Select a custom font - leave empty to use the default font." %}{% endset %}
-                        {{ forms.dropdown("fontFamily", "single", title, "", [{id: "", value: ""}], "id", "value", helpText, "", "", "", "", attributes) }}
+                        {{ forms.dropdown("fontFamily", "single", title, "", [{id: "", value: ""}], "id", "value", helpText, "template-selector-control", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Font Size" %}{% endset %}
                         {% set helpText %}{% trans "Set the font size" %}{% endset %}
-                        {{ forms.number("fontSize", title, module.getOption("fontSize"), helpText) }}
+                        {{ forms.number("fontSize", title, module.getOption("fontSize"), helpText, "template-selector-control") }}
                     </div>
 
                     <div class="tab-pane" id="noDataTemplateTab">

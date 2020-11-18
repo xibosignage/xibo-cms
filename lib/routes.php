@@ -350,6 +350,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/display/{id}', ['\Xibo\Controller\Display','edit'])->setName('display.edit');
     $group->delete('/display/{id}', ['\Xibo\Controller\Display','delete'])->setName('display.delete');
     $group->post('/display/wol/{id}', ['\Xibo\Controller\Display','wakeOnLan'])->setName('display.wol');
+    $group->put('/display/setBandwidthLimit/multi', ['\Xibo\Controller\Display','setBandwidthLimitMultiple'])->setName('display.setBandwidthLimitMultiple');
     $group->put('/display/defaultlayout/{id}', ['\Xibo\Controller\Display','setDefaultLayout'])->setName('display.defaultlayout');
     $group->post('/display/{id}/displaygroup/assign', ['\Xibo\Controller\Display','assignDisplayGroup'])->setName('display.assign.displayGroup');
     $group->put('/display/{id}/moveCms', ['\Xibo\Controller\Display','moveCms'])->setName('display.moveCms');

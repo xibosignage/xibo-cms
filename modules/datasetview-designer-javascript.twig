@@ -39,6 +39,9 @@
             // Set override template field, using the helper ()
             formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
 
+            // Set clock type input field, using the helper ()
+            formHelpers.setupObjectValueInputFields($(this), '#templateId', ['.template-selector-default'], ['empty']);
+
             // Set order and filtering clauses fields, using the helper ()
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useOrderingClause', '.order-clause-field', '#orderClause');
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useFilteringClause', '.filter-clause-field', '#filterClause');

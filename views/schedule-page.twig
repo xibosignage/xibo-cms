@@ -166,6 +166,8 @@
 {% endblock %}
 
 {% block javaScriptTemplates %}
+    {{ parent() }}
+    
     {% verbatim %}
         <script type="text/x-handlebars-template" id="calendar-template-day">
             <div id="cal-day-box">
@@ -887,6 +889,8 @@
     <script type="text/javascript">
 		// We are using this variable in xibo-calendar.js
         var scheduleRecurrenceDeleteUrl = "{{ url_for("schedule.recurrence.delete.form", {id:':id'}) }}";
+
+        var layoutPreviewUrl = "{{ url_for("layout.preview", {id: ':id'}) }}";
 
         // Equals helper for the templates below
         Handlebars.registerHelper('eq', function(v1, v2, opts) {
