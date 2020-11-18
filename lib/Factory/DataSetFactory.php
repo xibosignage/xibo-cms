@@ -458,6 +458,7 @@ class DataSetFactory extends BaseFactory
                     try {
                         $json = \GuzzleHttp\json_decode($body);
                     } catch (\GuzzleHttp\Exception\InvalidArgumentException $invalidArgumentException) {
+                        $this->getLog()->debug('JSON decode error: ' . $invalidArgumentException->getMessage());
                         throw new InvalidArgumentException(__('Unable to get Data for %s because the response was not valid JSON.', $dataSet->dataSet), 'url');
                     }
 
