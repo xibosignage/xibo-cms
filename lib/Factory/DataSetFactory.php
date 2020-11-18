@@ -451,12 +451,20 @@ class DataSetFactory extends BaseFactory
                     $this->pool->saveDeferred($cacheControlKey);
                 }
 
-                // TODO: we should probably do some checking to ensure we have JSON back
                 if ($dataSet->sourceId === 1) {
-                    $result->entries[] = json_decode($request->getBody());
+                    // Make sure we have JSON in the response
+                    $body = $request->getBody()->getContents();
+
+                    try {
+                        $json = \GuzzleHttp\json_decode($body);
+                    } catch (\GuzzleHttp\Exception\InvalidArgumentException $invalidArgumentException) {
+                        throw new InvalidArgumentException(__('Unable to get Data for %s because the response was not valid JSON.', $dataSet->dataSet), 'url');
+                    }
+
+                    $result->entries[] = $json;
                     $result->number = $result->number + 1;
                 } else {
-                    $csv = $request->getBody();
+                    $csv = $request->getBody()->getContents();
                     $array = array_map("str_getcsv", explode("\n", $csv));
 
                     if ($dataSet->ignoreFirstRow == 1) {
@@ -611,6 +619,8 @@ class DataSetFactory extends BaseFactory
      * @return array|\stdClass The Data hold in the configured dataRoot
      */
     private function getDataRootFromResult($dataRoot, $result) {
+        $this->getLog()->debug('Getting ' . $dataRoot . 'from result.');
+
         if (empty($dataRoot)) {
             return $result;
         }
