@@ -2738,6 +2738,8 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
         // Remove tabindex from modal to fix flatpickr bug
         $element.parents('.bootbox.modal').removeAttr('tabindex');
 
+        flatpickr.l10ns.default.firstDayOfWeek = parseInt(moment().startOf('week').format('d'));
+
         // Create flatpickr
         flatpickr($element, Object.assign({
             altInput: true,
@@ -2747,6 +2749,9 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
             altFormat: displayFormat,
             dateFormat: baseFormat,
             locale: language,
+            getWeek: function(dateObj) {
+                return moment(dateObj).week();
+            },
             parseDate: function(datestr, format) {
                 return moment(datestr, format, true).toDate();
             },
