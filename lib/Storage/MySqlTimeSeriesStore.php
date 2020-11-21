@@ -239,7 +239,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                     FROM tag 
                       INNER JOIN lktagdisplaygroup 
                       ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
+                      INNER JOIN `displaygroup`
+                      ON lktagdisplaygroup.displayGroupId = displaygroup.displayGroupId
+                        AND `displaygroup`.isDisplaySpecific = 1 
+                      INNER JOIN `lkdisplaydg`
+                      ON lkdisplaydg.displayGroupId = displaygroup.displayGroupId
+                   WHERE lkdisplaydg.displayId = stat.displayId 
                   GROUP BY lktagdisplaygroup.displayGroupId
                 ) AS displayTags
             ';
@@ -275,11 +280,6 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         FROM stat
             LEFT OUTER JOIN display
             ON stat.DisplayID = display.DisplayID
-            LEFT OUTER JOIN `lkdisplaydg`
-            ON lkdisplaydg.displayid = display.displayId
-            LEFT OUTER JOIN `displaygroup`
-            ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
-                AND `displaygroup`.isDisplaySpecific = 1
             LEFT OUTER JOIN layout
             ON layout.LayoutID = stat.LayoutID
             LEFT OUTER JOIN media
