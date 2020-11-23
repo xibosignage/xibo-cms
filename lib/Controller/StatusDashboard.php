@@ -34,7 +34,6 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -152,8 +151,6 @@ class StatusDashboard extends Base
                           IFNULL(SUM(Size), 0) AS size,
                           MIN(month) AS month_order
                         FROM `bandwidth`
-                          INNER JOIN `display`
-                          ON display.displayid = bandwidth.displayid
                           INNER JOIN `lkdisplaydg`
                           ON lkdisplaydg.displayID = bandwidth.displayId
                           INNER JOIN `displaygroup`
@@ -162,11 +159,8 @@ class StatusDashboard extends Base
                        WHERE month > :month 
             ';
 
-            // Including this will break the LEFT OUTER join for everyone except super-admins, for whom this statement
-            // doesn't add any SQL.
-            // However, that is probably desirable, as otherwise deleted Displays the user never had permissions for
-            // will be counted in the SUM. Not desirable for a multi-tenant CMS
-            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId', null, [], 'permissionsFolderId');
+            // Permissions
+            $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId');
 
             $sql .= ' GROUP BY MONTH(FROM_UNIXTIME(month)) ';
 
