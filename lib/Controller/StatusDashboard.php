@@ -145,15 +145,22 @@ class StatusDashboard extends Base
             $params = ['month' => Carbon::now()->subSeconds(86400 * 365)->format('U')];
 
             $sql = '
-              SELECT MAX(FROM_UNIXTIME(month)) AS month,
-                  IFNULL(SUM(Size), 0) AS size
-                FROM `bandwidth`
-                  LEFT OUTER JOIN `lkdisplaydg`
-                  ON lkdisplaydg.displayID = bandwidth.displayId
-                  LEFT OUTER JOIN `displaygroup`
-                  ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
-                    AND displaygroup.isDisplaySpecific = 1
-               WHERE month > :month ';
+                SELECT month,
+                      SUM(size) AS size
+                  FROM (
+                      SELECT MAX(FROM_UNIXTIME(month)) AS month,
+                          IFNULL(SUM(Size), 0) AS size,
+                          MIN(month) AS month_order
+                        FROM `bandwidth`
+                          INNER JOIN `display`
+                          ON display.displayid = bandwidth.displayid
+                          INNER JOIN `lkdisplaydg`
+                          ON lkdisplaydg.displayID = bandwidth.displayId
+                          INNER JOIN `displaygroup`
+                          ON displaygroup.DisplayGroupID = lkdisplaydg.DisplayGroupID
+                            AND displaygroup.isDisplaySpecific = 1
+                       WHERE month > :month 
+            ';
 
             // Including this will break the LEFT OUTER join for everyone except super-admins, for whom this statement
             // doesn't add any SQL.
@@ -161,7 +168,27 @@ class StatusDashboard extends Base
             // will be counted in the SUM. Not desirable for a multi-tenant CMS
             $this->displayFactory->viewPermissionSql('Xibo\Entity\DisplayGroup', $sql, $params, '`lkdisplaydg`.displayGroupId', null, [], 'permissionsFolderId');
 
-            $sql .= ' GROUP BY MONTH(FROM_UNIXTIME(month)) ORDER BY MIN(month); ';
+            $sql .= ' GROUP BY MONTH(FROM_UNIXTIME(month)) ';
+
+            // Include deleted displays?
+            if ($this->getUser()->isSuperAdmin()) {
+                $sql .= '
+                    UNION ALL
+                    SELECT MAX(FROM_UNIXTIME(month)) AS month,
+                        IFNULL(SUM(Size), 0) AS size,
+                        MIN(month) AS month_order
+                     FROM `bandwidth`
+                     WHERE bandwidth.displayId NOT IN (SELECT displayId FROM `display`)
+                        AND month > :month
+                    GROUP BY MONTH(FROM_UNIXTIME(month))
+                ';
+            }
+
+            $sql .= '
+                    ) grp
+                GROUP BY month
+                ORDER BY month_order
+            ';
 
             // Run the SQL
             $results = $this->store->select($sql, $params);
