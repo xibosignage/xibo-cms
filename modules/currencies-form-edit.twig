@@ -44,13 +44,13 @@
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a></li>
-                    <li><a href="#templateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
-                    <li><a href="#itemTemplateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Item" %}</span></a></li>
-                    <li><a href="#optionalStylesheetTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
-                    <li><a href="#noRecordsMessageTab" role="tab" data-toggle="tab"><span>{% trans "No Records Message" %}</span></a></li>
-                </ul>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a>
+                    <a class="dropdown-item" href="#templateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
+                    <a class="dropdown-item" href="#itemTemplateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Item" %}</span></a>
+                    <a class="dropdown-item" href="#optionalStylesheetTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
+                    <a class="dropdown-item" href="#noRecordsMessageTab" role="tab" data-toggle="tab"><span>{% trans "No Records Message" %}</span></a>
+                </div>
             </li>
             <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
             <li><a href="#results" role="tab" data-toggle="tab"><span>{% trans "Results" %}</span></a></li>

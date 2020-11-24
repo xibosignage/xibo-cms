@@ -1,30 +1,25 @@
-<li class="dropdown item">
-    <a href="#" class="dropdown-toggle notification-drawer-icon" data-toggle="dropdown">
+<li class="dropdown nav-item item">
+    <a id="navbarNotificationMenuLink" href="#" class="nav-link notification-drawer-icon" data-toggle="dropdown">
         <i class="fa fa-bell"></i> {% if notificationCount > 0 %}<span class="badge red">{{ notificationCount }}</span>{% endif %}
     </a>
-    <ul class="dropdown-menu dropdown-menu-right notification-drawer">
-        <li class="dropdown-header">{% trans "Notifications" %}<br/>
-
-        </li>
+    <div class="dropdown-menu dropdown-menu-right notification-drawer">
+        <h6 class="dropdown-header">{% trans "Notifications" %}</h6>
         {% if notifications|length > 0 %}
-            <li class="divider"></li>
+            <div class="dropdown-divider"></div>
         {% endif %}
         {% for notification in notifications %}
-            <li>
-                <a href="#" class="notification">
-                    {% if notification.notificationId %}
-                        <a class="XiboFormButton" href="{{ url_for("notification.show", {id: notification.notificationId}) }}"><span class="{% if notification.read %}notification-unread{% else %}notification-read{% endif %}">{{ notification.subject }} - <span class="notification-date">{{ notification.releaseDt }}</span></span></a>
-                    {% else %}
-                        <span class="fa fa-exclamation-circle"></span> {{ notification.subject }} - <span class="notification-date">{{ notification.releaseDt }}</span>
-                    {% endif %}
-                </a>
-            </li>
+            <a href="#" class="notification dropdown-item">
+                {% if notification.notificationId %}
+                    <a class="XiboFormButton" href="{{ url_for("notification.show", {id: notification.notificationId}) }}"><span class="{% if notification.read %}notification-unread{% else %}notification-read{% endif %}">{{ notification.subject }} - <span class="notification-date">{{ notification.releaseDt }}</span></span></a>
+                {% else %}
+                    <span class="fa fa-exclamation-circle"></span> {{ notification.subject }} - <span class="notification-date">{{ notification.releaseDt }}</span>
+                {% endif %}
+            </a>
         {% endfor %}
 
         {% if currentUser.featureEnabled("notification.centre") %}
-            <li class="divider"></li>
-
-            <li><a href="{{ url_for("notification.view") }}">{% trans "Notification Centre" %}</a></li>
+            <div class="dropdown-divider"></div>
+            <a class="dropdown-item" href="{{ url_for("notification.view") }}">{% trans "Notification Centre" %}</a>
         {% endif %}
-    </ul>
+    </div>
 </li>

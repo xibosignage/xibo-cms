@@ -40,17 +40,15 @@
                 <li role="presentation" class=""><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
                 <li role="presentation" class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
-                    <ul class="dropdown-menu">
+                    <div class="dropdown-menu">
                         {% for reports in defaults.availableReports %}
                             {% for report in reports %}
                                 {% if report.hidden == 0 and report.category == 'Proof of Play'%}
-                                    <li>
-                                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
-                                    </li>
+                                    <a class="dropdown-item" href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
                                 {% endif %}
                             {% endfor %}
                         {% endfor %}
-                    </ul>
+                    </div>
                 </li>
                 <li role="presentation"><a class="text-success" href="#"> {% trans "Distribution by Layout, Media or Event" %} <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="{% trans "This chart shows an aggregate duration and number of plays for the selected Layout, Media or Event. Please select your Range and Type below. Where the Range crosses period boundaries the data is aggregated into the correct period - i.e 1 week grouped by hourly produces 24 periods." %}"></span></a></li>
             </ul>

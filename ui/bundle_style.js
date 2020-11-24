@@ -8,7 +8,7 @@ require('material-design-icons/iconfont/material-icons.css');
 require('@fortawesome/fontawesome-free/css/all.min.css');
 
 // bootstrap
-require('bootstrap/dist/css/bootstrap.min.css');
+require('bootstrap/scss/bootstrap.scss');
 
 // bootstrap-colorpicker
 require('bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css');

@@ -177,6 +177,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
   height: 60px;
   background: #273759;
   margin-bottom: 15px;
+  z-index: 1;
 }
 .row.header > div:last-child {
   padding-right: 0;
@@ -208,14 +209,17 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 .row.header .user > .item {
   width: 65px;
   height: 60px;
-  float: right;
   display: inline-block;
   text-align: center;
   vertical-align: middle;
 }
-.row.header .user > .item a {
+.row.header .user > .item > a {
   color: #919191;
   display: block;
+  padding: 10px 0;
+}
+.row.header .user-notif > .item > a {
+    padding: 0;
 }
 .row.header .user > .item i {
   font-size: 20px;
@@ -224,15 +228,17 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 .row.header .user > .item img {
   width: 40px;
   height: 40px;
-  margin-top: 10px;
   border-radius: 2px;
 }
-.row.header .user > .item ul.dropdown-menu {
+.row.header .user > .item a::after {
+    display: none;
+}
+.row.header .user > .item div.dropdown-menu {
   border-radius: 2px;
   -webkit-box-shadow: 0 6px 12px rgba(0,0,0,.05);
   box-shadow: 0 6px 12px rgba(0,0,0,.05);
 }
-.row.header .user > .item ul.dropdown-menu:before {
+.row.header .user > .item div.dropdown-menu:before {
   position: absolute;
   top: -7px;
   right: 23px;
@@ -243,7 +249,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
   border-bottom-color: rgba(0, 0, 0, 0.2);
   content: '';
 }
-.row.header .user > .item ul.dropdown-menu:after {
+.row.header .user > .item div.dropdown-menu:after {
   position: absolute;
   top: -6px;
   right: 24px;
@@ -253,17 +259,17 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
   border-left: 6px solid transparent;
   content: '';
 }
-.row.header .user > .item ul.dropdown-menu .dropdown-header {
+.row.header .user > .item div.dropdown-menu .dropdown-header {
   text-align: center;
 }
-.row.header .user > .item ul.dropdown-menu li.link {
+.row.header .user > .item div.dropdown-menu li.link {
   text-align: left;
 }
-.row.header .user > .item ul.dropdown-menu li.link a {
+.row.header .user > .item div.dropdown-menu li.link a {
   padding-left: 7px;
   padding-right: 7px;
 }
-.row.header .user > .item ul.dropdown-menu div {
+.row.header .user > .item div.dropdown-menu div {
   padding: 15px;
 }
 
@@ -374,6 +380,10 @@ ul.sidebar .sidebar-title {
   color: #627cb7;
 }
 
+ul.sidebar .sidebar-title a, ul.sidebar .sidebar-title a:hover {
+    color: #fff;
+}
+
 .news-widget div.article {
   padding-top: 15px;
 }
@@ -383,6 +393,12 @@ ul.sidebar .sidebar-title {
 /* Horizontal Menu */
 .navbar-default {
   background-color: #273759;
+  font-size: 14px;
+  padding: 0 8px;
+  margin-bottom: 20px;
+}
+.navbar-default .navbar-brand {
+    padding: 13px 0;
 }
 .navbar-default img.nav-avatar {
   width: 40px;

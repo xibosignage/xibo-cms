@@ -39,12 +39,12 @@
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
-                    <li><a href="#currentEventTemplateTab" role="tab" data-toggle="tab"><span>{% trans "Current Event" %}</span></a></li>
-                    <li><a href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a></li>
-                    <li><a href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
-                </ul>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
+                    <a class="dropdown-item" href="#currentEventTemplateTab" role="tab" data-toggle="tab"><span>{% trans "Current Event" %}</span></a>
+                    <a class="dropdown-item" href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a>
+                    <a class="dropdown-item" href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
+                </div>
             </li>
             <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
             <li><a href="#triggerTab" role="tab" data-toggle="tab"><span>{% trans "Trigger" %}</span></a></li>

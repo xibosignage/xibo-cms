@@ -50,18 +50,18 @@
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                         aria-expanded="false">{{trans.actions}}<span class="caret"></span></a>
 
-                    <ul class="dropdown-menu navbar-submenu-container">
+                    <div class="dropdown-menu navbar-submenu-container">
                         {{#each customDropdownOptions}}
-                            <li>
+                            <a class="dropdown-item">
                                 <div id="{{id}}" class="navbar-submenu-item {{class}}" href="#">
                                     {{#if logo}}
                                         <i class="fa {{logo}}"></i>
                                     {{/if}}
                                     <span>{{title}}</span>
                                 </div>
-                            </li>
+                            </a>
                         {{/each}}
-                    </ul>
+                    </div>
                 </li>
             {{/if}}
 
@@ -74,8 +74,8 @@
                         <i class="fa fa-cog"></i>
                     </a>
                 
-                    <ul class="dropdown-menu navbar-submenu-container navbar-submenu-options-container">
-                        <li>
+                    <udivl class="dropdown-menu navbar-submenu-container navbar-submenu-options-container">
+                        <a class="dropdown-item">
                             <label class="navbar-submenu-item navbar-submenu-item-options displayTooltips-container tooltip-always-on"
                                 for="displayTooltips" data-toggle="tooltip" data-placement="left" data-title="{{trans.displayTooltipsTitle}}"
                                 accesskey="">
@@ -83,15 +83,15 @@
                                     {{#if displayTooltips}}checked{{/if}}>
                                 <span>{{trans.displayTooltipsName}}</span>
                             </label>
-                        </li>
-                        <li>
+                        </a>
+                        <a class="dropdown-item">
                             <div id="resetTour" class="navbar-submenu-item navbar-submenu-item-options tooltip-always-on hidden"
                                 data-toggle="tooltip" data-placement="bottom" data-title="{{trans.resetTourTitle}}" href="#">
                                 <i class="fa fa-repeat"></i>
                                 <span>{{trans.resetTour}}</span>
                             </div>
                         </li>
-                    </ul>
+                    </udivl>
                 </li>
             {{/if}}
         </ul>

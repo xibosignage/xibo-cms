@@ -818,7 +818,7 @@ function dataTableDraw(e, settings) {
     var target = $("#" + e.target.id);
 
     // Check to see if we have any buttons that are multi-select
-    var enabledButtons = target.find("ul.dropdown-menu li[data-commit-url]");
+    var enabledButtons = target.find("div.dropdown-menu li[data-commit-url]");
     
     // Check to see if we have tag filter for the current table
     var $tagsElement = target.closest(".XiboGrid").find('.FilterDiv #tags');

@@ -280,7 +280,7 @@ ul#FileAssociationsSortable {
     list-style: none;
 }
 
-ul.dropdown-menu-form {
+div.dropdown-menu-form {
     padding: 5px 10px 0;
     max-height: 300px;
     overflow-y: scroll;
@@ -294,24 +294,35 @@ ul.dropdown-menu-form {
     width: 200px;
 }
 
-.navbar-collapse {
-    padding-left: 0;
-    padding-right: 0;
-    height: 100%;
-    border: none
-}
-
 #page-wrapper {
     padding-left: 0
 }
 
-.navbar-toggle {
-    border-color: #FFFFFF;
-    margin-top: 13px
+.navbar-toggler {
+    color: #f9f9f9;
+    border-color: #ddd;
+    font-size: 24px;
+    padding: 4px 8px;
+}
+.navbar-toggler-side {
+    margin-top: 13px;
+    margin-right: 10px;
+}
+.navbar-toggler:focus, .navbar-toggler:hover {
+    background-color: #c4c4c4;
 }
 
-.navbar-toggle .icon-bar {
-    background-color: #FFFFFF
+@media (min-width: 768px) {
+    .navbar-collapse-side {
+        display: block!important;
+        height: auto!important;
+        padding-bottom: 0;
+        overflow: visible!important;
+    }
+
+    .navbar-toggler-side {
+        display: none;
+    }
 }
 
 @media (max-width: 768px) {

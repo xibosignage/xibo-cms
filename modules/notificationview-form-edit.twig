@@ -37,11 +37,11 @@
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
-                    <li><a href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a></li>
-                    <li><a href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
-                </ul>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
+                    <a class="dropdown-item" href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a>
+                    <a class="dropdown-item" href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
+                </div>
             </li>
         </ul>
         <div class="col-md-12">

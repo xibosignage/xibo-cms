@@ -40,17 +40,15 @@
                 <li role="presentation" class=""><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
                 <li role="presentation" class="dropdown">
                     <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
-                    <ul class="dropdown-menu">
+                    <div class="dropdown-menu">
                         {% for reports in defaults.availableReports %}
                             {% for report in reports %}
                                 {% if report.hidden == 0 and report.category == 'Proof of Play' %}
-                                    <li>
-                                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
-                                    </li>
+                                    <a class="dropdown-item" href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
                                 {% endif %}
                             {% endfor %}
                         {% endfor %}
-                    </ul>
+                    </div>
                 </li>
                 <li role="presentation"><a class="text-success" href="#">{% trans "Proof of Play" %}</a></li>
             </ul>

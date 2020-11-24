@@ -39,11 +39,11 @@
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Appearance" %}<span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#appearanceTemplateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
-                    <li><a href="#colorsTemplateTab" role="tab" data-toggle="tab"><span>{% trans "Colours" %}</span></a></li>
-                    <li><a href="#effectTemplateTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
-                </ul>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#appearanceTemplateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
+                    <a class="dropdown-item" href="#colorsTemplateTab" role="tab" data-toggle="tab"><span>{% trans "Colours" %}</span></a>
+                    <a class="dropdown-item" href="#effectTemplateTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a>
+                </div>
             </li>
             <li><a href="#cacheTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
         </ul>

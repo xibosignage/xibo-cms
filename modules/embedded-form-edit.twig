@@ -37,11 +37,11 @@
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#htmlTab" role="tab" data-toggle="tab"><span>{% trans "HTML to Embed" %}</span></a></li>
-                    <li><a href="#customStyleSheetTab" role="tab" data-toggle="tab"><span>{% trans "Custom Style Sheet" %}</span></a></li>
-                    <li><a href="#headContentTab" role="tab" data-toggle="tab"><span>{% trans "HEAD content to Embed" %}</span></a></li>
-                </ul>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#htmlTab" role="tab" data-toggle="tab"><span>{% trans "HTML to Embed" %}</span></a>
+                    <a class="dropdown-item" href="#customStyleSheetTab" role="tab" data-toggle="tab"><span>{% trans "Custom Style Sheet" %}</span></a>
+                    <a class="dropdown-item" href="#headContentTab" role="tab" data-toggle="tab"><span>{% trans "HEAD content to Embed" %}</span></a>
+                </div>
             </li>
         </ul>
         <div class="col-md-12">

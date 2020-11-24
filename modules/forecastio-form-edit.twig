@@ -46,13 +46,13 @@
                 <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a></li>
-                    <li><a href="#currentForecastTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Current Forecast" %}</span></a></li>
-                    <li><a href="#dailyForecastTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Daily Forecast" %}</span></a></li>
-                    <li><a href="#optionalStylesheetTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Style Sheet" %}</span></a></li>
-                    <li><a href="#optionalJavascript" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a></li>
-                </ul>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a>
+                    <a class="dropdown-item" href="#currentForecastTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Current Forecast" %}</span></a>
+                    <a class="dropdown-item" href="#dailyForecastTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Daily Forecast" %}</span></a>
+                    <a class="dropdown-item" href="#optionalStylesheetTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Style Sheet" %}</span></a>
+                    <a class="dropdown-item" href="#optionalJavascript" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a>
+                </div>
             </li>
             <li><a href="#cacheTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
             <li><a href="#forecast" role="tab" data-toggle="tab"><span>{% trans "Forecast" %}</span></a></li>
