@@ -179,6 +179,10 @@ if (isset($_GET['file'])) {
             // Supply a header only, pointing to the original file name
             header('Content-Disposition: attachment; filename="' . $file->path . '"');
 
+            if (array_key_exists('X_CLOUD_ACC', $_SERVER)) {
+                header('X_CLOUD_ACC', $_SERVER['X_CLOUD_ACC']);
+            }
+
         } else if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
             // Log bandwidth for the file being requested
             $app->logService->info('Delete request for ' . $file->path);
