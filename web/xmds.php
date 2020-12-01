@@ -173,14 +173,15 @@ if (isset($_GET['file'])) {
         // Only log bandwidth under certain conditions
         // also controls whether the nonce is updated
         $logBandwidth = false;
+        $usedBandwidth = $file->size;
 
         // Are we a DELETE request or otherwise?
         if ($_SERVER['REQUEST_METHOD'] == 'HEAD') {
             // Supply a header only, pointing to the original file name
             header('Content-Disposition: attachment; filename="' . $file->path . '"');
 
-            if (array_key_exists('X_CLOUD_ACC', $_SERVER)) {
-                header('X_CLOUD_ACC', $_SERVER['X_CLOUD_ACC']);
+            if (array_key_exists('X-CLOUD-ACC', $_SERVER)) {
+                header('X-CLOUD-ACC', $_SERVER['X-CLOUD-ACC']);
             }
 
         } else if ($_SERVER['REQUEST_METHOD'] == 'DELETE') {
@@ -189,6 +190,11 @@ if (isset($_GET['file'])) {
 
             // Log bandwidth here if we are a CDN
             $logBandwidth = ($app->configService->getSetting('CDN_URL') != '');
+
+            // Do we have a usage amount provided?
+            if (array_key_exists('HTTP_X_CDN_BW', $_SERVER)) {
+                $usedBandwidth = $_SERVER['HTTP_X_CDN_BW'];
+            }
 
         } else {
             // Log bandwidth here if we are NOT a CDN
@@ -212,10 +218,10 @@ if (isset($_GET['file'])) {
         // Log bandwidth
         if ($logBandwidth) {
             // Add the size to the bytes we have already requested.
-            $file->bytesRequested = $file->bytesRequested + $file->size;
+            $file->bytesRequested = $file->bytesRequested + $usedBandwidth;
             $file->save();
 
-            $app->bandwidthFactory->createAndSave(4, $file->displayId, $file->size);
+            $app->bandwidthFactory->createAndSave(4, $file->displayId, $usedBandwidth);
         }
     }
     catch (\Exception $e) {
