@@ -192,8 +192,13 @@ if (isset($_GET['file'])) {
             $logBandwidth = ($app->configService->getSetting('CDN_URL') != '');
 
             // Do we have a usage amount provided?
-            if (array_key_exists('HTTP_X_CDN_BW', $_SERVER)) {
-                $usedBandwidth = $_SERVER['HTTP_X_CDN_BW'];
+            if (array_key_exists('HTTP_X_CDN_BW', $_SERVER) && is_numeric($_SERVER['HTTP_X_CDN_BW'])) {
+                $usedBandwidth = intval($_SERVER['HTTP_X_CDN_BW']);
+
+                // Don't allow this if we get bandwidth lower than 0
+                if ($usedBandwidth < 0) {
+                    $usedBandwidth = $file->size;
+                }
             }
 
         } else {
