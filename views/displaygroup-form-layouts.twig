@@ -47,7 +47,7 @@
                 <div>
                     <ul id="FileAssociationsSortable">
                         {% for item in layouts %}
-                        <li data-layout-id="{{ item.layoutId }}" class="btn btn-sm btn-default">{{ item.layout }}<span class="glyphicon glyphicon-minus-sign"></span></li>
+                        <li data-layout-id="{{ item.layoutId }}" class="btn btn-sm btn-white">{{ item.layout }}<span class="fa fa-minus"></span></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -57,7 +57,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="FilterDiv">
+                <div class="FilterDiv card-body">
                     <form onsubmit="false">
 
                     </form>

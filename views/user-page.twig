@@ -26,7 +26,7 @@
 {% block title %}{{ "Users"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
+    <ul class="nav nav-pills pull-right p-2">
         {% if currentUser.isSuperAdmin() or (currentUser.isGroupAdmin() and currentUser.featureEnabled("users.add")) %}
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new User" %}" href="{{ url_for("user.add.form") }}"><i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Add User" %}</a></li>
         {% endif %}
@@ -39,18 +39,20 @@
         <div class="widget-title">{% trans "Users" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="usersView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
-                            <div class="form-group ">
-                                <label class="control-label" title="" for="userName" accesskey="">{% trans "Name" %}</label>
+                            <div class="form-group mr-3 mb-2">
+                                <label class="control-label mr-1" title="" for="userName" accesskey="">{% trans "Name" %}</label>
                                 <div>
                                     <div class="input-group">
                                         <input class="form-control" name="userName" type="text" id="userName" value="">
-                                        <span class="input-group-addon">
-                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                        </span>
+                                        <div class="input-group-append input-group-addon">
+                                            <div class="input-group-text">
+                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>

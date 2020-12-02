@@ -40,11 +40,11 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li class="tabForRemoteDataSet"><a href="#gateway" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
-                <li class="tabForRemoteDataSet"><a href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
-                <li class="tabForRemoteDataSet"><a href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
-                <li class="tabForRemoteDataSet"><a href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#gateway" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
+                <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
+                <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
+                <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="dataSetAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("dataSet.add") }}">
                 <div class="tab-content">
@@ -155,8 +155,8 @@
                         {{ forms.checkbox("ignoreFirstRow", title, 0, helpText, "csv-source-field") }}
 
                         <div class="form-group">
-                            <div class="col-sm-offset-2 col-sm-10">
-                                <a class="btn btn-default" id="dataSetRemoteTestButton" href="#">
+                            <div class="offset-sm-2 col-sm-10">
+                                <a class="btn btn-white" id="dataSetRemoteTestButton" href="#">
                                     {% trans "Test data URL" %}
                                 </a>
                             </div>

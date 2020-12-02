@@ -40,10 +40,10 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#message-body" role="tab" data-toggle="tab"><span>{% trans "Message" %}</span></a></li>
-                <li><a href="#audience" role="tab" data-toggle="tab"><span>{% trans "Audience" %}</span></a></li>
-                <li><a href="#attachment" role="tab" data-toggle="tab"><span>{% trans "Attachment" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#message-body" role="tab" data-toggle="tab"><span>{% trans "Message" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#audience" role="tab" data-toggle="tab"><span>{% trans "Audience" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#attachment" role="tab" data-toggle="tab"><span>{% trans "Attachment" %}</span></a></li>
             </ul>
             <form id="notificationForm" class="form-horizontal" method="post" action="{{ url_for("notification.add") }}">
                 <div class="tab-content">
@@ -107,8 +107,8 @@
                     <div class="tab-pane" id="attachment">
                         <div class="row attachment-fields attachment-add-button text-center">
                             <div class="col-xs-12">
-                                <button id="attachmentAddButton" class="btn btn-default" type="">
-                                    <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                                <button id="attachmentAddButton" class="btn btn-white" type="">
+                                    <i class="fa fa-plus"></i>
                                     {% trans "Add an attachment?" %}
                                 </button>
                             </div>

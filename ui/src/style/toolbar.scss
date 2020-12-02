@@ -50,7 +50,7 @@ ul.sidebar {
 .editor-toolbar .container-toolbar .navbar-peek-button {
     width: 50px;
     text-align: center;
-    font-size: 24px;
+    font-size: 1.75rem;
     padding: 10px;
     line-height: 30px;
     @include set-transparent-color(background, $toolbar-disabled-color, 0.3);
@@ -125,7 +125,7 @@ ul.sidebar {
     .btn-window {
         cursor: pointer;
         color: $toolbar-tab-hover-color;
-        font-size: 18px;
+        font-size: 1.3rem;
         padding: 0 4px;
 
         &:hover {
@@ -146,7 +146,7 @@ ul.sidebar {
 
     .btn-window-new-tab {
         position: relative;
-        font-size: 16px;
+        font-size: 1.15rem;
     }
 
     .media-search-controls {
@@ -157,7 +157,7 @@ ul.sidebar {
 
         .media-search-tab {
             display: inline-block;
-            font-size: 15px;
+            font-size: 1.1rem;
             height: 24px;
             background-color: darken($xibo-color-gray, 20%);
             @include border-radius(0 4px 0 0);
@@ -286,7 +286,7 @@ ul.sidebar {
         
         .assignItem {
             color: $toolbar-main-color;
-            font-size: 16px;
+            font-size: 1.15rem;
         }
 
         tbody>tr>td {
@@ -338,7 +338,7 @@ ul.sidebar {
 
         .card-icon {
             line-height: 30px;
-            font-size: 25px;
+            font-size: 1.8rem;
             padding: 5px 10px;
             position: absolute;
         }
@@ -354,7 +354,7 @@ ul.sidebar {
 
             i {
                 line-height: $toolbar-tools-card-height;
-                font-size: 23px;
+                font-size: 1.65rem;
             }
         }
 
@@ -371,7 +371,7 @@ ul.sidebar {
             width: $toolbar-tools-card-width;
             @include set-transparent-color(background-color, $toolbar-light-green, 0.9);
             @include border-radius(4px);
-            font-size: 22px;
+            font-size: 1.55rem;
         }
 
         .drag-area {
@@ -386,7 +386,7 @@ ul.sidebar {
             width: $toolbar-tools-card-width;
             @include set-transparent-color(background-color, $toolbar-orange, 0.9);
             @include border-radius(4px);
-            font-size: 22px;
+            font-size: 1.55rem;
         }
 
         &:not(.card-selected):hover {
@@ -412,7 +412,7 @@ ul.sidebar {
         &.pagination-btn {
             display: inline-block;
             width: 20px;
-            font-size: 20px;
+            font-size: 1.4rem;
             height: $toolbar-height;
             border: none;
             line-height: 30px;
@@ -421,7 +421,7 @@ ul.sidebar {
             background-color: $xibo-color-black;
 
             &.pag-btn-top-right, &.pag-btn-top-left {
-                font-size: 11px;
+                font-size: 0.8rem;
             }
 
             &:hover {
@@ -469,7 +469,7 @@ ul.sidebar {
             height: $toolbar-widgets-card-height;
             background: $xibo-color-primary;
             @include border-radius(0px 0 4px 4px);
-            font-size: 13px;
+            font-size: 0.95rem;
 
             .card-title {
                 position: relative;
@@ -487,7 +487,7 @@ ul.sidebar {
 
             .card-icon {
                 line-height: 10px;
-                font-size: 14px;
+                font-size: 1rem;
                 transform: translate(-50%);
                 padding: 0;
                 position: relative;
@@ -534,7 +534,7 @@ ul.sidebar {
                 margin: 0;
                 height: 14px;
                 text-align: center;
-                font-size: 10px;
+                font-size: 0.65rem;
             }
 
             &:not(.card-selected):hover, &.favourited {
@@ -621,13 +621,13 @@ ul.sidebar {
     color: $xibo-color-white;
     width: 50px;
     text-align: center;
-    font-size: 24px;
+    font-size: 1.75rem;
     padding: 10px;
     line-height: 30px;
     max-height: $toolbar-height;
 
     .material-icons {
-        font-size: 26px;
+        font-size: 1.85rem;
         line-height: 30px;
     }
 
@@ -669,7 +669,7 @@ ul.sidebar {
         &#optionsContainer {
             width: 50px;
             text-align: center;
-            font-size: 24px;
+            font-size: 1.75rem;
             padding: 5px 10px;
             line-height: 30px;
         }

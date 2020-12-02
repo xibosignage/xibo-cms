@@ -27,7 +27,7 @@
 {% block title %}{% trans %}RSS Feeds for {{ dataSetName }}{% endtrans %} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
+    <ul class="nav nav-pills pull-right p-2">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add RSS" %}" href="{{ url_for("dataSet.rss.add.form", {id: dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add RSS" %}</a></li>
     </ul>
 {% endblock %}
@@ -39,7 +39,7 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                         </form>
@@ -305,7 +305,7 @@
                     </label>
                 </div>
                 <div class="col-sm-1">
-                    <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+                    <button class="btn btn-white btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
                 </div>
             </div>
         </script>
@@ -345,7 +345,7 @@
                     </label>
                 </div>
                 <div class="col-sm-1">
-                    <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+                    <button class="btn btn-white btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
                 </div>
             </div>
         </script>

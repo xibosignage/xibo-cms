@@ -60,7 +60,7 @@
         {% endif %}
 
         <div id="content-wrapper">
-            <div class="page-content">
+            <div class="page-content mt-3 mt-md-0">
                 {% if not horizontalNav %}
                 <div class="row header header-side">
                     <div class="col-sm-12">
@@ -167,7 +167,7 @@
             <button class="btn select-all" data-toggle="selectAll">
                 {{ selectAll }}
             </button>
-            <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
+            <button class="btn btn-white dropdown-toggle" data-toggle="dropdown">
                 <span class="fa fa-caret-down"></span>
                 {{ withSelected }}
             </button>
@@ -406,7 +406,7 @@
                     {{#eq container "container-folder-tree"}}
                     {% endverbatim %}
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-default btnCloseInnerModal">{% trans "Close" %}</button>
+                        <button type="button" class="btn btn-white btnCloseInnerModal">{% trans "Close" %}</button>
                     </div>
                     {% verbatim %}
                     {{/eq}}

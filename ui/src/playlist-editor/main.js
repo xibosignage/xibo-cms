@@ -404,7 +404,7 @@ pE.deleteObject = function(objectType, objectId) {
             buttons: {
                 cancel: {
                     label: editorsTrans.no,
-                    className: 'btn-default'
+                    className: 'btn-white'
                 },
                 confirm: {
                     label: editorsTrans.yes,
@@ -510,7 +510,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
         let buttons = {
             cancel: {
                 label: editorsTrans.no,
-                className: 'btn-default'
+                className: 'btn-white'
             }
         };
 

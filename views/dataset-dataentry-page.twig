@@ -27,7 +27,7 @@
 {% block title %}{% trans %}Data Entry for {{ dataSetName }}{% endtrans %} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
+    <ul class="nav nav-pills pull-right p-2">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ url_for("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Row" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("dataSet.column.view", {"id": dataSet.dataSetId}) }}"><i class="fa fa-columns" aria-hidden="true"></i> {% trans "View Columns" %}</a></li>
     </ul>
@@ -41,7 +41,7 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% for col in dataSet.getColumn() %}
                                 {% if col.dataSetColumnTypeId == 1 and (col.dataTypeId == 1 or col.dataTypeId == 2) and col.showFilter == 1 %}
@@ -72,7 +72,7 @@
         <ul class="nav nav-pills pull-left" style="margin-left: 5px;">
             <li class="btn btn-success btn-xs"><a class="btns toggleMultiSelectMode" id="toggleMultiSelectMode" style="padding: 7px 7px;" title="{% trans "Click to toggle between Data Edit and Multi Select modes" %}" > <i class="" aria-hidden="true"></i> {% trans "Edit Mode" %}</a></li>
         </ul>
-        <ul class="nav nav-pills pull-right deleteRowsControl" style="margin-left: 5px;">
+        <ul class="nav nav-pills pull-right p-2 deleteRowsControl" style="margin-left: 5px;">
             <li class="btn btn-danger btn-xs"><a class="btns deleteSelectedRows" id="deleteSelectedRows" style="padding: 7px 7px;" title="{% trans "Click to delete selected rows" %}" > <i class="" aria-hidden="true"></i> {% trans "Delete Selected Rows" %}</a></li>
         </ul>
     </div>

@@ -143,7 +143,7 @@ Region.prototype.editPropertyForm = function(property) {
         buttons: {
             cancel: {
                 label: translations.cancel,
-                className: "btn-default"
+                className: "btn-white"
             },
             done: {
                 label: translations.done,

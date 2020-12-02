@@ -26,7 +26,7 @@
 {% block title %}{{ "Applications"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
+    <ul class="nav nav-pills pull-right p-2">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add an Application" %}" href="{{ url_for("application.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Application" %}</a></li>
         {% if currentUser.isSuperAdmin() %}
             <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a DOOH Application" %}" href="{{ url_for("application.addDooh.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DOOH Application" %}</a></li>
@@ -41,7 +41,7 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                         </form>
                     </div>

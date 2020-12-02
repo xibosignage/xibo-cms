@@ -44,7 +44,7 @@
                 <div>
                     <ul id="FileAssociationsSortable">
                         {% for item in media %}
-                        <li data-media-id="{{ item.id }}" class="btn btn-sm btn-default">{{ item.name }}<span class="glyphicon glyphicon-minus-sign"></span></li>
+                        <li data-media-id="{{ item.id }}" class="btn btn-sm btn-white">{{ item.name }}<span class="fa fa-minus"></span></li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -54,7 +54,7 @@
     <div class="row">
         <div class="col-md-12">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="FilterDiv">
+                <div class="FilterDiv card-body">
                     <form onsubmit="false">
                     {{ inline.dropdown("type", "single", "Type", "", [{type: null, module: ""}]|merge(modules), "type", "name") }}
                     </form>

@@ -40,12 +40,12 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "Details" %}</span></a></li>
-                <li><a href="#reference" role="tab" data-toggle="tab"><span>{% trans "Reference" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "Details" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#reference" role="tab" data-toggle="tab"><span>{% trans "Reference" %}</span></a></li>
                 {% if currentUser.userTypeId == 1 %}
-                    <li><a href="#notifications" role="tab" data-toggle="tab"><span>{% trans "Notifications" %}</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="#notifications" role="tab" data-toggle="tab"><span>{% trans "Notifications" %}</span></a></li>
                 {% endif %}
-                <li><a href="#optionsTab" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#optionsTab" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
             </ul>
             <form id="userEditForm" class="UserForm form-horizontal" data-user-id="{{ user.userId }}" method="put" action="{{ url_for("user.edit", {id: user.userId}) }}">
                 <div class="tab-content">

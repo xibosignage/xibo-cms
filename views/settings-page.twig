@@ -26,7 +26,7 @@
 {% block title %}{{ "Settings"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
+    <ul class="nav nav-pills pull-right p-2">
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED %}
             <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("maintenance.libraryTidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
         {% endif %}
@@ -40,16 +40,16 @@
             <div class="row">
                 <div class="col-md-12">
                     <ul class="nav nav-tabs" role="tablist">
-                        <li class="active"><a href="#tab_config" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
-                        <li><a href="#tab_defaults" role="tab" data-toggle="tab"><span>{% trans "Defaults" %}</span></a></li>
-                        <li><a href="#tab_displays" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
-                        <li><a href="#tab_general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                        <li><a href="#tab_maint" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
-                        <li><a href="#tab_network" role="tab" data-toggle="tab"><span>{% trans "Network" %}</span></a></li>
-                        <li><a href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Permissions" %}</span></a></li>
-                        <li><a href="#tab_regional" role="tab" data-toggle="tab"><span>{% trans "Regional" %}</span></a></li>
-                        <li><a href="#tab_troubleshooting" role="tab" data-toggle="tab"><span>{% trans "Troubleshooting" %}</span></a></li>
-                        <li><a href="#tab_users" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link active" href="#tab_config" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_defaults" role="tab" data-toggle="tab"><span>{% trans "Defaults" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_displays" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_maint" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_network" role="tab" data-toggle="tab"><span>{% trans "Network" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Permissions" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_regional" role="tab" data-toggle="tab"><span>{% trans "Regional" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_troubleshooting" role="tab" data-toggle="tab"><span>{% trans "Troubleshooting" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_users" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
                     </ul>
                     <form id="SettingsForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("settings.update") }}">
                         <div class="tab-content">

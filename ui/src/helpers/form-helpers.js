@@ -1569,7 +1569,7 @@ let formHelpers = function() {
             if(!(inputButtons[button].includes('XiboDialogClose') || inputButtons[button].includes('.submit()'))) {
                 buttons[button] = {
                     name: button,
-                    type: 'btn-default',
+                    type: 'btn-white',
                     click: inputButtons[button]
                 };
             }
@@ -1578,7 +1578,7 @@ let formHelpers = function() {
         // Add back button
         buttons.back = {
             name: editorsTrans.back,
-            type: 'btn-default',
+            type: 'btn-white',
             action: 'back'
         };
 

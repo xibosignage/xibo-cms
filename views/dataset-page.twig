@@ -28,7 +28,7 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabled("dataset.add") %}
-    <ul class="nav nav-pills pull-right">
+    <ul class="nav nav-pills pull-right p-2">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ url_for("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</a></li>
     </ul>
     {% endif %}
@@ -39,18 +39,19 @@
         <div class="widget-title">{% trans "DataSets" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline" onsubmit="return false">
-                            <div class="form-group">
-                                <label class="control-label" title="" for="dataSet" accesskey="">{% trans "Name" %}</label>
+                            <div class="form-group mr-3 mb-2">
+                                <label class="control-label mr-1" title="" for="dataSet" accesskey="">{% trans "Name" %}</label>
                                 <div>
                                     <div class="input-group">
                                         <input class="form-control" name="dataSet" type="text" id="dataSet" value="">
-
-                                        <span class="input-group-addon">
-                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                        </span>
+                                        <div class="input-group-append input-group-addon">
+                                            <div class="input-group-text">
+                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -398,16 +399,16 @@
                 <div class="col-md-7">
                     <!-- The fileinput-button span is used to style the file input field as button -->
                     <span class="btn btn-success fileinput-button">
-                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                        <i class="fa fa-plus"></i>
                         <span>{{ trans.addFiles }}</span>
                         <input type="file" name="files">
                     </span>
                     <button type="submit" class="btn btn-primary start">
-                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                        <i class="fa fa-upload"></i>
                         <span>{{ trans.startUpload }}</span>
                     </button>
                     <button type="reset" class="btn btn-warning cancel">
-                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                        <i class="fa fa-ban"></i>
                         <span>{{ trans.cancelUpload }}</span>
                     </button>
                     <!-- The loading indicator is shown during file processing -->
@@ -487,12 +488,12 @@
                 <td>
                     {% if (!o.files.error && !i && !o.options.autoUpload) { %}
                         <button class="btn btn-primary start">
-                            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                            <i class="fa fa-upload"></i>
                         </button>
                     {% } %}
                     {% if (!i) { %}
                         <button class="btn btn-warning cancel">
-                            <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                            <i class="fa fa-ban"></i>
                         </button>
                     {% } %}
                 </td>

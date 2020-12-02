@@ -1049,7 +1049,7 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
                         return "";
 
                     // Create a click-able span
-                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                    return "<a href=\"#\" class=\"assignItem\"><span class=\"fa fa-plus\"></a>";
                 }
             },
             {"data": "mediaId"},

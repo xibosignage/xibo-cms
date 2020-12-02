@@ -27,7 +27,7 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabled("template.add") %}
-        <ul class="nav nav-pills pull-right">
+        <ul class="nav nav-pills pull-right p-2">
             <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Template and jump to the layout designer." %}" href="{{ url_for("template.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Template" %}</a></li>
         </ul>
     {% endif %}
@@ -38,8 +38,8 @@
         <div class="widget-title">{% trans "Templates" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="templateView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "Name" %}{% endset %}
                             {{ inline.input("template", title) }}

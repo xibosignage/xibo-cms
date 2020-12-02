@@ -133,7 +133,7 @@ div.action-controller {
     position: absolute;
     z-index: 2;
     font-family: monospace, monospace;
-    font-size: 13px;
+    font-size: 1rem;
     max-width: 280px;
     background-color: #337ab7;
     border-radius: 4px;
@@ -160,7 +160,7 @@ div.action-controller .action-controller-title .toggle {
     padding: 0;
     background-color: #2568a0;
     border: 1px solid #3a7db5;
-    font-size: 14px;
+    font-size: 1rem;
     font-weight: bold;
 }
 

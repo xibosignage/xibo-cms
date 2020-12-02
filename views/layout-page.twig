@@ -5,7 +5,7 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabled("layout.add") %}
-    <ul class="nav nav-pills pull-right">
+    <ul class="nav nav-pills pull-right p-2">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</a></li>
     </ul>
@@ -17,26 +17,26 @@
         <div class="widget-title">{% trans "Layouts" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-type="layout" data-grid-name="layoutView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item"><a class="nav-link active" href="#general-filter" role="tab" data-toggle="tab" aria-selected="true"><span>{% trans "General" %}</span></a></li>
+                            <li class="nav-item"><a class="nav-link" href="#advanced-filter" role="tab" data-toggle="tab" aria-selected="false"><span>{% trans "Advanced" %}</span></a></li>
+                        </ul>
                         <form class="form-inline">
-                            <ul class="nav nav-tabs" role="tablist">
-                                <li class="active"><a href="#general-filter" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                                <li><a href="#advanced-filter" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
-                            </ul>
                             <div class="tab-content">
-                                <div class="tab-pane active" id="general-filter">
+                                <div class="tab-pane active" id="general-filter" role="tabpanel">
                                     {% set title %}{% trans "ID" %}{% endset %}
                                     {{ inline.number("layoutId", title) }}
 
-                                    <div class="form-group ">
-                                        <label class="control-label" title="" for="layout" accesskey="">{% trans "Name" %}</label>
-                                        <div>
-                                            <div class="input-group">
-                                                <input class="form-control" name="layout" type="text" id="layout" value="">
-                                                <span class="input-group-addon">
+                                    <div class="form-group mr-3 mb-2">
+                                        <label class="control-label mr-1" title="" for="layout" accesskey="">{% trans "Name" %}</label>
+                                        <div class="input-group">
+                                            <input class="form-control" name="layout" type="text" id="layout" value="">
+                                            <div class="input-group-append input-group-addon">
+                                                <div class="input-group-text">
                                                     <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                                </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -70,7 +70,7 @@
 
                                     {{ inline.hidden("folderId") }}
                                 </div>
-                                <div class="tab-pane" id="advanced-filter">
+                                <div class="tab-pane" id="advanced-filter" role="tabpanel">
 
                                     {% set title %}{% trans "Retired" %}{% endset %}
                                     {% set option1 = "Yes"|trans %}

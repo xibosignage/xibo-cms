@@ -7,8 +7,8 @@ require('material-design-icons/iconfont/material-icons.css');
 // font-awesome
 require('@fortawesome/fontawesome-free/css/all.min.css');
 
-// bootstrap
-require('bootstrap/scss/bootstrap.scss');
+// bootstrap ( themed )
+require('./src/style/bootstrap_theme.scss');
 
 // bootstrap-colorpicker
 require('bootstrap-colorpicker/dist/css/bootstrap-colorpicker.min.css');
@@ -51,7 +51,7 @@ require('flatpickr/dist/flatpickr.min.css');
 require('flatpickr/dist/plugins/monthSelect/style.css');
 
 // datatables.net-dt
-require('datatables.net-bs/css/dataTables.bootstrap.css');
+require('datatables.net-bs4/css/dataTables.bootstrap4.min.css');
 require('datatables.net-buttons-dt/css/buttons.dataTables.min.css');
 
 // bootstrap-tour

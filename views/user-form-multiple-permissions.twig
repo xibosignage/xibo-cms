@@ -54,8 +54,8 @@
                      data-url="{{ url_for("user.permissions.multi", {entity: entity}) }}"
                      data-target-ids="{{ objectIds }}">
                     <div class="permissionsMultiTableFilter">
-                        <div class="XiboFilter well">
-                            <div class="FilterDiv" id="Filter">
+                        <div class="XiboFilter card bg-light">
+                            <div class="FilterDiv card-body" id="Filter">
                                 <form class="form-inline">
                                     {% set title %}{% trans "Name" %}{% endset %}
                                     {{ inline.input("name", title) }}

@@ -106,7 +106,7 @@ require('form-serializer');
 // datatables.net
 var dt_extras = [
          require("datatables.net"),
-         require("datatables.net-bs"),
+         require("datatables.net-bs4"),
          require("datatables.net-buttons"),
          require("datatables.net-buttons/js/buttons.colVis.min.js"),
          require("datatables.net-buttons/js/buttons.html5.min.js"),

@@ -26,7 +26,7 @@
 {% block title %}{{ "Modules"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
+    <ul class="nav nav-pills pull-right p-2">
         {% if modulesToInstall|length > 0 %}
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Modules available to Install" %}" href="{{ url_for("module.install.list.form") }}"><i class="fa fa-upload" aria-hidden="true"></i> {% trans "Install Module" %}</a></li>
         {% endif %}
@@ -41,7 +41,7 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                         </form>

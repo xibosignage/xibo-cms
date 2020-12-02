@@ -1030,9 +1030,9 @@ function dataTableCreateTags(data, type) {
 
         for (var i = 0; i < arrayOfTags.length; i++) {
             if(arrayOfTags[i] != '' && (arrayOfValues[i] == undefined || arrayOfValues[i] === 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '</span></li>'
+                returnData += '<li class="btn btn-sm btn-white btn-tag">' + arrayOfTags[i] + '</span></li>'
             } else if (arrayOfTags[i] != '' && (arrayOfValues[i] != '' || arrayOfValues[i] !== 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '|' + arrayOfValues[i] + '</span></li>'
+                returnData += '<li class="btn btn-sm btn-white btn-tag">' + arrayOfTags[i] + '|' + arrayOfValues[i] + '</span></li>'
             }
         }
 
@@ -1359,7 +1359,7 @@ function XiboFormRender(sourceObj, data) {
                                 extrabutton.addClass('btn-primary save-button');
                             }
                             else {
-                                extrabutton.addClass('btn-default');
+                                extrabutton.addClass('btn-white');
                             }
 
                             extrabutton.click(function(e) {
@@ -1813,7 +1813,7 @@ function XiboMultiSelectFormRender(button) {
     }
 
     // Close button
-    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-default');
+    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-white');
     extrabutton.click(function() {
 
         $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
@@ -1860,7 +1860,7 @@ function XiboMultiSelectPermissionsFormOpen(button) {
             buttons: {
                 cancel: {
                     label: translations.close,
-                    className: 'btn-default'  
+                    className: 'btn-white'  
                 }
             }
         });
@@ -2031,7 +2031,7 @@ function XiboMultiSelectTagFormRender(button) {
     }
 
     // Close button
-    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-default');
+    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-white');
     extrabutton.click(function() {
 
         $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');

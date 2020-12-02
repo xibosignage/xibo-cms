@@ -23,7 +23,6 @@
      line-height: 0;
  }
  
- 
  .xibo-calendar-controls #dateInput {
     border: none;
     padding: 0;
@@ -35,7 +34,7 @@
     color: #428bca;
     background-color: white;
     width: 0px;
-    font-size: 14px;
+    font-size: 1rem;
     font-weight: 400;
     line-height: 1.42857143;
     border-radius: 4px;
@@ -48,6 +47,9 @@
     height: 0;
     padding: 0;
     border: none;
+    position: absolute;
+    bottom: -0.25rem;
+    left: -0.26rem;
  }
  
  .xibo-calendar-controls.dropdown {
@@ -220,7 +222,7 @@
 
 .cal-event-time-bar .slider .tooltip-inner {
     font-weight: bold;
-    font-size: 14px;
+    font-size: 1rem;
 }
 
 .cal-event-agenda-filter {

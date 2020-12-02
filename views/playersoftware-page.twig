@@ -26,7 +26,7 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabled("playersoftware.add") %}
-    <ul class="nav nav-pills pull-right">
+    <ul class="nav nav-pills pull-right p-2">
         <li class="btn btn-success btn-xs"><a class="btns" href="#" id="playerSoftwareUploadForm" title="{% trans "Add a new media item to the player software library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Version" %}</a></li>
     </ul>
     {% endif %}
@@ -38,8 +38,8 @@
         <div class="widget-title">{% trans "Player Software" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="playerSoftwareView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "Type" %}{% endset %}
                             {% set android %}{% trans "Android" %}{% endset %}

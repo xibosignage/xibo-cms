@@ -18,6 +18,9 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+html {
+    font-size: 14px; /* Root default font size */
+}
 
 .xibo-logo {
     height: 40px;
@@ -45,7 +48,7 @@
 
 .form-signin input[type="text"],
 .form-signin input[type="password"] {
-    font-size: 16px;
+    font-size: 1.15rem;
     height: auto;
     margin-bottom: 15px;
     padding: 7px 9px;
@@ -54,6 +57,7 @@
 @media (min-width: 920px) {
     .modal-dialog {
         width: 900px;
+        max-width: 900px;
     }
 }
 
@@ -147,7 +151,7 @@ span.error {
 
 .previewNav .prevSeq, .previewNav .nextSeq {
     cursor: pointer;
-    font-size: 15px;
+    font-size: 1.1rem;
 }
 
 .preview-media-information {
@@ -271,7 +275,7 @@ ul#FileAssociationsSortable {
 .bold-counter {
     font-weight: 100;
     line-height: 70px;
-    font-size: 70px;
+    font-size: 5rem;
     text-shadow: 1px 1px 5px #000;
     filter: dropshadow(color=#000, offx=1, offy=1);
 }
@@ -301,7 +305,7 @@ div.dropdown-menu-form {
 .navbar-toggler {
     color: #f9f9f9;
     border-color: #ddd;
-    font-size: 24px;
+    font-size: 1.75rem;
     padding: 4px 8px;
 }
 .navbar-toggler-side {
@@ -489,7 +493,7 @@ span.round-tabs {
     position: absolute;
     left: 0;
     text-align: center;
-    font-size: 25px;
+    font-size: 1.8rem;
 }
 
 span.round-tabs.one {
@@ -641,7 +645,7 @@ i.fa.fa-ban.fa-stack-2x {
 
 .board .tab-content .head {
     font-family: 'Roboto Condensed', sans-serif;
-    font-size: 25px;
+    font-size: 1.8rem;
     text-transform: uppercase;
     padding-bottom: 10px;
 }
@@ -665,14 +669,14 @@ i.fa.fa-ban.fa-stack-2x {
     }
 
     .board span.round-tabs {
-        font-size: 16px;
+        font-size: 1.15rem;
         width: 50px;
         height: 50px;
         line-height: 50px;
     }
 
     .board .tab-content .head {
-        font-size: 20px;
+        font-size: 1.4rem;
     }
 
     .board .nav-tabs > li a {
@@ -781,7 +785,7 @@ ul li.active.tab-design:hover a {
 }
 
 .big-duration {
-    font-size: 14px;
+    font-size: 1rem;
 }
 
 .fault.nav-tabs > li {
@@ -887,7 +891,7 @@ ul li.active.tab-design:hover a {
 
 .btn-click {
     margin-top: -27px;
-    font-size: 26px;
+    font-size: 1.85rem;
     cursor: pointer;
 }
 
@@ -907,21 +911,28 @@ ul li.active.tab-design:hover a {
 
 .bootstrap-tagsinput {
     min-width: 196px;
-    height: auto;
-    line-height: 24px;
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.375rem 0.75rem;
+    line-height: 1.5;
 }
 
 .tags-input-wide .bootstrap-tagsinput {
     width: 100%;
 }
 
-.XiboFilter .form-inline .bootstrap-tagsinput {
-    width: 100%;
-}
-
 .XiboFilter .form-inline .input-group-tags-exact .bootstrap-tagsinput {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
+}
+
+.XiboFilter .form-inline .tab-pane.active {
+    display: flex;
+    flex-flow: row wrap;
+    align-items: center;
+}
+
+.XiboFilter .form-inline .control-label {
+    font-weight: 700;
 }
 
 .bootstrap-tagsinput + [data-role="tagsInputInline"] + .input-group-addon {
@@ -943,10 +954,18 @@ ul li.active.tab-design:hover a {
 
 .bootstrap-tagsinput .tag {
     margin-right: 0;
+    color: white;
     background-color: #5bc0de;
     border-color: #46b8da;
     font-weight: 700;
     border-radius: 8px;
+    display: inline;
+    padding: .2em .6em .3em;
+    font-size: 0.8em;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
 }
 
 /*
@@ -1068,7 +1087,7 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
 
 .XiboCommand .command-inputs {
     padding: 6px;
-    font-size: 14px;
+    font-size: 1rem;
     margin: 4px 0;
     background-color: #e5e9ec;
 }
@@ -1122,7 +1141,7 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
 
 .XiboCommand .command-inputs .form-group-rs232 div label {
     width: 30%;
-    font-size: 14px;
+    font-size: 1rem;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -1166,6 +1185,14 @@ td.feature-group-header-cell {
     cursor: pointer;
 }
 
+.XiboForm .form-group .form-text {
+    font-size: 0.9rem;
+}
+
+.XiboForm .form-group .control-label {
+    font-weight: 700;
+}
+
 /* Layout Mini Preview */
 .mini-layout-preview {
     position: fixed;
@@ -1199,7 +1226,7 @@ td.feature-group-header-cell {
     position: absolute;
     color: #cecece;
     cursor: pointer;
-    font-size: 20px;
+    font-size: 1.4rem;
 }
 
 .mini-layout-preview .preview-button:hover {
@@ -1210,7 +1237,7 @@ td.feature-group-header-cell {
 .mini-layout-preview #playBtn {
     top: 50%;
     transform: translate(-50%, -50%);
-    font-size: 30px;
+    font-size: 2.2rem;
 }
 
 .mini-layout-preview #closeBtn {

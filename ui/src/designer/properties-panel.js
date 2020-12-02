@@ -216,7 +216,7 @@ PropertiesPanel.prototype.render = function(element, step) {
             // append new tab
             let tabName = actionsTranslations.tableHeaders.name;
             const tabList = self.DOMObject.find('.nav-tabs');
-            let tabHtml = '<li><a href="#actionTab" role="tab" data-toggle="tab"><span id="actionTabName"></span></a></li>';
+            let tabHtml = '<li class="nav-item"><a class="nav-link" href="#actionTab" role="tab" data-toggle="tab"><span id="actionTabName"></span></a></li>';
             $(tabHtml).appendTo(tabList);
             $('#actionTabName').text(tabName);
 

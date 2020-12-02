@@ -31,9 +31,9 @@
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-            <li><a href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
-            <li><a href="#editorTab" class="digital-control-group" role="tab" data-toggle="tab"><span>{% trans "Editor" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#editorTab" class="digital-control-group" role="tab" data-toggle="tab"><span>{% trans "Editor" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="clockFormEdit" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -137,7 +137,7 @@
                         </div>
 
                         <div class="ckeditor_controls inline-editor-hide container-fluid" data-linked-to="ta_text">
-                            <div class="col-sm-offset-4 col-sm-8">
+                            <div class="offset-sm-4 col-sm-8">
                                 <div class="form-group">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                     <div class="col-sm-8 ckeditor_select_container">

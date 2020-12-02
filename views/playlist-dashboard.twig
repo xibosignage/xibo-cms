@@ -217,7 +217,7 @@
 
                             // Change Empty to Add in the next row down (if there is one)
                             var $next = $container.parent().next().find("button");
-                            $next.addClass("spot-action").addClass("btn-success").removeClass("btn-default").prop("disabled", false).html("Add");
+                            $next.addClass("spot-action").addClass("btn-success").removeClass("btn-white").prop("disabled", false).html("Add");
                             $next.on("click", function () {
                                 spotActionButtonClick($next);
                             });
@@ -307,7 +307,7 @@
                 <div class="col-md-7">
                     <!-- The fileinput-button span is used to style the file input field as button -->
                     <span class="btn btn-success fileinput-button">
-                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                        <i class="fa fa-plus"></i>
                         <span>Please select a file...</span>
                         <input type="file" name="files[]">
                     </span>

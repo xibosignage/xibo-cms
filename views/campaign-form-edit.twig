@@ -98,7 +98,7 @@
                 <div>
                     <ul id="LayoutAssignSortable">
                         {% for item in layouts %}
-                        <li data-layout-id="{{ item.layoutId }}" data-display-order="{{ item.displayOrder }}" class="btn btn-sm btn-default {% if item.locked %}ui-state-disabled{% endif %}">{% if item.locked %}<span class="fa fa-lock"></span> {% endif %}{{ item.layout }} {% if not item.locked %}<span class="glyphicon glyphicon-minus-sign"></span>{% endif %}</li>
+                        <li data-layout-id="{{ item.layoutId }}" data-display-order="{{ item.displayOrder }}" class="btn btn-sm btn-white {% if item.locked %}ui-state-disabled{% endif %}">{% if item.locked %}<span class="fa fa-lock"></span> {% endif %}{{ item.layout }} {% if not item.locked %}<span class="fa fa-minus"></span>{% endif %}</li>
                         {% endfor %}
                     </ul>
                 </div>

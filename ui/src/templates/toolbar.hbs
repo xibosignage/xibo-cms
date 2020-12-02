@@ -11,9 +11,9 @@
             </button>
         </div>
 
-        <div class="collapse navbar-collapse" id="toolbar-navbar-collapse">
+        <div class="" id="toolbar-navbar-collapse">
             {{!-- Menu buttons --}}
-            <ul class="nav navbar-nav navbar-buttons toolbar-menu-left hide-on-read-only hide-on-lock">
+            <ul class="nav navbar-buttons toolbar-menu-left hide-on-read-only hide-on-lock">
                 {{#each menuItems}}
                     <li>
                         <a id="btn-menu-{{@index}}" class="btn-menu-option {{state}}" data-toggle="tooltip" data-title="{{itemTitle}}"
@@ -24,7 +24,7 @@
                 {{/each}}
             </ul>
 
-            <ul class="nav navbar-nav toolbar-menu-content hide-on-read-only hide-on-lock">
+            <ul class="nav toolbar-menu-content hide-on-read-only hide-on-lock">
                 {{!-- Menu items/tabs --}}
                 {{#each menuItems}}
                     <div id="content-{{@index}}" class="toolbar-pane toolbar-{{name}}-pane {{state}} {{#if search}}library-content{{/if}}">
@@ -80,7 +80,7 @@
             </ul>
 
             {{!-- Right buttons --}}
-            <ul class="nav navbar-nav navbar-right toolbar-menu-right hide-on-read-only hide-on-lock">
+            <ul class="nav navbar-right toolbar-menu-right hide-on-read-only hide-on-lock">
                 <li>
                     <a id="undoContainer" data-toggle="tooltip" data-placement="top" data-title="{{trans.undoActiveTitle}}"
                         class="navbar-peek-button tooltip-always-on navbar-undo {{#if undoActive}}active{{/if}}">

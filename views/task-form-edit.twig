@@ -36,8 +36,8 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#options" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#options" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
             </ul>
             <form id="taskEdit" class="XiboForm form-horizontal" method="put" action="{{ url_for("task.edit", {id: task.taskId}) }}">
                 <div class="tab-content">

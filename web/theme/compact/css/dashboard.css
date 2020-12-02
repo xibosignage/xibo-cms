@@ -15,19 +15,17 @@ body {
   margin-right: 0 !important;
 }
 .row > div {
-  margin-bottom: 15px;
+  margin-bottom: 1rem;
 }
 .alerts-container .alert:last-child {
   margin-bottom: 0px;
 }
 #page-wrapper {
-  padding-left: 70px;
   height: 100%
 }
 #sidebar-wrapper {
-  margin-left: -150px;
-  left: -30px;
-  width: 180px;
+  margin-left: -10rem;
+  width: 11rem;
   position: fixed;
   height: 100%;
   z-index: 999;
@@ -71,27 +69,27 @@ ul.sidebar li a {
   display: block;
   float: left;
   text-decoration: none;
-  width: 180px;
+  width: 11rem;
 }
 ul.sidebar .sidebar-main {
   height: 65px;
 }
 ul.sidebar .sidebar-main a {
-  font-size: 18px;
+  font-size: 1.3rem;
   line-height: 60px;
 }
 ul.sidebar .sidebar-main .menu-icon {
   float: right;
-  font-size: 18px;
+  font-size: 1.3rem;
   padding-right: 28px;
   line-height: 60px;
 }
 ul.sidebar .sidebar-title {
-  font-size: 12px;
-  height: 34px;
-  line-height: 24px;
+  display: table;
+  font-size: 0.9rem;
+  margin-top: 0.8rem;
+  line-height: 1.5rem;
   text-transform: uppercase;
-  padding: 10px 0;
 }
 #page-wrapper:not(.active) ul.sidebar .sidebar-title {
   display: none;
@@ -106,7 +104,7 @@ ul.sidebar .sidebar-list {
 }
 ul.sidebar .sidebar-list a {
   text-indent: 25px;
-  font-size: 15px;
+  font-size: 1rem;
   color: #b2bfdc;
   line-height: 24px;
 }
@@ -142,7 +140,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 }
 .sidebar-footer div a {
   color: #b2bfdc;
-  font-size: 12px;
+  font-size: 0.85rem;
   line-height: 43px;
 }
 .sidebar-footer div a:hover {
@@ -159,7 +157,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 }
 @media only screen and (min-width:561px){
   #page-wrapper.active {
-    padding-left: 180px;
+    padding-left: 11rem;
   }
 }
 @media only screen and (max-width:560px){
@@ -168,7 +166,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
   }
 }
 #page-wrapper.active #sidebar-wrapper {
-  left: 150px;
+  left: 10rem;
   z-index: 1;
 }
 
@@ -183,7 +181,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
   padding-right: 0;
 }
 .row.header .meta .page {
-  font-size: 17px;
+  font-size: 1.2rem;
   padding-top: 11px;
   white-space: nowrap;
   overflow: hidden;
@@ -196,11 +194,11 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 }
 @media only screen and (max-width : 992px) {
   .row header .meta .page {
-    width: 180px;
+    width: 11rem;
   }
 }
 .row.header .meta .breadcrumb-links {
-  font-size: 10px;
+  font-size: 0.7rem;
 }
 .row.header .login a {
   padding: 18px;
@@ -214,15 +212,23 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
   vertical-align: middle;
 }
 .row.header .user > .item > a {
-  color: #919191;
+  color: #cccccc;
   display: block;
   padding: 10px 0;
 }
+.row.header .user > .item > a:hover {
+    color: #f9f9f9;
+}
 .row.header .user-notif > .item > a {
-    padding: 0;
+  padding: 5px 0;
+  line-height: 49px;
+}
+.row.header .user-notif > .item > i {
+  font-size: 1.4rem;
+  line-height: 50px;
 }
 .row.header .user > .item i {
-  font-size: 20px;
+  font-size: 1.4rem;
   line-height: 55px;
 }
 .row.header .user > .item img {
@@ -231,7 +237,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
   border-radius: 2px;
 }
 .row.header .user > .item a::after {
-    display: none;
+  display: none;
 }
 .row.header .user > .item div.dropdown-menu {
   border-radius: 2px;
@@ -270,7 +276,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
   padding-right: 7px;
 }
 .row.header .user > .item div.dropdown-menu div {
-  padding: 15px;
+  padding: 3px;
 }
 
 /* Widgets */
@@ -332,7 +338,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
   overflow-y: auto;
 }
 .widget .widget-body.small {
-  height: 150px;
+  height: 10rem;
   overflow-y: auto;
 }
 .widget .widget-body.no-padding {
@@ -356,10 +362,10 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 .widget .widget-icon i {
   line-height: 66px;
   color: #ffffff;
-  font-size: 30px;
+  font-size: 2.2rem;
 }
 .widget .widget-content .title {
-  font-size: 28px;
+  font-size: 1.75rem;
   display: block;
 }
 
@@ -393,7 +399,7 @@ ul.sidebar .sidebar-title a, ul.sidebar .sidebar-title a:hover {
 /* Horizontal Menu */
 .navbar-default {
   background-color: #273759;
-  font-size: 14px;
+  font-size: 1rem;
   padding: 0 8px;
   margin-bottom: 20px;
 }
@@ -425,7 +431,7 @@ ul.sidebar .sidebar-title a, ul.sidebar .sidebar-title a:hover {
   background-color: #30426a;
 }
 .notification-drawer-icon i {
-  font-size: 20px;
+  font-size: 1.4rem;
 }
 .remote-icons a {
     padding-right: 5px;

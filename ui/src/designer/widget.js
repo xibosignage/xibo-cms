@@ -356,7 +356,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
         buttons: {
             cancel: {
                 label: translations.cancel,
-                className: "btn-default"
+                className: "btn-white"
             },
             done: {
                 label: translations.done,

@@ -27,7 +27,7 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabled("daypart.add") %}
-    <ul class="nav nav-pills pull-right">
+    <ul class="nav nav-pills pull-right p-2">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("daypart.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Daypart" %}</a></li>
     </ul>
     {% endif %}
@@ -39,7 +39,7 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                         </form>
@@ -211,7 +211,7 @@
                 <input class="form-control timePicker dateControl" name="exceptionEndTimesLink_{{ fieldId }}" type="text" id="exceptionEndTimesLink_{{ fieldId }}" data-link-field="exceptionEndTimes_{{ fieldId }}" data-link-format="hh:ii"/>
             </div>
             <div class="col-sm-1">
-                <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+                <button class="btn btn-white btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
             </div>
         </div>
     </script>

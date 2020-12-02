@@ -26,13 +26,13 @@
 <div class="row">
     <div class="col-md-12">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
-            <li><a href="#network" role="tab" data-toggle="tab">{% trans "Network" %}</a></li>
-            <li><a href="#location" role="tab" data-toggle="tab">{% trans "Location" %}</a></li>
-            <li><a href="#troubleshooting" role="tab" data-toggle="tab">{% trans "Troubleshooting" %}</a></li>
-            <li><a href="#advanced" role="tab" data-toggle="tab">{% trans "Advanced" %}</a></li>
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="#network" role="tab" data-toggle="tab">{% trans "Network" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="#location" role="tab" data-toggle="tab">{% trans "Location" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="#troubleshooting" role="tab" data-toggle="tab">{% trans "Troubleshooting" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="#advanced" role="tab" data-toggle="tab">{% trans "Advanced" %}</a></li>
             {% if commands|length > 0 %}
-                <li><a href="#commands" role="tab" data-toggle="tab">{% trans "Commands" %}</a></li>
+                <li class="nav-item"><a class="nav-link" href="#commands" role="tab" data-toggle="tab">{% trans "Commands" %}</a></li>
             {% endif %}
         </ul>
         <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">

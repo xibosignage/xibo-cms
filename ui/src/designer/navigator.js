@@ -275,7 +275,7 @@ Navigator.prototype.renderNavbar = function() {
                     },
                     cancel: {
                         label: editorsTrans.no,
-                        className: 'btn-default'
+                        className: 'btn-white'
                     }
                 },
                 callback: function(result) {

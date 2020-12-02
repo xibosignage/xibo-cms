@@ -27,7 +27,7 @@
 {% block title %}{% trans %}Columns for {{ dataSetName }}{% endtrans %} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
+    <ul class="nav nav-pills pull-right p-2">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add Column" %}" href="{{ url_for("dataSet.column.add.form", {id: dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Column" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" title="{% trans "View Data" %}" href="{{ url_for("dataSet.view.data", {id: dataSet.dataSetId}) }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "View Data" %}</a></li>
     </ul>
@@ -41,7 +41,7 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                         </form>

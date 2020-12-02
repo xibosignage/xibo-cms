@@ -58,7 +58,7 @@
                 </div>
                 <!-- The fileinput-button span is used to style the file input field as button -->
                 <span class="btn btn-success fileinput-button">
-                    <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                    <i class="fa fa-plus"></i>
                     <span>{{ trans.addFiles }}</span>
                     {{#if multi }}
                     <input type="file" name="files[]" id="files" multiple>
@@ -67,11 +67,11 @@
                     {{/if}}
                 </span>
                 <button type="submit" class="btn btn-primary start">
-                    <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                    <i class="fa fa-upload"></i>
                     <span>{{ trans.startUpload }}</span>
                 </button>
                 <button type="reset" class="btn btn-warning cancel">
-                    <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                    <i class="fa fa-ban"></i>
                     <span>{{ trans.cancelUpload }}</span>
                 </button>
                 {{#if folderSelector}}
@@ -224,12 +224,12 @@
         <td>
             {% if (!i && !o.options.autoUpload) { %}
                 <button class="btn btn-primary start" disabled>
-                    <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                    <i class="fa fa-upload"></i>
                 </button>
             {% } %}
             {% if (!i) { %}
                 <button class="btn btn-warning cancel">
-                    <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                    <i class="fa fa-ban"></i>
                 </button>
             {% } %}
         </td>
@@ -270,12 +270,12 @@
         <td>
             {% if (!i && !o.options.autoUpload) { %}
                 <button class="btn btn-primary start" disabled>
-                    <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                    <i class="fa fa-upload"></i>
                 </button>
             {% } %}
             {% if (!i) { %}
                 <button class="btn btn-warning cancel">
-                    <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                    <i class="fa fa-ban"></i>
                 </button>
             {% } %}
         </td>

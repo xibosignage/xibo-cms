@@ -348,7 +348,7 @@ var FileAssociationsCallback = function()
 
         // Add a span to that new item
         $("<span/>", {
-            "class": "glyphicon glyphicon-minus-sign",
+            "class": "fa fa-minus",
             click: function(){
                 $(this).parent().remove();
                 $(".modal-body .XiboGrid").each(function(){
@@ -367,7 +367,7 @@ var FileAssociationsCallback = function()
     });
 
     // Attach a click handler to all of the little points in the trough
-    $("#FileAssociationsSortable li .glyphicon-minus-sign").click(function() {
+    $("#FileAssociationsSortable li .fa-minus").click(function() {
 
         // Remove this and refresh the table
         $(this).parent().remove();
@@ -852,7 +852,7 @@ function mediaDisplayGroupFormCallBack() {
                         return "";
 
                     // Create a click-able span
-                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                    return "<a href=\"#\" class=\"assignItem\"><span class=\"fa fa-plus\"></a>";
                 }
             }
         ]
@@ -873,14 +873,14 @@ function mediaDisplayGroupFormCallBack() {
             var newItem = $("<li/>", {
                 "text": data.name,
                 "data-media-id": data.mediaId,
-                "class": "btn btn-sm btn-default"
+                "class": "btn btn-sm btn-white"
             });
 
             newItem.appendTo("#FileAssociationsSortable");
 
             // Add a span to that new item
             $("<span/>", {
-                "class": "glyphicon glyphicon-minus-sign",
+                "class": "fa fa-minus",
                 click: function(){
                     container.data().media[$(this).parent().data().mediaId] = 0;
                     $(this).parent().remove();
@@ -963,7 +963,7 @@ function layoutFormCallBack() {
                         return "";
 
                     // Create a click-able span
-                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                    return "<a href=\"#\" class=\"assignItem\"><span class=\"fa fa-plus\"></a>";
                 }
             }
         ]
@@ -984,14 +984,14 @@ function layoutFormCallBack() {
             var newItem = $("<li/>", {
                 "text": data.layout,
                 "data-layout-id": data.layoutId,
-                "class": "btn btn-sm btn-default"
+                "class": "btn btn-sm btn-white"
             });
 
             newItem.appendTo("#FileAssociationsSortable");
 
             // Add a span to that new item
             $("<span/>", {
-                "class": "glyphicon glyphicon-minus-sign",
+                "class": "fa fa-minus",
                 click: function(){
                     container.data().layout[$(this).parent().data().layoutId] = 0;
                     $(this).parent().remove();

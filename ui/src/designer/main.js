@@ -744,7 +744,7 @@ lD.welcomeScreen = function() {
             },
             view: {
                 label: layoutDesignerTrans.viewModeTitle,
-                className: "btn-default",
+                className: "btn-white",
                 callback: function(res) {
                     lD.enterReadOnlyMode();
                 }
@@ -931,7 +931,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
             let generatedButtons = {
                 cancel: {
                     label: translations.cancel,
-                    className: 'btn-default'
+                    className: 'btn-white'
                 }
             };
 
@@ -939,7 +939,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
             for(var button in res.buttons) {
                 if(res.buttons.hasOwnProperty(button)) {
                     if(button != translations.cancel) {
-                        let buttonType = 'btn-default';
+                        let buttonType = 'btn-white';
 
                         if(button === translations.save || button === editorsTrans.publish || button === editorsTrans.discard) {
                             buttonType = 'btn-primary';
@@ -1110,7 +1110,7 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
             buttons: {
                 cancel: {
                     label: editorsTrans.no,
-                    className: 'btn-default'
+                    className: 'btn-white'
                 },
                 confirm: {
                     label: editorsTrans.yes,
