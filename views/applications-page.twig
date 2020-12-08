@@ -26,12 +26,12 @@
 {% block title %}{{ "Applications"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right p-2">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add an Application" %}" href="{{ url_for("application.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Application" %}</a></li>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add an Application" %}" href="{{ url_for("application.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Application" %}</button>
         {% if currentUser.isSuperAdmin() %}
-            <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a DOOH Application" %}" href="{{ url_for("application.addDooh.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DOOH Application" %}</a></li>
+            <button class="btn btn-success XiboFormButton" title="{% trans "Add a DOOH Application" %}" href="{{ url_for("application.addDooh.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DOOH Application" %}</button>
         {% endif %}
-    </ul>
+    </div>
 {% endblock %}
 
 
@@ -46,7 +46,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="applications" class="table table-striped">
                         <thead>
                             <tr>
@@ -91,7 +91,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#applications_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#applications_wrapper').find('.col-md-6').eq(1));
         
         function copyFromSecretInput() {
             // Initialize the tooltip.

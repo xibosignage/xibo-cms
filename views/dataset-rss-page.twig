@@ -27,9 +27,9 @@
 {% block title %}{% trans %}RSS Feeds for {{ dataSetName }}{% endtrans %} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right p-2">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add RSS" %}" href="{{ url_for("dataSet.rss.add.form", {id: dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add RSS" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add RSS" %}" href="{{ url_for("dataSet.rss.add.form", {id: dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add RSS" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -45,7 +45,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="datasets" class="table table-striped" data-state-preference-name="dataSetRssGrid">
                         <thead>
                             <tr>
@@ -110,7 +110,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-md-6').eq(1));
 
         /**
          * Configure the Query Building on DataSetRss Add/Edit forms.
@@ -314,7 +314,7 @@
             <div class="form-group">
                 <label class="col-sm-1 control-label" for="filterClause[]">{{ title }}</label>
                 <div class="col-sm-2">
-                    <label for="filterClauseOperator[]" {{#eq title "1"}}class="hidden"{{/eq}}>
+                    <label for="filterClauseOperator[]" {{#eq title "1"}}class="d-none"{{/eq}}>
                     <select class="form-control" name="filterClauseOperator[]">
                         {{#each filterOperatorOptions}}
                         <option value="{{ id }}" {{#eq id ../filterClauseOperator}}selected{{/eq}}>{{ value }}</option>

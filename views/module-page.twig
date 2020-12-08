@@ -26,13 +26,13 @@
 {% block title %}{{ "Modules"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right p-2">
+    <div class="widget-action-menu pull-right">
         {% if modulesToInstall|length > 0 %}
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Modules available to Install" %}" href="{{ url_for("module.install.list.form") }}"><i class="fa fa-upload" aria-hidden="true"></i> {% trans "Install Module" %}</a></li>
+        <button class="btn btn-success XiboFormButton" title="{% trans "Modules available to Install" %}" href="{{ url_for("module.install.list.form") }}"><i class="fa fa-upload" aria-hidden="true"></i> {% trans "Install Module" %}</button>
         {% endif %}
-        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Verify all modules have been installed correctly." %}" href="{{ url_for("module.verify.form") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Verify All" %}</a></li>
-        <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
-    </ul>
+        <button class="btn btn-info XiboFormButton" title="{% trans "Verify all modules have been installed correctly." %}" href="{{ url_for("module.verify.form") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Verify All" %}</button>
+        <button class="btn btn btn-secondary" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -47,7 +47,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="modules" class="table table-striped" data-state-preference-name="moduleGrid">
                         <thead>
                             <tr>
@@ -110,7 +110,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#modules_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#modules_wrapper').find('.col-md-6').eq(1));
 
         function installModuleComplete()
         {

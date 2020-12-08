@@ -27,9 +27,9 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabled("daypart.add") %}
-    <ul class="nav nav-pills pull-right p-2">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("daypart.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Daypart" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" href="{{ url_for("daypart.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Daypart" %}</button>
+    </div>
     {% endif %}
 {% endblock %}
 
@@ -39,13 +39,12 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv card-body" id="Filter">
+                    <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="dayparts" class="table table-striped" data-state-preference-name="daypartGrid">
                         <thead>
                             <tr>
@@ -101,7 +100,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#dayparts_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#dayparts_wrapper').find('.col-md-6').eq(1));
 
         function dayPartFormOpen(dialog) {
             // Render a set of exceptions

@@ -25,11 +25,11 @@
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right p-2">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=summaryReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
-        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=summaryReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}?reportName=summaryReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+        <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}?reportName=summaryReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -55,7 +55,7 @@
         </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilterCustom">
+                <div class="XiboFilterCustom card bg-light mb-3">
                     <div class="FilterDiv card-body" id="summaryReport">
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
@@ -153,7 +153,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <canvas id="reportChart" style="clear:both; margin-top:25px;" height="70%"></canvas>
                     <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
                 </div>
@@ -376,38 +376,38 @@
                 var mediaVal = $("#mediaId").val();
                 var layoutVal = $("#layoutId").val();
                 var eventTagVal = $("#eventTag").val();
-                var anchorReportAddBtn = $("a#reportAddBtn");
+                var reportAddBtn = $("button#reportAddBtn");
 
                 var typeVal = $("#type").val();
 
                 if ( typeVal === 'layout') {
                     if (layoutVal == null) {
-                        anchorReportAddBtn.parent().addClass('disabled');
-                        anchorReportAddBtn.removeAttr('href');
+                        reportAddBtn.addClass('disabled');
+                        reportAddBtn.removeAttr('href');
                     } else {
-                        anchorReportAddBtn.parent().removeClass('disabled');
-                        anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
-                        anchorReportAddBtn.removeAttr('title');
+                        reportAddBtn.removeClass('disabled');
+                        reportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&layoutId=" + layoutVal + "&reportName=summaryReport" );
+                        reportAddBtn.removeAttr('title');
 
                     }
                 } else if ( typeVal === 'media') {
                     if (mediaVal == null) {
-                        anchorReportAddBtn.parent().addClass('disabled');
-                        anchorReportAddBtn.removeAttr('href');
+                        reportAddBtn.addClass('disabled');
+                        reportAddBtn.removeAttr('href');
                     } else {
-                        anchorReportAddBtn.parent().removeClass('disabled');
-                        anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=summaryReport" );
-                        anchorReportAddBtn.removeAttr('title');
+                        reportAddBtn.removeClass('disabled');
+                        reportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&mediaId=" + mediaVal + "&reportName=summaryReport" );
+                        reportAddBtn.removeAttr('title');
 
                     }
                 } else if ( typeVal === 'event') {
                     if (eventTagVal == null) {
-                        anchorReportAddBtn.parent().addClass('disabled');
-                        anchorReportAddBtn.removeAttr('href');
+                        reportAddBtn.addClass('disabled');
+                        reportAddBtn.removeAttr('href');
                     } else {
-                        anchorReportAddBtn.parent().removeClass('disabled');
-                        anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=summaryReport" );
-                        anchorReportAddBtn.removeAttr('title');
+                        reportAddBtn.removeClass('disabled');
+                        reportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?type=" + typeVal + "&eventTag=" + eventTagVal + "&reportName=summaryReport" );
+                        reportAddBtn.removeAttr('title');
 
                     }
                 }

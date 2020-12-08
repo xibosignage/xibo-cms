@@ -28,9 +28,9 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabled("dataset.add") %}
-    <ul class="nav nav-pills pull-right p-2">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ url_for("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ url_for("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</button>
+    </div>
     {% endif %}
 {% endblock %}
 
@@ -39,7 +39,7 @@
         <div class="widget-title">{% trans "DataSets" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter card bg-light">
+                <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline" onsubmit="return false">
                             <div class="form-group mr-3 mb-2">
@@ -70,7 +70,7 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
                     </div>
                     <div class="form-group col-sm-11" style="padding: 0">
                         <div id="breadcrumbs" style="margin-top: 5px;"></div>
@@ -78,14 +78,14 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-sm-2 well" id="grid-folder-filter">
+                    <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
                             <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10">
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-1">
                         <div class="XiboData">
                             <table id="datasets" class="table table-striped" data-state-preference-name="dataSetGrid" style="width: 100%;">
                                 <thead>
@@ -295,7 +295,7 @@
             });
         });
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-md-6').eq(1));
 
         function dataSetFormOpen(dialog) {
             // Bind the test button
@@ -335,9 +335,9 @@
             var $remoteTabs = $(dialog).find(".tabForRemoteDataSet");
 
             if (isRemote) {
-                $remoteTabs.removeClass("hidden");
+                $remoteTabs.removeClass("d-none");
             } else {
-                $remoteTabs.addClass("hidden");
+                $remoteTabs.addClass("d-none");
             }
         }
 
@@ -347,14 +347,14 @@
             var $authFieldPassword = $(dialog).find(".auth-field-password");
 
             if (authentication === "none") {
-                $authFieldUserName.addClass("hidden");
-                $authFieldPassword.addClass("hidden");
+                $authFieldUserName.addClass("d-none");
+                $authFieldPassword.addClass("d-none");
             } else if (authentication === "bearer") {
-                $authFieldUserName.addClass("hidden");
-                $authFieldPassword.removeClass("hidden");
+                $authFieldUserName.addClass("d-none");
+                $authFieldPassword.removeClass("d-none");
             } else {
-                $authFieldUserName.removeClass("hidden");
-                $authFieldPassword.removeClass("hidden");
+                $authFieldUserName.removeClass("d-none");
+                $authFieldPassword.removeClass("d-none");
             }
         }
 
@@ -364,11 +364,11 @@
             var $csvSource = $(dialog).find(".csv-source-field");
 
             if (sourceId == 1) {
-                $jsonSource.removeClass('hidden');
-                $csvSource.addClass('hidden');
+                $jsonSource.removeClass('d-none');
+                $csvSource.addClass('d-none');
             } else {
-                $jsonSource.addClass('hidden');
-                $csvSource.removeClass('hidden');
+                $jsonSource.addClass('d-none');
+                $csvSource.removeClass('d-none');
             }
         }
 
@@ -392,7 +392,7 @@
     <script type="text/x-handlebars-template" id="template-dataset-upload">
         <form class="form-horizontal" method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)csv/i">
             <div class="row fileupload-buttonbar">
-                <div class="well">
+                <div class="card p-3 bg-light">
                     {{ upload.maxSizeMessage }} <br>
                     {{ upload.utf8Message }}
                 </div>

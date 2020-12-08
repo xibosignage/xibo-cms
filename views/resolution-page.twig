@@ -27,9 +27,9 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabled("resolution.add") %}
-    <ul class="nav nav-pills pull-right p-2">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ url_for("resolution.add.form") }}"><span class="fa fa-plus"></span> {% trans "Add Resolution" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ url_for("resolution.add.form") }}"><span class="fa fa-plus"></span> {% trans "Add Resolution" %}</button>
+    </div>
     {% endif %}
 {% endblock %}
 
@@ -39,7 +39,7 @@
         <div class="widget-title">{% trans "Resolution" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="resolutionView">
-                <div class="XiboFilter card bg-light">
+                <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "Enabled" %}{% endset %}
@@ -50,7 +50,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="resolutions" class="table table-striped" data-state-preference-name="resolutionGrid">
                         <thead>
                             <tr>
@@ -108,7 +108,7 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#resolutions_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#resolutions_wrapper').find('.col-md-6').eq(1));
         });
     </script>
 {% endblock %}

@@ -26,11 +26,11 @@
 {% block title %}{{ "Settings"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right p-2">
+    <div class="widget-action-menu pull-right">
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED %}
-            <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("maintenance.libraryTidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
+            <button class="btn btn-danger XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("maintenance.libraryTidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</button>
         {% endif %}
-    </ul>
+    </div>
 {% endblock %}
 
 {% block pageContent %}

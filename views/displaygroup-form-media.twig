@@ -40,7 +40,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <div id="FileAssociationsAssign" class="well" data-url="{{ url_for("displayGroup.assign.media", {id: displayGroup.displayGroupId}) }}">
+            <div id="FileAssociationsAssign" class="card p-3 bg-light" data-url="{{ url_for("displayGroup.assign.media", {id: displayGroup.displayGroupId}) }}">
                 <div>
                     <ul id="FileAssociationsSortable">
                         {% for item in media %}
@@ -59,7 +59,7 @@
                     {{ inline.dropdown("type", "single", "Type", "", [{type: null, module: ""}]|merge(modules), "type", "name") }}
                     </form>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="mediaAssignments" data-url="{{ url_for("library.search") }}" class="table table-striped">
                         <thead>
                         <tr>

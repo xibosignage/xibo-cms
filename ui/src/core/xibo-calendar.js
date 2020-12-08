@@ -141,9 +141,9 @@ $(document).ready(function() {
 
         // Location map button
         $('#toggleMap').off().click(function() {
-            $map.toggleClass('hidden');
+            $map.toggleClass('d-none');
 
-            if(!$map.hasClass('hidden')) {
+            if(!$map.hasClass('d-none')) {
                 generateFilterGeoMap();
             }
         });
@@ -154,7 +154,7 @@ $(document).ready(function() {
             $('#geoLatitude').val('').change();
             $('#geoLongitude').val('').change();
 
-            if(!$map.hasClass('hidden')) {
+            if(!$map.hasClass('d-none')) {
                 generateFilterGeoMap();
             }
         });
@@ -557,7 +557,7 @@ var setupScheduleForm = function(dialog) {
         $('.nav-tabs a').on('shown.bs.tab', function(event){
             if ($(event.target).text() === 'Geo Location') {
 
-                $('#geoScheduleMap').removeClass('hidden');
+                $('#geoScheduleMap').removeClass('d-none');
                 generateGeoMap();
             }
         });
@@ -568,10 +568,10 @@ var setupScheduleForm = function(dialog) {
         isGeoAware = $('#isGeoAware').is(':checked');
 
         if (isGeoAware) {
-            $('#geoScheduleMap').removeClass('hidden');
+            $('#geoScheduleMap').removeClass('d-none');
             generateGeoMap();
         } else {
-            $('#geoScheduleMap').addClass('hidden');
+            $('#geoScheduleMap').addClass('d-none');
         }
     });
 
@@ -1129,7 +1129,7 @@ var scheduleNowFormEvaluateDates = function(form) {
             toDt.add(seconds, "seconds");
 
         // Update the message div
-        $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("hidden");
+        $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("d-none");
 
         // Update the final submit fields
         $("#fromDt").val(fromDt.format(systemDateFormat));

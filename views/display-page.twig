@@ -26,12 +26,12 @@
 {% block title %}{{ "Displays"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right p-2">
+    <div class="widget-action-menu pull-right">
         {% if currentUser.featureEnabled("displays.add") %}
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ url_for("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</a></li>
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ url_for("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</button>
         {% endif %}
-        <li class="btn btn-success btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
-    </ul>
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -39,7 +39,7 @@
         <div class="widget-title">{% trans "Displays" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayView">
-                <div class="XiboFilter card bg-light">
+                <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <ul class="nav nav-tabs" role="tablist">
                             <li class="nav-item"><a class="nav-link active" href="#filter-general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
@@ -189,7 +189,7 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
                     </div>
                     <div class="form-group col-sm-11" style="padding: 0">
                         <div id="breadcrumbs" style="margin-top: 5px;"></div>
@@ -197,14 +197,14 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-sm-2 well" id="grid-folder-filter">
+                    <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
                             <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10">
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-1">
                         <div class="XiboData">
                             <table id="displays" class="table table-striped" data-content-type="display" data-content-id-name="displayId" data-state-preference-name="displayGrid" style="width: 100%;">
                                 <thead>
@@ -531,7 +531,7 @@
             table.on('draw', dataTableDraw);
             table.on('draw', { form: $("#displays").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#displays_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#displays_wrapper').find('.col-md-6').eq(1));
 
             $("#refreshGrid").click(function () {
                 table.ajax.reload();

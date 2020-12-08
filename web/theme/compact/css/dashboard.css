@@ -293,7 +293,7 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
   background-color: #f6f6f6;
   padding: 10px 15px;
   border-bottom: 1px solid #e9e9e9;
-  line-height: 30px;
+  line-height: 29px;
 }
 .widget .widget-title i {
   margin-right: 5px;
@@ -367,6 +367,9 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 .widget .widget-content .title {
   font-size: 1.75rem;
   display: block;
+}
+.widget-action-menu {
+    padding: 8px;
 }
 
 /* Blue */

@@ -63,7 +63,7 @@
                         {% set helpText %}{% trans %}Check or un-check the options against each display to control whether they are a member or not.{% endtrans %}{% endset %}
                         {{ forms.message(helpText) }}
                         <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayDGView">
-                            <div class="XiboFilter card bg-light">
+                            <div class="XiboFilter card mb-3 bg-light">
                                 <div class="FilterDiv card-body" id="Filter">
                                     <form class="form-inline" id="displayForm">
                                         {% set title %}{% trans "Name" %}{% endset %}
@@ -97,7 +97,7 @@
                         {% set helpText %}{% trans %}Check or un-check the options against each display group to control whether they are a member or not.{% endtrans %}{% endset %}
                         {{ forms.message(helpText) }}
                         <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayGroupDGView">
-                            <div class="XiboFilter card bg-light">
+                            <div class="XiboFilter card mb-3 bg-light">
                                 <div class="FilterDiv card-body" id="Filter">
                                     <form class="form-inline" id="displayGroupForm">
                                         {% set title %}{% trans "Name" %}{% endset %}

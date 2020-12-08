@@ -54,7 +54,7 @@
                      data-url="{{ url_for("user.permissions.multi", {entity: entity}) }}"
                      data-target-ids="{{ objectIds }}">
                     <div class="permissionsMultiTableFilter">
-                        <div class="XiboFilter card bg-light">
+                        <div class="XiboFilter card mb-3 bg-light">
                             <div class="FilterDiv card-body" id="Filter">
                                 <form class="form-inline">
                                     {% set title %}{% trans "Name" %}{% endset %}
@@ -69,7 +69,7 @@
                     {% endset %}
                     {{ forms.message(multiplePermissionsMessage) }}
                     
-                    <div class="XiboData">
+                    <div class="XiboData card pt-3">
                         <table id="permissionsMultiTable" class="table table-striped">
                             <thead>
                             <tr>

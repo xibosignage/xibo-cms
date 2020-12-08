@@ -43,7 +43,7 @@
             <div class="alert alert-warning">
                 {% trans "Assigning a Layout to a Display/DisplayGroup does NOT schedule that Layout to be shown. Please use the Schedule to show Layouts." %}
             </div>
-            <div id="FileAssociationsAssign" class="well" data-url="{{ url_for("displayGroup.assign.layout", {id: displayGroup.displayGroupId}) }}">
+            <div id="FileAssociationsAssign" class="card p-3 bg-light" data-url="{{ url_for("displayGroup.assign.layout", {id: displayGroup.displayGroupId}) }}">
                 <div>
                     <ul id="FileAssociationsSortable">
                         {% for item in layouts %}
@@ -62,7 +62,7 @@
 
                     </form>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="layoutAssignments" data-url="{{ url_for("layout.search") }}" class="table table-striped" data-state-preference-name="campaignLayoutAssignGrid">
                         <thead>
                         <tr>

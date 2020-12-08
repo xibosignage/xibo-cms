@@ -129,10 +129,8 @@
     {% verbatim %}
     <script type="text/x-handlebars-template" id="buttons-template">
         <div class="btn-group pull-right">
-            <button class="btn dropdown-toggle" data-toggle="dropdown">
-                <span class="fa fa-caret-down"></span>
-            </button>
-            <div class="dropdown-menu">
+            <button class="btn dropdown-toggle" data-toggle="dropdown"></button>
+            <div class="dropdown-menu dropdown-menu-right">
                 {{#each buttons}}
                     {{#if divider}}
                         <div class="dropdown-divider"></div>
@@ -164,11 +162,10 @@
 
     <script type="text/x-handlebars-template" id="multiselect-button-template">
         <div class="btn-group dropup">
-            <button class="btn select-all" data-toggle="selectAll">
+            <button class="btn btn-primary select-all" data-toggle="selectAll">
                 {{ selectAll }}
             </button>
             <button class="btn btn-white dropdown-toggle" data-toggle="dropdown">
-                <span class="fa fa-caret-down"></span>
                 {{ withSelected }}
             </button>
             <div class="dropdown-menu">
@@ -332,7 +329,7 @@
                 </div>
             </div>
 
-            <div id="tagValueRequired" class="alert alert-info hidden">
+            <div id="tagValueRequired" class="alert alert-info d-none">
                 <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
             </div>
 
@@ -354,12 +351,12 @@
             {% trans "Player Status Window"%}:
             {% verbatim %}
                 {{#eq type "android"}}
-                    <div class="well">
+                    <div class="card p-3 bg-light">
                           <span>{{{data}}}</span>
                     </div>
                 {{/eq}}
                 {{#neq type "android"}}
-                    <div class="well">
+                    <div class="card p-3 bg-light">
                         <ul>
                             {{#each data as |value key|}}
                             <li>{{key}}: {{value}}</li>
@@ -396,7 +393,7 @@
                         <h4 class="modal-title">{% trans "Select Folder" %}</h4>
                     </div>
                     <div class="modal-body">
-                        <div class="form-group well">
+                        <div class="form-group card p-3 bg-light">
                             {% verbatim %}
                                 <div id="{{ container }}"></div>
                             {% endverbatim %}
@@ -429,7 +426,7 @@
 
     <script  type="text/javascript">
         function moveFolderMultiSelectFormOpen(dialog) {
-            var folderContainer = '<div class="well" id="container-folder-form-tree"></div>';
+            var folderContainer = '<div class="card p-3 bg-light" id="container-folder-form-tree"></div>';
             var $hiddenInput = $('<input name="folderId" type="hidden" id="formFolderId">');
 
             $hiddenInput.on('change', function() {

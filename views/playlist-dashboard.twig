@@ -50,7 +50,7 @@
             </div>
         </div>
         <div class="col-lg-6">
-            <div class="well">
+            <div class="card p-3 bg-light">
                 <h3>{% trans "Playlist Content" %}</h3>
                 <p>Fill empty Spots by clicking on ‘Add’ to select the media file you wish to use.</p>
 
@@ -95,7 +95,7 @@
                 }).fail(function () {
                     $('<span class="alert alert-error"/>')
                         .text('Upload server currently unavailable - ' + new Date())
-                        .appendTo($('.well'));
+                        .appendTo($('.card'));
                 });
             }
 

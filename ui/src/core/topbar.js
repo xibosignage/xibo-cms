@@ -129,7 +129,7 @@ Topbar.prototype.render = function() {
 
         // Reset tour
         if(typeof app.resetTour === 'function') {
-            self.DOMObject.find('#resetTour').removeClass('hidden').off().click(function() {
+            self.DOMObject.find('#resetTour').removeClass('d-none').off().click(function() {
                 app.resetTour();
             });
         }

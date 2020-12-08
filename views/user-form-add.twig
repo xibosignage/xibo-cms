@@ -100,7 +100,7 @@
                         {% set helpText %}{% trans "Select a User Group for this User so that they get access to the parts of the application they need." %}{% endset %}
                         {{ forms.dropdown("groupId", "single", title, null, [], "groupId", "group", helpText, "pagedSelect", "", "", "", attributes) }}
 
-                        {{ forms.message("User Groups are an easy way to configure a set of features and permissions which can be applied to multiple users. After adding a User they can be assigned to multiple Groups or have individual permissions assigned to them directly."|trans, "well") }}
+                        {{ forms.message("User Groups are an easy way to configure a set of features and permissions which can be applied to multiple users. After adding a User they can be assigned to multiple Groups or have individual permissions assigned to them directly."|trans, "card p-3 bg-light") }}
 
                         {% set title %}{% trans "Homepage" %}{% endset %}
                         {% set helpText %}{% trans "Homepage for this user. This is the page they will be taken to when they login." %}{% endset %}

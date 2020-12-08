@@ -227,7 +227,7 @@
                         {% set helpText %}{% trans "Should this event be location aware? Enable this checkbox and select an area by drawing a polygon or rectangle layer on the map below." %}{% endset %}
                         {{ forms.checkbox("isGeoAware", title, 0, helpText, "") }}
 
-                        <div id="geoScheduleMap" style="height: 500px; width: 100%" class="hidden"></div>
+                        <div id="geoScheduleMap" style="height: 500px; width: 100%" class="d-none"></div>
 
                         {{ forms.hidden("geoLocation", "") }}
                     </div>

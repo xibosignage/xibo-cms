@@ -1057,9 +1057,9 @@ function regionEditFormSubmit() {
 
 function userProfileEditFormOpen() {
 
-    $("#qRCode").addClass("hidden");
-    $("#recoveryButtons").addClass("hidden");
-    $("#recoveryCodes").addClass("hidden");
+    $("#qRCode").addClass("d-none");
+    $("#recoveryButtons").addClass("d-none");
+    $("#recoveryCodes").addClass("d-none");
 
     $("#twoFactorTypeId").on("change", function (e) {
         e.preventDefault();
@@ -1078,29 +1078,29 @@ function userProfileEditFormOpen() {
                     $("#qr").removeClass('fa fa-spinner fa-spin loading-icon')
                 }
             });
-            $("#qRCode").removeClass("hidden");
+            $("#qRCode").removeClass("d-none");
         } else {
-            $("#qRCode").addClass("hidden");
+            $("#qRCode").addClass("d-none");
         }
 
         if ($("#twoFactorTypeId").val() == 0) {
-            $("#recoveryButtons").addClass("hidden");
-            $("#recoveryCodes").addClass("hidden");
+            $("#recoveryButtons").addClass("d-none");
+            $("#recoveryCodes").addClass("d-none");
         }
 
         if ($('#userEditProfileForm').data().currentuser != 0 && $("#twoFactorTypeId").val() != 0) {
-            $("#recoveryButtons").removeClass("hidden");
+            $("#recoveryButtons").removeClass("d-none");
         }
     });
 
     if ($('#userEditProfileForm').data().currentuser != 0) {
-        $("#recoveryButtons").removeClass("hidden");
+        $("#recoveryButtons").removeClass("d-none");
     }
     let generatedCodes = '';
 
     $('#generateCodesBtn').on("click", function (e) {
         $("#codesList").html("");
-        $("#recoveryCodes").removeClass('hidden');
+        $("#recoveryCodes").removeClass('d-none');
         $(".recBtn").attr("disabled", true).addClass("disabled");
         generatedCodes = '';
 
@@ -1109,11 +1109,11 @@ function userProfileEditFormOpen() {
             async: false,
             type: "GET",
             beforeSend: function () {
-                $("#codesList").removeClass('well').addClass('fa fa-spinner fa-spin loading-icon');
+                $("#codesList").removeClass('card').addClass('fa fa-spinner fa-spin loading-icon');
             },
             success: function (response) {
                 generatedCodes = JSON.parse(response.data.codes);
-                $("#recoveryCodes").addClass('hidden');
+                $("#recoveryCodes").addClass('d-none');
                 $(".recBtn").attr("disabled", false).removeClass("disabled");
                 $('#showCodesBtn').click();
             },
@@ -1126,7 +1126,7 @@ function userProfileEditFormOpen() {
     $('#showCodesBtn').on("click", function (e) {
         $(".recBtn").attr("disabled", true).addClass("disabled");
         $("#codesList").html("");
-        $("#recoveryCodes").toggleClass('hidden');
+        $("#recoveryCodes").toggleClass('d-none');
         let codesList = [];
 
         $.ajax({
@@ -1146,7 +1146,7 @@ function userProfileEditFormOpen() {
                 $.each(codesList, function (index, value) {
                     $("#codesList").append(value + "<br/>");
                 });
-                $("#codesList").addClass('well');
+                $("#codesList").addClass('card');
                 $(".recBtn").attr("disabled", false).removeClass("disabled");
             }
         });
@@ -1154,7 +1154,7 @@ function userProfileEditFormOpen() {
 }
 
 function tagsWithValues(formId) {
-    $('#tagValue, label[for="tagValue"], #tagValueRequired').addClass("hidden");
+    $('#tagValue, label[for="tagValue"], #tagValueRequired').addClass("d-none");
     $('#tagValueContainer').hide();
 
     let tag;
@@ -1192,7 +1192,7 @@ function tagsWithValues(formId) {
                             tagIsRequired = response.data.tag.isRequired;
 
                             if (tagOptions != null && tagOptions != []) {
-                                $('#tagValue, label[for="tagValue"]').removeClass("hidden");
+                                $('#tagValue, label[for="tagValue"]').removeClass("d-none");
 
                                 if ($('#tagValue option[value=""]').length <= 0) {
                                     $('#tagValue')
@@ -1252,19 +1252,19 @@ function tagsWithValues(formId) {
 
     $(formSelector).on('itemRemoved', function(event) {
         if(tagN === event.item) {
-            $('#tagValueRequired, label[for="tagValue"]').addClass('hidden');
+            $('#tagValueRequired, label[for="tagValue"]').addClass('d-none');
             $('.save-button').prop('disabled', false);
-            $('#tagValue').html('').addClass("hidden");
+            $('#tagValue').html('').addClass("d-none");
             $('#tagValueInput').val('');
             $('#tagValueContainer').hide();
             tagN = '';
         } else if ($(".save-button").is(":disabled")) {
             // do nothing with jQuery
         } else {
-            $('#tagValue').html('').addClass("hidden");
+            $('#tagValue').html('').addClass("d-none");
             $('#tagValueInput').val('');
             $('#tagValueContainer').hide();
-            $('label[for="tagValue"]').addClass("hidden");
+            $('label[for="tagValue"]').addClass("d-none");
         }
     });
 
@@ -1277,11 +1277,11 @@ function tagsWithValues(formId) {
             if (tagIsRequired === 0 || (tagIsRequired === 1 && $(this).val() !== '')) {
                 $(formSelector).tagsinput('add', tagWithOption);
                 $(formSelector).tagsinput('remove', tagN);
-                $('#tagValue').html('').addClass("hidden");
-                $('#tagValueRequired, label[for="tagValue"]').addClass('hidden');
+                $('#tagValue').html('').addClass("d-none");
+                $('#tagValueRequired, label[for="tagValue"]').addClass('d-none');
                 $('.save-button').prop('disabled', false);
             } else {
-                $('#tagValueRequired').removeClass('hidden');
+                $('#tagValueRequired').removeClass('d-none');
                 $('#tagValue').focus();
             }
         }
@@ -1289,12 +1289,12 @@ function tagsWithValues(formId) {
 
     $('#tagValue').blur(function() {
         if($(this).val() === '' && tagIsRequired === 1 ) {
-            $('#tagValueRequired').removeClass('hidden');
+            $('#tagValueRequired').removeClass('d-none');
             $('#tagValue').focus();
             $('.save-button').prop('disabled', true);
         } else {
-            $('#tagValue').html('').addClass("hidden");
-            $('label[for="tagValue"]').addClass("hidden");
+            $('#tagValue').html('').addClass("d-none");
+            $('label[for="tagValue"]').addClass("d-none");
         }
     });
 
@@ -1314,11 +1314,11 @@ function tagsWithValues(formId) {
 
                 $('#tagValueInput').val('');
                 $('#tagValueContainer').hide();
-                $('#tagValueRequired').addClass('hidden');
+                $('#tagValueRequired').addClass('d-none');
                 $('.save-button').prop('disabled', false);
             } else {
                 $('#tagValueContainer').show();
-                $('#tagValueRequired').removeClass('hidden');
+                $('#tagValueRequired').removeClass('d-none');
                 $('#tagValueInput').focus();
             }
         }

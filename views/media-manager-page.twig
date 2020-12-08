@@ -29,7 +29,7 @@
         <div class="widget-title">{% trans "All Editable Widgets" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="mediaManagerView">
-                <div class="XiboFilter card bg-light">
+                <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
@@ -58,7 +58,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="entries" class="table table-striped">
                         <thead>
                             <tr>
@@ -223,7 +223,7 @@
                 });
             });
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#entries_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#entries_wrapper').find('.col-md-6').eq(1));
         });
 
         /**

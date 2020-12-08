@@ -97,7 +97,7 @@
         {% endif %}
 
         {% if passwordReminderEnabled %}
-        <form id="reminder-form" class="form-signin text-center hidden" action="{{ url_for("login.forgotten") }}" method="post">
+        <form id="reminder-form" class="form-signin text-center d-none" action="{{ url_for("login.forgotten") }}" method="post">
             <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
             <p><a href="{{ theme.getThemeConfig("theme_url") }}"><img class="login-logo" src="{{ theme.uri("img/xibologo.png") }}"></a></p>
 
@@ -126,15 +126,15 @@
             $("#reminder-form-toggle").on("click", function (e) {
                 e.preventDefault();
 
-                $("#login-form").addClass("hidden");
-                $("#reminder-form").removeClass("hidden");
+                $("#login-form").addClass("d-none");
+                $("#reminder-form").removeClass("d-none");
             });
 
             $("#login-form-toggle").on("click", function (e) {
                 e.preventDefault();
 
-                $("#login-form").removeClass("hidden");
-                $("#reminder-form").addClass("hidden");
+                $("#login-form").removeClass("d-none");
+                $("#reminder-form").addClass("d-none");
             });
         });
     </script>

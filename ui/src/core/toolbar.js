@@ -515,7 +515,7 @@ Toolbar.prototype.render = function() {
 
         // Reset tour
         if(typeof app.resetTour === 'function') {
-            self.DOMObject.find('#resetTour').removeClass('hidden').off().click(function() {
+            self.DOMObject.find('#resetTour').removeClass('d-none').off().click(function() {
                 app.resetTour();
             });
         }
@@ -1151,7 +1151,7 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
  */
 Toolbar.prototype.tablePositionUpdate = function(container) {
     // Calculate table container height
-    const tableContainerHeight = container.find('.media-search-controls').height() + container.find('.media-search-form:not(.hidden)').height() + container.find('.dataTables_wrapper').height();
+    const tableContainerHeight = container.find('.media-search-controls').height() + container.find('.media-search-form:not(.d-none)').height() + container.find('.dataTables_wrapper').height();
 
     // Set resizable min height
     if(container.resizable('instance') != undefined) {

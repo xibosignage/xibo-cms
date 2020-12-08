@@ -27,9 +27,9 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabled("template.add") %}
-        <ul class="nav nav-pills pull-right p-2">
-            <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Template and jump to the layout designer." %}" href="{{ url_for("template.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Template" %}</a></li>
-        </ul>
+        <div class="widget-action-menu pull-right">
+            <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Template and jump to the layout designer." %}" href="{{ url_for("template.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Template" %}</button>
+        </div>
     {% endif %}
 {% endblock %}
 
@@ -38,7 +38,7 @@
         <div class="widget-title">{% trans "Templates" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="templateView">
-                <div class="XiboFilter card bg-light">
+                <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "Name" %}{% endset %}
@@ -53,7 +53,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="templates" class="table table-striped" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="templateGrid">
                         <thead>
                             <tr>
@@ -118,7 +118,7 @@
         table.on('draw', dataTableDraw);
         table.on('draw', { form: $("#templates").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#templates_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#templates_wrapper').find('.col-md-6').eq(1));
 
         function templateFormOpen() {
             $("#templateAddForm").submit(function(e) {

@@ -172,16 +172,16 @@ div.action-controller .action-controller-title .toggle:after {
     content: ' \002D';
 }
 
-div.action-controller.hidden .action-controller-title .toggle:after {
+div.action-controller.d-none .action-controller-title .toggle:after {
     content: ' \002B';
 }
 
-div.action-controller.hidden {
+div.action-controller.d-none {
     opacity: 0.7;
     filter: alpha(opacity=70); /* IE8 and lower */
 }
 
-div.action-controller.hidden .action {
+div.action-controller.d-none .action {
     display: none;
 }
 

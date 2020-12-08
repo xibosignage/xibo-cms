@@ -37,7 +37,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="transitions" class="table table-striped">
                         <thead>
                             <tr>
@@ -94,6 +94,6 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#transitions_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#transitions_wrapper').find('.col-md-6').eq(1));
     </script>
 {% endblock %}

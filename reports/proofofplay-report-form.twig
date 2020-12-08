@@ -25,11 +25,11 @@
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right p-2">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=proofofplayReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
-        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=proofofplayReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}?reportName=proofofplayReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+        <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}?reportName=proofofplayReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -55,7 +55,7 @@
         </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView">
-                <div class="XiboFilterCustom well">
+                <div class="XiboFilterCustom card bg-light mb-3">
                     <div class="FilterDiv card-body" id="proofofplayReport">
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
@@ -178,7 +178,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="stats" class="table table-striped" data-state-preference-name="proofOfPlayGrid">
                         <thead>
                         <tr>
@@ -286,7 +286,7 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#stats_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#stats_wrapper').find('.col-md-6').eq(1));
 
             // Apply
             $("#applyBtn").click(function () {
@@ -353,7 +353,7 @@
                     }
                 });
 
-                var anchorReportAddBtn = $("a#reportAddBtn");
+                var anchorReportAddBtn = $("button#reportAddBtn");
                 var type = $("#type").val();
                 var tagsType = $("#tagsType").val();
                 var tags = $("#tags").val();

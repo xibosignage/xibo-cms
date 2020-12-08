@@ -26,9 +26,9 @@
 {% block title %}{{ "Tags"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right p-2">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Tag" %}" href="{{ url_for("tag.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Tag" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new Tag" %}" href="{{ url_for("tag.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i>  {% trans "Add Tag" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -36,7 +36,7 @@
         <div class="widget-title">{% trans "Tags" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="tagView">
-                <div class="XiboFilter card bg-light">
+                <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "ID" %}{% endset %}
@@ -64,7 +64,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="tags" class="table table-striped">
                         <thead>
                         <tr>
@@ -146,6 +146,6 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#tags_wrapper').find('.col-sm-6').eq(1), false);
+        dataTableAddButtons(table, $('#tags_wrapper').find('.col-md-6').eq(1), false);
     </script>
 {% endblock %}

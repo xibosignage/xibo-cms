@@ -92,7 +92,7 @@
                 {{ forms.number("seconds", title, "", helpText, "schedule-now-seconds-field duration-part") }}
 
                 {% set title %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] in the CMS timezone, please check this covers each of your Displays in their respective timezones.{% endtrans %}{% endset %}
-                <div class="alert alert-info scheduleNowMessage hidden" data-template="{{ title }}"></div>
+                <div class="alert alert-info scheduleNowMessage d-none" data-template="{{ title }}"></div>
 
                 {% set title %}{% trans "Display" %}{% endset %}
                 {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}

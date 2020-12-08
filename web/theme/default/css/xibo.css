@@ -22,6 +22,10 @@ html {
     font-size: 14px; /* Root default font size */
 }
 
+.hidden {
+    display: none !important; /* bootstrap 3 fix */
+}
+
 .xibo-logo {
     height: 40px;
     margin-left: 15px;
@@ -428,12 +432,6 @@ div.dt-buttons {
 /* Reset for nav pills to have a transparent hover */
 .nav-pills > li > a:hover, .nav-pills > li > a:focus {
     background-color: transparent !important;
-}
-
-ul li a.btns {
-    color: #fff !important;
-    font-size: 1.1em;
-
 }
 
 /* WIZARD ASSISTANT  */
@@ -1017,7 +1015,7 @@ ul li.active.tab-design:hover a {
     margin: 2px;
 }
 
-.template-override-controls .well {
+.template-override-controls .card.bg-light {
     min-height: 100px;
 }
 
@@ -1272,4 +1270,9 @@ td.feature-group-header-cell {
 
 .mini-layout-preview.show #content, .mini-layout-preview.show #playBtn {
     opacity: 1;
+}
+
+div.dataTables_wrapper div.dataTables_info {
+    white-space: nowrap;
+    padding-top: 0;
 }

@@ -26,15 +26,10 @@
 {% block title %}{{ "Logs"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right p-2">
-        <li class="btn btn-warning btn-xs">
-            <a class="XiboFormButton btns" title="{% trans "Truncate the Log" %}" href="{{ url_for("log.truncate.form") }}"
-               data-auto-submit="true" data-commit-url="{{ url_for("log.truncate") }}" data-commit-method="DELETE">
-                <i class="fa fa-scissors" aria-hidden="true"></i> {% trans "Truncate" %}
-            </a>
-        </li>
-        <li class="btn btn-success btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-warning XiboFormButton" title="{% trans "Truncate the Log" %}" href="{{ url_for("log.truncate.form") }}" data-auto-submit="true" data-commit-url="{{ url_for("log.truncate") }}" data-commit-method="DELETE"><i class="fa fa-scissors" aria-hidden="true"></i> {% trans "Truncate" %}</button>
+        <button class="btn btn-success" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+    </div>
 {% endblock %}
 
 
@@ -43,7 +38,7 @@
         <div class="widget-title">{% trans "Logs" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="logView">
-                <div class="XiboFilter card bg-light">
+                <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <ul class="nav nav-tabs" role="tablist">
                             <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
@@ -167,7 +162,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="logs" class="table table-striped" data-state-preference-name="logGrid">
                         <thead>
                             <tr>
@@ -226,7 +221,7 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#logs_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#logs_wrapper').find('.col-md-6').eq(1));
 
             $("#refreshLog").click(function() {
                 table.ajax.reload();

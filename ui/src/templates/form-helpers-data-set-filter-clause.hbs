@@ -1,6 +1,6 @@
 <div class="form-inline text-center">
     <label class="form-group">{{ title }}</label>
-    <div class="form-group" {{#eq title "1"}}class="hidden"{{/eq}}>
+    <div class="form-group" {{#eq title "1"}}class="d-none"{{/eq}}>
         <select class="form-control" name="filterClauseOperator[]">
             {{#each filterOperatorOptions}}
                 <option value="{{ id }}" {{#eq id ../filterClauseOperator}}selected{{/eq}}>{{ value }}</option>

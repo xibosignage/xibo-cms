@@ -818,7 +818,7 @@ function ActionController(parent, actions, options) {
 
     // Toggle actions visibility
     $container.find('.toggle').click(function() {
-        $container.toggleClass('hidden');
+        $container.toggleClass('d-none');
     });
 
     // Display according to the number of clickable actions

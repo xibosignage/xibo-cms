@@ -66,7 +66,7 @@
                 {% set title %}{% trans "Layout / Campaign" %}{% endset %}
                 {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
 
-                <select name="campaignId" id="campaignId" class="hidden form-control"
+                <select name="campaignId" id="campaignId" class="d-none form-control"
                     data-search-url= "{{ url_for("campaign.search") }}"
                     data-trans-campaigns= "{% trans "Campaigns" %}"
                     data-trans-layouts= "{% trans "Layouts" %}"
@@ -138,7 +138,7 @@
 
             <!-- Geo location map -->
             <div class="cal-event-location-map" data-default-lat="{{ defaultLat }}" data-default-long="{{ defaultLong }}">
-                <div id="geoFilterAgendaMap" style="height: 400px; width: 100%" class="hidden"></div>
+                <div id="geoFilterAgendaMap" style="height: 400px; width: 100%" class="d-none"></div>
             </div>
         </div>
     </div>

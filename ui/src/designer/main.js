@@ -185,7 +185,7 @@ $(document).ready(function() {
                             inactiveCheck: function() {
                                 return (lD.layout.editable == false);
                             },
-                            inactiveCheckClass: 'hidden',
+                            inactiveCheckClass: 'd-none',
                         },
                         {
                             id: 'publishLayout',
@@ -196,7 +196,7 @@ $(document).ready(function() {
                             inactiveCheck: function() {
                                 return (lD.layout.editable == false);
                             },
-                            inactiveCheckClass: 'hidden',
+                            inactiveCheckClass: 'd-none',
                         },
                         {
                             id: 'checkoutLayout',
@@ -207,7 +207,7 @@ $(document).ready(function() {
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
                             },
-                            inactiveCheckClass: 'hidden',
+                            inactiveCheckClass: 'd-none',
                         },
                         {
                             id: 'scheduleLayout',
@@ -218,7 +218,7 @@ $(document).ready(function() {
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true || lD.layout.scheduleNowPermission == false);
                             },
-                            inactiveCheckClass: 'hidden',
+                            inactiveCheckClass: 'd-none',
                         },
                         {
                             id: 'saveTemplate',
@@ -229,7 +229,7 @@ $(document).ready(function() {
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
                             },
-                            inactiveCheckClass: 'hidden',
+                            inactiveCheckClass: 'd-none',
                         },
                         {
                             id: 'unlockLayout',

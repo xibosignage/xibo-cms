@@ -5,10 +5,10 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabled("layout.add") %}
-    <ul class="nav nav-pills pull-right p-2">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</button>
+        <button class="btn btn-info" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</button>
+    </div>
     {% endif %}
 {% endblock %}
 
@@ -17,7 +17,7 @@
         <div class="widget-title">{% trans "Layouts" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-type="layout" data-grid-name="layoutView">
-                <div class="XiboFilter card bg-light">
+                <div class="XiboFilter card mb-3 bg-light">
                     <div class="FilterDiv card-body" id="Filter">
                         <ul class="nav nav-tabs" role="tablist">
                             <li class="nav-item"><a class="nav-link active" href="#general-filter" role="tab" data-toggle="tab" aria-selected="true"><span>{% trans "General" %}</span></a></li>
@@ -103,7 +103,7 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
                     </div>
                     <div class="form-group col-sm-11" style="padding: 0">
                         <div id="breadcrumbs" style="margin-top: 5px;"></div>
@@ -111,14 +111,14 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-sm-2 well" id="grid-folder-filter">
+                    <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
                             <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10">
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-1">
                         <div class="XiboData">
                             <table id="layouts" class="table table-striped responsive nowrap" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="layoutGrid" style="width: 100%;">
                                 <thead>
@@ -299,7 +299,7 @@
             table.on('draw', dataTableDraw);
             table.on('draw', { form: $("#layouts").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#layouts_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#layouts_wrapper').find('.col-md-6').eq(1));
         });
 
         $("#layoutUploadForm").click(function(e) {

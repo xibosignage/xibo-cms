@@ -49,11 +49,11 @@
         }
     </style>
 
-    <ul class="nav nav-pills pull-right p-2">
+    <div class="widget-action-menu pull-right">
         <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
         <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=timeconnected"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
         <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=timeconnected"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
-    </ul>
+    </div>
 
 {% endblock %}
 {% block pageContent %}
@@ -88,7 +88,7 @@
                         <div style="padding-left: 20px">Green is connected %</div>
                     </div>
                 </div>
-                <div class="XiboFilterCustom">
+                <div class="XiboFilterCustom card bg-light mb-3">
                     <div class="FilterDiv card-body" id="timeconnected">
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
@@ -152,7 +152,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="records_table"></table>
                     <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
                 </div>
@@ -245,7 +245,7 @@
             var checkEnableSchedule = function() {
 
                 // Schedule button enable/disable - start
-                var anchorReportAddBtn = $("a#reportAddBtn");
+                var anchorReportAddBtn = $("button#reportAddBtn");
 
                 anchorReportAddBtn.attr("href", "{{ url_for("reportschedule.add.form") }}?reportName=timeconnected" );
             };

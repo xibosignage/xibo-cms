@@ -38,7 +38,7 @@
         {{/if}}
         <div class="row fileupload-buttonbar">
             <div class="col-md-7">
-                <div class="well">
+                <div class="card p-3 bg-light">
                     <p>{{ upload.maxSizeMessage }}</p>
                     {{#if upload.validExtensionsMessage}}
                         <p><strong>{{ upload.validExtensionsMessage }}</strong></p>
@@ -161,7 +161,7 @@
                         <div class="input-group">
                             <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
                             <input class="form-control dateTimePicker dateControl" type="text" name="widgetFromDt" id="widgetFromDt" />
-                            <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
+                            <span class="input-group-addon date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
                         </div>
                         <span class="help-block">{{ trans.widgetFromDtMessage }}</span>
                     </div>
@@ -174,7 +174,7 @@
                         <div class="input-group">
                             <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
                             <input class="form-control dateTimePicker dateControl" type="text" name="widgetToDt" id="widgetToDt" />
-                            <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
+                            <span class="input-group-addon date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
                         </div>
                         <span class="help-block">{{ trans.widgetToDtMessage }}</span>
                     </div>
