@@ -19,8 +19,9 @@
  */
 
  .xibo-calendar-controls {
-     margin-left: 10px;
+     margin-left: 0.5rem;
      line-height: 0;
+     margin-bottom: 0.5rem;
  }
  
  .xibo-calendar-controls #dateInput {
@@ -47,9 +48,9 @@
     height: 0;
     padding: 0;
     border: none;
-    position: absolute;
-    bottom: -0.25rem;
-    left: -0.26rem;
+    position: relative;
+    top: 1.8rem;
+    right: 3rem;
  }
  
  .xibo-calendar-controls.dropdown {
@@ -60,6 +61,18 @@
     .xibo-calendar-controls.dropdown {
         max-width: 360px;
     }
+ }
+
+ #calendar-progress {
+    font-size: 0rem;
+    -webkit-transition: font-size 0.2s;
+    -moz-transition: font-size 0.2s;
+    -o-transition: font-size 0.2s;
+    transition: font-size 0.2s;
+ }
+
+ #calendar-progress.show {
+    font-size: 1.5rem;
  }
 
  #cal-week-box {

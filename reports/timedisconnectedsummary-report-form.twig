@@ -36,10 +36,13 @@
 
     <div class="widget">
         <div class="widget-title">
+            <span>{% trans "Time Connected" %}</span>
+        </div>
+        <div class="widget-navigation-menu">
             <ul class="nav nav-pills">
-                <li role="presentation" class=""><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
-                <li role="presentation" class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
+                <li role="presentation" class="nav-item"><a class="nav-link" href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
                     <div class="dropdown-menu">
                         {% for reports in defaults.availableReports %}
                             {% for report in reports %}
@@ -50,7 +53,6 @@
                         {% endfor %}
                     </div>
                 </li>
-                <li role="presentation"><a class="text-success" href="#"> {% trans "Time Disconnected Summary" %} </a></li>
             </ul>
         </div>
         <div class="widget-body">

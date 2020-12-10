@@ -75,7 +75,7 @@
 
                         {% set title %}{% trans "Homepage" %}{% endset %}
                         {% set helpText %}{% trans "Homepage for this user. This is the page they will be taken to when they login." %}{% endset %}
-                        <div class="form-group">
+                        <div class="form-group row">
                             <label class="col-sm-2 control-label" for="homePageId">{{ title }}</label>
                             <div class="col-sm-10">
                                 <select name="homePageId" class="form-control homepage-select" required data-search-url="{{ url_for("user.homepages.search") }}">
@@ -91,7 +91,7 @@
 
                         {% set title %}{% trans "Library Quota" %}{% endset %}
                         {% set helpText %}{% trans "The quota that should be applied. Enter 0 for no quota." %}{% endset %}
-                        <div class="form-group">
+                        <div class="form-group row">
                             <label class="col-sm-2 control-label" for="libraryQuota">{{ title }}</label>
                             <div class="col-sm-6">
                                 <input class="form-control" name="libraryQuota" type="number" id="libraryQuota" min="0" value="{{ user.libraryQuota }}" />

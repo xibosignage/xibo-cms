@@ -602,7 +602,7 @@
             $(dialog).find('.modal-body').append($message);
 
             var $cmsAddress =   $(
-                '<div class="form-group">' +
+                '<div class="form-group row">' +
                     '<label class="col-sm-2 control-label" for="newCmsAddress" accesskey="">New CMS Address</label>' +
                     '<div class="col-sm-10">' +
                         '<input class="form-control" name="newCmsAddress" type="text" id="newCmsAddress" value="">' +
@@ -612,7 +612,7 @@
             );
 
             var $cmsKey = $(
-                '<div class="form-group">' +
+                '<div class="form-group row">' +
                     '<label class="col-sm-2 control-label" for="newCmsKey" accesskey="">New CMS Key</label>' +
                     '<div class="col-sm-10">' +
                         '<input class="form-control" name="newCmsKey" type="text" id="newCmsKey" value="">' +
@@ -622,7 +622,7 @@
             );
 
             var $authenticationCode =   $(
-                '<div class="form-group">' +
+                '<div class="form-group row">' +
                     '<label class="col-sm-2 control-label" for="twoFactorCode" accesskey="">Two Factor Code</label>' +
                     '<div class="col-sm-10">' +
                         '<input class="form-control" name="twoFactorCode" type="text" id="twoFactorCode" value="">' +
@@ -806,7 +806,7 @@
                 $(target).find('.slider').addClass('scaled-slider');
                 $(target).find('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
 
-                var $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
+                var $newButton = $('<button class="btn btn-danger btn-sm pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
                     e.stopPropagation();
                     restoreInputField(target, inputName);
                  });

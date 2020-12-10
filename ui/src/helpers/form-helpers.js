@@ -1373,7 +1373,7 @@ let formHelpers = function() {
                 type: 'button',
                 title: editorsTrans.copyToClipboard,
                 'data-container': '#properties-panel',
-                class: 'btn btn-xs copyTextAreaButton',
+                class: 'btn btn-sm copyTextAreaButton',
                 click: function() {
                     const $input = $(el);
                     let disabled = false;

@@ -83,7 +83,7 @@
 
                         {% set title %}{% trans "Dayparting" %}{% endset %}
                         {% set helpText %}{% trans "Select the dayparting information for this event. To set your own times select custom and to have the event run constantly select Always." %}{% endset %}
-                        <div class="form-group day-part-control">
+                        <div class="form-group row day-part-control">
                             <label class="col-sm-2 control-label" for="dayPartId">{{ title }}</label>
                             <div class="col-sm-10">
                                 <select class="form-control" name="dayPartId" id="dayPartId">
@@ -120,14 +120,14 @@
                         {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, event.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes) }}
 
-                        <div class="form-group preview-button-container">
+                        <div class="form-group row preview-button-container">
                             <div class="offset-md-2 col-md-10">
                                 <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview", {id: ':id'}) }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
                                 <span class="help-block">{% trans "Preview your selection in a new tab" %}</span>
                             </div>
                         </div>
 
-                        <div class="form-group interrupt-control" style="display: block;">
+                        <div class="form-group row interrupt-control">
                             <label class="col-sm-2 control-label" for="shareOfVoice" accesskey="">{% trans "Share of Voice" %}</label>
                             <div class="col-sm-5">
                                 <input class="form-control" name="shareOfVoice" type="number" id="shareOfVoice" value="{{ event.shareOfVoice }}">

@@ -803,7 +803,7 @@ function XiboInitialise(scope) {
  */
 function dataTableProcessing(e, settings, processing) {
     if (processing)
-        $(e.target).closest('.widget').children(".widget-title").append(' <span class="saving fa fa-cog fa-spin"></span>');
+        $(e.target).closest('.widget').children(".widget-title").append('<span class="saving fa fa-cog fa-spin"></span>');
     else
         $(e.target).closest('.widget').closest(".widget").find(".saving").remove();
 }

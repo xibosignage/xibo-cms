@@ -27,7 +27,7 @@
 {% block pageContent %}
     {% for key,reports in defaults.availableReports %}
         <div class="row reports-available">
-            <div class="reports-available-title">
+            <div class="reports-available-title col-sm-12 pl-0">
                 <span>{{ key }}</span>
             </div>
             {% if key == "Proof of Play" and currentUser.featureEnabled("proof-of-play") %}

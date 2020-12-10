@@ -44,14 +44,14 @@
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% if currentUser.featureEnabled('folder.view') %}
-                        <div class="form-group">
+                        <div class="form-group row">
                             <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
                             <div class="col-sm-10" style="padding-top: 7px">
                                 <span id="originalFormFolder"></span>
                             </div>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group row">
                             <label class="col-sm-2 control-label">{% trans "Move to Selected Folder:" %}</label>
                             <div class="col-sm-10">
                                 <button type="button" class="btn btn-info" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>

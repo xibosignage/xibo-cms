@@ -33,8 +33,9 @@
 
 {% block pageContent %}
     <div class="widget">
-        <div class="widget-title">{% trans "Report Schedule" %}
-            <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="{% trans "The report will be available 6AM every day." %}"></span>
+        <div class="widget-title">
+            <span>{% trans "Report Schedule" %}</span>
+            <span class="fa fa-info-circle widget-title-info px-1" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-content="{% trans "The report will be available 6AM every day." %}"></span>
         </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="reportscheduleView">

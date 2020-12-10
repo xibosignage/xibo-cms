@@ -429,11 +429,6 @@ div.dt-buttons {
     position: relative;
 }
 
-/* Reset for nav pills to have a transparent hover */
-.nav-pills > li > a:hover, .nav-pills > li > a:focus {
-    background-color: transparent !important;
-}
-
 /* WIZARD ASSISTANT  */
 
 .board {

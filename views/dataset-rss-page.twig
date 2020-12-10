@@ -286,7 +286,7 @@
 
     {% verbatim %}
         <script type="text/x-handlebars-template" id="dataSetViewOrderClauseTemplate">
-            <div class="form-group">
+            <div class="form-group row">
                 <label class="col-sm-1 control-label" for="orderClause[]">{{ title }}</label>
                 <div class="col-sm-7">
                     <select class="form-control" name="orderClause[]">
@@ -311,7 +311,7 @@
         </script>
 
         <script type="text/x-handlebars-template" id="dataSetViewFilterClauseTemplate">
-            <div class="form-group">
+            <div class="form-group row">
                 <label class="col-sm-1 control-label" for="filterClause[]">{{ title }}</label>
                 <div class="col-sm-2">
                     <label for="filterClauseOperator[]" {{#eq title "1"}}class="d-none"{{/eq}}>
