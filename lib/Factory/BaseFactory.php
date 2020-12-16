@@ -348,6 +348,15 @@ class BaseFactory
                 if (!isset($filteredNames[0])) {
                     $j = 1;
                 }
+
+                // Trim/Sanitise
+                $searchName = trim($searchName);
+
+                // Discard any incompatible
+                if ($searchName === '-') {
+                    continue;
+                }
+
                 // store searchName array
                 $searchNames[] = $searchName;
 
