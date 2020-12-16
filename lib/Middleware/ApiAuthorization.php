@@ -99,6 +99,11 @@ class ApiAuthorization implements Middleware
         $user->setChildAclDependencies($this->app->getContainer()->get('userGroupFactory'));
         $user->load();
 
+        // Block access by retired users.
+        if ($user->retired === 1) {
+            throw new AccessDeniedException(__('Sorry this account does not exist or cannot be authenticated.'));
+        }
+
         // We must check whether this user has access to the route they have requested.
         // Get the current route pattern
         $routeContext = RouteContext::fromRequest($request);
