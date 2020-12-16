@@ -101,7 +101,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $name,
                     $fileName,
                     $module->getModuleType(),
-                    (($this->options['allowMediaTypeChange'] == 1) ? $oldMedia->getOwnerId() : $this->options['userId'])
+                    $oldMedia->getOwnerId()
                 );
 
                 if ($tags != '') {
