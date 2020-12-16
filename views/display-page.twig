@@ -232,6 +232,7 @@
                                         <th>{% trans "Longitude" %}</th>
                                         <th>{% trans "Screen shot?" %}</th>
                                         <th>{% trans "Thumbnail" %}</th>
+                                        <th>{% trans "CMS Transfer?" %}</th>
                                         <th>{% trans "Bandwidth Limit" %}</th>
                                         <th>{% trans "Last Command" %}</th>
                                         <th>{% trans "XMR Registered" %}</th>
@@ -411,6 +412,12 @@
                             }
                         },
                         "visible": false
+                    },
+                    {
+                        "data": "isCmsTransferInProgress",
+                        "render": dataTableTickCrossColumn,
+                        "visible": false,
+                        "name": "isCmsTransferInProgress"
                     },
                     {
                         "name": "bandwidthLimit",
@@ -703,7 +710,7 @@
                     if( $settings.find('.multiSelect').length > 0) {
                         // Copy special fields ( timers, pictureOptions ) by selected option
                         $inputFields = $settings.find('.multiSelect option:selected[value="' + inputName + '"]').parents('.form-group:first').find('.multiSelect, .multiSelectInputs');
-                        
+
                         $inputFields.each(function(key, el) {
                             if($(el).find('.timePickerDisplayEditForm').length > 0) {
                                 timepickerOptionsFixFlag = true;
@@ -717,7 +724,7 @@
                                 $(el).find('.pictureControlsSlider').bootstrapSlider('destroy');
                             }
                         });
-                    } 
+                    }
                 } else if($inputFields.length == 1 && $inputFields.hasClass('timePicker')) {
                     timepickerFixFlag  = true;
 
@@ -758,7 +765,7 @@
                     $inputFieldsOld.find('.pictureControlsSlider').bootstrapSlider(sliderFixOptions);
                     $inputFields.find('.pictureControlsSlider').bootstrapSlider(sliderFixOptions);
                 }
-                
+
                 // Set value if defined
                 if(newValue != null) {
                     if($(target).find('.multiSelectInputs .pictureControlsSlider').length > 0) {
