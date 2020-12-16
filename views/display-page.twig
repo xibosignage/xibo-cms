@@ -818,7 +818,13 @@
                 $(target).find('.slider').addClass('scaled-slider');
                 $(target).find('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
 
-                var $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
+                // Add help text if exists on label
+                let inputHelpText = $(target).parent('tr').find('td:first strong').attr('title');
+                if(inputHelpText) {
+                    $(target).append('<div class="text-muted">' + inputHelpText + '</div>');
+                }
+
+                let $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
                     e.stopPropagation();
                     restoreInputField(target, inputName);
                  });
