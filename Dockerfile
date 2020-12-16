@@ -110,7 +110,8 @@ COPY --from=sendfile /usr/lib/apache2/mod_xsendfile.so /usr/lib/apache2/mod_xsen
 # Update the PHP.ini file
 RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php7/php.ini && \
     sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini && \
-    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini
+    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini && \
+    sed -i "s/expose_php = .*$/expose_php = Off/" /etc/php7/php.ini
 
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
