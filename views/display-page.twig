@@ -446,27 +446,37 @@
                     {
                         "name": "remote",
                         "render": function (data, type, row) {
-                            if (type !== "display")
+                            console.log(type);
+                            if (type === "display") {
+                                var html = "<div class='remote-icons'>";
+                                if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" !== "" && row.clientAddress != null && row.clientAddress !== "") {
+                                    var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', row.clientAddress);
+                                    html += '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">'
+                                        + '<i class="fa fa-eye"></i></a>';
+                                }
+
+                                if (row.teamViewerLink !== "") {
+                                    html += '<a href="' + row.teamViewerLink + '" title="{% trans "TeamViewer to this Display" %}" target="_blank">'
+                                        + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/teamviewer.png" alt="TeamViewer Icon"></a>';
+                                }
+
+                                if (row.webkeyLink !== "") {
+                                    html += '<a href="' + row.webkeyLink + '" title="{% trans "Webkey to this Display" %}" target="_blank">'
+                                        + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/webkey.png" alt="Webkey Icon"></a>';
+                                }
+
+                                return html + "</div>";
+
+                            } else if (type === "export") {
+                                if (row.teamViewerLink !== "") {
+                                    return "TeamViewer: " + row.teamViewerLink;
+                                }
+                                if (row.webkeyLink !== "") {
+                                    return "Webkey: " + row.webkeyLink;
+                                }
+                            } else {
                                 return "";
-
-                            var html = "<div class='remote-icons'>";
-                            if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" !== "" && row.clientAddress != null && row.clientAddress !== "") {
-                                var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', row.clientAddress);
-                                html += '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">'
-                                    + '<i class="fa fa-eye"></i></a>';
                             }
-
-                            if (row.teamViewerLink !== "") {
-                                html += '<a href="' + row.teamViewerLink + '" title="{% trans "TeamViewer to this Display" %}" target="_blank">'
-                                    + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/teamviewer.png" alt="TeamViewer Icon"></a>';
-                            }
-
-                            if (row.webkeyLink !== "") {
-                                html += '<a href="' + row.webkeyLink + '" title="{% trans "Webkey to this Display" %}" target="_blank">'
-                                    + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/webkey.png" alt="Webkey Icon"></a>';
-                            }
-
-                            return html + "</div>";
                         },
                         "visible": true,
                         "orderable": false
@@ -750,9 +760,11 @@
             $.each($settings, function(index, element) {
                 var $label = $(element).find('label');
                 var $input = $(element).find('input,select');
+                var $help = $(element).find('.help-block');
                 var over = $label.prop("for");
                 var value = '';
                 var text = '';
+                var help = $help.length > 0 ? $help.text() : '';
 
                 // Skip for some fields
                 if(['name', 'isDefault'].includes(over)) {
@@ -805,7 +817,7 @@
                 }
 
                 // Append new row to the table
-                var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong>' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
+                var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong title="' + help + '">' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
 
                 // Get override element
                 var overrideEl = override.find((x) => { return x.name === over; });
