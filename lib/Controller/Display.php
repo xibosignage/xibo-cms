@@ -626,6 +626,9 @@ class Display extends Base
             $display->teamViewerLink = (!empty($teamViewerSerial)) ? 'https://start.teamviewer.com/' . $teamViewerSerial : '';
             $display->webkeyLink = (!empty($webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $webkeySerial : '';
 
+            // Is a transfer to another CMS in progress?
+            $display->isCmsTransferInProgress = (!empty($display->newCmsAddress));
+
             // Edit and Delete buttons first
             if ($this->getUser()->checkEditable($display)) {
 
@@ -830,6 +833,14 @@ class Display extends Base
                         ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
                     ]
                 ];
+
+                if ($display->isCmsTransferInProgress) {
+                    $display->buttons[] = [
+                        'id' => 'display_button_move_cancel',
+                        'url' => $this->urlFor('display.moveCmsCancel.form', ['id' => $display->displayId]),
+                        'text' => __('Cancel CMS Transfer'),
+                    ];
+                }
             }
         }
 
@@ -1924,6 +1935,47 @@ class Display extends Base
         } else {
             throw new InvalidArgumentException(__('Invalid Two Factor Authentication Code'), 'twoFactorCode');
         }
+    }
+
+    /**
+     * @param $displayId
+     * @throws NotFoundException
+     */
+    public function moveCmsCancelForm($displayId)
+    {
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkEditable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'display-form-moveCmsCancel';
+        $this->getState()->setData([
+            'display' => $display
+        ]);
+    }
+
+    /**
+     * @param $displayId
+     * @throws NotFoundException
+     * @throws XiboException
+     */
+    public function moveCmsCancel($displayId)
+    {
+        $display = $this->displayFactory->getById($displayId);
+
+        if (!$this->getUser()->checkEditable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $display->newCmsAddress = '';
+        $display->newCmsKey = '';
+        $display->save();
+
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Cancelled CMS Transfer for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
     }
 
     public function addViaCodeForm()

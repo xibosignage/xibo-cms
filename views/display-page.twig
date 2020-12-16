@@ -189,6 +189,7 @@
                                 <th>{% trans "Longitude" %}</th>
                                 <th>{% trans "Screen shot?" %}</th>
                                 <th>{% trans "Thumbnail" %}</th>
+                                <th>{% trans "CMS Transfer?" %}</th>
                                 <th>{% trans "Bandwidth Limit" %}</th>
                                 <th>{% trans "Last Command" %}</th>
                                 <th>{% trans "XMR Registered" %}</th>
@@ -374,6 +375,12 @@
                             }
                         },
                         "visible": false
+                    },
+                    {
+                        "data": "isCmsTransferInProgress",
+                        "render": dataTableTickCrossColumn,
+                        "visible": false,
+                        "name": "isCmsTransferInProgress"
                     },
                     {
                         "name": "bandwidthLimit",

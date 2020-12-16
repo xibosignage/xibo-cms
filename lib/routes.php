@@ -254,6 +254,7 @@ $app->put('/display/licenceCheck/:id', '\Xibo\Controller\Display:checkLicence')-
 $app->get('/display/screenshot/:id', '\Xibo\Controller\Display:screenShot')->name('display.screenShot');
 $app->post('/display/:id/displaygroup/assign', '\Xibo\Controller\Display:assignDisplayGroup')->name('display.assign.displayGroup');
 $app->put('/display/:id/moveCms', '\Xibo\Controller\Display:moveCms')->name('display.moveCms');
+$app->delete('/display/:id/moveCms', '\Xibo\Controller\Display:moveCmsCancel')->name('display.moveCmsCancel');
 $app->post('/display/addViaCode', '\Xibo\Controller\Display:addViaCode')->name('display.addViaCode');
 
 /**
