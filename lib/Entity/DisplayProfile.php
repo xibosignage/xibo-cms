@@ -648,7 +648,9 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
                 ['name' => 'lockOptions', 'default' => '{}'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'updateStartWindow', 'default' => '00:00'],
+                ['name' => 'updateEndWindow', 'default' => '00:00']
             ],
             'sssp' => [
                 ['name' => 'emailAddress', 'default' => ''],
@@ -670,7 +672,9 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
                 ['name' => 'lockOptions', 'default' => '{}'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'updateStartWindow', 'default' => '00:00'],
+                ['name' => 'updateEndWindow', 'default' => '00:00'],
             ]
         );
 

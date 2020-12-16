@@ -451,6 +451,14 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('downloadEndWindow', $sanitizedParams->getString('downloadEndWindow'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('updateStartWindow')) {
+                    $displayProfile->setSetting('updateStartWindow', $sanitizedParams->getString('updateStartWindow'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('updateEndWindow')) {
+                    $displayProfile->setSetting('updateEndWindow', $sanitizedParams->getString('updateEndWindow'), $ownConfig, $config);
+                }
+
                 if ($sanitizedParams->hasParam('dayPartId')) {
                     $displayProfile->setSetting('dayPartId', $sanitizedParams->getInt('dayPartId'), $ownConfig, $config);
                 }
