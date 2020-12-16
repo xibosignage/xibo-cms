@@ -152,7 +152,7 @@ class Soap5 extends Soap4
                     }
                   
                     // Override the XMR address if empty
-                    if (strtolower($settingName) == 'xmrnetworkaddress' && $arrayItem['value'] == '') {
+                    if (strtolower($settingName) == 'xmrnetworkaddress' && $arrayItem['value'] ?? '' == '') {
                         $arrayItem['value'] = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
                     }
 
