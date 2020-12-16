@@ -666,8 +666,8 @@ class ConfigService implements ConfigServiceInterface
         );
 
         $this->testItem($rows, __('Allow PHP to open external URLs'),
-            Environment::checkAllowUrlFopen(),
-            __('You must have allow_url_fopen = On in your PHP.ini file for RSS Feeds / Anonymous statistics gathering to function.'),
+            (Environment::checkCurl() || Environment::checkAllowUrlFopen()),
+            __('You must have the curl extension enabled or PHP configured with "allow_url_fopen = On" for the CMS to access external resources. We strongly recommend curl.'),
             false
         );
 
