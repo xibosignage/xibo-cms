@@ -740,6 +740,12 @@
                 $(target).find('.slider').addClass('scaled-slider');
                 $(target).find('.pictureControlsSlider').slider('refresh', { useCurrentValue: true });
 
+                // Add help text if exists on label
+                var inputHelpText = $(target).parent('tr').find('td:first strong').attr('title');
+                if(inputHelpText) {
+                    $(target).append('<div class="text-muted">' + inputHelpText + '</div>');
+                }
+
                 let $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
                     e.stopPropagation();
                     restoreInputField(target, inputName);
