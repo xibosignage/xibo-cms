@@ -187,7 +187,7 @@ class HtmlPackage extends ModuleWidget
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setOption('name', $sanitizedParams->getString('name'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
-        $this->setOption('nominatedFile', $sanitizedParams->getString('nominatedFile'));
+        $this->setOption('nominatedFile', urlencode($sanitizedParams->getString('nominatedFile')));
         $this->setOption('updateInterval', $this->getSetting('updateInterval', 259200));
 
         $this->saveWidget();
