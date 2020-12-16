@@ -1727,7 +1727,8 @@ class Soap
 
                     default:
                         $this->getLog()->debug('Skipping unknown node in media inventory: %s - %s.', $node->getAttribute('type'), $node->getAttribute('id'));
-                        continue;
+                        // continue drops out the switch, continue again goes to the top of the foreach
+                        continue 2;
                 }
 
                 // File complete?
