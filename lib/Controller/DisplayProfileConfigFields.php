@@ -443,6 +443,14 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('downloadEndWindow', $this->getSanitizer()->getString('downloadEndWindow'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('updateStartWindow')) {
+                    $displayProfile->setSetting('updateStartWindow', $this->getSanitizer()->getString('updateStartWindow'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('updateEndWindow')) {
+                    $displayProfile->setSetting('updateEndWindow', $this->getSanitizer()->getString('updateEndWindow'), $ownConfig, $config);
+                }
+
                 if ($this->getSanitizer()->hasParam('dayPartId')) {
                     $displayProfile->setSetting('dayPartId', $this->getSanitizer()->getInt('dayPartId'), $ownConfig, $config);
                 }
