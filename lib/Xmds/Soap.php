@@ -1068,8 +1068,18 @@ class Soap
             return new \SoapFault('Sender', 'Unable to get the schedule');
         }
 
-        // Are we interleaving the default?
-        if ($this->display->incSchedule == 1) {
+        // Default Layout
+        // is it valid?
+        $defaultLayout = $this->layoutFactory->getById($this->display->defaultLayoutId);
+
+        if ($defaultLayout->status >= ModuleWidget::$STATUS_INVALID) {
+            $this->getLog()->error(sprintf('Player has invalid default Layout. Display = %s, LayoutId = %d',
+                $this->display->display,
+                $defaultLayout->layoutId));
+        }
+
+        // Are we interleaving the default? And is the default valid?
+        if ($this->display->incSchedule == 1 && $defaultLayout->status < ModuleWidget::$STATUS_INVALID) {
             // Add as a node at the end of the schedule.
             $layout = $scheduleXml->createElement("layout");
 
