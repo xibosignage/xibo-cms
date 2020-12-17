@@ -41,6 +41,7 @@ use Xibo\Storage\StorageServiceInterface;
 /**
  * Class Display
  * @package Xibo\Entity
+ * @property $isCmsTransferInProgress Is a transfer to another CMS in progress?
  *
  * @SWG\Definition()
  */

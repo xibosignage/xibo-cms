@@ -192,11 +192,18 @@
 
                     {% set title = "Screen Shot Size"|trans %}
                     {% set helpText = "The size of the screenshot to return when requested."|trans %}
+                    {% if displayProfile.type == "lg" %}
                     {% set options = [
                         { id: 1, value: "Thumbnail"|trans },
                         { id: 2, value: "HD"|trans },
                         { id: 3, value: "FHD"|trans }
                     ] %}
+                    {% else %}
+                        {% set options = [
+                            { id: 1, value: "Thumbnail"|trans },
+                            { id: 2, value: "Standard"|trans }
+                        ] %}
+                    {% endif %}
                     {{ forms.dropdown("screenShotSize", "single", title, displayProfile.getSetting("screenShotSize"), options, "id", "value", helpText) }}
 
                     {% set title = "Send progress while downloading"|trans %}
