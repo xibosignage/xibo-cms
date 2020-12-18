@@ -1,22 +1,19 @@
-<nav class="navbar navbar-fixed-bottom">
+<nav class="navbar navbar-dark navbar-expand-md fixed-bottom">
     <div class="container-toolbar container-fluid">
 
         <div class="navbar-header hide-on-read-only hide-on-lock">
-            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#toolbar-navbar-collapse"
+            <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#toolbar-navbar-collapse"
                 aria-expanded="false">
-                <span class="sr-only">Toggle navigation</span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
-                <span class="icon-bar"></span>
+                <span class="navbar-toggler-icon"></span>
             </button>
         </div>
 
-        <div class="" id="toolbar-navbar-collapse">
+        <div class="collapse navbar-collapse justify-content-between" id="toolbar-navbar-collapse">
             {{!-- Menu buttons --}}
-            <ul class="nav navbar-buttons toolbar-menu-left hide-on-read-only hide-on-lock">
+            <ul class="navbar-nav navbar-buttons toolbar-menu-left hide-on-read-only hide-on-lock">
                 {{#each menuItems}}
                     <li>
-                        <a id="btn-menu-{{@index}}" class="btn-menu-option {{state}}" data-toggle="tooltip" data-title="{{itemTitle}}"
+                        <a id="btn-menu-{{@index}}" class="btn-menu-option {{state}}" data-container=".editor-bottom-bar" data-toggle="tooltip" data-title="{{itemTitle}}"
                             data-test="toolbarTabs">
                             <i class="fas fa-{{itemIcon}}"></i>
                         </a>
@@ -24,7 +21,7 @@
                 {{/each}}
             </ul>
 
-            <ul class="nav toolbar-menu-content hide-on-read-only hide-on-lock">
+            <ul class="navbar-nav toolbar-menu-content hide-on-read-only hide-on-lock">
                 {{!-- Menu items/tabs --}}
                 {{#each menuItems}}
                     <div id="content-{{@index}}" class="toolbar-pane toolbar-{{name}}-pane {{state}} {{#if search}}library-content{{/if}}">
@@ -36,12 +33,12 @@
                             {{#if paging}}
                                 <a id="pag-btn-top-left-{{@index}}" {{pagBtnStepTopLeftDisabled}}
                                     class="btn btn-primary navbar-nav pagination-btn pag-btn-top-left"
-                                    data-toggle="tooltip" data-placement="top" data-title="{{../trans.moduleNavStart}}">
+                                    data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{../trans.moduleNavStart}}">
                                     <i class="fa fa-step-backward"></i>
                                 </a>
                                 <a id="pag-btn-left-{{@index}}" {{pagBtnStepLeftDisabled}} 
                                     class="btn btn-primary navbar-nav pagination-btn pag-btn-left"
-                                    data-toggle="tooltip" data-placement="top" data-title="{{../trans.moduleNavLeft}}">
+                                    data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{../trans.moduleNavLeft}}">
                                     <i class="fa fa-caret-left"></i>
                                 </a>
                             {{/if}}
@@ -65,12 +62,12 @@
                             {{#if paging}}
                                 <a id="pag-btn-right-{{@index}}" {{pagBtnStepRightDisabled}} 
                                     class="btn btn-primary navbar-nav pagination-btn pag-btn-right"
-                                    data-toggle="tooltip" data-placement="top" data-title="{{../trans.moduleNavRight}}">
+                                    data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{../trans.moduleNavRight}}">
                                     <i class="fa fa-caret-right"></i>
                                 </a>
                                 <a id="pag-btn-top-right-{{@index}}" {{pagBtnStepTopRightDisabled}}
                                     class="btn btn-primary navbar-nav pagination-btn pag-btn-top-right"
-                                    data-toggle="tooltip" data-placement="top" data-title="{{../trans.moduleNavEnd}}">
+                                    data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{../trans.moduleNavEnd}}">
                                     <i class="fa fa-step-forward"></i>
                                 </a>
                             {{/if}}
@@ -80,9 +77,9 @@
             </ul>
 
             {{!-- Right buttons --}}
-            <ul class="nav navbar-right toolbar-menu-right hide-on-read-only hide-on-lock">
+            <ul class="navbar-nav navbar-right toolbar-menu-right hide-on-read-only hide-on-lock">
                 <li>
-                    <a id="undoContainer" data-toggle="tooltip" data-placement="top" data-title="{{trans.undoActiveTitle}}"
+                    <a id="undoContainer" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.undoActiveTitle}}"
                         class="navbar-peek-button tooltip-always-on navbar-undo {{#if undoActive}}active{{/if}}">
                         <i class="fa fa-undo"></i>
                     </a>
@@ -90,7 +87,7 @@
                 
                 {{#if showOptions}}
                     <li>
-                        <a id="multiSelectContainer" data-toggle="tooltip" data-placement="top" data-title="{{trans.selectMultipleWidgets}}"
+                        <a id="multiSelectContainer" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.selectMultipleWidgets}}"
                             class="navbar-peek-button navbar-multiselect active">
                             <i class="fa fa-object-group"></i>
                         </a>
@@ -98,7 +95,7 @@
                 {{/if}}
 
                 <li>
-                    <a id="trashContainer" data-toggle="tooltip" data-placement="top" data-title="{{trans.trashBinActiveTitle}}"
+                    <a id="trashContainer" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top" data-title="{{trans.trashBinActiveTitle}}"
                         class="navbar-peek-button navbar-bin {{#if trashActive}}active{{/if}}">
                         <i class="fa fa-trash"></i>
                     </a>
@@ -106,7 +103,7 @@
 
                 {{!-- Options menu --}}
                 {{#if showOptions}}
-                    <li class="dropdown navbar-submenu navbar-submenu-options" data-toggle="tooltip" data-placement="top"
+                    <li class="dropdown navbar-submenu navbar-submenu-options" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top"
                         data-title="{{trans.options}}">
                         <a id="optionsContainer" href="#" class="dropdown-toggle btn-menu-option" data-toggle="dropdown" role="button" aria-haspopup="true"
                             aria-expanded="false">
@@ -116,7 +113,7 @@
                         <div class="dropdown-menu navbar-submenu-container navbar-submenu-options-container">
                             <a class="dropdown-item">
                                 <label class="navbar-submenu-item navbar-submenu-item-options displayTooltips-container tooltip-always-on"
-                                    for="displayTooltips" data-toggle="tooltip" data-placement="left" data-title="{{trans.displayTooltipsTitle}}"
+                                    for="displayTooltips" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="left" data-title="{{trans.displayTooltipsTitle}}"
                                     accesskey="">
                                     <input type="checkbox" id="displayTooltips" name="displayTooltips"
                                         {{#if displayTooltips}}checked{{/if}}>
@@ -125,7 +122,7 @@
                             </a>
                             <a class="dropdown-item">
                                 <div id="resetTour" class="navbar-submenu-item navbar-submenu-item-options tooltip-always-on d-none"
-                                    data-toggle="tooltip" data-placement="bottom" data-title="{{trans.resetTourTitle}}" href="#">
+                                    data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="bottom" data-title="{{trans.resetTourTitle}}" href="#">
                                     <i class="fa fa-repeat"></i>
                                     <span>{{trans.resetTour}}</span>
                                 </div>

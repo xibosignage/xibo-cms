@@ -401,6 +401,7 @@ pE.deleteObject = function(objectType, objectId) {
         bootbox.dialog({
             title: editorsTrans.deleteTitle.replace('%obj%', objectType),
             message: htmlContent,
+            size: 'large',
             buttons: {
                 cancel: {
                     label: editorsTrans.no,
@@ -608,6 +609,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
         bootbox.dialog({
             title: editorsTrans.deleteMultipleTitle,
             message: htmlContent,
+            size: 'large',
             buttons: buttons
         }).attr('data-test', 'deleteObjectModal');
     };

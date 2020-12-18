@@ -40,7 +40,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <div id="FileAssociationsAssign" class="card p-3 bg-light" data-url="{{ url_for("displayGroup.assign.media", {id: displayGroup.displayGroupId}) }}">
+            <div id="FileAssociationsAssign" class="card p-3 mb-3 bg-light" data-url="{{ url_for("displayGroup.assign.media", {id: displayGroup.displayGroupId}) }}">
                 <div>
                     <ul id="FileAssociationsSortable">
                         {% for item in media %}

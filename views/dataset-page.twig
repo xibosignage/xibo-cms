@@ -98,7 +98,7 @@
                                         <th>{% trans "Owner" %}</th>
                                         <th>{% trans "Permissions" %}</th>
                                         <th>{% trans "Last Sync" %}</th>
-                                        <th>{% trans "Row Menu" %}</th>
+                                        <th class="rowMenu">{% trans "Row Menu" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -202,6 +202,7 @@
                         columns: columns
                     }),
                     title: "{% trans "CSV Import" %}",
+                    size: 'large',
                     buttons: {
                         main: {
                             label: "{% trans "Done" %}",
@@ -392,7 +393,7 @@
     <script type="text/x-handlebars-template" id="template-dataset-upload">
         <form class="form-horizontal" method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)csv/i">
             <div class="row fileupload-buttonbar">
-                <div class="card p-3 bg-light">
+                <div class="card p-3 mb-3 bg-light">
                     {{ upload.maxSizeMessage }} <br>
                     {{ upload.utf8Message }}
                 </div>

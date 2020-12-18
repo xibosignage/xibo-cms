@@ -9,12 +9,12 @@
         </div>
     {{/each}}
 
-    <a class="btn-window btn-window-new-tab" data-toggle="tooltip" data-title="{{trans.window.newTab}}"
+    <a class="btn-window btn-window-new-tab" data-toggle="tooltip" data-container=".media-search-container" data-title="{{trans.window.newTab}}"
         data-menu="{{menuIndex}}">
         <i class="fa fa-plus"></i>    
     </a>
 
-    <a class="btn-window btn-window-close pull-right" data-toggle="tooltip"
+    <a class="btn-window btn-window-close pull-right" data-toggle="tooltip" data-container=".media-search-container"
         data-title="{{trans.window.minimise}}" data-menu="{{menuIndex}}">
         <i class="fa fa-times"></i>    
     </a>
@@ -23,20 +23,23 @@
 {{#each menuObj.content}}
     <form id="media-search-form-{{@index}}" class="form-inline media-search-form drag-handle {{#neq @index ../menuObj.selectedTab}}hidden{{/neq}}">
         <div class="form-group search-form-group">
-            <select id="input-type-{{@index}}" name="type" class="form-control form-control-inline input-type">
+            <select id="input-type-{{@index}}" name="type" class="form-control mr-1 form-control-inline input-type">
                 <option value="">{{filters.type.name}}</option>
                 {{#each filters.type.values}}
                     <option value="{{type}}" {{#eq ../filters.type.value type}}selected{{/eq}}>{{name}}</option>
                 {{/each}}
             </select>
 
-            <input id="input-name-{{@index}}" name="media" type="text" value="{{filters.name.value}}" class="form-control form-control-inline input-name"
+            <input id="input-name-{{@index}}" name="media" type="text" value="{{filters.name.value}}" class="form-control mr-1 form-control-inline input-name"
                 placeholder="{{filters.name.name}}">
 
-            <input id="input-tag-{{@index}}" name="tags" type="text" value="{{filters.tag.value}}" data-role="tagsinput"
-                class="form-control form-control-inline input-tag" placeholder="{{filters.tag.name}}">
+            <span class="mr-1">
+                <input id="input-tag-{{@index}}" name="tags" type="text" value="{{filters.tag.value}}" data-role="tagsinput"
+                            class="form-control form-control-inline input-tag" placeholder="{{filters.tag.name}}">
+            </span>
+           
 
-            <select id="input-owner-{{@index}}" name="ownerId" class="form-control form-control-inline input-owner">
+            <select id="input-owner-{{@index}}" name="ownerId" class="form-control mr-1 form-control-inline input-owner">
                 <option value="">{{filters.owner.name}}</option>
                 {{#each filters.owner.values}}
                     <option value="{{userId}}" {{#eq ../filters.owner.value userId}}selected{{/eq}}>{{name}}</option>
@@ -51,12 +54,12 @@
         <table id="media-table-{{menuIndex}}" class="table media-table table-striped">
             <thead>
                 <tr>
+                    <th></th>
                     <th>{{trans.tableHeader.id}}</th>
                     <th>{{trans.tableHeader.name}}</th>
                     <th>{{trans.tableHeader.type}}</th>
                     <th>{{trans.tableHeader.tags}}</th>
                     <th>{{trans.tableHeader.thumbnail}}</th>
-                    <th></th>
                 </tr>
             </thead>
             <tbody>

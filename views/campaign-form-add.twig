@@ -83,9 +83,9 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-12 card p-3 bg-light">
+        <div class="col-md-12 card p-3 mb-3 bg-light">
             <h4>{% trans %}Layouts on new campaign{% endtrans %}</h4>
-            <div id="LayoutAssign" class="card p-3 bg-light" data-url="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}">
+            <div id="LayoutAssign" class="card p-3 mb-3 bg-light" data-url="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}">
                 <div>
                     <ul id="LayoutAssignSortable">
                         {% for item in layouts %}

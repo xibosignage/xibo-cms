@@ -114,7 +114,6 @@ function keyHandler(event) {
     if (letter == 'l') {
         var log = $(".preview-log");
         if (log.css("display") == 'none') {
-            //TODOM: Check this!
             log.css("display", "block");
         }
         else {
@@ -263,7 +262,6 @@ function Layout(id, options, preload, layoutPreview) {
     self.run = function() {
         playLog(4, "debug", "Running Layout ID " + self.id, false);
         if (self.ready) {
-            //TODOM: Check this!
             $("#" + self.containerName).css("display", "block");
             $("#splash_" + self.id).css("display", "none");
 
@@ -331,7 +329,6 @@ function Layout(id, options, preload, layoutPreview) {
 
             self.stopAllMedia();
 
-            //TODOM: Check this!
             $("#end_" +  self.id).css("display", "block");
             //$("#" + self.containerName).remove();
         }
@@ -424,8 +421,7 @@ function Region(parent, id, xml, options, preload) {
         }
         
         newMedia.run();
-        
-        //TODOM: Check this!
+
         $("#" + newMedia.containerName).css("display", "block");
     };
     

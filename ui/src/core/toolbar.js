@@ -359,7 +359,7 @@ Toolbar.prototype.render = function() {
         this.DOMObject.find('.hide-on-read-only').hide();
         
         // Create the read only alert message
-        let $readOnlyMessage = $('<div id="read-only-message" class="alert alert-info btn text-center navbar-nav" data-toggle="tooltip" data-placement="bottom" data-title="' + layoutDesignerTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutDesignerTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutDesignerTrans.readOnlyModeMessage + '</div>');
+        let $readOnlyMessage = $('<div id="read-only-message" class="alert alert-info btn text-center navbar-nav" data-container=".editor-bottom-bar" data-toggle="tooltip" data-placement="bottom" data-title="' + layoutDesignerTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutDesignerTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutDesignerTrans.readOnlyModeMessage + '</div>');
 
         // Prepend the element to the bottom toolbar's content
         $readOnlyMessage.prependTo(this.DOMObject.find('.container-toolbar .navbar-collapse')).click(lD.checkoutLayout);
@@ -540,8 +540,8 @@ Toolbar.prototype.loadContent = function(menu = -1) {
     } else if(this.menuItems[menu].name === 'widgets') {
         // Calculate scroll region width
         var totalWidth = this.DOMObject.find('.navbar-collapse').outerWidth();
-        var widthMenuLeft = this.DOMObject.find('.toolbar-menu-left').width();
-        var widthMenuRight = this.DOMObject.find('.toolbar-menu-right').width();
+        var widthMenuLeft = this.DOMObject.find('.toolbar-menu-left').outerWidth();
+        var widthMenuRight = this.DOMObject.find('.toolbar-menu-right').outerWidth();
 
         // Content width minus the left and right button areas, and the paging buttons width (20px * 4)
         this.menuItems[menu].containerWidth = totalWidth - widthMenuLeft - widthMenuRight - 80;
@@ -874,6 +874,8 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
         this.createNewTab(menu);
     }
 
+    console.log(toolbarTrans);
+
     // Render template
     const html = ToolbarMediaSearchTemplate({
         menuIndex: menu,
@@ -1024,7 +1026,6 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
 
     // Destroy previous table
     self.DOMObject.find('#media-table-' + menu).DataTable().destroy();
-    self.DOMObject.find('#media-table-' + menu).empty();
 
     var mediaTable = self.DOMObject.find('#media-table-' + menu).DataTable({
         "language": dataTablesLanguage,
@@ -1151,7 +1152,7 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
  */
 Toolbar.prototype.tablePositionUpdate = function(container) {
     // Calculate table container height
-    const tableContainerHeight = container.find('.media-search-controls').height() + container.find('.media-search-form:not(.d-none)').height() + container.find('.dataTables_wrapper').height();
+    const tableContainerHeight = container.find('.media-search-controls').outerHeight() + container.find('.media-search-form:not(.hidden)').outerHeight() + container.find('.XiboGrid').outerHeight();
 
     // Set resizable min height
     if(container.resizable('instance') != undefined) {

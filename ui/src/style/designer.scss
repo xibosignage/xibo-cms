@@ -106,12 +106,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     margin: 0 16px;
 }
 
-@media (min-width: 768px) {
-    .welcome-screen-modal .modal-dialog {
-        width: 600px;
-    }
-}
-
 @media (max-width: 768px) {
     #layout-editor-main {
         padding-top: 15px;

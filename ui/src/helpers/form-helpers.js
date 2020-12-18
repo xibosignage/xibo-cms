@@ -1226,6 +1226,7 @@ let formHelpers = function() {
                     var dialog = bootbox.dialog({
                         message: response.html,
                         title: dialogTitle,
+                        size: 'large',
                         animate: false
                     }).attr("id", id);
 

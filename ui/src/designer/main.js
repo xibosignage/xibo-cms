@@ -180,7 +180,7 @@ $(document).ready(function() {
                             id: 'discardLayout',
                             title: layoutDesignerTrans.discardTitle,
                             logo: 'fa-times-circle-o',
-                            class: 'btn-warning',
+                            class: 'btn-danger',
                             action: lD.showDiscardScreen,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == false);
@@ -724,6 +724,7 @@ lD.welcomeScreen = function() {
     bootbox.dialog({
         message: layoutDesignerTrans.welcomeModalMessage,
         className: "welcome-screen-modal",
+        size: 'large',
         closeButton: false,
         buttons: {
             checkout: {
@@ -851,6 +852,7 @@ lD.showCheckoutScreen = function() {
     bootbox.dialog({
         title: layoutDesignerTrans.checkoutTitle + ' ' + lD.layout.name,
         message: layoutDesignerTrans.checkoutMessage,
+        size: 'large',
         buttons: {
             checkout: {
                 label: layoutDesignerTrans.checkoutTitle,
@@ -970,6 +972,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
                 className: 'second-dialog',
                 title: res.dialogTitle,
                 message: res.html,
+                size: 'large',
                 buttons: generatedButtons
             }).attr('id', calculatedId).attr('data-test', type + 'LayoutForm');
 
@@ -1107,6 +1110,7 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
         bootbox.dialog({
             title: editorsTrans.deleteTitle.replace('%obj%', objectType),
             message: htmlContent,
+            size: 'large',
             buttons: {
                 cancel: {
                     label: editorsTrans.no,
@@ -1862,6 +1866,7 @@ lD.showUnlockScreen = function() {
     bootbox.dialog({
         title: layoutDesignerTrans.unlockTitle,
         message: layoutDesignerTrans.unlockMessage,
+        size: 'large',
         buttons: {
             unlock: {
                 label: layoutDesignerTrans.unlockTitle,

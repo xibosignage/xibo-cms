@@ -2,20 +2,20 @@
     {{! Left region }}
     <div class="pull-left">
         {{#if renderLayout}}
-            <button type="button" id="play-btn" class="btn btn-sm" data-toggle="tooltip" data-placement="right" data-title="{{ trans.playPreviewLayout }}">
+            <button type="button" id="play-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="right" data-title="{{ trans.playPreviewLayout }}">
                 <i class="fa fa-play-circle"></i>
             </button>
             {{#unless readOnlyModeOn}}
-                <button type="button" id="navigator-edit-btn" class="btn btn-sm hide-on-fs" data-toggle="tooltip" data-placement="bottom" data-title="{{ trans.editLayout }}">
+                <button type="button" id="navigator-edit-btn" class="btn btn-sm hide-on-fs" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="bottom" data-title="{{ trans.editLayout }}">
                     <i class="fa fa-edit"></i>
                 </button>
             {{/unless}}
         {{else}}
-            <button type="button" id="back-btn" class="btn btn-sm" data-toggle="tooltip" data-placement="right" data-title="{{ trans.backToLayout }}">
+            <button type="button" id="back-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="right" data-title="{{ trans.backToLayout }}">
                 <i class="fa-arrow-alt-circle-left fas"></i>
             </button>
         
-            <button type="button" id="inline-editor-save" class="btn btn-sm" data-toggle="tooltip" data-placement="left"
+            <button type="button" id="inline-editor-save" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="left"
                 data-title="{{ trans.saveEditorChanges }}">
                 <i class="fa fa-save"></i>
             </button>
@@ -25,13 +25,13 @@
     {{!-- Paging controls --}}
     {{#if pagingEnable}}
         <span class="paging inline-editor-hide">
-            <button type="button" id="left-btn" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="bottom" data-title="{{ trans.previousWidget }}">
+            <button type="button" id="left-btn" class="btn btn-sm btn-primary" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="bottom" data-title="{{ trans.previousWidget }}">
                 <i class="fa fa-arrow-left"></i>
             </button>
             <span class="label">
                 {{currentItem}} / {{totalItems}}
             </span>
-            <button type="button" id="right-btn" class="btn btn-sm btn-primary" data-toggle="tooltip" data-placement="bottom" data-title="{{ trans.nextWidget }}">
+            <button type="button" id="right-btn" class="btn btn-sm btn-primary" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="bottom" data-title="{{ trans.nextWidget }}">
                 <i class="fa fa-arrow-right"></i>
             </button>
         </span>
@@ -58,7 +58,7 @@
         {{/if}}
 
         {{!-- Full screen button --}}
-        <button type="button" id="fs-btn" class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-placement="bottom"
+        <button type="button" id="fs-btn" class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="bottom"
             data-title="{{ trans.toggleFullscreen }}">
             <i class="fas fa-arrows-alt hide-on-fs"></i>
             <i class="fas fa-compress-arrows-alt show-on-fs"></i>

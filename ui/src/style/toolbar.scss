@@ -21,7 +21,7 @@ ul.sidebar {
 }
 
 #page-wrapper .editor-toolbar nav {
-    margin-left: 180px;
+    margin-left: 11rem;
 }
 
 @media (max-width: 768px) {
@@ -48,6 +48,7 @@ ul.sidebar {
 }
 
 .editor-toolbar .container-toolbar .navbar-peek-button {
+    display: block;
     width: 50px;
     text-align: center;
     font-size: 1.75rem;
@@ -95,17 +96,13 @@ ul.sidebar {
     }
 }
 
-
-.editor-toolbar .container-toolbar .navbar-right {
-    padding-right: 15px;
-}
-
 .editor-toolbar .library-content {
     position: fixed;
     bottom: 50px;
     right: 0px;
     height: fit-content;
     opacity: 0.95;
+    border: 2px solid $xibo-color-blue;
 
     &.hide-mode {
         width: 0 !important;
@@ -118,7 +115,6 @@ ul.sidebar {
 
     .media-search-container {
         background: $xibo-color-white;
-        border: 2px solid $xibo-color-blue;
         height: 100%;
     }
 
@@ -410,6 +406,7 @@ ul.sidebar {
 
     a {
         &.pagination-btn {
+            float: left;
             display: inline-block;
             width: 20px;
             font-size: 1.4rem;
@@ -591,7 +588,7 @@ ul.sidebar {
 }
 
 /* Toolbar - buttons */
-.editor-toolbar a {
+.editor-toolbar a:not(.page-link) {
     color: $xibo-color-white;
     cursor: pointer;
 }
@@ -605,6 +602,10 @@ ul.sidebar {
     background: $toolbar-tab-fg-color;
     padding: 2px;
     border: none;
+
+    & > a {
+        padding: 0;
+    }
 }
 
 .editor-toolbar .navbar-submenu a:hover {
@@ -618,6 +619,7 @@ ul.sidebar {
 }
 
 .editor-toolbar .btn-menu-option {
+    display: block;
     color: $xibo-color-white;
     width: 50px;
     text-align: center;
@@ -672,17 +674,26 @@ ul.sidebar {
             font-size: 1.75rem;
             padding: 5px 10px;
             line-height: 30px;
+            
+            &::after {
+                display: none;
+            }
         }
 
         color: $xibo-color-white;
 
         &:hover, &:focus {
             color: $toolbar-main-color;
+            background-color: $xibo-color-white;
         }
     }
 
     &.open > a {
         color: $toolbar-main-color;
+    }
+
+    .dropdown-item {
+
     }
 
     .navbar-submenu-item-options {

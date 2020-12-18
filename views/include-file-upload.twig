@@ -38,7 +38,7 @@
         {{/if}}
         <div class="row fileupload-buttonbar">
             <div class="col-md-7">
-                <div class="card p-3 bg-light">
+                <div class="card p-3 mb-3 bg-light">
                     <p>{{ upload.maxSizeMessage }}</p>
                     {{#if upload.validExtensionsMessage}}
                         <p><strong>{{ upload.validExtensionsMessage }}</strong></p>
@@ -57,7 +57,7 @@
                     {{/if}}
                 </div>
                 <!-- The fileinput-button span is used to style the file input field as button -->
-                <span class="btn btn-success fileinput-button">
+                <span class="btn btn-sm btn-success fileinput-button">
                     <i class="fa fa-plus"></i>
                     <span>{{ trans.addFiles }}</span>
                     {{#if multi }}
@@ -66,17 +66,17 @@
                     <input type="file" name="files[]" id="files">
                     {{/if}}
                 </span>
-                <button type="submit" class="btn btn-primary start">
+                <button type="submit" class="btn btn-sm btn-primary start">
                     <i class="fa fa-upload"></i>
                     <span>{{ trans.startUpload }}</span>
                 </button>
-                <button type="reset" class="btn btn-warning cancel">
+                <button type="reset" class="btn btn-sm btn-warning cancel">
                     <i class="fa fa-ban"></i>
                     <span>{{ trans.cancelUpload }}</span>
                 </button>
                 {{#if folderSelector}}
                  {% endverbatim %}   {% if currentUser.featureEnabled('folder.view') %} {% verbatim %}
-                    <button type="button" class="btn btn-info pull-right" data-toggle="modal" data-target="#folder-tree-form-modal" title="{{trans.selectFolderTitle}}">{{trans.selectFolder}}</button>
+                    <button type="button" class="btn btn-sm btn-info" data-toggle="modal" data-target="#folder-tree-form-modal" title="{{trans.selectFolderTitle}}">{{trans.selectFolder}}</button>
                  {% endverbatim %}  {% endif %} {% verbatim %}
                 {{/if}}
                 <!-- The loading indicator is shown during file processing -->

@@ -48,7 +48,8 @@ function openUploadForm(options) {
         title: options.title,
         buttons: options.buttons,
         className: options.className,
-        animate: options.animateDialog
+        animate: options.animateDialog,
+        size: 'large'
     }).on('hidden.bs.modal', function () {
         // Reset video image covers.
         videoImageCovers = {};

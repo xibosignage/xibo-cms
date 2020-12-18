@@ -351,12 +351,12 @@
             {% trans "Player Status Window"%}:
             {% verbatim %}
                 {{#eq type "android"}}
-                    <div class="card p-3 bg-light">
+                    <div class="card p-3 mb-3 bg-light">
                           <span>{{{data}}}</span>
                     </div>
                 {{/eq}}
                 {{#neq type "android"}}
-                    <div class="card p-3 bg-light">
+                    <div class="card p-3 mb-3 bg-light">
                         <ul>
                             {{#each data as |value key|}}
                             <li>{{key}}: {{value}}</li>
@@ -392,7 +392,7 @@
                         <button type="button" class="close btnCloseInnerModal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <div class="form-group card p-3 bg-light">
+                        <div class="form-group card p-3 mb-3 bg-light">
                             {% verbatim %}
                                 <div id="{{ container }}"></div>
                             {% endverbatim %}
@@ -425,7 +425,7 @@
 
     <script  type="text/javascript">
         function moveFolderMultiSelectFormOpen(dialog) {
-            var folderContainer = '<div class="card p-3 bg-light" id="container-folder-form-tree"></div>';
+            var folderContainer = '<div class="card p-3 mb-3 bg-light" id="container-folder-form-tree"></div>';
             var $hiddenInput = $('<input name="folderId" type="hidden" id="formFolderId">');
 
             $hiddenInput.on('change', function() {

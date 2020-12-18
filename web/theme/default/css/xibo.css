@@ -58,25 +58,6 @@ html {
     padding: 7px 9px;
 }
 
-@media (min-width: 920px) {
-    .modal-dialog {
-        width: 900px;
-        max-width: 900px;
-    }
-}
-
-/* Define some modal widths and heights */
-.modal-big .modal-dialog {
-    width: 80%;
-}
-
-@media (max-width: 767px) {
-    .modal-big .modal-dialog {
-        width: auto;
-        margin-left: auto;
-    }
-}
-
 /* Full width iframe (for inside the help windows) */
 .full-iframe {
     width: 100%;
@@ -1047,8 +1028,9 @@ ul li.active.tab-design:hover a {
 
 .override-input button.button-close-override {
     position: absolute;
-    right: -16px;
-    top: 8px;
+    right: -11px;
+    top: 11px;
+    padding: 6px 4px;
 }
 
 /* 

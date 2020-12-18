@@ -803,7 +803,7 @@ function XiboInitialise(scope) {
  */
 function dataTableProcessing(e, settings, processing) {
     if (processing)
-        $(e.target).closest('.widget').children(".widget-title").append('<span class="saving fa fa-cog fa-spin"></span>');
+        $(e.target).closest('.widget').children(".widget-title").append('<span class="saving fa fa-cog fa-spin pl-1"></span>');
     else
         $(e.target).closest('.widget').closest(".widget").find(".saving").remove();
 }
@@ -1138,6 +1138,7 @@ function dataTableAddButtons(table, filter, allButtons) {
             buttons: [
                 {
                     extend: 'colvis',
+                    columns: ':not(.rowMenu)',
                     text: function (dt, button, config) {
                         return dt.i18n('buttons.colvis');
                     }
@@ -1189,8 +1190,9 @@ function dataTableAddButtons(table, filter, allButtons) {
     }
 
     table.buttons( 0, null ).container().prependTo(filter);
-    $(filter).addClass('text-right')
+    $(filter).addClass('text-right');
     $(".ColVis_MasterButton").addClass("btn");
+    $(filter).find('.dt-buttons button.btn-secondary').addClass('btn-outline-primary').removeClass('btn-secondary');
 }
 
 /**
@@ -1334,7 +1336,8 @@ function XiboFormRender(sourceObj, data) {
                 var dialog = bootbox.dialog({
                         message: response.html,
                         title: dialogTitle,
-                        animate: false
+                        animate: false,
+                        size: 'large'
                     }).attr("id", id);
 
                 // Store the extra
@@ -1706,7 +1709,8 @@ function XiboMultiSelectFormRender(button) {
     var dialog = bootbox.dialog({
             message: message,
             title: translations.multiselect,
-            animate: false
+            animate: false,
+            size: 'large'
         });
 
     // Append a footer to the dialog
@@ -1857,6 +1861,7 @@ function XiboMultiSelectPermissionsFormOpen(button) {
             message: translations.multiselectNoItemsMessage,
             title: translations.multiselect,
             animate: false,
+            size: 'large',
             buttons: {
                 cancel: {
                     label: translations.close,
@@ -1924,6 +1929,7 @@ function XiboMultiSelectTagFormRender(button) {
     var dialog = bootbox.dialog({
         message: dialogContent,
         title: translations.multiselect,
+        size: 'large',
         animate: false
     });
 
@@ -2426,6 +2432,7 @@ function SystemMessage(messageText, success) {
         var dialog = bootbox.dialog({
             message: messageText,
             title: "Application Message",
+            size: 'large',
             buttons: [{
                 label: 'Close',
                 callback: function() {
@@ -2470,7 +2477,7 @@ function SystemMessageInline(messageText, modal) {
     $(modal).find(".btn").removeClass("disabled");
 
     $("<div/>", {
-        class: "card bg-light p-3 text-danger text-center form-error",
+        class: "card bg-light p-3 text-danger col-sm-12 text-center form-error",
         html: messageText
     }).appendTo(modal.find(".modal-footer"));
 }

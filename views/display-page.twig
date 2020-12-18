@@ -243,7 +243,7 @@
                                         <th>{% trans "Remote" %}</th>
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
-                                        <th>{% trans "Row Menu" %}</th>
+                                        <th class="rowMenu">{% trans "Row Menu" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -772,6 +772,8 @@
                     } else if($inputFields.attr('type') == 'checkbox') {
                         // CHECKBOX
                         $($inputFields).prop('checked', newValue);
+                    } else if(timepickerFixFlag) {
+                        $($inputFields).find('input').val(newValue);
                     } else {
                         $($inputFields).val(newValue);
                     }
@@ -888,7 +890,7 @@
                 }
 
                 // Append new row to the table
-                var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong>' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
+                var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong>' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input text-center" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
 
                 // Get override element
                 var overrideEl = override.find(function(x) { return x.name === over; });
