@@ -335,6 +335,14 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('forceHttps', $sanitizedParams->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('authServerWhitelist')) {
+                    $displayProfile->setSetting('authServerWhitelist', $this->getSanitizer()->getString('authServerWhitelist'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('edgeBrowserWhitelist')) {
+                    $displayProfile->setSetting('edgeBrowserWhitelist', $this->getSanitizer()->getString('edgeBrowserWhitelist'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'linux':
