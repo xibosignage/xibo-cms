@@ -29,7 +29,7 @@ use Phinx\Wrapper\TextWrapper;
  */
 class Environment
 {
-    public static $WEBSITE_VERSION_NAME = '2.3.7';
+    public static $WEBSITE_VERSION_NAME = '2.3.8';
     public static $XMDS_VERSION = '5';
     public static $XLF_VERSION = 3;
     public static $VERSION_REQUIRED = '7.0.8';

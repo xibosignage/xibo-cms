@@ -95,6 +95,14 @@
                         {% set title %}{% trans "Upper Row Limit" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
                         {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText) }}
+
+                        {% set title %}{% trans "Number of Items" %}{% endset %}
+                        {% set helpText %}{% trans "The Number of items you want to display" %}{% endset %}
+                        {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
+
+                        {% set title %}{% trans "Randomise?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order." %}{% endset %}
+                        {{ forms.checkbox("randomiseItems", title, module.getOption("randomiseItems"), helpText) }}
                     </div>
 
                     <div class="tab-pane" id="appearanceTab">

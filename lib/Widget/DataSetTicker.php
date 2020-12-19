@@ -382,6 +382,8 @@ class DataSetTicker extends ModuleWidget
             $this->setOption('itemsSideBySide', $this->getSanitizer()->getCheckbox('itemsSideBySide'));
             $this->setOption('upperLimit', $this->getSanitizer()->getInt('upperLimit', 0));
             $this->setOption('lowerLimit', $this->getSanitizer()->getInt('lowerLimit', 0));
+            $this->setOption('numItems', $this->getSanitizer()->getInt('numItems'));
+            $this->setOption('randomiseItems', $this->getSanitizer()->getCheckbox('randomiseItems'));
             $this->setOption('itemsPerPage', $this->getSanitizer()->getInt('itemsPerPage'));
             $this->setOption('backgroundColor', $this->getSanitizer()->getString('backgroundColor'));
             $this->setRawNode('noDataMessage', $this->getSanitizer()->getParam('noDataMessage', ''));
@@ -465,6 +467,7 @@ class DataSetTicker extends ModuleWidget
         $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
+        $numItems = $this->getOption('numItems', 0);
 
         // Text/CSS subsitution variables.
         // DataSet tickers or feed tickers without overrides.
@@ -497,6 +500,7 @@ class DataSetTicker extends ModuleWidget
             'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
             'takeItemsFrom' => $takeItemsFrom,
             'itemsPerPage' => $itemsPerPage,
+            'numItems' => $numItems,
             'randomiseItems' => $this->getOption('randomiseItems', 0),
             'speed' => $this->getOption('speed', 1000),
             'originalWidth' => $this->region->width,
@@ -520,7 +524,9 @@ class DataSetTicker extends ModuleWidget
         }
 
         // Work out how many pages we will be showing.
-        $pages = count($items);
+        $pages = $numItems;
+        if ($numItems > count($items) || $numItems == 0)
+            $pages = count($items);
 
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
