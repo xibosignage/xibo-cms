@@ -67,7 +67,7 @@ interface TimeSeriesStoreInterface
 
     /**
      * Get the earliest date
-     * @return array
+     * @return \Jenssegers\Date\Date|null
      */
     public function getEarliestDate();
 

@@ -220,6 +220,9 @@ class RegionFactory extends BaseFactory
             $params['playlistId'] = $this->getSanitizer()->getInt('playlistId', $filterBy);
         }
 
+        // Order by Name
+        $sql .= ' ORDER BY `region`.name ';
+
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['zIndex']]);
         }

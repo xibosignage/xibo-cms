@@ -1,9 +1,10 @@
 <?php
 /*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
- * This file (DatabaseLogHandler.php) is part of Xibo.
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
  *
  * Xibo is free software: you can redistribute it and/or modify
  * it under the terms of the GNU Affero General Public License as published by
@@ -19,9 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Helper;
-
 
 use Monolog\Handler\AbstractProcessingHandler;
 use Xibo\Storage\PdoStorageService;
@@ -32,8 +31,16 @@ use Xibo\Storage\PdoStorageService;
  */
 class DatabaseLogHandler extends AbstractProcessingHandler
 {
+    /** @var \PDOStatement|null */
     private static $statement;
 
+    /** @var int Track the number of failures since a success */
+    private $failureCount = 0;
+
+    /**
+     * @inheritDoc
+     * @throws \Exception
+     */
     protected function write(array $record)
     {
         if (self::$statement == NULL) {
@@ -59,11 +66,28 @@ class DatabaseLogHandler extends AbstractProcessingHandler
         );
 
         try {
-            PdoStorageService::incrementStatStatic('log', 'insert');
+            // Insert
             self::$statement->execute($params);
-        }
-        catch (\PDOException $e) {
-            // Not sure what we can do here?
+
+            // Reset failure count
+            $this->failureCount = 0;
+
+            // Successful write
+            PdoStorageService::incrementStatStatic('log', 'insert');
+
+        } catch (\Exception $e) {
+            // Increment failure count
+            $this->failureCount++;
+
+            // Try to create a new statement
+            if ($this->failureCount <= 1) {
+                // Clear the stored statement, and try again
+                // this will rebuild the connection
+                self::$statement = null;
+
+                // Try again.
+                $this->write($record);
+            }
         }
     }
 }

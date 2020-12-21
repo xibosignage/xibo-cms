@@ -20,6 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+use Monolog\Logger;
+
 define('XIBO', true);
 define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
 
@@ -36,12 +38,18 @@ $argv = $GLOBALS['argv'];
 array_shift($GLOBALS['argv']);
 $pathInfo = '/' . implode('/', $argv);
 
+// Log handlers
+$handlers = [new \Xibo\Helper\DatabaseLogHandler()];
+
+// Optionally allow console logging
+if (isset($_SERVER['LOG_TO_CONSOLE']) && $_SERVER['LOG_TO_CONSOLE']) {
+    $handlers[] = new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG);
+}
+
 // Create a logger
 $logger = new \Xibo\Helper\AccessibleMonologWriter(array(
     'name' => 'CONSOLE',
-    'handlers' => array(
-        new \Xibo\Helper\DatabaseLogHandler()
-    ),
+    'handlers' => $handlers,
     'processors' => array(
         new \Xibo\Helper\LogProcessor(),
         new \Monolog\Processor\UidProcessor(7)

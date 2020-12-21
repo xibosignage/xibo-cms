@@ -327,6 +327,14 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('authServerWhitelist')) {
+                    $displayProfile->setSetting('authServerWhitelist', $this->getSanitizer()->getString('authServerWhitelist'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('edgeBrowserWhitelist')) {
+                    $displayProfile->setSetting('edgeBrowserWhitelist', $this->getSanitizer()->getString('edgeBrowserWhitelist'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'linux':
@@ -441,6 +449,14 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('downloadEndWindow')) {
                     $displayProfile->setSetting('downloadEndWindow', $this->getSanitizer()->getString('downloadEndWindow'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('updateStartWindow')) {
+                    $displayProfile->setSetting('updateStartWindow', $this->getSanitizer()->getString('updateStartWindow'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('updateEndWindow')) {
+                    $displayProfile->setSetting('updateEndWindow', $this->getSanitizer()->getString('updateEndWindow'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('dayPartId')) {

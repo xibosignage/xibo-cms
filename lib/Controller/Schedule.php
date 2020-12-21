@@ -1677,13 +1677,21 @@ class Schedule extends Base
             }
         }
 
+        $isLayoutSpecific = -1;
+        if ($from == 'Campaign') {
+            $isLayoutSpecific = 0;
+        } else if ($from == 'Layout') {
+            $isLayoutSpecific = 1;
+        }
+
         $this->getState()->template = 'schedule-form-now';
         $this->getState()->setData([
-            'campaignId' => (($from == 'Campaign') ? $id : 0),
+            'eventTypeId' => (($from == 'Campaign') ? \Xibo\Entity\Schedule::$CAMPAIGN_EVENT : \Xibo\Entity\Schedule::$LAYOUT_EVENT),
+            'campaignId' => (($from == 'Campaign' || $from == 'Layout') ? $id : 0),
             'displayGroupId' => (($from == 'DisplayGroup') ? $id : 0),
             'displays' => $displays,
             'displayGroups' => $groups,
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
+            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => $isLayoutSpecific]),
             'alwaysDayPart' => $this->dayPartFactory->getAlwaysDayPart(),
             'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
             'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')

@@ -22,6 +22,8 @@
 
 namespace Xibo\Storage;
 
+use Jenssegers\Date\Date;
+use Xibo\Exception\GeneralException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\CampaignFactory;
@@ -168,11 +170,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function getEarliestDate()
     {
-        $earliestDate = $this->store->select('SELECT MIN(statDate) AS minDate FROM `stat`', []);
+        $result = $this->store->select('SELECT MIN(start) AS minDate FROM `stat`', []);
+        $earliestDate = $result[0]['minDate'];
 
-        return [
-            'minDate' => $earliestDate[0]['minDate']
-        ];
+        return ($earliestDate === null)
+            ? null
+            : Date::createFromFormat('U', $result[0]['minDate']);
     }
 
     /** @inheritdoc */
@@ -181,6 +184,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
+        $statDateLessThan = isset($filterBy['statDateLessThan']) ? $filterBy['statDateLessThan'] : null;
 
         // In the case of user switches from  mongo to mysql - laststatId were saved as Mongo ObjectId string
         if (isset($filterBy['statId'])) {
@@ -235,7 +239,12 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                     FROM tag 
                       INNER JOIN lktagdisplaygroup 
                       ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
+                      INNER JOIN `displaygroup`
+                      ON lktagdisplaygroup.displayGroupId = displaygroup.displayGroupId
+                        AND `displaygroup`.isDisplaySpecific = 1 
+                      INNER JOIN `lkdisplaydg`
+                      ON lkdisplaydg.displayGroupId = displaygroup.displayGroupId
+                   WHERE lkdisplaydg.displayId = stat.displayId 
                   GROUP BY lktagdisplaygroup.displayGroupId
                 ) AS displayTags
             ';
@@ -271,11 +280,6 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         FROM stat
             LEFT OUTER JOIN display
             ON stat.DisplayID = display.DisplayID
-            LEFT OUTER JOIN `lkdisplaydg`
-            ON lkdisplaydg.displayid = display.displayId
-            LEFT OUTER JOIN `displaygroup`
-            ON displaygroup.displaygroupid = lkdisplaydg.displaygroupid
-                AND `displaygroup`.isDisplaySpecific = 1
             LEFT OUTER JOIN layout
             ON layout.LayoutID = stat.LayoutID
             LEFT OUTER JOIN media
@@ -295,6 +299,9 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         // get the next stats from the given date
         if ($statDate != null) {
             $body .= ' AND stat.statDate >= ' . $statDate->format('U');
+        }
+        if ($statDateLessThan != null) {
+            $body .= ' AND stat.statDate < ' . $statDateLessThan->format('U');
         }
 
         if ($statId != null) {
@@ -501,7 +508,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
         }
         catch (\PDOException $e) {
             $this->log->error($e->getMessage());
-            throw new \RuntimeException('Stats cannot be deleted.');
+            throw new GeneralException('Stats cannot be deleted.');
         }
     }
 

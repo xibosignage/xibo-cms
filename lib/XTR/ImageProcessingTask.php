@@ -21,10 +21,8 @@
  */
 
 namespace Xibo\XTR;
-use Xibo\Entity\DisplayGroup;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\ImageProcessingServiceInterface;
 
@@ -124,6 +122,28 @@ class ImageProcessingTask implements TaskInterface
                 ]);
             }
 
+            // Mark any effected Layouts to be rebuilt.
+            $this->store->update('
+                UPDATE `layout` 
+                    SET status = :status, `modifiedDT` = :modifiedDt 
+                 WHERE layoutId IN (
+                     SELECT DISTINCT region.layoutId 
+                       FROM lkwidgetmedia
+                        INNER JOIN widget
+                        ON widget.widgetId = lkwidgetmedia.widgetId
+                        INNER JOIN lkplaylistplaylist
+                        ON lkplaylistplaylist.childId = widget.playlistId
+                        INNER JOIN playlist
+                        ON lkplaylistplaylist.parentId = playlist.playlistId
+                        INNER JOIN region
+                        ON playlist.regionId = region.regionId
+                      WHERE lkwidgetmedia.mediaId = :mediaId
+                     )
+            ', [
+                'status' => 3,
+                'modifiedDt' => $this->date->getLocalDate(),
+                'mediaId' => $media->mediaId
+            ]);
         }
 
         // Notify display
