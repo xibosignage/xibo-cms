@@ -1584,7 +1584,8 @@ class LayoutFactory extends BaseFactory
                 $playlist->requiresDurationUpdate = 1;
 
                 // save non-media based widget, we can't save media based widgets here as we don't have updated mediaId yet.
-                if ($module->regionSpecific == 1) {
+                // double check if we have any medias assigned to a Widget, if so, we cannot save it here.
+                if ($module->regionSpecific == 1 && $playlistWidget->mediaIds == []) {
                     $playlistWidget->save();
                 }
             }
