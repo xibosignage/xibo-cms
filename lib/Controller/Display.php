@@ -2268,13 +2268,13 @@ class Display extends Base
     /**
      * @param Request $request
      * @param Response $response
+     * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @param $displayId
      * @throws NotFoundException
      */
-    public function moveCmsCancelForm(Request $request, Response $response, $displayId)
+    public function moveCmsCancelForm(Request $request, Response $response, $id)
     {
-        $display = $this->displayFactory->getById($displayId);
+        $display = $this->displayFactory->getById($id);
 
         if (!$this->getUser()->checkEditable($display)) {
             throw new AccessDeniedException();
