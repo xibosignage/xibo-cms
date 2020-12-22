@@ -1100,16 +1100,16 @@ class Soap
                 // Add as a node at the end of the schedule.
                 $layout = $scheduleXml->createElement("layout");
 
-                $layout->setAttribute("file", $defaultLayout);
+                $layout->setAttribute("file", $defaultLayoutId);
                 $layout->setAttribute("fromdt", '2000-01-01 00:00:00');
                 $layout->setAttribute("todt", '2030-01-19 00:00:00');
                 $layout->setAttribute("scheduleid", 0);
                 $layout->setAttribute("priority", 0);
 
-                if ($options['dependentsAsNodes'] && array_key_exists($defaultLayout, $layoutDependents)) {
+                if ($options['dependentsAsNodes'] && array_key_exists($defaultLayoutId, $layoutDependents)) {
                     $dependentNode = $scheduleXml->createElement("dependents");
 
-                    foreach ($layoutDependents[$defaultLayout] as $storedAs) {
+                    foreach ($layoutDependents[$defaultLayoutId] as $storedAs) {
                         $fileNode = $scheduleXml->createElement("file", $storedAs);
 
                         $dependentNode->appendChild($fileNode);
@@ -1140,6 +1140,11 @@ class Soap
             $layoutElements->appendChild($default);
         } catch (\Exception $exception) {
             $this->getLog()->error('Default Layout Invalid: ' . $exception->getMessage());
+
+            // Add the splash screen on as the default layout (ID 0)
+            $default = $scheduleXml->createElement('default');
+            $default->setAttribute('file', 0);
+            $layoutElements->appendChild($default);
         }
 
         // Add on a list of global dependants
