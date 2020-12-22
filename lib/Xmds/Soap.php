@@ -1118,7 +1118,7 @@ class Soap
             if ($options['dependentsAsNodes'] && array_key_exists($defaultLayoutId, $layoutDependents)) {
                 $dependentNode = $scheduleXml->createElement("dependents");
 
-                foreach ($layoutDependents[$this->display->defaultLayoutId] as $storedAs) {
+                foreach ($layoutDependents[$defaultLayoutId] as $storedAs) {
                     $fileNode = $scheduleXml->createElement("file", $storedAs);
 
                     $dependentNode->appendChild($fileNode);
