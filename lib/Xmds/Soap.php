@@ -353,6 +353,11 @@ class Soap
         $fileElements->setAttribute('fitlerFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
         $fileElements->setAttribute('fitlerTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
 
+        // Default Layout
+        $defaultLayoutId = ($this->display->defaultLayoutId === null || $this->display->defaultLayoutId === 0)
+            ? $this->getConfig()->getSetting('DEFAULT_LAYOUT')
+            : $this->display->defaultLayoutId;
+
         // Get a list of all layout ids in the schedule right now
         // including any layouts that have been associated to our Display Group
         try {
@@ -382,9 +387,13 @@ class Soap
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
 
-            // Our layout list will always include the default layout
+            // Build a list of Layouts
             $layouts = [];
-            $layouts[] = $this->display->defaultLayoutId;
+
+            // Our layout list will always include the default layout
+            if ($defaultLayoutId != null) {
+                $layouts[] = $defaultLayoutId;
+            }
 
             // Build up the other layouts into an array
             foreach ($sth->fetchAll() as $row) {
@@ -1103,17 +1112,16 @@ class Soap
                 // Add as a node at the end of the schedule.
                 $layout = $scheduleXml->createElement("layout");
 
-                $layout->setAttribute("file", $this->display->defaultLayoutId);
+                $layout->setAttribute("file", $defaultLayout);
                 $layout->setAttribute("fromdt", '2000-01-01 00:00:00');
                 $layout->setAttribute("todt", '2030-01-19 00:00:00');
                 $layout->setAttribute("scheduleid", 0);
                 $layout->setAttribute("priority", 0);
 
-                if ($options['dependentsAsNodes'] && array_key_exists($this->display->defaultLayoutId,
-                        $layoutDependents)) {
+                if ($options['dependentsAsNodes'] && array_key_exists($defaultLayout, $layoutDependents)) {
                     $dependentNode = $scheduleXml->createElement("dependents");
 
-                    foreach ($layoutDependents[$this->display->defaultLayoutId] as $storedAs) {
+                    foreach ($layoutDependents[$defaultLayout] as $storedAs) {
                         $fileNode = $scheduleXml->createElement("file", $storedAs);
 
                         $dependentNode->appendChild($fileNode);
