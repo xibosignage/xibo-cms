@@ -873,6 +873,11 @@ class Soap
         $layoutElements->setAttribute('filterFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
         $layoutElements->setAttribute('filterTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
 
+        // Default Layout
+        $defaultLayoutId = ($this->display->defaultLayoutId === null || $this->display->defaultLayoutId === 0)
+            ? $this->getConfig()->getSetting('DEFAULT_LAYOUT')
+            : $this->display->defaultLayoutId;
+
         try {
             $dbh = $this->getStore()->getConnection();
 
@@ -894,7 +899,7 @@ class Soap
             $layoutDependents = [];
 
             // Layouts (pop in the default)
-            $layoutIds = [$this->display->defaultLayoutId];
+            $layoutIds = [$defaultLayoutId];
 
             // Calculate a sync key
             $syncKey = [];
@@ -1083,27 +1088,48 @@ class Soap
         }
 
         // Default Layout
-        // is it valid?
-        $defaultLayout = $this->layoutFactory->getById($this->display->defaultLayoutId);
+        try {
+            // is it valid?
+            $defaultLayout = $this->layoutFactory->getById($defaultLayoutId);
 
-        if ($defaultLayout->status >= ModuleWidget::$STATUS_INVALID) {
-            $this->getLog()->error(sprintf('Player has invalid default Layout. Display = %s, LayoutId = %d',
-                $this->display->display,
-                $defaultLayout->layoutId));
-        }
+            if ($defaultLayout->status >= ModuleWidget::$STATUS_INVALID) {
+                $this->getLog()->error(sprintf('Player has invalid default Layout. Display = %s, LayoutId = %d',
+                    $this->display->display,
+                    $defaultLayout->layoutId));
+            }
 
-        // Are we interleaving the default? And is the default valid?
-        if ($this->display->incSchedule == 1 && $defaultLayout->status < ModuleWidget::$STATUS_INVALID) {
-            // Add as a node at the end of the schedule.
-            $layout = $scheduleXml->createElement("layout");
+            // Are we interleaving the default? And is the default valid?
+            if ($this->display->incSchedule == 1 && $defaultLayout->status < ModuleWidget::$STATUS_INVALID) {
+                // Add as a node at the end of the schedule.
+                $layout = $scheduleXml->createElement("layout");
 
-            $layout->setAttribute("file", $this->display->defaultLayoutId);
-            $layout->setAttribute("fromdt", '2000-01-01 00:00:00');
-            $layout->setAttribute("todt", '2030-01-19 00:00:00');
-            $layout->setAttribute("scheduleid", 0);
-            $layout->setAttribute("priority", 0);
+                $layout->setAttribute("file", $this->display->defaultLayoutId);
+                $layout->setAttribute("fromdt", '2000-01-01 00:00:00');
+                $layout->setAttribute("todt", '2030-01-19 00:00:00');
+                $layout->setAttribute("scheduleid", 0);
+                $layout->setAttribute("priority", 0);
 
-            if ($options['dependentsAsNodes'] && array_key_exists($this->display->defaultLayoutId, $layoutDependents)) {
+                if ($options['dependentsAsNodes'] && array_key_exists($this->display->defaultLayoutId,
+                        $layoutDependents)) {
+                    $dependentNode = $scheduleXml->createElement("dependents");
+
+                    foreach ($layoutDependents[$this->display->defaultLayoutId] as $storedAs) {
+                        $fileNode = $scheduleXml->createElement("file", $storedAs);
+
+                        $dependentNode->appendChild($fileNode);
+                    }
+
+                    $layout->appendChild($dependentNode);
+                }
+
+                $layoutElements->appendChild($layout);
+            }
+
+            // Add on the default layout node
+            $default = $scheduleXml->createElement("default");
+            $default->setAttribute("file", $defaultLayoutId);
+
+            if ($options['dependentsAsNodes'] && array_key_exists($defaultLayoutId, $layoutDependents)) {
                 $dependentNode = $scheduleXml->createElement("dependents");
 
                 foreach ($layoutDependents[$this->display->defaultLayoutId] as $storedAs) {
@@ -1112,29 +1138,13 @@ class Soap
                     $dependentNode->appendChild($fileNode);
                 }
 
-                $layout->appendChild($dependentNode);
+                $default->appendChild($dependentNode);
             }
 
-            $layoutElements->appendChild($layout);
+            $layoutElements->appendChild($default);
+        } catch (\Exception $exception) {
+            $this->getLog()->error('Default Layout Invalid: ' . $exception->getMessage());
         }
-
-        // Add on the default layout node
-        $default = $scheduleXml->createElement("default");
-        $default->setAttribute("file", $this->display->defaultLayoutId);
-
-        if ($options['dependentsAsNodes'] && array_key_exists($this->display->defaultLayoutId, $layoutDependents)) {
-            $dependentNode = $scheduleXml->createElement("dependents");
-
-            foreach ($layoutDependents[$this->display->defaultLayoutId] as $storedAs) {
-                $fileNode = $scheduleXml->createElement("file", $storedAs);
-
-                $dependentNode->appendChild($fileNode);
-            }
-
-            $default->appendChild($dependentNode);
-        }
-
-        $layoutElements->appendChild($default);
 
         // Add on a list of global dependants
         $globalDependents = $scheduleXml->createElement("dependants");
