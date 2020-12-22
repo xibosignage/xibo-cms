@@ -885,7 +885,9 @@ class Soap
             $layoutDependents = [];
 
             // Layouts (pop in the default)
-            $layoutIds = [$defaultLayoutId];
+            if ($defaultLayoutId != null) {
+                $layoutIds = [$defaultLayoutId];
+            }
 
             // Calculate a sync key
             $syncKey = [];
