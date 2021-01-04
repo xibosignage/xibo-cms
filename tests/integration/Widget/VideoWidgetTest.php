@@ -25,7 +25,9 @@ namespace Xibo\Tests\Integration\Widget;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
+use Xibo\OAuth2\Client\Entity\XiboSchedule;
 use Xibo\OAuth2\Client\Entity\XiboVideo;
+use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
 
@@ -36,9 +38,13 @@ use Xibo\Tests\LocalWebTestCase;
 class VideoWidgetTest extends LocalWebTestCase
 {
     use LayoutHelperTrait;
+    use DisplayHelperTrait;
 
     /** @var \Xibo\OAuth2\Client\Entity\XiboLayout */
     protected $publishedLayout;
+
+    /** @var \Xibo\OAuth2\Client\Entity\XiboLayout */
+    protected $draftLayout;
 
     /** @var XiboLibrary */
     protected $media;
@@ -59,13 +65,13 @@ class VideoWidgetTest extends LocalWebTestCase
         $this->publishedLayout = $this->createLayout();
 
         // Checkout
-        $layout = $this->getDraft($this->publishedLayout);
+        $this->draftLayout = $this->getDraft($this->publishedLayout);
 
         // Create some media to upload
         $this->media = (new XiboLibrary($this->getEntityProvider()))->create(Random::generateString(), PROJECT_ROOT . '/tests/resources/HLH264.mp4');
 
         // Assign the media we've created to our regions playlist.
-        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $layout->regions[0]->regionPlaylist->playlistId);
+        $playlist = (new XiboPlaylist($this->getEntityProvider()))->assign([$this->media->mediaId], 10, $this->draftLayout->regions[0]->regionPlaylist->playlistId);
 
         // Store the widgetId
         $this->widgetId = $playlist->widgets[0]->widgetId;
@@ -133,5 +139,117 @@ class VideoWidgetTest extends LocalWebTestCase
                 $this->assertSame($useDuration, $option['value']);
             }
         }
+    }
+
+    public function testEndDetect()
+    {
+        $response = $this->sendRequest('PUT', '/playlist/widget/' . $this->widgetId, [
+            'name' => 'End Detect',
+            'duration' => 0,
+            'useDuration' => 0,
+            'scaleTypeId' => 'aspect',
+            'mute' => 1,
+            'loop' => 0,
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+
+        // Publish
+        $this->publishedLayout = $this->publish($this->publishedLayout);
+
+        // Build the Layout and get the XLF
+        $this->buildLayout($this->publishedLayout);
+
+        // Create a Display
+        $display = $this->createDisplay();
+
+        // Schedule the Layout "always" onto our display
+        //  deleting the layout will remove this at the end
+        $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
+            date('Y-m-d H:i:s', time()),
+            date('Y-m-d H:i:s', time()+7200),
+            $this->publishedLayout->campaignId,
+            [$display->displayGroupId],
+            0,
+            NULL,
+            NULL,
+            NULL,
+            0,
+            0,
+            0
+        );
+
+        $this->displaySetLicensed($display);
+        $this->getXmdsWrapper()->RequiredFiles($display->license);
+
+        // Get the file XLF
+        $file = $this->getXmdsWrapper()->GetFile($display->license,
+            $this->publishedLayout->layoutId,
+            'layout',
+            0,
+            1024
+        );
+
+        $this->getLogger()->debug($file);
+
+        $this->assertTrue(stripos($file, 'duration="0"') !== false, 'Duration is not 0 as expected for End Detection');
+        $this->assertTrue(stripos($file, 'useDuration="0"') !== false, 'useDuration is incorrectly set');
+    }
+
+    public function testNotEndDetect()
+    {
+        $response = $this->sendRequest('PUT', '/playlist/widget/' . $this->widgetId, [
+            'name' => 'End Detect',
+            'duration' => 35,
+            'useDuration' => 1,
+            'scaleTypeId' => 'aspect',
+            'mute' => 1,
+            'loop' => 0,
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
+
+        // Publish
+        $this->publishedLayout = $this->publish($this->publishedLayout);
+
+        // Build the Layout and get the XLF
+        $this->buildLayout($this->publishedLayout);
+
+        // Create a Display
+        $display = $this->createDisplay();
+
+        // Schedule the Layout "always" onto our display
+        //  deleting the layout will remove this at the end
+        $event = (new XiboSchedule($this->getEntityProvider()))->createEventLayout(
+            date('Y-m-d H:i:s', time()),
+            date('Y-m-d H:i:s', time()+7200),
+            $this->publishedLayout->campaignId,
+            [$display->displayGroupId],
+            0,
+            NULL,
+            NULL,
+            NULL,
+            0,
+            0,
+            0
+        );
+
+        $this->displaySetLicensed($display);
+        $this->getXmdsWrapper()->RequiredFiles($display->license);
+
+        // Get the file XLF
+        $file = $this->getXmdsWrapper()->GetFile($display->license,
+            $this->publishedLayout->layoutId,
+            'layout',
+            0,
+            1024
+        );
+
+        $this->getLogger()->debug($file);
+
+        $this->assertTrue(stripos($file, 'duration="35"') !== false, 'Duration is not > 0 as expected for non End Detection');
+        $this->assertTrue(stripos($file, 'useDuration="1"') !== false, 'useDuration is incorrectly set');
     }
 }

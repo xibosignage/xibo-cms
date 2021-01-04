@@ -203,6 +203,25 @@
                         "render": dataTableSpacingPreformatted
                     },
                     {
+                        "name": "status",
+                        "data": function (data, type) {
+                            if (type != "display")
+                                return data.status;
+
+                            var icon = "";
+                            if (data.status == 1)
+                                icon = "fa-check";
+                            else if (data.status == 2)
+                                icon = "fa-exclamation";
+                            else if (data.status == 3)
+                                icon = "fa-cogs";
+                            else
+                                icon = "fa-times";
+
+                            return "<span class='fa " + icon + "' title='" + (data.statusDescription) + ((data.statusMessage == null) ? "" : " - " + (data.statusMessage)) + "'></span>";
+                        }
+                    },
+                    {
                         "sortable": false,
                         "data": function(data, type, row, meta) {
                             if (type !== "display")

@@ -43,7 +43,7 @@
 
                         {% set title %}{% trans "Nominated File" %}{% endset %}
                         {% set helpText %}{% trans "Enter a nominated file name that player will attempt to open after extracting the .htz archive" %}{% endset %}
-                        {{ forms.input("nominatedFile", title, module.getOption("nominatedFile", 'index.html'), helpText) }}
+                        {{ forms.input("nominatedFile", title, module.getOption("nominatedFile", 'index.html')|url_decode, helpText) }}
 
                         {% set title %}{% trans "Set a duration?" %}{% endset %}
                         {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}

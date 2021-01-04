@@ -43,7 +43,7 @@ class DataSetTicker extends ModuleWidget
     {
         // Extends parent's method
         parent::installFiles();
-        
+
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.marquee.min.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
@@ -397,6 +397,8 @@ class DataSetTicker extends ModuleWidget
             $this->setOption('itemsSideBySide', $sanitizedParams->getCheckbox('itemsSideBySide'));
             $this->setOption('upperLimit', $sanitizedParams->getInt('upperLimit', ['default' => 0]));
             $this->setOption('lowerLimit', $sanitizedParams->getInt('lowerLimit', ['default' => 0]));
+            $this->setOption('numItems', $sanitizedParams->getInt('numItems', ['default' => 0]));
+            $this->setOption('randomiseItems', $sanitizedParams->getCheckbox('randomiseItems'));
             $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));
             $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
             $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', ''));
@@ -491,6 +493,7 @@ class DataSetTicker extends ModuleWidget
         $durationIsPerItem = $this->getOption('durationIsPerItem', 1);
         $takeItemsFrom = $this->getOption('takeItemsFrom', 'start');
         $itemsPerPage = $this->getOption('itemsPerPage', 0);
+        $numItems = $this->getOption('numItems', 0);
 
         // Text/CSS subsitution variables.
         // DataSet tickers or feed tickers without overrides.
@@ -535,7 +538,10 @@ class DataSetTicker extends ModuleWidget
         }
 
         // Work out how many pages we will be showing.
-        $pages = count($items);
+        $pages = $numItems;
+        if ($numItems > count($items) || $numItems == 0) {
+            $pages = count($items);
+        }
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
 
@@ -570,6 +576,7 @@ class DataSetTicker extends ModuleWidget
                 'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
                 'takeItemsFrom' => $takeItemsFrom,
                 'itemsPerPage' => $itemsPerPage,
+                'numItems' => $numItems,
                 'randomiseItems' => $this->getOption('randomiseItems', 0),
                 'speed' => $this->getOption('speed', 1000),
                 'originalWidth' => $this->region->width,

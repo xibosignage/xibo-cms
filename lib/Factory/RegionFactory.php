@@ -250,6 +250,9 @@ class RegionFactory extends BaseFactory
             $params['isDrawer'] = $sanitizedFilter->getInt('isDrawer');
         }
 
+        // Order by Name
+        $sql .= ' ORDER BY `region`.name ';
+
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['zIndex', 'duration', 'isDrawer']]);
         }

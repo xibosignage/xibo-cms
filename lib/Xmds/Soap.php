@@ -25,6 +25,7 @@ define('BLACKLIST_ALL', "All");
 define('BLACKLIST_SINGLE', "Single");
 
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 use Monolog\Logger;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
@@ -352,6 +353,11 @@ class Soap
         $fileElements->setAttribute('fitlerFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
         $fileElements->setAttribute('fitlerTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
 
+        // Default Layout
+        $defaultLayoutId = ($this->display->defaultLayoutId === null || $this->display->defaultLayoutId === 0)
+            ? $this->getConfig()->getSetting('DEFAULT_LAYOUT')
+            : $this->display->defaultLayoutId;
+
         // Get a list of all layout ids in the schedule right now
         // including any layouts that have been associated to our Display Group
         try {
@@ -381,9 +387,13 @@ class Soap
             $sth = $dbh->prepare($SQL);
             $sth->execute($params);
 
-            // Our layout list will always include the default layout
+            // Build a list of Layouts
             $layouts = [];
-            $layouts[] = $this->display->defaultLayoutId;
+
+            // Our layout list will always include the default layout
+            if ($defaultLayoutId != null) {
+                $layouts[] = $defaultLayoutId;
+            }
 
             // Build up the other layouts into an array
             foreach ($sth->fetchAll() as $row) {
@@ -872,6 +882,11 @@ class Soap
         $layoutElements->setAttribute('filterFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
         $layoutElements->setAttribute('filterTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
 
+        // Default Layout
+        $defaultLayoutId = ($this->display->defaultLayoutId === null || $this->display->defaultLayoutId === 0)
+            ? $this->getConfig()->getSetting('DEFAULT_LAYOUT')
+            : $this->display->defaultLayoutId;
+
         try {
             $dbh = $this->getStore()->getConnection();
 
@@ -893,7 +908,7 @@ class Soap
             $layoutDependents = [];
 
             // Layouts (pop in the default)
-            $layoutIds = [$this->display->defaultLayoutId];
+            $layoutIds = [$defaultLayoutId];
 
             // Calculate a sync key
             $syncKey = [];
@@ -1081,49 +1096,68 @@ class Soap
             return new \SoapFault('Sender', 'Unable to get the schedule');
         }
 
-        // Are we interleaving the default?
-        if ($this->display->incSchedule == 1) {
-            // Add as a node at the end of the schedule.
-            $layout = $scheduleXml->createElement("layout");
+        // Default Layout
+        try {
+            // is it valid?
+            $defaultLayout = $this->layoutFactory->getById($defaultLayoutId);
 
-            $layout->setAttribute("file", $this->display->defaultLayoutId);
-            $layout->setAttribute("fromdt", '2000-01-01 00:00:00');
-            $layout->setAttribute("todt", '2030-01-19 00:00:00');
-            $layout->setAttribute("scheduleid", 0);
-            $layout->setAttribute("priority", 0);
+            if ($defaultLayout->status >= ModuleWidget::$STATUS_INVALID) {
+                $this->getLog()->error(sprintf('Player has invalid default Layout. Display = %s, LayoutId = %d',
+                    $this->display->display,
+                    $defaultLayout->layoutId));
+            }
 
-            if ($options['dependentsAsNodes'] && array_key_exists($this->display->defaultLayoutId, $layoutDependents)) {
+            // Are we interleaving the default? And is the default valid?
+            if ($this->display->incSchedule == 1 && $defaultLayout->status < ModuleWidget::$STATUS_INVALID) {
+                // Add as a node at the end of the schedule.
+                $layout = $scheduleXml->createElement("layout");
+
+                $layout->setAttribute("file", $defaultLayoutId);
+                $layout->setAttribute("fromdt", '2000-01-01 00:00:00');
+                $layout->setAttribute("todt", '2030-01-19 00:00:00');
+                $layout->setAttribute("scheduleid", 0);
+                $layout->setAttribute("priority", 0);
+
+                if ($options['dependentsAsNodes'] && array_key_exists($defaultLayoutId, $layoutDependents)) {
+                    $dependentNode = $scheduleXml->createElement("dependents");
+
+                    foreach ($layoutDependents[$defaultLayoutId] as $storedAs) {
+                        $fileNode = $scheduleXml->createElement("file", $storedAs);
+
+                        $dependentNode->appendChild($fileNode);
+                    }
+
+                    $layout->appendChild($dependentNode);
+                }
+
+                $layoutElements->appendChild($layout);
+            }
+
+            // Add on the default layout node
+            $default = $scheduleXml->createElement("default");
+            $default->setAttribute("file", $defaultLayoutId);
+
+            if ($options['dependentsAsNodes'] && array_key_exists($defaultLayoutId, $layoutDependents)) {
                 $dependentNode = $scheduleXml->createElement("dependents");
 
-                foreach ($layoutDependents[$this->display->defaultLayoutId] as $storedAs) {
+                foreach ($layoutDependents[$defaultLayoutId] as $storedAs) {
                     $fileNode = $scheduleXml->createElement("file", $storedAs);
 
                     $dependentNode->appendChild($fileNode);
                 }
 
-                $layout->appendChild($dependentNode);
+                $default->appendChild($dependentNode);
             }
 
-            $layoutElements->appendChild($layout);
+            $layoutElements->appendChild($default);
+        } catch (\Exception $exception) {
+            $this->getLog()->error('Default Layout Invalid: ' . $exception->getMessage());
+
+            // Add the splash screen on as the default layout (ID 0)
+            $default = $scheduleXml->createElement('default');
+            $default->setAttribute('file', 0);
+            $layoutElements->appendChild($default);
         }
-
-        // Add on the default layout node
-        $default = $scheduleXml->createElement("default");
-        $default->setAttribute("file", $this->display->defaultLayoutId);
-
-        if ($options['dependentsAsNodes'] && array_key_exists($this->display->defaultLayoutId, $layoutDependents)) {
-            $dependentNode = $scheduleXml->createElement("dependents");
-
-            foreach ($layoutDependents[$this->display->defaultLayoutId] as $storedAs) {
-                $fileNode = $scheduleXml->createElement("file", $storedAs);
-
-                $dependentNode->appendChild($fileNode);
-            }
-
-            $default->appendChild($dependentNode);
-        }
-
-        $layoutElements->appendChild($default);
 
         // Add on a list of global dependants
         $globalDependents = $scheduleXml->createElement("dependants");
@@ -1876,7 +1910,7 @@ class Soap
     }
 
     /**
-     * PHONE_HOME if required
+     * Report anonymous usage statistics if they are switched on.
      */
     protected function phoneHome()
     {
@@ -1885,6 +1919,10 @@ class Soap
             // If it's been > 28 days since last PHONE_HOME then
             if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < Carbon::now()->subSeconds(60 * 60 * 24 * 28)->format('U')) {
 
+                if ($this->display->isAuditing()) {
+                    $this->getLog()->debug('Phone Home required for displayId ' . $this->display->displayId);
+                }
+
                 try {
                     $dbh = $this->getStore()->getConnection();
 
@@ -1892,33 +1930,25 @@ class Soap
                     $sth = $dbh->prepare('SELECT COUNT(*) AS Cnt FROM `display` WHERE `licensed` = 1');
                     $sth->execute();
 
-                    $PHONE_HOME_CLIENTS = $sth->fetchColumn();
-
-                    // Retrieve version number
-                    $PHONE_HOME_VERSION = Environment::$WEBSITE_VERSION_NAME;
-
-                    $PHONE_HOME_URL = $this->getConfig()->getSetting('PHONE_HOME_URL') . "?id=" . urlencode($this->getConfig()->getSetting('PHONE_HOME_KEY')) . "&version=" . urlencode($PHONE_HOME_VERSION) . "&numClients=" . urlencode($PHONE_HOME_CLIENTS);
-
-                    if ($this->display->isAuditing())
-                        $this->getLog()->notice(sprintf("audit", "PHONE_HOME_URL " . $PHONE_HOME_URL, "xmds", "RequiredFiles"));
-
                     // Set PHONE_HOME_TIME to NOW.
-                    $sth = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
-                    $sth->execute(array(
+                    $update = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
+                    $update->execute(array(
                         'time' => Carbon::now()->format('U'),
                         'setting' => 'PHONE_HOME_DATE'
                     ));
 
-                    @file_get_contents($PHONE_HOME_URL);
-
-                    if ($this->display->isAuditing())
-                        $this->getLog()->notice(sprintf("audit", "PHONE_HOME [OUT]", "xmds", "RequiredFiles"));
+                    // Use Guzzle to phone home.
+                    // we don't care about the response
+                    (new Client())->get($this->getConfig()->getSetting('PHONE_HOME_URL'), $this->getConfig()->getGuzzleProxy([
+                        'query' => [
+                            'id' => $this->getConfig()->getSetting('PHONE_HOME_KEY'),
+                            'version' => Environment::$WEBSITE_VERSION_NAME,
+                            'numClients' => $sth->fetchColumn()
+                        ]
+                    ]));
 
                 } catch (\Exception $e) {
-
-                    $this->getLog()->error($e->getMessage());
-
-                    return false;
+                    $this->getLog()->error('Phone Home: ' . $e->getMessage());
                 }
             }
         }

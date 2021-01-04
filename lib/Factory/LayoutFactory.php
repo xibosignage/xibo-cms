@@ -751,6 +751,16 @@ class LayoutFactory extends BaseFactory
             // create all nested Playlists, save their widgets to key=>value array
             foreach ($nestedPlaylistJson as $nestedPlaylist) {
                 $newPlaylist = $this->playlistFactory->createEmpty()->hydrate($nestedPlaylist);
+                $newPlaylist->tags = [];
+
+                // Populate tags
+                if ($nestedPlaylist['tags'] !== null && count($nestedPlaylist['tags']) > 0) {
+                    foreach ($nestedPlaylist['tags'] as $tag) {
+                        $newPlaylist->tags[] = $this->tagFactory->tagFromString(
+                            $tag['tag'] . (!empty($tag['value']) ? '|' . $tag['value'] : '')
+                        );
+                    }
+                }
 
                 $oldIds[] = $newPlaylist->playlistId;
                 $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
@@ -914,6 +924,16 @@ class LayoutFactory extends BaseFactory
                     foreach ($playlistJson as $playlistDetail) {
 
                         $newPlaylist = $this->playlistFactory->createEmpty()->hydrate($playlistDetail);
+                        $newPlaylist->tags = [];
+
+                        // Populate tags
+                        if ($playlistDetail['tags'] !== null && count($playlistDetail['tags']) > 0) {
+                            foreach ($playlistDetail['tags'] as $tag) {
+                                $newPlaylist->tags[] = $this->tagFactory->tagFromString(
+                                    $tag['tag'] . (!empty($tag['value']) ? '|' . $tag['value'] : '')
+                                );
+                            }
+                        }
 
                         // Check to see if it matches our Sub-Playlist widget config
                         if (in_array($newPlaylist->playlistId, $layoutSubPlaylistId)) {
