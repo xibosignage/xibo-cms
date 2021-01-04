@@ -143,7 +143,7 @@ class VideoWidgetTest extends LocalWebTestCase
 
     public function testEndDetect()
     {
-        $response = $this->client->put('/playlist/widget/' . $this->widgetId, [
+        $response = $this->sendRequest('PUT', '/playlist/widget/' . $this->widgetId, [
             'name' => 'End Detect',
             'duration' => 0,
             'useDuration' => 0,
@@ -152,8 +152,8 @@ class VideoWidgetTest extends LocalWebTestCase
             'loop' => 0,
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
 
         // Publish
         $this->publishedLayout = $this->publish($this->publishedLayout);
@@ -199,7 +199,7 @@ class VideoWidgetTest extends LocalWebTestCase
 
     public function testNotEndDetect()
     {
-        $response = $this->client->put('/playlist/widget/' . $this->widgetId, [
+        $response = $this->sendRequest('PUT', '/playlist/widget/' . $this->widgetId, [
             'name' => 'End Detect',
             'duration' => 35,
             'useDuration' => 1,
@@ -208,8 +208,8 @@ class VideoWidgetTest extends LocalWebTestCase
             'loop' => 0,
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
-        $this->assertSame(200, $this->client->response->status());
-        $this->assertNotEmpty($this->client->response->body());
+        $this->assertSame(200, $response->getStatusCode());
+        $this->assertNotEmpty($response->getBody());
 
         // Publish
         $this->publishedLayout = $this->publish($this->publishedLayout);
