@@ -144,7 +144,16 @@
         </div>
         {{/if}}
         {{#if showWidgetDates }}
-        <div class="row row-widget-dates">
+        <div class="row">
+            <div class="col-md-12">
+                <label for="setExpiryDates">
+                    <input type="checkbox" id="setExpiryDates" name="setExpiryDates">
+                    {{ trans.widgetExpiryDates }}
+                </label>
+                <span class="help-block">{{ trans.widgetExpiryDatesMessage }}</span>
+            </div>
+        </div>
+        <div class="row row-widget-dates row-widget-set-expiry hide">
             <div class="col-md-6">
                 <div class="form-group">
                     <label class="col-sm-2 control-label" for="widgetFromDt">{{ trans.widgetFromDt }}</label>
@@ -172,18 +181,20 @@
                 </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-6">
+        <div class="row row-widget-set-expiry hide">
+            <div class="col-md-12">
                 <label for="deleteOnExpiry">
                     <input type="checkbox" id="deleteOnExpiry" name="deleteOnExpiry">
-                    {{ trans.deleteOnExpiryMessage }}
+                    {{ trans.deleteOnExpiry }}
                 </label>
+                <span class="help-block">{{ trans.deleteOnExpiryMessage }}</span>
             </div>
-            <div class="col-md-6">
+            <div class="col-md-12">
                 <label for="applyToMedia">
                     <input type="checkbox" id="applyToMedia" name="applyToMedia">
-                    {{ trans.applyToMediaMessage }}
+                    {{ trans.applyToMedia }}
                 </label>
+                <span class="help-block">{{ trans.applyToMediaMessage }}</span>
             </div>
         </div>
         {{/if}}

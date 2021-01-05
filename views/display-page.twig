@@ -232,6 +232,7 @@
                                         <th>{% trans "Longitude" %}</th>
                                         <th>{% trans "Screen shot?" %}</th>
                                         <th>{% trans "Thumbnail" %}</th>
+                                        <th>{% trans "CMS Transfer?" %}</th>
                                         <th>{% trans "Bandwidth Limit" %}</th>
                                         <th>{% trans "Last Command" %}</th>
                                         <th>{% trans "XMR Registered" %}</th>
@@ -413,6 +414,12 @@
                         "visible": false
                     },
                     {
+                        "data": "isCmsTransferInProgress",
+                        "render": dataTableTickCrossColumn,
+                        "visible": false,
+                        "name": "isCmsTransferInProgress"
+                    },
+                    {
                         "name": "bandwidthLimit",
                         responsivePriority: 5,
                         "data": null,
@@ -489,27 +496,37 @@
                         "data": null,
                         responsivePriority: 4,
                         "render": function (data, type, row) {
-                            if (type !== "display")
+                            console.log(type);
+                            if (type === "display") {
+                                var html = "<div class='remote-icons'>";
+                                if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" !== "" && row.clientAddress != null && row.clientAddress !== "") {
+                                    var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', row.clientAddress);
+                                    html += '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">'
+                                        + '<i class="fa fa-eye"></i></a>';
+                                }
+
+                                if (row.teamViewerLink !== "") {
+                                    html += '<a href="' + row.teamViewerLink + '" title="{% trans "TeamViewer to this Display" %}" target="_blank">'
+                                        + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/teamviewer.png" alt="TeamViewer Icon"></a>';
+                                }
+
+                                if (row.webkeyLink !== "") {
+                                    html += '<a href="' + row.webkeyLink + '" title="{% trans "Webkey to this Display" %}" target="_blank">'
+                                        + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/webkey.png" alt="Webkey Icon"></a>';
+                                }
+
+                                return html + "</div>";
+
+                            } else if (type === "export") {
+                                if (row.teamViewerLink !== "") {
+                                    return "TeamViewer: " + row.teamViewerLink;
+                                }
+                                if (row.webkeyLink !== "") {
+                                    return "Webkey: " + row.webkeyLink;
+                                }
+                            } else {
                                 return "";
-
-                            var html = "<div class='remote-icons'>";
-                            if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" !== "" && row.clientAddress != null && row.clientAddress !== "") {
-                                var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', row.clientAddress);
-                                html += '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">'
-                                    + '<i class="fa fa-eye"></i></a>';
                             }
-
-                            if (row.teamViewerLink !== "") {
-                                html += '<a href="' + row.teamViewerLink + '" title="{% trans "TeamViewer to this Display" %}" target="_blank">'
-                                    + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/teamviewer.png" alt="TeamViewer Icon"></a>';
-                            }
-
-                            if (row.webkeyLink !== "") {
-                                html += '<a href="' + row.webkeyLink + '" title="{% trans "Webkey to this Display" %}" target="_blank">'
-                                    + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/webkey.png" alt="Webkey Icon"></a>';
-                            }
-
-                            return html + "</div>";
                         },
                         "visible": true,
                         "orderable": false
@@ -693,7 +710,7 @@
                     if( $settings.find('.multiSelect').length > 0) {
                         // Copy special fields ( timers, pictureOptions ) by selected option
                         $inputFields = $settings.find('.multiSelect option:selected[value="' + inputName + '"]').parents('.form-group:first').find('.multiSelect, .multiSelectInputs');
-                        
+
                         $inputFields.each(function(key, el) {
                             if($(el).find('.timePickerDisplayEditForm').length > 0) {
                                 timepickerOptionsFixFlag = true;
@@ -707,7 +724,7 @@
                                 $(el).find('.pictureControlsSlider').bootstrapSlider('destroy');
                             }
                         });
-                    } 
+                    }
                 } else if($inputFields.length == 1 && $inputFields.hasClass('timePicker')) {
                     timepickerFixFlag  = true;
 
@@ -748,7 +765,7 @@
                     $inputFieldsOld.find('.pictureControlsSlider').bootstrapSlider(sliderFixOptions);
                     $inputFields.find('.pictureControlsSlider').bootstrapSlider(sliderFixOptions);
                 }
-                
+
                 // Set value if defined
                 if(newValue != null) {
                     if($(target).find('.multiSelectInputs .pictureControlsSlider').length > 0) {
@@ -801,7 +818,13 @@
                 $(target).find('.slider').addClass('scaled-slider');
                 $(target).find('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
 
-                var $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
+                // Add help text if exists on label
+                let inputHelpText = $(target).parent('tr').find('td:first strong').attr('title');
+                if(inputHelpText) {
+                    $(target).append('<div class="text-muted">' + inputHelpText + '</div>');
+                }
+
+                let $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
                     e.stopPropagation();
                     restoreInputField(target, inputName);
                  });

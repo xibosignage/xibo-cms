@@ -235,6 +235,29 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
+     * Set Bandwidth limit
+     * @param int $bandwidthLimit
+     * @param array $displayIds
+     * @return DisplayGroup[]
+     * @throws NotFoundException
+     */
+    public function setBandwidth($bandwidthLimit, $displayGroupIds)
+    {
+        $sql = 'UPDATE `displaygroup` SET bandwidthLimit = :bandwidthLimit WHERE displayGroupId IN (0';
+        $params['bandwidthLimit'] = $bandwidthLimit;
+        
+        $i = 0;
+        foreach ($displayGroupIds as $displayGroupId) {
+            $i++;
+            $sql .= ',:displayGroupId' . $i;
+            $params['displayGroupId' . $i] = $displayGroupId;
+        }
+        $sql .= ')';
+
+        $this->getStore()->update($sql, $params);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DisplayGroup]

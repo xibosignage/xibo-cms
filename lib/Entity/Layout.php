@@ -1368,7 +1368,10 @@ class Layout implements \JsonSerializable
                 // Is this Widget one that does not have a duration of its own?
                 // Assuming we have at least 1 region with a set duration, then we ought to
                 // Reset to the minimum duration
-                if ($widget->useDuration == 0 && $countWidgets <= 1 && $regionLoop == 0 && $widget->type != 'video'
+                if ($widget->useDuration == 0
+                    && $countWidgets <= 1
+                    && $regionLoop == 0
+                    && $widget->type != 'video'
                     && $layoutCountRegionsWithDuration >= 1
                 ) {
                     // Make sure this Widget expires immediately so that the other Regions can be the leaders when
@@ -1405,7 +1408,8 @@ class Layout implements \JsonSerializable
                 }
 
                 // Set the duration according to whether we are using widget duration or not
-                $mediaNode->setAttribute('duration', $widgetDuration);
+                $isEndDetectVideoWidget = ($widget->type === 'video' && $widget->useDuration === 0);
+                $mediaNode->setAttribute('duration', ($isEndDetectVideoWidget ? 0 : $widgetDuration));
                 $mediaNode->setAttribute('useDuration', $widget->useDuration);
                 $widgetActionNode = null;
 

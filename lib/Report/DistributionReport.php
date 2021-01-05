@@ -15,6 +15,7 @@ use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
@@ -350,7 +351,7 @@ class DistributionReport implements ReportInterface
                 break;
 
             case 'thisweek':
-                $fromDt = $now->copy()->startOfWeek();
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek();
                 $toDt = $fromDt->copy()->addWeek();
                 break;
 
@@ -365,7 +366,7 @@ class DistributionReport implements ReportInterface
                 break;
 
             case 'lastweek':
-                $fromDt = $now->copy()->startOfWeek()->subWeek();
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek()->subWeek();
                 $toDt = $fromDt->copy()->addWeek();
                 break;
 

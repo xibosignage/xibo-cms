@@ -29,8 +29,6 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Item;
-use Xibo\Entity\Permission;
-use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
@@ -1466,9 +1464,9 @@ class Layout extends Base
             if ($this->getUser()->featureEnabled('layout.view')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_preview',
-                    'linkType' => '_blank',
                     'external' => true,
-                    'url' => $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]),
+                    'url' => '#',
+                    'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '");',
                     'text' => __('Preview Layout')
                 );
 
@@ -1479,7 +1477,7 @@ class Layout extends Base
             if ($this->getUser()->featureEnabled('schedule.now')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_schedulenow',
-                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
+                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Layout']),
                     'text' => __('Schedule Now')
                 );
             }

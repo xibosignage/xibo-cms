@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Controller\DataTablesDotNetTrait;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -253,7 +254,7 @@ trait ReportTrait
         // FromDT/ToDt should always be at the start of the day.
         switch ($groupByFilter) {
             case 'byweek':
-                $fromDt->startOfWeek();
+                $fromDt->locale(Translate::GetLocale())->startOfWeek();
                 break;
 
             case 'bymonth':
@@ -307,10 +308,12 @@ trait ReportTrait
                     'end' => $loopDate->addDay()->format('U')
                 ]);
             } else if ($groupByFilter == 'byweek') {
+                $weekNo = $loopDate->locale(Translate::GetLocale())->week();
+                
                 $periods->execute([
                     'id' => $loopDate->weekOfYear . $loopDate->year,
                     'customLabel' => $loopDate->format($customLabel),
-                    'label' => $loopDate->format('Y-m-d (\wW)'),
+                    'label' => $loopDate->format('Y-m-d') . '(w' . $weekNo . ')',
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addWeek()->format('U')
                 ]);

@@ -13,6 +13,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
@@ -302,7 +303,7 @@ class SummaryReport implements ReportInterface
                 break;
 
             case 'thisweek':
-                $fromDt = $now->copy()->startOfWeek();
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek();
                 $toDt = $fromDt->copy()->addWeek();
                 $groupByFilter = 'byday';
                 break;
@@ -324,7 +325,7 @@ class SummaryReport implements ReportInterface
                 break;
 
             case 'lastweek':
-                $fromDt = $now->copy()->startOfWeek()->subWeek();
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek()->subWeek();
                 $toDt = $fromDt->copy()->addWeek();
                 $groupByFilter = 'byday';
                 break;
@@ -646,8 +647,8 @@ class SummaryReport implements ReportInterface
                 $extendedPeriodEnd = $filterRangeEnd;
             } elseif ($groupByFilter == 'byweek') {
                 // Extend upto the start of the first week of the fromdt, and end of the week of the todt
-                $startOfWeek = $fromDt->copy()->startOfWeek();
-                $endOfWeek = $toDt->copy()->endOfWeek()->addSecond();
+                $startOfWeek = $fromDt->copy()->locale(Translate::GetLocale())->startOfWeek();
+                $endOfWeek = $toDt->copy()->locale(Translate::GetLocale())->endOfWeek()->addSecond();
                 $extendedPeriodStart = new UTCDateTime( $startOfWeek->format('U') * 1000);
                 $extendedPeriodEnd = new UTCDateTime($endOfWeek->format('U') * 1000);
             } elseif ($groupByFilter == 'bymonth') {
@@ -1026,7 +1027,7 @@ class SummaryReport implements ReportInterface
                 // CMS date
                 $period_start = Carbon::createFromTimestamp($period_start_u);
                 $period_end = Carbon::createFromTimestamp($period_end_u);
-
+                
                 if ($groupByFilter == 'byhour'){
                     $label = $period_start->format('g:i A');
                 } elseif ($groupByFilter == 'byday') {
@@ -1038,7 +1039,7 @@ class SummaryReport implements ReportInterface
                 } elseif ($groupByFilter == 'byweek') {
                     $weekstart = $period_start->format('M d');
                     $weekend = $period_end->format('M d');
-                    $weekno = $period_start->format('W');
+                    $weekno = $period_start->locale(Translate::GetLocale())->week();
 
                     if ($period_start_u < $fromDt->copy()->format('U')) {
                         $weekstart = $fromDt->copy()->format('M-d');

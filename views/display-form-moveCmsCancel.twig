@@ -1,0 +1,45 @@
+{#
+/**
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Cancel Transfer?" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Yes" %}, $("#displayMoveCmsCancelForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="displayMoveCmsCancelForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("display.moveCmsCancel", {id: display.displayId }) }}">
+                {% set message %}{% trans "Are you sure you want to cancel this CMS transfer? This is only possible if the Display has not already transferred." %}{% endset %}
+                {{ forms.message(message) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

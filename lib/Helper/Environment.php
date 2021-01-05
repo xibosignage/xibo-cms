@@ -304,6 +304,14 @@ class Environment
     /**
      * @return bool
      */
+    public static function checkCurl()
+    {
+        return extension_loaded('curl');
+    }
+
+    /**
+     * @return bool
+     */
     public static function checkSimpleXml()
     {
         return extension_loaded('simplexml');

@@ -529,6 +529,9 @@ $(document).ready(function() {
                 // Get the template and render it on the div
                 $('.cal-event-breadcrumb-trail #content').append(calendar._breadcrumbTrail($self.data("elemId"), events, $self.data("eventId")));
                 
+                // Create mini layout preview
+                createMiniLayoutPreview(layoutPreviewUrl.replace(':id', $self.data("elemId")));
+
                 XiboInitialise("");
             }
             
@@ -949,7 +952,7 @@ var processScheduleFormElements = function(el) {
             $(".interrupt-control").css('display', interruptControlDisplay);
 
             // If the fieldVal is 2 (command), then we should set the dayPartId to be 0 (custom)
-            if (fieldVal === 2) {
+            if (fieldVal == 2) {
                 // Determine what the custom day part is.
                 var $dayPartId = $("#dayPartId");
                 var customDayPartId = 0;
@@ -965,6 +968,10 @@ var processScheduleFormElements = function(el) {
                 var $startTime = $(".starttime-control");
                 $startTime.find("input[name=fromDt_Link2]").show();
                 $startTime.find(".help-block").html($startTime.closest("form").data().daypartMessage);
+
+                // Set the repeats/reminders tabs to visible.
+                $("li.repeats").css("display", "block");
+                $("li.reminders").css("display", "block");
             }
             
             // Call funtion for the daypart ID 

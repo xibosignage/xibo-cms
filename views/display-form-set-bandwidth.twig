@@ -1,0 +1,69 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% set randomId = random() %}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Bandwidth Limit" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#displayFormSetBandwidthLimit").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="displayFormSetBandwidthLimit" class="XiboForm form-horizontal" method="put" action="{{ url_for("display.setBandwidthLimitMultiple", {id: display.displayId}) }}">
+                {% set setBandwidthMultipleMessage %}
+                    {% trans "Change Bandwidth Limit to all the selected displays." %}<br>
+                {% endset %}
+                {{ forms.message(setBandwidthMultipleMessage) }}
+                
+                {{ forms.hidden('ids', ids) }}
+
+                {% set title %}{% trans "Bandwidth limit" %}{% endset %}
+                {% set helpText %}{% trans "The bandwidth limit that should be applied. Enter 0 for no limit." %}{% endset %}
+                <div class="form-group">
+                    <label class="col-sm-2 control-label" for="bandwidthLimit">{{ title }}</label>
+                    <div class="col-sm-6">
+                        <input class="form-control" name="bandwidthLimit" type="number" id="bandwidthLimit" min="0" value=""/>
+                        <span class="help-block">{{ helpText }}</span>
+                    </div>
+                    <div class="col-sm-4">
+                        <select name="bandwidthLimitUnits" class="form-control">
+                            <option value="kb">KiB</option>
+                            <option value="mb">MiB</option>
+                            <option value="gb">GiB</option>
+                        </select>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

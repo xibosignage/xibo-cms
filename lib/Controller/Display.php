@@ -649,6 +649,9 @@ class Display extends Base
             $display->teamViewerLink = (!empty($display->teamViewerSerial)) ? 'https://start.teamviewer.com/' . $display->teamViewerSerial : '';
             $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial : '';
 
+            // Is a transfer to another CMS in progress?
+            $display->isCmsTransferInProgress = (!empty($display->newCmsAddress));
+
             // Edit and Delete buttons first
             if ($this->getUser()->featureEnabled('displays.modify')
                 && $this->getUser()->checkEditable($display)
@@ -906,6 +909,30 @@ class Display extends Base
                         ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
                     ]
                 ];
+
+                $display->buttons[] = [
+                    'multi-select' => true,
+                    'multiSelectOnly' => true, // Show button only on multi-select menu
+                    'id' => 'display_button_set_bandwidth',
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'display.setBandwidthLimitMultiple')],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'display_button_set_bandwidth'],
+                        ['name' => 'text', 'value' => __('Set Bandwidth')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'display.setBandwidthLimitMultiple.form')],
+                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
+                    ]
+                ];
+
+                if ($display->isCmsTransferInProgress) {
+                    $display->buttons[] = [
+                        'id' => 'display_button_move_cancel',
+                        'url' => $this->urlFor('display.moveCmsCancel.form', ['id' => $display->displayId]),
+                        'text' => __('Cancel CMS Transfer'),
+                    ];
+                }
             }
         }
 
@@ -1443,6 +1470,108 @@ class Display extends Base
 
         return $this->render($request, $response);
     }
+
+    /**
+     * Set Bandwidth to one or more displays
+     * @param Request $request
+     * @param Response $response
+     * @param $ids
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function setBandwidthLimitMultipleForm(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Check if the array of ids is passed
+        if($sanitizedParams->getString('ids') == '') {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Get array of ids
+        $ids = $sanitizedParams->getString('ids');
+
+        $this->getState()->template = 'display-form-set-bandwidth';
+        $this->getState()->setData([
+            'ids' => $ids,
+            'help' =>  $this->getHelp()->link('Display', 'setBandwidthLimit')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+        /**
+     * Set Bandwidth to one or more displays
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function setBandwidthLimitMultiple(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Get array of ids
+        $ids = ($sanitizedParams->getString('ids') != '') ? explode(',', $sanitizedParams->getString('ids')) : [];
+        $bandwidthLimit = intval($sanitizedParams->getString('bandwidthLimit'));
+        $bandwidthLimitUnits = $sanitizedParams->getString('bandwidthLimitUnits');
+
+        // Check if the array of ids is passed
+        if (count($ids) == 0) {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Check if the bandwidth value has something
+        if ($bandwidthLimit == '') {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // convert bandwidth to kb based on form units
+        if ($bandwidthLimitUnits == 'mb') {
+            $bandwidthLimit = $bandwidthLimit * 1024;
+        } else if ($bandwidthLimitUnits == 'gb') {
+            $bandwidthLimit = $bandwidthLimit * 1024 * 1024;
+        }
+
+        // display group ids to be updated
+        $displayGroupIds = [];
+
+        foreach ($ids as $id) {
+            // get display
+            $display = $this->displayFactory->getById($id);
+
+            // check if the display is accessible by user
+            if (!$this->getUser()->checkViewable($display)) {
+                throw new AccessDeniedException();
+            }
+
+            $displayGroupIds[] = $display->displayGroupId;
+        }
+
+        // update bandwidth limit to the array of ids
+        $this->displayGroupFactory->setBandwidth($bandwidthLimit, $displayGroupIds);
+
+        // Audit Log message
+        $this->getLog()->audit('DisplayGroup', 0, 'Batch update of bandwidth limit for ' . count($displayGroupIds) . ' items', [
+            'bandwidthLimit' => $bandwidthLimit,
+            'displayGroupIds' => $displayGroupIds
+        ]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpCode' => 204,
+            'message' => __('Displays Updated')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
 
     /**
      * Assign Display to Display Groups
@@ -2139,12 +2268,62 @@ class Display extends Base
     /**
      * @param Request $request
      * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     */
+    public function moveCmsCancelForm(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'display-form-moveCmsCancel';
+        $this->getState()->setData([
+            'display' => $display
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param $id
+     * @throws NotFoundException
+     * @throws GeneralException
+     */
+    public function moveCmsCancel(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $display->newCmsAddress = '';
+        $display->newCmsKey = '';
+        $display->save();
+
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Cancelled CMS Transfer for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function addViaCodeForm(Request $request, Response $response)
-    {
+    public function addViaCodeForm(Request $request, Response $response) {
         $this->getState()->template = 'display-form-addViaCode';
 
         return $this->render($request,$response);

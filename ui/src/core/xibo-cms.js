@@ -2738,6 +2738,8 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
         // Remove tabindex from modal to fix flatpickr bug
         $element.parents('.bootbox.modal').removeAttr('tabindex');
 
+        flatpickr.l10ns.default.firstDayOfWeek = parseInt(moment().startOf('week').format('d'));
+
         // Create flatpickr
         flatpickr($element, Object.assign({
             altInput: true,
@@ -2747,6 +2749,9 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
             altFormat: displayFormat,
             dateFormat: baseFormat,
             locale: language,
+            getWeek: function(dateObj) {
+                return moment(dateObj).week();
+            },
             parseDate: function(datestr, format) {
                 return moment(datestr, format, true).toDate();
             },
@@ -3107,4 +3112,72 @@ function disableFolders () {
     $('#container-folder-tree').remove();
     $('#grid-folder-filter').remove();
     $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
+}
+
+/**
+ * Create a mini layout preview
+ * @param  {string} previewUrl
+ */
+function createMiniLayoutPreview(previewUrl) {
+    // Add element to page if it's not already
+    if($('.page-content').find('.mini-layout-preview').length == 0) {
+        var miniPlayerTemplate = Handlebars.compile($('#mini-player-template').html());
+        $('.page-content').append(miniPlayerTemplate());
+    }
+
+    var $layoutPreview = $('.mini-layout-preview');
+    var $layoutPreviewContent = $layoutPreview.find('#content');
+
+    // Create base template for preview content
+    var previewTemplate = Handlebars.compile(`<iframe scrolling="no" 
+        src="{{url}}" 
+        width="{{width}}px" 
+        height="{{height}}px" 
+        style="border:0;">
+    </iframe>`);
+    
+    // Clean all selected elements
+    $layoutPreviewContent.html('');
+
+    // Handle buttons
+    $layoutPreview.find('#playBtn').show().off().on('click', function() {
+        // Hide button
+        $(this).hide();
+
+        // Load and start preview
+        $layoutPreview.find('#content').append(previewTemplate({
+            url: previewUrl,
+            width: $layoutPreview.hasClass('large') ? '760' : '440',
+            height: $layoutPreview.hasClass('large') ? '420' : '240'
+        }));
+    });
+
+    $layoutPreview.find('#closeBtn').off().on('click', function() {
+        // Close preview and empty content
+        $layoutPreview.find('#content').html('');
+        $layoutPreview.removeClass('show');
+        $layoutPreview.remove();
+    });
+
+    $layoutPreview.find('#newTabBtn').off().on('click', function() {
+        // Open preview in new tab
+        window.open(previewUrl,'_blank');
+    });
+
+    $layoutPreview.find('#sizeBtn').off().on('click', function() {
+        // Empty content
+        $layoutPreview.find('#content').html('');
+
+        // Toggle size class
+        $layoutPreview.toggleClass('large');
+
+        // Change icon based on size state
+        $(this).toggleClass('fa-minus-square', $layoutPreview.hasClass('large'));
+
+        // Re-show play button
+        $layoutPreview.find('#playBtn').show();
+    });
+
+    // Show layout preview element
+    $layoutPreview.addClass('show');
 }
