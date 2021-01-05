@@ -3077,8 +3077,15 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
 
         // this handler for the search everywhere checkbox on grid pages
         $("#folder-tree-clear-selection-button").on('click', function() {
-            $(this).prop('checked', true);
-            $(container).jstree("deselect_all");
+
+            if ($("#folder-tree-clear-selection-button").is(':checked')) {
+                $(this).prop('checked', true);
+                $(container).jstree("deselect_all");
+            } else {
+                $(this).prop('checked', false);
+                $(container).jstree('select_node', 1)
+            }
+
         });
 
         // this is handler for the hamburger button on grid pages
