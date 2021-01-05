@@ -50,26 +50,48 @@
                                 {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
                                 {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
                             {% endif %}
+
+                            {{ inline.hidden("folderId") }}
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="templates" class="table table-striped" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="templateGrid">
-                        <thead>
-                            <tr>
-                                <th>{% trans "Name" %}</th>
-                                <th>{% trans "Owner" %}</th>
-                                <th>{% trans "Description" %}</th>
-                                {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
-                                <th>{% trans "Thumbnail" %}</th>
-                                <th>{% trans "Permissions" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
 
-                        </tbody>
-                    </table>
+                <div class="row">
+                    <div class="col-sm-1 form-group" style="padding: 0">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
+                    </div>
+                    <div class="form-group col-sm-11" style="padding: 0">
+                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-2 well" id="grid-folder-filter">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
+                        </div>
+                        <div id="container-folder-tree"></div>
+                    </div>
+                    <div id="datatable-container" class="col-sm-10">
+                        <div class="XiboData">
+                            <table id="templates" class="table table-striped" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="templateGrid">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "Name" %}</th>
+                                        <th>{% trans "Owner" %}</th>
+                                        <th>{% trans "Description" %}</th>
+                                        {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
+                                        <th>{% trans "Thumbnail" %}</th>
+                                        <th>{% trans "Permissions" %}</th>
+                                        <th>{% trans "Row Menu" %}</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -78,6 +100,9 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        {% if not currentUser.featureEnabled("folder.view") %}
+            disableFolders();
+        {% endif %}
         var table = $("#templates").DataTable({
             "language": dataTablesLanguage,
             serverSide: true,
@@ -121,6 +146,24 @@
         dataTableAddButtons(table, $('#templates_wrapper').find('.col-sm-6').eq(1));
 
         function templateFormOpen() {
+            if ($('#folder-tree-form-modal').length === 0) {
+                // compile tree folder modal and append it to Form
+                var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+                var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+                $("#templateAddForm").append(folderTreeModal(treeConfig));
+
+                $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                    $(this).data('bs.modal', null);
+                });
+            }
+
+            // select current working folder if one is selected in the grid
+            if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined) {
+                $('#templateAddForm' + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
+            }
+
+            initJsTreeAjax('#container-folder-form-tree', 'templateAddForm', true, 600);
+
             $("#templateAddForm").submit(function(e) {
                 e.preventDefault();
                 var form = $(this);
