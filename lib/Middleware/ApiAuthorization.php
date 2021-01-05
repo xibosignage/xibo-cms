@@ -30,6 +30,7 @@ use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
+use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\OAuth\AccessTokenRepository;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\NotFoundException;
@@ -110,6 +111,7 @@ class ApiAuthorization implements Middleware
             $request = $request->withAttribute('public', false);
 
             // Check that the Scopes granted to this token are allowed access to the route/method of this request
+            /** @var ApplicationScopeFactory $applicationScopeFactory */
             $applicationScopeFactory = $this->app->getContainer()->get('applicationScopeFactory');
             $scopes = $validatedRequest->getAttribute('oauth_scopes');
 
@@ -117,14 +119,14 @@ class ApiAuthorization implements Middleware
             if (is_array($scopes) && count($scopes) > 0) {
                 foreach ($scopes as $scope) {
                     // Valid routes
-                    if ($scope->getId() != 'all') {
+                    if ($scope->id != 'all') {
                         $logger->debug(sprintf('Test authentication for %s %s against scope %s',
-                            $route, $request->getMethod(), $scope->getId()));
+                            $resource, $request->getMethod(), $scope->id));
 
                         // Check the route and request method
                         try {
-                            $applicationScopeFactory->getById($scope->getId())->checkRoute($request->getMethod(),
-                                $route);
+                            $applicationScopeFactory->getById($scope->id)->checkRoute($request->getMethod(),
+                                $resource);
                         } catch (NotFoundException $notFoundException) {
                             throw new AccessDeniedException();
                         }

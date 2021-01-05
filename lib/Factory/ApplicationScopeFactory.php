@@ -1,7 +1,7 @@
 <?php
 /*
  * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  * (ApplicationScopeFactory.php)
  */
 
@@ -61,7 +61,7 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
     /**
      * Get by Client Id
      * @param $clientId
-     * @return array[ApplicationScope]
+     * @return ApplicationScope[]
      */
     public function getByClientId($clientId)
     {
@@ -72,7 +72,7 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
      * Query
      * @param null $sortOrder
      * @param array $filterBy
-     * @return array
+     * @return ApplicationScope[]
      */
     public function query($sortOrder = null, $filterBy = [])
     {
@@ -149,16 +149,11 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
     {
         $this->getLog()->debug('finalizeScopes');
 
-        // This needs to take the scopes array and compare it to the scopes assigned to the client entity, if they mismatch
-        // then it should remove.
-        $finalised = [];
-
         /** @var \Xibo\Entity\Application $clientEntity */
         foreach ($clientEntity->scopes as $scope) {
-            if (in_array($scope->getIdentifier(), $scopes)) {
-                $finalised[] = $scope->getIdentifier();
-            }
+            $scopes[] = $this->getScopeEntityByIdentifier($scope->getIdentifier());
         }
-        return $finalised;
+
+        return $scopes;
     }
 }

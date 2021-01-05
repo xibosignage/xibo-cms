@@ -1042,10 +1042,10 @@ class Library extends Base
         self::ensureLibraryExists($libraryFolder);
 
         // Get Valid Extensions
-        if ($parsedBody->getInt('oldMediaId') !== null) {
-            $media = $this->mediaFactory->getById($parsedBody->getInt('oldMediaId'));
+        if ($parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]) !== null) {
+            $media = $this->mediaFactory->getById($parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]));
             $oldFolderId = $media->folderId;
-            $validExt = $this->moduleFactory->getValidExtensions(['type' => $media->mediaType]);
+            $validExt = $this->moduleFactory->getValidExtensions(['type' => $media->mediaType, 'allowMediaTypeChange' => $options['allowMediaTypeChange']]);
         } else {
             $validExt = $this->moduleFactory->getValidExtensions();
         }
@@ -1058,8 +1058,8 @@ class Library extends Base
             'controller' => $this,
             'oldMediaId' => $parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]),
             'widgetId' => $parsedBody->getInt('widgetId'),
-            'updateInLayouts' => $parsedBody->getCheckbox('updateInLayouts'),
-            'deleteOldRevisions' => $parsedBody->getCheckbox('deleteOldRevisions'),
+            'updateInLayouts' => $parsedBody->getCheckbox('updateInLayouts', ['default' => $options['updateInLayouts']]),
+            'deleteOldRevisions' => $parsedBody->getCheckbox('deleteOldRevisions', ['default' => $options['deleteOldRevisions']]),
             'allowMediaTypeChange' => $options['allowMediaTypeChange'],
             'displayOrder' => $parsedBody->getInt('displayOrder'),
             'playlistId' => $parsedBody->getInt('playlistId'),
@@ -1839,6 +1839,7 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException
      * @throws GeneralException
@@ -1848,27 +1849,20 @@ class Library extends Base
      */
     public function mcaas(Request $request, Response $response, $id)
     {
-        // TODO MCAAS
         // This is only available through the API
         if (!$this->isApi($request)) {
             throw new AccessDeniedException(__('Route is available through the API'));
         }
 
-        // We need to get the access token we used to authorize this request.
-        // as we are API we can expect that in the $app.
-        /** @var $accessToken \League\OAuth2\Server\Entity\AccessTokenEntity */
-        $accessToken = $this->getApp()->server->getAccessToken();
-
-        // Call Add with the oldMediaId
-        $this->add([
+        $options = [
             'oldMediaId' => $id,
             'updateInLayouts' => 1,
             'deleteOldRevisions' => 1,
             'allowMediaTypeChange' => 1
-        ]);
+        ];
 
-        // Expire the token
-        $accessToken->expire();
+        // Call Add with the oldMediaId
+        return $this->add($request->withParsedBody(['options' => $options]), $response);
     }
 
     /**
