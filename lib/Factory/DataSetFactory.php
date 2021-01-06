@@ -435,6 +435,9 @@ class DataSetFactory extends BaseFactory
                         // use the md5
                         $md5 = md5($request->getBody());
 
+                        // Rewind so we can use it again
+                        $request->getBody()->rewind();
+
                         if ($cacheControlKeyValue === $md5) {
                             $this->getLog()->debug('Skipping due to MD5');
                             continue;

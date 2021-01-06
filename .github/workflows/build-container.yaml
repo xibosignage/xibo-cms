@@ -51,25 +51,6 @@ jobs:
           docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
           docker push xibosignage/xibo-cms:release-${GITHUB_REF##*/}
 
-  deploy:
-    name: Deploy Test Instances
-    runs-on: ubuntu-18.04
-    needs: build
-    if: github.repository == 'xibosignage/xibo-cms' && github.event_name == 'push'
-    steps:
-      - name: Deploy to Develop
-        uses: joelwmale/webhook-action@1.0.0
-        if: github.ref == 'refs/heads/develop'
-        env:
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_DEVELOP_URL }}
-          data: ''
-      - name: Deploy to Staging
-        uses: joelwmale/webhook-action@1.0.0
-        if: github.ref == 'refs/heads/release23'
-        env:
-          WEBHOOK_URL: ${{ secrets.WEBHOOK_STAGING_URL }}
-          data: ''
-
   in_fork:
     name: Skip in a fork
     runs-on: ubuntu-18.04
