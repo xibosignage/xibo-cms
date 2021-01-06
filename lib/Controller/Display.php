@@ -929,7 +929,7 @@ class Display extends Base
                 if ($display->isCmsTransferInProgress) {
                     $display->buttons[] = [
                         'id' => 'display_button_move_cancel',
-                        'url' => $this->urlFor('display.moveCmsCancel.form', ['id' => $display->displayId]),
+                        'url' => $this->urlFor($request,'display.moveCmsCancel.form', ['id' => $display->displayId]),
                         'text' => __('Cancel CMS Transfer'),
                     ];
                 }
