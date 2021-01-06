@@ -150,7 +150,7 @@
                 // compile tree folder modal and append it to Form
                 var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
                 var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
-                $("#templateAddForm").append(folderTreeModal(treeConfig));
+                $("body").append(folderTreeModal(treeConfig));
 
                 $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
                     $(this).data('bs.modal', null);

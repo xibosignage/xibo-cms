@@ -1235,3 +1235,7 @@ td.feature-group-header-cell {
 .mini-layout-preview.show #content, .mini-layout-preview.show #playBtn {
     opacity: 1;
 }
+
+.inner-modal {
+    z-index: 1051;
+}
