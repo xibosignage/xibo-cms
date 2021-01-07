@@ -174,9 +174,15 @@ function openUploadForm(options) {
         if (options.templateOptions.folderSelector) {
             // Handle creating a folder selector
             // compile tree folder modal and append it to Form
+
+            // make bootstrap happy.
+            if ($('#folder-tree-form-modal').length != 0) {
+                $('#folder-tree-form-modal').remove();
+            }
+
             if ($('#folder-tree-form-modal').length === 0) {
                 let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-                form.append(folderTreeModal({
+                $('body').append(folderTreeModal({
                     container: "container-folder-form-tree",
                     modal: "folder-tree-form-modal"
                 }));

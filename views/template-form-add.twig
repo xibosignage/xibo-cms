@@ -47,6 +47,17 @@
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 
+                        {% if currentUser.featureEnabled('folder.view') %}
+                            <div class="form-group">
+                                <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
+                                <div class="col-sm-10">
+                                    <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                                    <span id="selectedFormFolder"></span>
+                                </div>
+                            </div>
+                            {{ forms.hidden('folderId') }}
+                        {% endif %}
+
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "The Name of the Template - (1 - 50 characters)" %}{% endset %}
                         {{ forms.input("name", title, "", helpText) }}

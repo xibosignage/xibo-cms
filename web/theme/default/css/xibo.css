@@ -1261,3 +1261,7 @@ div.dataTables_wrapper div.dataTables_info {
     white-space: nowrap;
     padding-top: 0;
 }
+
+.inner-modal {
+    z-index: 1051;
+}

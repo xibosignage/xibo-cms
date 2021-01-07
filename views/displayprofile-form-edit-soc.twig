@@ -135,6 +135,14 @@
                     {% set helpText = "The end of the time window to connect to the CMS and download updates."|trans %}
                     {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText) }}
 
+                    {% set title = "Update Window Start Time"|trans %}
+                    {% set helpText = "The start of the time window to install application updates."|trans %}
+                    {{ forms.time("updateStartWindow", title, displayProfile.getSetting("updateStartWindow"), helpText) }}
+
+                    {% set title = "Update Window End Time"|trans %}
+                    {% set helpText = "The end of the time window to install application updates."|trans %}
+                    {{ forms.time("updateEndWindow", title, displayProfile.getSetting("updateEndWindow"), helpText) }}
+
                     {% set title = "Force HTTPS?"|trans %}
                     {% set helpText = "Should Displays be forced to use HTTPS connection to the CMS?"|trans %}
                     {{ forms.checkbox("forceHttps", title, displayProfile.getSetting("forceHttps"), helpText) }}
@@ -187,11 +195,18 @@
 
                     {% set title = "Screen Shot Size"|trans %}
                     {% set helpText = "The size of the screenshot to return when requested."|trans %}
+                    {% if displayProfile.type == "lg" %}
                     {% set options = [
                         { id: 1, value: "Thumbnail"|trans },
                         { id: 2, value: "HD"|trans },
                         { id: 3, value: "FHD"|trans }
                     ] %}
+                    {% else %}
+                        {% set options = [
+                            { id: 1, value: "Thumbnail"|trans },
+                            { id: 2, value: "Standard"|trans }
+                        ] %}
+                    {% endif %}
                     {{ forms.dropdown("screenShotSize", "single", title, displayProfile.getSetting("screenShotSize"), options, "id", "value", helpText) }}
 
                     {% set title = "Send progress while downloading"|trans %}

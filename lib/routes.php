@@ -301,7 +301,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/library/usage/layouts/{id}', ['\Xibo\Controller\Library','usageLayouts'])->setName('library.usage.layouts');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.view']));
 
-$app->get('/library/download[/{id}[/{type}]]', ['\Xibo\Controller\Library','download'])->setName('library.download');
+$app->get('/library/download/{id}[/{type}]', ['\Xibo\Controller\Library','download'])->setName('library.download');
 
 $app->group('', function (RouteCollectorProxy $group) {
     //$group->map(['HEAD'],'/library', ['\Xibo\Controller\Library','  addgroup
@@ -354,6 +354,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/display/defaultlayout/{id}', ['\Xibo\Controller\Display','setDefaultLayout'])->setName('display.defaultlayout');
     $group->post('/display/{id}/displaygroup/assign', ['\Xibo\Controller\Display','assignDisplayGroup'])->setName('display.assign.displayGroup');
     $group->put('/display/{id}/moveCms', ['\Xibo\Controller\Display','moveCms'])->setName('display.moveCms');
+    $group->delete('/display/{id}/moveCms', ['\Xibo\Controller\Display','moveCmsCancel'])->setName('display.moveCmsCancel');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.modify']));
 
 /**

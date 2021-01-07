@@ -224,8 +224,8 @@ class Login extends Base
             try {
                 $user = $this->userFactory->getByName($username);
 
-                // DOOH user
-                if ($user->userTypeId === 4) {
+                // DOOH user/Retired user
+                if ($user->userTypeId === 4 || $user->retired === 1) {
                     throw new AccessDeniedException(__('Sorry this account does not exist or does not have permission to access the web portal.'));
                 }
 

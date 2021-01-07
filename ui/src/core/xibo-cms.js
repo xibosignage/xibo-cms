@@ -1502,11 +1502,19 @@ function XiboFormRender(sourceObj, data) {
                         $(this).closest(".modal").addClass("modal-big");
                 });
 
-                if ($('#folder-tree-form-modal').length === 0 && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').length) {
+                // make bootstrap happy.
+                if ($('#folder-tree-form-modal').length != 0) {
+                    $('#folder-tree-form-modal').remove();
+                }
+
+                // if there is no modal appended to body and we are on a form that needs this modal, then append it
+                if ($('#folder-tree-form-modal').length === 0 && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').length && $('#select-folder-button').length) {
                     // compile tree folder modal and append it to Form
                     var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
                     var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
-                    $('.XiboForm').append(folderTreeModal(treeConfig));
+
+                    // append to body, instead of the form as it was before to make it more bootstrap friendly
+                    $('body').append(folderTreeModal(treeConfig));
 
                     $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
                         $(this).data('bs.modal', null);
@@ -1516,12 +1524,15 @@ function XiboFormRender(sourceObj, data) {
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
 
-                // if this is add form and we have some folderId selected in grid view, put that as the working folder id for this form
-                // edit forms will get the current folderId assigned to the edited object.
-                if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val() == '') {
-                    $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
+                if (dialog.find('.XiboForm').attr('id') != undefined) {
+                    // if this is add form and we have some folderId selected in grid view, put that as the working folder id for this form
+                    // edit forms will get the current folderId assigned to the edited object.
+                    if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val() == '') {
+                        $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
+                    }
+
+                    initJsTreeAjax('#container-folder-form-tree', dialog.find('.XiboForm').attr('id'), true, 600);
                 }
-                initJsTreeAjax('#container-folder-form-tree', dialog.find('.XiboForm').attr('id'), true, 600);
 
                 // Do we have to call any functions due to this success?
                 if (response.callBack !== "" && response.callBack !== undefined) {
@@ -2950,7 +2961,7 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
             }
         });
 
-        $(container).on('loaded.jstree', function(e, data) {
+        $(container).on('ready.jstree', function(e, data) {
             // if we are on the form, we need to select tree node (currentWorkingFolder)
             // this is set/passed to twigs on render time
             if (isForm) {
@@ -3079,14 +3090,21 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
         // clicking outside of the tree select modal will work as well.
         $(".btnCloseInnerModal").on('click', function(e) {
             e.preventDefault();
-            var FolderTreeModalId = (isForm) ? '#folder-tree-form-modal' : '#folder-tree-modal';
-            $(FolderTreeModalId).modal('hide');
+            var folderTreeModalId = (isForm) ? '#folder-tree-form-modal' : '#folder-tree-modal';
+            $(folderTreeModalId).modal('hide');
         });
 
         // this handler for the search everywhere checkbox on grid pages
         $("#folder-tree-clear-selection-button").on('click', function() {
-            $(this).prop('checked', true);
-            $(container).jstree("deselect_all");
+
+            if ($("#folder-tree-clear-selection-button").is(':checked')) {
+                $(this).prop('checked', true);
+                $(container).jstree("deselect_all");
+            } else {
+                $(this).prop('checked', false);
+                $(container).jstree('select_node', 1)
+            }
+
         });
 
         // this is handler for the hamburger button on grid pages

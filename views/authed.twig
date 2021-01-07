@@ -381,7 +381,7 @@
     <script type="text/x-handlebars-template" id="folder-tree-template">
         <!-- Modal -->
         {% verbatim %}
-        <div id="{{ modal }}" class="modal fade" role="dialog">
+        <div id="{{ modal }}" class="modal fade inner-modal" role="dialog">
          {% endverbatim %}
             <div class="modal-dialog modal-sm" style="width:450px;">
 
@@ -398,15 +398,9 @@
                             {% endverbatim %}
                         </div>
                     </div>
-                    {% verbatim %}
-                    {{#eq container "container-folder-tree"}}
-                    {% endverbatim %}
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-white btnCloseInnerModal">{% trans "Close" %}</button>
+                        <button type="button" class="btn btn-white btnCloseInnerModal">{% trans "Done" %}</button>
                     </div>
-                    {% verbatim %}
-                    {{/eq}}
-                    {% endverbatim %}
                 </div>
 
             </div>
@@ -425,6 +419,11 @@
 
     <script  type="text/javascript">
         function moveFolderMultiSelectFormOpen(dialog) {
+            // make bootstrap happy.
+            if ($('#folder-tree-form-modal').length != 0) {
+                $('#folder-tree-form-modal').remove();
+            }
+
             var folderContainer = '<div class="card p-3 mb-3 bg-light" id="container-folder-form-tree"></div>';
             var $hiddenInput = $('<input name="folderId" type="hidden" id="formFolderId">');
 

@@ -21,8 +21,10 @@
  */
 
 namespace Xibo\XTR;
+use Carbon\Carbon;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ImageProcessingServiceInterface;
 
 /**
@@ -117,6 +119,28 @@ class ImageProcessingTask implements TaskInterface
                 ]);
             }
 
+            // Mark any effected Layouts to be rebuilt.
+            $this->store->update('
+                UPDATE `layout` 
+                    SET status = :status, `modifiedDT` = :modifiedDt 
+                 WHERE layoutId IN (
+                     SELECT DISTINCT region.layoutId 
+                       FROM lkwidgetmedia
+                        INNER JOIN widget
+                        ON widget.widgetId = lkwidgetmedia.widgetId
+                        INNER JOIN lkplaylistplaylist
+                        ON lkplaylistplaylist.childId = widget.playlistId
+                        INNER JOIN playlist
+                        ON lkplaylistplaylist.parentId = playlist.playlistId
+                        INNER JOIN region
+                        ON playlist.regionId = region.regionId
+                      WHERE lkwidgetmedia.mediaId = :mediaId
+                     )
+            ', [
+                'status' => 3,
+                'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+                'mediaId' => $media->mediaId
+            ]);
         }
 
         // Notify display

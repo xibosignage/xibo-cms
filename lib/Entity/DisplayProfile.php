@@ -561,7 +561,9 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'maxLogFileUploads', 'default' => 3, 'type' => 'int'],
                 ['name' => 'embeddedServerPort', 'default' => 9696, 'type' => 'int'],
                 ['name' => 'preventSleep', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'authServerWhitelist', 'default' => null, 'type' => 'string'],
+                ['name' => 'edgeBrowserWhitelist', 'default' => null, 'type' => 'string']
             ],
             'android' => [
                 ['name' => 'emailAddress', 'default' => ''],
@@ -648,7 +650,9 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
                 ['name' => 'lockOptions', 'default' => '{}'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'updateStartWindow', 'default' => '00:00'],
+                ['name' => 'updateEndWindow', 'default' => '00:00']
             ],
             'sssp' => [
                 ['name' => 'emailAddress', 'default' => ''],
@@ -670,7 +674,9 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
                 ['name' => 'lockOptions', 'default' => '{}'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'updateStartWindow', 'default' => '00:00'],
+                ['name' => 'updateEndWindow', 'default' => '00:00'],
             ]
         );
 

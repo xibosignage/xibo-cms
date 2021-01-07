@@ -118,6 +118,13 @@
                     ] %}
                     {{ forms.dropdown("dayPartId", "single", title, displayProfile.getSetting("dayPartId"), [{dayPartId:null, name:""}]|merge(dayParts), "dayPartId", "name", helpText, "pagedSelect", "", "", "", attributes) }}
 
+                    {% set title = "Authentication Whitelist"|trans %}
+                    {% set helpText = "A comma separated list of domains which should be allowed to perform NTML/Negotiate authentication."|trans %}
+                    {{ forms.input("authServerWhitelist", title, displayProfile.getSetting("authServerWhitelist"), helpText) }}
+
+                    {% set title = "Edge Browser Whitelist"|trans %}
+                    {% set helpText = "A comma separated list of website urls which should be rendered by the Edge Browser instead of Chromium."|trans %}
+                    {{ forms.input("edgeBrowserWhitelist", title, displayProfile.getSetting("edgeBrowserWhitelist"), helpText) }}
                 </div>
 
                 <div class="tab-pane" id="location">

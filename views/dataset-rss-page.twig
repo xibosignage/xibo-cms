@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -95,7 +95,7 @@
                         if (type !== "display")
                             return "";
 
-                        var url = window.location.origin + "{{ url_for("dataSet.rss.feed") }}".replace(':psk', data.psk);
+                        var url = window.location.origin + "{{ url_for("dataSet.rss.feed", {psk: ':psk'}) }}".replace(':psk', data.psk);
 
                         return "<a href=\"" + url + "\" target=\"_blank\">" + url + "</a>";
                     }

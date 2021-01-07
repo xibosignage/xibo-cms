@@ -649,6 +649,9 @@ class Display extends Base
             $display->teamViewerLink = (!empty($display->teamViewerSerial)) ? 'https://start.teamviewer.com/' . $display->teamViewerSerial : '';
             $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial : '';
 
+            // Is a transfer to another CMS in progress?
+            $display->isCmsTransferInProgress = (!empty($display->newCmsAddress));
+
             // Edit and Delete buttons first
             if ($this->getUser()->featureEnabled('displays.modify')
                 && $this->getUser()->checkEditable($display)
@@ -922,6 +925,14 @@ class Display extends Base
                         ['name' => 'content-id-name', 'value' => 'displayGroupId']
                     ]
                 ];
+
+                if ($display->isCmsTransferInProgress) {
+                    $display->buttons[] = [
+                        'id' => 'display_button_move_cancel',
+                        'url' => $this->urlFor($request,'display.moveCmsCancel.form', ['id' => $display->displayId]),
+                        'text' => __('Cancel CMS Transfer'),
+                    ];
+                }
             }
         }
 
@@ -1542,7 +1553,7 @@ class Display extends Base
 
             $displayGroupIds[] = $display->displayGroupId;
         }
-        
+
         // update bandwidth limit to the array of ids
         $this->displayGroupFactory->setBandwidth($bandwidthLimit, $displayGroupIds);
 
@@ -2257,12 +2268,62 @@ class Display extends Base
     /**
      * @param Request $request
      * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     */
+    public function moveCmsCancelForm(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'display-form-moveCmsCancel';
+        $this->getState()->setData([
+            'display' => $display
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param $id
+     * @throws NotFoundException
+     * @throws GeneralException
+     */
+    public function moveCmsCancel(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $display->newCmsAddress = '';
+        $display->newCmsKey = '';
+        $display->save();
+
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Cancelled CMS Transfer for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function addViaCodeForm(Request $request, Response $response)
-    {
+    public function addViaCodeForm(Request $request, Response $response) {
         $this->getState()->template = 'display-form-addViaCode';
 
         return $this->render($request,$response);
