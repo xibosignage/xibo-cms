@@ -357,11 +357,11 @@ Widget.prototype.editPropertyForm = function(property, type) {
         buttons: {
             cancel: {
                 label: translations.cancel,
-                className: "btn-white"
+                className: "btn-white btn-bb-cancel"
             },
             done: {
                 label: translations.done,
-                className: "btn-primary test",
+                className: "btn-primary test btn-bb-done",
                 callback: function(res) {
 
                     const form = dialog.find('form');

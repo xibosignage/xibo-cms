@@ -46,9 +46,9 @@
                 </a>
                 <div class="dropdown-menu">
                     <a class="dropdown-item" href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a>
-                    <a class="dropdown-item" href="#templateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
-                    <a class="dropdown-item" href="#itemTemplateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Item" %}</span></a>
-                    <a class="dropdown-item" href="#optionalStylesheetTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#templateTab"  role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#itemTemplateTab"  role="tab" data-toggle="tab"><span>{% trans "Item" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#optionalStylesheetTab"  role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
                     <a class="dropdown-item" href="#noRecordsMessageTab" role="tab" data-toggle="tab"><span>{% trans "No Records Message" %}</span></a>
                 </div>
             </li>
@@ -175,14 +175,16 @@
                     </div>
 
                     <div class="tab-pane" id="templateTab">
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="mainTemplate_advanced" name="mainTemplate_advanced" {% if module.getOption("mainTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "Main Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="mainTemplate_advanced" name="mainTemplate_advanced" {% if module.getOption("mainTemplate_advanced", 0) == 1 %}checked{% endif %} 
+                                    data-size="small" 
+                                    data-label-text="{% trans "Visual editor" %}" 
+                                    data-label-width="80px" 
+                                    data-on-text="{% trans "On" %}" 
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
                         
                         <div class="editor-messages">
@@ -202,14 +204,16 @@
                     </div>
 
                     <div class="tab-pane" id="itemTemplateTab">
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Item Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="itemTemplate_advanced" name="itemTemplate_advanced" {% if module.getOption("itemTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "Item Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="itemTemplate_advanced" name="itemTemplate_advanced" {% if module.getOption("itemTemplate_advanced", 0) == 1 %}checked{% endif %} 
+                                    data-size="small" 
+                                    data-label-text="{% trans "Visual editor" %}" 
+                                    data-label-width="80px" 
+                                    data-on-text="{% trans "On" %}" 
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
 
                         <div class="editor-messages">

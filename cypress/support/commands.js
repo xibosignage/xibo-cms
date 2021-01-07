@@ -202,7 +202,7 @@ Cypress.Commands.add('importLayout', function(fileName) {
         const formData = new FormData();
 
         // Create random name
-        const uuid = Cypress._.random(0, 1e6);
+        const uuid = Cypress._.random(0, 1e9);
 
         formData.set('files[]', blob, fileName); //adding a file to the form
         formData.set('name[]', uuid); //adding a name to the form

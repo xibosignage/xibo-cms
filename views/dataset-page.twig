@@ -206,7 +206,7 @@
                     buttons: {
                         main: {
                             label: "{% trans "Done" %}",
-                            className: "btn-primary",
+                            className: "btn-primary btn-bb-main",
                             callback: function() {
                                 table.ajax.reload();
                                 XiboDialogClose();
@@ -214,7 +214,7 @@
                         },
                         help: {
                             label: "{% trans "Help" %}",
-                            className: "default",
+                            className: "default btn-bb-help",
                             callback: function() {
                                 XiboHelpRender("{{ helpService.link("dataset") }}#Importing_from_CSV_file");
                             }
@@ -284,7 +284,7 @@
                     }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
                         // Get uploaded and downloaded files and toggle Done button
                         var filesToUploadCount = form.find('tr.template-upload').length;
-                        var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
+                        var $button = form.parents('.modal:first').find('button.btn-bb-main');
 
                         if(filesToUploadCount == 0) {
                             $button.removeAttr('disabled');

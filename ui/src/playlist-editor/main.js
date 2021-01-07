@@ -405,11 +405,11 @@ pE.deleteObject = function(objectType, objectId) {
             buttons: {
                 cancel: {
                     label: editorsTrans.no,
-                    className: 'btn-white'
+                    className: 'btn-white btn-bb-cancel'
                 },
                 confirm: {
                     label: editorsTrans.yes,
-                    className: 'btn-danger',
+                    className: 'btn-danger btn-bb-confirm',
                     callback: function() {
 
                         // Empty options object
@@ -511,7 +511,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
         let buttons = {
             cancel: {
                 label: editorsTrans.no,
-                className: 'btn-white'
+                className: 'btn-white btn-bb-cancel'
             }
         };
 
@@ -519,7 +519,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
         if($(htmlContent).find('input[type="checkbox"]').length > 1) {
             buttons.selectAll = {
                 label: editorsTrans.selectAll,
-                className: 'btn-warning',
+                className: 'btn-warning btn-bb-selectall',
                 callback: function() {
                     $(this).find('input[type="checkbox"]').prop('checked', true);
                     return false;
@@ -529,7 +529,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
         
         buttons.confirm = {
             label: editorsTrans.yes,
-            className: 'btn-danger',
+            className: 'btn-danger btn-bb-confirm',
             callback: function() {
                 const $objects = $(this).find('.multi-delete-element');
                 let deletedElements = 0;

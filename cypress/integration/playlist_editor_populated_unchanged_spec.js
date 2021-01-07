@@ -92,7 +92,7 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
         cy.get('#playlist-editor-toolbar .btn-window-new-tab').click();
 
         // Select and search image items
-        cy.get('.media-search-form:not(.d-none) .input-type').select('image');
+        cy.get('.media-search-form:not(.d-none) .input-type:last').select('image');
 
         cy.wait('@mediaLoad');
 

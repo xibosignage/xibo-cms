@@ -94,7 +94,7 @@ function openUploadForm(options) {
             var setExpiryFlag = form.find('#setExpiryDates').is(":checked");
 
             // Hide and disable fiels ( to avoid form submitting)
-            form.find('.row-widget-set-expiry').toggleClass('hide', !setExpiryFlag);
+            form.find('.row-widget-set-expiry').toggleClass('hidden', !setExpiryFlag);
             form.find('.row-widget-set-expiry input').prop('disabled', !setExpiryFlag);
         };
 
@@ -160,7 +160,7 @@ function openUploadForm(options) {
             .bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
                     // Get uploaded and downloaded files and toggle Done button
                     var filesToUploadCount = form.find('tr.template-upload').length;
-                    var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
+                    var $button = form.parents('.modal:first').find('button.btn-bb-main');
 
                     if (filesToUploadCount === 0) {
                         $button.removeAttr('disabled');

@@ -170,14 +170,16 @@
                     </div>
 
                     <div class="tab-pane" id="noDataTemplateTab">
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "No Data Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "No Data Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
+                                    data-size="small" 
+                                    data-label-text="{% trans "Visual editor" %}" 
+                                    data-label-width="80px" 
+                                    data-on-text="{% trans "On" %}" 
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
                         
                         {% set noDataMessageMessage1 %}

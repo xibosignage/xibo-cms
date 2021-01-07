@@ -894,6 +894,14 @@ ul li.active.tab-design:hover a {
     width: 100%;
 }
 
+@media (min-width: 768px) {
+    .form-horizontal .control-label {
+        padding-top: 7px;
+        margin-bottom: 0;
+        text-align: right;
+    }
+}
+
 .XiboFilter .form-inline .input-group-tags-exact .bootstrap-tagsinput {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;

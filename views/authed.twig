@@ -219,7 +219,7 @@
             <input class="form-control form-control-inline rs232-text-input rs232-data-bits" placeholder="{% endverbatim %}{% trans "Data Bits" %}{% verbatim %}" value="{{ value.cs.dataBits }}">
         </div>
         <div class="form-group-command form-group-rs232">
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-12 col-sm-6">
                 <label for="rs232Parity{{ unique }}">{% endverbatim %}{% trans "Parity:" %}{% verbatim %}</label>
                 <select name="rs232Parity{{ unique }}" id="rs232Parity{{ unique }}" class="rs232-parity form-control">
                     <option value="None" {{#eq value.cs.parity "None"}}selected="selected"{{/eq}}>None</option>
@@ -230,7 +230,7 @@
                 </select>
             </div>
 
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-12 col-sm-6">
                 <label for="rs232StopBits{{ unique }}">{% endverbatim %}{% trans "Stop Bits:" %}{% verbatim %}</label>
                 <select name="rs232StopBits{{ unique }}" id="rs232StopBits{{ unique }}" class="rs232-stop-bits form-control">
                     <option value="None" {{#eq value.cs.stopBits "None"}}selected="selected"{{/eq}}>None</option>
@@ -240,7 +240,7 @@
                 </select>
             </div>
 
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-12 col-sm-6">
                 <label for="rs232Handshake{{ unique }}">{% endverbatim %}{% trans "Handshake:" %}{% verbatim %}</label>
                 <select name="rs232Handshake{{ unique }}" id="rs232Handshake{{ unique }}" class="rs232-handshake form-control">
                     <option value="None" {{#eq value.cs.handshake "None"}}selected="selected"{{/eq}}>None</option>
@@ -250,7 +250,7 @@
                 </select>
             </div>
             
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-12 col-sm-6">
                 <label for="rs232HexSupport{{ unique }}">{% endverbatim %}{% trans "HexSupport:" %}{% verbatim %}</label>
                 <select name="rs232HexSupport{{ unique }}" id="rs232HexSupport{{ unique }}" class="rs232-hex-support form-control">
                     <option value="0" {{#eq value.cs.hexSupport "0"}}selected="selected"{{/eq}}>0</option>

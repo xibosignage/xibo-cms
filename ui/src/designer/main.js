@@ -729,7 +729,7 @@ lD.welcomeScreen = function() {
         buttons: {
             checkout: {
                 label: layoutDesignerTrans.checkoutTitle,
-                className: "btn-success",
+                className: "btn-success btn-bb-checkout",
                 callback: function(res) {
 
                     $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
@@ -745,7 +745,7 @@ lD.welcomeScreen = function() {
             },
             view: {
                 label: layoutDesignerTrans.viewModeTitle,
-                className: "btn-white",
+                className: "btn-white btn-bb-view",
                 callback: function(res) {
                     lD.enterReadOnlyMode();
                 }
@@ -856,7 +856,7 @@ lD.showCheckoutScreen = function() {
         buttons: {
             checkout: {
                 label: layoutDesignerTrans.checkoutTitle,
-                className: "btn-success",
+                className: "btn-success btn-bb-checkout",
                 callback: function(res) {
 
                     $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
@@ -951,7 +951,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
 
                         generatedButtons[button] = {
                             label: button,
-                            className: buttonType,
+                            className: buttonType + ' btn-bb-' + button,
                             callback: function(result) {
                                 // Call global function by the function name
                                 if (mainActionCallback != null) {
@@ -1114,11 +1114,11 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
             buttons: {
                 cancel: {
                     label: editorsTrans.no,
-                    className: 'btn-white'
+                    className: 'btn-white btn-bb-cancel'
                 },
                 confirm: {
                     label: editorsTrans.yes,
-                    className: 'btn-danger',
+                    className: 'btn-danger btn-bb-confirm',
                     callback: function() {
 
                         // Empty options object
@@ -1361,14 +1361,14 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
             buttons: {
                 viewLibrary: {
                     label: uploadTrans.viewLibrary,
-                    className: "btn-white",
+                    className: "btn-white btn-bb-viewlibrary",
                     callback: function() {
                         lD.toolbar.openNewTabAndSearch(moduleType);
                     }
                 },
                 main: {
                     label: translations.done,
-                    className: "btn-primary",
+                    className: "btn-primary btn-bb-main",
                     callback: function() {
                         lD.timeline.resetZoom();
                         lD.reloadData(lD.layout);
@@ -1870,7 +1870,7 @@ lD.showUnlockScreen = function() {
         buttons: {
             unlock: {
                 label: layoutDesignerTrans.unlockTitle,
-                className: "btn-info",
+                className: "btn-info btn-bb-unlock",
                 callback: function(res) {
 
                     $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');

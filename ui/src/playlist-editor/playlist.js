@@ -141,14 +141,14 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
                 buttons: {
                     viewLibrary: {
                         label: uploadTrans.viewLibrary,
-                        className: "btn-white",
+                        className: "btn-white btn-bb-viewlibrary",
                         callback: function() {
                             pE.toolbar.openNewTabAndSearch(draggableSubType);
                         }
                     },
                     main: {
                         label: translations.done,
-                        className: "btn-primary",
+                        className: "btn-primary btn-bb-main",
                         callback: function() {
                             pE.reloadData();
                         }

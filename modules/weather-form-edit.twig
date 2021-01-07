@@ -49,8 +49,8 @@
                 <div class="dropdown-menu">
                     <a class="dropdown-item" href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a>
                     <a class="dropdown-item" href="#backgroundTab" role="tab" data-toggle="tab"><span>{% trans "Backgrounds" %}</span></a>
-                    <a class="dropdown-item" href="#templateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Main Template" %}</span></a>
-                    <a class="dropdown-item" href="#optionalStylesheetTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#templateTab"  role="tab" data-toggle="tab"><span>{% trans "Main Template" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#optionalStylesheetTab"  role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
                     <a class="dropdown-item" href="#optionalJavascript" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a>
                 </div>
             </li>
@@ -212,8 +212,8 @@
                     </div>
 
                     <div class="tab-pane" id="templateTab">
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Forecast Template" %}</h4>
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "Forecast Template" %}</h4>
                         </div>
 
                         <div class="editor-messages">

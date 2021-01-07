@@ -198,14 +198,16 @@
 
                     <div class="tab-pane" id="templateTab">
 
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="template_advanced" name="template_advanced" {% if module.getOption("template_advanced", 0) == 1 %}checked{% endif %}
-                                data-size="small"
-                                data-label-text="{% trans "Visual editor" %}"
-                                data-label-width="80px"
-                                data-on-text="{% trans "On" %}"
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "Main Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="template_advanced" name="template_advanced" {% if module.getOption("template_advanced", 0) == 1 %}checked{% endif %}
+                                    data-size="small"
+                                    data-label-text="{% trans "Visual editor" %}"
+                                    data-label-width="80px"
+                                    data-on-text="{% trans "On" %}"
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
 
                         <div class="editor-messages">
@@ -229,7 +231,7 @@
                             {{ forms.message(playlistEditorMessage, 'playlist-editor-message ta_text-advanced-editor-show') }}
                         </div>
 
-                        <div class="form-group row ckeditor_controls inline-editor-hide container-fluid" data-linked-to="template">
+                        <div class="form-group row ckeditor_controls inline-editor-hide" data-linked-to="template">
                             <div class="col-sm-6">
                                 <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                 <div class="col-sm-8 ckeditor_select_container">
@@ -267,17 +269,16 @@
 
                     <div class="tab-pane" id="currentEventTemplateTab">
 
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Current Event Template" %}</h4>
-
-                            <div class="current-event-template">
-                                <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="currentEventTemplate_advanced" name="currentEventTemplate_advanced" {% if module.getOption("currentEventTemplate_advanced", 0) == 1 %}checked{% endif %}
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "Current Event Template" %}</h4>
+                            <div class="current-event-template ml-auto">
+                                <input type="checkbox" class="bootstrap-switch-target" id="currentEventTemplate_advanced" name="currentEventTemplate_advanced" {% if module.getOption("currentEventTemplate_advanced", 0) == 1 %}checked{% endif %}
                                     data-size="small"
                                     data-label-text="{% trans "Visual editor" %}"
                                     data-label-width="80px"
                                     data-on-text="{% trans "On" %}"
                                     data-off-text="{% trans "Off" %}">
-                            </div>
+                                </div>
                         </div>
 
                         {% set title %}{% trans "Use an alternative template for Current Events?" %}{% endset %}
@@ -297,7 +298,7 @@
                             {{ forms.message(simpleTextEditorMessage2, 'currentEventTemplate-advanced-editor-show') }}
                         </div>
 
-                        <div class="ckeditor_controls current-event-template" data-linked-to="currentEventTemplate">
+                        <div class="ckeditor_controls row current-event-template" data-linked-to="currentEventTemplate">
                             <div class="col-sm-6">
                                 <div class="form-group row">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
@@ -340,14 +341,16 @@
 
                     <div class="tab-pane" id="noDataTemplateTab">
 
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "No Data Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %}
-                                data-size="small"
-                                data-label-text="{% trans "Visual editor" %}"
-                                data-label-width="80px"
-                                data-on-text="{% trans "On" %}"
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "No Data Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %}
+                                    data-size="small"
+                                    data-label-text="{% trans "Visual editor" %}"
+                                    data-label-width="80px"
+                                    data-on-text="{% trans "On" %}"
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
 
                         {% set noDataMessageMessage1 %}

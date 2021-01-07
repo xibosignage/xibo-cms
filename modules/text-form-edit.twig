@@ -37,7 +37,7 @@
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
                 <div class="dropdown-menu">
-                    <a class="dropdown-item" href="#templateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#templateTab"  role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
                     <a class="dropdown-item" href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a>
                 </div>
             </li>
@@ -124,14 +124,16 @@
 
                     <div class="tab-pane" id="templateTab">
 
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 1) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "Main Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 1) == 1 %}checked{% endif %} 
+                                    data-size="small" 
+                                    data-label-text="{% trans "Visual editor" %}" 
+                                    data-label-width="80px" 
+                                    data-on-text="{% trans "On" %}" 
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
 
                         <div class="editor-messages">
@@ -155,7 +157,7 @@
                             {{ forms.message(playlistEditorMessage, 'playlist-editor-message ta_text-advanced-editor-show') }}
                         </div>
 
-                        <div class="ckeditor_controls inline-editor-hide container-fluid" data-linked-to="ta_text">
+                        <div class="ckeditor_controls row inline-editor-hide container-fluid" data-linked-to="ta_text">
                             <div class="col-sm-6">
                                 <div class="form-group row">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>

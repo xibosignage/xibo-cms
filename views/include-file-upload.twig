@@ -99,71 +99,84 @@
         {{#if oldMediaId}}
         <div class="row">
             <div class="col-md-12">
-                <label for="updateInLayouts">
+                <div class="form-check">
                     <input type="checkbox" id="updateInLayouts" name="updateInLayouts" {{#if updateInAllChecked}}checked{{/if}}>
-                    {{ trans.updateInLayouts.title }}
-                </label>
-                <span class="help-block">{{ trans.updateInLayouts.helpText }}</span>
-
-                <label for="deleteOldRevisions">
+                    <label for="updateInLayouts">
+                        {{ trans.updateInLayouts.title }}
+                    </label>
+                </div>
+                <small class="form-text text-muted">{{ trans.updateInLayouts.helpText }}</small>
+            </div>
+            <div class="col-md-12">
+                <div class="form-check">
                     <input type="checkbox" id="deleteOldRevisions" name="deleteOldRevisions" {{#if deleteOldRevisionsChecked}}checked{{/if}}>
-                    {{ trans.deleteOldRevisions.title }}
-                </label>
-                <span class="help-block">{{ trans.deleteOldRevisions.helpText }}</span>
+                    <label for="deleteOldRevisions">
+                        {{ trans.deleteOldRevisions.title }}
+                    </label>
+                </div>
+                <small class="form-text text-muted">{{ trans.deleteOldRevisions.helpText }}</small>
             </div>
         </div>
         {{/if}}
         {{#if layoutImport }}
         <div class="row">
             <div class="col-md-6">
-                <label for="replaceExisting" title="If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.">
-                    <input type="checkbox" id="replaceExisting" name="replaceExisting">
-                    {{ trans.replaceExistingMediaMessage }}
-                </label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="replaceExisting" name="replaceExisting">
+                    <label class="form-check-label" for="replaceExisting" title="If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.">
+                        {{ trans.replaceExistingMediaMessage }}
+                    </label>
+                </div>
             </div>
             <div class="col-md-6">
-                <label for="importTags" title="Would you like to import any tags contained on the layout.">
-                    <input type="checkbox" id="importTags" name="importTags">
-                    {{ trans.importTagsMessage }}
-                </label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="importTags" name="importTags">
+                    <label class="form-check-label" for="importTags" title="Would you like to import any tags contained on the layout.">
+                        {{ trans.importTagsMessage }}
+                    </label>
+                </div>
             </div>
         </div>
         <div class="row">
             <div class="col-md-6">
-                <label for="useExistingDataSets">
-                    <input type="checkbox" id="useExistingDataSets" name="useExistingDataSets" checked>
-                    {{ trans.useExistingDataSetsMessage }}
-                </label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="useExistingDataSets" name="useExistingDataSets" checked>
+                    <label class="form-check-label" for="useExistingDataSets">
+                        {{ trans.useExistingDataSetsMessage }}
+                    </label>
+                </div>
             </div>
             <div class="col-md-6">
-                <label for="importDataSetData">
-                    <input type="checkbox" id="importDataSetData" name="importDataSetData" disabled>
-                    {{ trans.dataSetDataMessage }}
-                </label>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="importDataSetData" name="importDataSetData" disabled>
+                    <label class="form-check-label" for="importDataSetData">
+                        {{ trans.dataSetDataMessage }}
+                    </label>
+                </div>
             </div>
         </div>
         {{/if}}
         {{#if showWidgetDates }}
         <div class="row">
             <div class="col-md-12">
-                <label for="setExpiryDates">
-                    <input type="checkbox" id="setExpiryDates" name="setExpiryDates">
-                    {{ trans.widgetExpiryDates }}
-                </label>
-                <span class="help-block">{{ trans.widgetExpiryDatesMessage }}</span>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="setExpiryDates" name="setExpiryDates">
+                    <label class="form-check-label" for="setExpiryDates">{{ trans.widgetExpiryDates }}</label>
+                </div>
+                <small class="form-text text-muted">{{ trans.widgetExpiryDatesMessage }}</small>
             </div>
         </div>
-        <div class="row row-widget-dates row-widget-set-expiry hide">
+        <div class="row row-widget-dates row-widget-set-expiry hidden">
             <div class="col-md-6">
                 <div class="form-group row">
                     <label class="col-sm-2 control-label" for="widgetFromDt">{{ trans.widgetFromDt }}</label>
                     <div class="col-sm-10">
                         <div class="input-group">
-                            <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
+                            <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
                             <input class="form-control dateTimePicker dateControl" type="text" name="widgetFromDt" id="widgetFromDt" />
-                            <span class="input-group-addon date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
+                            <span class="input-group-append input-group-addon input-group-text date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
                         </div>
-                        <span class="help-block">{{ trans.widgetFromDtMessage }}</span>
+                       <small class="form-text text-muted">{{ trans.widgetFromDtMessage }}</small>
                     </div>
                 </div>
             </div>
@@ -172,29 +185,29 @@
                     <label class="col-sm-2 control-label" for="widgetToDt">{{ trans.widgetToDt }}</label>
                     <div class="col-sm-10">
                         <div class="input-group">
-                            <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
+                            <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
                             <input class="form-control dateTimePicker dateControl" type="text" name="widgetToDt" id="widgetToDt" />
-                            <span class="input-group-addon date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
+                            <span class="input-group-append input-group-addon input-group-text date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
                         </div>
-                        <span class="help-block">{{ trans.widgetToDtMessage }}</span>
+                       <small class="form-text text-muted">{{ trans.widgetToDtMessage }}</small>
                     </div>
                 </div>
             </div>
         </div>
-        <div class="row row-widget-set-expiry hide">
+        <div class="row row-widget-set-expiry hidden">
             <div class="col-md-12">
-                <label for="deleteOnExpiry">
-                    <input type="checkbox" id="deleteOnExpiry" name="deleteOnExpiry">
-                    {{ trans.deleteOnExpiry }}
-                </label>
-                <span class="help-block">{{ trans.deleteOnExpiryMessage }}</span>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="deleteOnExpiry" name="deleteOnExpiry">
+                    <label class="form-check-label" for="deleteOnExpiry">{{ trans.deleteOnExpiry }}</label>
+                </div>
+                <small class="form-text text-muted">{{ trans.deleteOnExpiryMessage }}</small>
             </div>
             <div class="col-md-12">
-                <label for="applyToMedia">
-                    <input type="checkbox" id="applyToMedia" name="applyToMedia">
-                    {{ trans.applyToMedia }}
-                </label>
-                <span class="help-block">{{ trans.applyToMediaMessage }}</span>
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="applyToMedia" name="applyToMedia">
+                    <label class="form-check-label" for="applyToMedia">{{ trans.applyToMedia }}</label>
+                </div>
+                <span class="form-text text-muted">{{ trans.applyToMediaMessage }}</span>
             </div>
         </div>
         {{/if}}

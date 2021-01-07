@@ -1865,7 +1865,7 @@ function XiboMultiSelectPermissionsFormOpen(button) {
             buttons: {
                 cancel: {
                     label: translations.close,
-                    className: 'btn-white'  
+                    className: 'btn-white btn-bb-cancel'  
                 }
             }
         });
@@ -2435,6 +2435,7 @@ function SystemMessage(messageText, success) {
             size: 'large',
             buttons: [{
                 label: 'Close',
+                className: 'btn-bb-close',
                 callback: function() {
                     if (lastForm != null && lastForm.indexOf("playlist/widget/form") > -1 && timelineForm != null) {
                         // Close button

@@ -668,6 +668,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 #layout-editor #layout-viewer-navbar {
     
     .viewer-navbar {
+        display: block;
         background: $viewer-navbar-bg-colour;
         color: $viewer-navbar-fg-colour;
         min-height: 40px;
@@ -944,20 +945,22 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
                 }
 
                 .form-group {
-                    margin-right: -5px;
-                    margin-left: -5px;
+                    margin-right: -5px !important;
+                    margin-left: -5px !important;
 
                     .col-sm-2 {
-                        width: 22%;
+                        flex: 0 0 22%;
+                        max-width: 22%;
                     }
 
                     .col-sm-10 {
-                        width: 78%;
+                        flex: 0 0 78%;
+                        max-width: 78%;
                     }
 
                     .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
-                        padding-left: 4px;
-                        padding-right: 4px;
+                        padding-left: 4px !important;
+                        padding-right: 4px !important;
                     }
 
                     .offset-sm-2 {
@@ -1083,6 +1086,19 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
             }
 
+            .form-content-title {
+                margin: -5px 0 10px 0;
+                padding: 5px 0;
+                border-bottom: 1px solid #e5e5e5;
+
+                h4 {
+                    font-size: 18px;
+                    line-height: 38px;
+                    margin: 0;
+                    padding: 0px 8px;
+                }
+            }
+
             table td span.label {
                 white-space: inherit;
             }
@@ -1136,6 +1152,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
     #layout-navigator-navbar {
         .navigator-navbar {
+            display: block;
             padding: 4px;
             background: darken($navigator-navbar-bg-colour, 10%);
             color: $navigator-navbar-fg-colour;

@@ -48,9 +48,9 @@
                 </a>
                 <div class="dropdown-menu">
                     <a class="dropdown-item" href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a>
-                    <a class="dropdown-item" href="#currentForecastTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Current Forecast" %}</span></a>
-                    <a class="dropdown-item" href="#dailyForecastTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Daily Forecast" %}</span></a>
-                    <a class="dropdown-item" href="#optionalStylesheetTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Style Sheet" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#currentForecastTab"  role="tab" data-toggle="tab"><span>{% trans "Current Forecast" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#dailyForecastTab"  role="tab" data-toggle="tab"><span>{% trans "Daily Forecast" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#optionalStylesheetTab"  role="tab" data-toggle="tab"><span>{% trans "Style Sheet" %}</span></a>
                     <a class="dropdown-item" href="#optionalJavascript" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a>
                 </div>
             </li>
@@ -138,14 +138,16 @@
                     </div>
 
                     <div class="tab-pane" id="currentForecastTab">
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Current Forecast Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="currentTemplate_advanced" name="currentTemplate_advanced" {% if module.getOption("currentTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "Current Forecast Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="currentTemplate_advanced" name="currentTemplate_advanced" {% if module.getOption("currentTemplate_advanced", 0) == 1 %}checked{% endif %} 
+                                    data-size="small" 
+                                    data-label-text="{% trans "Visual editor" %}" 
+                                    data-label-width="80px" 
+                                    data-on-text="{% trans "On" %}" 
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
 
                         <div class="editor-messages">
@@ -166,14 +168,16 @@
                     </div>
 
                     <div class="tab-pane" id="dailyForecastTab">
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Daily Forecast Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="dailyTemplate_advanced" name="dailyTemplate_advanced" {% if module.getOption("dailyTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "Daily Forecast Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="dailyTemplate_advanced" name="dailyTemplate_advanced" {% if module.getOption("dailyTemplate_advanced", 0) == 1 %}checked{% endif %} 
+                                    data-size="small" 
+                                    data-label-text="{% trans "Visual editor" %}" 
+                                    data-label-width="80px" 
+                                    data-on-text="{% trans "On" %}" 
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
 
                         <div class="editor-messages">
