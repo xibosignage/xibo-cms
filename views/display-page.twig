@@ -496,7 +496,6 @@
                         "data": null,
                         responsivePriority: 4,
                         "render": function (data, type, row) {
-                            console.log(type);
                             if (type === "display") {
                                 var html = "<div class='remote-icons'>";
                                 if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" !== "" && row.clientAddress != null && row.clientAddress !== "") {

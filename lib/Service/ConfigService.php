@@ -24,6 +24,7 @@ namespace Xibo\Service;
 use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Helper\Environment;
+use Xibo\Helper\NatoAlphabet;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
 
@@ -772,5 +773,10 @@ class ConfigService implements ConfigServiceInterface
             return false;
 
         return ($results[0]['Value'] != 'STATEMENT');
+    }
+
+    public function getPhoneticKey()
+    {
+        return NatoAlphabet::convertToNato($this->getSetting('SERVER_KEY'));
     }
 }

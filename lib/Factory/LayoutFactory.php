@@ -779,8 +779,10 @@ class LayoutFactory extends BaseFactory
             $this->getLog()->debug('Finished creating nested playlists there are ' . count($playlists) . ' Playlists created');
         }
 
+        $drawers = (array_key_exists('drawers', $layoutJson['layoutDefinitions'])) ? $layoutJson['layoutDefinitions']['drawers'] : [];
+
         // merge Layout Regions and Drawers into one array.
-        $allRegions = array_merge($layoutJson['layoutDefinitions']['regions'], $layoutJson['layoutDefinitions']['drawers']);
+        $allRegions = array_merge($layoutJson['layoutDefinitions']['regions'], $drawers );
 
         // Populate Region Nodes
         foreach ($allRegions as $regionJson) {
@@ -1711,7 +1713,7 @@ class LayoutFactory extends BaseFactory
                 $playlist->requiresDurationUpdate = 1;
 
                 // save non-media based widget, we can't save media based widgets here as we don't have updated mediaId yet.
-                if ($module->regionSpecific == 1) {
+                if ($module->regionSpecific == 1 && $playlistWidget->mediaIds == []) {
                     $playlistWidget->save();
                 }
             }

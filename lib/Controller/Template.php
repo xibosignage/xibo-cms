@@ -128,7 +128,8 @@ class Template extends Base
             'excludeTemplates' => 0,
             'tags' => $sanitizedQueryParams->getString('tags'),
             'layoutId' => $sanitizedQueryParams->getInt('templateId'),
-            'layout' => $sanitizedQueryParams->getString('template')
+            'layout' => $sanitizedQueryParams->getString('template'),
+            'folderId' => $sanitizedQueryParams->getInt('folderId')
         ], $request));
 
         foreach ($templates as $template) {
@@ -346,6 +347,7 @@ class Template extends Base
         $resolutionId = $sanitizedParams->getInt('resolutionId');
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
+        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
 
         // Tags
         if ($this->getUser()->featureEnabled('tag.tagging')) {
@@ -368,6 +370,9 @@ class Template extends Base
 
         // Set auto apply transitions flag
         $layout->autoApplyTransitions = $autoApplyTransitions;
+
+        // Set folderId
+        $layout->folderId = $folderId;
 
         // Save
         $layout->save();
@@ -485,6 +490,7 @@ class Template extends Base
         $layout->tags[] = $this->tagFactory->getByTag('template');
 
         $layout->description = $sanitizedParams->getString('description');
+        $layout->folderId = $sanitizedParams->getInt('folderId');
         $layout->setOwner($this->getUser()->userId, true);
         $layout->save();
 

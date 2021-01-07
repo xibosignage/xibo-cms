@@ -584,7 +584,7 @@ class ModuleFactory extends BaseFactory
             $body .= ' AND `installName` = :installName ';
         }
 
-        if ($parsedBody->getString('type') != '') {
+        if ($parsedBody->getString('type') != '' && $parsedBody->getInt('allowMediaTypeChange', ['default' => 0]) == 0) {
             $params['type'] = $parsedBody->getString('type');
             $body .= ' AND `module` = :type ';
         }
