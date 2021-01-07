@@ -39,6 +39,6 @@ describe('Dashboard', function() {
         cy.get('button[data-role="end"]').click();
 
         cy.wait(500);
-        cy.get('.popover.tour').should('not.be.visible');
+        cy.get('.popover.tour').should('not.exist');
     });
 });
