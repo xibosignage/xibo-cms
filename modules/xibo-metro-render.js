@@ -294,7 +294,7 @@ jQuery.fn.extend({
             }
 
             // Protect against images that don't load
-            $(this).find("img").error(function() {
+            $(this).find("img").on("error", function() {
                 $(this).unbind("error").attr("src", "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNiYAAAAAkAAxkR2eQAAAAASUVORK5CYII=");
             });
         });

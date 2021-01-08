@@ -42,8 +42,8 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#displays" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
-                <li><a href="#layouts" role="tab" data-toggle="tab"><span>{% trans "Layouts" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#displays" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#layouts" role="tab" data-toggle="tab"><span>{% trans "Layouts" %}</span></a></li>
             </ul>
             <div class="tab-content">
                 <div class="tab-pane active" id="displays">
@@ -58,7 +58,7 @@
                         <div class="row">
                             <div class="col-md-12">
                                 <div class="XiboFilter">
-                                    <div class="FilterDiv" id="Filter">
+                                    <div class="FilterDiv card-body" id="Filter">
                                         <form class="form-inline" id="usageReportForm">
                                             {% set title %}{% trans "From Date" %}{% endset %}
                                             {{ inline.dateTime("playlistEventFromDate", title, "", helpText, "", "") }}

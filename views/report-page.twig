@@ -27,11 +27,11 @@
 {% block pageContent %}
     {% for key,reports in defaults.availableReports %}
         <div class="row reports-available">
-            <div class="reports-available-title">
+            <div class="reports-available-title col-sm-12 pl-0">
                 <span>{{ key }}</span>
             </div>
             {% if key == "Proof of Play" and currentUser.featureEnabled("proof-of-play") %}
-                <div class="col-lg-3 col-md-6 col-xs-12">
+                <div class="col-lg-3 col-md-6 col-12">
                     <div class="widget content" style="min-height: 210px">
                         <div class="widget-body">
                             <div class="widget-icon green">
@@ -48,7 +48,7 @@
             {% endif %}
             {% for report in reports %}
                 {% if report.hidden == 0 %}
-                    <div class="report-box col-lg-3 col-md-6 col-xs-12">
+                    <div class="report-box col-lg-3 col-md-6 col-12">
                         <div class="widget content" style="min-height: 210px">
                             <div class="widget-body">
                                 <div class="widget-icon {{ report.color }} ">
@@ -193,7 +193,7 @@
         .reports-available-title {
             margin: 5px 15px 5px;
             color: #273759;
-            font-size: 20px;
+            font-size: 1.4rem;
         }
 
         div.report-box {
@@ -206,13 +206,13 @@
         }
 
         .widget .widget-content .report-title {
-            font-size: 16px;
+            font-size: 1.15rem;
             padding: 10px 0 0;
             display: block;
         }
 
         .widget .widget-content .comment {
-            font-size: 14px;
+            font-size: 1rem;
         }
     </style>
 {% endblock %}

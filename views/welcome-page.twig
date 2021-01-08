@@ -36,7 +36,7 @@
         }
 
         .tour-title {
-            font-size: 18px;
+            font-size: 1.3rem;
             padding: 16px 16px 0px 16px;
         }
 
@@ -60,7 +60,7 @@
             background-color: #333;
             color: #f9f9f9;
             border-radius: 0 0 6px 6px;
-            font-size: 18px;
+            font-size: 1.3rem;
         }
 
         /* running */
@@ -82,7 +82,7 @@
         }
 
         .welcome-title {
-            font-size: 20px;
+            font-size: 1.4rem;
             margin: 20px 0 20px 0;
         }
 
@@ -102,7 +102,6 @@
         }
 
         .tour-cards-section, .welcome-players-section {
-            display: table;
             width: 100%;
             max-width: 1200px;
             margin-bottom: 10px;
@@ -131,14 +130,14 @@
 {% block pageContent %}
 
     <div class="container-fluid welcome-container">
-        <div class="col-xs-12">
+        <div class="col-12">
 
             {% set productName = theme.getThemeConfig('theme_title') %}
             <h2>{% trans %}Welcome to the {{productName}} CMS{% endtrans %}</h2>
             <p>{% trans %}The {{productName}} system comprises a central content management system (the CMS you are currently logged into) and Player software to download content from the CMS and play on screens.{% endtrans %}</p>
         </div>
 
-        <div class="col-xs-12">
+        <div class="col-12">
             <div class="welcome-title">{% trans "How does it all work?" %}</div>
             <p>{% trans "The Player application needs to run on a device attached to each screen that is to be used and will connect over the network to the CMS to download any new content at regular defined intervals." %}</p>
             <p>{% trans "Downloaded content from the CMS is cached to the Player so if there is a problem connecting to the CMS, it can continue to show the stored content until the connection between the CMS and Player is re-established." %}</p>
@@ -148,24 +147,24 @@
         {# CMS players #}
         {% include "welcome-page_players.twig" %}
 
-        <div class="col-xs-12 welcome-title">{% trans "We’d like to take you on a tour of the CMS using a series of short tutorials to get you up and running in no time. If you already know your way around, please skip." %}</div>
+        <div class="col-12 welcome-title">{% trans "We’d like to take you on a tour of the CMS using a series of short tutorials to get you up and running in no time. If you already know your way around, please skip." %}</div>
         
-        <div class="tour-cards-section">
-            <div class="col-xs-12 col-sm-6 col-md-4 tour-card-container">
+        <div class="tour-cards-section row">
+            <div class="col-12 col-sm-6 col-md-4 tour-card-container">
                 <div class="tour-card tour-link" data-tour-name="authDisplayTour">
                     <img class="tour-image" src="{{ theme.uri("img/tours/authDisplayTour.png") }}">
                     <div class="tour-title">{% trans "Authorise Displays..." %}</div>
                     <div class="tour-text">{% trans "Once you have chosen your Player and installed the software, this tour will take you through the steps needed to connect and authorise Displays with your CMS." %}</div>
                 </div>
             </div>
-            <div class="col-xs-12 col-sm-6 col-md-4 tour-card-container">
+            <div class="col-12 col-sm-6 col-md-4 tour-card-container">
                 <div class="tour-card tour-link" data-tour-name="mainTour">
                     <img class="tour-image" src="{{ theme.uri("img/tours/mainTour.png") }}">
                     <div class="tour-title">{% trans "Create Content..." %}</div>
                     <div class="tour-text">{% trans "Do you want to see how easy it is to create a basic Layout using the Layout designer? This tutorial will take you through the basics, step by step so you can start creating your own content with ease." %}</div>
                 </div>
             </div>
-            <div class="col-xs-12 col-sm-6 col-md-4 tour-card-container">
+            <div class="col-12 col-sm-6 col-md-4 tour-card-container">
                 <div class="tour-card tour-link" data-tour-name="schedulingTour">
                     <img class="tour-image" src="{{ theme.uri("img/tours/schedulingTour.png") }}">
                     <div class="tour-title">{% trans "Get Scheduling..." %}</div>
@@ -174,7 +173,7 @@
             </div>
         </div>
 
-        <p class="col-xs-12">{{ "Explore more of the features and functionality that [[PRODUCTNAME]] has to offer by clicking on the Manual link from the CMS main menu."|trans|replace({'[[PRODUCTNAME]]': theme.getThemeConfig('theme_title') }) }}</p>
+        <p class="col-12">{{ "Explore more of the features and functionality that [[PRODUCTNAME]] has to offer by clicking on the Manual link from the CMS main menu."|trans|replace({'[[PRODUCTNAME]]': theme.getThemeConfig('theme_title') }) }}</p>
 
         {# CMS support #}
         {% include "welcome-page_support.twig" %}
@@ -204,6 +203,10 @@
                 var tourName = $(this).data('tourName');
                 var tourSeen = (localStorage[tourName + '_seen'] == 1);
                 var tourPlaying = (localStorage.tour_playing == tourName);
+
+                console.log(tourName);
+                console.log('tourSeen: ' + tourSeen);
+                console.log('tourPlaying: ' + tourPlaying);
 
                 // Reset to original state by removing all temporary classes/elements
                 $(this).find('.tour-icon').remove();

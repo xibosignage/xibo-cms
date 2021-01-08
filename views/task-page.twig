@@ -26,12 +26,12 @@
 {% block title %}{{ "Tasks"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
+    <div class="widget-action-menu pull-right">
         {% if settings.TASK_CONFIG_LOCKED_CHECKB == 0 or settings.TASK_CONFIG_LOCKED_CHECKB == "Unchecked" %}
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("task.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Task" %}</a></li>
+            <button class="btn btn-success XiboFormButton" href="{{ url_for("task.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Task" %}</button>
         {% endif %}
-        <li class="btn btn-success btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
-    </ul>
+        <button class="btn btn-primary" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -40,13 +40,13 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="tasks" class="table table-striped" data-state-preference-name="taskGrid">
                         <thead>
                             <tr>
@@ -59,7 +59,7 @@
                                 <th>{% trans "Last Run" %}</th>
                                 <th>{% trans "Last Status" %}</th>
                                 <th>{% trans "Last Duration" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
+                                <th class="rowMenu">{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -177,7 +177,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#tasks_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#tasks_wrapper').find('.col-md-6').eq(1));
 
         $("#refreshLog").click(function () {
             table.ajax.reload();

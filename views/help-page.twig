@@ -26,9 +26,9 @@
 {% block title %}{{ "Help Links"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Help page" %}" href="{{ url_for("help.add.form") }}"><i class="fa fa-question-circle" aria-hidden="true"></i> {% trans "Add Help Link" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-info XiboFormButton" title="{% trans "Add a new Help page" %}" href="{{ url_for("help.add.form") }}"><i class="fa fa-question-circle" aria-hidden="true"></i> {% trans "Add Help Link" %}</button>
+    </div>
 {% endblock %}
 
 
@@ -38,13 +38,13 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="helpLinks" class="table table-striped" data-state-preference-name="helpGrid">
                         <thead>
                             <tr>
@@ -97,6 +97,6 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#helpLinks_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#helpLinks_wrapper').find('.col-md-6').eq(1));
     </script>
 {% endblock %}

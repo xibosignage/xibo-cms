@@ -26,10 +26,10 @@
 {% block title %}{{ "Audit Log"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Export raw data to CSV" %}" href="{{ url_for("auditLog.export.form") }}"><i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"> <i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Export raw data to CSV" %}" href="{{ url_for("auditLog.export.form") }}"><i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</button>
+        <button class="btn btn-primary" id="refreshLog" title="{% trans "Refresh the Log" %}" href="#"> <i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -37,35 +37,39 @@
         <div class="widget-title">{% trans "Audit Log" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="auditView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                             {% set title %}{% trans "From Date" %}{% endset %}
-                            <div class="form-group">
-                                <label class="control-label" for="fromDt">{{ title }}</label>
-                                <div class="input-group date" style="display:table;">
+                            <div class="form-group mr-3 mb-2">
+                                <label class="control-label mr-1" for="fromDt">{{ title }}</label>
+                                <div class="input-group date">
                                     <input type="hidden" name="fromDt" id="fromDt" />
                                     <input class="form-control datePicker dateControl" name="fromDtLink"
                                            type="text" id="fromDtLink" data-link-field="fromDt"
                                            data-link-format="yyyy-mm-dd 00:00:00" readonly />
-                                    <span class="input-group-addon" id="fromDateControlCancel">
-                                                <span class="fa fa-times-circle"></span>
-                                            </span>
+                                    <div class="input-group-append input-group-addon" id="fromDateControlCancel">
+                                        <div class="input-group-text">
+                                            <span class="fa fa-times-circle"></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
                             {% set title %}{% trans "To Date" %}{% endset %}
-                            <div class="form-group">
-                                <label class="control-label" for="toDt">{{ title }}</label>
-                                <div class="input-group date" style="display:table;">
+                            <div class="form-group mr-3 mb-2">
+                                <label class="control-label mr-1" for="toDt">{{ title }}</label>
+                                <div class="input-group date">
                                     <input type="hidden" name="toDt" id="toDt" />
                                     <input class="form-control datePicker dateControl" name="toDtLink"
                                            type="text" id="toDtLink" data-link-field="toDt"
                                            data-link-format="yyyy-mm-dd 00:00:00" readonly />
-                                    <span class="input-group-addon" id="toDateControlCancel">
-                                                <span class="fa fa-times-circle"></span>
-                                            </span>
+                                    <div class="input-group-append input-group-addon" id="toDateControlCancel">
+                                        <div class="input-group-text">
+                                            <span class="fa fa-times-circle"></span>
+                                        </div>
+                                    </div>
                                 </div>
                             </div>
 
@@ -83,7 +87,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="logs" class="table table-striped">
                         <thead>
                             <tr>
@@ -178,7 +182,7 @@
                 });
             });
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#logs_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#logs_wrapper').find('.col-md-6').eq(1));
 
             $("#refreshLog").click(function () {
                 table.ajax.reload();
@@ -189,6 +193,7 @@
                 var $fromDt = $("#fromDt");
                 $fromDt.val("");
                 $("#fromDtLink").val("");
+                $("#fromDtLink").parent().find('.datePickerHelper').val('');
 
                 table.ajax.reload();
 
@@ -201,6 +206,7 @@
                 var $toDt = $("#toDt");
                 $toDt.val("");
                 $("#toDtLink").val("");
+                $("#toDtLink").parent().find('.datePickerHelper').val('');
 
                 table.ajax.reload();
 

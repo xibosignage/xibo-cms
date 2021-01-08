@@ -29,61 +29,52 @@
 
         {% if hideNavigation == "0" %}
             {% if horizontalNav %}
-                <nav class="navbar navbar-default">
-                    <div class="container-fluid">
-                        <!-- Brand and toggle get grouped for better mobile display -->
-                        <div class="navbar-header">
-                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1" aria-expanded="false">
-                                <span class="sr-only">Toggle navigation</span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                            </button>
-                            <a class="navbar-brand" href="#">
-                                <img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}">
-                            </a>
-                        </div>
+                <nav class="navbar navbar-default navbar-expand-lg">
+                    <a class="navbar-brand" href="#">
+                        <img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}">
+                    </a>
 
-                        <!-- Collect the nav links, forms, and other content for toggling -->
-                        <div class="collapse navbar-collapse" id="navbar-collapse-1">
-                            {% include "authed-topbar.twig" %}
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse-1" aria-controls="navbarNav" aria-expanded="false">
+                        <span class="fa fa-bars"></span>
+                    </button>
 
-                            <ul class="nav navbar-nav navbar-right">
-                                {% include "authed-theme-topbar.twig" ignore missing %}
-                                {% if currentUser.featureEnabled("drawer") %}
-                                    {% include "authed-notification-drawer.twig" %}
-                                {% endif %}
-                                {% include "authed-user-menu.twig" %}
-                            </ul>
-                        </div><!-- /.navbar-collapse -->
-                    </div><!-- /.container-fluid -->
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="navbar-collapse collapse justify-content-between" id="navbar-collapse-1">
+                        {% include "authed-topbar.twig" %}
+
+                        <ul class="nav navbar-nav navbar-right">
+                            {% include "authed-theme-topbar.twig" ignore missing %}
+                            {% if currentUser.featureEnabled("drawer") %}
+                                {% include "authed-notification-drawer.twig" %}
+                            {% endif %}
+                            {% include "authed-user-menu.twig" %}
+                        </ul>
+                    </div><!-- /.navbar-collapse -->
                 </nav>
             {% else %}
-                <div class="collapse navbar-collapse" id="navbar-collapse-1">
+                <div class="navbar-collapse navbar-collapse-side collapse" id="navbar-collapse-1">
                     {% include "authed-sidebar.twig" %}
                 </div>
             {% endif %}
         {% endif %}
 
         <div id="content-wrapper">
-            <div class="page-content">
+            <div class="page-content mt-3 mt-md-0">
                 {% if not horizontalNav %}
-                <div class="row header">
+                <div class="row header header-side">
                     <div class="col-sm-12">
                         <div class="meta pull-left">
                             <div class="page"><img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}"></div>
                         </div>
+                        <button type="button" class="pull-right navbar-toggler navbar-toggler-side" data-toggle="collapse" data-target="#navbar-collapse-1" aria-controls="navbarNav" aria-expanded="false">
+                            <span class="fa fa-bars"></span>
+                        </button>
                         <div class="user pull-right">
-                            <button type="button"  class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
-                                <span class="sr-only">Toggle navigation</span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                            </button>
                             {% include "authed-user-menu.twig" %}
                         </div>
                         {% if currentUser.featureEnabled("drawer") %}
-                        <div class="user pull-right">
+                        <div class="user user-notif pull-right">
                             {% include "authed-notification-drawer.twig" %}
                         </div>
                         {% endif %}
@@ -138,55 +129,54 @@
     {% verbatim %}
     <script type="text/x-handlebars-template" id="buttons-template">
         <div class="btn-group pull-right">
-            <button class="btn dropdown-toggle" data-toggle="dropdown">
-                <span class="fa fa-caret-down"></span>
-            </button>
-            <ul class="dropdown-menu">
+            <button class="btn dropdown-toggle" data-toggle="dropdown"></button>
+            <div class="dropdown-menu dropdown-menu-right">
                 {{#each buttons}}
                     {{#if divider}}
-                        <li class="divider"></li>
+                        <div class="dropdown-divider"></div>
                     {{else multiSelectOnly}}
-                        <li {{#each dataAttributes}}
+                        <a {{#each dataAttributes}}
                             data-{{ name }}="{{ value }}"
                             {{/each}}
-                            class="{{#if class}}{{ class }}{{else}}XiboMultiHiddenButton{{/if}} {{ id }}" style="display: none;"><a tabindex="-1" href="#">{{ text }}</a>
-                        </li>
+                            class="dropdown-item {{#if class}}{{ class }}{{else}}XiboMultiHiddenButton{{/if}} {{ id }}" style="display: none;" tabindex="-1" href="#">
+                            {{ text }}
+                        </a>
                     {{else}}
                         {{#if external}}
-                            <li class="{{ id }}"><a tabindex="-1" target="{{ linkType }}" onclick="{{ onclick }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a></li>
+                            <a class="dropdown-item {{ id }}" tabindex="-1" target="{{ linkType }}" onclick="{{ onclick }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a>
                         {{/if}}
 
                         {{#unless external}}
-                            <li {{#each dataAttributes}}
+                            <a {{#each dataAttributes}}
                                 data-{{ name }}="{{ value }}"
                                 {{/each}}
-                                class="{{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}><a tabindex="-1" href="#">{{ text }}</a>
-                            </li>
+                                class="dropdown-item {{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}} tabindex="-1" href="#">
+                                {{ text }}
+                            </a>
                         {{/unless}}
                     {{/if}}
                 {{/each}}
-            </ul>
+            </div>
         </div>
     </script>
 
     <script type="text/x-handlebars-template" id="multiselect-button-template">
         <div class="btn-group dropup">
-            <button class="btn select-all" data-toggle="selectAll">
+            <button class="btn btn-primary select-all" data-toggle="selectAll">
                 {{ selectAll }}
             </button>
-            <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                <span class="fa fa-caret-down"></span>
+            <button class="btn btn-white dropdown-toggle" data-toggle="dropdown">
                 {{ withSelected }}
             </button>
-            <ul class="dropdown-menu">
+            <div class="dropdown-menu">
                 {{#each buttons}}
                     {{#if divider}}
-                        <li class="divider"></li>
+                        <div class="dropdown-divider"></div>
                     {{else}}
-                        <li class="XiboMultiSelectFormButton" data-custom-handler="{{ customHandler }}" data-custom-handler-url="{{ customHandlerUrl }}" data-button-id="{{ id }}" data-grid-id="{{ gridId }}" data-content-type="{{ contentType }}" data-content-id-name="{{ contentIdName }}"><a tabindex="-1" href="#">{{ text }}</a></li>
+                        <a class="dropdown-item XiboMultiSelectFormButton" data-custom-handler="{{ customHandler }}" data-custom-handler-url="{{ customHandlerUrl }}" data-button-id="{{ id }}" data-grid-id="{{ gridId }}" data-content-type="{{ contentType }}" data-content-id-name="{{ contentIdName }}" tabindex="-1" href="#">{{ text }}</a>
                     {{/if}}
                 {{/each}}
-            </ul>
+            </div>
         </div>
     </script>
 
@@ -229,7 +219,7 @@
             <input class="form-control form-control-inline rs232-text-input rs232-data-bits" placeholder="{% endverbatim %}{% trans "Data Bits" %}{% verbatim %}" value="{{ value.cs.dataBits }}">
         </div>
         <div class="form-group-command form-group-rs232">
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-12 col-sm-6">
                 <label for="rs232Parity{{ unique }}">{% endverbatim %}{% trans "Parity:" %}{% verbatim %}</label>
                 <select name="rs232Parity{{ unique }}" id="rs232Parity{{ unique }}" class="rs232-parity form-control">
                     <option value="None" {{#eq value.cs.parity "None"}}selected="selected"{{/eq}}>None</option>
@@ -240,7 +230,7 @@
                 </select>
             </div>
 
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-12 col-sm-6">
                 <label for="rs232StopBits{{ unique }}">{% endverbatim %}{% trans "Stop Bits:" %}{% verbatim %}</label>
                 <select name="rs232StopBits{{ unique }}" id="rs232StopBits{{ unique }}" class="rs232-stop-bits form-control">
                     <option value="None" {{#eq value.cs.stopBits "None"}}selected="selected"{{/eq}}>None</option>
@@ -250,7 +240,7 @@
                 </select>
             </div>
 
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-12 col-sm-6">
                 <label for="rs232Handshake{{ unique }}">{% endverbatim %}{% trans "Handshake:" %}{% verbatim %}</label>
                 <select name="rs232Handshake{{ unique }}" id="rs232Handshake{{ unique }}" class="rs232-handshake form-control">
                     <option value="None" {{#eq value.cs.handshake "None"}}selected="selected"{{/eq}}>None</option>
@@ -260,7 +250,7 @@
                 </select>
             </div>
             
-            <div class="col-xs-12 col-sm-6">
+            <div class="col-12 col-sm-6">
                 <label for="rs232HexSupport{{ unique }}">{% endverbatim %}{% trans "HexSupport:" %}{% verbatim %}</label>
                 <select name="rs232HexSupport{{ unique }}" id="rs232HexSupport{{ unique }}" class="rs232-hex-support form-control">
                     <option value="0" {{#eq value.cs.hexSupport "0"}}selected="selected"{{/eq}}>0</option>
@@ -339,7 +329,7 @@
                 </div>
             </div>
 
-            <div id="tagValueRequired" class="alert alert-info hidden">
+            <div id="tagValueRequired" class="alert alert-info d-none">
                 <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
             </div>
 
@@ -361,12 +351,12 @@
             {% trans "Player Status Window"%}:
             {% verbatim %}
                 {{#eq type "android"}}
-                    <div class="well">
+                    <div class="card p-3 mb-3 bg-light">
                           <span>{{{data}}}</span>
                     </div>
                 {{/eq}}
                 {{#neq type "android"}}
-                    <div class="well">
+                    <div class="card p-3 mb-3 bg-light">
                         <ul>
                             {{#each data as |value key|}}
                             <li>{{key}}: {{value}}</li>
@@ -398,19 +388,18 @@
                 <!-- Modal content-->
                 <div class="modal-content">
                     <div class="modal-header">
-                        <button type="button" class="close btnCloseInnerModal">&times;</button>
-
                         <h4 class="modal-title">{% trans "Select Folder" %}</h4>
+                        <button type="button" class="close btnCloseInnerModal">&times;</button>
                     </div>
                     <div class="modal-body">
-                        <div class="form-group well">
+                        <div class="form-group card p-3 mb-3 bg-light">
                             {% verbatim %}
                                 <div id="{{ container }}"></div>
                             {% endverbatim %}
                         </div>
                     </div>
                     <div class="modal-footer">
-                        <button type="button" class="btn btn-primary btnCloseInnerModal">{% trans "Done" %}</button>
+                        <button type="button" class="btn btn-white btnCloseInnerModal">{% trans "Done" %}</button>
                     </div>
                 </div>
 
@@ -435,7 +424,7 @@
                 $('#folder-tree-form-modal').remove();
             }
 
-            var folderContainer = '<div class="well" id="container-folder-form-tree"></div>';
+            var folderContainer = '<div class="card p-3 mb-3 bg-light" id="container-folder-form-tree"></div>';
             var $hiddenInput = $('<input name="folderId" type="hidden" id="formFolderId">');
 
             $hiddenInput.on('change', function() {

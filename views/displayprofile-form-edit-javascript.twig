@@ -251,7 +251,7 @@
     <script type="text/x-handlebars-template" id="template-timers">
         <div class="form-group col-sm-12 row form-group-timers">
             <div class="col-sm-1">
-                <button type="button" class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+                <button type="button" class="btn btn-white btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
             </div>
             <div class="col-sm-5">
                 <select class="form-control multiSelect" name="timers[{{ index }}][day]" data-index="{{ index }}">
@@ -264,13 +264,13 @@
             <div class="col-sm-3 multiSelectInputs">
                 <div class="input-group">
                     <input class="form-control timePickerDisplayEditForm timersOn" type="text" name="timers[{{ index }}][on]" id="timersOn{{ index }}" value="{{ values.on }}" />
-                    <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
+                    <span class="input-group-addon date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
                 </div>
             </div>
             <div class="col-sm-3 multiSelectInputs">
                 <div class="input-group">
                     <input class="form-control timePickerDisplayEditForm timersOff" type="text" name="timers[{{ index }}][off]" id="timersOff{{ index }}" value="{{ values.off }}" />
-                    <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
+                    <span class="input-group-addon date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
                 </div>
             </div>
         </div>
@@ -279,7 +279,7 @@
     <script type="text/x-handlebars-template" id="template-picture-options">
             <div class="form-group col-sm-12 row form-group-picture-options">
             <div class="col-sm-1">
-                <button type="button" class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+                <button type="button" class="btn btn-white btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
             </div>
             <div class="col-sm-5">
                 <select class="form-control multiSelect" name="pictureControls[{{ index }}][property]" data-index="{{ index }}">

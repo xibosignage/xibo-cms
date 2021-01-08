@@ -192,7 +192,7 @@
                 <div class="widget-body">
                     <div class="XiboGrid" id="{{ random() }}">
                         <div class="XiboFilter">
-                            <div class="FilterDiv" id="bandwidthFilter">
+                            <div class="FilterDiv card-body" id="bandwidthFilter">
                                 <form class="form-inline">
                                     {{ inline.date("fromDt", "From Date", defaults.fromDate, "", "", "", "") }}
                                     {{ inline.date("toDt", "To Date", defaults.toDate, "", "", "", "") }}
@@ -200,7 +200,7 @@
                                 </form>
                             </div>
                         </div>
-                        <div class="XiboData">
+                        <div class="XiboData card pt-3">
                             <canvas id="bandwidthChart" style="clear:both; margin-top:25px;" height="330"></canvas>
                         </div>
                     </div>

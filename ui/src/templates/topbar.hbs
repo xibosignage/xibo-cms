@@ -1,97 +1,100 @@
-<nav class="navbar navbar-expand">
+<nav class="navbar">
 
     <div class="container-toolbar container-fluid">
         {{!-- Menu items/tabs --}}
         <div id="layoutInfo" class="navbar-text layout-info">
-            <span id="layout-info-status" class="label label-default" 
+            <span id="layout-info-status" class="badge badge-default" 
                 data-status-code="" 
                 data-toggle="popover"
                 data-trigger="hover" 
-                data-placement="right" 
+                data-placement="right"
                 data-html="true">
                 <i class="fa fa-spinner fa-spin"></i>
             </span>
 
             <span class="layout-info-name" 
                 data-toggle="tooltip" 
-                data-placement="bottom" 
+                data-placement="bottom"
+                data-container=".editor-top-bar" 
                 data-title="{{trans.nameDetail}}">
                 <span class="layout-info-label">{{trans.name}}:</span>"{{mainObject.name}}"
             </span>
 
             <span class="layout-info-duration"
                 data-toggle="tooltip" 
-                data-placement="bottom" 
+                data-placement="bottom"
+                data-container=".editor-top-bar" 
                 data-title="{{trans.durationDetail}}">
                 <i class="fa fa-clock-o layout-info-icon"></i><span class="layout-info-label">{{trans.duration}}:</span>{{mainObject.duration}}s
             </span>
 
             <span class="layout-info-dimensions"
                 data-toggle="tooltip" 
-                data-placement="bottom" 
+                data-placement="bottom"
+                data-container=".editor-top-bar" 
                 data-title="{{trans.dimensionsDetail}}">
                 <i class="fa fa-arrows layout-info-icon"></i><span class="layout-info-label">{{trans.dimensions}}:</span>{{mainObject.width}}x{{mainObject.height}}
             </span>
         </div>
 
         {{!-- Right menu --}}
-        <ul class="layout-action-menu nav navbar-nav navbar-right">
+        <ul class="layout-action-menu nav">
 
             {{!-- Layout select dropdown --}}
             <li>
-                <div id="layoutJumpListContainer" data-toggle="tooltip" data-placement="bottom" data-title="{{trans.changeLayout}}"
-                    class="navbar-btn" hidden>
+                <div id="layoutJumpListContainer" data-toggle="tooltip" data-placement="bottom" data-container=".editor-top-bar" data-title="{{trans.changeLayout}}"
+                    class="navbar-btn d-none">
                 </div>
             </li>
 
             {{!-- Buttons --}}
             {{#if customDropdownOptions}}
-                <li id="actionsSubmenu" class="dropdown navbar-submenu hide-on-lock">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
+                <li id="actionsSubmenu" class="nav-item dropdown navbar-submenu hide-on-lock">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true"
                         aria-expanded="false">{{trans.actions}}<span class="caret"></span></a>
 
-                    <ul class="dropdown-menu navbar-submenu-container">
+                    <div class="dropdown-menu dropdown-menu-right navbar-submenu-container">
                         {{#each customDropdownOptions}}
-                            <li>
+                            <a class="dropdown-item">
                                 <div id="{{id}}" class="navbar-submenu-item {{class}}" href="#">
                                     {{#if logo}}
                                         <i class="fa {{logo}}"></i>
                                     {{/if}}
                                     <span>{{title}}</span>
                                 </div>
-                            </li>
+                            </a>
                         {{/each}}
-                    </ul>
+                    </div>
                 </li>
             {{/if}}
 
             {{!-- Options menu --}}
             {{#if showOptions}}
-                <li class="dropdown navbar-submenu navbar-submenu-options hide-on-lock" data-toggle="tooltip" data-placement="top"
+                <li class="nav-item dropdown navbar-submenu navbar-submenu-options hide-on-lock" data-toggle="tooltip" data-container=".editor-top-bar" data-placement="top"
                     data-title="{{trans.options}}">
-                    <a id="optionsContainer" href="#" class="dropdown-toggle" data-toggle="dropdown" role="button"
+                    <a id="optionsContainer" href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button"
                         aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-cog"></i>
                     </a>
                 
-                    <ul class="dropdown-menu navbar-submenu-container navbar-submenu-options-container">
-                        <li>
+                    <div class="dropdown-menu dropdown-menu-right navbar-submenu-container navbar-submenu-options-container">
+                        <a class="dropdown-item">
                             <label class="navbar-submenu-item navbar-submenu-item-options displayTooltips-container tooltip-always-on"
-                                for="displayTooltips" data-toggle="tooltip" data-placement="left" data-title="{{trans.displayTooltipsTitle}}"
+                                for="displayTooltips" data-toggle="tooltip" data-container=".editor-top-bar" data-placement="left" data-title="{{trans.displayTooltipsTitle}}"
                                 accesskey="">
                                 <input type="checkbox" id="displayTooltips" name="displayTooltips"
                                     {{#if displayTooltips}}checked{{/if}}>
                                 <span>{{trans.displayTooltipsName}}</span>
                             </label>
-                        </li>
-                        <li>
-                            <div id="resetTour" class="navbar-submenu-item navbar-submenu-item-options tooltip-always-on hidden"
-                                data-toggle="tooltip" data-placement="bottom" data-title="{{trans.resetTourTitle}}" href="#">
+                        </a>
+                        <a class="dropdown-item">
+                            <div id="resetTour" class="navbar-submenu-item navbar-submenu-item-options tooltip-always-on d-none"
+                                data-toggle="tooltip" data-container=".editor-top-bar" data-placement="bottom" data-title="{{trans.resetTourTitle}}" href="#">
                                 <i class="fa fa-repeat"></i>
                                 <span>{{trans.resetTour}}</span>
                             </div>
-                        </li>
-                    </ul>
+                        </a>
+                    </div>
                 </li>
             {{/if}}
         </ul>

@@ -79,15 +79,15 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#populate" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#populate" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
             </ul>
             <form id="playlistAddForm" class="XiboForm form-horizontal playlistForm" method="post" action="{{ url_for("playlist.add") }}" data-gettag="{{ url_for("tag.getByName") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
 
                         {% if currentUser.featureEnabled('folder.view') %}
-                        <div class="form-group">
+                        <div class="form-group row">
                             <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
                             <div class="col-sm-10">
                                 <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
@@ -155,7 +155,7 @@
                         <div class="widget">
                             <div class="widget-title">{% trans "Library Media" %}</div>
                             <div class="widget-body">
-                                <div class="FilterDiv" id="Filter">
+                                <div class="FilterDiv card-body" id="Filter">
                                     {% set message = "Populate with Library Media matching the criteria below and automatically maintain the Playlist."|trans %}
                                     {{ forms.message(message) }}
 
@@ -168,7 +168,7 @@
                                     {% endif %}
                                 </div>
 
-                                <div class="XiboData">
+                                <div class="XiboData card pt-3">
                                     <table id="playlistLibraryMedia" class="table table-striped">
                                         <thead>
                                         <tr>

@@ -8,7 +8,7 @@ describe('Layout View', function() {
 
         cy.visit('/layout/view');
 
-        cy.get('a[href="/layout/form/add"]').click();
+        cy.get('button[href="/layout/form/add"]').click();
 
         // Create random name
         let uuid = Cypress._.random(0, 1e10);

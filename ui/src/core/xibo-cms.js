@@ -803,7 +803,7 @@ function XiboInitialise(scope) {
  */
 function dataTableProcessing(e, settings, processing) {
     if (processing)
-        $(e.target).closest('.widget').children(".widget-title").append(' <span class="saving fa fa-cog fa-spin"></span>');
+        $(e.target).closest('.widget').children(".widget-title").append('<span class="saving fa fa-cog fa-spin pl-1"></span>');
     else
         $(e.target).closest('.widget').closest(".widget").find(".saving").remove();
 }
@@ -818,11 +818,11 @@ function dataTableDraw(e, settings) {
     var target = $("#" + e.target.id);
 
     // Check to see if we have any buttons that are multi-select
-    var enabledButtons = target.find("ul.dropdown-menu li[data-commit-url]");
+    var enabledButtons = target.find("div.dropdown-menu a[data-commit-url]");
     
     // Check to see if we have tag filter for the current table
     var $tagsElement = target.closest(".XiboGrid").find('.FilterDiv #tags');
-    
+
     if (enabledButtons.length > 0 || $tagsElement.length > 0) {
 
         var searchByKey = function(array, item, key) {
@@ -879,7 +879,7 @@ function dataTableDraw(e, settings) {
         target.closest(".dataTables_wrapper").find(".dataTables_info").prepend(output);
 
         // Bind to our output
-        target.closest(".dataTables_wrapper").find(".dataTables_info li.XiboMultiSelectFormButton").click(function(){
+        target.closest(".dataTables_wrapper").find(".dataTables_info a.XiboMultiSelectFormButton").click(function(){
             if($(this).data('customHandler') != undefined && typeof window[$(this).data('customHandler')] == 'function') {
                 window[$(this).data('customHandler')](this);
             } else {
@@ -887,7 +887,7 @@ function dataTableDraw(e, settings) {
             }
         });
 
-        target.closest(".dataTables_wrapper").find(".dataTables_info li.XiboMultiSelectFormCustomButton").click(function(){
+        target.closest(".dataTables_wrapper").find(".dataTables_info a.XiboMultiSelectFormCustomButton").click(function(){
             window[$(this).data('customHandler')](this);
         });
         
@@ -1030,9 +1030,9 @@ function dataTableCreateTags(data, type) {
 
         for (var i = 0; i < arrayOfTags.length; i++) {
             if(arrayOfTags[i] != '' && (arrayOfValues[i] == undefined || arrayOfValues[i] === 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '</span></li>'
+                returnData += '<li class="btn btn-sm btn-white btn-tag">' + arrayOfTags[i] + '</span></li>'
             } else if (arrayOfTags[i] != '' && (arrayOfValues[i] != '' || arrayOfValues[i] !== 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '|' + arrayOfValues[i] + '</span></li>'
+                returnData += '<li class="btn btn-sm btn-white btn-tag">' + arrayOfTags[i] + '|' + arrayOfValues[i] + '</span></li>'
             }
         }
 
@@ -1131,7 +1131,6 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
 }
 
 function dataTableAddButtons(table, filter, allButtons) {
-
     allButtons = (allButtons === undefined) ? true : allButtons;
 
     if (allButtons) {
@@ -1139,6 +1138,7 @@ function dataTableAddButtons(table, filter, allButtons) {
             buttons: [
                 {
                     extend: 'colvis',
+                    columns: ':not(.rowMenu)',
                     text: function (dt, button, config) {
                         return dt.i18n('buttons.colvis');
                     }
@@ -1190,7 +1190,9 @@ function dataTableAddButtons(table, filter, allButtons) {
     }
 
     table.buttons( 0, null ).container().prependTo(filter);
+    $(filter).addClass('text-right');
     $(".ColVis_MasterButton").addClass("btn");
+    $(filter).find('.dt-buttons button.btn-secondary').addClass('btn-outline-primary').removeClass('btn-secondary');
 }
 
 /**
@@ -1334,7 +1336,8 @@ function XiboFormRender(sourceObj, data) {
                 var dialog = bootbox.dialog({
                         message: response.html,
                         title: dialogTitle,
-                        animate: false
+                        animate: false,
+                        size: 'large'
                     }).attr("id", id);
 
                 // Store the extra
@@ -1359,7 +1362,7 @@ function XiboFormRender(sourceObj, data) {
                                 extrabutton.addClass('btn-primary save-button');
                             }
                             else {
-                                extrabutton.addClass('btn-default');
+                                extrabutton.addClass('btn-white');
                             }
 
                             extrabutton.click(function(e) {
@@ -1717,7 +1720,8 @@ function XiboMultiSelectFormRender(button) {
     var dialog = bootbox.dialog({
             message: message,
             title: translations.multiselect,
-            animate: false
+            animate: false,
+            size: 'large'
         });
 
     // Append a footer to the dialog
@@ -1824,7 +1828,7 @@ function XiboMultiSelectFormRender(button) {
     }
 
     // Close button
-    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-default');
+    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-white');
     extrabutton.click(function() {
 
         $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
@@ -1868,10 +1872,11 @@ function XiboMultiSelectPermissionsFormOpen(button) {
             message: translations.multiselectNoItemsMessage,
             title: translations.multiselect,
             animate: false,
+            size: 'large',
             buttons: {
                 cancel: {
                     label: translations.close,
-                    className: 'btn-default'  
+                    className: 'btn-white btn-bb-cancel'  
                 }
             }
         });
@@ -1935,6 +1940,7 @@ function XiboMultiSelectTagFormRender(button) {
     var dialog = bootbox.dialog({
         message: dialogContent,
         title: translations.multiselect,
+        size: 'large',
         animate: false
     });
 
@@ -2042,7 +2048,7 @@ function XiboMultiSelectTagFormRender(button) {
     }
 
     // Close button
-    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-default');
+    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-white');
     extrabutton.click(function() {
 
         $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
@@ -2437,8 +2443,10 @@ function SystemMessage(messageText, success) {
         var dialog = bootbox.dialog({
             message: messageText,
             title: "Application Message",
+            size: 'large',
             buttons: [{
                 label: 'Close',
+                className: 'btn-bb-close',
                 callback: function() {
                     if (lastForm != null && lastForm.indexOf("playlist/widget/form") > -1 && timelineForm != null) {
                         // Close button
@@ -2481,7 +2489,7 @@ function SystemMessageInline(messageText, modal) {
     $(modal).find(".btn").removeClass("disabled");
 
     $("<div/>", {
-        class: "well text-danger text-center form-error",
+        class: "card bg-light p-3 text-danger col-sm-12 text-center form-error",
         html: messageText
     }).appendTo(modal.find(".modal-footer"));
 }
@@ -2782,7 +2790,7 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
 
     // Clear button
     if(clearButtonActive) {
-        $inputElement.parent().find('.date-clear-button').removeClass('hidden').click(function() {
+        $inputElement.parent().find('.date-clear-button').removeClass('d-none').click(function() {
             updateDatePicker($inputElement, '');
 
             // Clear callback if defined
@@ -3101,6 +3109,12 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
 
         // this is handler for the hamburger button on grid pages
         $('#folder-tree-select-folder-button').off("click").on('click', function() {
+
+            // Shrink table to ease animation
+            if($('#grid-folder-filter').is(":hidden")) {
+                $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
+            }
+
             $('#grid-folder-filter').toggle('fast', function() {
                 if ($(this).is(":hidden")) {
 
@@ -3115,7 +3129,6 @@ function initJsTreeAjax(container, table, isForm = false, ttl = false)
                 } else {
                     // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
                     $("#breadcrumbs").hide('slow');
-                    $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
                     $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
                 }
             });

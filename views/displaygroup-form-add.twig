@@ -79,7 +79,7 @@
             <form id="displayGroupAddForm" class="XiboForm form-horizontal displayGroupForm" method="post" action="{{ url_for("displayGroup.add") }}" data-gettag="{{ url_for("tag.getByName") }}">
 
                 {% if currentUser.featureEnabled('folder.view') %}
-                <div class="form-group">
+                <div class="form-group row">
                     <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
                     <div class="col-sm-10">
                         <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
@@ -125,7 +125,7 @@
                 <div class="widget dynamic-fields">
                     <div class="widget-title">{% trans "Displays" %}</div>
                     <div class="widget-body">
-                        <div class="FilterDiv" id="Filter">
+                        <div class="FilterDiv card-body" id="Filter">
                             {% set title %}{% trans "Criteria" %}{% endset %}
                             {% set helpText %}{% trans "A comma separated set of regular expressions run against the Display name to determine membership." %}{% endset %}
                             {{ forms.input("dynamicCriteria", title, "", helpText, "dynamic-fields") }}
@@ -137,7 +137,7 @@
                             {{ forms.hidden("useRegexForName", 1) }}
                         </div>
 
-                        <div class="XiboData">
+                        <div class="XiboData card pt-3">
                             <table id="displayGroupDisplays" class="table table-striped">
                                 <thead>
                                 <tr>

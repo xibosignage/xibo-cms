@@ -47,10 +47,10 @@
         var targetId = $(dialog).find(".targetid-control");
 
         if (target === 'region') {
-            targetId.removeClass("hidden");
+            targetId.removeClass("d-none");
         } else {
             $('#targetId').val('');
-            targetId.addClass("hidden");
+            targetId.addClass("d-none");
         }
     }
 
@@ -63,23 +63,23 @@
 
         if (actionType === 'navLayout') {
             // nav Layout, hide Widget and Target dropdowns and clear corresponding values
-            navLayout.removeClass("hidden");
-            navWidget.addClass("hidden");
+            navLayout.removeClass("d-none");
+            navWidget.addClass("d-none");
             $("#target").val("screen").change();
-            target.addClass("hidden");
+            target.addClass("d-none");
             $('#widgetId').val('');
             $('#targetId').val('');
         } else if (actionType === 'navWidget') {
             // nav Widget, hide LayoutCode and clear its value
-            navLayout.addClass("hidden");
-            navWidget.removeClass("hidden");
-            target.removeClass("hidden");
+            navLayout.addClass("d-none");
+            navWidget.removeClass("d-none");
+            target.removeClass("d-none");
             $('#layoutCode').val('');
         } else {
             // not in nav Action Type, clear values, hide
-            navLayout.addClass("hidden");
-            navWidget.addClass("hidden");
-            target.removeClass("hidden");
+            navLayout.addClass("d-none");
+            navWidget.addClass("d-none");
+            target.removeClass("d-none");
             $('#widgetId').val('');
             $('#layoutCode').val('');
         }
@@ -90,9 +90,9 @@
         var triggerCode = $(dialog).find(".trigger-code-control");
 
         if (triggerType === 'webhook') {
-            triggerCode.removeClass('hidden');
+            triggerCode.removeClass('d-none');
         } else {
-            triggerCode.addClass('hidden');
+            triggerCode.addClass('d-none');
             $('#triggerCode').val('');
         }
     }
@@ -102,7 +102,7 @@
         $('.nav-tabs a').on('shown.bs.tab', function(event) {
             if ($(event.target).text() === 'Actions') {
                 // Expose the button
-                $('.action-button-add').removeClass("hidden");
+                $('.action-button-add').removeClass("d-none");
 
                 // initialize the table only if it's not already initialized
                 if (!$.fn.DataTable.isDataTable('#actions')) {
@@ -211,11 +211,11 @@
                     });
                     table.on('draw', dataTableDraw);
                     table.on('processing.dt', dataTableProcessing);
-                    dataTableAddButtons(table, $('#actions_wrapper').find('.col-sm-6').eq(1), false);
+                    dataTableAddButtons(table, $('#actions_wrapper').find('.col-md-6').eq(1), false);
                 }
             } else {
                 // Hide the button
-                $('.action-button-add').addClass("hidden");
+                $('.action-button-add').addClass("d-none");
             }
         });
     }
