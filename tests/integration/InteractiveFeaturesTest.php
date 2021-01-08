@@ -221,8 +221,8 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
         return [
             'Layout' => ['layout', 'touch', 'trigger code', 'next', 'screen', null],
             'Layout with region target' => ['layout', 'touch', null, 'previous', 'region', null],
-            'Region' => ['region', 'webhook', null, 'previous', 'screen', null],
-            'Region with region target' => ['region', 'webhook', null, 'previous', 'region', null],
+            'Region' => ['region', 'webhook', 'test', 'previous', 'screen', null],
+            'Region with region target' => ['region', 'touch', null, 'previous', 'region', null],
             'Widget' => ['widget', 'touch', null, 'next', 'screen', null],
             'Widget with region target' => ['widget', 'touch', null, 'next', 'region', null],
             'Navigate to Widget' => ['layout', 'touch', null, 'navWidget', 'screen', null],
@@ -270,6 +270,7 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
 
         $action = $this->getEntityProvider()->post('/action/layout/' . $layout->layoutId, [
             'triggerType' => 'webhook',
+            'triggerCode' => 'test',
             'actionType' => 'previous',
             'target' => 'screen'
         ]);
@@ -352,8 +353,8 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
             }
 
             // trigger code in non layout
-            if ($source !== 'layout' && $triggerCode != null) {
-                $this->assertSame('Trigger code can only be set with source set to Layout', $body->error);
+            if ($triggerType === 'webhook' && $triggerCode === null) {
+                $this->assertSame('Please provide trigger code', $body->error);
             }
 
             // navWidget without widgetId
@@ -379,9 +380,9 @@ class InteractiveFeaturesTest extends \Xibo\Tests\LocalWebTestCase
             'Wrong source' => ['playlist', 'touch', null, 'next', 'screen'],
             'Wrong trigger type' => ['layout', 'notExistingType', null, 'navRegion', 'screen'],
             'Wrong action type' => ['layout', 'touch', null, 'wrongAction', 'screen'],
-            'Wrong target' => ['layout', 'touch', 'trigger code', 'next', 'world'],
+            'Wrong target' => ['layout', 'touch', null, 'next', 'world'],
             'Target region without targetId' => ['layout', 'touch', 'trigger code', 'next', 'region'],
-            'Trigger Code for non layout source' => ['region', 'touch', 'trigger code', 'next', 'screen'],
+            'Missing trigger code for webhook' => ['region', 'webhook', null, 'next', 'screen'],
             'Navigate to Widget without widgetId' => ['layout', 'touch', null, 'navWidget', 'screen'],
             'Navigate to Layout without layoutCode' => ['layout', 'touch', null, 'navLayout', 'screen']
         ];

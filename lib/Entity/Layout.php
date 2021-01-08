@@ -1223,7 +1223,11 @@ class Layout implements \JsonSerializable
         $layoutNode->setAttribute('height', $this->height);
         $layoutNode->setAttribute('bgcolor', $this->backgroundColor);
         $layoutNode->setAttribute('schemaVersion', $this->schemaVersion);
-        $layoutNode->setAttribute('code', $this->code);
+
+        // add Layout code only if code identifier is set on the Layout.
+        if ($this->code != null) {
+            $layoutNode->setAttribute('code', $this->code);
+        }
 
         // Layout stat collection flag
         if (is_null($this->enableStat)) {
