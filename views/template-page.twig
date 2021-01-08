@@ -57,21 +57,22 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
                     </div>
                     <div class="form-group col-sm-11" style="padding: 0">
                         <div id="breadcrumbs" style="margin-top: 5px;"></div>
                     </div>
                 </div>
+
                 <div class="row">
-                    <div class="col-sm-2 well" id="grid-folder-filter">
+                    <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
                             <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10">
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-1">
                         <div class="XiboData card pt-3">
                             <table id="templates" class="table table-striped" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="templateGrid">
                                 <thead>
@@ -82,7 +83,7 @@
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                         <th>{% trans "Thumbnail" %}</th>
                                         <th>{% trans "Permissions" %}</th>
-                                        <th>{% trans "Row Menu" %}</th>
+                                        <th class="rowMenu">{% trans "Row Menu" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody>

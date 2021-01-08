@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use Respect\Validation\Validator as v;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
@@ -1015,6 +1016,11 @@ class Layout implements \JsonSerializable
         }
 
         if ($this->code != null) {
+
+            if (!v::alnum('_')->validate($this->code)) {
+                throw new InvalidArgumentException(__('Please use only alphanumeric characters in Layout Code identifier', 'code'));
+            }
+
             $duplicateCode = $this->layoutFactory->query(null, [
                 'notLayoutId' => ($this->parentId !== null) ? $this->parentId : $this->layoutId,
                 'disableUserCheck' => 1,
@@ -1217,6 +1223,11 @@ class Layout implements \JsonSerializable
         $layoutNode->setAttribute('height', $this->height);
         $layoutNode->setAttribute('bgcolor', $this->backgroundColor);
         $layoutNode->setAttribute('schemaVersion', $this->schemaVersion);
+
+        // add Layout code only if code identifier is set on the Layout.
+        if ($this->code != null) {
+            $layoutNode->setAttribute('code', $this->code);
+        }
 
         // Layout stat collection flag
         if (is_null($this->enableStat)) {

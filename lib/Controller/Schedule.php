@@ -933,6 +933,13 @@ class Schedule extends Base
      *      required=false,
      *      @SWG\Items(type="string")
      *   ),
+     *   @SWG\Parameter(
+     *      name="geoLocationJson",
+     *      in="formData",
+     *      description="Valid GeoJSON string, use as an alternative to geoLocation parameter",
+     *      type="string",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -973,16 +980,18 @@ class Schedule extends Base
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice') : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
 
-        if ($this->isApi($request)) {
-            if ($schedule->isGeoAware === 1) {
+        // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
+        if ($this->isApi($request) && $schedule->isGeoAware === 1) {
+            if ($sanitizedParams->getArray('geoLocation') != null) {
                 // get string array from API
                 $coordinates = $sanitizedParams->getArray('geoLocation');
-
-                // generate geo json and assign to Schedule
+                // generate GeoJSON and assign to Schedule
                 $schedule->geoLocation = $this->createGeoJson($coordinates);
+            } else {
+                // we were provided with GeoJSON
+                $schedule->geoLocation = $sanitizedParams->getString('geoLocationJson');
             }
         } else {
-
             // if we are not using API, then valid GeoJSON is created in the front end.
             $schedule->geoLocation = $sanitizedParams->getString('geoLocation');
         }
@@ -1439,6 +1448,13 @@ class Schedule extends Base
      *      required=false,
      *      @SWG\Items(type="string")
      *   ),
+     *   @SWG\Parameter(
+     *      name="geoLocationJson",
+     *      in="formData",
+     *      description="Valid GeoJSON string, use as an alternative to geoLocation parameter",
+     *      type="string",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1478,17 +1494,18 @@ class Schedule extends Base
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice') : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
 
-
-        if ($this->isApi($request)) {
-            if ($schedule->isGeoAware === 1) {
+        // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
+        if ($this->isApi($request) && $schedule->isGeoAware === 1) {
+            if ($sanitizedParams->getArray('geoLocation') != null) {
                 // get string array from API
                 $coordinates = $sanitizedParams->getArray('geoLocation');
-
-                // generate geo json and assign to Schedule
+                // generate GeoJSON and assign to Schedule
                 $schedule->geoLocation = $this->createGeoJson($coordinates);
+            } else {
+                // we were provided with GeoJSON
+                $schedule->geoLocation = $sanitizedParams->getString('geoLocationJson');
             }
         } else {
-
             // if we are not using API, then valid GeoJSON is created in the front end.
             $schedule->geoLocation = $sanitizedParams->getString('geoLocation');
         }

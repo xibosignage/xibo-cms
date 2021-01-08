@@ -71,6 +71,13 @@ function openUploadForm(options) {
         };
         var refreshSessionInterval;
 
+        $(form).on('keydown', function(event) {
+            if(event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
+
         // Video thumbnail capture.
         if (options.videoImageCovers) {
             $(dialog).find('#files').on('change', handleVideoCoverImage);
