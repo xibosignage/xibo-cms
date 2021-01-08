@@ -36,7 +36,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="displayMoveCmsCancelForm" class="XiboForm form-horizontal" method="delete" action="{{ urlFor("display.moveCmsCancel", {id: display.displayId }) }}">
+            <form id="displayMoveCmsCancelForm" class="XiboForm form-horizontal" method="delete" action="{{ url_for("display.moveCmsCancel", {id: display.displayId }) }}">
                 {% set message %}{% trans "Are you sure you want to cancel this CMS transfer? This is only possible if the Display has not already transferred." %}{% endset %}
                 {{ forms.message(message) }}
             </form>
