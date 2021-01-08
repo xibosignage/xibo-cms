@@ -25,9 +25,9 @@
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -44,7 +44,7 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
 
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="libraryUsage" class="table table-striped">
                         <thead>
                         <tr>

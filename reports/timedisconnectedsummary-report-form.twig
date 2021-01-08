@@ -25,40 +25,40 @@
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=timedisconnectedsummary"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=timedisconnectedsummary"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
-        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=timedisconnectedsummary"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=timedisconnectedsummary"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}?reportName=timedisconnectedsummary"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+        <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}?reportName=timedisconnectedsummary"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
 
     <div class="widget">
         <div class="widget-title">
+            <span>{% trans "Time Connected" %}</span>
+        </div>
+        <div class="widget-navigation-menu">
             <ul class="nav nav-pills">
-                <li role="presentation" class=""><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
-                <li role="presentation" class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
-                    <ul class="dropdown-menu">
+                <li role="presentation" class="nav-item"><a class="nav-link" href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
+                    <div class="dropdown-menu">
                         {% for reports in defaults.availableReports %}
                             {% for report in reports %}
                                 {% if report.hidden == 0 and report.category == 'Display'%}
-                                    <li>
-                                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
-                                    </li>
+                                    <a class="dropdown-item" href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
                                 {% endif %}
                             {% endfor %}
                         {% endfor %}
-                    </ul>
+                    </div>
                 </li>
-                <li role="presentation"><a class="text-success" href="#"> {% trans "Time Disconnected Summary" %} </a></li>
             </ul>
         </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="availabilityFilter">
+                    <div class="FilterDiv card-body" id="availabilityFilter">
                         <form class="form-inline">
                             {% set title %}{% trans "From Date" %}{% endset %}
                             {{ inline.date("availabilityFromDt", title, defaults.fromDate, "", "", "", "") }}
@@ -107,7 +107,7 @@
                     </div>
                 </div>
                 <br/>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="stats" class="table table-striped">
                         <thead>
                         <tr>

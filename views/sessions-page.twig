@@ -30,8 +30,8 @@
         <div class="widget-title">{% trans "Sessions" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="sessionsView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "From Date" %}{% endset %}
                             {{ inline.date("fromDt", title) }}
@@ -51,7 +51,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="sessions" class="table table-striped">
                         <thead>
                             <tr>
@@ -61,7 +61,7 @@
                                 <th>{% trans "IP Address" %}</th>
                                 <th>{% trans "Browser" %}</th>
                                 <th>{% trans "Expires At" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
+                                <th class="rowMenu">{% trans "Row Menu" %}</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -111,7 +111,7 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#sessions_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#sessions_wrapper').find('.col-md-6').eq(1));
         });
     </script>
 {% endblock %}

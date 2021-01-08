@@ -129,7 +129,7 @@ Topbar.prototype.render = function() {
 
         // Reset tour
         if(typeof app.resetTour === 'function') {
-            self.DOMObject.find('#resetTour').removeClass('hidden').off().click(function() {
+            self.DOMObject.find('#resetTour').removeClass('d-none').off().click(function() {
                 app.resetTour();
             });
         }
@@ -151,7 +151,7 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
     // Append layout html to the main div
     jumpListContainer.html(html);
 
-    jumpListContainer.show();
+    jumpListContainer.removeClass('d-none');
 
     const jumpList = jumpListContainer.find('#layoutJumpList');
 
@@ -247,7 +247,7 @@ Topbar.prototype.updateLayoutStatus = function() {
 
     // Use status loader icon
     statusContainer.find('i').removeClass().addClass('fa fa-spinner fa-spin');
-    statusContainer.removeClass().addClass('label label-default');
+    statusContainer.removeClass().addClass('badge badge-default');
 
     // Prevent the update if there's no layout status yet
     if(lD.layout.status == undefined) {
@@ -284,7 +284,7 @@ Topbar.prototype.updateLayoutStatus = function() {
 
     // Update label
     let labelType = (labelCodes[lD.layout.status.code] != undefined) ? labelCodes[lD.layout.status.code] : labelCodes[''];
-    statusContainer.removeClass().addClass('label label-' + labelType)
+    statusContainer.removeClass().addClass('badge badge-' + labelType)
         .attr('data-status-code', lD.layout.status.code);
 
     // Create or update popover
@@ -299,8 +299,8 @@ Topbar.prototype.updateLayoutStatus = function() {
         );
     } else {
         // Update popover
-        statusContainer.data('bs.popover').options.title = title;
-        statusContainer.data('bs.popover').options.content = content;
+        statusContainer.data('bs.popover').config.title = title;
+        statusContainer.data('bs.popover').config.content = content;
     }
 
     // Click status to scroll timeline to first broken widget

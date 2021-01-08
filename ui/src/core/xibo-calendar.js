@@ -141,9 +141,9 @@ $(document).ready(function() {
 
         // Location map button
         $('#toggleMap').off().click(function() {
-            $map.toggleClass('hidden');
+            $map.toggleClass('d-none');
 
-            if(!$map.hasClass('hidden')) {
+            if(!$map.hasClass('d-none')) {
                 generateFilterGeoMap();
             }
         });
@@ -154,7 +154,7 @@ $(document).ready(function() {
             $('#geoLatitude').val('').change();
             $('#geoLongitude').val('').change();
 
-            if(!$map.hasClass('hidden')) {
+            if(!$map.hasClass('d-none')) {
                 generateFilterGeoMap();
             }
         });
@@ -220,7 +220,7 @@ $(document).ready(function() {
                         getJsonRequestControl.abort();
                     }
 
-                    $('#calendar-progress').addClass('fa fa-cog fa-spin');
+                    $('#calendar-progress').addClass('show');
 
                     getJsonRequestControl = $.getJSON(url, params)
                         .done(function(data) {
@@ -263,10 +263,10 @@ $(document).ready(function() {
                                 });
                             });
 
-                            $('#calendar-progress').removeClass('fa fa-cog fa-spin');
+                            $('#calendar-progress').removeClass('show');
                         })
                         .fail(function(res) {
-                            $('#calendar-progress').removeClass('fa fa-cog fa-spin');
+                            $('#calendar-progress').removeClass('show');
 
                             if (done != undefined)
                                 done();
@@ -410,7 +410,7 @@ $(document).ready(function() {
                         calendar._render();
                     } else {
 
-                        $('#calendar-progress').addClass('fa fa-cog fa-spin');
+                        $('#calendar-progress').addClass('show');
 
                         // 3 - make request to get the data for the events
                         getJsonRequestControl = $.getJSON(url, params)
@@ -445,7 +445,7 @@ $(document).ready(function() {
                                     
                                 calendar._render();
 
-                                $('#calendar-progress').removeClass('fa fa-cog fa-spin');
+                                $('#calendar-progress').removeClass('show');
                             })
                             .fail(function(res) {
                                 // Deal with the failed request
@@ -459,7 +459,7 @@ $(document).ready(function() {
                                 
                                 calendar._render();
                                 
-                                $('#calendar-progress').removeClass('fa fa-cog fa-spin');
+                                $('#calendar-progress').removeClass('show');
                             });
                     }
                         
@@ -557,7 +557,7 @@ var setupScheduleForm = function(dialog) {
         $('.nav-tabs a').on('shown.bs.tab', function(event){
             if ($(event.target).text() === 'Geo Location') {
 
-                $('#geoScheduleMap').removeClass('hidden');
+                $('#geoScheduleMap').removeClass('d-none');
                 generateGeoMap();
             }
         });
@@ -568,10 +568,10 @@ var setupScheduleForm = function(dialog) {
         isGeoAware = $('#isGeoAware').is(':checked');
 
         if (isGeoAware) {
-            $('#geoScheduleMap').removeClass('hidden');
+            $('#geoScheduleMap').removeClass('d-none');
             generateGeoMap();
         } else {
-            $('#geoScheduleMap').addClass('hidden');
+            $('#geoScheduleMap').addClass('d-none');
         }
     });
 
@@ -921,9 +921,9 @@ var processScheduleFormElements = function(el) {
         case 'recurrenceType':
             //console.log('Process: recurrenceType, val = ' + fieldVal);
 
-            var repeatControlGroupDisplay = (fieldVal == "") ? "none" : "block";
-            var repeatControlGroupWeekDisplay = (fieldVal != "Week") ? "none" : "block";
-            var repeatControlGroupMonthDisplay = (fieldVal !== "Month") ? "none" : "block";
+            var repeatControlGroupDisplay = (fieldVal == "") ? "none" : "";
+            var repeatControlGroupWeekDisplay = (fieldVal != "Week") ? "none" : "";
+            var repeatControlGroupMonthDisplay = (fieldVal !== "Month") ? "none" : "";
 
             $(".repeat-control-group").css('display', repeatControlGroupDisplay);
             $(".repeat-weekly-control-group").css('display', repeatControlGroupWeekDisplay);
@@ -934,13 +934,13 @@ var processScheduleFormElements = function(el) {
         case 'eventTypeId':
             console.log('Process: eventTypeId, val = ' + fieldVal);
             
-            var layoutControlDisplay = (fieldVal == 2) ? "none" : "block";
-            var endTimeControlDisplay = (fieldVal == 2) ? "none" : "block";
-            var startTimeControlDisplay = (fieldVal == 2) ? "block" : "block";
-            var dayPartControlDisplay = (fieldVal == 2) ? "none" : "block";
-            var commandControlDisplay = (fieldVal == 2) ? "block" : "none";
-            var scheduleSyncControlDisplay = (fieldVal == 1) ? "block" : "none";
-            var interruptControlDisplay = (fieldVal == 4) ? "block" : "none";
+            var layoutControlDisplay = (fieldVal == 2) ? "none" : "";
+            var endTimeControlDisplay = (fieldVal == 2) ? "none" : "";
+            var startTimeControlDisplay = (fieldVal == 2) ? "" : "";
+            var dayPartControlDisplay = (fieldVal == 2) ? "none" : "";
+            var commandControlDisplay = (fieldVal == 2) ? "" : "none";
+            var scheduleSyncControlDisplay = (fieldVal == 1) ? "" : "none";
+            var interruptControlDisplay = (fieldVal == 4) ? "" : "none";
 
 
             $(".layout-control").css('display', layoutControlDisplay);
@@ -1012,10 +1012,10 @@ var processScheduleFormElements = function(el) {
 
             var meta = el.find('option[value=' + fieldVal + ']').data();
 
-            var endTimeControlDisplay = (meta.isCustom === 0) ? "none" : "block";
-            var startTimeControlDisplay = (meta.isAlways === 1) ? "none" : "block";
-            var repeatsControlDisplay = (meta.isAlways === 1) ? "none" : "block";
-            var reminderControlDisplay = (meta.isAlways === 1) ? "none" : "block";
+            var endTimeControlDisplay = (meta.isCustom === 0) ? "none" : "";
+            var startTimeControlDisplay = (meta.isAlways === 1) ? "none" : "";
+            var repeatsControlDisplay = (meta.isAlways === 1) ? "none" : "";
+            var reminderControlDisplay = (meta.isAlways === 1) ? "none" : "";
 
             var $startTime = $(".starttime-control");
             var $endTime = $(".endtime-control");
@@ -1133,7 +1133,7 @@ var scheduleNowFormEvaluateDates = function(form) {
             toDt.add(seconds, "seconds");
 
         // Update the message div
-        $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("hidden");
+        $messageDiv.html($messageDiv.data().template.replace("[fromDt]", fromDt.format(jsDateFormat)).replace("[toDt]", toDt.format(jsDateFormat))).removeClass("d-none");
 
         // Update the final submit fields
         $("#fromDt").val(fromDt.format(systemDateFormat));

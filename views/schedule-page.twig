@@ -27,58 +27,18 @@
 
 {% block pageContent %}
     <div class="row">
-        <div class="col-sm-12">
-            <div class="btn-group pull-right xibo-calendar-controls">
-                <button type="button" class="btn btn-warning" data-calendar-view="year">{% trans "Year" %}</button>
-                <button type="button" class="btn btn-warning active" data-calendar-view="month">{% trans "Month" %}</button>
-                <button type="button" class="btn btn-warning" data-calendar-view="week">{% trans "Week" %}</button>
-                <button type="button" class="btn btn-warning" data-calendar-view="day">{% trans "Day" %}</button>
-                {% if currentUser.featureEnabled("schedule.agenda") %}
-                    <button type="button" class="btn btn-warning" data-calendar-view="agenda">{% trans "Agenda" %}</button>
-                {% endif %}
-            </div>
-
-            <div class="btn-group pull-right xibo-calendar-controls">
-                <button class="inputgroup date" id="dateInput">
-                    <span class="input-group-addon date-open-button" role="button">
-                        <i class="glyphicon glyphicon-calendar"></i>
-                    </span>
-                    <input type="text" class="form-control" id="dateInputLink" data-input />
-                </button>
-            </div>
-            <div class="btn-group pull-right xibo-calendar-controls">
-                <button type="button" class="btn btn-primary" data-calendar-nav="prev"><span class="glyphicon glyphicon-backward"></span> {% trans "Prev" %}</button>
-                <button type="button" class="btn btn-default" data-calendar-nav="today">{% trans "Today" %}</button>
-                <button type="button" class="btn btn-primary" data-calendar-nav="next">{% trans "Next" %} <span class="glyphicon glyphicon-forward"></span></button>
-            </div>
-
-            {% if currentUser.featureEnabled("schedule.add") %}
-                <div class="btn-group pull-right xibo-calendar-controls">
-                    <button class="btn btn-success XiboFormButton" href="{{ url_for("schedule.add.form") }}">
-                        {% trans "Add Event" %}
-                    </button>
-                </div>
-            {% endif %}
-
-            <div class="xibo-calendar-controls dropdown pull-right">
-                {# Campaign / Layout list. We want to build two arrays for us to use. #}
-                {% set title %}{% trans "Layout / Campaign" %}{% endset %}
-                {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
-
-                <select name="campaignId" id="campaignId" class="hidden form-control"
-                    data-search-url= "{{ url_for("campaign.search") }}"
-                    data-trans-campaigns= "{% trans "Campaigns" %}"
-                    data-trans-layouts= "{% trans "Layouts" %}"
-                    data-allow-clear="true"
-                    data-width="100%"
-                    title="{% trans "Layout / Campaign" %}"
-                    data-placeholder="{% trans "Layout / Campaign" %}"
-                    data-dropdownAutoWidth
+        <div class="xibo-calendar-controls-container align-content-start col-sm-6 col-xl-5 pr-0 form-inline">
+            <div class="xibo-calendar-controls">
+                <div class="form-check">
+                    <input class="form-check-input" title="Show All" type="checkbox" id="showAll" name="showAll" data-search-url="{{ url_for("displayGroup.search") }}"
+                        {% if displayGroupsShowAll == -1 %}
+                            checked
+                        {% endif %}
                     >
-                </select>
+                    <label class="form-check-label" for="showAll">{% trans "Show All" %}</label>
+                </div>
             </div>
-
-            <div class="xibo-calendar-controls dropdown pull-right">
+            <div class="xibo-calendar-controls dropdown ">
                 <select id="DisplayList" class="form-control" name="displayGroupIds[]"
                         data-placeholder="{% trans "Displays" %}"
                         data-search-url="{{ url_for("displayGroup.search") }}"
@@ -95,19 +55,61 @@
                 </select>
             </div>
 
-            <div class="xibo-calendar-controls pull-right">
-                <input title="Show All" type="checkbox" id="showAll" name="showAll" data-search-url="{{ url_for("displayGroup.search") }}"
-                    {% if displayGroupsShowAll == -1 %}
-                        checked
-                    {% endif %}
-                >
-                <label for="showAll">{% trans "Show All" %}</label>
+            <div class="xibo-calendar-controls dropdown">
+                {# Campaign / Layout list. We want to build two arrays for us to use. #}
+                {% set title %}{% trans "Layout / Campaign" %}{% endset %}
+                {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
+
+                <select name="campaignId" id="campaignId" class="d-none form-control"
+                    data-search-url= "{{ url_for("campaign.search") }}"
+                    data-trans-campaigns= "{% trans "Campaigns" %}"
+                    data-trans-layouts= "{% trans "Layouts" %}"
+                    data-allow-clear="true"
+                    data-width="100%"
+                    title="{% trans "Layout / Campaign" %}"
+                    data-placeholder="{% trans "Layout / Campaign" %}"
+                    data-dropdownAutoWidth
+                    >
+                </select>
             </div>
-
-            <div class="progress pull-right"><span id="calendar-progress"></span></div>
-
+        </div>
+        <div class="xibo-calendar-controls-container align-content-start justify-content-end col-sm-6 col-xl-7 pl-0 form-inline text-right">
+            {% if currentUser.featureEnabled("schedule.add") %}
+                <div class="xibo-calendar-controls">
+                    <button class="btn btn-success XiboFormButton" href="{{ url_for("schedule.add.form") }}">
+                        {% trans "Add Event" %}
+                    </button>
+                </div>
+            {% endif %}
+            <div class="btn-group xibo-calendar-controls">
+                <button type="button" class="btn btn-primary" data-calendar-nav="prev"><span class="fa fa-backward"></span> {% trans "Prev" %}</button>
+                <button type="button" class="btn btn-white" data-calendar-nav="today">{% trans "Today" %}</button>
+                <button type="button" class="btn btn-primary" data-calendar-nav="next">{% trans "Next" %} <span class="fa fa-forward"></span></button>
+            </div>
+            <div class="xibo-calendar-controls">
+                <div class="inputgroup date" id="dateInput">
+                    <span class="btn btn-outline-dark date-open-button" role="button">
+                        <i class="fa fa-calendar"></i>
+                    </span>
+                    <input type="text" class="form-control" id="dateInputLink" data-input />
+                </div>
+            </div>
+            <div class="btn-group xibo-calendar-controls">
+                <button type="button" class="btn btn-outline-info" data-calendar-view="year">{% trans "Year" %}</button>
+                <button type="button" class="btn btn-outline-info active" data-calendar-view="month">{% trans "Month" %}</button>
+                <button type="button" class="btn btn-outline-info" data-calendar-view="week">{% trans "Week" %}</button>
+                <button type="button" class="btn btn-outline-info" data-calendar-view="day">{% trans "Day" %}</button>
+                {% if currentUser.featureEnabled("schedule.agenda") %}
+                    <button type="button" class="btn btn-outline-info" data-calendar-view="agenda">{% trans "Agenda" %}</button>
+                {% endif %}
+            </div>
+        </div>
+        <div class="text-center col-xl-12">
             <h1 class="page-header"></h1>
-        </div>         
+            <div class="calendar-loading">
+                <span id="calendar-progress" class="fa fa-spin fa-cog"></span>
+            </div>
+        </div>
     </div>
     <div class="row">
         <div class="col-sm-12 cal-event-agenda-filter" style="display:none;">
@@ -125,8 +127,8 @@
             <!-- Geo location -->
             <form class="form-inline cal-event-location">
                 <button id="toggleMap" type="button" class="btn btn-primary pull-right" title="{% trans "Map" %}"><i class="fa fa-map"></i></button>
-                <button id="getLocation" type="button" class="btn btn-default pull-right" title="{% trans "Get browser location!" %}"><i class="fa fa-map-marker"></i></button>
-                <button id="clearLocation" type="button" class="btn btn-default pull-right" title="{% trans "Clear coordinates!" %}"><i class="fa fa-times"></i></button>
+                <button id="getLocation" type="button" class="btn btn-white pull-right" title="{% trans "Get browser location!" %}"><i class="fa fa-map-marker"></i></button>
+                <button id="clearLocation" type="button" class="btn btn-white pull-right" title="{% trans "Clear coordinates!" %}"><i class="fa fa-times"></i></button>
                 <div class="form-group pull-right">
                     <input type="email" class="form-control" id="geoLongitude" placeholder="Longitude">
                 </div>
@@ -137,7 +139,7 @@
 
             <!-- Geo location map -->
             <div class="cal-event-location-map" data-default-lat="{{ defaultLat }}" data-default-long="{{ defaultLong }}">
-                <div id="geoFilterAgendaMap" style="height: 400px; width: 100%" class="hidden"></div>
+                <div id="geoFilterAgendaMap" style="height: 400px; width: 100%" class="d-none"></div>
             </div>
         </div>
     </div>
@@ -172,13 +174,13 @@
         <script type="text/x-handlebars-template" id="calendar-template-day">
             <div id="cal-day-box">
                 <div class="row-fluid clearfix cal-row-head">
-                    <div class="span1 col-xs-1 cal-cell"><%= cal.locale.time %></div>
-                    <div class="span11 col-xs-11 cal-cell"><%= cal.locale.events %></div>
+                    <div class="span1 col-1 cal-cell"><%= cal.locale.time %></div>
+                    <div class="span11 col-11 cal-cell"><%= cal.locale.events %></div>
                 </div>
                 <% if(all_day.length) {%>
                 <div class="row-fluid clearfix cal-day-hour">
-                    <div class="span1 col-xs-1"><b><%= cal.locale.all_day %></b></div>
-                    <div class="span11 col-xs-11">
+                    <div class="span1 col-1"><b><%= cal.locale.all_day %></b></div>
+                    <div class="span11 col-11">
                         <% _.each(all_day, function(event){ %>
                         <%
                         var eventTitle = (event.event.isAlways == 1) ? event.title : "[" + moment(event.scheduleEvent.fromDt, systemDateFormat).format(jsDateFormat) + " - " + moment(event.scheduleEvent.toDt, systemDateFormat).format(jsDateFormat) + "] " + event.title;
@@ -195,8 +197,8 @@
                 <% }; %>
                 <% if(before_time.length) {%>
                 <div class="row-fluid clearfix cal-day-hour">
-                    <div class="span1 col-xs-3"><b><%= cal.locale.before_time %></b></div>
-                    <div class="span5 col-xs-5">
+                    <div class="span1 col-3"><b><%= cal.locale.before_time %></b></div>
+                    <div class="span5 col-5">
                         <% _.each(before_time, function(event){ %>
                         <div class="day-highlight dh-<%= event['class'] %>">
                             <span class="cal-hours pull-right"><%= event.end_hour %></span>
@@ -215,8 +217,8 @@
                         <div class="cal-day-hour">
                             <% for(l = 0; l < cal._hour_min(i); l++){ %>
                             <div class="row-fluid cal-day-hour-part">
-                                <div class="span1 col-xs-1"><b><%= cal._hour(i, l) %></b></div>
-                                <div class="span11 col-xs-11"></div>
+                                <div class="span1 col-1"><b><%= cal._hour(i, l) %></b></div>
+                                <div class="span11 col-11"></div>
                             </div>
                             <% }; %>
                         </div>
@@ -237,8 +239,8 @@
                 </div>
             <% if(after_time.length) {%>
             <div class="row-fluid clearfix cal-day-hour">
-                <div class="span1 col-xs-3"><b><%= cal.locale.after_time %></b></div>
-                <div class="span11 col-xs-9">
+                <div class="span1 col-3"><b><%= cal.locale.after_time %></b></div>
+                <div class="span11 col-9">
                     <% _.each(after_time, function(event){ %>
                     <div class="day-highlight dh-<%= event['class'] %>">
                         <span class="cal-hours"><%= event.start_hour %></span>
@@ -560,29 +562,29 @@
             <div class="container-fluid">
                 
                 <!-- Content panel with tabs -->
-                <div class="panel with-nav-tabs panel-default agenda-panel">
+                <div class="card with-nav-tabs bg-white agenda-panel">
                 
                     <!-- Tab Panel -->
                     <% if (typeof agenda.displayGroupList != 'undefined' && agenda.displayGroupList.length > 1) { %>
-                        <div class="panel-heading">
+                        <div class="card-heading">
                                 <ul class="nav nav-tabs">
                                     <% _.each(agenda.displayGroupList, function(displayGroup){ %>
                                         <% if (displayGroup['id'] == agenda.selectedDisplayGroup) { %>
-                                            <li class="active">
+                                            <li class="nav-item active">
                                         <% } else { %>
-                                            <li>
+                                            <li class="nav-item">
                                         <% }; %>
                                         
-                                        <%
-                                            // If it is a simple display show an 
-                                            var displayGroupIcon = "";
-                                            if (displayGroup['isDisplaySpecific'] == 0)
-                                                displayGroupIcon = "<span class='fa fa-television'></span> ";
-                                        %>
+                                            <%
+                                                // If it is a simple display show an 
+                                                var displayGroupIcon = "";
+                                                if (displayGroup['isDisplaySpecific'] == 0)
+                                                    displayGroupIcon = "<span class='fa fa-television'></span> ";
+                                            %>
                                         
-                                        <a data-toggle="tab" data-id="<%= displayGroup['id'] %>" href="#tab_<%= displayGroup['id'] %>">
-                                            <%= (displayGroupIcon + displayGroup['name']) %>
-                                        </a>
+                                            <a class="nav-link" data-toggle="tab" data-id="<%= displayGroup['id'] %>" href="#tab_<%= displayGroup['id'] %>">
+                                                <%= (displayGroupIcon + displayGroup['name']) %>
+                                            </a>
                                         </li>
                                     <% }); %>
                                 </ul> 
@@ -590,7 +592,7 @@
                     <% } %>
                 
                     <!-- Tab Content -->
-                    <div class="panel-body">
+                    <div class="card-body p-1">
                     
                     <% if (agenda.errorMessage != '') { %>
                        {% endverbatim %}
@@ -611,7 +613,7 @@
                         <!-- Request successful - Show Data -->
                             
                         <!-- Breadcrumb trail -->
-                        <div class="cal-event-breadcrumb-trail col-xs-12">
+                        <div class="cal-event-breadcrumb-trail col-12">
                             <div id="content"></div>
                         </div>     
                         
@@ -623,25 +625,27 @@
                                         var resultItem = agenda.results[displayGroup['id']]; 
                                         var isActive = (displayGroup['id'] == agenda.selectedDisplayGroup) ? 'active' : '';
                                     %>
-                                    <div id="tab_<%= displayGroup['id'] %>" class="tab-pane fade in <%= isActive %> container-fluid">
-                                        <% if(typeof resultItem.events != 'undefined') { %>
-                                            <div class="col-lg-9 agenda-col">
-                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 1) %>
-                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
-                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 4) %>
-                                                <%= cal._layouts(resultItem.events, resultItem.layouts, 5) %>
-                                            </div>
-                                            <div class="col-lg-3 agenda-col">
-                                                <div class="row">
-                                                    <div class="col-xs-6 col-lg-12 agenda-col">
-                                                        <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
-                                                    </div> 
-                                                    <div class="col-xs-6 col-lg-12 agenda-col">
-                                                        <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
+                                    <div id="tab_<%= displayGroup['id'] %>" class="tab-pane <%= isActive %> container-fluid">
+                                        <div class="row">
+                                            <% if(typeof resultItem.events != 'undefined') { %>
+                                                <div class="col-lg-9 agenda-col">
+                                                    <%= cal._layouts(resultItem.events, resultItem.layouts, 1) %>
+                                                    <%= cal._layouts(resultItem.events, resultItem.layouts, 3) %>
+                                                    <%= cal._layouts(resultItem.events, resultItem.layouts, 4) %>
+                                                    <%= cal._layouts(resultItem.events, resultItem.layouts, 5) %>
+                                                </div>
+                                                <div class="col-lg-3 agenda-col">
+                                                    <div class="row">
+                                                        <div class="col-6 col-lg-12 agenda-col">
+                                                            <%= cal._displaygroups(resultItem.events, resultItem.displayGroups) %>
+                                                        </div> 
+                                                        <div class="col-6 col-lg-12 agenda-col">
+                                                            <%= cal._campaigns(resultItem.events, resultItem.campaigns) %>
+                                                        </div>
                                                     </div>
                                                 </div>
-                                            </div>
-                                         <% } %>
+                                            <% } %>
+                                        </div>
                                     </div>
                                 <% } %>
                             <% }); %>
@@ -653,10 +657,10 @@
         </script>
         
         <script type="text/x-handlebars-template" id="calendar-template-agenda-layouts">
-            <table class="table agenda-table agenda-table-layouts" data-type="layouts" width="100%">
+            <table class="table agenda-table agenda-table-layouts" data-type="layouts" style="width: 100%;">
                 <thead>
                     <tr class="table-title">
-                        <th colspan="10">
+                        <th colspan="10" class="pr-2">
                             <% if (layouts.type == 1) { %>
                                 {% endverbatim %}{% trans "Layouts" %}{% verbatim %}</span>
                             <% } else if (layouts.type == 3) { %>
@@ -667,7 +671,7 @@
                                 {% endraw %}{% trans "Campaign Layouts" %}{% raw %}
                             <% } %>
                             
-                            <span class="pull-right badge" title="{% endverbatim %}{% trans "Number of Layouts" %}{% verbatim %}" data-toggle="tooltip" data-placement="top">
+                            <span class="pull-right badge badge-light" title="{% endverbatim %}{% trans "Number of Layouts" %}{% verbatim %}" data-toggle="tooltip" data-placement="top">
                                 <%= layouts.length %>
                             </span>
                         </th>
@@ -840,7 +844,7 @@
 
 
         <script type="text/x-handlebars-template" id="reminderEventTemplate">
-            <div class="form-group">
+            <div class="form-group row">
                 <input class="form-control" name="reminder_scheduleReminderId[]" type="hidden" value="{{ scheduleReminderId }}" />
 
                 <div class="col-sm-2">
@@ -877,7 +881,7 @@
                     </label>
                 </div>
                 <div class="col-sm-2">
-                    <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+                    <button class="btn btn-white btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
                 </div>
             </div>
         </script>

@@ -39,7 +39,7 @@
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="layoutEditForm" class="form-horizontal" method="put" action="{{ url_for("layout.edit.background", {id: layout.layoutId}) }}">
@@ -78,10 +78,10 @@
                         </div>
 
                         <div class="row background-image-fields background-image-add-button text-center">
-                            <div class="col-xs-12">
-                                <button id="backgroundAddButton" class="btn btn-default" type="button"
+                            <div class="col-12">
+                                <button id="backgroundAddButton" class="btn btn-white" type="button"
                                         data-add-new-background-url="{{ url_for("library.add") }}">
-                                    <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                                    <i class="fa fa-plus"></i>
                                     {% trans "Add a new background image?" %}
                                 </button>
                             </div>

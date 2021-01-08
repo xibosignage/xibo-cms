@@ -31,7 +31,7 @@ module.exports = {
         // Use global var or option
         let enableTooltips = (forcedOption != null) ? forcedOption : this.displayTooltips;
 
-        container.tooltip('destroy').tooltip({
+        container.tooltip('dispose').tooltip({
             selector: (enableTooltips) ? '[data-toggle="tooltip"]' : '[data-toggle="tooltip"].tooltip-always-on'
         });
     },

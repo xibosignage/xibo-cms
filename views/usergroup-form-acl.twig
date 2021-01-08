@@ -81,12 +81,12 @@
             {{ forms.message(helpText) }}
 
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#mediaTab" role="tab" data-toggle="tab"><span>{% trans "Content" %}</span></a></li>
-                <li><a href="#displaysTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
-                <li><a href="#homepagesTab" role="tab" data-toggle="tab"><span>{% trans "Reports" %}</span></a></li>
-                <li><a href="#usersTab" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
-                <li><a href="#systemTab" role="tab" data-toggle="tab"><span>{% trans "System" %}</span></a></li>
-                <li><a href="#customTab" role="tab" data-toggle="tab"><span>{% trans "Custom" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#mediaTab" role="tab" data-toggle="tab"><span>{% trans "Content" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#displaysTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#homepagesTab" role="tab" data-toggle="tab"><span>{% trans "Reports" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#usersTab" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#systemTab" role="tab" data-toggle="tab"><span>{% trans "System" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#customTab" role="tab" data-toggle="tab"><span>{% trans "Custom" %}</span></a></li>
             </ul>
             <form id="AclForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("group.acl", {id: groupId}) }}">
                 <div class="tab-content">

@@ -23,11 +23,11 @@
 
     $(document).ready(function () {
         var layoutDesignerTour, mainTour, authDisplayTour, schedulingTour, no_nav_template, start_template, next_template, final_template, end_tour_message;
-        final_template = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content'></div><div class='popover-navigation'><button class='btn btn-sm btn-primary pull-right' data-role='backToWelcome'>{% trans "Go back to Welcome Page!" %}</button><button class='btn btn-sm btn-default pull-left' data-role='end'>{% trans "Close" %}</button></div></div>";
-        final_template_2 = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content'></div><div class='popover-navigation'><button class='btn btn-sm btn-default' data-role='end'>{% trans "End Tour" %}</button></div></div>";
-        next_template = "<div class='popover popover-normal-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content'></div><div class='popover-navigation'><button class='btn btn-sm btn-default pull-left' data-role='end'>{% trans "End Tour" %}</button><button class='btn btn-sm btn-primary pull-right' data-role='next'>{% trans "Next" %}</button></div></div>";
+        final_template = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content'></div><div class='popover-navigation'><button class='btn btn-sm btn-primary pull-right' data-role='backToWelcome'>{% trans "Go back to Welcome Page!" %}</button><button class='btn btn-sm btn-white pull-left' data-role='end'>{% trans "Close" %}</button></div></div>";
+        final_template_2 = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content'></div><div class='popover-navigation'><button class='btn btn-sm btn-white' data-role='end'>{% trans "End Tour" %}</button></div></div>";
+        next_template = "<div class='popover popover-normal-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content'></div><div class='popover-navigation'><button class='btn btn-sm btn-white pull-left' data-role='end'>{% trans "End Tour" %}</button><button class='btn btn-sm btn-primary pull-right' data-role='next'>{% trans "Next" %}</button></div></div>";
         no_nav_template = "<div class='popover popover-normal-width tour'><div class='arrow'></div><button type='button' data-role='end' class='close padminus'>&times;</button><h3 class='popover-title'></h3><div class='popover-content'></div></div>";
-        start_template = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div><div class='popover-navigation'><button class='btn btn-sm btn-primary' data-role='next'>{% trans "Get started with the basics" %}</button><button class='btn btn-sm btn-default' data-role='end'>{% trans "Skip this tutorial" %}</button></div></div>";
+        start_template = "<div class='popover popover-double-width tour'><div class='arrow'></div><h3 class='popover-title'></h3><div class='popover-content popover-content-large'></div><div class='popover-navigation'><button class='btn btn-sm btn-primary' data-role='next'>{% trans "Get started with the basics" %}</button><button class='btn btn-sm btn-white' data-role='end'>{% trans "Skip this tutorial" %}</button></div></div>";
         end_tour_message = '{% trans "End Tour!" %}';
 
         window.cmsTours = {
@@ -82,7 +82,7 @@
             name: 'mainTour',
             debug: false,
             keyboard: false,
-            framework: "bootstrap3", 
+            framework: "bootstrap4", 
             showProgressBar: false,     // don't show the progress bar on this step only
             showProgressText: false,    // don't show the progress text on this step only
             highlightOpacity: 0.6,
@@ -491,7 +491,7 @@
                     template: no_nav_template
                 },
                 {
-                    element: '.bootbox .modal-content button[data-bb-handler="Publish"]',
+                    element: '.bootbox .modal-content button.btn-bb-Publish',
                     placement: "bottom",
                     container: '.bootbox',
                     title: "",
@@ -525,7 +525,7 @@
             debug: false,
             keyboard: false,
             name: 'layoutDesignerTour',
-            framework: "bootstrap3", 
+            framework: "bootstrap4", 
             showProgressBar: false,     // don't show the progress bar on this step only
             showProgressText: false,    // don't show the progress text on this step only
             highlightOpacity: 0.6,
@@ -674,7 +674,7 @@
             name: 'schedulingTour',
             debug: false,
             keyboard: false,
-            framework: "bootstrap3", 
+            framework: "bootstrap4", 
             showProgressBar: false,     // don't show the progress bar on this step only
             showProgressText: false,    // don't show the progress text on this step only
             highlightOpacity: 0.6,
@@ -898,7 +898,7 @@
             name: 'authDisplayTour',
             debug: false,
             keyboard: false,
-            framework: "bootstrap3", 
+            framework: "bootstrap4", 
             showProgressBar: false,     // don't show the progress bar on this step only
             showProgressText: false,    // don't show the progress text on this step only
             highlightOpacity: 0.6,
@@ -979,7 +979,7 @@
                     template: no_nav_template
                 },
                 { // 8
-                    element: '#displays tbody tr:first td ul.dropdown-menu .display_button_authorise',
+                    element: '#displays tbody tr:first td div.dropdown-menu .display_button_authorise',
                     content: "{% trans "Now select Authorise!" %}",
                     reflex: true,
                     placement: "left",

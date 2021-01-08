@@ -40,22 +40,22 @@
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a></li>
-                    <li><a href="#backgroundTab" role="tab" data-toggle="tab"><span>{% trans "Backgrounds" %}</span></a></li>
-                    <li><a href="#templateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Main Template" %}</span></a></li>
-                    <li><a href="#optionalStylesheetTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
-                    <li><a href="#optionalJavascript" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a></li>
-                </ul>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a>
+                    <a class="dropdown-item" href="#backgroundTab" role="tab" data-toggle="tab"><span>{% trans "Backgrounds" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#templateTab"  role="tab" data-toggle="tab"><span>{% trans "Main Template" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#optionalStylesheetTab"  role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
+                    <a class="dropdown-item" href="#optionalJavascript" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a>
+                </div>
             </li>
-            <li><a href="#cacheTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
-            <li><a href="#forecast" role="tab" data-toggle="tab"><span>{% trans "Forecast" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#cacheTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#forecast" role="tab" data-toggle="tab"><span>{% trans "Forecast" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="forecastEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -212,8 +212,8 @@
                     </div>
 
                     <div class="tab-pane" id="templateTab">
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Forecast Template" %}</h4>
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "Forecast Template" %}</h4>
                         </div>
 
                         <div class="editor-messages">
@@ -230,7 +230,7 @@
                         </div>
 
                         <div class="ckeditor_controls inline-editor-hide container-fluid" data-linked-to="template">
-                            <div class="form-group localSelect">
+                            <div class="form-group row localSelect">
                                 <label class="col-sm-2 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                 <div class="col-sm-10 ckeditor_select_container weather-type-targets">
                                     {% set weatherSnippets = module.getWeatherSnippets() %}

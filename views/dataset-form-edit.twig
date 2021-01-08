@@ -40,11 +40,11 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li class="tabForRemoteDataSet"><a href="#gateway" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
-                <li class="tabForRemoteDataSet"><a href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
-                <li class="tabForRemoteDataSet"><a href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
-                <li class="tabForRemoteDataSet"><a href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#gateway" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
+                <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#auth" role="tab" data-toggle="tab"><span>{% trans "Authentication" %}</span></a></li>
+                <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#data" role="tab" data-toggle="tab"><span>{% trans "Data" %}</span></a></li>
+                <li class="nav-item tabForRemoteDataSet"><a class="nav-link" href="#params" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="dataSetEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("dataSet.edit", {id: dataSet.dataSetId}) }}">
                 <input type="hidden" name="testDataSetId" value="{{ dataSet.dataSetId }}"/>
@@ -52,14 +52,14 @@
                     <div class="tab-pane active" id="general">
 
                         {% if currentUser.featureEnabled('folder.view') %}
-                        <div class="form-group">
+                        <div class="form-group row">
                             <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
                             <div class="col-sm-10" style="padding-top: 7px">
                                 <span id="originalFormFolder"></span>
                             </div>
                         </div>
 
-                        <div class="form-group">
+                        <div class="form-group row">
                             <label class="col-sm-2 control-label">{% trans "Move to Selected Folder:" %}</label>
                             <div class="col-sm-10">
                                 <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
@@ -100,7 +100,7 @@
                         {% set helpText %}{% trans "URL to the Remote DataSet for GET and POST." %}{% endset %}
                         {{ forms.input("uri", title, dataSet.uri, helpText, "", "required") }}
 
-                        <div class="form-group">
+                        <div class="form-group row">
                             <div class="col-sm-12">
                                 <div class="help-block">
                                     <strong>{% trans "Replacements" %}</strong><br>
@@ -161,9 +161,9 @@
                         {% set helpText %}{% trans "For CSV source, should the first row be ignored?" %}{% endset %}
                         {{ forms.checkbox("ignoreFirstRow", title, dataSet.ignoreFirstRow, helpText, 'csv-source-field') }}
 
-                        <div class="form-group">
-                            <div class="col-sm-offset-2 col-sm-10">
-                                <a class="btn btn-default" id="dataSetRemoteTestButton" href="#">
+                        <div class="form-group row">
+                            <div class="offset-sm-2 col-sm-10">
+                                <a class="btn btn-white" id="dataSetRemoteTestButton" href="#">
                                     {% trans "Test data URL" %}
                                 </a>
                             </div>
@@ -181,7 +181,7 @@
                         ] %}
                         {{ forms.dropdown("summarize", "single", title, dataSet.summarize, options, "typeid", "type", helpText, "json-source-field") }}
 
-                        <div class="form-group json-source-field">
+                        <div class="form-group row json-source-field">
                             <label class="col-sm-2 control-label" for="summarizeField">{% trans "By Field" %}</label>
                             <div class="col-sm-10">
                                 <input class="form-control" type="text" name="summarizeField" id="summarizeField" value="{{ dataSet.summarizeField }}"/>
