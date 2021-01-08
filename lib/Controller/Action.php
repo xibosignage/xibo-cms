@@ -394,7 +394,7 @@ class Action  extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $triggerType = $sanitizedParams->getString('triggerType');
-        $triggerCode = $sanitizedParams->getString('triggerCode');
+        $triggerCode = $sanitizedParams->getString('triggerCode', ['defaultOnEmptyString' => true]);
         $actionType = $sanitizedParams->getString('actionType');
         $target = $sanitizedParams->getString('target');
         $targetId = $sanitizedParams->getInt('targetId');
@@ -620,7 +620,7 @@ class Action  extends Base
         }
 
         $action->triggerType = $sanitizedParams->getString('triggerType');
-        $action->triggerCode = $sanitizedParams->getString('triggerCode');
+        $action->triggerCode = $sanitizedParams->getString('triggerCode', ['defaultOnEmptyString' => true]);
         $action->actionType = $sanitizedParams->getString('actionType');
         $action->target = $sanitizedParams->getString('target');
         $action->targetId = $sanitizedParams->getInt('targetId');
