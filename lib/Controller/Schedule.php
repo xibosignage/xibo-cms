@@ -1815,40 +1815,12 @@ class Schedule extends Base
      */
     public function scheduleNowForm(Request $request, Response $response,$from, $id)
     {
-        $groups = [];
-        $displays = [];
-        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
-
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
-
-            // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup)) {
-                continue;
-            }
-
-            if ($displayGroup->isDisplaySpecific == 1) {
-                $displays[] = $displayGroup;
-            } else {
-                $groups[] = $displayGroup;
-            }
-        }
-
-        $isLayoutSpecific = -1;
-        if ($from == 'Campaign') {
-            $isLayoutSpecific = 0;
-        } else if ($from == 'Layout') {
-            $isLayoutSpecific = 1;
-        }
-
         $this->getState()->template = 'schedule-form-now';
         $this->getState()->setData([
             'eventTypeId' => (($from == 'Campaign') ? \Xibo\Entity\Schedule::$CAMPAIGN_EVENT : \Xibo\Entity\Schedule::$LAYOUT_EVENT),
-            'campaignId' => (($from == 'Campaign' || $from == 'Layout') ? $id : 0),
-            'displayGroupId' => (($from == 'DisplayGroup') ? $id : 0),
-            'displays' => $displays,
-            'displayGroups' => $groups,
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => $isLayoutSpecific]),
+            'campaign' => (($from == 'Campaign' || $from == 'Layout') ? $this->campaignFactory->getById($id) : null),
+            'displayGroup' => (($from == 'DisplayGroup') ? [$this->displayGroupFactory->getById($id)] : null),
+            'displayGroupId' => (($from == 'DisplayGroup') ? (int)$id : 0),
             'alwaysDayPart' => $this->dayPartFactory->getAlwaysDayPart(),
             'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
             'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')
