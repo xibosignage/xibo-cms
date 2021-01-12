@@ -169,7 +169,7 @@ class MediaFactory extends BaseFactory
     /**
      * Create module files from folder
      * @param string $folder The path to the folder to add.
-     * @return array[Media]
+     * @return Media[]
      * @throws InvalidArgumentException
      */
     public function createModuleFileFromFolder($folder)
@@ -426,7 +426,7 @@ class MediaFactory extends BaseFactory
     /**
      * Get by Owner Id
      * @param int $ownerId
-     * @return array[Media]
+     * @return Media[]
      * @throws NotFoundException
      */
     public function getByOwnerId($ownerId)
@@ -437,7 +437,7 @@ class MediaFactory extends BaseFactory
     /**
      * Get by Type
      * @param string $type
-     * @return array[Media]
+     * @return Media[]
      * @throws NotFoundException
      */
     public function getByMediaType($type)
@@ -448,7 +448,7 @@ class MediaFactory extends BaseFactory
     /**
      * Get by Display Group Id
      * @param int $displayGroupId
-     * @return array[Media]
+     * @return Media[]
      * @throws NotFoundException
      */
     public function getByDisplayGroupId($displayGroupId)
@@ -460,7 +460,7 @@ class MediaFactory extends BaseFactory
      * Get Media by LayoutId
      * @param int $layoutId
      * @param int $edited
-     * @return array[Media]
+     * @return Media[]
      * @throws NotFoundException
      */
     public function getByLayoutId($layoutId, $edited = -1)
