@@ -1929,9 +1929,36 @@ abstract class ModuleWidget implements ModuleInterface
         return $parsedContent;
     }
 
+
+    /**
+     * Does this Widget has a thumbnail>
+     *
+     * @return bool
+     */
     public function hasThumbnail()
     {
         return false;
+    }
+
+    /**
+     * Does this Widget has html editor available?
+     *
+     * @return bool
+     */
+    public function hasHtmlEditor()
+    {
+        return false;
+    }
+
+    /**
+     * This is called on Layout Import to find and replace Library references from text editor.
+     * For Widget with html editor, return an array of options that may contain Library references
+     *
+     * @return array
+     */
+    public function getHtmlWidgetOptions()
+    {
+        return [];
     }
 
     //</editor-fold>

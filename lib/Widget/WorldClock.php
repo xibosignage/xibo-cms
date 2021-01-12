@@ -629,4 +629,16 @@ class WorldClock extends ModuleWidget
     {
         return true;
     }
+
+    /** @inheritDoc */
+    public function hasHtmlEditor()
+    {
+        return true;
+    }
+
+    /** @inheritDoc */
+    public function getHtmlWidgetOptions()
+    {
+        return ['mainTemplate'];
+    }
 }

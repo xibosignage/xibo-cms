@@ -817,4 +817,16 @@ class Calendar extends ModuleWidget
         // Make sure we lock for the entire iCal URI to prevent any clashes
         return md5(urldecode($this->getOption('uri')));
     }
+
+    /** @inheritDoc */
+    public function hasHtmlEditor()
+    {
+        return true;
+    }
+
+    /** @inheritDoc */
+    public function getHtmlWidgetOptions()
+    {
+        return ['template', 'currentEventTemplate', 'noDataMessage'];
+    }
 }

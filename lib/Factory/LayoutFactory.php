@@ -839,7 +839,7 @@ class LayoutFactory extends BaseFactory
                 $widget->ownerId = $mediaOwnerId;
                 $widget->duration = $mediaNode['duration'];
                 $widget->useDuration = $mediaNode['useDuration'];
-                $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
+                $widget->mediaIds = $mediaNode['mediaIds'];
                 $widget->tempWidgetId = $mediaNode['widgetId'];
 
                 // Widget from/to dates.
@@ -856,7 +856,6 @@ class LayoutFactory extends BaseFactory
                     continue;
                 }
 
-                $module = $modules[$widget->type];
                 /* @var \Xibo\Entity\Module $module */
 
                 //
@@ -883,18 +882,7 @@ class LayoutFactory extends BaseFactory
                     // Convert the module type of known legacy widgets
                     if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
                         $widget->type = 'datasetticker';
-                        $module = $modules[$widget->type];
                     }
-                }
-
-                //
-                // Get the MediaId associated with this widget
-                //
-                if ($module->regionSpecific == 0) {
-                    $this->getLog()->debug('Library Widget, getting mediaId');
-
-                    $this->getLog()->debug(sprintf('Assigning mediaId %d', $widget->tempId));
-                    $widget->assignMedia($widget->tempId);
                 }
 
                 //
@@ -1320,6 +1308,11 @@ class LayoutFactory extends BaseFactory
                         // Assign the new ID
                         $widget->assignMedia($newMediaId);
                     }
+
+                    // change mediaId references in applicable widgets, outside of the if condition, because if the Layout is loadByXLF we will not have mediaIds set on Widget at this point
+                    // the mediaIds array for Widgets with Library references will be correctly populated on getResource call from Player/CMS.
+                    // if the Layout was loadByJson then it will already have correct mediaIds array at this point.
+                    $this->handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId);
                 }
             }
 
@@ -1356,6 +1349,10 @@ class LayoutFactory extends BaseFactory
 
                             // Assign the new ID
                             $widget->assignMedia($newMediaId);
+
+                            // change mediaId references in applicable widgets in all Playlists we have created on this import.
+                            $this->handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId);
+
                             $widget->save();
 
                             if (!in_array($widget, $playlist->widgets)) {
@@ -1365,7 +1362,7 @@ class LayoutFactory extends BaseFactory
                             }
                         }
 
-                        // add Playlist widgetsto the $widgets (which already has all widgets from layout regionPlaylists)
+                        // add Playlist widgets to the $widgets (which already has all widgets from layout regionPlaylists)
                         // this will be needed if any Playlist has widgets with dataSets
                         if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
                             $widgets[] = $widget;
@@ -2345,5 +2342,26 @@ class LayoutFactory extends BaseFactory
         }
 
         return $returnDraft ? $draft : $layout;
+    }
+
+    /**
+     * Function called during Layout Import
+     * Check if provided Widget has options to have Library references
+     * if it does, then go through them find and replace old media references
+     *
+     * @param Widget $widget
+     * @param $newMediaId
+     * @param $oldMediaId
+     * @throws NotFoundException
+     */
+    public function handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId)
+    {
+        $module = $this->moduleFactory->createWithWidget($widget);
+
+        if ($module->hasHtmlEditor()) {
+            foreach ($module->getHtmlWidgetOptions() as $option) {
+                $widget->setOptionValue($option, 'cdata', str_replace('[' . $oldMediaId . ']', '[' . $newMediaId . ']', $widget->getOptionValue($option, null)));
+            }
+        }
     }
 }
