@@ -362,7 +362,7 @@ class Tag extends Base
             $tag->options = null;
         }
 
-        $tag->save(['validate' => true]);
+        $tag->save();
 
         // Return
         $this->getState()->hydrate([
@@ -512,7 +512,7 @@ class Tag extends Base
             }
         }
 
-        $tag->save(['validate' => true]);
+        $tag->save();
 
         // Return
         $this->getState()->hydrate([

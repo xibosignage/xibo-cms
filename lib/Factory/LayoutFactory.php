@@ -704,12 +704,13 @@ class LayoutFactory extends BaseFactory
      * @param null $playlistJson
      * @param null $nestedPlaylistJson
      * @param bool $useJson
+     * @param bool $importTags
      * @return array
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false)
+    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false, $importTags = false)
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
@@ -754,7 +755,7 @@ class LayoutFactory extends BaseFactory
                 $newPlaylist->tags = [];
 
                 // Populate tags
-                if ($nestedPlaylist['tags'] !== null && count($nestedPlaylist['tags']) > 0) {
+                if ($nestedPlaylist['tags'] !== null && count($nestedPlaylist['tags']) > 0 && $importTags) {
                     foreach ($nestedPlaylist['tags'] as $tag) {
                         $newPlaylist->tags[] = $this->tagFactory->tagFromString(
                             $tag['tag'] . (!empty($tag['value']) ? '|' . $tag['value'] : '')
@@ -917,7 +918,7 @@ class LayoutFactory extends BaseFactory
                         $newPlaylist->tags = [];
 
                         // Populate tags
-                        if ($playlistDetail['tags'] !== null && count($playlistDetail['tags']) > 0) {
+                        if ($playlistDetail['tags'] !== null && count($playlistDetail['tags']) > 0 && $importTags) {
                             foreach ($playlistDetail['tags'] as $tag) {
                                 $newPlaylist->tags[] = $this->tagFactory->tagFromString(
                                     $tag['tag'] . (!empty($tag['value']) ? '|' . $tag['value'] : '')
@@ -1005,16 +1006,17 @@ class LayoutFactory extends BaseFactory
 
         $this->getLog()->debug(sprintf('Finished loading layout - there are %d drawer regions.', count($layout->drawers)));
 
-        // Load any existing tags
-        if (!is_array($layout->tags)) {
-            $layout->tags = $this->tagFactory->tagsFromString($layout->tags);
-        }
+        if ($importTags) {
+            foreach ($layoutJson['layoutDefinitions']['tags'] as $tagNode) {
+                if ($tagNode == []) {
+                    continue;
+                }
 
-        foreach ($layoutJson['layoutDefinitions']['tags'] as $tagNode) {
-            if ($tagNode == [])
-                continue;
+                $layout->tags[] = $this->tagFactory->tagFromString(
+                    $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
+                );
 
-            $layout->tags[] = $this->tagFactory->tagFromString($tagNode['tag']);
+            }
         }
 
         // The parsed, finished layout
@@ -1032,6 +1034,7 @@ class LayoutFactory extends BaseFactory
      * @param bool $useExistingDataSets
      * @param bool $importDataSetData
      * @param \Xibo\Controller\Library $libraryController
+     * @param string $tags
      * @return Layout
      * @throws DuplicateEntityException
      * @throws GeneralException
@@ -1039,7 +1042,7 @@ class LayoutFactory extends BaseFactory
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ConfigurationException
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, $tags)
     {
         $this->getLog()->debug(sprintf('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName));
 
@@ -1103,7 +1106,7 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true);
+            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true, $importTags);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
@@ -1185,6 +1188,12 @@ class LayoutFactory extends BaseFactory
         // Tag as imported
         $layout->tags[] = $this->tagFactory->tagFromString('imported');
 
+        // Tag from the upload form
+        $tagsFromForm = (($tags != '') ? $this->tagFactory->tagsFromString($tags) : []);
+        foreach ($tagsFromForm as $tagFromForm) {
+            $layout->tags[] = $tagFromForm;
+        }
+
         // Set the owner
         $layout->setOwner($userId, true);
 
@@ -1252,6 +1261,20 @@ class LayoutFactory extends BaseFactory
                 $this->getLog()->debug('Media does not exist in Library, add it ' .  $file['file']);
 
                 $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
+
+                if ($importTags) {
+                    foreach ($file['tags'] as $tagNode) {
+                        if ($tagNode == []) {
+                            continue;
+                        }
+
+                        $media->tags[] = $this->tagFactory->tagFromString(
+                            $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
+                        );
+
+                    }
+                }
+
                 $media->tags[] = $this->tagFactory->tagFromString('imported');
 
                 // Get global stat setting of media to set to on/off/inherit
