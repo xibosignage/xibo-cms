@@ -460,12 +460,13 @@ class MediaFactory extends BaseFactory
      * Get Media by LayoutId
      * @param int $layoutId
      * @param int $edited
+     * @param int $excludeDynamicPlaylistMedia
      * @return Media[]
      * @throws NotFoundException
      */
-    public function getByLayoutId($layoutId, $edited = -1)
+    public function getByLayoutId($layoutId, $edited = -1, $excludeDynamicPlaylistMedia = 0)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isEdited' => $edited]);
+        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isEdited' => $edited, 'excludeDynamicPlaylistMedia' => $excludeDynamicPlaylistMedia]);
     }
 
     /**
@@ -723,6 +724,11 @@ class MediaFactory extends BaseFactory
                         INNER JOIN lkwidgetmedia
                         ON widget.widgetId = lkwidgetmedia.widgetId
                      WHERE region.layoutId = :layoutId ';
+
+            // include Media only for non dynamic Playlists #2392
+            if ($sanitizedFilter->getInt('excludeDynamicPlaylistMedia') === 1) {
+                $body .= ' AND lkplaylistplaylist.childId IN (SELECT playlistId FROM playlist WHERE playlist.playlistId = lkplaylistplaylist.childId AND playlist.isDynamic = 0) ';
+            }
 
             if ($sanitizedFilter->getInt('widgetId') !== null) {
                 $body .= ' AND `widget`.widgetId = :widgetId ';
