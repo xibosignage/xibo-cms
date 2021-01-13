@@ -25,6 +25,7 @@ use Psr\Container\ContainerInterface;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\Permission;
@@ -1926,7 +1927,7 @@ class User extends Base
             /** @var $object Media */
             if ($object->mediaType === 'font') {
                 // Drop permissions (we need to reassess).
-                $this->container->get('\Xibo\Controller\Library')->installFonts(['invalidateCache' => true], $request);
+                $this->container->get('\Xibo\Controller\Library')->installFonts(RouteContext::fromRequest($request)->getRouteParser(),['invalidateCache' => true]);
             }
         }
 

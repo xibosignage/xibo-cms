@@ -321,7 +321,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             // Fonts, then install
             if ($module->getModuleType() == 'font') {
-                $controller->installFonts();
+                $controller->installFonts($this->options['routeParser']);
             }
 
             // Are we assigning to a Playlist?

@@ -26,6 +26,7 @@ use Parsedown;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Item;
@@ -2307,7 +2308,7 @@ class Layout extends Base
             'accept_file_types' => '/\.zip$/i',
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $libraryController->libraryUsage() > $libraryLimit),
-            'request' => $request
+            'routeParser' => RouteContext::fromRequest($request)->getRouteParser()
         );
 
         $this->setNoOutput(true);

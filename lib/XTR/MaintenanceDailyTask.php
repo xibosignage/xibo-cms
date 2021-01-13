@@ -133,6 +133,7 @@ class MaintenanceDailyTask implements TaskInterface
                         false,
                         true,
                         $this->libraryController,
+                        null,
                         null
                     );
 

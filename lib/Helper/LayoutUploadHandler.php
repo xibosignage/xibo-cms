@@ -77,7 +77,8 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $useExistingDataSets,
                 $importDataSetData,
                 $this->options['libraryController'],
-                $tags
+                $tags,
+                $this->options['routeParser']
             );
 
             $layout->save(['saveActions' => false, 'import' => $importTags]);

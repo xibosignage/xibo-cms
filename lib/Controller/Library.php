@@ -888,7 +888,7 @@ class Library extends Base
 
         // Do we need to reassess fonts?
         if ($media->mediaType == 'font') {
-            $this->installFonts();
+            $this->installFonts(RouteContext::fromRequest($request)->getRouteParser());
         }
 
         // Return
@@ -1075,7 +1075,8 @@ class Library extends Base
             'widgetFromDt' => $widgetFromDt === null ? null : $widgetFromDt->format('U'),
             'widgetToDt' => $widgetToDt === null ? null : $widgetToDt->format('U'),
             'deleteOnExpiry' => $parsedBody->getCheckbox('deleteOnExpiry', ['checkboxReturnInteger' => true]),
-            'oldFolderId' => $parsedBody->getInt('folderId', ['default' => $oldFolderId])
+            'oldFolderId' => $parsedBody->getInt('folderId', ['default' => $oldFolderId]),
+            'routeParser' => RouteContext::fromRequest($request)->getRouteParser()
         ];
 
         // Output handled by UploadHandler
@@ -1260,7 +1261,7 @@ class Library extends Base
         // Are we a font
         if ($media->mediaType == 'font') {
             // We may have made changes and need to regenerate
-            $this->installFonts();
+            $this->installFonts(RouteContext::fromRequest($request)->getRouteParser());
         }
 
         // Return
@@ -1556,7 +1557,7 @@ class Library extends Base
     public function fontCss(Request $request, Response $response)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false], $request);
+        $css = $this->installFonts(RouteContext::fromRequest($request)->getRouteParser(),['invalidateCache' => false]);
 
         // Work out the etag
         /** @var $httpCache HttpCacheProvider*/
@@ -1592,7 +1593,7 @@ class Library extends Base
     public function fontList(Request $request, Response $response)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false], $request);
+        $css = $this->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -1604,7 +1605,7 @@ class Library extends Base
 
     /**
      * Get font CKEditor config
-     * @param Request|null $request
+     * @param \Slim\Interfaces\RouteParserInterface $routeParser
      * @return string
      * @throws ConfigurationException
      * @throws GeneralException
@@ -1612,10 +1613,10 @@ class Library extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function fontCKEditorConfig(Request $request = null)
+    public function fontCKEditorConfig($routeParser)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false], $request);
+        $css = $this->installFonts($routeParser, ['invalidateCache' => false]);
 
         return $css['ckeditor'];
     }
@@ -1623,7 +1624,7 @@ class Library extends Base
     /**
      * Installs fonts
      * @param array $options
-     * @param Request|null $request
+     * @param \Slim\Interfaces\RouteParserInterface $routeParser
      * @return array
      * @throws ConfigurationException
      * @throws GeneralException
@@ -1631,7 +1632,7 @@ class Library extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function installFonts($options = [], Request $request = null)
+    public function installFonts($routeParser, $options = [])
     {
         $options = array_merge([
             'invalidateCache' => true
@@ -1700,8 +1701,7 @@ class Library extends Base
                     // Test to see if this user should have access to this font
                     if ($this->getUser()->checkViewable($font)) {
                         // Css for the local CMS contains the full download path to the font
-                        $url = $this->urlFor($request, 'library.download',
-                                ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
+                        $url = $routeParser->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]);
                         $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
 
                         // CKEditor string

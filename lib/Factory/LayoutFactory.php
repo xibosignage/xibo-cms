@@ -1035,6 +1035,7 @@ class LayoutFactory extends BaseFactory
      * @param bool $importDataSetData
      * @param \Xibo\Controller\Library $libraryController
      * @param string $tags
+     * @param \Slim\Interfaces\RouteParserInterface $routeParser $routeParser
      * @return Layout
      * @throws DuplicateEntityException
      * @throws GeneralException
@@ -1042,7 +1043,7 @@ class LayoutFactory extends BaseFactory
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ConfigurationException
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, $tags)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, $tags, $routeParser)
     {
         $this->getLog()->debug(sprintf('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName));
 
@@ -1609,9 +1610,9 @@ class LayoutFactory extends BaseFactory
             $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
         }
 
-        if ($fontsAdded) {
+        if ($fontsAdded && $routeParser != null) {
             $this->getLog()->debug('Fonts have been added');
-            $libraryController->installFonts();
+            $libraryController->installFonts($routeParser);
         }
 
         return $layout;
