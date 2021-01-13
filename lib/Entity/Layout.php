@@ -1418,7 +1418,7 @@ class Layout implements \JsonSerializable
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $mappings = [];
 
-        foreach ($this->mediaFactory->getByLayoutId($this->layoutId, 1) as $media) {
+        foreach ($this->mediaFactory->getByLayoutId($this->layoutId, 1, 1) as $media) {
             /* @var Media $media */
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
 
@@ -1523,8 +1523,13 @@ class Layout implements \JsonSerializable
                 foreach ($playlistIds as $playlistId) {
                     $count = 1;
                     $playlist = $this->playlistFactory->getById($playlistId);
-                    $playlist->load();
-                    $playlist->expandWidgets(0, false);
+
+                    // include Widgets only for non dynamic Playlists #2392
+                    $playlist->load(['loadWidgets' => ($playlist->isDynamic) ? false : true]);
+                    if ($playlist->isDynamic === 0) {
+                        $playlist->expandWidgets(0, false);
+                    }
+
                     $playlistDefinitions[$playlist->playlistId] = $playlist;
 
                     // this is a recursive function, we are adding Playlist definitions, Playlist mappings and DataSets existing on the nested Playlist.
