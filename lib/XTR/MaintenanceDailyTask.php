@@ -132,7 +132,8 @@ class MaintenanceDailyTask implements TaskInterface
                         true,
                         false,
                         true,
-                        $this->libraryController
+                        $this->libraryController,
+                        null
                     );
 
                     $layout->save([
