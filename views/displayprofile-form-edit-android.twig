@@ -89,7 +89,7 @@
                     {{ forms.dropdown("aggregationLevel", "single", title, displayProfile.getSetting("aggregationLevel"), options, "id", "value", helpText, "aggregation-level") }}
 
                     {% set title = "Player Version"|trans %}
-                    {% set helpText = "Please ensure that the Player version you select here is suitable for all devices that use this display profile. You can override the version on the display record, but you must do that before making a change here"|trans %}
+                    {% set helpText = "Set the Player Version to install, making sure that the selected version is suitable for your device"|trans %}
                     {% set attributes = [
                         { name: "data-width", value: "300px" },
                         { name: "data-allow-clear", value: "true" },
