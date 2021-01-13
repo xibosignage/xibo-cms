@@ -1755,7 +1755,8 @@ class Layout implements \JsonSerializable
         if ($this->backgroundImageId != 0) {
             $media = $this->mediaFactory->getById($this->backgroundImageId);
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
-
+            $media->load();
+            
             $mappings[] = [
                 'file' => $media->fileName,
                 'mediaid' => $media->mediaId,
