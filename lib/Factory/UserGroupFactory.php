@@ -569,6 +569,11 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'users',
                     'title' => __('Access to API applications')
                 ],
+                'user.sharing' => [
+                    'feature' => 'user.sharing',
+                    'group' => 'users',
+                    'title' => __('Allow Sharing capabilities for all User objects')
+                ],
                 'notification.add' => [
                     'feature' => 'notification.add',
                     'group' => 'notifications',
