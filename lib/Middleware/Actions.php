@@ -73,7 +73,7 @@ class Actions implements Middleware
                         /** @var \Xibo\Entity\Layout $layout */
                         $layout = $container->get('layoutFactory')->createFromZip($folder . '/' . $file, null,
                             $container->get('userFactory')->getSystemUser()->getId(), false, false, true, false,
-                            true, $container->get('\Xibo\Controller\Library'));
+                            true, $container->get('\Xibo\Controller\Library'), null);
                         $layout->save([
                             'audit' => false
                         ]);
