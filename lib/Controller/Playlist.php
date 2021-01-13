@@ -601,7 +601,7 @@ class Playlist extends Base
 
         // Do we have a tag or name filter?
         $nameFilter = $sanitizedParams->getString('filterMediaName');
-        $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? null : $sanitizedParams->getString('filterMediaTag');
+        $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('filterMediaTag') : null;
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
