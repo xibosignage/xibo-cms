@@ -231,4 +231,16 @@ class Embedded extends ModuleWidget
         // We have a long cache interval because we don't depend on any external data.
         return 86400 * 365;
     }
+
+    /** @inheritDoc */
+    public function hasHtmlEditor()
+    {
+        return true;
+    }
+
+    /** @inheritDoc */
+    public function getHtmlWidgetOptions()
+    {
+        return ['embedHtml', 'embedScript'];
+    }
 }

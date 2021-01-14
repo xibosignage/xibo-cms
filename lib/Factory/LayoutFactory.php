@@ -704,12 +704,13 @@ class LayoutFactory extends BaseFactory
      * @param null $playlistJson
      * @param null $nestedPlaylistJson
      * @param bool $useJson
+     * @param bool $importTags
      * @return array
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false)
+    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false, $importTags = false)
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
@@ -754,7 +755,7 @@ class LayoutFactory extends BaseFactory
                 $newPlaylist->tags = [];
 
                 // Populate tags
-                if ($nestedPlaylist['tags'] !== null && count($nestedPlaylist['tags']) > 0) {
+                if ($nestedPlaylist['tags'] !== null && count($nestedPlaylist['tags']) > 0 && $importTags) {
                     foreach ($nestedPlaylist['tags'] as $tag) {
                         $newPlaylist->tags[] = $this->tagFactory->tagFromString(
                             $tag['tag'] . (!empty($tag['value']) ? '|' . $tag['value'] : '')
@@ -839,7 +840,7 @@ class LayoutFactory extends BaseFactory
                 $widget->ownerId = $mediaOwnerId;
                 $widget->duration = $mediaNode['duration'];
                 $widget->useDuration = $mediaNode['useDuration'];
-                $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
+                $widget->mediaIds = $mediaNode['mediaIds'];
                 $widget->tempWidgetId = $mediaNode['widgetId'];
 
                 // Widget from/to dates.
@@ -856,7 +857,6 @@ class LayoutFactory extends BaseFactory
                     continue;
                 }
 
-                $module = $modules[$widget->type];
                 /* @var \Xibo\Entity\Module $module */
 
                 //
@@ -883,18 +883,7 @@ class LayoutFactory extends BaseFactory
                     // Convert the module type of known legacy widgets
                     if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
                         $widget->type = 'datasetticker';
-                        $module = $modules[$widget->type];
                     }
-                }
-
-                //
-                // Get the MediaId associated with this widget
-                //
-                if ($module->regionSpecific == 0) {
-                    $this->getLog()->debug('Library Widget, getting mediaId');
-
-                    $this->getLog()->debug(sprintf('Assigning mediaId %d', $widget->tempId));
-                    $widget->assignMedia($widget->tempId);
                 }
 
                 //
@@ -929,7 +918,7 @@ class LayoutFactory extends BaseFactory
                         $newPlaylist->tags = [];
 
                         // Populate tags
-                        if ($playlistDetail['tags'] !== null && count($playlistDetail['tags']) > 0) {
+                        if ($playlistDetail['tags'] !== null && count($playlistDetail['tags']) > 0 && $importTags) {
                             foreach ($playlistDetail['tags'] as $tag) {
                                 $newPlaylist->tags[] = $this->tagFactory->tagFromString(
                                     $tag['tag'] . (!empty($tag['value']) ? '|' . $tag['value'] : '')
@@ -1017,16 +1006,17 @@ class LayoutFactory extends BaseFactory
 
         $this->getLog()->debug(sprintf('Finished loading layout - there are %d drawer regions.', count($layout->drawers)));
 
-        // Load any existing tags
-        if (!is_array($layout->tags)) {
-            $layout->tags = $this->tagFactory->tagsFromString($layout->tags);
-        }
+        if ($importTags) {
+            foreach ($layoutJson['layoutDefinitions']['tags'] as $tagNode) {
+                if ($tagNode == []) {
+                    continue;
+                }
 
-        foreach ($layoutJson['layoutDefinitions']['tags'] as $tagNode) {
-            if ($tagNode == [])
-                continue;
+                $layout->tags[] = $this->tagFactory->tagFromString(
+                    $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
+                );
 
-            $layout->tags[] = $this->tagFactory->tagFromString($tagNode['tag']);
+            }
         }
 
         // The parsed, finished layout
@@ -1044,6 +1034,8 @@ class LayoutFactory extends BaseFactory
      * @param bool $useExistingDataSets
      * @param bool $importDataSetData
      * @param \Xibo\Controller\Library $libraryController
+     * @param string $tags
+     * @param \Slim\Interfaces\RouteParserInterface $routeParser $routeParser
      * @return Layout
      * @throws DuplicateEntityException
      * @throws GeneralException
@@ -1051,7 +1043,7 @@ class LayoutFactory extends BaseFactory
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ConfigurationException
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, $tags, $routeParser)
     {
         $this->getLog()->debug(sprintf('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName));
 
@@ -1115,7 +1107,7 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true);
+            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true, $importTags);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
@@ -1197,6 +1189,12 @@ class LayoutFactory extends BaseFactory
         // Tag as imported
         $layout->tags[] = $this->tagFactory->tagFromString('imported');
 
+        // Tag from the upload form
+        $tagsFromForm = (($tags != '') ? $this->tagFactory->tagsFromString($tags) : []);
+        foreach ($tagsFromForm as $tagFromForm) {
+            $layout->tags[] = $tagFromForm;
+        }
+
         // Set the owner
         $layout->setOwner($userId, true);
 
@@ -1264,6 +1262,20 @@ class LayoutFactory extends BaseFactory
                 $this->getLog()->debug('Media does not exist in Library, add it ' .  $file['file']);
 
                 $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
+
+                if ($importTags && isset($file['tags'])) {
+                    foreach ($file['tags'] as $tagNode) {
+                        if ($tagNode == []) {
+                            continue;
+                        }
+
+                        $media->tags[] = $this->tagFactory->tagFromString(
+                            $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
+                        );
+
+                    }
+                }
+
                 $media->tags[] = $this->tagFactory->tagFromString('imported');
 
                 // Get global stat setting of media to set to on/off/inherit
@@ -1320,6 +1332,11 @@ class LayoutFactory extends BaseFactory
                         // Assign the new ID
                         $widget->assignMedia($newMediaId);
                     }
+
+                    // change mediaId references in applicable widgets, outside of the if condition, because if the Layout is loadByXLF we will not have mediaIds set on Widget at this point
+                    // the mediaIds array for Widgets with Library references will be correctly populated on getResource call from Player/CMS.
+                    // if the Layout was loadByJson then it will already have correct mediaIds array at this point.
+                    $this->handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId);
                 }
             }
 
@@ -1356,6 +1373,10 @@ class LayoutFactory extends BaseFactory
 
                             // Assign the new ID
                             $widget->assignMedia($newMediaId);
+
+                            // change mediaId references in applicable widgets in all Playlists we have created on this import.
+                            $this->handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId);
+
                             $widget->save();
 
                             if (!in_array($widget, $playlist->widgets)) {
@@ -1365,7 +1386,7 @@ class LayoutFactory extends BaseFactory
                             }
                         }
 
-                        // add Playlist widgetsto the $widgets (which already has all widgets from layout regionPlaylists)
+                        // add Playlist widgets to the $widgets (which already has all widgets from layout regionPlaylists)
                         // this will be needed if any Playlist has widgets with dataSets
                         if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
                             $widgets[] = $widget;
@@ -1589,9 +1610,9 @@ class LayoutFactory extends BaseFactory
             $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
         }
 
-        if ($fontsAdded) {
+        if ($fontsAdded && $routeParser != null) {
             $this->getLog()->debug('Fonts have been added');
-            $libraryController->installFonts();
+            $libraryController->installFonts($routeParser);
         }
 
         return $layout;
@@ -2345,5 +2366,26 @@ class LayoutFactory extends BaseFactory
         }
 
         return $returnDraft ? $draft : $layout;
+    }
+
+    /**
+     * Function called during Layout Import
+     * Check if provided Widget has options to have Library references
+     * if it does, then go through them find and replace old media references
+     *
+     * @param Widget $widget
+     * @param $newMediaId
+     * @param $oldMediaId
+     * @throws NotFoundException
+     */
+    public function handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId)
+    {
+        $module = $this->moduleFactory->createWithWidget($widget);
+
+        if ($module->hasHtmlEditor()) {
+            foreach ($module->getHtmlWidgetOptions() as $option) {
+                $widget->setOptionValue($option, 'cdata', str_replace('[' . $oldMediaId . ']', '[' . $newMediaId . ']', $widget->getOptionValue($option, null)));
+            }
+        }
     }
 }

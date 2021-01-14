@@ -598,147 +598,7 @@ var setupScheduleForm = function(dialog) {
 
     convertShareOfVoice(shareOfVoice.val());
 
-    // Select lists
-    var $campaignSelect = $('#campaignId', dialog);
-    $campaignSelect.select2({
-        ajax: {
-            url: $campaignSelect.data("searchUrl"),
-            dataType: "json",
-            data: function(params) {
-                var query = {
-                    isLayoutSpecific: $campaignSelect.data("searchIsLayoutSpecific"),
-                    retired: 0,
-                    totalDuration: 0,
-                    name: params.term,
-                    start: 0,
-                    length: 10,
-                    columns: [
-                        {
-                            "data": "isLayoutSpecific"
-                        },
-                        {
-                            "data": "campaign"
-                        }
-                    ],
-                    order: [
-                        {
-                            "column": 0,
-                            "dir": "asc"
-                        },
-                        {
-                            "column": 1,
-                            "dir": "asc"
-                        }
-                    ]
-                };
-
-                // Set the start parameter based on the page number
-                if (params.page != null) {
-                    query.start = (params.page - 1) * 10;
-                }
-
-                return query;
-            },
-            processResults: function(data, params) {
-                var results = [];
-
-                $.each(data.data, function(index, el) {
-                    results.push({
-                        "id": el["campaignId"],
-                        "text": el["campaign"]
-                    });
-                });
-
-                var page = params.page || 1;
-                page = (page > 1) ? page - 1 : page;
-
-                return {
-                    results: results,
-                    pagination: {
-                        more: (page * 10 < data.recordsTotal)
-                    }
-                }
-            }
-        }
-    });
-
-    var $displaySelect = $('select[name="displayGroupIds[]"]', dialog);
-    $displaySelect.select2({
-        ajax: {
-            url: $displaySelect.data("searchUrl"),
-            dataType: "json",
-            data: function(params) {
-                var query = {
-                    isDisplaySpecific: -1,
-                    forSchedule: 1,
-                    displayGroup: params.term,
-                    start: 0,
-                    length: 10,
-                    columns: [
-                        {
-                            "data": "isDisplaySpecific"
-                        },
-                        {
-                            "data": "displayGroup"
-                        }
-                    ],
-                    order: [
-                        {
-                            "column": 0,
-                            "dir": "asc"
-                        },
-                        {
-                            "column": 1,
-                            "dir": "asc"
-                        }
-                    ]
-                };
-
-                // Set the start parameter based on the page number
-                if (params.page != null) {
-                    query.start = (params.page - 1) * 10;
-                }
-
-                return query;
-            },
-            processResults: function(data, params) {
-                var groups = [];
-                var displays = [];
-
-                $.each(data.data, function(index, element) {
-                    if (element.isDisplaySpecific === 1) {
-                        displays.push({
-                            "id": element.displayGroupId,
-                            "text": element.displayGroup
-                        });
-                    } else {
-                        groups.push({
-                            "id": element.displayGroupId,
-                            "text": element.displayGroup
-                        });
-                    }
-                });
-
-                var page = params.page || 1;
-                page = (page > 1) ? page - 1 : page;
-
-                return {
-                    results: [
-                        {
-                            "text": $displaySelect.data('transGroups'),
-                            "children": groups
-                        },{
-                            "text": $displaySelect.data('transDisplay'),
-                            "children": displays
-                        }
-                    ],
-                    pagination: {
-                        more: (page * 10 < data.recordsTotal)
-                    }
-                }
-            }
-        }
-    });
+    setupSelectForSchedule(dialog);
 
     $('select[name="recurrenceRepeatsOn[]"]', dialog).select2({
         width: "100%"
@@ -988,15 +848,15 @@ var processScheduleFormElements = function(el) {
 
                 // Change Label and Help text when Layout event type is selected
                 $layoutControl.children("label").text($campaignSelect.data("transLayout"));
-                $layoutControl.children("div").children(".help-block").text($campaignSelect.data("transLayoutHelpText"));
+                $layoutControl.children("div").children("small.form-text.text-muted").text($campaignSelect.data("transLayoutHelpText"));
 
             } else {
                 // Load Campaigns only
                 searchIsLayoutSpecific = 0;
 
                 // Change Label and Help text when Campaign event type is selected
-                $layoutControl.children("label").text('Campaign');
-                $layoutControl.children("div").children(".help-block").text('Please select a Campaign for this Event to show');
+                $layoutControl.children("label").text($campaignSelect.data("transCampaign"));
+                $layoutControl.children("div").children("small.form-text.text-muted").text($campaignSelect.data("transCampaignHelpText"));
             }
 
             // Set the search criteria
@@ -1072,10 +932,9 @@ var duplicateScheduledEvent = function() {
  * Callback for the schedule form
  */
 var setupScheduleNowForm = function(form) {
-    
-    // We submit this form ourselves (outside framework)
-    $('#campaignId', form).select2();
-    $('select[name="displayGroupIds[]"]', form).select2();
+
+    setupSelectForSchedule(form);
+    processScheduleFormElements($("#eventTypeId", form));
 
     // Hide the seconds input option unless seconds are enabled in the date format
     if (dateFormat.indexOf("s") <= -1) {
@@ -1411,4 +1270,148 @@ var filterEventsByLocation = function(events) {
     }
 
     return eventsResult;
+};
+
+var setupSelectForSchedule = function (dialog) {
+    // Select lists
+    var $campaignSelect = $('#campaignId', dialog);
+    $campaignSelect.select2({
+        ajax: {
+            url: $campaignSelect.data("searchUrl"),
+            dataType: "json",
+            data: function(params) {
+                var query = {
+                    isLayoutSpecific: $campaignSelect.data("searchIsLayoutSpecific"),
+                    retired: 0,
+                    totalDuration: 0,
+                    name: params.term,
+                    start: 0,
+                    length: 10,
+                    columns: [
+                        {
+                            "data": "isLayoutSpecific"
+                        },
+                        {
+                            "data": "campaign"
+                        }
+                    ],
+                    order: [
+                        {
+                            "column": 0,
+                            "dir": "asc"
+                        },
+                        {
+                            "column": 1,
+                            "dir": "asc"
+                        }
+                    ]
+                };
+
+                // Set the start parameter based on the page number
+                if (params.page != null) {
+                    query.start = (params.page - 1) * 10;
+                }
+
+                return query;
+            },
+            processResults: function(data, params) {
+                var results = [];
+
+                $.each(data.data, function(index, el) {
+                    results.push({
+                        "id": el["campaignId"],
+                        "text": el["campaign"]
+                    });
+                });
+
+                var page = params.page || 1;
+                page = (page > 1) ? page - 1 : page;
+
+                return {
+                    results: results,
+                    pagination: {
+                        more: (page * 10 < data.recordsTotal)
+                    }
+                }
+            }
+        }
+    });
+
+    var $displaySelect = $('select[name="displayGroupIds[]"]', dialog);
+    $displaySelect.select2({
+        ajax: {
+            url: $displaySelect.data("searchUrl"),
+            dataType: "json",
+            data: function(params) {
+                var query = {
+                    isDisplaySpecific: -1,
+                    forSchedule: 1,
+                    displayGroup: params.term,
+                    start: 0,
+                    length: 10,
+                    columns: [
+                        {
+                            "data": "isDisplaySpecific"
+                        },
+                        {
+                            "data": "displayGroup"
+                        }
+                    ],
+                    order: [
+                        {
+                            "column": 0,
+                            "dir": "asc"
+                        },
+                        {
+                            "column": 1,
+                            "dir": "asc"
+                        }
+                    ]
+                };
+
+                // Set the start parameter based on the page number
+                if (params.page != null) {
+                    query.start = (params.page - 1) * 10;
+                }
+
+                return query;
+            },
+            processResults: function(data, params) {
+                var groups = [];
+                var displays = [];
+
+                $.each(data.data, function(index, element) {
+                    if (element.isDisplaySpecific === 1) {
+                        displays.push({
+                            "id": element.displayGroupId,
+                            "text": element.displayGroup
+                        });
+                    } else {
+                        groups.push({
+                            "id": element.displayGroupId,
+                            "text": element.displayGroup
+                        });
+                    }
+                });
+
+                var page = params.page || 1;
+                page = (page > 1) ? page - 1 : page;
+
+                return {
+                    results: [
+                        {
+                            "text": $displaySelect.data('transGroups'),
+                            "children": groups
+                        },{
+                            "text": $displaySelect.data('transDisplay'),
+                            "children": displays
+                        }
+                    ],
+                    pagination: {
+                        more: (page * 10 < data.recordsTotal)
+                    }
+                }
+            }
+        }
+    });
 };

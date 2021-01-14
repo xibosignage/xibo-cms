@@ -57,6 +57,9 @@ class LayoutUploadHandler extends BlueImpUploadHandler
 
             // Parse parameters
             $name = isset($_REQUEST['name']) ? $_REQUEST['name'][$index] : '';
+            $tags = $controller->getUser()->featureEnabled('tag.tagging')
+                ? isset($_REQUEST['tags']) ? $_REQUEST['tags'][$index] : ''
+                : '';
             $template = isset($_REQUEST['template']) ? $_REQUEST['template'][$index] : 0;
             $replaceExisting = isset($_REQUEST['replaceExisting']) ? $_REQUEST['replaceExisting'][$index] : 0;
             $importTags = isset($_REQUEST['importTags']) ? $_REQUEST['importTags'][$index] : 0;
@@ -73,10 +76,12 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $importTags,
                 $useExistingDataSets,
                 $importDataSetData,
-                $this->options['libraryController']
+                $this->options['libraryController'],
+                $tags,
+                $this->options['routeParser']
             );
 
-            $layout->save(['saveActions' => false]);
+            $layout->save(['saveActions' => false, 'import' => $importTags]);
             $layout->managePlaylistClosureTable($layout);
             $layout->manageActions($layout);
 

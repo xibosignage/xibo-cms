@@ -783,7 +783,8 @@ class Layout implements \JsonSerializable
             'setBuildRequired' => true,
             'validate' => true,
             'notify' => true,
-            'audit' => true
+            'audit' => true,
+            'import' => false
         ], $options);
 
         if ($options['validate']) {
@@ -843,6 +844,19 @@ class Layout implements \JsonSerializable
 
         if ($options['saveTags']) {
             $this->getLog()->debug('Saving tags on ' . $this);
+
+            // if we are saving new Layout after import, we need to go through all Tags on the Layout
+            // double check if any of them match Tags added from imported Playlists or Media
+            // otherwise we would end up with duplicated Tags
+            if ($options['import']) {
+                $importedTags = $this->tags;
+                $this->tags = [];
+             foreach ($importedTags as $importedTag) {
+                 $this->tags[] = $this->tagFactory->tagFromString(
+                     $importedTag->tag . (!empty($importedTag->value) ? '|' . $importedTag->value : '')
+                 );
+             }
+            }
 
             // Remove unwanted ones
             if (is_array($this->unassignTags)) {
@@ -1649,7 +1663,8 @@ class Layout implements \JsonSerializable
 
         foreach ($this->tags as $tag) {
             /* @var Tag $tag */
-            $tagNode = $document->createElement('tag', $tag->tag);
+            $tagNode = $document->createElement('tag', $tag->tag . (!empty($tag->value) ? '|' . $tag->value : ''));
+
             $tagsNode->appendChild($tagNode);
         }
 
@@ -1719,9 +1734,10 @@ class Layout implements \JsonSerializable
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $mappings = [];
 
-        foreach ($this->mediaFactory->getByLayoutId($this->layoutId, 1) as $media) {
+        foreach ($this->mediaFactory->getByLayoutId($this->layoutId, 1, 1) as $media) {
             /* @var Media $media */
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
+            $media->load();
 
             $mappings[] = [
                 'file' => $media->fileName,
@@ -1730,7 +1746,8 @@ class Layout implements \JsonSerializable
                 'type' => $media->mediaType,
                 'duration' => $media->duration,
                 'background' => 0,
-                'font' => 0
+                'font' => 0,
+                'tags' => $media->tags
             ];
         }
 
@@ -1738,7 +1755,8 @@ class Layout implements \JsonSerializable
         if ($this->backgroundImageId != 0) {
             $media = $this->mediaFactory->getById($this->backgroundImageId);
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
-
+            $media->load();
+            
             $mappings[] = [
                 'file' => $media->fileName,
                 'mediaid' => $media->mediaId,
@@ -1746,7 +1764,8 @@ class Layout implements \JsonSerializable
                 'type' => $media->mediaType,
                 'duration' => $media->duration,
                 'background' => 1,
-                'font' => 0
+                'font' => 0,
+                'tags' => $media->tags
             ];
         }
 
@@ -1825,8 +1844,13 @@ class Layout implements \JsonSerializable
                 foreach ($playlistIds as $playlistId) {
                     $count = 1;
                     $playlist = $this->playlistFactory->getById($playlistId);
-                    $playlist->load();
-                    $playlist->expandWidgets(0, false);
+
+                    // include Widgets only for non dynamic Playlists #2392
+                    $playlist->load(['loadWidgets' => ($playlist->isDynamic) ? false : true]);
+                    if ($playlist->isDynamic === 0) {
+                        $playlist->expandWidgets(0, false);
+                    }
+
                     $playlistDefinitions[$playlist->playlistId] = $playlist;
 
                     // this is a recursive function, we are adding Playlist definitions, Playlist mappings and DataSets existing on the nested Playlist.

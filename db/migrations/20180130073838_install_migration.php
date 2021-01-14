@@ -1213,7 +1213,6 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`) VALUES
   (1, \'Image\', \'Image\', 1, 0, \'Upload Image files to assign to Layouts\', \'forms/image.gif\', 1, \'jpg,jpeg,png,bmp,gif\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Image\', 10),
   (2, \'Video\', \'Video\', 1, 0, \'Upload Video files to assign to Layouts\', \'forms/video.gif\', 1, \'wmv,avi,mpg,mpeg,webm,mp4\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Video\', 0),
-  (3, \'Flash\', \'Flash\', 1, 0, \'Upload SWF files to assign to Layouts\', \'forms/flash.gif\', 1, \'swf\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Flash\', 10),
   (4, \'PowerPoint\', \'PowerPoint\', 1, 0, \'Upload a PowerPoint file to assign to Layouts\', \'forms/powerpoint.gif\', 1, \'ppt,pps,pptx\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\PowerPoint\', 10),
   (5, \'Webpage\', \'Webpage\', 1, 1, \'Embed a Webpage\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\WebPage\', 60),
   (6, \'Ticker\', \'Ticker\', 1, 1, \'Display dynamic feed content\', \'forms/ticker.gif\', 1, NULL, 1, 1, NULL, \'[]\', \'../modules\', \'Xibo\\\\Widget\\\\Ticker\', 5),

@@ -925,4 +925,16 @@ class DataSetTicker extends ModuleWidget
         // Lock to the dataSetId, because our dataSet might have external images which are downloaded.
         return $this->getOption('dataSetId');
     }
+
+    /** @inheritDoc */
+    public function hasHtmlEditor()
+    {
+        return true;
+    }
+
+    /** @inheritDoc */
+    public function getHtmlWidgetOptions()
+    {
+        return ['template'];
+    }
 }
