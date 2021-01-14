@@ -138,7 +138,8 @@ class MaintenanceDailyTask implements TaskInterface
                     );
 
                     $layout->save([
-                        'audit' => false
+                        'audit' => false,
+                        'import' => true
                     ]);
                 }
             }
