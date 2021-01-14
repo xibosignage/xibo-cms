@@ -1263,7 +1263,7 @@ class LayoutFactory extends BaseFactory
 
                 $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
 
-                if ($importTags) {
+                if ($importTags && isset($file['tags'])) {
                     foreach ($file['tags'] as $tagNode) {
                         if ($tagNode == []) {
                             continue;
