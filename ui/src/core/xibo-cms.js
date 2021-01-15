@@ -803,7 +803,7 @@ function XiboInitialise(scope) {
  */
 function dataTableProcessing(e, settings, processing) {
     if (processing)
-        $(e.target).closest('.widget').children(".widget-title").append('<span class="saving fa fa-cog fa-spin pl-1"></span>');
+        $(e.target).closest('.widget').children(".widget-title").append('<span class="saving fa fa-cog fa-spin p-1"></span>');
     else
         $(e.target).closest('.widget').closest(".widget").find(".saving").remove();
 }
@@ -2856,6 +2856,9 @@ function destroyDatePicker($element) {
         // Destroy jalali calendar
         $('#' + $element.attr('id') + 'Link').data().datepicker.destroy();
     }
+
+    // Unbind toggle button click
+    $element.parent().find('.date-open-button').off('click');
 }
 
 function initJsTreeAjax(container, table, isForm = false, ttl = false)

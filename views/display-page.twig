@@ -51,7 +51,7 @@
                                     {% set title %}{% trans "ID" %}{% endset %}
                                     {{ inline.number("displayId", title) }}
 
-                                    <div class="form-group mr-3 mb-2">
+                                    <div class="form-group mr-1 mb-1">
                                         <label class="control-label mr-1" title="" for="display" accesskey="">{% trans "Name" %}</label>
                                         <div>
                                             <div class="input-group">
@@ -119,7 +119,7 @@
 
                                 <div class="tab-pane" id="filter-advanced">
                                     {% set title %}{% trans "Last Accessed" %}{% endset %}
-                                    <div class="form-group mr-3 mb-2">
+                                    <div class="form-group mr-1 mb-1">
                                         <label class="control-label mr-1" for="lastAccessed">{{ title }}</label>
                                         <div class="input-group date">
                                             <input type="hidden" name="lastAccessed" id="lastAccessed" />
@@ -204,7 +204,7 @@
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
-                    <div id="datatable-container" class="card col-sm-10 pt-4 px-1">
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
                             <table id="displays" class="table table-striped" data-content-type="display" data-content-id-name="displayId" data-state-preference-name="displayGrid" style="width: 100%;">
                                 <thead>
@@ -244,7 +244,7 @@
                                         <th>{% trans "Remote" %}</th>
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
-                                        <th class="rowMenu">{% trans "Row Menu" %}</th>
+                                        <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -303,11 +303,11 @@
                 },
                 createdRow: function (row, data, index) {
                     if (data.mediaInventoryStatus === 1) {
-                        $(row).addClass('success');
+                        $(row).addClass('table-success');
                     } else if (data.mediaInventoryStatus === 1) {
-                        $(row).addClass('danger');
+                        $(row).addClass('table-danger');
                     } else {
-                        $(row).addClass('warning');
+                        $(row).addClass('table-warning');
                     }
                 },
                 "columns": [
@@ -830,7 +830,7 @@
                     $(target).append('<div class="text-muted">' + inputHelpText + '</div>');
                 }
 
-                var $newButton = $('<button class="btn btn-danger btn-sm pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
+                var $newButton = $('<button class="btn btn-outline-danger btn-sm pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
                     e.stopPropagation();
                     restoreInputField(target, inputName);
                  });
@@ -841,7 +841,7 @@
             // Method to restore the input field to the edit button
             var restoreInputField = function(target, inputName) {
 
-                $(target).html('<button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button>');
+                $(target).html('<button class="btn btn-block btn-outline-secondary" type="button"><i class="fa fa-edit"></i></button>');
 
                 // Handlers for field edit
                 $(target).off().click(function() {
@@ -857,9 +857,11 @@
             $.each($settings, function(index, element) {
                 var $label = $(element).find('label');
                 var $input = $(element).find('input,select');
+                var $help = $(element).find('small.form-text.text-muted');
                 var over = $label.prop("for");
                 var value = '';
                 var text = '';
+                var help = $help.length > 0 ? $help.text() : '';
 
                 // Skip for some fields
                 if(['name', 'isDefault'].includes(over)) {
@@ -912,7 +914,7 @@
                 }
 
                 // Append new row to the table
-                var $tableNewRow = $('<tr class="row-fluid"><td class="col-5"><strong>' + text + '</strong></td><td class="col-3"><div>' + value + '</div></td><td class="col-4 override-input text-center" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
+                var $tableNewRow = $('<tr><td style="width: 40%;"><strong title="' + help + '">' + text + '</strong></td><td style="width: 25%;"><div>' + value + '</div></td><td class="override-input text-center" style="width: 35%;" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block btn-outline-secondary" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
 
                 // Get override element
                 var overrideEl = override.find(function(x) { return x.name === over; });

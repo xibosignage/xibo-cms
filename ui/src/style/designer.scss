@@ -79,7 +79,13 @@ $designer-overlay-z-index: 1050;
 $unsuccess-message-bg-color: darken($xibo-color-red, 30%);
 $layout-status-popover-message-bg-color: $xibo-color-red;
 
+
+.navbar-default {
+    margin-bottom: 0;
+}
+
 #read-only-message {
+    display: block;
     margin: 5px 5%;
     padding: 10px;
     width: 90%;
@@ -106,16 +112,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     margin: 0 16px;
 }
 
-@media (max-width: 768px) {
-    #layout-editor-main {
-        padding-top: 15px;
-    }
-
-    #layout-editor  {
-        margin-top: 0;
-    }
-}
-
 @media (max-width: 1200px) {
     #layout-editor  {
         margin-top: 0;
@@ -123,6 +119,16 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
     #page-wrapper #layout-editor  {
         margin-top: 25px;
+    }
+}
+
+@media (max-width: 768px) {
+    #layout-editor-main {
+        padding-top: 15px;
+    }
+
+    #layout-editor, #page-wrapper #layout-editor  {
+        margin-top: 0;
     }
 }
 
@@ -945,8 +951,9 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
                 }
 
                 .form-group {
-                    margin-right: -5px !important;
-                    margin-left: -5px !important;
+                    display: flex;
+                    margin-right: -5px;
+                    margin-left: -5px;
 
                     .col-sm-2 {
                         flex: 0 0 22%;
@@ -959,8 +966,8 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
                     }
 
                     .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
-                        padding-left: 4px !important;
-                        padding-right: 4px !important;
+                        padding-left: 4px;
+                        padding-right: 4px;
                     }
 
                     .offset-sm-2 {
@@ -998,7 +1005,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
                         display: inline-block;
                     }
 
-                    select, button, input {
+                    select, input {
                         padding: 5px;
                         max-width: 90px;
                     }

@@ -539,7 +539,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
         this.menuItems[menu].content = toolsList;
     } else if(this.menuItems[menu].name === 'widgets') {
         // Calculate scroll region width
-        var totalWidth = this.DOMObject.find('.navbar-collapse').outerWidth();
+        var totalWidth = this.DOMObject.find('.container-toolbar').width();
         var widthMenuLeft = this.DOMObject.find('.toolbar-menu-left').outerWidth();
         var widthMenuRight = this.DOMObject.find('.toolbar-menu-right').outerWidth();
 
@@ -873,8 +873,6 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     if(this.menuItems[menu].content.length === 0) {
         this.createNewTab(menu);
     }
-
-    console.log(toolbarTrans);
 
     // Render template
     const html = ToolbarMediaSearchTemplate({

@@ -23,7 +23,7 @@
 
 {% macro message(message, groupClass, messageStyleClass) %}
     <div class="row">
-        <div class="{% if messageStyleClass %}{{messageStyleClass}}{% else %}text-info{% endif %} col-sm-12 {{ groupClass }}">
+        <div class="{% if messageStyleClass %}{{messageStyleClass}}{% endif %} col-sm-12 {{ groupClass }}">
             <p>{{ message }}</p>
         </div>
     </div>

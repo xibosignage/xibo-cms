@@ -75,7 +75,7 @@
                             <th>{% trans "Media ID" %}</th>
                             <th>{% trans "Original File Name" %}</th>
                             <th>{% trans "Permissions" %}</th>
-                            <th class="rowMenu">{% trans "Row Menu" %}</th>
+                            <th class="rowMenu"></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -128,7 +128,7 @@
 
                 createdRow: function (row, data, index) {
                     if (data.version === "" || data.version === null || data.code === 0) {
-                        $(row).addClass('danger');
+                        $(row).addClass('table-danger');
                         $(row).attr('Title', "{{ warningLabel }}");
                     }
                 },

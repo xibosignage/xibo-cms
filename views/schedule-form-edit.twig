@@ -94,7 +94,7 @@
                                                 data-is-custom="{{ dayPart.isCustom }}">{{ dayPart.name }}</option>
                                     {% endfor %}
                                 </select>
-                                <span class="help-block">{{ helpText }}</span>
+                                <small class="form-text text-muted">{{ helpText }}</small>
                             </div>
                         </div>
 
@@ -123,7 +123,7 @@
                         <div class="form-group row preview-button-container">
                             <div class="offset-md-2 col-md-10">
                                 <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview", {id: ':id'}) }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
-                                <span class="help-block">{% trans "Preview your selection in a new tab" %}</span>
+                                <small class="form-text text-muted">{% trans "Preview your selection in a new tab" %}</small>
                             </div>
                         </div>
 
@@ -131,12 +131,12 @@
                             <label class="col-sm-2 control-label" for="shareOfVoice" accesskey="">{% trans "Share of Voice" %}</label>
                             <div class="col-sm-5">
                                 <input class="form-control" name="shareOfVoice" type="number" id="shareOfVoice" value="{{ event.shareOfVoice }}">
-                                <span class="help-block">{% trans "The amount of time this Layout should be shown, in seconds per hour." %}</span>
+                                <small class="form-text text-muted">{% trans "The amount of time this Layout should be shown, in seconds per hour." %}</small>
                             </div>
 
                             <div class="col-sm-5">
                                 <input class="form-control" name="shareOfVoicePercentage" type="number" id="shareOfVoicePercentage" value="">
-                                <span class="help-block">{% trans "As a percentage" %}</span>
+                                <small class="form-text text-muted">{% trans "As a percentage" %}</small>
                             </div>
                         </div>
 
@@ -163,7 +163,7 @@
                         {% endif %}
 
                         {% if recurringEvent %}
-                            <div class="card p-3 mb-3 bg-light text-info text-center form-error">
+                            <div class="card p-3 mb-3 bg-light text-primary text-center form-error">
                                 <p>This is an instance of a scheduled recurring event:
                                     <span class="fa fa-info-circle"
                                           data-toggle="popover"

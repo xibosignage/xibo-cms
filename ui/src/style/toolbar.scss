@@ -31,6 +31,10 @@ ul.sidebar {
     }
 }
 
+#toolbar-navbar-collapse {
+    width: inherit;
+}
+
 .drag-handle {
     cursor: grab;
 }
@@ -550,6 +554,13 @@ ul.sidebar {
             height: $toolbar-height;
             scrollbar-width: thin; /* For firefox */
 
+            /* Internet explorer fix */
+            @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
+                & {
+                    -ms-overflow-style: -ms-autohiding-scrollbar;
+                }
+            }
+
             /* SCROLLBAR */
             /* width */
             &::-webkit-scrollbar {
@@ -613,7 +624,6 @@ ul.sidebar {
 }
 
 .editor-toolbar .navbar-submenu-item {
-    color: $toolbar-tab-fg-color;    
     padding: 4px;
     cursor: pointer;
 }
@@ -692,10 +702,6 @@ ul.sidebar {
         color: $toolbar-main-color;
     }
 
-    .dropdown-item {
-
-    }
-
     .navbar-submenu-item-options {
         width: 100%;
         background-color: $toolbar-main-color;
@@ -708,6 +714,7 @@ ul.sidebar {
         }
 
         &:hover {
+            color: $toolbar-tab-fg-color;    
             background-color: darken($toolbar-main-color, 10%);
         }
     }

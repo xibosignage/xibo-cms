@@ -340,6 +340,7 @@ div.dropdown-menu-form {
         position: fixed;
         top: 0;
         width: 100%;
+        z-index: 5;
     }
 
     .navbar-collapse {
@@ -347,7 +348,7 @@ div.dropdown-menu-form {
     }
 
     #page-wrapper.active {
-        padding-top: 60px;
+        padding-top: 45px;
         padding-left: 0
     }
 
@@ -902,6 +903,11 @@ ul li.active.tab-design:hover a {
     }
 }
 
+.XiboFilter .form-inline .form-group {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
 .XiboFilter .form-inline .input-group-tags-exact .bootstrap-tagsinput {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
@@ -915,6 +921,14 @@ ul li.active.tab-design:hover a {
 
 .XiboFilter .form-inline .control-label {
     font-weight: 700;
+}
+
+.XiboFilter .form-inline .bootstrap-switch, .XiboFilter .form-inline .xibo-inline-btn {
+    margin-top: 18px;
+}
+
+.XiboFilter .form-inline select {
+    min-width: 100%;
 }
 
 .bootstrap-tagsinput + [data-role="tagsInputInline"] + .input-group-addon {
@@ -1031,14 +1045,30 @@ ul li.active.tab-design:hover a {
  * Display settings
  */
 .override-input {
+    padding: 6px !important;
     position: relative !important;
+    opacity: 0.8;
 }
 
 .override-input button.button-close-override {
     position: absolute;
-    right: -11px;
-    top: 11px;
+    right: -15px;
+    height: 33.5px;
+    top: 6px;
     padding: 6px 4px;
+}
+
+.override-input .text-muted {
+    font-size: 0.9rem;
+    text-align: justify;
+    line-height: 16px;
+    padding: 6px;
+}
+
+.override-input .form-check-input {
+    position: relative;
+    width: 100%;
+    margin: 0;
 }
 
 /* 
@@ -1168,7 +1198,7 @@ td.feature-group-header-cell {
     cursor: pointer;
 }
 
-.XiboForm .form-group .form-text {
+.XiboForm .form-group .form-text, .form-group small.form-text.text-muted {
     font-size: 0.9rem;
 }
 
@@ -1264,4 +1294,8 @@ div.dataTables_wrapper div.dataTables_info {
 
 .inner-modal {
     z-index: 1051;
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: #eee;
 }

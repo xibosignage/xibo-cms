@@ -128,8 +128,8 @@
 
     {% verbatim %}
     <script type="text/x-handlebars-template" id="buttons-template">
-        <div class="btn-group pull-right">
-            <button class="btn dropdown-toggle" data-toggle="dropdown"></button>
+        <div class="btn-group pull-right" title="{% endverbatim %}{% trans "Row Menu" %}{% verbatim %}">
+            <button class="btn btn-white dropdown-toggle" data-toggle="dropdown"></button>
             <div class="dropdown-menu dropdown-menu-right">
                 {{#each buttons}}
                     {{#if divider}}
