@@ -2861,8 +2861,12 @@ function destroyDatePicker($element) {
     $element.parent().find('.date-open-button').off('click');
 }
 
-function initJsTreeAjax(container, table, isForm = false, ttl = false)
+function initJsTreeAjax(container, table, isForm, ttl)
 {
+    // Default values
+    isForm = (typeof isForm == 'undefined') ? false : isForm;
+    ttl = (typeof ttl == 'undefined') ? false : ttl;
+    
     var state = {};
     if ($(container).length) {
 
@@ -3163,12 +3167,7 @@ function createMiniLayoutPreview(previewUrl) {
     var $layoutPreviewContent = $layoutPreview.find('#content');
 
     // Create base template for preview content
-    var previewTemplate = Handlebars.compile(`<iframe scrolling="no" 
-        src="{{url}}" 
-        width="{{width}}px" 
-        height="{{height}}px" 
-        style="border:0;">
-    </iframe>`);
+    var previewTemplate = Handlebars.compile('<iframe scrolling="no" src="{{url}}" width="{{width}}px" height="{{height}}px" style="border:0;"></iframe>');
     
     // Clean all selected elements
     $layoutPreviewContent.html('');
