@@ -72,7 +72,7 @@
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
-                    <div id="datatable-container" class="card col-sm-10 pt-4 px-1">
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData card pt-3">
                             <table id="templates" class="table table-striped" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="templateGrid">
                                 <thead>
@@ -83,7 +83,7 @@
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                         <th>{% trans "Thumbnail" %}</th>
                                         <th>{% trans "Permissions" %}</th>
-                                        <th class="rowMenu">{% trans "Row Menu" %}</th>
+                                        <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
                                 <tbody>

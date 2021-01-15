@@ -488,8 +488,8 @@ class Calendar extends ModuleWidget
                     var now = moment();
                     var ongoingEvent = false;
                     
-                    var noEventTrigger = ' . ($this->getOption('noEventTrigger', '') == '' ? 'false' : $this->getOption('noEventTrigger')) . ';
-                    var currentEventTrigger = ' . ($this->getOption('currentEventTrigger', '') == '' ? 'false' : $this->getOption('currentEventTrigger')) . ';
+                    var noEventTrigger = ' . ($this->getOption('noEventTrigger', '') == '' ? 'false' : ('"' . $this->getOption('noEventTrigger') . '"')) . ';
+                    var currentEventTrigger = ' . ($this->getOption('currentEventTrigger', '') == '' ? 'false' : ('"' . $this->getOption('currentEventTrigger'). '"')) . ';
 
                     // Prepare the items array, sorting it and removing any items that have expired.
                     $.each(items, function(index, element) {

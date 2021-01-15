@@ -43,7 +43,7 @@
                     <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
-                            <div class="form-group mr-3 mb-2">
+                            <div class="form-group mr-1 mb-1">
                                 <label class="control-label mr-1" title="" for="name" accesskey="">{% trans "Name" %}</label>
                                 <div>
                                     <div class="input-group">
@@ -89,7 +89,7 @@
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
-                    <div id="datatable-container" class="card col-sm-10 pt-4 px-1">
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
                             <table id="campaigns" class="table table-striped" data-content-type="campaign" data-content-id-name="campaignId" data-state-preference-name="campaignGrid" style="width: 100%;">
                                 <thead>
@@ -98,7 +98,7 @@
                                         <th>{% trans "# Layouts" %}</th>
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                         <th>{% trans "Duration" %}</th>
-                                        <th class="rowMenu">{% trans "Row Menu" %}</th>
+                                        <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
                                 <tbody>

@@ -336,6 +336,13 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 .widget .widget-body table thead {
   background: #fafafa;
 }
+.widget .widget-body .dataTables_info {
+    padding-left: 6px;
+    padding-top: 8px;
+}
+.widget .widget-body .dataTables_paginate {
+    padding-right: 6px;
+}
 .widget .widget-body.large {
   height: 350px;
   overflow-y: auto;

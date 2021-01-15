@@ -56,7 +56,7 @@
                                 <small>{% trans "duration" %}:</small> {{ extendedLayout.duration|datehms }}<br/>
                             </div>
                             <div class="col-sm-4">
-                                <a class="btn btn-white btn-sm" href="{{ url_for("layout.preview", {id: extendedLayout.layout.layoutId}) }}" target="_blank">
+                                <a class="btn btn-white" href="{{ url_for("layout.preview", {id: extendedLayout.layout.layoutId}) }}" target="_blank">
                                     {% trans "Open full screen" %}
                                     <span class="fa fa-tablet"></span>
                                 </a>
