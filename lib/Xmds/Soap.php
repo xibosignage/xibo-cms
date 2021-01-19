@@ -649,6 +649,11 @@ class Soap
                 $file->setAttribute("size", $fileSize);
                 $file->setAttribute("md5", $md5);
 
+                // add Layout code only if code identifier is set on the Layout.
+                if ($layout->code != null) {
+                    $file->setAttribute('code', $layout->code);
+                }
+
                 // Permissive check for http layouts - always allow unless windows and <= 120
                 $supportsHttpLayouts = !($this->display->clientType == 'windows' && $this->display->clientCode <= 120);
 
