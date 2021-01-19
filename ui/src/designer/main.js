@@ -180,7 +180,7 @@ $(document).ready(function() {
                             id: 'discardLayout',
                             title: layoutDesignerTrans.discardTitle,
                             logo: 'fa-times-circle-o',
-                            class: 'btn-danger',
+                            class: 'btn-warning',
                             action: lD.showDiscardScreen,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == false);

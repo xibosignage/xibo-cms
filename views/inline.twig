@@ -1,6 +1,6 @@
 
 {% macro disabled(name, title, value, helpText, groupClass) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}">{{ title }}</label>
         <input readonly class="form-control" value="{{ value }}"></input>
     </div>
@@ -17,7 +17,7 @@
 {% endmacro %}
 
 {% macro message(message, groupClass, messageStyleClass) %}
-    <div class="{% if messageStyleClass %}{{messageStyleClass}}{% else %}text-info{% endif %} mr-3 {{ groupClass }}">
+    <div class="{% if messageStyleClass %}{{messageStyleClass}}{% endif %} mr-1 {{ groupClass }}">
         <span>{{ message }}</span>
     </div>
 {% endmacro %}
@@ -31,22 +31,22 @@
 {% macro button(title, type, link, groupClass) %}
     <div class="form-group {{ groupClass }}">
         {% if type == "link" %}
-            <a class="btn btn-white mr-3 mb-2 ml-0" href="{{ link }}">{{ title }}</a>
+            <a class="btn btn-white xibo-inline-btn mr-1 ml-0" href="{{ link }}">{{ title }}</a>
         {% else %}
-            <button class="btn btn-white mr-3 mb-2 ml-0" type="{{ type }}">{{ title }}</button>
+            <button class="btn btn-white xibo-inline-btn mr-1 ml-0" type="{{ type }}">{{ title }}</button>
         {% endif %}
     </div>
 {% endmacro %}
 
 {% macro input(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
 
 {% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         {% if exactTag %}
             <div class="input-group input-group-tags-exact">
@@ -64,28 +64,28 @@
 {% endmacro %}
 
 {% macro number(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <input class="form-control" name="{{ name }}" type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
 
 {% macro email(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <input class="form-control" name="{{ name }}" type="email" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
 
 {% macro password(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <input class="form-control" name="{{ name }}" type="password" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
 
 {% macro checkbox(name, title, value, groupClass, accessKey) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mt-2 mr-2 mb-1 {{ groupClass }}">
         <div class="form-check">
             <input title="{{ title }}" class="form-check-input" type="checkbox" id="{{ name }}" name="{{ name }}" {% if value == 1 %}checked{% endif %}>
             <label class="form-check-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
@@ -94,7 +94,7 @@
 {% endmacro %}
 
 {% macro radio(name, id, title, value, helpText, groupClass, accessKey, setValue) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mt-2 mr-2 mb-1 {{ groupClass }}">
         <div class="form-check">
             <input class="form-check-input" type="radio" id="{{ id }}" name="{{ name }}" value="{{ setValue }}" {% if value == setValue %}checked{% endif %}>
             <label class="form-check-label" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
@@ -103,7 +103,7 @@
 {% endmacro %}
 
 {% macro dropdown(name, type, title, value, options, optionId, optionValue, helpText, groupClass, validation, accessKey, callBack, dataAttributes, optionGroups) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <select class="form-control" {% if type == "dropdownmulti" %}multiple{% endif %} name="{{ name }}" id="{{ name }}" {{ callBack }}
         {% if dataAttributes|length > 0 %}
@@ -168,7 +168,7 @@
 {% endmacro %}
 
 {% macro date(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="input-group">
             <div class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></div>
@@ -179,7 +179,7 @@
 {% endmacro %}
 
 {% macro dateMonth(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="input-group">
             <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
@@ -190,7 +190,7 @@
 {% endmacro %}
 
 {% macro dateTime(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ linkedName }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="input-group">
             <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
@@ -201,7 +201,7 @@
 {% endmacro %}
 
 {% macro time(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group mr-3 mb-2 {{ groupClass }}">
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="input-group">
             <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>

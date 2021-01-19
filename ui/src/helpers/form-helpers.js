@@ -42,7 +42,7 @@ let formHelpers = function() {
         const checkboxObj = $(form).find(checkBoxSelector);
         const inputFieldsObj = $(form).find(inputFieldsSelector);
         const inputFieldsObjOpposite = $(form).find(inputFieldsSelectorOpposite);
-        const displayVisibleProperty = (customVisibleDisplayProperty) ? customVisibleDisplayProperty : 'flex';
+        const displayVisibleProperty = (customVisibleDisplayProperty) ? customVisibleDisplayProperty : '';
 
         const displayInputFields = function() {
             // Init
@@ -74,7 +74,7 @@ let formHelpers = function() {
      */
     this.setupObjectValueInputFields = function(form, inputValueSelector, inputFieldsArray, customIndexValues = null, inverted = false, customTarget = null, customVisibleDisplayProperty) {
 
-        const displayVisibleProperty = (customVisibleDisplayProperty) ? customVisibleDisplayProperty : 'flex';
+        const displayVisibleProperty = (customVisibleDisplayProperty) ? customVisibleDisplayProperty : '';
         const elementClass = (!inverted) ? displayVisibleProperty : 'none';
         const inverseClass = (!inverted) ? 'none' : displayVisibleProperty;
 
@@ -1057,15 +1057,14 @@ let formHelpers = function() {
      * @param {string} instanceToDestroy - Name of the instance marked to be destroyed
      */
     this.setupFormDimensionControls = function(dialog, toggleFlag, instanceToDestroy) {
-
         if(toggleFlag) {
             // Display controls
-            $(dialog).find('.form-editor-controls').show();
+            $(dialog).find('.form-editor-controls').toggleClass('d-none', false);
         } else {
             // Hide the controls if there are no CKEditor instances or the one that is left is marked to be destroyed
             if($.isEmptyObject(CKEDITOR.instances) || (Object.keys(CKEDITOR.instances).length === 1 && CKEDITOR.instances[instanceToDestroy] !== undefined)) {
                 // Hide controls
-                $(dialog).find('.form-editor-controls').hide();
+                $(dialog).find('.form-editor-controls').toggleClass('d-none', true);
             }
         }
     };

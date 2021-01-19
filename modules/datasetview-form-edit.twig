@@ -90,19 +90,19 @@
                         {{ forms.message(message) }}
 
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-12 row">
                                 <div class="connectedlist col-sm-6">
-                                    <p class="text-info">{% trans "Columns Selected" %}</p>
-                                    <ul id="columnsIn" class="connectedSortable">
-                                        {% for column in module.dataSetColumnsSelected() %}
+                                    <p class="text-info text-center">{% trans "Columns Available" %}</p>
+                                    <ul id="columnsOut" class="connectedSortable m-auto text-center">
+                                        {% for column in module.dataSetColumnsNotSelected() %}
                                             <li id="{{ column.dataSetColumnId }}" class="li-sortable">{{ column.heading }}</li>
                                         {% endfor %}
                                     </ul>
                                 </div>
                                 <div class="connectedlist col-sm-6">
-                                    <p class="text-info">{% trans "Columns Available" %}</p>
-                                    <ul id="columnsOut" class="connectedSortable">
-                                        {% for column in module.dataSetColumnsNotSelected() %}
+                                    <p class="text-info text-center">{% trans "Columns Selected" %}</p>
+                                    <ul id="columnsIn" class="connectedSortable m-auto text-center">
+                                        {% for column in module.dataSetColumnsSelected() %}
                                             <li id="{{ column.dataSetColumnId }}" class="li-sortable">{{ column.heading }}</li>
                                         {% endfor %}
                                     </ul>
