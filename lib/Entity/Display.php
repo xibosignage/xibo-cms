@@ -403,6 +403,8 @@ class Display implements \JsonSerializable
     /** @var \Xibo\Entity\DisplayProfile the resolved DisplayProfile for this Display */
     private $_displayProfile;
 
+    private $datesToFormat = ['auditingUntil'];
+
     /**
      * Commands
      * @var array[Command]
@@ -726,8 +728,9 @@ class Display implements \JsonSerializable
             $this->edit();
         }
 
-        if ($options['audit'])
+        if ($options['audit'] && $this->getChangedProperties() != []) {
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->getChangedProperties());
+        }
 
         // Trigger an update of all dynamic DisplayGroups
         if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('tags')) {
@@ -1178,7 +1181,7 @@ class Display implements \JsonSerializable
         if ($item->isMiss()) {
             return [];
         } else {
-            // special handling not Windows Display (Windows sends status as json)
+            // special handling for Android
             if ($this->clientType === 'android') {
                 return nl2br($item->get());
             } else {
