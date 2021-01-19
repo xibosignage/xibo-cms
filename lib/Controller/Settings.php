@@ -236,13 +236,16 @@ class Settings extends Base
             $libraryLocation = rtrim($libraryLocation, '\\') . DIRECTORY_SEPARATOR;
 
             // Attempt to add the directory specified
-            if (!file_exists($libraryLocation . 'temp'))
+            if (!file_exists($libraryLocation . 'temp')) {
                 // Make the directory with broad permissions recursively (so will add the whole path)
                 mkdir($libraryLocation . 'temp', 0777, true);
+            }
 
-            if (!is_writable($libraryLocation . 'temp'))
+            if (!is_writable($libraryLocation . 'temp')) {
                 throw new InvalidArgumentException(__('The Library Location you have picked is not writeable'), 'LIBRARY_LOCATION');
+            }
 
+            $this->handleChangedSettings('LIBRARY_LOCATION', $this->getConfig()->getSetting('LIBRARY_LOCATION'), $libraryLocation, $changedSettings);
             $this->getConfig()->changeSetting('LIBRARY_LOCATION', $libraryLocation);
         }
 
