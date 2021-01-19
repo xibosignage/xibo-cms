@@ -3212,3 +3212,19 @@ function createMiniLayoutPreview(previewUrl) {
     // Show layout preview element
     $layoutPreview.addClass('show');
 }
+
+/**
+ * https://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
+ * @param {number} size
+ * @param {number} precision
+ * @returns {string}
+ */
+function formatBytes(size, precision){
+    if (size === 0) {
+        return "0 Bytes";
+    }
+
+    const c=0 > precision ? 0 : precision, d = Math.floor(Math.log(size)/Math.log(1024));
+    return parseFloat((size/Math.pow(1024,d)).toFixed(c))+" "+["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"][d]
+}
+
