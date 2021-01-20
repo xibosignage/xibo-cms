@@ -93,11 +93,11 @@
 
                     {% set title = "Download Window Start Time"|trans %}
                     {% set helpText = "The start of the time window to connect to the CMS and download updates."|trans %}
-                    {{ forms.time("downloadStartWindow", title, displayProfile.getSetting("downloadStartWindow"), helpText) }}
+                    {{ forms.time("downloadStartWindow", title, displayProfile.getSetting("downloadStartWindow"), helpText, "", "", "","HH:mm") }}
 
                     {% set title = "Download Window End Time"|trans %}
                     {% set helpText = "The end of the time window to connect to the CMS and download updates."|trans %}
-                    {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText) }}
+                    {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText, "", "", "","HH:mm") }}
 
                     {% set title = "Force HTTPS?"|trans %}
                     {% set helpText = "Should Displays be forced to use HTTPS connection to the CMS?"|trans %}
@@ -241,6 +241,10 @@
                     {% set title = "Embedded Web Server Port"|trans %}
                     {% set helpText = "The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen."|trans %}
                     {{ forms.number("embeddedServerPort", title, displayProfile.getSetting("embeddedServerPort"), helpText) }}
+
+                    {% set title = "Embedded Web Server allow WAN?"|trans %}
+                    {% set helpText = "Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic"|trans %}
+                    {{ forms.checkbox("embeddedServerAllowWan", title, displayProfile.getSetting("embeddedServerAllowWan"), helpText) }}
 
                     {% set title = "Prevent Sleep?"|trans %}
                     {% set helpText = "Stop the player PC power management from Sleeping the PC"|trans %}

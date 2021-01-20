@@ -241,6 +241,11 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('maxRegionCount', $sanitizedParams->getInt('maxRegionCount'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('embeddedServerAllowWan')) {
+                    $this->handleChangedSettings('embeddedServerAllowWan', ($ownConfig) ? $displayProfile->getSetting('embeddedServerAllowWan') : $display->getSetting('embeddedServerAllowWan'), $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $changedSettings);
+                    $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'windows':
@@ -414,6 +419,11 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('edgeBrowserWhitelist', $sanitizedParams->getString('edgeBrowserWhitelist'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('embeddedServerAllowWan')) {
+                    $this->handleChangedSettings('embeddedServerAllowWan', ($ownConfig) ? $displayProfile->getSetting('embeddedServerAllowWan') : $display->getSetting('embeddedServerAllowWan'), $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $changedSettings);
+                    $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'linux':
@@ -532,6 +542,11 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('forceHttps', $sanitizedParams->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('embeddedServerAllowWan')) {
+                    $this->handleChangedSettings('embeddedServerAllowWan', ($ownConfig) ? $displayProfile->getSetting('embeddedServerAllowWan') : $display->getSetting('embeddedServerAllowWan'), $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $changedSettings);
+                    $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'lg':
@@ -630,6 +645,11 @@ trait DisplayProfileConfigFields
                 if ($sanitizedParams->hasParam('forceHttps')) {
                     $this->handleChangedSettings('forceHttps', ($ownConfig) ? $displayProfile->getSetting('forceHttps') : $display->getSetting('forceHttps'), $sanitizedParams->getCheckbox('forceHttps'), $changedSettings);
                     $displayProfile->setSetting('forceHttps', $sanitizedParams->getCheckbox('forceHttps'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('embeddedServerAllowWan')) {
+                    $this->handleChangedSettings('embeddedServerAllowWan', ($ownConfig) ? $displayProfile->getSetting('embeddedServerAllowWan') : $display->getSetting('embeddedServerAllowWan'), $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $changedSettings);
+                    $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
                 }
 
                 if ($sanitizedParams->hasParam('timers')) {

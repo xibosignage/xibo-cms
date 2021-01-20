@@ -2726,6 +2726,10 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
         return false;
     }
 
+    if ($element.data('customFormat')) {
+        baseFormat = $element.data('customFormat');
+    }
+
     var $inputElement = $element;
     var initialValue = $element.val();
 

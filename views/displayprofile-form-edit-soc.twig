@@ -129,19 +129,19 @@
 
                     {% set title = "Download Window Start Time"|trans %}
                     {% set helpText = "The start of the time window to connect to the CMS and download updates."|trans %}
-                    {{ forms.time("downloadStartWindow", title, displayProfile.getSetting("downloadStartWindow"), helpText) }}
+                    {{ forms.time("downloadStartWindow", title, displayProfile.getSetting("downloadStartWindow"), helpText, "", "", "","HH:mm") }}
 
                     {% set title = "Download Window End Time"|trans %}
                     {% set helpText = "The end of the time window to connect to the CMS and download updates."|trans %}
-                    {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText) }}
+                    {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText, "", "", "","HH:mm") }}
 
                     {% set title = "Update Window Start Time"|trans %}
                     {% set helpText = "The start of the time window to install application updates."|trans %}
-                    {{ forms.time("updateStartWindow", title, displayProfile.getSetting("updateStartWindow"), helpText) }}
+                    {{ forms.time("updateStartWindow", title, displayProfile.getSetting("updateStartWindow"), helpText, "", "", "","HH:mm") }}
 
                     {% set title = "Update Window End Time"|trans %}
                     {% set helpText = "The end of the time window to install application updates."|trans %}
-                    {{ forms.time("updateEndWindow", title, displayProfile.getSetting("updateEndWindow"), helpText) }}
+                    {{ forms.time("updateEndWindow", title, displayProfile.getSetting("updateEndWindow"), helpText, "", "", "","HH:mm") }}
 
                     {% set title = "Force HTTPS?"|trans %}
                     {% set helpText = "Should Displays be forced to use HTTPS connection to the CMS?"|trans %}
@@ -213,6 +213,9 @@
                     {% set helpText = "How often, in minutes, should the Display send its download progress while it is downloading new content?"|trans %}
                     {{ forms.number("mediaInventoryTimer", title, displayProfile.getSetting("mediaInventoryTimer"), helpText) }}
 
+                    {% set title = "Embedded Web Server allow WAN?"|trans %}
+                    {% set helpText = "Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic"|trans %}
+                    {{ forms.checkbox("embeddedServerAllowWan", title, displayProfile.getSetting("embeddedServerAllowWan"), helpText) }}
                 </div>
 
                 <div class="tab-pane" id="timers">
