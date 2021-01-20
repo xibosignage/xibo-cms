@@ -279,6 +279,12 @@ div.dropdown-menu-form {
     margin: 0;
 }
 
+@media (max-width: 768px) {
+    #page-wrapper .page-content {
+        margin-top: 1rem !important;
+    }
+}
+
 .display-screenshot {
     width: 200px;
 }

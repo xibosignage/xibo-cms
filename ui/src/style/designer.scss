@@ -98,7 +98,11 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 // CSS
 #layout-editor  {
     overflow: hidden;
-    margin: 25px -15px 0 -15px;
+    margin: 45px -15px 0 -15px;
+}
+
+#page-wrapper #layout-editor  {
+    margin-top: 25px;
 }
 
 #layout-editor-main {
