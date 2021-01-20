@@ -163,7 +163,7 @@ class StatsArchiveTask implements TaskInterface
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
         $out = fopen($fileName, 'w');
-        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
+        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId', 'Engagements']);
 
         while ($row = $resultSet->getNextRow() ) {
 
@@ -174,11 +174,13 @@ class StatsArchiveTask implements TaskInterface
                 $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()) : null;
                 $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
                 $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
+                $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
             } else {
 
                 $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
                 $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
                 $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
+                $engagements = isset($row['engagements']) ? $row['engagements'] : '[]';
             }
 
             // Read the columns
@@ -197,6 +199,7 @@ class StatsArchiveTask implements TaskInterface
                 isset($row['layoutId']) ? $sanitizedRow->getInt('layoutId') :'',
                 isset($row['widgetId']) ? $sanitizedRow->getInt('widgetId') :'',
                 isset($row['mediaId']) ? $sanitizedRow->getInt('mediaId') :'',
+                $engagements
             ]);
         }
 
