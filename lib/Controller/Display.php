@@ -1313,7 +1313,7 @@ class Display extends Base
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
-        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), [], $request);
+        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), $sanitizedParams, [], $display);
 
         // Tags are stored on the displaygroup, we're just passing through here
         if ($this->getUser()->featureEnabled('tag.tagging')) {

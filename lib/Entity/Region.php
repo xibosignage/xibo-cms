@@ -475,7 +475,7 @@ class Region implements \JsonSerializable
 
             $this->regionPlaylist->save();
 
-            if ($options['audit']) {
+            if ($options['audit'] && count($this->getChangedProperties()) > 0) {
                 $change = $this->getChangedProperties();
                 $change['campaignId'][] = $campaignId;
                 $this->audit($this->regionId, 'Saved', $change);

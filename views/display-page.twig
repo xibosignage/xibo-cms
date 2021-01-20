@@ -1004,10 +1004,27 @@
                 method: "GET",
                 dataType: "json",
                 success: function (data) {
-                    statusWindowData['data'] = data;
-                    statusWindowData['type'] = displayType;
-                    var statusWindowTemplate = Handlebars.compile($('#display-status-window-template').html());
-                    $('.modal-body').append(statusWindowTemplate(statusWindowData));
+                    if (data != null) {
+                        // do some processing on data received from webOS and Tizen Players.
+                        if (displayType === 'webOS' || displayType === 'tizen') {
+                            data.logMessagesArray = JSON.stringify(data.logMessagesArray);
+                            data.allLayouts = JSON.stringify(data.allLayouts);
+                            data.scheduledLayouts = JSON.stringify(data.scheduledLayouts);
+                            data.validLayouts = JSON.stringify(data.validLayouts);
+                            data.invalidLayouts = JSON.stringify(data.invalidLayouts);
+                            data.blacklistArray = JSON.stringify(data.blacklistArray);
+                            data.spaceTotal = formatBytes(data.spaceTotal, 2);
+                            data.spaceFree = formatBytes(data.spaceFree, 2);
+                            data.spaceUsed = formatBytes(data.spaceUsed, 2);
+                            data.trialLicenseRemain = moment.unix(data.trialLicenseRemain).format('YYYY-MM-DD HH:mm:ss');
+                            data.mainLicenseRemain = moment.unix(data.mainLicenseRemain).format('YYYY-MM-DD HH:mm:ss');
+                        }
+
+                        statusWindowData['data'] = data;
+                        statusWindowData['type'] = displayType;
+                        var statusWindowTemplate = Handlebars.compile($('#display-status-window-template').html());
+                        $('.modal-body').append(statusWindowTemplate(statusWindowData));
+                    }
                 }
             });
         });

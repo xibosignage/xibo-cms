@@ -438,7 +438,7 @@ class DisplayProfile extends Base
         $displayProfile->isDefault = $parsedParams->getCheckbox('isDefault');
 
         // Different fields for each client type
-        $this->editConfigFields($displayProfile, null, $request);
+        $this->editConfigFields($displayProfile, $parsedParams);
 
         // Capture and update commands
         foreach ($this->commandFactory->query() as $command) {

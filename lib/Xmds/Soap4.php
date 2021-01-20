@@ -591,7 +591,7 @@ class Soap4 extends Soap
         $statusDialog = $sanitizedStatus->getString('statusDialog', ['default' => null]);
 
         if ($statusDialog !== null) {
-            // special handling for non Windows Players (Windows sends status as json already)
+            // special handling for Android Players (Other Players send status as json already)
             if ($this->display->clientType == 'android') {
                 $statusDialog = json_encode($statusDialog);
             }
