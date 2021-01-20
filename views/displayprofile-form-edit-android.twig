@@ -274,6 +274,10 @@
                     {% set helpText = "The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen."|trans %}
                     {{ forms.number("serverPort", title, displayProfile.getSetting("serverPort"), helpText) }}
 
+                    {% set title = "Embedded Web Server allow WAN?"|trans %}
+                    {% set helpText = "Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic"|trans %}
+                    {{ forms.checkbox("embeddedServerAllowWan", title, displayProfile.getSetting("embeddedServerAllowWan"), helpText) }}
+
                     {% set title = "Load Link Libraries for APK Update"|trans %}
                     {% set helpText = "Should the update command include dynamic link libraries? Only change this if your updates are failing."|trans %}
                     {{ forms.checkbox("installWithLoadedLinkLibraries", title, displayProfile.getSetting("installWithLoadedLinkLibraries"), helpText) }}

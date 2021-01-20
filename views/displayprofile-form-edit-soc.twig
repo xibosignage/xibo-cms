@@ -213,6 +213,9 @@
                     {% set helpText = "How often, in minutes, should the Display send its download progress while it is downloading new content?"|trans %}
                     {{ forms.number("mediaInventoryTimer", title, displayProfile.getSetting("mediaInventoryTimer"), helpText) }}
 
+                    {% set title = "Embedded Web Server allow WAN?"|trans %}
+                    {% set helpText = "Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic"|trans %}
+                    {{ forms.checkbox("embeddedServerAllowWan", title, displayProfile.getSetting("embeddedServerAllowWan"), helpText) }}
                 </div>
 
                 <div class="tab-pane" id="timers">

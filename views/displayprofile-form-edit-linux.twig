@@ -192,6 +192,10 @@
                     {% set helpText = "The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen."|trans %}
                     {{ forms.number("embeddedServerPort", title, displayProfile.getSetting("embeddedServerPort"), helpText) }}
 
+                    {% set title = "Embedded Web Server allow WAN?"|trans %}
+                    {% set helpText = "Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic"|trans %}
+                    {{ forms.checkbox("embeddedServerAllowWan", title, displayProfile.getSetting("embeddedServerAllowWan"), helpText) }}
+
                     {% set title = "Prevent Sleep?"|trans %}
                     {% set helpText = "Stop the player PC power management from Sleeping the PC"|trans %}
                     {{ forms.checkbox("preventSleep", title, displayProfile.getSetting("preventSleep"), helpText) }}
