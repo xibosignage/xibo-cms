@@ -153,14 +153,15 @@ class DataSetColumn extends Base
     public function grid(Request $request, Response $response, $id)
     {
         $dataSet = $this->dataSetFactory->getById($id);
+        $parsedRequestParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 
-        $dataSetColumns = $this->dataSetColumnFactory->query($this->gridRenderSort($request), [
+        $dataSetColumns = $this->dataSetColumnFactory->query($this->gridRenderSort($parsedRequestParams), [
             'dataSetId' => $id,
-            'dataSetColumnId' => $this->getSanitizer($request->getParams())->getInt('dataSetColumnId')
+            'dataSetColumnId' => $parsedRequestParams->getInt('dataSetColumnId')
         ]);
 
         foreach ($dataSetColumns as $column) {

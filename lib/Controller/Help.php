@@ -82,7 +82,8 @@ class Help extends Base
      */
     public function grid(Request $request, Response $response)
     {
-        $helpLinks = $this->helpFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $helpLinks = $this->helpFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([], $sanitizedParams));
 
         foreach ($helpLinks as $row) {
             /* @var \Xibo\Entity\Help $row */

@@ -156,10 +156,10 @@ class DataSetRss extends Base
             throw new AccessDeniedException();
         }
         
-        $feeds = $this->dataSetRssFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $feeds = $this->dataSetRssFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([
             'dataSetId' => $id,
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName')
-        ], $request));
+        ], $sanitizedParams));
 
         foreach ($feeds as $feed) {
 

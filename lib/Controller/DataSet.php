@@ -189,7 +189,7 @@ class DataSet extends Base
             'folderId' => $sanitizedParams->getInt('folderId'),
         ];
 
-        $dataSets = $this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $dataSets = $this->dataSetFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedParams));
 
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */

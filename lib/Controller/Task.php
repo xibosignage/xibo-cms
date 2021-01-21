@@ -152,7 +152,8 @@ class Task extends Base
      */
     public function grid(Request $request, Response $response)
     {
-        $tasks = $this->taskFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $tasks = $this->taskFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([], $sanitizedParams));
 
         foreach ($tasks as $task) {
             /** @var \Xibo\Entity\Task $task */

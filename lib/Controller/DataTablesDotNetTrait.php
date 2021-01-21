@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,7 +22,7 @@
 
 namespace Xibo\Controller;
 
-use Slim\Http\ServerRequest as Request;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Trait DataTablesDotNetTrait
@@ -35,23 +35,22 @@ trait DataTablesDotNetTrait
     /**
      * Set the filter
      * @param array $extraFilter
-     * @param \Slim\Http\ServerRequest|null $request
+     * @param SanitizerInterface|null $sanitizedRequestParams
      * @return array
      */
-    protected function gridRenderFilter(array $extraFilter, Request $request = null)
+    protected function gridRenderFilter(array $extraFilter, $sanitizedRequestParams = null)
     {
-        if ($request === null) {
+        if ($sanitizedRequestParams === null) {
             return $extraFilter;
         }
 
-        $parsedFilter = $this->getSanitizer($request->getParams());
         // Handle filtering
         $filter = [
-            'start' => $parsedFilter->getInt('start', ['default' => 0]),
-            'length' => $parsedFilter->getInt('length', ['default' => 10])
+            'start' => $sanitizedRequestParams->getInt('start', ['default' => 0]),
+            'length' => $sanitizedRequestParams->getInt('length', ['default' => 10])
         ];
 
-        $search = $request->getParam('search', array());
+        $search = $sanitizedRequestParams->getArray('search', ['default' => []]);
         if (is_array($search) && isset($search['value'])) {
             $filter['search'] = $search['value'];
         } else if ($search != '') {
@@ -66,17 +65,17 @@ trait DataTablesDotNetTrait
 
     /**
      * Set the sort order
-     * @param Request|array $request
+     * @param SanitizerInterface|array $sanitizedRequestParams
      * @return array
      */
-    protected function gridRenderSort($request)
+    protected function gridRenderSort($sanitizedRequestParams)
     {
-        if ($request instanceof Request) {
-            $columns = $request->getParam('columns');
-            $order = $request->getParam('order');
+        if ($sanitizedRequestParams instanceof SanitizerInterface) {
+            $columns = $sanitizedRequestParams->getArray('columns');
+            $order = $sanitizedRequestParams->getArray('order');
         } else {
-            $columns = $request['columns'] ?? null;
-            $order = $request['order'] ?? null;
+            $columns = $sanitizedRequestParams['columns'] ?? null;
+            $order = $sanitizedRequestParams['order'] ?? null;
         }
 
         if ($columns === null

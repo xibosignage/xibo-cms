@@ -159,7 +159,7 @@ class PlayerSoftware extends Base
             'playerShowVersion' => $sanitizedQueryParams->getString('playerShowVersion')
         ];
 
-        $versions = $this->playerVersionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $versions = $this->playerVersionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
 
         // add row buttons
         foreach ($versions as $version) {

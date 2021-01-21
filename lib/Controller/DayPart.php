@@ -160,7 +160,7 @@ class DayPart extends Base
             'isCustom' => $sanitizedParams->getInt('isCustom')
         ];
 
-        $dayParts = $this->dayPartFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $dayParts = $this->dayPartFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedParams));
         $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
         
         foreach ($dayParts as $dayPart) {

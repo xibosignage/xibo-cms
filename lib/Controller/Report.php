@@ -137,14 +137,14 @@ class Report extends Base
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $reportSchedules = $this->reportScheduleFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $reportSchedules = $this->reportScheduleFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
             'name' => $sanitizedQueryParams->getString('name'),
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $sanitizedQueryParams->getInt('userId'),
             'reportScheduleId' => $sanitizedQueryParams->getInt('reportScheduleId'),
             'reportName' => $sanitizedQueryParams->getString('reportName'),
             'onlyMySchedules' => $sanitizedQueryParams->getCheckbox('onlyMySchedules')
-        ], $request));
+        ], $sanitizedQueryParams));
 
         /** @var \Xibo\Entity\ReportSchedule $reportSchedule */
         foreach ($reportSchedules as $reportSchedule) {
@@ -807,13 +807,13 @@ class Report extends Base
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $savedReports = $this->savedReportFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $savedReports = $this->savedReportFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
             'saveAs' => $sanitizedQueryParams->getString('saveAs'),
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $sanitizedQueryParams->getInt('userId'),
             'reportName' => $sanitizedQueryParams->getString('reportName'),
             'onlyMyReport' => $sanitizedQueryParams->getCheckbox('onlyMyReport')
-        ], $request));
+        ], $sanitizedQueryParams));
 
         foreach ($savedReports as $savedReport) {
             if (!$this->isApi($request)) {

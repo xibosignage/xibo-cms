@@ -1226,7 +1226,7 @@ class Layout extends Base
         }
 
         // Get all layouts
-        $layouts = $this->layoutFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $layouts = $this->layoutFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([
             'layout' => $parsedQueryParams->getString('layout'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $parsedQueryParams->getInt('userId'),
@@ -1243,7 +1243,7 @@ class Layout extends Base
             'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId'),
             'campaignId' => $parsedQueryParams->getInt('campaignId'),
             'folderId' => $parsedQueryParams->getInt('folderId')
-        ], $request));
+        ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
             /* @var \Xibo\Entity\Layout $layout */

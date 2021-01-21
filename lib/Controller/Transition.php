@@ -92,7 +92,7 @@ class Transition extends Base
             'availableAsOut' => $sanitizedQueryParams->getInt('availableAsOut')
         ];
 
-        $transitions = $this->transitionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $transitions = $this->transitionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
 
         foreach ($transitions as $transition) {
             /* @var \Xibo\Entity\Transition $transition */

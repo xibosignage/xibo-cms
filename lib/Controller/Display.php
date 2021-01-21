@@ -550,7 +550,7 @@ class Display extends Base
         ];
 
         // Get a list of displays
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $displays = $this->displayFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
 
         // Get all Display Profiles
@@ -839,6 +839,22 @@ class Display extends Base
                         array('name' => 'rowtitle', 'value' => $display->display)
                     )
                 );
+
+                // Trigger webhook
+                $display->buttons[] = [
+                    'id' => 'display_button_trigger_webhook',
+                    'url' => $this->urlFor($request,'displayGroup.trigger.webhook.form', ['id' => $display->displayGroupId]),
+                    'text' => __('Trigger a web hook'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.trigger.webhook', ['id' => $display->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'display_button_trigger_webhook'],
+                        ['name' => 'text', 'value' => __('Trigger a web hook')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
+                    ]
+                ];
 
                 $display->buttons[] = ['divider' => true];
             }
