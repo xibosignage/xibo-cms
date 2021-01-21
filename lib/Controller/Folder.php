@@ -74,12 +74,12 @@ class Folder extends Base
         $parsedParams = $this->getSanitizer($request->getParams());
         $treeJson = [];
 
-        $folders = $this->folderFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $folders = $this->folderFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter([
             'folderId' => $parsedParams->getInt('folderId'),
             'folderName' => $parsedParams->getString('folderName'),
             'isRoot' => $parsedParams->getInt('isRoot'),
             'includeRoot' => 1
-        ], $request));
+        ], $parsedParams));
 
         foreach ($folders as $folder) {
             if ($folder->id === 1) {

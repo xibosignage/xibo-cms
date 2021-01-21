@@ -120,14 +120,14 @@ class MediaManager extends Base
 
         $rows = [];
 
-        $widgets = $this->widgetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $widgets = $this->widgetFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
             'layout' => $sanitizedQueryParams->getString('layout'),
             'region' => $sanitizedQueryParams->getString('region'),
             'media' => $sanitizedQueryParams->getString('media'),
             'type' => $sanitizedQueryParams->getString('type'),
             'playlist' => $sanitizedQueryParams->getString('playlist'),
             'showWidgetsFrom' => $sanitizedQueryParams->getInt('showWidgetsFrom')
-        ], $request));
+        ], $sanitizedQueryParams));
         $widgetsCount = $this->widgetFactory->countLast();
 
         foreach ($widgets as $widget) {

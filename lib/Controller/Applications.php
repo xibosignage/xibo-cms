@@ -135,8 +135,9 @@ class Applications extends Base
     public function grid(Request $request, Response $response)
     {
         $this->getState()->template = 'grid';
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $applications = $this->applicationFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
+        $applications = $this->applicationFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([], $sanitizedParams));
 
         foreach ($applications as $application) {
             /* @var Application $application */

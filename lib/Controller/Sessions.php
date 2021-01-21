@@ -95,10 +95,10 @@ class Sessions extends Base
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
 
-        $sessions = $this->sessionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $sessions = $this->sessionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
             'type' => $sanitizedQueryParams->getString('type'),
             'fromDt' => $sanitizedQueryParams->getString('fromDt')
-        ], $request));
+        ], $sanitizedQueryParams));
 
         foreach ($sessions as $row) {
             /* @var \Xibo\Entity\Session $row */

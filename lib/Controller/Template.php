@@ -124,13 +124,13 @@ class Template extends Base
         // Embed?
         $embed = ($sanitizedQueryParams->getString('embed') != null) ? explode(',', $sanitizedQueryParams->getString('embed')) : [];
 
-        $templates = $this->layoutFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $templates = $this->layoutFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
             'excludeTemplates' => 0,
             'tags' => $sanitizedQueryParams->getString('tags'),
             'layoutId' => $sanitizedQueryParams->getInt('templateId'),
             'layout' => $sanitizedQueryParams->getString('template'),
             'folderId' => $sanitizedQueryParams->getInt('folderId')
-        ], $request));
+        ], $sanitizedQueryParams));
 
         foreach ($templates as $template) {
             /* @var \Xibo\Entity\Layout $template */

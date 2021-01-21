@@ -141,7 +141,7 @@ class Command extends Base
             'code' => $sanitzedParams->getString('code')
         ];
 
-        $commands = $this->commandFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $commands = $this->commandFactory->query($this->gridRenderSort($sanitzedParams), $this->gridRenderFilter($filter, $sanitzedParams));
 
         foreach ($commands as $command) {
             /* @var \Xibo\Entity\Command $command */

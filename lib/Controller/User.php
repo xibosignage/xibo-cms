@@ -356,7 +356,7 @@ class User extends Base
         ];
 
         // Load results into an array
-        $users = $this->userFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request));
+        $users = $this->userFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filterBy, $sanitizedParams));
 
         foreach ($users as $user) {
             /* @var \Xibo\Entity\User $user */
@@ -1603,7 +1603,7 @@ class User extends Base
         }
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id, $this->gridRenderSort($request), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $request));
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id, $this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $sanitizedParams));
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($permissions);
@@ -1684,7 +1684,7 @@ class User extends Base
             }
 
             // List of all Groups with a view / edit / delete check box
-            $permissions = array_merge_recursive($permissions, $this->permissionFactory->getAllByObjectId($this->getUser(), $objects[$i]->permissionsClass(), $objectId, $this->gridRenderSort($request), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $request)));
+            $permissions = array_merge_recursive($permissions, $this->permissionFactory->getAllByObjectId($this->getUser(), $objects[$i]->permissionsClass(), $objectId, $this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $sanitizedParams)));
         }
 
         // Change permissions structure to be grouped by user group

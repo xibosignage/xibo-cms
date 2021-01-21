@@ -266,7 +266,7 @@ class DisplayGroup extends Base
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
-        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */

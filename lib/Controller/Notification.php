@@ -205,7 +205,7 @@ class Notification extends Base
             'subject' => $sanitizedQueryParams->getString('subject')
         ];
         $embed = ($sanitizedQueryParams->getString('embed') != null) ? explode(',', $sanitizedQueryParams->getString('embed')) : [];
-        $notifications = $this->notificationFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $notifications = $this->notificationFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
 
         foreach ($notifications as $notification) {
             /* @var \Xibo\Entity\Notification $notification */

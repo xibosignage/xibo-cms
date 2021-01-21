@@ -550,7 +550,7 @@ class Display extends Base
         ];
 
         // Get a list of displays
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $displays = $this->displayFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
 
         // Get all Display Profiles

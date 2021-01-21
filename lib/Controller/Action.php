@@ -196,7 +196,7 @@ class Action  extends Base
             'layoutCode' => $parsedParams->getString('layoutCode')
         ];
 
-        $actions = $this->actionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $actions = $this->actionFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));
 
         foreach ($actions as $action) {
             $action->widgetName = null;

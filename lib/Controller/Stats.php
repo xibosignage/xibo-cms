@@ -975,8 +975,8 @@ class Stats extends Base
         }
 
         // Sorting?
-        $filterBy = $this->gridRenderFilter([], $request);
-        $sortOrder = $this->gridRenderSort($request);
+        $filterBy = $this->gridRenderFilter([], $params);
+        $sortOrder = $this->gridRenderSort($params);
 
         $order = '';
         if (is_array($sortOrder))

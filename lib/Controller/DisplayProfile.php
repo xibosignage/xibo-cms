@@ -168,7 +168,7 @@ class DisplayProfile extends Base
         ];
 
         $embed = ($parsedQueryParams->getString('embed') != null) ? explode(',', $parsedQueryParams->getString('embed')) : [];
-        $profiles = $this->displayProfileFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $profiles = $this->displayProfileFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
         if (count($profiles) <= 0)
             throw new NotFoundException(__('Display Profile not found'), 'DisplayProfile');

@@ -140,8 +140,8 @@ class UserGroup extends Base
         ];
 
         $groups = $this->userGroupFactory->query(
-            $this->gridRenderSort($request),
-            $this->gridRenderFilter($filterBy, $request)
+            $this->gridRenderSort($sanitizedQueryParams),
+            $this->gridRenderFilter($filterBy, $sanitizedQueryParams)
         );
 
         foreach ($groups as $group) {

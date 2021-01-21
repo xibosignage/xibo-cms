@@ -582,7 +582,7 @@ class Library extends Base
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
         // Construct the SQL
-        $mediaList = $this->mediaFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $mediaList = $this->mediaFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([
             'mediaId' => $parsedQueryParams->getInt('mediaId'),
             'name' => $parsedQueryParams->getString('media'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
@@ -599,7 +599,7 @@ class Library extends Base
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'notPlayerSoftware' => 1,
             'notSavedReport' => 1
-        ], $request));
+        ], $parsedQueryParams));
 
         // Add some additional row content
         foreach ($mediaList as $media) {
@@ -2028,13 +2028,14 @@ class Library extends Base
     public function usageForm(Request $request, Response $response, $id)
     {
         $media = $this->mediaFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
         // Get a list of displays that this mediaId is used on
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $id], $request));
+        $displays = $this->displayFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $id], $sanitizedParams));
 
         $this->getState()->template = 'library-form-usage';
         $this->getState()->setData([
@@ -2084,7 +2085,7 @@ class Library extends Base
         }
 
         // Get a list of displays that this mediaId is used on by direct assignment
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['mediaId' => $id], $request));
+        $displays = $this->displayFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['mediaId' => $id], $sanitizedParams));
 
         // have we been provided with a date/time to restrict the scheduled events to?
         $mediaFromDate = $sanitizedParams->getDate('mediaEventFromDate');
