@@ -435,6 +435,27 @@
             $(dialog).find('.modal-body').append($hiddenInput);
             initJsTreeAjax('#container-folder-form-tree', "multi-select-folder", true, 600000);
         }
+
+        function triggerWebhookMultiSelectFormOpen(dialog) {
+            var $triggerCode =   $(
+                '<div class="form-group row">' +
+                '<label class="col-sm-2 control-label" for="triggerCode" accesskey="">{% trans "Trigger Code" %}</label>' +
+                '<div class="col-sm-10">' +
+                '<input class="form-control" name="triggerCode" type="text" id="triggerCode" value="">' +
+                '<span class="help-block">{% trans "Enter the code associated with the web hook you wish to trigger. Please note that for this action to work, the webhook trigger code has to be added to Interactive Actions in scheduled content for this Player."%}</span>' +
+                '</div>' +
+                '</div>'
+            );
+
+            $(dialog).find('.modal-body').append($triggerCode);
+
+            $('#triggerCode').on('change', function() {
+
+                dialog.data().commitData = {
+                    triggerCode: $('#triggerCode').val()
+                };
+            });
+        }
     </script>
 
     {# File upload templates and scripts #}
