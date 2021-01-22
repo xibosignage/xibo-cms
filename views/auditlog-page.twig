@@ -42,36 +42,10 @@
                         <form class="form-inline">
 
                             {% set title %}{% trans "From Date" %}{% endset %}
-                            <div class="form-group mr-1 mb-1">
-                                <label class="control-label mr-1" for="fromDt">{{ title }}</label>
-                                <div class="input-group date">
-                                    <input type="hidden" name="fromDt" id="fromDt" />
-                                    <input class="form-control datePicker dateControl" name="fromDtLink"
-                                           type="text" id="fromDtLink" data-link-field="fromDt"
-                                           data-link-format="yyyy-mm-dd 00:00:00" readonly />
-                                    <div class="input-group-append input-group-addon" id="fromDateControlCancel">
-                                        <div class="input-group-text">
-                                            <span class="fa fa-times-circle"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {{ inline.date("fromDt", title) }}
 
                             {% set title %}{% trans "To Date" %}{% endset %}
-                            <div class="form-group mr-1 mb-1">
-                                <label class="control-label mr-1" for="toDt">{{ title }}</label>
-                                <div class="input-group date">
-                                    <input type="hidden" name="toDt" id="toDt" />
-                                    <input class="form-control datePicker dateControl" name="toDtLink"
-                                           type="text" id="toDtLink" data-link-field="toDt"
-                                           data-link-format="yyyy-mm-dd 00:00:00" readonly />
-                                    <div class="input-group-append input-group-addon" id="toDateControlCancel">
-                                        <div class="input-group-text">
-                                            <span class="fa fa-times-circle"></span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
+                            {{ inline.date("toDt", title) }}
 
                             {% set title %}{% trans "User" %}{% endset %}
                             {{ inline.input("user", title) }}
@@ -186,32 +160,6 @@
 
             $("#refreshLog").click(function () {
                 table.ajax.reload();
-            });
-
-            $("#fromDateControlCancel").on('click', function() {
-                // Clear the date picker
-                var $fromDt = $("#fromDt");
-                $fromDt.val("");
-                $("#fromDtLink").val("");
-                $("#fromDtLink").parent().find('.datePickerHelper').val('');
-
-                table.ajax.reload();
-
-                // Reset local storage
-                localStorage.setItem("auditView", JSON.stringify($fromDt.closest("form").serializeArray()));
-            });
-
-            $("#toDateControlCancel").on('click', function() {
-                // Clear the date picker
-                var $toDt = $("#toDt");
-                $toDt.val("");
-                $("#toDtLink").val("");
-                $("#toDtLink").parent().find('.datePickerHelper').val('');
-
-                table.ajax.reload();
-
-                // Reset local storage
-                localStorage.setItem("auditView", JSON.stringify($toDt.closest("form").serializeArray()));
             });
         });
 

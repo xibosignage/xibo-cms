@@ -119,20 +119,7 @@
 
                                 <div class="tab-pane" id="filter-advanced">
                                     {% set title %}{% trans "Last Accessed" %}{% endset %}
-                                    <div class="form-group mr-1 mb-1">
-                                        <label class="control-label mr-1" for="lastAccessed">{{ title }}</label>
-                                        <div class="input-group date">
-                                            <input type="hidden" name="lastAccessed" id="lastAccessed" />
-                                            <input class="form-control datePicker dateControl" name="lastAccessedLink"
-                                                   type="text" id="lastAccessedLink" data-link-field="lastAccessed"
-                                                   data-link-format="yyyy-mm-dd hh:ii:ss" readonly />
-                                            <div class="input-group-append input-group-addon" id="lastAccessedControlCancel">
-                                                <div class="input-group-text">
-                                                    <span class="fa fa-times-circle"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {{ inline.date("lastAccessed", title) }}
 
                                     {% set title %}{% trans "Player Type" %}{% endset %}
                                     {% set android %}{% trans "Android" %}{% endset %}
@@ -551,19 +538,6 @@
 
             $("#refreshGrid").click(function () {
                 table.ajax.reload();
-            });
-
-            $("#lastAccessedControlCancel").on('click', function() {
-                // Clear the date picker
-                var $lastAccessed = $("#lastAccessed");
-                $lastAccessed.val("");
-                $("#lastAccessedLink").val("");
-                $("#lastAccessedLink").parent().find('.datePickerHelper').val('');
-
-                table.ajax.reload();
-
-                // Reset local storage
-                localStorage.setItem("displayView", JSON.stringify($lastAccessed.closest("form").serializeArray()));
             });
         });
 
