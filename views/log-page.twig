@@ -72,20 +72,7 @@
                                 </div>
                                 <div class="tab-pane" id="advanced">
                                     {% set title %}{% trans "From Date" %}{% endset %}
-                                    <div class="form-group mr-1 mb-1">
-                                        <label class="control-label mr-1" for="fromDt">{{ title }}</label>
-                                        <div class="input-group date">
-                                            <input type="hidden" name="fromDt" id="fromDt" />
-                                            <input class="form-control datePicker dateControl" name="fromDtLink"
-                                                   type="text" id="fromDtLink" data-link-field="fromDt"
-                                                   data-link-format="yyyy-mm-dd hh:ii:ss" readonly />
-                                            <div class="input-group-append input-group-addon" id="fromDateControlCancel">
-                                                <div class="input-group-text">
-                                                    <span class="fa fa-times-circle"></span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
+                                    {{ inline.date("fromDt", title) }}
 
                                     {% set title %}{% trans "Channel" %}{% endset %}
                                     {{ inline.input("channel", title) }}
@@ -225,19 +212,6 @@
 
             $("#refreshLog").click(function() {
                 table.ajax.reload();
-            });
-
-            $("#fromDateControlCancel").on('click', function() {
-                // Clear the date picker
-                var $fromDt = $("#fromDt");
-                $fromDt.val("");
-                $("#fromDtLink").val("");
-                $("#fromDtLink").parent().find('.datePickerHelper').val('');
-
-                table.ajax.reload();
-
-                // Reset local storage
-                localStorage.setItem("logView", JSON.stringify($fromDt.closest("form").serializeArray()));
             });
         });
     </script>

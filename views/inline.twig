@@ -202,7 +202,7 @@
 
 {% macro time(name, title, value, helpText, groupClass, validation, accessKey) %}
     <div class="form-group mr-1 mb-1 {{ groupClass }}">
-        <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <label class="control-label mr-1 {% if title == '' %}d-none{% endif %}" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="input-group">
             <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
             <input class="form-control timePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />

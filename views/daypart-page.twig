@@ -179,6 +179,20 @@
                     $(this).closest(".form-group").remove();
                 }
             });
+
+            // check if we already have this day in exceptions array, if so remove the row with a message.
+            $exceptions.on("change", "select", function() {
+                var selectedDays = [];
+                $('select').not('#' + $(this).attr('id')).each(function(i) {
+                    selectedDays.push($(this).val());
+                });
+
+                if (selectedDays.includes(this.value)) {
+                    toastr.error(translations.dayPartExceptionErrorMessage);
+                    // Remove this row
+                    $(this).closest(".form-group").remove();
+                }
+            })
         }
 
         // Equals helper for the templates below
@@ -194,7 +208,7 @@
     <script type="text/x-handlebars-template" id="dayPartExceptionsTemplate">
         <div class="form-group row">
             <div class="col-3">
-                <select class="form-control" name="exceptionDays[]">
+                <select class="form-control" name="exceptionDays[]" id="exceptionDays_{{fieldId}}">
                     <option value=""></option>
                     {{#each daysOfWeek}}
                     <option value="{{ day }}" {{#eq day ../exceptionDay}}selected{{/eq}}>{{ title }}</option>
@@ -202,12 +216,14 @@
                 </select>
             </div>
             <div class="col-3">
-                <input type="hidden" name="exceptionStartTimes[]" id="exceptionStartTimes_{{ fieldId }}" value="{{ exceptionStart }}" />
-                <input class="form-control timePicker dateControl" name="exceptionStartTimesLink_{{ fieldId }}" type="text" id="exceptionStartTimesLink_{{ fieldId }}" data-link-field="exceptionStartTimes_{{ fieldId }}" data-link-format="hh:ii"/>
+    {% endverbatim %}
+                {{ inline.time("exceptionStartTimes[]", "", "{{ exceptionStart }}"  ) }}
+    {% verbatim %}
             </div>
             <div class="col-3">
-                <input type="hidden" name="exceptionEndTimes[]" id="exceptionEndTimes_{{ fieldId }}" value="{{ exceptionEnd }}" />
-                <input class="form-control timePicker dateControl" name="exceptionEndTimesLink_{{ fieldId }}" type="text" id="exceptionEndTimesLink_{{ fieldId }}" data-link-field="exceptionEndTimes_{{ fieldId }}" data-link-format="hh:ii"/>
+    {% endverbatim %}
+                {{ inline.time("exceptionEndTimes[]", "", "{{ exceptionEnd }}"  ) }}
+    {% verbatim %}
             </div>
             <div class="col-1">
                 <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
