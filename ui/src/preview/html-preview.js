@@ -977,7 +977,7 @@ function previewActionTrigger(path, data, done) {
     };
 
     // ACTIONS
-    if(path == '/setduration') { 
+    if(path == '/duration/set') { 
         // Set duration action
         var mediaToChange = findMediaById(data.id);
         
