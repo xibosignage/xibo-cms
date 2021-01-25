@@ -79,11 +79,6 @@ $designer-overlay-z-index: 1050;
 $unsuccess-message-bg-color: darken($xibo-color-red, 30%);
 $layout-status-popover-message-bg-color: $xibo-color-red;
 
-
-.navbar-default {
-    margin-bottom: 0;
-}
-
 #read-only-message {
     display: block;
     margin: 5px 5%;
@@ -118,7 +113,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
 @media (max-width: 1200px) {
     #layout-editor  {
-        margin-top: 0;
+        margin-top: -20px;
     }
 
     #page-wrapper #layout-editor  {
@@ -131,7 +126,11 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         padding-top: 15px;
     }
 
-    #layout-editor, #page-wrapper #layout-editor  {
+    #layout-editor {
+        margin-top: -20px;
+    } 
+    
+    #page-wrapper #layout-editor  {
         margin-top: 0;
     }
 }

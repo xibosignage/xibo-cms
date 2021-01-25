@@ -909,32 +909,31 @@ ul li.active.tab-design:hover a {
     }
 }
 
-.XiboFilter .form-inline .form-group {
+.XiboFilter .form-inline .form-group, .XiboFilterCustom .form-inline .form-group {
     flex-direction: column;
     align-items: flex-start;
 }
 
-.XiboFilter .form-inline .input-group-tags-exact .bootstrap-tagsinput {
+.XiboFilter .form-inline .input-group-tags-exact .bootstrap-tagsinput, .XiboFilterCustom .form-inline .input-group-tags-exact .bootstrap-tagsinput {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
 }
 
-.XiboFilter .form-inline .tab-pane.active {
+.XiboFilter .form-inline .tab-pane.active, .XiboFilterCustom .form-inline .tab-pane.active {
     display: flex;
-    flex-flow: row wrap;
-    align-items: center;
+    flex-wrap: wrap;
 }
 
-.XiboFilter .form-inline .control-label {
+.XiboFilter .form-inline .control-label, .XiboFilterCustom .form-inline .control-label {
     font-weight: 700;
 }
 
-.XiboFilter .form-inline .bootstrap-switch, .XiboFilter .form-inline .xibo-inline-btn {
+.XiboFilter .form-inline .bootstrap-switch, .XiboFilter .form-inline .xibo-inline-btn, .XiboFilterCustom .form-inline .bootstrap-switch, .XiboFilterCustom .form-inline .xibo-inline-btn {
     margin-top: 18px;
 }
 
-.XiboFilter .form-inline select {
-    min-width: 100%;
+.XiboFilter .form-inline select, .XiboFilterCustom .form-inline select {
+    min-width: 100px;
 }
 
 .bootstrap-tagsinput + [data-role="tagsInputInline"] + .input-group-addon {

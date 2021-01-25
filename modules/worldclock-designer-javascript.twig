@@ -95,12 +95,12 @@
 
             // find the gylph
             if($(this).find('i').hasClass('fa-plus')) {
-                var context = {title: $worldClocksContainer.find('.form-inline').length + 1, clockTimezone: '', timezones: timezones, buttonGlyph: 'fa-minus'};
+                var context = {title: $worldClocksContainer.find('.form-clock').length + 1, clockTimezone: '', timezones: timezones, buttonGlyph: 'fa-minus'};
                 $worldClocksContainer.append(worldClockTemplate(context));
                 initClockRows(container);
             } else {
                 // Remove this row
-                $(this).closest('.form-inline').remove();
+                $(this).closest('.form-clock').remove();
             }
 
             updateClockCountLabel(container);
@@ -108,7 +108,7 @@
     }
 
     function updateClockCountLabel(container) {
-        var clockCount = container.find('#worldClocksContainer').find('.form-inline').length;
+        var clockCount = container.find('#worldClocksContainer').find('.form-clock').length;
         container.find('.clockCount').html((clockCount > 1) ? '(' + clockCount + ')' : '');
     }
 

@@ -1712,7 +1712,7 @@ function XiboMultiSelectFormRender(button) {
     var message;
 
     if (matches.length > 0)
-        message = translations.multiselectMessage.replace('%1', "" + matches.length).replace("%2", $(button).find("a").html());
+        message = translations.multiselectMessage.replace('%1', "" + matches.length).replace("%2", $(button).html());
     else
         message = translations.multiselectNoItemsMessage;
 
