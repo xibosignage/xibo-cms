@@ -78,12 +78,14 @@
                     </div>
 
                     <div class="tab-pane" id="configurationTab">
-                        <div class="col-sm-12">
-                            <h4>{% trans "Clocks" %}&nbsp;<span class="clockCount"></span></h4>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h4>{% trans "Clocks" %}&nbsp;<span class="clockCount"></span></h4>
+                            </div>
                         </div>
 
-                        <div id="worldClocksContainer" class="col-sm-12 form-group text-center"></div>
-
+                        <div id="worldClocksContainer" class="form-group d-block px-3"></div>
+                        
                         {% set title %}{% trans "Clock Type" %}{% endset %}
                         {% set helpText %}{% trans "Please select the type of clock to display." %}{% endset %}
                         {% set analog %}{% trans "Analog" %}{% endset %}

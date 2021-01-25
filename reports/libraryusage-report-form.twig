@@ -93,40 +93,37 @@
                 </div>
             </div>
         </div>
-    </div>
-
-
-    <div class="row">
-        <div class="col-md-6">
-            <div class="widget">
-                <div class="widget-title">
-                    <i class="fa fa-tasks"></i>
-                    {% if libraryLimitSet != "" %}
-                        {% trans %}Library Usage. Limit {{ libraryLimit }}{% endtrans %}
-                    {% else %}
-                        {% trans "Library Usage" %}
-                    {% endif %}
-                    <div class="clearfix"></div>
-                </div>
-                <div class="widget-body medium no-padding">
-                    <canvas id="libraryChart" style="clear:both;" width="350" height="220"></canvas>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="widget">
+                    <div class="widget-title">
+                        <i class="fa fa-tasks"></i>
+                        {% if libraryLimitSet != "" %}
+                            {% trans %}Library Usage. Limit {{ libraryLimit }}{% endtrans %}
+                        {% else %}
+                            {% trans "Library Usage" %}
+                        {% endif %}
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="widget-body medium no-padding">
+                        <canvas id="libraryChart" style="clear:both;" width="350" height="220"></canvas>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="col-md-6">
-            <div class="widget">
-                <div class="widget-title">
-                    <i class="fa fa-user"></i>
-                    {% trans "User Percentage Usage" %}
-                    <div class="clearfix"></div>
-                </div>
-                <div class="widget-body medium no-padding">
-                    <canvas id="userChart" style="clear:both;" width="350" height="220"></canvas>
+            <div class="col-md-6">
+                <div class="widget">
+                    <div class="widget-title">
+                        <i class="fa fa-user"></i>
+                        {% trans "User Percentage Usage" %}
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="widget-body medium no-padding">
+                        <canvas id="userChart" style="clear:both;" width="350" height="220"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
-
 {% endblock %}
 
 {% block javaScript %}

@@ -80,7 +80,7 @@
         </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="pull-right">
+                <div class="pull-right p-3">
                     <div>
                         <div class="note-box" style="background-color: #03a9f4;"></div>
                         <div style="padding-left: 20px">Blue is disconnected %</div>
@@ -144,7 +144,7 @@
                             ] %}
                             {{ inline.dropdown("displayGroupIds[]", "dropdownmulti", title, displayGroupIds, {group: defaults.displayGroups, display: defaults.displays}, "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes, optionGroups) }}
 
-                            <div class="col-sm-12 pl-0">
+                            <div class="w-100">
                                 <a id="applyBtn" class="btn btn-success">
                                     <span>{% trans "Apply" %}</span>
                                 </a>
