@@ -211,7 +211,7 @@ class MediaFactory extends BaseFactory
             $media->mediaType = $requestOptions['fileType'];
             $media->duration = $requestOptions['duration'];
             $media->moduleSystemFile = 0;
-            $media->isRemote = false;
+            $media->isRemote = true;
             $media->urlDownload = true;
             $media->extension = $requestOptions['extension'];
             $media->enableStat = $requestOptions['enableStat'];
@@ -449,11 +449,12 @@ class MediaFactory extends BaseFactory
      * Get Media by LayoutId
      * @param int $layoutId
      * @param int $edited
+     * @param int $excludeDynamicPlaylistMedia
      * @return array[Media]
      */
-    public function getByLayoutId($layoutId, $edited = -1)
+    public function getByLayoutId($layoutId, $edited = -1, $excludeDynamicPlaylistMedia = 0)
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isEdited' => $edited]);
+        return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isEdited' => $edited, 'excludeDynamicPlaylistMedia' => $excludeDynamicPlaylistMedia]);
     }
 
     /**
@@ -705,7 +706,12 @@ class MediaFactory extends BaseFactory
                         ON widget.widgetId = lkwidgetmedia.widgetId
                      WHERE region.layoutId = :layoutId ';
 
-            if ($this->getSanitizer()->getInt('widgetId', $filterBy) !== null) {
+            // include Media only for non dynamic Playlists #2392
+            if ($this->getSanitizer()->getInt('excludeDynamicPlaylistMedia') === 1) {
+                $body .= ' AND lkplaylistplaylist.childId IN (SELECT playlistId FROM playlist WHERE playlist.playlistId = lkplaylistplaylist.childId AND playlist.isDynamic = 0) ';
+            }
+
+            if ($this->getSanitizer()->getInt('widgetId') !== null) {
                 $body .= ' AND `widget`.widgetId = :widgetId ';
                 $params['widgetId'] = $this->getSanitizer()->getInt('widgetId', $filterBy);
             }
