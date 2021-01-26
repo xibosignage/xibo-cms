@@ -211,7 +211,7 @@ class MediaFactory extends BaseFactory
             $media->mediaType = $requestOptions['fileType'];
             $media->duration = $requestOptions['duration'];
             $media->moduleSystemFile = 0;
-            $media->isRemote = false;
+            $media->isRemote = true;
             $media->urlDownload = true;
             $media->extension = $requestOptions['extension'];
             $media->enableStat = $requestOptions['enableStat'];
