@@ -597,7 +597,7 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'serverPort', 'default' => 9696],
                 ['name' => 'installWithLoadedLinkLibraries', 'default' => 1, 'type' => 'checkbox'],
                 ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'useMultipleVideoDecoders', 'default' => 'default', 'type' => 'string'],
+                ['name' => 'isUseMultipleVideoDecoders', 'default' => 'default', 'type' => 'string'],
                 ['name' => 'maxRegionCount', 'default' => 0]
             ],
             'linux' => [
