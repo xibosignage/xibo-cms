@@ -567,41 +567,25 @@ i.fa.fa-ban.fa-stack-2x {
 }
 
 /* Fault Page */
+.board li a {
+    position: relative;
+}
 
-.board li.active:before {
+.board li a:after {
     content: " ";
     position: absolute;
-    left: 45%;
-    opacity: 0;
+    left: 50%;
     margin: 0 auto;
-    bottom: -2px;
-    border: 10px solid transparent;
-    border-bottom-color: #fff;
-    z-index: 1;
+    bottom: -5px;
+    border: 0px solid transparent;
+    border-bottom-color: #ddd;
+    transform: translateX(-50%);
     transition: 0.2s ease-in-out;
 }
 
-.board li:after {
-    content: " ";
-    position: absolute;
-    left: 45%;
-    opacity: 0;
-    margin: 0 auto;
-    bottom: 0px;
-    border: 5px solid transparent;
-    border-bottom-color: #ddd;
-    transition: 0.1s ease-in-out;
-}
-
-.board li.active:after {
-    content: " ";
-    position: absolute;
-    left: 45%;
-    opacity: 1;
-    margin: 5px auto;
-    bottom: 0px;
-    border: 10px solid transparent;
-    border-bottom-color: #ddd;
+.board li a.active:after {
+    border-width: 10px;
+    bottom: -15px;
 }
 
 .board .nav-tabs > li a {
@@ -616,9 +600,6 @@ i.fa.fa-ban.fa-stack-2x {
     background: transparent;
 }
 
-.board .tab-content {
-}
-
 .board .tab-pane {
     position: relative;
     /*padding-top: 50px;*/
@@ -629,6 +610,7 @@ i.fa.fa-ban.fa-stack-2x {
     font-size: 1.8rem;
     text-transform: uppercase;
     padding-bottom: 10px;
+    margin-top: 30px;
 }
 
 .board .btn-outline-rounded {
@@ -806,11 +788,12 @@ ul li.active.tab-design:hover a {
 .funkyradio input[type="checkbox"]:empty ~ label:before {
     position: absolute;
     display: block;
+    font-size: 1.25em;
     top: 0;
     bottom: 0;
     left: 0;
     content: '';
-    width: 2.5em;
+    width: 2em;
     background: #D1D3D4;
     border-radius: 3px 0 0 3px;
 }
@@ -820,8 +803,8 @@ ul li.active.tab-design:hover a {
 }
 
 .funkyradio input[type="checkbox"]:hover:not(:checked) ~ label:before {
-    content: '\2714';
-    text-indent: .9em;
+    content: '\2713';
+    text-indent: .6em;
     color: #C2C2C2;
 }
 
@@ -830,8 +813,8 @@ ul li.active.tab-design:hover a {
 }
 
 .funkyradio input[type="checkbox"]:checked ~ label:before {
-    content: '\2714';
-    text-indent: .9em;
+    content: '\2713';
+    text-indent: .6em;
     color: #333;
     background-color: #ccc;
 }
