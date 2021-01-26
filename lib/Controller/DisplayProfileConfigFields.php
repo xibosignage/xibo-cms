@@ -231,9 +231,9 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('forceHttps', $sanitizedParams->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
-                if ($sanitizedParams->hasParam('useMultipleVideoDecoders')) {
-                    $this->handleChangedSettings('useMultipleVideoDecoders', ($ownConfig) ? $displayProfile->getSetting('useMultipleVideoDecoders') : $display->getSetting('useMultipleVideoDecoders'), $sanitizedParams->getString('useMultipleVideoDecoders'), $changedSettings);
-                    $displayProfile->setSetting('useMultipleVideoDecoders', $sanitizedParams->getString('useMultipleVideoDecoders'), $ownConfig, $config);
+                if ($sanitizedParams->hasParam('isUseMultipleVideoDecoders')) {
+                    $this->handleChangedSettings('isUseMultipleVideoDecoders', ($ownConfig) ? $displayProfile->getSetting('isUseMultipleVideoDecoders') : $display->getSetting('isUseMultipleVideoDecoders'), $sanitizedParams->getString('isUseMultipleVideoDecoders'), $changedSettings);
+                    $displayProfile->setSetting('isUseMultipleVideoDecoders', $sanitizedParams->getString('isUseMultipleVideoDecoders'), $ownConfig, $config);
                 }
 
                 if ($sanitizedParams->hasParam('maxRegionCount')) {

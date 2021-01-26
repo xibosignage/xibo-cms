@@ -705,7 +705,7 @@ $app->group('', function (RouteCollectorProxy $group) {
 
 $app->get('/report/reportschedule', ['\Xibo\Controller\Report','reportScheduleGrid'])->setName('reportschedule.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->post('/report/reportschedule', ['\Xibo\Controller\Report','reportScheduleAdd'])->setName('report.scheduling');
+    $group->post('/report/reportschedule', ['\Xibo\Controller\Report','reportScheduleAdd'])->setName('reportschedule.add');
     $group->put('/report/reportschedule/{id}', ['\Xibo\Controller\Report','reportScheduleEdit'])->setName('reportschedule.edit');
     $group->delete('/report/reportschedule/{id}', ['\Xibo\Controller\Report','reportScheduleDelete'])->setName('reportschedule.delete');
     $group->post('/report/reportschedule/{id}/deletesavedreport', ['\Xibo\Controller\Report','reportScheduleDeleteAllSavedReport'])->setName('reportschedule.deleteall');
