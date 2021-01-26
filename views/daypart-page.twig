@@ -201,6 +201,20 @@
                     $(this).closest(".form-group").remove();
                 }
             });
+
+            // check if we already have this day in exceptions array, if so remove the row with a message.
+            $exceptions.on("change", "select", function() {
+                var selectedDays = [];
+                $('select').not('#' + $(this).attr('id')).each(function(i) {
+                    selectedDays.push($(this).val());
+                });
+
+                if (selectedDays.includes(this.value)) {
+                    toastr.error(translations.dayPartExceptionErrorMessage);
+                    // Remove this row
+                    $(this).closest(".form-group").remove();
+                }
+            })
         }
 
         // Equals helper for the templates below
@@ -216,7 +230,7 @@
     <script type="text/x-handlebars-template" id="dayPartExceptionsTemplate">
         <div class="form-group">
             <div class="col-sm-3">
-                <select class="form-control" name="exceptionDays[]">
+                <select class="form-control" name="exceptionDays[]" id="exceptionDays_{{ fieldId }}">
                     <option value=""></option>
                     {{#each daysOfWeek}}
                     <option value="{{ day }}" {{#eq day ../exceptionDay}}selected{{/eq}}>{{ title }}</option>
