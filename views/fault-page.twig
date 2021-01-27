@@ -23,8 +23,6 @@
 {% extends "authed.twig" %}
 
 {% block pageContent %}
-
-
     <div class="widget">
         <div class="widget-title">{% trans "Report Fault" %}</div>
         <div class="widget-body">
@@ -33,44 +31,45 @@
                     <div class="board-inner">
                         <ul class="nav fault nav-tabs" id="fault">
                             <div class="liner"></div>
-                            <li class="active">
-                                <a href="#home" data-toggle="tab">
-                                    <span class="round-tabs one"> <i class="fa fa-home"></i> </span> </a>
+                            <li class="nav-item">
+                                <a class="nav-link active" href="#home" data-toggle="tab">
+                                    <span class="round-tabs one"> <i class="fa fa-home"></i> </span>
+                                </a>
                             </li>
-                            <li class="">
-                                <a href="#checklist" data-toggle="tab">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#checklist" data-toggle="tab">
                                     <span class="round-tabs two"> <i class="fa fa-check-square-o" aria-hidden="true"></i> </span>
                                 </a>
                             </li>
-                            <li class="">
-                                <a href="#turnons" data-toggle="tab">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#turnons" data-toggle="tab">
                                     <span class="round-tabs three"> <i class="fa fa-bug" aria-hidden="true"></i> </span>
                                 </a>
                             </li>
-                            <li class="">
-                                <a href="#replicate" data-toggle="tab">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#replicate" data-toggle="tab">
                                     <span class="round-tabs four"> <i class="fa fa-clone" aria-hidden="true"></i> </span>
                                 </a>
                             </li>
-                            <li class="">
-                                <a href="#collect" data-toggle="tab">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#collect" data-toggle="tab">
                                     <span class="round-tabs five"> <i class="fa fa-floppy-o" aria-hidden="true"></i> </span>
                                 </a>
                             </li>
-                            <li class="">
-                                <a href="#turnoff" data-toggle="tab">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#turnoff" data-toggle="tab">
                                     <span class="round-tabs six">  <span><i class="fa fa-bug"></i><i class="fa fa-ban fa-stack-2x"></i></span> </span>
                                 </a>
                             </li>
-                            <li class="">
-                                <a href="#ask" data-toggle="tab">
+                            <li class="nav-item">
+                                <a class="nav-link" href="#ask" data-toggle="tab">
                                     <span class="round-tabs seven"><i class="fa fa-question-circle" aria-hidden="true"></i></span>
                                 </a>
                             </li>
                         </ul>
                     </div>
                     <div class="tab-content">
-                        <div class="tab-pane fade in active" id="home">
+                        <div class="tab-pane fade in active show" id="home">
                             <h3 class="head text-center">{% trans "Report an application fault" %}
                                 <span style="color:#f48260;"></span>
                             </h3>
@@ -136,7 +135,7 @@
                                 <p class="text-center"><b>{% trans "All other checks passed" %}</b></p>
 
                             {% endif %}
-                            <div class="row text-center">
+                            <div class="text-center">
                                 <a id="toggler" href="#" class="btn btn-info">{% trans "I want to see the list anyway." %}</a>
                             </div>
                             <br/>
