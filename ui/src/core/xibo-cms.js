@@ -3008,7 +3008,13 @@ function initJsTreeAjax(container, table, isForm, ttl)
                 url: "/folders/"+folderId,
                 method: "PUT",
                 dataType: "json",
-                data: dataObject
+                data: dataObject,
+                success: function (data) {
+                    if (container === '#container-folder-form-tree') {
+                        // if we rename node on a form, make sure to refresh the js tree in the grid
+                        $('#container-folder-tree').jstree(true).refresh();
+                    }
+                }
             });
         });
 
@@ -3029,6 +3035,10 @@ function initJsTreeAjax(container, table, isForm, ttl)
                 data: dataObject,
                 success: function (data) {
                     $(container).jstree(true).set_id(node, data.data.id);
+                    // if we add a new node on a form, make sure to refresh the js tree in the grid
+                    if (container === '#container-folder-form-tree') {
+                        $('#container-folder-tree').jstree(true).refresh();
+                    }
                 },
             });
         });
@@ -3050,6 +3060,10 @@ function initJsTreeAjax(container, table, isForm, ttl)
                 success: function (data) {
                     if (data.success) {
                         toastr.success(translations.done)
+                        // if we delete node on a form, make sure to refresh the js tree in the grid
+                        if (container === '#container-folder-form-tree') {
+                            $('#container-folder-tree').jstree(true).refresh();
+                        }
                     } else {
                         toastr.error(translations.folderWithContent);
                         console.log(data.message);
