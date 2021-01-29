@@ -5,16 +5,14 @@
 
     {{#if hasMedia}}
         {{#if showDeleteFromLibrary}}
-            <div class="col-sm-offset-2 col-sm-10">
-                <div class="checkbox">
-                    <label for="deleteMedia"
-                        title="{{ trans.deleteMediaFromLibraryTitle }}"
-                        accesskey="">
-                        <input type="checkbox" id="deleteMedia" name="deleteMedia">
+            <div class="offset-sm-1 col-sm-10">
+                <div class="form-check">
+                    <input class="form-check-input" type="checkbox" id="deleteMedia" name="deleteMedia">
+                    <label class="form-check-label" for="deleteMedia" title="{{ trans.deleteMediaFromLibraryTitle }}" accesskey="">
                         {{ trans.deleteMediaFromLibraryTitle }}
                     </label>
                 </div>
-                <span class="help-block">{{ trans.deleteMediaFromLibraryMessage }}</span>
+                <small class="form-text text-muted">{{ trans.deleteMediaFromLibraryMessage }}</small>
             </div>
         {{else}}
             <div class="col-sm-12 ">

@@ -95,7 +95,7 @@ class Preview extends Base
             'previewOptions' => [
                 'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
                 'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
-                'libraryDownloadUrl' => $this->urlFor($request,'library.download'),
+                'libraryDownloadUrl' => $this->urlFor($request,'library.download', ['id' => ':id']),
                 'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
                 'loaderUrl' => $this->getConfig()->uri('img/loader.gif'),
                 'layoutPreviewUrl' => $this->urlFor($request,'layout.preview', ['id' => '[layoutCode]'])

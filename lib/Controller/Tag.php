@@ -220,7 +220,7 @@ class Tag extends Base
             'haveOptions' => $sanitizedQueryParams->getCheckbox('haveOptions')
         ];
 
-        $tags = $this->tagFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $tags = $this->tagFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
 
         foreach ($tags as $tag) {
             /* @var \Xibo\Entity\Tag $tag */
@@ -362,7 +362,7 @@ class Tag extends Base
             $tag->options = null;
         }
 
-        $tag->save(['validate' => true]);
+        $tag->save();
 
         // Return
         $this->getState()->hydrate([
@@ -512,7 +512,7 @@ class Tag extends Base
             }
         }
 
-        $tag->save(['validate' => true]);
+        $tag->save();
 
         // Return
         $this->getState()->hydrate([

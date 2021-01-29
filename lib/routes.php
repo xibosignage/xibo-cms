@@ -301,7 +301,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/library/usage/layouts/{id}', ['\Xibo\Controller\Library','usageLayouts'])->setName('library.usage.layouts');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.view']));
 
-$app->get('/library/download[/{id}[/{type}]]', ['\Xibo\Controller\Library','download'])->setName('library.download');
+$app->get('/library/download/{id}[/{type}]', ['\Xibo\Controller\Library','download'])->setName('library.download');
 
 $app->group('', function (RouteCollectorProxy $group) {
     //$group->map(['HEAD'],'/library', ['\Xibo\Controller\Library','  addgroup
@@ -391,6 +391,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/displaygroup/{id}/action/revertToSchedule', ['\Xibo\Controller\DisplayGroup','revertToSchedule'])->setName('displayGroup.action.revertToSchedule');
     $group->post('/displaygroup/{id}/copy', ['\Xibo\Controller\DisplayGroup','copy'])->setName('displayGroup.copy');
     $group->post('/displaygroup/{id}/action/clearStatsAndLogs', ['\Xibo\Controller\DisplayGroup','clearStatsAndLogs'])->setName('displayGroup.action.clearStatsAndLogs');
+    $group->post('/displaygroup/{id}/action/triggerWebhook', ['\Xibo\Controller\DisplayGroup','triggerWebhook'])->setName('displayGroup.action.trigger.webhook');
     $group->put('/displaygroup/{id}/selectfolder', ['\Xibo\Controller\DisplayGroup','selectFolder'])->setName('displayGroup.selectfolder');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displaygroup.modify']));
 
@@ -704,7 +705,7 @@ $app->group('', function (RouteCollectorProxy $group) {
 
 $app->get('/report/reportschedule', ['\Xibo\Controller\Report','reportScheduleGrid'])->setName('reportschedule.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->post('/report/reportschedule', ['\Xibo\Controller\Report','reportScheduleAdd'])->setName('report.scheduling');
+    $group->post('/report/reportschedule', ['\Xibo\Controller\Report','reportScheduleAdd'])->setName('reportschedule.add');
     $group->put('/report/reportschedule/{id}', ['\Xibo\Controller\Report','reportScheduleEdit'])->setName('reportschedule.edit');
     $group->delete('/report/reportschedule/{id}', ['\Xibo\Controller\Report','reportScheduleDelete'])->setName('reportschedule.delete');
     $group->post('/report/reportschedule/{id}/deletesavedreport', ['\Xibo\Controller\Report','reportScheduleDeleteAllSavedReport'])->setName('reportschedule.deleteall');

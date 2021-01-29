@@ -140,14 +140,15 @@ Region.prototype.editPropertyForm = function(property) {
         className: 'second-dialog',
         title: editorsTrans.loadPropertyForObject.replace('%prop%', property).replace('%obj%', 'region'),
         message: '<p><i class="fa fa-spin fa-spinner"></i>' + editorsTrans.loading + '...</p>',
+        size: 'large',
         buttons: {
             cancel: {
                 label: translations.cancel,
-                className: "btn-default"
+                className: "btn-white btn-bb-cancel"
             },
             done: {
                 label: translations.done,
-                className: "btn-primary test",
+                className: "btn-primary test btn-bb-done",
                 callback: function(res) {
 
                     app.common.showLoadingScreen();

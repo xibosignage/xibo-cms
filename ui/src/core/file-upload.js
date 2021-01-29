@@ -48,7 +48,8 @@ function openUploadForm(options) {
         title: options.title,
         buttons: options.buttons,
         className: options.className,
-        animate: options.animateDialog
+        animate: options.animateDialog,
+        size: 'large'
     }).on('hidden.bs.modal', function () {
         // Reset video image covers.
         videoImageCovers = {};
@@ -69,6 +70,13 @@ function openUploadForm(options) {
             maxFileSize: options.templateOptions.upload.maxSize
         };
         var refreshSessionInterval;
+
+        $(form).on('keydown', function(event) {
+            if(event.keyCode == 13) {
+                event.preventDefault();
+                return false;
+            }
+        });
 
         // Video thumbnail capture.
         if (options.videoImageCovers) {
@@ -93,7 +101,7 @@ function openUploadForm(options) {
             var setExpiryFlag = form.find('#setExpiryDates').is(":checked");
 
             // Hide and disable fiels ( to avoid form submitting)
-            form.find('.row-widget-set-expiry').toggleClass('hide', !setExpiryFlag);
+            form.find('.row-widget-set-expiry').toggleClass('hidden', !setExpiryFlag);
             form.find('.row-widget-set-expiry input').prop('disabled', !setExpiryFlag);
         };
 
@@ -159,7 +167,7 @@ function openUploadForm(options) {
             .bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
                     // Get uploaded and downloaded files and toggle Done button
                     var filesToUploadCount = form.find('tr.template-upload').length;
-                    var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
+                    var $button = form.parents('.modal:first').find('button.btn-bb-main');
 
                     if (filesToUploadCount === 0) {
                         $button.removeAttr('disabled');
@@ -173,9 +181,15 @@ function openUploadForm(options) {
         if (options.templateOptions.folderSelector) {
             // Handle creating a folder selector
             // compile tree folder modal and append it to Form
+
+            // make bootstrap happy.
+            if ($('#folder-tree-form-modal').length != 0) {
+                $('#folder-tree-form-modal').remove();
+            }
+
             if ($('#folder-tree-form-modal').length === 0) {
                 let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-                form.append(folderTreeModal({
+                $('body').append(folderTreeModal({
                     container: "container-folder-form-tree",
                     modal: "folder-tree-form-modal"
                 }));

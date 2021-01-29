@@ -352,6 +352,7 @@ class Stats extends Base
         $layoutIds = $sanitizedQueryParams->getIntArray('layoutId', ['default' => []]);
         $mediaIds = $sanitizedQueryParams->getIntArray('mediaId', ['default' => []]);
         $statDate = $sanitizedQueryParams->getDate('statDate');
+        $statDateLessThan = $sanitizedQueryParams->getDate('statDateLessThan');
         $statId = $sanitizedQueryParams->getString('statId');
         $campaignId = $sanitizedQueryParams->getInt('campaignId');
         $eventTag = $sanitizedQueryParams->getString('eventTag');
@@ -390,6 +391,7 @@ class Stats extends Base
                 'layoutIds' => $layoutIds,
                 'mediaIds' => $mediaIds,
                 'statDate' => $statDate,
+                'statDateLessThan' => $statDateLessThan,
                 'statId' => $statId,
                 'campaignId' => $campaignId,
                 'eventTag' => $eventTag,
@@ -975,8 +977,8 @@ class Stats extends Base
         }
 
         // Sorting?
-        $filterBy = $this->gridRenderFilter([], $request);
-        $sortOrder = $this->gridRenderSort($request);
+        $filterBy = $this->gridRenderFilter([], $params);
+        $sortOrder = $this->gridRenderSort($params);
 
         $order = '';
         if (is_array($sortOrder))

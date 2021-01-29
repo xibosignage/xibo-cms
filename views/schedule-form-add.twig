@@ -41,10 +41,10 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li class="repeats"><a href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
-                <li class="reminders"><a href="#reminders" role="tab" data-toggle="tab"><span>{% trans "Reminder" %}</span></a></li>
-                <li class="geoSchedule"><a href="#geoSchedule" role="tab" data-toggle="tab"><span>{% trans "Geo Location" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="nav-item repeats"><a class="nav-link" href="#repeats" role="tab" data-toggle="tab"><span>{% trans "Repeats" %}</span></a></li>
+                <li class="nav-item reminders"><a class="nav-link" href="#reminders" role="tab" data-toggle="tab"><span>{% trans "Reminder" %}</span></a></li>
+                <li class="nav-item geoSchedule"><a class="nav-link" href="#geoSchedule" role="tab" data-toggle="tab"><span>{% trans "Geo Location" %}</span></a></li>
             </ul>
             {% set dayPartMessage %}{% trans "Select the start time for this event" %}{% endset %}
             {% set notDayPartMessage %}{% trans "Start and end time will be defined by the daypart's configuration for this day of the week. Use a repeating schedule to apply this event over multiple days" %}{% endset %}
@@ -79,7 +79,7 @@
 
                         {% set title %}{% trans "Dayparting" %}{% endset %}
                         {% set helpText %}{% trans "Select the dayparting information for this event. To set your own times select custom and to have the event run constantly select Always." %}{% endset %}
-                        <div class="form-group day-part-control">
+                        <div class="form-group row day-part-control">
                             <label class="col-sm-2 control-label" for="dayPartId">{{ title }}</label>
                             <div class="col-sm-10">
                                 <select class="form-control" name="dayPartId" id="dayPartId">
@@ -90,7 +90,7 @@
                                                 data-is-custom="{{ dayPart.isCustom }}">{{ dayPart.name }}</option>
                                     {% endfor %}
                                 </select>
-                                <span class="help-block">{{ helpText }}</span>
+                                <small class="form-text text-muted">{{ helpText }}</small>
                             </div>
                         </div>
 
@@ -108,31 +108,31 @@
                             { name: "data-search-is-layout-specific", value: -1 },
                             { name: "data-trans-layout", value: "Layout"|trans },
                             { name: "data-trans-layout-help-text", value: "Please select a Layout for this Event to show"|trans },
-                            { name: "data-trans-layout", value: "Campaign"|trans },
-                            { name: "data-trans-layout-help-text", value: "Please select a Campaign for this Event to show"|trans },
+                            { name: "data-trans-campaign", value: "Campaign"|trans },
+                            { name: "data-trans-campaign-help-text", value: "Please select a Campaign for this Event to show"|trans },
                         ] %}
 
                         {% set title %}{% trans "Layout" %}{% endset %}
                         {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
                         {{ forms.dropdown("campaignId", "single", title, "", null, "id", "value", helpText, "layout-control", "", "", "", attributes) }}
 
-                        <div class="form-group preview-button-container">
-                            <div class="col-md-offset-2 col-md-10">
+                        <div class="form-group row preview-button-container">
+                            <div class="offset-md-2 col-md-10">
                                 <a id="previewButton" class="btn btn-success" target="_blank" data-url="{{ url_for("campaign.preview", {id: ':id'}) }}">{% trans "Preview" %} <span class="fa fa-tablet"></span></a>
-                                <span class="help-block">{% trans "Preview your selection in a new tab" %}</span>
+                                <small class="form-text text-muted">{% trans "Preview your selection in a new tab" %}</small>
                             </div>
                         </div>
 
-                        <div class="form-group interrupt-control" style="display: block;">
+                        <div class="form-group row interrupt-control" style="display: flex;">
                             <label class="col-sm-2 control-label" for="shareOfVoice" accesskey="">{% trans "Share of Voice" %}</label>
                             <div class="col-sm-5">
                                 <input class="form-control" name="shareOfVoice" type="number" id="shareOfVoice" value="0">
-                                <span class="help-block">{% trans "The amount of time this Layout should be shown, in seconds per hour." %}</span>
+                                <small class="form-text text-muted">{% trans "The amount of time this Layout should be shown, in seconds per hour." %}</small>
                             </div>
 
                             <div class="col-sm-5">
                                 <input class="form-control" name="shareOfVoicePercentage" type="number" id="shareOfVoicePercentage" value="">
-                                <span class="help-block">{% trans "As a percentage" %}</span>
+                                <small class="form-text text-muted">{% trans "As a percentage" %}</small>
                             </div>
                         </div>
 
@@ -227,7 +227,7 @@
                         {% set helpText %}{% trans "Should this event be location aware? Enable this checkbox and select an area by drawing a polygon or rectangle layer on the map below." %}{% endset %}
                         {{ forms.checkbox("isGeoAware", title, 0, helpText, "") }}
 
-                        <div id="geoScheduleMap" style="height: 500px; width: 100%" class="hidden"></div>
+                        <div id="geoScheduleMap" style="height: 500px; width: 100%" class="d-none"></div>
 
                         {{ forms.hidden("geoLocation", "") }}
                     </div>

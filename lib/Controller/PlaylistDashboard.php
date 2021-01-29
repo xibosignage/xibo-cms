@@ -120,11 +120,13 @@ class PlaylistDashboard extends Base
      */
     public function grid(Request $request, Response $response)
     {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
         // Playlists
-        $playlists = $this->playlistFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $playlists = $this->playlistFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([
             'name' => $this->getSanitizer($request->getParams())->getString('name'),
             'regionSpecific' => 0
-        ], $request));
+        ], $sanitizedParams));
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->playlistFactory->countLast();

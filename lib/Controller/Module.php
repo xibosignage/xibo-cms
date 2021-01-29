@@ -217,7 +217,7 @@ class Module extends Base
             'moduleId' => $parsedQueryParams->getInt('moduleId')
         ];
 
-        $modules = $this->moduleFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $modules = $this->moduleFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
         foreach ($modules as $module) {
             /* @var \Xibo\Entity\Module $module */
@@ -1253,12 +1253,14 @@ class Module extends Base
      */
     public function getDataSets(Request $request, Response $response)
     {
+        $parsedRequestParams = $this->getSanitizer($request->getParams());
+
         $this->getState()->template = 'grid';
         $filter = [
             'dataSet' => $this->getSanitizer($request->getParams())->getString('dataSet')
         ];
 
-        $this->getState()->setData($this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request)));
+        $this->getState()->setData($this->dataSetFactory->query($this->gridRenderSort($parsedRequestParams), $this->gridRenderFilter($filter, $parsedRequestParams)));
         $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
 
         return $this->render($request, $response);

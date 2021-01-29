@@ -421,7 +421,7 @@ function Region(parent, id, xml, options, preload) {
         }
         
         newMedia.run();
-        
+
         $("#" + newMedia.containerName).css("display", "block");
     };
     
@@ -818,7 +818,7 @@ function ActionController(parent, actions, options) {
 
     // Toggle actions visibility
     $container.find('.toggle').click(function() {
-        $container.toggleClass('hidden');
+        $container.toggleClass('d-none');
     });
 
     // Display according to the number of clickable actions
@@ -977,7 +977,7 @@ function previewActionTrigger(path, data, done) {
     };
 
     // ACTIONS
-    if(path == '/setduration') { 
+    if(path == '/duration/set') { 
         // Set duration action
         var mediaToChange = findMediaById(data.id);
         

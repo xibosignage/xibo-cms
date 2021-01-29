@@ -78,7 +78,6 @@ class Stocks extends AlphaVantageBase
         
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-finance-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
     }
 
     /**
@@ -699,5 +698,17 @@ class Stocks extends AlphaVantageBase
     public function hasTemplates()
     {
         return true;
+    }
+
+    /** @inheritDoc */
+    public function hasHtmlEditor()
+    {
+        return true;
+    }
+
+    /** @inheritDoc */
+    public function getHtmlWidgetOptions()
+    {
+        return ['mainTemplate', 'itemTemplate'];
     }
 }

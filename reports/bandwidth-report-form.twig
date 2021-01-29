@@ -25,40 +25,40 @@
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=bandwidth"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=bandwidth"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
-        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=bandwidth"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=bandwidth"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}?reportName=bandwidth"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+        <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}?reportName=bandwidth"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
 
     <div class="widget">
         <div class="widget-title">
+            <span>{% trans "Bandwidth" %}</span>
+        </div>
+        <div class="widget-navigation-menu">
             <ul class="nav nav-pills">
-                <li role="presentation" class=""><a href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
-                <li role="presentation" class="dropdown">
-                    <a href="#" class="dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
-                    <ul class="dropdown-menu">
+                <li role="presentation" class="nav-item"><a class="nav-link" href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
+                    <div class="dropdown-menu">
                         {% for reports in defaults.availableReports %}
                             {% for report in reports %}
                                 {% if report.hidden == 0 and report.category == 'Display'%}
-                                    <li>
-                                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
-                                    </li>
+                                    <a class="dropdown-item" href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
                                 {% endif %}
                             {% endfor %}
                         {% endfor %}
-                    </ul>
+                    </div>
                 </li>
-                <li role="presentation"><a class="text-success" href="#"> {% trans "Bandwidth" %}</a></li>
             </ul>
         </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilterCustom">
-                    <div class="FilterDiv" id="bandwidth">
+                <div class="XiboFilterCustom card bg-light mb-3">
+                    <div class="FilterDiv card-body" id="bandwidth">
                         <form class="form-inline">
                             {% set title %}{% trans "From Date" %}{% endset %}
                             {{ inline.dateMonth("bandwidthFromDt", title, defaults.toDate, "", "", "", "") }}
@@ -80,8 +80,7 @@
                             ] %}
                             {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
-                            <p></p>
-                            <div class="row">
+                            <div class="w-100">
                                 <a id="applyBtn" class="btn btn-success">
                                     <span>{% trans "Apply" %}</span>
                                 </a>
@@ -90,7 +89,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3 d-block">
                     <canvas id="reportChart" style="clear:both; margin-top:25px;" height="70%"></canvas>
                     <img id="imageLoader" style="display: block; margin: auto;" src="{{ theme.uri("img/loader.gif") }}">
                 </div>

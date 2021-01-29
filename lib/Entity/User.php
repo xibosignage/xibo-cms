@@ -1410,10 +1410,10 @@ class User implements \JsonSerializable, UserEntityInterface
 
         // Admin users
         // Note here that the DOOH user isn't allowed to outright delete other users things
-        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
+        if ($this->userTypeId == 1 || ($this->userId == $object->getOwnerId() && $this->featureEnabled('user.sharing')))
             return true;
         // Group Admins
-        else if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId()))))
+        else if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId()))) && $this->featureEnabled('user.sharing'))
             // Group Admin and in the same group as the owner.
             return true;
         else

@@ -582,7 +582,7 @@ class Library extends Base
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
         // Construct the SQL
-        $mediaList = $this->mediaFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $mediaList = $this->mediaFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([
             'mediaId' => $parsedQueryParams->getInt('mediaId'),
             'name' => $parsedQueryParams->getString('media'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
@@ -599,7 +599,7 @@ class Library extends Base
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'notPlayerSoftware' => 1,
             'notSavedReport' => 1
-        ], $request));
+        ], $parsedQueryParams));
 
         // Add some additional row content
         foreach ($mediaList as $media) {
@@ -888,7 +888,7 @@ class Library extends Base
 
         // Do we need to reassess fonts?
         if ($media->mediaType == 'font') {
-            $this->installFonts();
+            $this->installFonts(RouteContext::fromRequest($request)->getRouteParser());
         }
 
         // Return
@@ -1042,10 +1042,10 @@ class Library extends Base
         self::ensureLibraryExists($libraryFolder);
 
         // Get Valid Extensions
-        if ($parsedBody->getInt('oldMediaId') !== null) {
-            $media = $this->mediaFactory->getById($parsedBody->getInt('oldMediaId'));
+        if ($parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]) !== null) {
+            $media = $this->mediaFactory->getById($parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]));
             $oldFolderId = $media->folderId;
-            $validExt = $this->moduleFactory->getValidExtensions(['type' => $media->mediaType]);
+            $validExt = $this->moduleFactory->getValidExtensions(['type' => $media->mediaType, 'allowMediaTypeChange' => $options['allowMediaTypeChange']]);
         } else {
             $validExt = $this->moduleFactory->getValidExtensions();
         }
@@ -1058,8 +1058,8 @@ class Library extends Base
             'controller' => $this,
             'oldMediaId' => $parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]),
             'widgetId' => $parsedBody->getInt('widgetId'),
-            'updateInLayouts' => $parsedBody->getCheckbox('updateInLayouts'),
-            'deleteOldRevisions' => $parsedBody->getCheckbox('deleteOldRevisions'),
+            'updateInLayouts' => $parsedBody->getCheckbox('updateInLayouts', ['default' => $options['updateInLayouts']]),
+            'deleteOldRevisions' => $parsedBody->getCheckbox('deleteOldRevisions', ['default' => $options['deleteOldRevisions']]),
             'allowMediaTypeChange' => $options['allowMediaTypeChange'],
             'displayOrder' => $parsedBody->getInt('displayOrder'),
             'playlistId' => $parsedBody->getInt('playlistId'),
@@ -1075,7 +1075,8 @@ class Library extends Base
             'widgetFromDt' => $widgetFromDt === null ? null : $widgetFromDt->format('U'),
             'widgetToDt' => $widgetToDt === null ? null : $widgetToDt->format('U'),
             'deleteOnExpiry' => $parsedBody->getCheckbox('deleteOnExpiry', ['checkboxReturnInteger' => true]),
-            'oldFolderId' => $parsedBody->getInt('folderId', ['default' => $oldFolderId])
+            'oldFolderId' => $parsedBody->getInt('folderId', ['default' => $oldFolderId]),
+            'routeParser' => RouteContext::fromRequest($request)->getRouteParser()
         ];
 
         // Output handled by UploadHandler
@@ -1260,7 +1261,7 @@ class Library extends Base
         // Are we a font
         if ($media->mediaType == 'font') {
             // We may have made changes and need to regenerate
-            $this->installFonts();
+            $this->installFonts(RouteContext::fromRequest($request)->getRouteParser());
         }
 
         // Return
@@ -1556,7 +1557,7 @@ class Library extends Base
     public function fontCss(Request $request, Response $response)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false], $request);
+        $css = $this->installFonts(RouteContext::fromRequest($request)->getRouteParser(),['invalidateCache' => false]);
 
         // Work out the etag
         /** @var $httpCache HttpCacheProvider*/
@@ -1592,7 +1593,7 @@ class Library extends Base
     public function fontList(Request $request, Response $response)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false], $request);
+        $css = $this->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -1604,7 +1605,7 @@ class Library extends Base
 
     /**
      * Get font CKEditor config
-     * @param Request|null $request
+     * @param \Slim\Interfaces\RouteParserInterface $routeParser
      * @return string
      * @throws ConfigurationException
      * @throws GeneralException
@@ -1612,10 +1613,10 @@ class Library extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function fontCKEditorConfig(Request $request = null)
+    public function fontCKEditorConfig($routeParser)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false], $request);
+        $css = $this->installFonts($routeParser, ['invalidateCache' => false]);
 
         return $css['ckeditor'];
     }
@@ -1623,7 +1624,7 @@ class Library extends Base
     /**
      * Installs fonts
      * @param array $options
-     * @param Request|null $request
+     * @param \Slim\Interfaces\RouteParserInterface $routeParser
      * @return array
      * @throws ConfigurationException
      * @throws GeneralException
@@ -1631,7 +1632,7 @@ class Library extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function installFonts($options = [], Request $request = null)
+    public function installFonts($routeParser, $options = [])
     {
         $options = array_merge([
             'invalidateCache' => true
@@ -1700,8 +1701,7 @@ class Library extends Base
                     // Test to see if this user should have access to this font
                     if ($this->getUser()->checkViewable($font)) {
                         // Css for the local CMS contains the full download path to the font
-                        $url = $this->urlFor($request, 'library.download',
-                                ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
+                        $url = $routeParser->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]);
                         $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
 
                         // CKEditor string
@@ -1831,6 +1831,7 @@ class Library extends Base
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);
             $entry->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+            $this->getLog()->audit('Media', $entry->mediaId, 'Removing Expired', ['mediaId' => $entry->mediaId, 'name' => $entry->name, 'expired' => Carbon::createFromTimestamp($entry->expires)->format(DateFormatHelper::getSystemFormat())]);
             $entry->delete();
         }
     }
@@ -1839,6 +1840,7 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException
      * @throws GeneralException
@@ -1848,27 +1850,20 @@ class Library extends Base
      */
     public function mcaas(Request $request, Response $response, $id)
     {
-        // TODO MCAAS
         // This is only available through the API
         if (!$this->isApi($request)) {
             throw new AccessDeniedException(__('Route is available through the API'));
         }
 
-        // We need to get the access token we used to authorize this request.
-        // as we are API we can expect that in the $app.
-        /** @var $accessToken \League\OAuth2\Server\Entity\AccessTokenEntity */
-        $accessToken = $this->getApp()->server->getAccessToken();
-
-        // Call Add with the oldMediaId
-        $this->add([
+        $options = [
             'oldMediaId' => $id,
             'updateInLayouts' => 1,
             'deleteOldRevisions' => 1,
             'allowMediaTypeChange' => 1
-        ]);
+        ];
 
-        // Expire the token
-        $accessToken->expire();
+        // Call Add with the oldMediaId
+        return $this->add($request->withParsedBody(['options' => $options]), $response);
     }
 
     /**
@@ -2033,13 +2028,14 @@ class Library extends Base
     public function usageForm(Request $request, Response $response, $id)
     {
         $media = $this->mediaFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
         // Get a list of displays that this mediaId is used on
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $id], $request));
+        $displays = $this->displayFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $id], $sanitizedParams));
 
         $this->getState()->template = 'library-form-usage';
         $this->getState()->setData([
@@ -2089,7 +2085,7 @@ class Library extends Base
         }
 
         // Get a list of displays that this mediaId is used on by direct assignment
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['mediaId' => $id], $request));
+        $displays = $this->displayFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['mediaId' => $id], $sanitizedParams));
 
         // have we been provided with a date/time to restrict the scheduled events to?
         $mediaFromDate = $sanitizedParams->getDate('mediaEventFromDate');

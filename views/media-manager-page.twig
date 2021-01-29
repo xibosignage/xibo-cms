@@ -29,8 +29,8 @@
         <div class="widget-title">{% trans "All Editable Widgets" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="mediaManagerView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                             {% set title %}{% trans "Layout" %}{% endset %}
@@ -58,7 +58,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="entries" class="table table-striped">
                         <thead>
                             <tr>
@@ -69,7 +69,7 @@
                                 <th>{% trans "Region" %}</th>
                                 <th>{% trans "Playlist" %}</th>
                                 <th>{% trans "Display Order" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
+                                <th class="rowMenu"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -175,7 +175,7 @@
                         buttons: {
                             main: {
                                 label: "{% trans "Done" %}",
-                                className: "btn-primary",
+                                className: "btn-primary btn-bb-main",
                                 callback: function() {
                                     table.ajax.reload();
                                     XiboDialogClose();
@@ -223,7 +223,7 @@
                 });
             });
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#entries_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#entries_wrapper').find('.col-md-6').eq(1));
         });
 
         /**
@@ -254,7 +254,7 @@
                     buttons: {
                         main: {
                             label: "{% trans "Done" %}",
-                            className: "btn-primary",
+                            className: "btn-primary btn-bb-main",
                             callback: function() {
                                 table.ajax.reload();
                                 XiboDialogClose();

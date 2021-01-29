@@ -36,19 +36,21 @@ let formHelpers = function() {
      * @param {string} checkBoxSelect - CSS selector for the checkbox object
      * @param {string} inputFieldsSelector - CSS selector for the input fields to toggle ( show on checked, hide on unchecked)
      * @param {string=} inputFieldsSelectorOpposite - CSS selector for the input fields that behave diferently from the select fields on previous param ( hide on checked, show on unchecked)
+     * @param {string=} customVisibleDisplayProperty - CSS display property to use for the object visibility
      */
-    this.setupCheckboxInputFields = function(form, checkBoxSelector, inputFieldsSelector, inputFieldsSelectorOpposite) {
+    this.setupCheckboxInputFields = function(form, checkBoxSelector, inputFieldsSelector, inputFieldsSelectorOpposite, customVisibleDisplayProperty) {
         const checkboxObj = $(form).find(checkBoxSelector);
         const inputFieldsObj = $(form).find(inputFieldsSelector);
         const inputFieldsObjOpposite = $(form).find(inputFieldsSelectorOpposite);
+        const displayVisibleProperty = (customVisibleDisplayProperty) ? customVisibleDisplayProperty : '';
 
         const displayInputFields = function() {
             // Init
             if(checkboxObj.is(':checked') == false) {
                 inputFieldsObj.css('display', 'none');
-                inputFieldsObjOpposite.css('display', 'block');
+                inputFieldsObjOpposite.css('display', displayVisibleProperty);
             } else if(checkboxObj.is(':checked') == true) {
-                inputFieldsObj.css('display', 'block');
+                inputFieldsObj.css('display', displayVisibleProperty);
                 inputFieldsObjOpposite.css('display', 'none');
             }
 
@@ -68,11 +70,13 @@ let formHelpers = function() {
      * @param {Array.<string>} inputFieldsArray - Array of CSS selector for the input fields to be compared with the values to be toggled
      * @param {Array.<>} customIndexValues - Array of values to compare to the inputFieldsArray, if it matches, the field will be shown/hidden according to the inverted flag state
      * @param {bool=} inverted - Use hide element instead of show just element ( default )
+     * @param {string=} customVisibleDisplayProperty - CSS display property to use for the object visibility
      */
-    this.setupObjectValueInputFields = function(form, inputValueSelector, inputFieldsArray, customIndexValues = null, inverted = false, customTarget = null) {
+    this.setupObjectValueInputFields = function(form, inputValueSelector, inputFieldsArray, customIndexValues = null, inverted = false, customTarget = null, customVisibleDisplayProperty) {
 
-        const elementClass = (!inverted) ? 'block' : 'none';
-        const inverseClass = (!inverted) ? 'none' : 'block';
+        const displayVisibleProperty = (customVisibleDisplayProperty) ? customVisibleDisplayProperty : '';
+        const elementClass = (!inverted) ? displayVisibleProperty : 'none';
+        const inverseClass = (!inverted) ? 'none' : displayVisibleProperty;
 
         const inputValueField = $(form).find(inputValueSelector);
 
@@ -898,7 +902,7 @@ let formHelpers = function() {
                     buttons: {
                         main: {
                             label: translations.done,
-                            className: 'btn-primary',
+                            className: 'btn-primary btn-bb-main',
                             callback: function() {
                                 if(typeof self.namespace.timeline.resetZoom === 'function') {
                                     self.namespace.timeline.resetZoom();
@@ -1053,15 +1057,14 @@ let formHelpers = function() {
      * @param {string} instanceToDestroy - Name of the instance marked to be destroyed
      */
     this.setupFormDimensionControls = function(dialog, toggleFlag, instanceToDestroy) {
-
         if(toggleFlag) {
             // Display controls
-            $(dialog).find('.form-editor-controls').show();
+            $(dialog).find('.form-editor-controls').toggleClass('d-none', false);
         } else {
             // Hide the controls if there are no CKEditor instances or the one that is left is marked to be destroyed
             if($.isEmptyObject(CKEDITOR.instances) || (Object.keys(CKEDITOR.instances).length === 1 && CKEDITOR.instances[instanceToDestroy] !== undefined)) {
                 // Hide controls
-                $(dialog).find('.form-editor-controls').hide();
+                $(dialog).find('.form-editor-controls').toggleClass('d-none', true);
             }
         }
     };
@@ -1226,6 +1229,7 @@ let formHelpers = function() {
                     var dialog = bootbox.dialog({
                         message: response.html,
                         title: dialogTitle,
+                        size: 'large',
                         animate: false
                     }).attr("id", id);
 
@@ -1373,7 +1377,7 @@ let formHelpers = function() {
                 type: 'button',
                 title: editorsTrans.copyToClipboard,
                 'data-container': '#properties-panel',
-                class: 'btn btn-xs copyTextAreaButton',
+                class: 'btn btn-sm copyTextAreaButton',
                 click: function() {
                     const $input = $(el);
                     let disabled = false;
@@ -1569,7 +1573,7 @@ let formHelpers = function() {
             if(!(inputButtons[button].includes('XiboDialogClose') || inputButtons[button].includes('.submit()'))) {
                 buttons[button] = {
                     name: button,
-                    type: 'btn-default',
+                    type: 'btn-white',
                     click: inputButtons[button]
                 };
             }
@@ -1578,7 +1582,7 @@ let formHelpers = function() {
         // Add back button
         buttons.back = {
             name: editorsTrans.back,
-            type: 'btn-default',
+            type: 'btn-white',
             action: 'back'
         };
 

@@ -44,7 +44,7 @@
     "operation": "is:checked",
     "actions": {
     ".order-clause-field": { "display": "none" },
-    "#orderClause": { "display": "block" }
+    "#orderClause": { "display": "" }
     }
     },{
     "field": "useOrderingClause",
@@ -53,7 +53,7 @@
     "operation": "is:checked",
     "actions": {
     ".order-clause-field": { "display": "none" },
-    "#orderClause": { "display": "block" }
+    "#orderClause": { "display": "" }
     }
     },{
     "field": "useOrderingClause",
@@ -61,7 +61,7 @@
     "value": true,
     "operation": "is:checked",
     "actions": {
-    ".order-clause-field": { "display": "block" },
+    ".order-clause-field": { "display": "" },
     "#orderClause": { "display": "none" }
     }
     },{
@@ -70,7 +70,7 @@
     "value": true,
     "operation": "is:checked",
     "actions": {
-    ".order-clause-field": { "display": "block" },
+    ".order-clause-field": { "display": "" },
     "#orderClause": { "display": "none" }
     }
     },{
@@ -80,7 +80,7 @@
     "operation": "is:checked",
     "actions": {
     ".filter-clause-field": { "display": "none" },
-    "#filterClause": { "display": "block" }
+    "#filterClause": { "display": "" }
     }
     },{
     "field": "useFilteringClause",
@@ -89,7 +89,7 @@
     "operation": "is:checked",
     "actions": {
     ".filter-clause-field": { "display": "none" },
-    "#filterClause": { "display": "block" }
+    "#filterClause": { "display": "" }
     }
     },{
     "field": "useFilteringClause",
@@ -97,7 +97,7 @@
     "value": true,
     "operation": "is:checked",
     "actions": {
-    ".filter-clause-field": { "display": "block" },
+    ".filter-clause-field": { "display": "" },
     "#filterClause": { "display": "none" }
     }
     },{
@@ -106,7 +106,7 @@
     "value": true,
     "operation": "is:checked",
     "actions": {
-    ".filter-clause-field": { "display": "block" },
+    ".filter-clause-field": { "display": "" },
     "#filterClause": { "display": "none" }
     }
     }
@@ -119,9 +119,9 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
-                <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
             </ul>
             <form id="dataSetRssAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("dataSet.rss.add", {id: dataSet.dataSetId}) }}">
                 <div class="tab-content">

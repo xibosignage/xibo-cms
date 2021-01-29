@@ -31,11 +31,6 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     overflow: auto;
     @include set-transparent-color(background, $xibo-color-black, 0.6);
 
-    .editor-modal-dialog {
-        margin-top: 20px;
-        width: 85vw;
-    }
-
     .editor-modal-content {
         background: $playlist-editor-main-background-color;
         margin-bottom: 60px;
@@ -52,16 +47,11 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     }
 
     .editor-modal-header .editor-modal-close i {
-        padding-left: 8px;
         color: $xibo-color-red;
     }
 }
 
 // Bootbox custom dialogs
-.bootbox .modal-dialog {
-    width: 80% !important;
-}
-
 .second-dialog {
     z-index:  3100;
 }
@@ -223,11 +213,11 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
 
         .loading-container {
             padding: 200px;
-            font-size: 100px;
+            font-size: 7.15rem;
         }
 
         .dropzone  {
-            font-size: 30px;
+            font-size: 2.2rem;
             border: 2px dashed $xibo-color-secondary;
             @include border-radius(4px);
             min-height: 590px;

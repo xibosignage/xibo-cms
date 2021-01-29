@@ -54,17 +54,17 @@
                  data-groups-url="{{ url_for("displayGroup.assign.displayGroup", {id: displayGroup.displayGroupId}) }}"
             >
                 <ul class="nav nav-tabs" role="tablist">
-                    <li class="active"><a href="#displayTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
-                    <li><a href="#displayGroupTab" role="tab" data-toggle="tab"><span>{% trans "Display Groups" %}</span></a></li>
-                    <li><a href="#treeTab" role="tab" data-toggle="tab"><span>{% trans "Relationship Tree" %}</span></a></li>
+                    <li class="nav-item"><a class="nav-link active" href="#displayTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="#displayGroupTab" role="tab" data-toggle="tab"><span>{% trans "Display Groups" %}</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="#treeTab" role="tab" data-toggle="tab"><span>{% trans "Relationship Tree" %}</span></a></li>
                 </ul>
                 <div class="tab-content">
                     <div class="tab-pane active" id="displayTab">
                         {% set helpText %}{% trans %}Check or un-check the options against each display to control whether they are a member or not.{% endtrans %}{% endset %}
                         {{ forms.message(helpText) }}
                         <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayDGView">
-                            <div class="XiboFilter well">
-                                <div class="FilterDiv" id="Filter">
+                            <div class="XiboFilter card mb-3 bg-light">
+                                <div class="FilterDiv card-body" id="Filter">
                                     <form class="form-inline" id="displayForm">
                                         {% set title %}{% trans "Name" %}{% endset %}
                                         {{ inline.input("display", title) }}
@@ -97,8 +97,8 @@
                         {% set helpText %}{% trans %}Check or un-check the options against each display group to control whether they are a member or not.{% endtrans %}{% endset %}
                         {{ forms.message(helpText) }}
                         <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayGroupDGView">
-                            <div class="XiboFilter well">
-                                <div class="FilterDiv" id="Filter">
+                            <div class="XiboFilter card mb-3 bg-light">
+                                <div class="FilterDiv card-body" id="Filter">
                                     <form class="form-inline" id="displayGroupForm">
                                         {% set title %}{% trans "Name" %}{% endset %}
                                         {{ inline.input("displayGroup", title) }}

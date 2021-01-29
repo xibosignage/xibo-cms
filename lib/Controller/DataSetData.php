@@ -139,7 +139,7 @@ class DataSetData extends Base
             throw new AccessDeniedException();
         }
         
-        $sorting = $this->gridRenderSort($request);
+        $sorting = $this->gridRenderSort($sanitizedParams);
 
         if ($sorting != null) {
             $sorting = implode(',', $sorting);
@@ -158,7 +158,7 @@ class DataSetData extends Base
         $filter = trim($filter, 'AND');
 
         // Work out the limits
-        $filter = $this->gridRenderFilter(['filter' => $request->getParam('filter', $filter)], $request);
+        $filter = $this->gridRenderFilter(['filter' => $request->getParam('filter', $filter)], $sanitizedParams);
 
         try {
             $data = $dataSet->getData([

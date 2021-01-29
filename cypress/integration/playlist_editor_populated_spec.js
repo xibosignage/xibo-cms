@@ -114,7 +114,7 @@ describe('Playlist Editor (Populated)', function() {
             cy.get('#playlist-editor-toolbar a#trashContainer').click();
 
             // Confirm delete on modal
-            cy.get('[data-test="deleteObjectModal"] button[data-bb-handler="confirm"]').click();
+            cy.get('[data-test="deleteObjectModal"] button.btn-bb-confirm').click();
 
             // Check toast message
             cy.get('.toast-success').contains('Deleted');
@@ -151,7 +151,7 @@ describe('Playlist Editor (Populated)', function() {
             });
 
             // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+            cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
 
             // Check if the widget has the audio icon
             cy.wait('@reloadPlaylist');
@@ -189,7 +189,7 @@ describe('Playlist Editor (Populated)', function() {
 
 
             // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+            cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
 
             // Check if the widget has the expiry dates icon
             cy.wait('@reloadPlaylist');
@@ -222,7 +222,7 @@ describe('Playlist Editor (Populated)', function() {
             });
 
             // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+            cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
 
             // Check if the widget has the transition icon
             cy.wait('@reloadPlaylist').then(() => {

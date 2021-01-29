@@ -13,15 +13,15 @@ width: {{ durationPercentage }}%;">
     
     <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
         <div class="widgetSubType">
-            <i class="fa module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip" data-container="#layout-editor" data-title="{{moduleName}}"></i>
+            <i class="fa module-icon-{{subType}} tooltip-always-on" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{moduleName}}"></i>
         </div>
-        <div class="widgetDuration tooltip-always-on" data-toggle="tooltip" data-title="{{duration}}" data-container="#layout-editor">
+        <div class="widgetDuration tooltip-always-on" data-toggle="tooltip" data-title="{{duration}}" data-container="#layout-timeline">
             {{ duration }}
         </div>
     </div>
 
     <div class="widgetName">
-        <span class="tooltip-always-on" data-toggle="tooltip" data-container="#layout-editor" data-title="{{widgetName}}">{{widgetName}}</span>
+        <span class="tooltip-always-on" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{widgetName}}">{{widgetName}}</span>
     </div>
 
     <div class="widgetProperties">
@@ -30,12 +30,12 @@ width: {{ durationPercentage }}%;">
         {{/if}}
 
         {{#if actions }}
-            <i class="fa fa-paper-plane editProperty" data-property="Action" data-content="tooltip" data-toggle="tooltip" data-container="body" data-title="{{trans.widgetActions}} {{ actions.length}}" ></i>
+            <i class="fa fa-paper-plane editProperty" data-property="Action" data-content="tooltip" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.widgetActions}} {{ actions.length}}" ></i>
         {{/if}}
 
         {{#gt expireStatus 0}}
             <i class="fa {{expireStatusIcon}} editProperty" 
-            data-toggle="tooltip" data-container="#layout-editor" data-html="true" 
+            data-toggle="tooltip" data-container="#layout-timeline" data-html="true" 
             data-title="{{expireStatusTitle}}"
             data-property="Expiry"></i>
         {{/gt}}

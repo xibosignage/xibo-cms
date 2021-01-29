@@ -27,17 +27,21 @@
 {% block formHtml %}
     {# Playlist editor main div #}
     <div class="modal editor-modal">  
-        <div class="modal-dialog editor-modal-dialog">
+        <div class="modal-dialog modal-xl editor-modal-dialog">
             <div class="modal-content editor-modal-content">
                 <div class="modal-header editor-modal-header">
-                    <button type="button" class="close editor-modal-close" onclick="pE.close()">
-                        <i class="fa fa-times"></i></button>
-                    <button type="button" class="close editor-modal-help" onclick="XiboHelpRender('{{ help }}')">
-                        <i class="fa fa-question-circle"></i>
-                    </button>
                     <h4 class="modal-title editor-modal-title">
                         {% trans "Edit Playlist" %}
                     </h4>
+                    
+                    <div class="">
+                        <button type="button" class="close editor-modal-close pl-2" onclick="pE.close()">
+                            <i class="fa fa-times"></i>
+                        </button>
+                        <button type="button" class="close editor-modal-help mr-0 px-2" onclick="XiboHelpRender('{{ help }}')">
+                            <i class="fa fa-question-circle"></i>
+                        </button>
+                    </div>
                 </div>
 
                 <div class="modal-body editor-modal-body">

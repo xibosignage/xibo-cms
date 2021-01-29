@@ -458,6 +458,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
+        $statDateLessThan = isset($filterBy['statDateLessThan']) ? $filterBy['statDateLessThan'] : null;
 
         // In the case of user switches from mysql to mongo - laststatId were saved as integer
         if (isset($filterBy['statId'])) {
@@ -498,11 +499,21 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['start'] = ['$gte' => $fromDt];
         }
 
-        // statDate Filter
+        // statDate and statDateLessThan Filter
         // get the next stats from the given date
+        $statDateQuery = [];
         if ($statDate != null) {
             $statDate = new UTCDateTime($statDate->format('U')*1000);
-            $match['$match']['statDate'] = [ '$gte' => $statDate];
+            $statDateQuery['$gte'] = $statDate;
+        }
+        
+        if ($statDateLessThan != null) {
+            $statDateLessThan = new UTCDateTime($statDateLessThan->format('U')*1000);
+            $statDateQuery['$lt'] = $statDateLessThan;
+        }
+
+        if (count($statDateQuery) > 0) {
+            $match['$match']['statDate'] = $statDateQuery;
         }
 
         if (!empty($statId)) {

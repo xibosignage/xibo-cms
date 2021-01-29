@@ -1,4 +1,4 @@
-<div class="form-inline text-center">
+<div class="form-inline justify-content-between p-1">
     <label class="form-group">{{ title }}</label>
     <div class="form-group">
         <select class="form-control" name="orderClause[]">
@@ -14,5 +14,5 @@
             <option value="DESC" {{#if orderClauseDesc}}selected{{/if}}>{{ descTitle }}</option>
         </select>
     </div>
-    <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+    <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
 </div>

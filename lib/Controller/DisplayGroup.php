@@ -48,6 +48,7 @@ use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
 use Xibo\XMR\OverlayLayoutAction;
 use Xibo\XMR\RevertToSchedule;
+use Xibo\XMR\TriggerWebhookAction;
 
 /**
  * Class DisplayGroup
@@ -266,7 +267,7 @@ class DisplayGroup extends Base
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
-        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
@@ -414,6 +415,22 @@ class DisplayGroup extends Base
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.collectNow', ['id' => $group->displayGroupId])],
                     ]
                 );
+
+                // Trigger webhook
+                $group->buttons[] = [
+                    'id' => 'displaygroup_button_trigger_webhook',
+                    'url' => $this->urlFor($request,'displayGroup.trigger.webhook.form', ['id' => $group->displayGroupId]),
+                    'text' => __('Trigger a web hook'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.trigger.webhook', ['id' => $group->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_trigger_webhook'],
+                        ['name' => 'text', 'value' => __('Trigger a web hook')],
+                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
+                        ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
+                    ]
+                ];
             }
         }
 
@@ -2480,6 +2497,95 @@ class DisplayGroup extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Display %s moved to Folder %s'), $displayGroup->displayGroup, $folder->text)
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function triggerWebhookForm(Request $request, Response $response, $id)
+    {
+        $displayGroup = $this->displayGroupFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'displaygroup-form-trigger-webhook';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Send a code to a Player to trigger a web hook associated with provided trigger code.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/action/triggerWebhook",
+     *  operationId="displayGroupActionTriggerWebhook",
+     *  tags={"displayGroup"},
+     *  summary="Action: Trigger Web hook",
+     *  description="Send the trigger webhook action to this DisplayGroup",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The display group id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="triggerCode",
+     *      in="formData",
+     *      description="The trigger code that should be sent to the Player",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function triggerWebhook(Request $request, Response $response, $id)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $triggerCode = $sanitizedParams->getString('triggerCode');
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        if ($triggerCode == '') {
+            throw new InvalidArgumentException(__('Please provide a Trigger Code'), 'triggerCode');
+        }
+
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new TriggerWebhookAction($triggerCode));
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
         ]);
 
         return $this->render($request, $response);

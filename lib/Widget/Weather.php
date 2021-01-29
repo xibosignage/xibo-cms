@@ -1029,4 +1029,16 @@ class Weather extends ModuleWidget
     {
         return true;
     }
+
+    /** @inheritDoc */
+    public function hasHtmlEditor()
+    {
+        return true;
+    }
+
+    /** @inheritDoc */
+    public function getHtmlWidgetOptions()
+    {
+        return ['template'];
+    }
 }

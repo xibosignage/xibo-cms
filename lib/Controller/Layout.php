@@ -26,6 +26,7 @@ use Parsedown;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Item;
@@ -1225,7 +1226,7 @@ class Layout extends Base
         }
 
         // Get all layouts
-        $layouts = $this->layoutFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $layouts = $this->layoutFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([
             'layout' => $parsedQueryParams->getString('layout'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $parsedQueryParams->getInt('userId'),
@@ -1242,7 +1243,7 @@ class Layout extends Base
             'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId'),
             'campaignId' => $parsedQueryParams->getInt('campaignId'),
             'folderId' => $parsedQueryParams->getInt('folderId')
-        ], $request));
+        ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
@@ -2307,7 +2308,7 @@ class Layout extends Base
             'accept_file_types' => '/\.zip$/i',
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $libraryController->libraryUsage() > $libraryLimit),
-            'request' => $request
+            'routeParser' => RouteContext::fromRequest($request)->getRouteParser()
         );
 
         $this->setNoOutput(true);
@@ -2582,7 +2583,7 @@ class Layout extends Base
 
             // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
             // error message
-            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
+            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false, 'publishing' => true]);
 
             // Return
             $this->getState()->hydrate([

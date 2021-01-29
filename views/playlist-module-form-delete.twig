@@ -44,7 +44,7 @@
                 {% set message %}{% trans "Are you sure you want to remove this widget?" %} {% trans "This action cannot be undone." %}{% endset %}
                 {{ forms.message(message) }}
 
-                <div class="col-sm-offset-2 col-sm-10">
+                <div class="offset-sm-2 col-sm-10">
                     <div class="checkbox">
                         <label for="deleteMedia" title="{% trans "Also delete from the Library?" %}" accesskey="">
                             <input type="checkbox" id="deleteMedia" name="deleteMedia">

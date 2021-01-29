@@ -38,6 +38,24 @@
     <div class="row">
         <div class="col-md-12">
             <form id="templateAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("template.add.from.layout", {id: layout.layoutId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
+                {% if currentUser.featureEnabled('folder.view') %}
+                    <div class="form-group">
+                        <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
+                        <div class="col-sm-10" style="padding-top: 7px">
+                            <span id="originalFormFolder"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <label class="col-sm-2 control-label">{% trans "Move to Selected Folder:" %}</label>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                            <span id="selectedFormFolder"></span>
+                        </div>
+                    </div>
+                    {{ forms.hidden('folderId', layout.folderId) }}
+                {% endif %}
+
                 {% set title %}{% trans "Name" %}{% endset %}
                 {% set helpText %}{% trans "The Name of the Template - (1 - 50 characters)" %}{% endset %}
                 {% set templateName %}{{ layout.layout }} {% trans "Template" %}{% endset %}

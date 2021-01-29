@@ -132,7 +132,7 @@ class Resolution extends Base
             'resolution' => $sanitizedQueryParams->getString('resolution')
         ];
 
-        $resolutions = $this->resolutionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $resolutions = $this->resolutionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
 
         foreach ($resolutions as $resolution) {
             /* @var \Xibo\Entity\Resolution $resolution */

@@ -27,9 +27,9 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabled("displaygroup.add") %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Display Group" %}" href="{{ url_for("displayGroup.add.form") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Display Group" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Display Group" %}" href="{{ url_for("displayGroup.add.form") }}"> <i class="fa fa-desktop" aria-hidden="true"></i> {% trans "Add Display Group" %}</button>
+    </div>
     {% endif %}
 {% endblock %}
 
@@ -38,20 +38,22 @@
         <div class="widget-title">{% trans "Display Groups" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "ID" %}{% endset %}
                             {{ inline.input("displayGroupId", title) }}
 
-                            <div class="form-group ">
-                                <label class="control-label" title="" for="displayGroup" accesskey="">{% trans "Name" %}</label>
+                            <div class="form-group mr-1 mb-1">
+                                <label class="control-label mr-1" title="" for="displayGroup" accesskey="">{% trans "Name" %}</label>
                                 <div>
                                     <div class="input-group">
                                         <input class="form-control" name="displayGroup" type="text" id="displayGroup" value="">
-                                        <span class="input-group-addon">
-                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                        </span>
+                                        <div class="input-group-append input-group-addon">
+                                            <div class="input-group-text">
+                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -91,21 +93,21 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
                     </div>
                     <div class="form-group col-sm-11" style="padding: 0">
                         <div id="breadcrumbs" style="margin-top: 5px;"></div>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-2 well" id="grid-folder-filter">
+                    <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
                             <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
-                    <div id="datatable-container" class="col-sm-10">
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
                             <table id="displaygroups" class="table table-striped" data-content-type="displayGroup" data-content-id-name="displayGroupId" data-state-preference-name="displayGroupGrid" style="width: 100%;">
                                 <thead>
@@ -121,7 +123,7 @@
                                         {% endif %}
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
-                                        <th>{% trans "Row Menu" %}</th>
+                                        <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
                                 <tbody>
@@ -187,7 +189,7 @@
         table.on('draw', dataTableDraw);
         table.on('draw', { form: $("#displaygroups").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#displaygroups_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#displaygroups_wrapper').find('.col-md-6').eq(1));
 
         var displayTable;
         var criteria;

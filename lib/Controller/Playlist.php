@@ -278,7 +278,7 @@ class Playlist extends Base
         $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
 
         // Playlists
-        $playlists = $this->playlistFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $playlists = $this->playlistFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([
             'name' => $sanitizedParams->getString('name'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'userId' => $sanitizedParams->getInt('userId'),
@@ -289,7 +289,7 @@ class Playlist extends Base
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
             'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
             'folderId' => $sanitizedParams->getInt('folderId')
-        ], $request));
+        ], $sanitizedParams));
 
         foreach ($playlists as $playlist) {
 
@@ -601,7 +601,7 @@ class Playlist extends Base
 
         // Do we have a tag or name filter?
         $nameFilter = $sanitizedParams->getString('filterMediaName');
-        $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? null : $sanitizedParams->getString('filterMediaTag');
+        $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('filterMediaTag') : null;
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
@@ -1092,10 +1092,10 @@ class Playlist extends Base
         $this->getState()->template = 'grid';
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $widgets = $this->widgetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $widgets = $this->widgetFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([
             'playlistId' => $sanitizedParams->getInt('playlistId'),
             'widgetId' => $sanitizedParams->getInt('widgetId')
-        ], $request));
+        ], $sanitizedParams));
 
         foreach ($widgets as $widget) {
             /* @var Widget $widget */

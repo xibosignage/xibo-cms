@@ -168,7 +168,7 @@ class DisplayProfile extends Base
         ];
 
         $embed = ($parsedQueryParams->getString('embed') != null) ? explode(',', $parsedQueryParams->getString('embed')) : [];
-        $profiles = $this->displayProfileFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $profiles = $this->displayProfileFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
         if (count($profiles) <= 0)
             throw new NotFoundException(__('Display Profile not found'), 'DisplayProfile');
@@ -438,7 +438,7 @@ class DisplayProfile extends Base
         $displayProfile->isDefault = $parsedParams->getCheckbox('isDefault');
 
         // Different fields for each client type
-        $this->editConfigFields($displayProfile, null, $request);
+        $this->editConfigFields($displayProfile, $parsedParams);
 
         // Capture and update commands
         foreach ($this->commandFactory->query() as $command) {

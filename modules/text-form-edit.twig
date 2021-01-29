@@ -31,17 +31,17 @@
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#general" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "General" %}</span></a></li>
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab" data-enlarge="1"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#templateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
-                    <li><a href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a></li>
-                </ul>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item template-override-controls" href="#templateTab"  role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
+                    <a class="dropdown-item" href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a>
+                </div>
             </li>
-            <li><a href="#effectTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#effectTab" role="tab" data-toggle="tab"><span>{% trans "Effect" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="textEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -124,14 +124,16 @@
 
                     <div class="tab-pane" id="templateTab">
 
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 1) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "Main Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 1) == 1 %}checked{% endif %} 
+                                    data-size="small" 
+                                    data-label-text="{% trans "Visual editor" %}" 
+                                    data-label-width="80px" 
+                                    data-on-text="{% trans "On" %}" 
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
 
                         <div class="editor-messages">
@@ -155,9 +157,9 @@
                             {{ forms.message(playlistEditorMessage, 'playlist-editor-message ta_text-advanced-editor-show') }}
                         </div>
 
-                        <div class="ckeditor_controls inline-editor-hide container-fluid" data-linked-to="ta_text">
+                        <div class="ckeditor_controls row inline-editor-hide container-fluid" data-linked-to="ta_text">
                             <div class="col-sm-6">
-                                <div class="form-group">
+                                <div class="form-group row">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                     <div class="col-sm-8 ckeditor_select_container">
                                         <select id="ckeditor_snippets_select" 
@@ -174,7 +176,7 @@
                                 </div>
                             </div>
                             <div class="col-sm-6">
-                                <div class="form-group">
+                                <div class="form-group row">
                                     <label class="col-sm-4 control-label" for="ckeditor_library_select">{% trans "Library" %}</label>
                                     <div class="col-sm-8 ckeditor_select_container">
                                         <select id="ckeditor_library_select"

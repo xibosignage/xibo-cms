@@ -411,7 +411,7 @@ class Tag implements \JsonSerializable
     {
         // Default options
         $options = array_merge([
-            'validate' => false
+            'validate' => true
         ], $options);
 
         if ($options['validate']) {

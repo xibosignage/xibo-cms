@@ -185,7 +185,7 @@ $(document).ready(function() {
                             inactiveCheck: function() {
                                 return (lD.layout.editable == false);
                             },
-                            inactiveCheckClass: 'hidden',
+                            inactiveCheckClass: 'd-none',
                         },
                         {
                             id: 'publishLayout',
@@ -196,7 +196,7 @@ $(document).ready(function() {
                             inactiveCheck: function() {
                                 return (lD.layout.editable == false);
                             },
-                            inactiveCheckClass: 'hidden',
+                            inactiveCheckClass: 'd-none',
                         },
                         {
                             id: 'checkoutLayout',
@@ -207,7 +207,7 @@ $(document).ready(function() {
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
                             },
-                            inactiveCheckClass: 'hidden',
+                            inactiveCheckClass: 'd-none',
                         },
                         {
                             id: 'scheduleLayout',
@@ -218,7 +218,7 @@ $(document).ready(function() {
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true || lD.layout.scheduleNowPermission == false);
                             },
-                            inactiveCheckClass: 'hidden',
+                            inactiveCheckClass: 'd-none',
                         },
                         {
                             id: 'saveTemplate',
@@ -229,7 +229,7 @@ $(document).ready(function() {
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
                             },
-                            inactiveCheckClass: 'hidden',
+                            inactiveCheckClass: 'd-none',
                         },
                         {
                             id: 'unlockLayout',
@@ -724,11 +724,12 @@ lD.welcomeScreen = function() {
     bootbox.dialog({
         message: layoutDesignerTrans.welcomeModalMessage,
         className: "welcome-screen-modal",
+        size: 'large',
         closeButton: false,
         buttons: {
             checkout: {
                 label: layoutDesignerTrans.checkoutTitle,
-                className: "btn-success",
+                className: "btn-success btn-bb-checkout",
                 callback: function(res) {
 
                     $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
@@ -744,7 +745,7 @@ lD.welcomeScreen = function() {
             },
             view: {
                 label: layoutDesignerTrans.viewModeTitle,
-                className: "btn-default",
+                className: "btn-white btn-bb-view",
                 callback: function(res) {
                     lD.enterReadOnlyMode();
                 }
@@ -851,10 +852,11 @@ lD.showCheckoutScreen = function() {
     bootbox.dialog({
         title: layoutDesignerTrans.checkoutTitle + ' ' + lD.layout.name,
         message: layoutDesignerTrans.checkoutMessage,
+        size: 'large',
         buttons: {
             checkout: {
                 label: layoutDesignerTrans.checkoutTitle,
-                className: "btn-success",
+                className: "btn-success btn-bb-checkout",
                 callback: function(res) {
 
                     $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');
@@ -931,7 +933,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
             let generatedButtons = {
                 cancel: {
                     label: translations.cancel,
-                    className: 'btn-default'
+                    className: 'btn-white'
                 }
             };
 
@@ -939,7 +941,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
             for(var button in res.buttons) {
                 if(res.buttons.hasOwnProperty(button)) {
                     if(button != translations.cancel) {
-                        let buttonType = 'btn-default';
+                        let buttonType = 'btn-white';
 
                         if(button === translations.save || button === editorsTrans.publish || button === editorsTrans.discard) {
                             buttonType = 'btn-primary';
@@ -949,7 +951,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
 
                         generatedButtons[button] = {
                             label: button,
-                            className: buttonType,
+                            className: buttonType + ' btn-bb-' + button,
                             callback: function(result) {
                                 // Call global function by the function name
                                 if (mainActionCallback != null) {
@@ -970,6 +972,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
                 className: 'second-dialog',
                 title: res.dialogTitle,
                 message: res.html,
+                size: 'large',
                 buttons: generatedButtons
             }).attr('id', calculatedId).attr('data-test', type + 'LayoutForm');
 
@@ -1107,14 +1110,15 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
         bootbox.dialog({
             title: editorsTrans.deleteTitle.replace('%obj%', objectType),
             message: htmlContent,
+            size: 'large',
             buttons: {
                 cancel: {
                     label: editorsTrans.no,
-                    className: 'btn-default'
+                    className: 'btn-white btn-bb-cancel'
                 },
                 confirm: {
                     label: editorsTrans.yes,
-                    className: 'btn-danger',
+                    className: 'btn-danger btn-bb-confirm',
                     callback: function() {
 
                         // Empty options object
@@ -1357,14 +1361,14 @@ lD.addModuleToPlaylist = function(playlistId, moduleType, moduleData, addToPosit
             buttons: {
                 viewLibrary: {
                     label: uploadTrans.viewLibrary,
-                    className: "btn-white",
+                    className: "btn-white btn-bb-viewlibrary",
                     callback: function() {
                         lD.toolbar.openNewTabAndSearch(moduleType);
                     }
                 },
                 main: {
                     label: translations.done,
-                    className: "btn-primary",
+                    className: "btn-primary btn-bb-main",
                     callback: function() {
                         lD.timeline.resetZoom();
                         lD.reloadData(lD.layout);
@@ -1862,10 +1866,11 @@ lD.showUnlockScreen = function() {
     bootbox.dialog({
         title: layoutDesignerTrans.unlockTitle,
         message: layoutDesignerTrans.unlockMessage,
+        size: 'large',
         buttons: {
             unlock: {
                 label: layoutDesignerTrans.unlockTitle,
-                className: "btn-info",
+                className: "btn-info btn-bb-unlock",
                 callback: function(res) {
 
                     $(res.currentTarget).append('&nbsp;<i class="fa fa-cog fa-spin"></i>');

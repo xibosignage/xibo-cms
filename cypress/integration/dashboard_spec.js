@@ -24,7 +24,7 @@ describe('Dashboard', function() {
         cy.visit('/statusdashboard');
 
         // Open user dropdown menu
-        cy.get('.dropdown-toggle img.nav-avatar').click();
+        cy.get('#navbarUserMenu img.nav-avatar').click();
 
         // Click Reshow welcome
         cy.get('#reshowWelcomeMenuItem').click();

@@ -148,8 +148,8 @@ describe('Layout Designer (Populated)', function() {
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Open toolbar Tools tab
-        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click();
-        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click({force:true});
+        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
 
         // Open the audio form
         cy.dragToElement(
@@ -163,7 +163,7 @@ describe('Layout Designer (Populated)', function() {
             });
 
             // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+            cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
 
             // Check if the widget has the audio icon
             cy.wait('@reloadLayout').then(() => {
@@ -182,8 +182,8 @@ describe('Layout Designer (Populated)', function() {
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Open toolbar Tools tab
-        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click();
-        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click({force:true});
+        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
 
         // Open the audio form
         cy.dragToElement(
@@ -201,7 +201,7 @@ describe('Layout Designer (Populated)', function() {
             cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day:first').click();
             
             // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+            cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
 
             // Check if the widget has the audio icon
             cy.wait('@reloadLayout').then(() => {
@@ -220,7 +220,7 @@ describe('Layout Designer (Populated)', function() {
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Open toolbar Tools tab
-        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
 
         // Open the audio form
         cy.dragToElement(
@@ -234,7 +234,7 @@ describe('Layout Designer (Populated)', function() {
             });
 
             // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] [data-bb-handler="done"]').click();
+            cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
 
             // Check if the widget has the audio icon
             cy.wait('@reloadLayout').then(() => {
@@ -316,7 +316,7 @@ describe('Layout Designer (Populated)', function() {
             cy.get('#layout-editor-toolbar a#trashContainer').click();
 
             // Confirm delete on modal
-            cy.get('[data-test="deleteObjectModal"] button[data-bb-handler="confirm"]').click();
+            cy.get('[data-test="deleteObjectModal"] button.btn-bb-confirm').click();
 
             // Check toast message
             cy.get('.toast-success').contains('Deleted');
@@ -371,7 +371,7 @@ describe('Layout Designer (Populated)', function() {
         cy.get('#layout-editor-topbar li#actionsSubmenu').click();
         cy.get('#layout-editor-topbar li#actionsSubmenu #publishLayout').click();
 
-        cy.get('button[data-bb-handler="Publish"]').click();
+        cy.get('button.btn-bb-Publish').click();
 
         // Get the id from the published layout and check if the designer reloaded to the Read Only Mode of that layout
         cy.wait('@layoutPublish').then((res) => {

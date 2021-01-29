@@ -128,7 +128,7 @@ class AuditLog extends Base
             $search['message'] = $filterMessage;
         }
 
-        $rows = $this->auditLogFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($search, $request));
+        $rows = $this->auditLogFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($search, $sanitizedParams));
 
         // Do some post processing
         foreach ($rows as $row) {

@@ -5,7 +5,7 @@ describe('Display Groups', function () {
     beforeEach(function () {
         cy.login();
 
-        testRun = Cypress._.random(0, 1e6);
+        testRun = Cypress._.random(0, 1e9);
     });
 
     it('should add one empty and one filled display groups', function() {
@@ -96,7 +96,7 @@ describe('Display Groups', function () {
 
             // Delete all
             cy.get('.dataTables_info button[data-toggle="dropdown"]').click();
-            cy.get('.dataTables_info li[data-button-id="displaygroup_button_delete"]').click();
+            cy.get('.dataTables_info a[data-button-id="displaygroup_button_delete"]').click();
 
             cy.get('input#confirmDelete').check();
             cy.get('button.save-button').click();

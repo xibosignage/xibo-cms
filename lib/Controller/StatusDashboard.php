@@ -114,8 +114,9 @@ class StatusDashboard extends Base
      */
     public function displays(Request $request, Response $response)
     {
+        $parsedRequestParams = $this->getSanitizer($request->getParams());
         // Get a list of displays
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
+        $displays = $this->displayFactory->query($this->gridRenderSort($parsedRequestParams), $this->gridRenderFilter([], $parsedRequestParams));
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->displayFactory->countLast();

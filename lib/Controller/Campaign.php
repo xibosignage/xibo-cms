@@ -223,7 +223,7 @@ class Campaign extends Base
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];
 
-        $campaigns = $this->campaignFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $options);
+        $campaigns = $this->campaignFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams), $options);
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
@@ -964,7 +964,7 @@ class Campaign extends Base
                 'previewOptions' => [
                     'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
                     'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
-                    'libraryDownloadUrl' => $this->urlFor($request,'library.download'),
+                    'libraryDownloadUrl' => $this->urlFor($request,'library.download', ['id' => ':id']),
                     'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
                     'loaderUrl' => $this->getConfig()->uri('img/loader.gif')
                 ]

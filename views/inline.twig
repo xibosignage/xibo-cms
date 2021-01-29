@@ -1,10 +1,8 @@
 
 {% macro disabled(name, title, value, helpText, groupClass) %}
-    <div class="form-group {{ groupClass }}">
-        <label class="control-label" title="{{ helpText }}">{{ title }}</label>
-        <div class="">
-            <p class="form-control-static">{{ value }}</p>
-        </div>
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}">{{ title }}</label>
+        <input readonly class="form-control" value="{{ value }}"></input>
     </div>
 {% endmacro %}
 
@@ -13,156 +11,140 @@
 {% endmacro %}
 
 {% macro raw(text, groupClass) %}
-    <div class="col-sm-12 {{ groupClass }}">
-        {{ text }}
+    <div class="{{ groupClass }}">
+        {{ text|raw }}
     </div>
 {% endmacro %}
 
-{% macro message(message, groupClass) %}
+{% macro message(message, groupClass, messageStyleClass) %}
+    <div class="{% if messageStyleClass %}{{messageStyleClass}}{% endif %} mr-1 {{ groupClass }}">
+        <span>{{ message }}</span>
+    </div>
+{% endmacro %}
+
+{% macro alert(message, alertType, groupClass) %}
     <div class="row">
-        <div class="col-sm-12 {{ groupClass }}">
-            <p>{{ message }}</p>
-        </div>
+        <div class="mr-3 alert alert-{% if alertType %}{{alertType}}{% else %}primary{% endif %} {{ groupClass }}" role="alert">{{ message }}</div>
     </div>
 {% endmacro %}
 
 {% macro button(title, type, link, groupClass) %}
     <div class="form-group {{ groupClass }}">
-        <div class="col-sm-offset-2 ">
-            {% if type == "link" %}
-                <a class="btn btn-default" href="{{ link }}">{{ title }}</a>
-            {% else %}
-                <button class="btn btn-default" type="{{ type }}">{{ title }}</button>
-            {% endif %}
-        </div>
+        {% if type == "link" %}
+            <a class="btn btn-white xibo-inline-btn mr-1 ml-0" href="{{ link }}">{{ title }}</a>
+        {% else %}
+            <button class="btn btn-white xibo-inline-btn mr-1 ml-0" type="{{ type }}">{{ title }}</button>
+        {% endif %}
     </div>
 {% endmacro %}
 
 {% macro input(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group {{ groupClass }}">
-        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="">
-            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} />
-        </div>
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
 
 {% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle) %}
-    <div class="form-group {{ groupClass }}">
-        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         {% if exactTag %}
-            <div>
-                <div class="input-group input-group-tags-exact">
-                    <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" data-auto-complete-url="{{ url_for('tag.search') }}" {{ validation }} />
-                    <span class="input-group-addon">
+            <div class="input-group input-group-tags-exact">
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" data-auto-complete-url="{{ url_for('tag.search') }}" {{ validation }} />
+                <div class="input-group-append input-group-addon">
+                    <div class="input-group-text">
                         <input title="{{ exactTagTitle }}" type="checkbox" id="{{ exactTag }}" name="{{ exactTag }}">
-                    </span>
+                    </div>
                 </div>
             </div>
         {% else %}
-            <div>
-                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" data-auto-complete-url="{{ url_for('tag.search') }}" {{ validation }} />
-            </div>
+            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" data-auto-complete-url="{{ url_for('tag.search') }}" {{ validation }} />
         {% endif %}
     </div>
 {% endmacro %}
 
 {% macro number(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group {{ groupClass }}">
-        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="">
-            <input class="form-control" name="{{ name }}" type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
-        </div>
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <input class="form-control" name="{{ name }}" type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
 
 {% macro email(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group {{ groupClass }}">
-        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="">
-            <input class="form-control" name="{{ name }}" type="email" id="{{ name }}" value="{{ value }}" {{ validation }} />
-        </div>
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <input class="form-control" name="{{ name }}" type="email" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
 
 {% macro password(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group {{ groupClass }}">
-        <label class="control-label" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="">
-            <input class="form-control" name="{{ name }}" type="password" id="{{ name }}" value="{{ value }}" {{ validation }} />
-        </div>
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <input class="form-control" name="{{ name }}" type="password" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
 
 {% macro checkbox(name, title, value, groupClass, accessKey) %}
-    <div class="form-group {{ groupClass }}">
-        <div class="">
-            <div class="checkbox">
-                <input title="{{ title }}" class="form-control" type="checkbox" id="{{ name }}" name="{{ name }}" {% if value == 1 %}checked{% endif %}>
-                <label for="{{ name }}">{{ title }}</label>
-            </div>
+    <div class="form-group mt-2 mr-2 mb-1 {{ groupClass }}">
+        <div class="form-check">
+            <input title="{{ title }}" class="form-check-input" type="checkbox" id="{{ name }}" name="{{ name }}" {% if value == 1 %}checked{% endif %}>
+            <label class="form-check-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         </div>
     </div>
 {% endmacro %}
 
 {% macro radio(name, id, title, value, helpText, groupClass, accessKey, setValue) %}
-    <div class="form-group {{ groupClass }}">
-        <div class="col-sm-offset-2 ">
-            <div class="radio">
-                <label for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">
-                    <input type="radio" id="{{ id }}" name="{{ name }}" value="{{ setValue }}" {% if value == setValue %}checked{% endif %}>
-                    {{ title }}
-                </label>
-            </div>
+    <div class="form-group mt-2 mr-2 mb-1 {{ groupClass }}">
+        <div class="form-check">
+            <input class="form-check-input" type="radio" id="{{ id }}" name="{{ name }}" value="{{ setValue }}" {% if value == setValue %}checked{% endif %}>
+            <label class="form-check-label" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
         </div>
     </div>
 {% endmacro %}
 
 {% macro dropdown(name, type, title, value, options, optionId, optionValue, helpText, groupClass, validation, accessKey, callBack, dataAttributes, optionGroups) %}
-    <div class="form-group {{ groupClass }}">
-        <label class="control-label" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="">
-            <select class="form-control" {% if type == "dropdownmulti" %}multiple{% endif %} name="{{ name }}" id="{{ name }}" {{ callBack }}
-            {% if dataAttributes|length > 0 %}
-            {% for attribute in dataAttributes %}
-                {{ attribute.name }}="{{ attribute.value }}"
-            {% endfor %}
-            {% endif %}>
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" for="{{ name }}" title="{{ helpText }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <select class="form-control" {% if type == "dropdownmulti" %}multiple{% endif %} name="{{ name }}" id="{{ name }}" {{ callBack }}
+        {% if dataAttributes|length > 0 %}
+        {% for attribute in dataAttributes %}
+            {{ attribute.name }}="{{ attribute.value }}"
+        {% endfor %}
+        {% endif %}>
 
-            {% set hasGroups = optionGroups|length > 0 %}
-            {% if not hasGroups %}
-                {% set optionGroups = {label: "General"} %}
+        {% set hasGroups = optionGroups|length > 0 %}
+        {% if not hasGroups %}
+            {% set optionGroups = {label: "General"} %}
+        {% endif %}
+
+        {% for group in optionGroups %}
+            {% if hasGroups %}
+                <optgroup label="{{ group.label }}">
+                {% set tempOptions = attribute(options, group.id) %}
+            {% else %}
+                {% set tempOptions = options %}
             {% endif %}
 
-            {% for group in optionGroups %}
-                {% if hasGroups %}
-                    <optgroup label="{{ group.label }}">
-                    {% set tempOptions = attribute(options, group.id) %}
+            {% for option in tempOptions %}
+
+                {% set itemOptionId = attribute(option, optionId) %}
+                {% set itemOptionValue = attribute(option, optionValue) %}
+
+                {% if type == "dropdownmulti" %}
+                    {% set selected = (itemOptionId in value) %}
                 {% else %}
-                    {% set tempOptions = options %}
+                    {% set selected = (itemOptionId == value) %}
                 {% endif %}
 
-                {% for option in tempOptions %}
-
-                    {% set itemOptionId = attribute(option, optionId) %}
-                    {% set itemOptionValue = attribute(option, optionValue) %}
-
-                    {% if type == "dropdownmulti" %}
-                        {% set selected = (itemOptionId in value) %}
-                    {% else %}
-                        {% set selected = (itemOptionId == value) %}
-                    {% endif %}
-
-                    <option value="{{ itemOptionId }}" {% if selected %}selected{% endif %}>{{ itemOptionValue }}</option>
-                {% endfor %}
-
-                {% if hasGroups %}
-                    </optgroup>
-                {% endif %}
+                <option value="{{ itemOptionId }}" {% if selected %}selected{% endif %}>{{ itemOptionValue }}</option>
             {% endfor %}
 
-            </select>
-        </div>
+            {% if hasGroups %}
+                </optgroup>
+            {% endif %}
+        {% endfor %}
+
+        </select>
     </div>
 {% endmacro %}
 
@@ -186,71 +168,61 @@
 {% endmacro %}
 
 {% macro date(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group {{ groupClass }}">
-        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div>
-            <div class="input-group">
-                <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
-                <input class="form-control datePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
-                <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
-            </div>
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="input-group">
+            <div class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></div>
+            <input class="form-control datePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+            <span class="input-group-append input-group-addon input-group-text date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
         </div>
     </div>
 {% endmacro %}
 
 {% macro dateMonth(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group {{ groupClass }}">
-        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div>
-            <div class="input-group">
-                <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
-                <input class="form-control dateMonthPicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
-                <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
-            </div>
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="input-group">
+            <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
+            <input class="form-control dateMonthPicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+            <span class="input-group-append input-group-addon input-group-text date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
         </div>
     </div>
 {% endmacro %}
 
 {% macro dateTime(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group {{ groupClass }}">
-        <label class="control-label" title="{{ helpText }}" for="{{ linkedName }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div>
-            <div class="input-group">
-                <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
-                <input class="form-control dateTimePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
-                <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
-            </div>
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}" for="{{ linkedName }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="input-group">
+            <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
+            <input class="form-control dateTimePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+            <span class="input-group-append input-group-addon input-group-text date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
         </div>
     </div>
 {% endmacro %}
 
 {% macro time(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group {{ groupClass }}">
-        <label class="control-label" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div>
-            <div class="input-group">
-                <span class="input-group-addon date-open-button" role="button"><i class="fa fa-calendar"></i></span>
-                <input class="form-control timePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
-                <span class="input-group-addon date-clear-button hidden" role="button"><i class="fa fa-times"></i></span>
-            </div>
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1 {% if title == '' %}d-none{% endif %}" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="input-group">
+            <span class="input-group-prepend input-group-text date-open-button" role="button"><i class="fa fa-calendar"></i></span>
+            <input class="form-control timePicker dateControl" type="text" {{ validation }} name="{{ name }}" id="{{ name }}" value="{{ value }}" />
+            <span class="input-group-append input-group-addon input-group-text date-clear-button d-none" role="button"><i class="fa fa-times"></i></span>
         </div>
     </div>
 {% endmacro %}
 
 {% macro switch(name, title, value, labelWidth, switchSize, onText, offText, groupClass, accessKey, disabled) %}
     <div class="form-group {{ groupClass }}">
-        <div class="">
-            <div class="checkbox">
-                <input type="checkbox" class="bootstrap-switch-target" id="{{ name }}" name="{{ name }}" accesskey="{{ accessKey }}"
-                       {% if value == 1 %}checked{% endif %}
-                        {% if disabled == 1 %}disabled{% endif %}
-                       data-label-text="{{ title }}"
-                        {% if onText not in [null, undefined, ""] %} data-on-text="{{ onText }}"{% endif %}
-                        {% if offText not in [null, undefined, ""] %} data-off-text="{{ offText }}"{% endif %}
-                        {% if switchSize not in [null, undefined, ""] %}data-size="{{ switchSize }}"{% else %}data-size="small"{% endif %}
-                        {% if labelWidth not in [null, undefined, ""] %} data-label-width="{{ labelWidth }}"{% endif %}
-                >
-            </div>
+        <div class="checkbox">
+            <input type="checkbox" class="bootstrap-switch-target" id="{{ name }}" name="{{ name }}" accesskey="{{ accessKey }}"
+                    {% if value == 1 %}checked{% endif %}
+                    {% if disabled == 1 %}disabled{% endif %}
+                    data-label-text="{{ title }}"
+                    {% if onText not in [null, undefined, ""] %} data-on-text="{{ onText }}"{% endif %}
+                    {% if offText not in [null, undefined, ""] %} data-off-text="{{ offText }}"{% endif %}
+                    {% if switchSize not in [null, undefined, ""] %}data-size="{{ switchSize }}"{% else %}data-size="small"{% endif %}
+                    {% if labelWidth not in [null, undefined, ""] %} data-label-width="{{ labelWidth }}"{% endif %}
+            >
         </div>
     </div>
 {% endmacro %}

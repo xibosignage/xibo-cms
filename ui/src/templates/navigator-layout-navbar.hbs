@@ -1,17 +1,17 @@
 <nav class="navbar navigator-navbar">
     {{! Left region }}
     <div class="pull-left">
-        <button type="button" id="close-btn" class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-placement="right"
+        <button type="button" id="close-btn" class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-container="#layout-navigator-navbar" data-placement="right"
             data-title="{{trans.closeDesc}}">
             <i class="fa-arrow-alt-circle-left fas"></i>
         </button>
         
-        <button type="button" id="add-btn" class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-placement="bottom"
+        <button type="button" id="add-btn" class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-container="#layout-navigator-navbar" data-placement="bottom"
             data-title="{{trans.addRegionDesc}}">
             <i class="fa fa-plus"></i>
         </button>
 
-        <button type="button" id="delete-btn" {{#unless trashBinActive}}disabled{{/unless}} class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-placement="bottom"
+        <button type="button" id="delete-btn" {{#unless trashBinActive}}disabled{{/unless}} class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-container="#layout-navigator-navbar" data-placement="bottom"
             data-title="{{trans.deleteRegion}}">
             <i class="fa fa-trash"></i>
         </button>
@@ -19,7 +19,7 @@
     
     {{! Right region }}
     <div class="pull-right">
-        <button type="button" id="fs-btn" class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-placement="bottom"
+        <button type="button" id="fs-btn" class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-container="#layout-navigator-navbar" data-placement="bottom"
             data-title="{{ trans.toggleFullscreen }}">
             <i class="fas fa-arrows-alt hide-on-fs"></i>
             <i class="fas fa-compress-arrows-alt show-on-fs"></i>

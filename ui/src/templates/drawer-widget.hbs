@@ -2,7 +2,7 @@
     
     <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
         <div class="widgetSubType">
-            <i class="fa module-icon-{{subType}}" data-toggle="tooltip" data-title="{{moduleName}}"></i>
+            <i class="fa module-icon-{{subType}}" data-toggle="tooltip" data-container="#actions-drawer" data-title="{{moduleName}}"></i>
         </div>
         <div class="widgetDuration">
             {{ duration }}
@@ -10,7 +10,7 @@
     </div>
 
     <div class="widgetName">
-        <span data-toggle="tooltip" data-title="{{widgetName}}">{{widgetName}}</span>
+        <span data-toggle="tooltip" data-container="#actions-drawer" data-title="{{widgetName}}">{{widgetName}}</span>
     </div>
 
     <div class="widgetProperties">
@@ -20,7 +20,7 @@
 
         {{#gt expireStatus 0}}
             <i class="fa {{expireStatusIcon}} editProperty" 
-            data-toggle="tooltip" data-container="body" data-html="true" 
+            data-toggle="tooltip" data-container="#actions-drawer" data-html="true" 
             data-title="{{expireStatusTitle}}"
             data-property="Expiry"></i>
         {{/gt}}

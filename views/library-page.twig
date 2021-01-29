@@ -27,15 +27,15 @@
 
 {% block actionMenu %}
     {% if currentUser.featureEnabledCount(["library.add", "library.modify"]) > 0 or settings.SETTING_LIBRARY_TIDY_ENABLED == 1 %}
-    <ul class="nav nav-pills pull-right">
+    <div class="widget-action-menu pull-right">
         {% if currentUser.featureEnabled("library.add") %}
-        <li class="btn btn-success btn-xs"><a class="btns" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</a></li>
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new media item to the library via external URL" %}" href="{{ url_for("library.uploadUrl.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add media (URL)" %}</a></li>
+        <button class="btn btn-success" href="#" id="libraryUploadForm" title="{% trans "Add a new media item to the library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Media" %}</button>
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new media item to the library via external URL" %}" href="{{ url_for("library.uploadUrl.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add media (URL)" %}</button>
         {% endif %}
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED == 1 and currentUser.featureEnabled("library.modify") %}
-            <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("library.tidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
+            <button class="btn btn-danger XiboFormButton" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("library.tidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</button>
         {% endif %}
-    </ul>
+    </div>
     {% endif %}
 {% endblock %}
 
@@ -45,20 +45,22 @@
         <div class="widget-title">{% trans "Library" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="libraryView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "ID" %}{% endset %}
                             {{ inline.number("mediaId", title) }}
 
-                            <div class="form-group ">
-                                <label class="control-label" title="" for="media" accesskey="">{% trans "Name" %}</label>
+                            <div class="form-group mr-1 mb-1">
+                                <label class="control-label mr-1" title="" for="media" accesskey="">{% trans "Name" %}</label>
                                 <div>
                                     <div class="input-group">
                                         <input class="form-control" name="media" type="text" id="media" value="">
-                                        <span class="input-group-addon">
-                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                        </span>
+                                        <div class="input-group-append input-group-addon">
+                                            <div class="input-group-text">
+                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -97,7 +99,7 @@
                 </div>
                 <div class="row">
                     <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
                     </div>
                     <div class="form-group col-sm-11" style="padding: 0">
                         <div id="breadcrumbs" style="margin-top: 5px;"></div>
@@ -105,7 +107,7 @@
                 </div>
 
                 <div class="row">
-                    <div class="col-sm-2 well" id="grid-folder-filter">
+                    <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
                             <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
@@ -113,7 +115,7 @@
                         <div id="container-folder-tree"></div>
                     </div>
 
-                    <div id="datatable-container" class="col-sm-10">
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
                             <table id="libraryItems" class="table table-striped responsive nowrap" data-content-type="media" data-content-id-name="mediaId" data-state-preference-name="libraryGrid" style="width: 100%;">
                                 <thead>
@@ -136,7 +138,7 @@
                                     <th>{% trans "Created" %}</th>
                                     <th>{% trans "Modified" %}</th>
                                     <th>{% trans "Expires" %}</th>
-                                    <th>{% trans "Row Menu" %}</th>
+                                    <th class="rowMenu"></th>
                                 </tr>
                                 </thead>
                                 <tbody>
@@ -299,7 +301,7 @@
             table.on('draw', dataTableDraw);
             table.on('draw', { form: $("#libraryItems").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#libraryItems_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#libraryItems_wrapper').find('.col-md-6').eq(1));
         });
 
         $("#libraryUploadForm").click(function(e) {
@@ -313,7 +315,7 @@
                 buttons: {
                     main: {
                         label: "{% trans "Done" %}",
-                        className: "btn-primary",
+                        className: "btn-primary btn-bb-main",
                         callback: function () {
                             table.ajax.reload();
                             XiboDialogClose();
@@ -366,7 +368,7 @@
                     buttons: {
                         main: {
                             label: "{% trans "Done" %}",
-                            className: "btn-primary",
+                            className: "btn-primary btn-bb-main",
                             callback: function () {
                                 table.ajax.reload();
                                 XiboDialogClose();

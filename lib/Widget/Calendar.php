@@ -488,8 +488,8 @@ class Calendar extends ModuleWidget
                     var now = moment();
                     var ongoingEvent = false;
                     
-                    var noEventTrigger = ' . ($this->getOption('noEventTrigger', '') == '' ? 'false' : $this->getOption('noEventTrigger')) . ';
-                    var currentEventTrigger = ' . ($this->getOption('currentEventTrigger', '') == '' ? 'false' : $this->getOption('currentEventTrigger')) . ';
+                    var noEventTrigger = ' . ($this->getOption('noEventTrigger', '') == '' ? 'false' : ('"' . $this->getOption('noEventTrigger') . '"')) . ';
+                    var currentEventTrigger = ' . ($this->getOption('currentEventTrigger', '') == '' ? 'false' : ('"' . $this->getOption('currentEventTrigger'). '"')) . ';
 
                     // Prepare the items array, sorting it and removing any items that have expired.
                     $.each(items, function(index, element) {
@@ -816,5 +816,17 @@ class Calendar extends ModuleWidget
     {
         // Make sure we lock for the entire iCal URI to prevent any clashes
         return md5(urldecode($this->getOption('uri')));
+    }
+
+    /** @inheritDoc */
+    public function hasHtmlEditor()
+    {
+        return true;
+    }
+
+    /** @inheritDoc */
+    public function getHtmlWidgetOptions()
+    {
+        return ['template', 'currentEventTemplate', 'noDataMessage'];
     }
 }

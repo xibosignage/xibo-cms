@@ -43,17 +43,17 @@
             <form id="campaignEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("campaign.edit", {"id": campaign.campaignId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
 
                 {% if currentUser.featureEnabled('folder.view') %}
-                <div class="form-group">
+                <div class="form-group row">
                     <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
                     <div class="col-sm-10" style="padding-top: 7px">
                         <span id="originalFormFolder"></span>
                     </div>
                 </div>
 
-                <div class="form-group">
+                <div class="form-group row">
                     <label class="col-sm-2 control-label">{% trans "Move to Selected Folder:" %}</label>
                     <div class="col-sm-10">
-                        <button type="button" class="btn btn-info" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                        <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
                         <span id="selectedFormFolder"></span>
                     </div>
                 </div>
@@ -91,14 +91,14 @@
         </div>
     </div>
     <div class="row">
-        <div class="col-md-12 well">
+        <div class="col-md-12 card p-3 mb-3 bg-light">
             {% set campaignName = campaign.campaign %}
             <h4>{% trans %}Layouts on {{campaignName}}{% endtrans %}</h4>
-            <div id="LayoutAssign" class="well" data-url="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}">
+            <div id="LayoutAssign" class="card p-3 mb-3 bg-light" data-url="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}">
                 <div>
                     <ul id="LayoutAssignSortable">
                         {% for item in layouts %}
-                        <li data-layout-id="{{ item.layoutId }}" data-display-order="{{ item.displayOrder }}" class="btn btn-sm btn-default {% if item.locked %}ui-state-disabled{% endif %}">{% if item.locked %}<span class="fa fa-lock"></span> {% endif %}{{ item.layout }} {% if not item.locked %}<span class="glyphicon glyphicon-minus-sign"></span>{% endif %}</li>
+                        <li data-layout-id="{{ item.layoutId }}" data-display-order="{{ item.displayOrder }}" class="btn btn-sm btn-white {% if item.locked %}ui-state-disabled{% endif %}">{% if item.locked %}<span class="fa fa-lock"></span> {% endif %}{{ item.layout }} {% if not item.locked %}<span class="fa fa-minus"></span>{% endif %}</li>
                         {% endfor %}
                     </ul>
                 </div>
@@ -120,7 +120,7 @@
                     </form>
                 </div>
 
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="layoutAssignments" class="table table-striped" data-state-preference-name="campaignLayoutAssignGrid">
                         <thead>
                         <tr>

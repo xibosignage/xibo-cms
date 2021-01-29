@@ -550,7 +550,7 @@ class Display extends Base
         ];
 
         // Get a list of displays
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $displays = $this->displayFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
 
         // Get all Display Profiles
@@ -840,6 +840,22 @@ class Display extends Base
                     )
                 );
 
+                // Trigger webhook
+                $display->buttons[] = [
+                    'id' => 'display_button_trigger_webhook',
+                    'url' => $this->urlFor($request,'displayGroup.trigger.webhook.form', ['id' => $display->displayGroupId]),
+                    'text' => __('Trigger a web hook'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.trigger.webhook', ['id' => $display->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'display_button_trigger_webhook'],
+                        ['name' => 'text', 'value' => __('Trigger a web hook')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
+                    ]
+                ];
+
                 $display->buttons[] = ['divider' => true];
             }
 
@@ -929,7 +945,7 @@ class Display extends Base
                 if ($display->isCmsTransferInProgress) {
                     $display->buttons[] = [
                         'id' => 'display_button_move_cancel',
-                        'url' => $this->urlFor('display.moveCmsCancel.form', ['id' => $display->displayId]),
+                        'url' => $this->urlFor($request,'display.moveCmsCancel.form', ['id' => $display->displayId]),
                         'text' => __('Cancel CMS Transfer'),
                     ];
                 }
@@ -1313,7 +1329,7 @@ class Display extends Base
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
-        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), [], $request);
+        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), $sanitizedParams, [], $display);
 
         // Tags are stored on the displaygroup, we're just passing through here
         if ($this->getUser()->featureEnabled('tag.tagging')) {

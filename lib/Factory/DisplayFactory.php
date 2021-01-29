@@ -470,9 +470,10 @@ class DisplayFactory extends BaseFactory
         // run the special query to help sort by displays already assigned to this display group, we want to run it only if we're sorting by member column.
         if ($parsedBody->getInt('displayGroupIdMembers') !== null && ($sortOrder == ['`member`'] || $sortOrder == ['`member` DESC'] )) {
             $members = [];
+            $displayGroupId = $parsedBody->getInt('displayGroupIdMembers');
+            
             foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                $displayId = $parsedBody->getInt($row['displayId']);
-                $displayGroupId = $parsedBody->getInt('displayGroupIdMembers');
+                $displayId = $this->getSanitizer($row)->getInt('displayId');
 
                 if ($this->getStore()->exists('SELECT display.display, display.displayId, displaygroup.displayGroupId
                                                     FROM display

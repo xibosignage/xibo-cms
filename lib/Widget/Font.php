@@ -22,6 +22,7 @@
 namespace Xibo\Widget;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -86,7 +87,7 @@ class Font extends ModuleWidget
     public function settings(Request $request, Response $response): Response
     {
         if ($this->getSanitizer($request->getParams())->getCheckbox('rebuildFonts') == 1) {
-            $this->container->get('\Xibo\Controller\Library')->installFonts(['invalidateCache' => true], $request);
+            $this->container->get('\Xibo\Controller\Library')->installFonts(RouteContext::fromRequest($request)->getRouteParser(),['invalidateCache' => true]);
         }
 
         return $response;

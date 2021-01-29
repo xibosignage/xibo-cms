@@ -4,8 +4,8 @@
     border: none;
     min-height: 40px;
     z-index: 2;
-    top: 75px;
-    margin: 1px;
+    top: 65px;
+    margin: 0;
     background: $toolbar-dark-blue;
     position: fixed;
     right: 0;
@@ -15,24 +15,18 @@
 
 #page-wrapper #layout-editor-topbar nav {
     top: 60px;
-    margin: 0 0 0 180px;
+    margin: 0 0 0 11rem;
 }
 
 @media (max-width: 1200px) {
-
     #layout-editor-topbar nav {
-        margin: 0;
         top: 0;
         position: relative;
     }
 
     #page-wrapper #layout-editor-topbar nav {
-        top: 60px;
-        margin: 0 0 0 180px;
         position: fixed;
-    }
 
-    #page-wrapper #layout-editor-topbar nav {
         .layout-info-duration, .layout-info-dimensions {
             display: none;
         }
@@ -45,6 +39,12 @@
         top: 0;
         position: relative;
     }
+    
+    #layout-editor-topbar nav {
+        .layout-info-duration, .layout-info-dimensions {
+            display: none;
+        }
+    }
 }
 
 
@@ -52,9 +52,8 @@
     padding: 0 16px;
 
     .navbar-text.layout-info {
-        margin: 8px 0;
         color: $xibo-color-white;
-        max-height: 24px;
+        line-height: 24px;
         display: inline-block;
 
         & > span {
@@ -63,7 +62,7 @@
         }
 
         .layout-info-label {
-            font-size: 12px;
+            font-size: 0.85rem;
             font-weight: 700;
             margin-right: 3px;
         }
@@ -91,7 +90,7 @@
             }
 
             i {
-                font-size: 14px;
+                font-size: 1rem;
             }
         }
 

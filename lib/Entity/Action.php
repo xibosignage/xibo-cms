@@ -170,8 +170,8 @@ class Action implements \JsonSerializable
             throw new InvalidArgumentException(__('Please select a Region'), 'targetId');
         }
 
-        if ($this->source !== 'layout' && $this->triggerCode !== null) {
-            throw new InvalidArgumentException(__('Trigger code can only be set with source set to Layout'), 'triggerCode');
+        if ($this->triggerType === 'webhook' && $this->triggerCode === null) {
+            throw new InvalidArgumentException(__('Please provide trigger code'), 'triggerCode');
         }
 
         if (!in_array($this->triggerType, ['touch', 'webhook'])) {

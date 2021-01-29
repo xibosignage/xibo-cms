@@ -18,6 +18,13 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+html {
+    font-size: 14px; /* Root default font size */
+}
+
+.hidden {
+    display: none !important; /* bootstrap 3 fix */
+}
 
 .xibo-logo {
     height: 40px;
@@ -45,28 +52,10 @@
 
 .form-signin input[type="text"],
 .form-signin input[type="password"] {
-    font-size: 16px;
+    font-size: 1.15rem;
     height: auto;
     margin-bottom: 15px;
     padding: 7px 9px;
-}
-
-@media (min-width: 920px) {
-    .modal-dialog {
-        width: 900px;
-    }
-}
-
-/* Define some modal widths and heights */
-.modal-big .modal-dialog {
-    width: 80%;
-}
-
-@media (max-width: 767px) {
-    .modal-big .modal-dialog {
-        width: auto;
-        margin-left: auto;
-    }
 }
 
 /* Full width iframe (for inside the help windows) */
@@ -147,7 +136,7 @@ span.error {
 
 .previewNav .prevSeq, .previewNav .nextSeq {
     cursor: pointer;
-    font-size: 15px;
+    font-size: 1.1rem;
 }
 
 .preview-media-information {
@@ -271,7 +260,7 @@ ul#FileAssociationsSortable {
 .bold-counter {
     font-weight: 100;
     line-height: 70px;
-    font-size: 70px;
+    font-size: 5rem;
     text-shadow: 1px 1px 5px #000;
     filter: dropshadow(color=#000, offx=1, offy=1);
 }
@@ -280,7 +269,7 @@ ul#FileAssociationsSortable {
     list-style: none;
 }
 
-ul.dropdown-menu-form {
+div.dropdown-menu-form {
     padding: 5px 10px 0;
     max-height: 300px;
     overflow-y: scroll;
@@ -290,28 +279,45 @@ ul.dropdown-menu-form {
     margin: 0;
 }
 
-.display-screenshot {
-    width: 200px;
+@media (max-width: 768px) {
+    #page-wrapper .page-content {
+        margin-top: 1rem !important;
+    }
 }
 
-.navbar-collapse {
-    padding-left: 0;
-    padding-right: 0;
-    height: 100%;
-    border: none
+.display-screenshot {
+    width: 200px;
 }
 
 #page-wrapper {
     padding-left: 0
 }
 
-.navbar-toggle {
-    border-color: #FFFFFF;
-    margin-top: 13px
+.navbar-toggler {
+    color: #f9f9f9;
+    border-color: #ddd;
+    font-size: 1.75rem;
+    padding: 4px 8px;
+}
+.navbar-toggler-side {
+    margin-top: 13px;
+    margin-right: 10px;
+}
+.navbar-toggler:focus, .navbar-toggler:hover {
+    background-color: #c4c4c4;
 }
 
-.navbar-toggle .icon-bar {
-    background-color: #FFFFFF
+@media (min-width: 768px) {
+    .navbar-collapse-side {
+        display: block!important;
+        height: auto!important;
+        padding-bottom: 0;
+        overflow: visible!important;
+    }
+
+    .navbar-toggler-side {
+        display: none;
+    }
 }
 
 @media (max-width: 768px) {
@@ -340,6 +346,7 @@ ul.dropdown-menu-form {
         position: fixed;
         top: 0;
         width: 100%;
+        z-index: 5;
     }
 
     .navbar-collapse {
@@ -347,7 +354,7 @@ ul.dropdown-menu-form {
     }
 
     #page-wrapper.active {
-        padding-top: 60px;
+        padding-top: 45px;
         padding-left: 0
     }
 
@@ -410,17 +417,6 @@ div.dt-buttons {
     position: relative;
 }
 
-/* Reset for nav pills to have a transparent hover */
-.nav-pills > li > a:hover, .nav-pills > li > a:focus {
-    background-color: transparent !important;
-}
-
-ul li a.btns {
-    color: #fff !important;
-    font-size: 1.1em;
-
-}
-
 /* WIZARD ASSISTANT  */
 
 .board {
@@ -478,7 +474,7 @@ span.round-tabs {
     position: absolute;
     left: 0;
     text-align: center;
-    font-size: 25px;
+    font-size: 1.8rem;
 }
 
 span.round-tabs.one {
@@ -571,41 +567,25 @@ i.fa.fa-ban.fa-stack-2x {
 }
 
 /* Fault Page */
+.board li a {
+    position: relative;
+}
 
-.board li.active:before {
+.board li a:after {
     content: " ";
     position: absolute;
-    left: 45%;
-    opacity: 0;
+    left: 50%;
     margin: 0 auto;
-    bottom: -2px;
-    border: 10px solid transparent;
-    border-bottom-color: #fff;
-    z-index: 1;
+    bottom: -5px;
+    border: 0px solid transparent;
+    border-bottom-color: #ddd;
+    transform: translateX(-50%);
     transition: 0.2s ease-in-out;
 }
 
-.board li:after {
-    content: " ";
-    position: absolute;
-    left: 45%;
-    opacity: 0;
-    margin: 0 auto;
-    bottom: 0px;
-    border: 5px solid transparent;
-    border-bottom-color: #ddd;
-    transition: 0.1s ease-in-out;
-}
-
-.board li.active:after {
-    content: " ";
-    position: absolute;
-    left: 45%;
-    opacity: 1;
-    margin: 5px auto;
-    bottom: 0px;
-    border: 10px solid transparent;
-    border-bottom-color: #ddd;
+.board li a.active:after {
+    border-width: 10px;
+    bottom: -15px;
 }
 
 .board .nav-tabs > li a {
@@ -620,9 +600,6 @@ i.fa.fa-ban.fa-stack-2x {
     background: transparent;
 }
 
-.board .tab-content {
-}
-
 .board .tab-pane {
     position: relative;
     /*padding-top: 50px;*/
@@ -630,9 +607,10 @@ i.fa.fa-ban.fa-stack-2x {
 
 .board .tab-content .head {
     font-family: 'Roboto Condensed', sans-serif;
-    font-size: 25px;
+    font-size: 1.8rem;
     text-transform: uppercase;
     padding-bottom: 10px;
+    margin-top: 30px;
 }
 
 .board .btn-outline-rounded {
@@ -654,14 +632,14 @@ i.fa.fa-ban.fa-stack-2x {
     }
 
     .board span.round-tabs {
-        font-size: 16px;
+        font-size: 1.15rem;
         width: 50px;
         height: 50px;
         line-height: 50px;
     }
 
     .board .tab-content .head {
-        font-size: 20px;
+        font-size: 1.4rem;
     }
 
     .board .nav-tabs > li a {
@@ -770,7 +748,7 @@ ul li.active.tab-design:hover a {
 }
 
 .big-duration {
-    font-size: 14px;
+    font-size: 1rem;
 }
 
 .fault.nav-tabs > li {
@@ -810,11 +788,12 @@ ul li.active.tab-design:hover a {
 .funkyradio input[type="checkbox"]:empty ~ label:before {
     position: absolute;
     display: block;
+    font-size: 1.25em;
     top: 0;
     bottom: 0;
     left: 0;
     content: '';
-    width: 2.5em;
+    width: 2em;
     background: #D1D3D4;
     border-radius: 3px 0 0 3px;
 }
@@ -824,8 +803,8 @@ ul li.active.tab-design:hover a {
 }
 
 .funkyradio input[type="checkbox"]:hover:not(:checked) ~ label:before {
-    content: '\2714';
-    text-indent: .9em;
+    content: '\2713';
+    text-indent: .6em;
     color: #C2C2C2;
 }
 
@@ -834,8 +813,8 @@ ul li.active.tab-design:hover a {
 }
 
 .funkyradio input[type="checkbox"]:checked ~ label:before {
-    content: '\2714';
-    text-indent: .9em;
+    content: '\2713';
+    text-indent: .6em;
     color: #333;
     background-color: #ccc;
 }
@@ -876,7 +855,7 @@ ul li.active.tab-design:hover a {
 
 .btn-click {
     margin-top: -27px;
-    font-size: 26px;
+    font-size: 1.85rem;
     cursor: pointer;
 }
 
@@ -896,21 +875,48 @@ ul li.active.tab-design:hover a {
 
 .bootstrap-tagsinput {
     min-width: 196px;
-    height: auto;
-    line-height: 24px;
+    height: calc(1.5em + 0.75rem + 2px);
+    padding: 0.375rem 0.75rem;
+    line-height: 1.5;
 }
 
 .tags-input-wide .bootstrap-tagsinput {
     width: 100%;
 }
 
-.XiboFilter .form-inline .bootstrap-tagsinput {
-    width: 100%;
+@media (min-width: 768px) {
+    .form-horizontal .control-label {
+        padding-top: 7px;
+        margin-bottom: 0;
+        text-align: right;
+    }
 }
 
-.XiboFilter .form-inline .input-group-tags-exact .bootstrap-tagsinput {
+.XiboFilter .form-inline .form-group, .XiboFilterCustom .form-inline .form-group {
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.XiboFilter .form-inline .input-group-tags-exact .bootstrap-tagsinput, .XiboFilterCustom .form-inline .input-group-tags-exact .bootstrap-tagsinput {
     border-top-right-radius: 0;
     border-bottom-right-radius: 0;
+}
+
+.XiboFilter .form-inline .tab-pane.active, .XiboFilterCustom .form-inline .tab-pane.active {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.XiboFilter .form-inline .control-label, .XiboFilterCustom .form-inline .control-label {
+    font-weight: 700;
+}
+
+.XiboFilter .form-inline .bootstrap-switch, .XiboFilter .form-inline .xibo-inline-btn, .XiboFilterCustom .form-inline .bootstrap-switch, .XiboFilterCustom .form-inline .xibo-inline-btn {
+    margin-top: 18px;
+}
+
+.XiboFilter .form-inline select, .XiboFilterCustom .form-inline select {
+    min-width: 100px;
 }
 
 .bootstrap-tagsinput + [data-role="tagsInputInline"] + .input-group-addon {
@@ -932,10 +938,18 @@ ul li.active.tab-design:hover a {
 
 .bootstrap-tagsinput .tag {
     margin-right: 0;
+    color: white;
     background-color: #5bc0de;
     border-color: #46b8da;
     font-weight: 700;
     border-radius: 8px;
+    display: inline;
+    padding: .2em .6em .3em;
+    font-size: 0.8em;
+    line-height: 1;
+    text-align: center;
+    white-space: nowrap;
+    vertical-align: baseline;
 }
 
 /*
@@ -987,7 +1001,7 @@ ul li.active.tab-design:hover a {
     margin: 2px;
 }
 
-.template-override-controls .well {
+.template-override-controls .card.bg-light {
     min-height: 100px;
 }
 
@@ -1019,13 +1033,30 @@ ul li.active.tab-design:hover a {
  * Display settings
  */
 .override-input {
+    padding: 6px !important;
     position: relative !important;
+    opacity: 0.8;
 }
 
 .override-input button.button-close-override {
     position: absolute;
-    right: -16px;
-    top: 8px;
+    right: -15px;
+    height: 33.5px;
+    top: 6px;
+    padding: 6px 4px;
+}
+
+.override-input .text-muted {
+    font-size: 0.9rem;
+    text-align: justify;
+    line-height: 16px;
+    padding: 6px;
+}
+
+.override-input .form-check-input {
+    position: relative;
+    width: 100%;
+    margin: 0;
 }
 
 /* 
@@ -1057,7 +1088,7 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
 
 .XiboCommand .command-inputs {
     padding: 6px;
-    font-size: 14px;
+    font-size: 1rem;
     margin: 4px 0;
     background-color: #e5e9ec;
 }
@@ -1111,7 +1142,7 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
 
 .XiboCommand .command-inputs .form-group-rs232 div label {
     width: 30%;
-    font-size: 14px;
+    font-size: 1rem;
     overflow: hidden;
     white-space: nowrap;
     text-overflow: ellipsis;
@@ -1139,7 +1170,7 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
 }
 
 .vakata-context {
-    z-index: 1050;
+    z-index: 1051;
 }
 
 .jstree-anchor {
@@ -1153,6 +1184,14 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
 
 td.feature-group-header-cell {
     cursor: pointer;
+}
+
+.XiboForm .form-group .form-text, .form-group small.form-text.text-muted {
+    font-size: 0.9rem;
+}
+
+.XiboForm .form-group .control-label {
+    font-weight: 700;
 }
 
 /* Layout Mini Preview */
@@ -1188,7 +1227,7 @@ td.feature-group-header-cell {
     position: absolute;
     color: #cecece;
     cursor: pointer;
-    font-size: 20px;
+    font-size: 1.4rem;
 }
 
 .mini-layout-preview .preview-button:hover {
@@ -1199,7 +1238,7 @@ td.feature-group-header-cell {
 .mini-layout-preview #playBtn {
     top: 50%;
     transform: translate(-50%, -50%);
-    font-size: 30px;
+    font-size: 2.2rem;
 }
 
 .mini-layout-preview #closeBtn {
@@ -1234,4 +1273,17 @@ td.feature-group-header-cell {
 
 .mini-layout-preview.show #content, .mini-layout-preview.show #playBtn {
     opacity: 1;
+}
+
+div.dataTables_wrapper div.dataTables_info {
+    white-space: nowrap;
+    padding-top: 0;
+}
+
+.inner-modal {
+    z-index: 1051;
+}
+
+.nav-tabs .nav-link:hover {
+    background-color: #eee;
 }
