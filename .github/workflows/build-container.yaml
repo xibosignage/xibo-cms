@@ -50,12 +50,3 @@ jobs:
         run: |
           docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
           docker push xibosignage/xibo-cms:release-${GITHUB_REF##*/}
-
-  in_fork:
-    name: Skip in a fork
-    runs-on: ubuntu-18.04
-    if: github.repository != 'xibosignage/xibo-cms'
-    steps:
-      - name: Skip
-        run: |
-          echo 'Skipped while in a fork'
