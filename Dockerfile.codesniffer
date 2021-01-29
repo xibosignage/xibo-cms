@@ -1,0 +1,22 @@
+# Stage 1
+# Run composer
+FROM composer:1.6 as composer
+COPY ./composer.json /app
+COPY ./composer.lock /app
+
+RUN composer install --no-interaction
+
+# Stage 2
+FROM php:7.3-alpine
+MAINTAINER Xibo Adspace <info@xibo-adspace.com>
+
+# Add git
+RUN apk update && \
+    apk add --no-cache git && \
+    mkdir /code
+
+# Composer generated vendor files
+COPY --from=composer /app/vendor /code/vendor
+
+VOLUME ["/project"]
+WORKDIR /project
