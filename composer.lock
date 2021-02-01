@@ -5271,18 +5271,22 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/support.git",
-                "reference": "75cdc099d7365d5c85ccbfcb0bd5696c7c2e13a1"
+                "reference": "50bcacf2130f515ec7def1125c42b8ac7ef65a55"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/support/zipball/75cdc099d7365d5c85ccbfcb0bd5696c7c2e13a1",
-                "reference": "75cdc099d7365d5c85ccbfcb0bd5696c7c2e13a1",
+                "url": "https://api.github.com/repos/xibosignage/support/zipball/50bcacf2130f515ec7def1125c42b8ac7ef65a55",
+                "reference": "50bcacf2130f515ec7def1125c42b8ac7ef65a55",
                 "shasum": ""
             },
             "require": {
                 "illuminate/support": "^5.4",
                 "psr/http-message": "^1.0",
                 "psr/log": "^1.1"
+            },
+            "require-dev": {
+                "exussum12/coverage-checker": "^0.11.2",
+                "squizlabs/php_codesniffer": "3.*"
             },
             "suggest": {
                 "monolog/monolog": "If the Monolog Handlers/Processors are to be used",
@@ -5310,7 +5314,7 @@
                 "source": "https://github.com/xibosignage/support/tree/master",
                 "issues": "https://github.com/xibosignage/support/issues"
             },
-            "time": "2021-01-06T16:41:41+00:00"
+            "time": "2021-02-01T17:07:27+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
