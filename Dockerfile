@@ -85,6 +85,8 @@ RUN apk update && apk upgrade && apk add tar \
     php7-fileinfo \
     php7-xml \
     php7-simplexml \
+    php7-xmlwriter \
+    php7-tokenizer \
     php7-mbstring \
     php7-memcached \
     php7-zlib \
