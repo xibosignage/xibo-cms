@@ -1093,9 +1093,23 @@ class User extends Base
             }
         }
 
+        // Prepare output
         $this->getState()->template = 'grid';
+
+        // Have we asked for a specific homepage?
+        $homepageFilter = $params->getString('homepage');
+        if ($homepageFilter !== null) {
+            if (array_key_exists($homepageFilter, $homepages)) {
+                $this->getState()->recordsTotal = 1;
+                $this->getState()->setData([$homepages[$homepageFilter]]);
+                return $this->render($request, $response);
+            } else {
+                throw new NotFoundException(__('Homepage not found'));
+            }
+        }
+
         $this->getState()->recordsTotal = count($homepages);
-        $this->getState()->setData($homepages);
+        $this->getState()->setData(array_values($homepages));
 
         return $this->render($request, $response);
     }
@@ -2430,6 +2444,7 @@ class User extends Base
         $this->getUser()->setOptionValue('navigationMenuPosition', $parsedParams->getString('navigationMenuPosition'));
         $this->getUser()->setOptionValue('useLibraryDuration', $parsedParams->getCheckbox('useLibraryDuration'));
         $this->getUser()->setOptionValue('showThumbnailColumn', $parsedParams->getCheckbox('showThumbnailColumn'));
+        $this->getUser()->setOptionValue('isAlwaysUseManualAddUserForm', $parsedParams->getCheckbox('isAlwaysUseManualAddUserForm'));
 
         if ($this->getUser()->isSuperAdmin()) {
             $this->getUser()->showContentFrom = $parsedParams->getInt('showContentFrom');
@@ -2451,6 +2466,28 @@ class User extends Base
             'httpStatus' => 204,
             'message' => __('Updated Preferences')
         ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * User Onboarding Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function onboardingForm(Request $request, Response $response)
+    {
+        // Only group admins or super admins can create Users.
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
+            throw new AccessDeniedException(__('Only super and group admins can create users'));
+        }
+
+        $this->getState()->template = 'user-form-onboarding';
+        $this->getState()->setData([]);
 
         return $this->render($request, $response);
     }

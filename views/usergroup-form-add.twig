@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -38,37 +38,94 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item"><a class="nav-link active" href="#general-tab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#description-tab" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#onboarding-tab" role="tab" data-toggle="tab"><span>{% trans "Onboarding Settings" %}</span></a></li>
+            </ul>
             <form id="userGroupAddForm" class="UserGroupForm form-horizontal" method="post" action="{{ url_for("group.add") }}">
-                {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "The Name for this User Group" %}{% endset %}
-                {{ forms.input("group", title, "", helpText, "", "required maxlength='50'") }}
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general-tab">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "The Name for this User Group" %}{% endset %}
+                        {{ forms.input("group", title, "", helpText, "", "required maxlength='50'") }}
 
-                {% set title %}{% trans "Library Quota" %}{% endset %}
-                {% set helpText %}{% trans "The quota that should be applied. Enter 0 for no quota." %}{% endset %}
-                <div class="form-group row">
-                    <label class="col-sm-2 control-label" for="libraryQuota">{{ title }}</label>
-                    <div class="col-sm-6">
-                        <input class="form-control" name="libraryQuota" type="number" id="libraryQuota" />
-                        <span class="help-block">{{ helpText }}</span>
+                        {% set title %}{% trans "Library Quota" %}{% endset %}
+                        {% set helpText %}{% trans "The quota that should be applied. Enter 0 for no quota." %}{% endset %}
+                        <div class="form-group row">
+                            <label class="col-sm-2 control-label" for="libraryQuota">{{ title }}</label>
+                            <div class="col-sm-6">
+                                <input class="form-control" name="libraryQuota" type="number" id="libraryQuota" />
+                                <span class="help-block">{{ helpText }}</span>
+                            </div>
+                            <div class="col-sm-4">
+                                <select name="libraryQuotaUnits" class="form-control">
+                                    <option value="kb">KiB</option>
+                                    <option value="mb">MiB</option>
+                                    <option value="gb">GiB</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        {% if currentUser.userTypeId == 1 %}
+                            {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
+                            {% set helpText %}{% trans "Should members of this Group receive system notifications?" %}{% endset %}
+                            {{ forms.checkbox("isSystemNotification", title, 0, helpText) }}
+
+                            {% set title %}{% trans "Receive Display Notifications?" %}{% endset %}
+                            {% set helpText %}{% trans "Should members of this Group receive Display notifications for Displays they have permission to see?" %}{% endset %}
+                            {{ forms.checkbox("isDisplayNotification", title, 0, helpText) }}
+                        {% endif %}
                     </div>
-                    <div class="col-sm-4">
-                        <select name="libraryQuotaUnits" class="form-control">
-                            <option value="kb">KiB</option>
-                            <option value="mb">MiB</option>
-                            <option value="gb">GiB</option>
-                        </select>
+
+                    <div class="tab-pane" id="description-tab">
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "An optional description of the user group. (1 - 500 characters)" %}{% endset %}
+                        {{ forms.textarea("description", title, "", helpText, "", "", 15) }}
                     </div>
+
+                    {% if currentUser.userTypeId == 1 %}
+                        <div class="tab-pane" id="onboarding-tab">
+                            {% set title %}{% trans "Show when onboarding a new user?" %}{% endset %}
+                            {% set helpText %}{% trans "Should this User Group be available for selection when creating a New User via the onboarding form?" %}{% endset %}
+                            {{ forms.checkbox("isShownForAddUser", title, 0, helpText) }}
+
+                            {% set title %}{% trans "Default Homepage" %}{% endset %}
+                            {% set helpText %}{% trans "Default Homepage users created with this group." %}{% endset %}
+                            {% set homepagesUrl %}{{ url_for("user.homepages.search") }}?userTypeId=1{% endset %}
+                            {% set attributes = [
+                                { name: "data-live-search", value: "true" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: homepagesUrl },
+                                { name: "data-search-term", value: "homepage" },
+                                { name: "data-id-property", value: "homepage" },
+                                { name: "data-text-property", value: "title" },
+                                { name: "data-initial-key", value: "homepage" },
+                                { name: "data-initial-value", value: group.defaultHomepageId }
+                            ] %}
+                            {{ forms.dropdown("defaultHomepageId", "single", title, "", null, "homepage", "title", helpText, "pagedSelect", "", "", "", attributes) }}
+
+                            {% set title %}{% trans "Default Library Quota" %}{% endset %}
+                            {% set helpText %}{% trans "The quota that should be applied to new users created with this group. Enter 0 for no quota." %}{% endset %}
+                            <div class="form-group row">
+                                <label class="col-sm-2 control-label" for="defaultLibraryQuota">{{ title }}</label>
+                                <div class="col-sm-6">
+                                    <input class="form-control" name="defaultLibraryQuota" type="number" id="defaultLibraryQuota" value="0" />
+                                    <span class="help-block">{{ helpText }}</span>
+                                </div>
+                                <div class="col-sm-4">
+                                    <select name="libraryQuotaUnits" class="form-control">
+                                        <option value="kb">KiB</option>
+                                        <option value="mb">MiB</option>
+                                        <option value="gb">GiB</option>
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                    {% endif %}
                 </div>
-
-                {% if currentUser.userTypeId == 1 %}
-                    {% set title %}{% trans "Receive System Notifications?" %}{% endset %}
-                    {% set helpText %}{% trans "Should members of this Group receive system notifications?" %}{% endset %}
-                    {{ forms.checkbox("isSystemNotification", title, 0, helpText) }}
-
-                    {% set title %}{% trans "Receive Display Notifications?" %}{% endset %}
-                    {% set helpText %}{% trans "Should members of this Group receive Display notifications for Displays they have permission to see?" %}{% endset %}
-                    {{ forms.checkbox("isDisplayNotification", title, 0, helpText) }}
-                {% endif %}
             </form>
         </div>
     </div>

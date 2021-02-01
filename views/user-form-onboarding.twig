@@ -1,0 +1,144 @@
+{#
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Onboarding" %}
+{% endblock %}
+
+{% block callBack %}onboardingFormOpen{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <div class="stepwizard" data-active="onboarding-step-1">
+                <div class="stepwizard-row setup-panel">
+                    <div class="stepwizard-step col-xs-3">
+                        <a href="#onboarding-step-1" type="button" class="btn btn-success btn-circle">1</a>
+                        <p><small>Type</small></p>
+                    </div>
+                    <div class="stepwizard-step col-xs-3">
+                        <a href="#onboarding-step-2" type="button" class="btn btn-default btn-circle" disabled="disabled">2</a>
+                        <p><small>Content</small></p>
+                    </div>
+                    <div class="stepwizard-step col-xs-3">
+                        <a href="#onboarding-step-3" type="button" class="btn btn-default btn-circle" disabled="disabled">3</a>
+                        <p><small>Displays</small></p>
+                    </div>
+                    <div class="stepwizard-step col-xs-3">
+                        <a href="#onboarding-step-4" type="button" class="btn btn-default btn-circle" disabled="disabled">4</a>
+                        <p><small>Credentials</small></p>
+                    </div>
+                </div>
+            </div>
+            <form id="userOnboardingForm" class="onboarding-form form-horizontal" role="form" method="post">
+                <div class="panel panel-default setup-content" id="onboarding-step-1" data-next="onboarding-step-2">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Type</h3>
+                    </div>
+                    <div class="panel-body">
+                        <p>
+                            The User account you are using has full access to the CMS and all of its features and configuration.
+                            If you are not adding an administrator type User, then it is likely you'll want to restrict and simplify
+                            what this new User can do.<br>
+                            <br>
+                            You may even want to create a simplified User for your own usage to administer the system in a way tailored
+                            to your usage.
+                        </p>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="userType" id="userType-admin" value="admin" checked>
+                                System Administrator. <br>
+                                Selecting this option will direct you to the Add User form where you can manually create a Super Admin.
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="userType" id="userType-playlist" value="playlist">
+                                Playlist Manager. <br>
+                                This is a user who controls the content on one or more Playlists.
+                            </label>
+                        </div>
+                        <div class="radio">
+                            <label>
+                                <input type="radio" name="userType" id="userType-display" value="display">
+                                Display Manager. <br>
+                                This is a user who administrates the Displays on the network.
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default setup-content" style="display:none;" id="onboarding-step-2" data-next="onboarding-step-3">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Content</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label class="control-label">Company Name</label>
+                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Name" />
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Company Address</label>
+                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Address" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default setup-content" style="display:none;" id="onboarding-step-3" data-next="onboarding-step-4">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Schedule</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label class="control-label">Company Name</label>
+                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Name" />
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Company Address</label>
+                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Address" />
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel panel-default setup-content" style="display:none;" id="onboarding-step-4" data-next="submit">
+                    <div class="panel-heading">
+                        <h3 class="panel-title">Cargo</h3>
+                    </div>
+                    <div class="panel-body">
+                        <div class="form-group">
+                            <label class="control-label">Company Name</label>
+                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Name" />
+                        </div>
+                        <div class="form-group">
+                            <label class="control-label">Company Address</label>
+                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Address" />
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}

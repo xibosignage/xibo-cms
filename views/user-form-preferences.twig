@@ -1,6 +1,6 @@
 {#
 /*
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -72,6 +72,10 @@
                 {% set title %}{% trans "Clear all auto submit form choices?" %}{% endset %}
                 {% set helpText %}{% trans "If you have selected to automatically submit any forms, tick here to reset." %}{% endset %}
                 {{ forms.checkbox("autoSubmitClearAll", title, 0, helpText) }}
+
+                {% set title %}{% trans "Always use manual Add User form?" %}{% endset %}
+                {% set helpText %}{% trans "If selected the manual Add User form will always open when you click Add User, otherwise the onboarding form will open." %}{% endset %}
+                {{ forms.checkbox("isAlwaysUseManualAddUserForm", title, currentUser.getOptionValue("isAlwaysUseManualAddUserForm", 0), helpText) }}
             </form>
         </div>
     </div>
