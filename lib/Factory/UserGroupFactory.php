@@ -314,7 +314,7 @@ class UserGroupFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $group = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'isUserSpecific', 'isEveryone', 'libraryQuota', 'isSystemNotification', 'isDisplayNotification', 'isShownForAddUser'
+                    'isUserSpecific', 'isEveryone', 'libraryQuota', 'isSystemNotification', 'isDisplayNotification', 'isShownForAddUser', 'defaultLibraryQuota'
                 ],
                 'stringProperties' => [
                     'defaultHomepageId'

@@ -387,7 +387,7 @@ class UserGroup
             'isDisplayNotification' => $this->isDisplayNotification,
             'isShownForAddUser' => $this->isShownForAddUser,
             'defaultHomepageId' => $this->defaultHomepageId,
-            'defaultLibraryQuota' => $this->defaultLibraryQuota
+            'defaultLibraryQuota' => $this->defaultLibraryQuota ?? 0
         ]);
     }
 
@@ -416,7 +416,7 @@ class UserGroup
             'isDisplayNotification' => $this->isDisplayNotification,
             'isShownForAddUser' => $this->isShownForAddUser,
             'defaultHomepageId' => $this->defaultHomepageId,
-            'defaultLibraryQuota' => $this->defaultLibraryQuota
+            'defaultLibraryQuota' => $this->defaultLibraryQuota ?? 0
         ]);
     }
 
