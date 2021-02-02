@@ -1,6 +1,6 @@
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Spring Signage Ltd
+ * Copyright (C) 2006-2020 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -21,6 +21,7 @@ var timelineForm;
 var lastForm;
 var gridTimeouts = [];
 var buttonsTemplate;
+var autoSubmitTemplate = null;
 
 // Fix startsWith string prototype for IE
 if (!String.prototype.startsWith) {
@@ -45,7 +46,12 @@ $.fn.dataTable.ext.errMode = function (settings, helpPage, message) {
 // Set up the light boxes
 $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
     event.preventDefault();
-    $(this).ekkoLightbox();
+    $(this).ekkoLightbox({
+        onContentLoaded: function() {
+            var container = $('.ekko-lightbox-container');
+            container.css({'max-height': container.height(), "height": ""});
+        }
+    });
 });
 
 $(document).ready(function() {
@@ -140,6 +146,9 @@ function XiboInitialise(scope) {
         // Bind the filter form
         $(this).find(".XiboFilter form input").on("keyup",  filterRefresh);
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
+
+        // init the jsTree
+        initJsTreeAjax('#container-folder-tree',  'grid-folder-tree-state', false)
     });
 
     // Search for any Buttons / Links on the page that are used to load forms
@@ -256,21 +265,6 @@ function XiboInitialise(scope) {
         return false;
     });
 
-    // Search for any charts
-    // TODO: remove in 1.9
-    $(scope + " div.morrisChart").each(function() {
-
-        // Look for a variable with the same ID as this element
-        var data = eval($(this).attr("id"));
-
-        if (data.type == "line")
-            new Morris.Line(data.data);
-        else if (data.type == "donut")
-            new Morris.Donut(data.data);
-        else if (data.type == "bar")
-            new Morris.Bar(data.data);
-    });
-
     // Special drop down forms (to act as a menu instead of a usual dropdown)
     $(scope + ' .dropdown-menu').on('click', function(e) {
         if($(this).hasClass('dropdown-menu-form')) {
@@ -287,7 +281,7 @@ function XiboInitialise(scope) {
                 jsDateOnlyFormat,
                 {
                     altFieldFormatter: function(unixTime) {
-                        let newDate = moment.unix(unixTime / 1000);
+                        var newDate = moment.unix(unixTime / 1000);
                         newDate.set('hour', 0);
                         newDate.set('minute', 0);
                         newDate.set('second', 0);
@@ -305,7 +299,7 @@ function XiboInitialise(scope) {
     });
 
     $(scope + ' .dateTimePicker:not(.datePickerHelper)').each(function() {
-        const enableSeconds = dateFormat.includes('s');
+        var enableSeconds = dateFormat.includes('s');
 
         if(calendarType == 'Jalali') {
             initDatePicker(
@@ -337,7 +331,7 @@ function XiboInitialise(scope) {
 
     $(scope + ' .dateMonthPicker:not(.datePickerHelper)').each(function() {
         if(calendarType == 'Jalali') {
-            const linkedFormat = $(this).data().linkFormat;
+            var linkedFormat = $(this).data().linkFormat;
             initDatePicker(
                 $(this),
                 systemDateFormat,
@@ -349,7 +343,7 @@ function XiboInitialise(scope) {
                         enabled: false
                     },
                     altFieldFormatter: function(unixTime) {
-                        let newDate = moment.unix(unixTime / 1000);
+                        var newDate = moment.unix(unixTime / 1000);
                         newDate.set('date', 1);
                         newDate.set('hour', 0);
                         newDate.set('minute', 0);
@@ -369,10 +363,10 @@ function XiboInitialise(scope) {
                         shorthand: false,
                         dateFormat: systemDateFormat,
                         altFormat: 'MMMM Y',
-                        parseDate: (datestr, format) => {
+                        parseDate: function(datestr, format) {
                             return moment(datestr, format, true).toDate();
                         },
-                        formatDate: (date, format, locale) => {
+                        formatDate: function(date, format, locale) {
                             return moment(date).format(format);
                         }
                     })]
@@ -382,7 +376,7 @@ function XiboInitialise(scope) {
     });
 
     $(scope + ' .timePicker:not(.datePickerHelper)').each(function() {
-        const enableSeconds = dateFormat.includes('s');
+        var enableSeconds = dateFormat.includes('s');
 
         if(calendarType == 'Jalali') {
             initDatePicker(
@@ -398,7 +392,7 @@ function XiboInitialise(scope) {
                         }
                     },
                     altFieldFormatter: function(unixTime) {
-                        let newDate = moment.unix(unixTime / 1000);
+                        var newDate = moment.unix(unixTime / 1000);
                         newDate.set('second', 0);
 
                         return newDate.format(systemTimeFormat);
@@ -441,8 +435,8 @@ function XiboInitialise(scope) {
 
     // make a vanilla layout, display and media selector for reuse
     $(scope + " .pagedSelect select.form-control").each(function() {
-        let $this = $(this);
-        let anchor = $this.data("anchorElement");
+        var $this = $(this);
+        var anchor = $this.data("anchorElement");
         if (anchor !== undefined && anchor !== "") {
             makePagedSelect($(this), $(anchor));
         } else {
@@ -466,11 +460,338 @@ function XiboInitialise(scope) {
     });
     
     // Initialize tags input form
-    $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").tagsinput();
+    $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").each(function() {
+        var self = this;
+        var autoCompleteUrl = $(self).data('autoCompleteUrl');
+
+        if(autoCompleteUrl != undefined && autoCompleteUrl != '') {
+            // Tags input with autocomplete
+            var tags = new Bloodhound({
+                datumTokenizer: Bloodhound.tokenizers.whitespace,
+                queryTokenizer: Bloodhound.tokenizers.whitespace,
+                initialize: false,
+                remote: {
+                    url: autoCompleteUrl,
+                    prepare: function(query, settings) {
+                        settings.data = { tag: query };
+                        return settings;
+                    },
+                    filter: function(list) {
+                        return $.map(list.data, function(tagObj) {
+                            return {
+                                tag: tagObj.tag
+                            };
+                        });
+                    }
+                },
+                sorter: function(a, b) {
+                    var nameA = a.tag.toUpperCase();
+                    var nameB = b.tag.toUpperCase();
+                    if (nameA < nameB) {
+                        return -1;
+                    }
+                    if (nameA > nameB) {
+                        return 1;
+                    }
+
+                    // Names must be the same 
+                    return 0;
+                }
+            });
+
+            var promise = tags.initialize();
+
+            promise
+            .done(function() {
+                // Initialise tagsinput with autocomplete
+                $(self).tagsinput({
+                    typeaheadjs: {
+                        name: 'tags',
+                        displayKey: 'tag',
+                        valueKey: 'tag',
+                        source: tags.ttAdapter()
+                    }
+                });
+            })
+            .fail(function() { 
+                console.info('Auto-complete for tag failed! Using default...');
+                $(self).tagsinput();
+            });
+        } else {
+            // Normal tags input
+            $(self).tagsinput();
+        }
+    });
 
     // Initialize tag with values function from xibo-forms.js
     $(scope + " .tags-with-value").each(function() {
         tagsWithValues($(this).closest("form").attr('id'));
+    });
+
+    $(scope + " .XiboCommand").each(function() {
+        // Get main container
+        var $mainContainer = $(this);
+
+        // Get input and its value
+        var $input = $mainContainer.find('input');
+
+        // Hide main input
+        $input.hide();
+
+        var commandTypes = {
+            'freetext': translations.freeTextCommand,
+            'tpv_led': 'Philips Android',
+            'rs232': 'RS232',
+            'intent': 'Android Intent'
+        };
+
+        // Scope functions
+        var changeTypeTemplate = function(type) {
+            var initVal = $input.val();
+            var parsedVal = parseValue($input.val());
+            
+            var $targetContainer = $mainContainer.find('.command-inputs');
+
+            // Create template for the inputs
+            var inputTemplate = Handlebars.compile($('#command-input-' + type + '-template').html());
+            $targetContainer.html(inputTemplate({
+                value: parsedVal.value,
+                initVal: initVal,
+                unique: new Date().valueOf()
+            }));
+
+            // Extra templates for Android intent
+            if(type == 'intent') {
+                var inputExtraTemplate = Handlebars.compile($('#command-input-intent-extra-template').html());
+                if(parsedVal.value.extras != undefined){
+                    parsedVal.value.extras.forEach(function(el){
+                        $targetContainer.find('.intent-extra-container').append(inputExtraTemplate(el));
+                    });
+                }
+
+                // Add extra element
+                $targetContainer.on('click', '.intent-add-extra', function() {
+                    $targetContainer.find('.intent-extra-container').append(inputExtraTemplate({}));
+                    updateValue(type);
+                });
+
+                // Remove extra element
+                $targetContainer.on('click', '.intent-remove-extra', function() {
+                    $(this).parents('.intent-extra-element').remove();
+                    updateValue(type);
+                });
+            }
+
+            // Bind input changes to the old input field
+            $targetContainer.change('input, select', function() {
+                updateValue(type);
+            });
+
+            updateValue(type);
+        };
+
+        // Parse and set value to main input
+        var parseValue = function(value) {
+            var valueObj = {};
+
+            if(value == '' || value == undefined) {
+                valueObj.type = 'freetext';
+                valueObj.value = '';
+            } else {
+                var splitValue = value.split('|');
+
+                if(splitValue.length == 1) {
+                    // free text
+                    valueObj.type = 'freetext';
+                    valueObj.value = value;
+                } else {
+                    valueObj.type = splitValue[0];
+
+                    switch (valueObj.type) {
+                        case 'intent':
+                            // intent|<type|activity,service,broadcast>|<activity>|[<extras>]
+                            valueObj.value = {
+                                // <type|activity,service,broadcast>
+                                type: splitValue[1],
+                                // [<extras>]
+                                //{
+                                //  "name": "<extra name>",
+                                //  "type": "<type|string,int,bool,intArray>",
+                                //  "value": <the value of the above type>
+                                //}
+                                extras: (splitValue.length > 3) ? JSON.parse(splitValue[3]) : []
+                            };
+                            break;
+                        case 'rs232':
+                            // rs232|<connection string>|<command>
+                            var connectionStringRaw = splitValue[1].split(',');
+                            var connectionString = {
+                                deviceName: connectionStringRaw[0],
+                                baudRate: connectionStringRaw[1],
+                                dataBits: connectionStringRaw[2],
+                                parity: connectionStringRaw[3],
+                                stopBits: connectionStringRaw[4],
+                                handshake: connectionStringRaw[5],
+                                hexSupport: connectionStringRaw[6]
+                            };
+
+                            valueObj.value = {
+                                // <COM#>,<Baud Rate>,<Data Bits>,<Parity|None,Odd,Even,Mark,Space>,<StopBits|None,One,Two,OnePointFive>,<Handshake|None,XOnXOff,RequestToSend,RequestToSendXOnXOff>,<HexSupport|0,1,default 0>
+                                // <DeviceName>,<Baud Rate>,<Data Bits>,<Parity>,<StopBits>,<FlowControl>
+                                cs: connectionString,
+                                command: splitValue[2]
+                            };
+                            break;
+                        case 'tpv_led':
+                            valueObj.type = 'tpv_led';
+                            valueObj.value = splitValue[1];
+                            
+                            break;
+                        default:
+                            valueObj.type = 'freetext';
+                            valueObj.value = value;
+                            break;
+                    }
+                }
+            }
+
+            return valueObj;
+        };
+
+        var updateValue = function(type) {
+            var builtString = '';
+            var invalidValue = false;
+            var $container = $mainContainer.find('.command-inputs');
+
+            // Reset invalid class
+            $container.removeClass('invalid');
+
+            //$input.val();
+            switch (type) {
+                case 'tpv_led':
+                    builtString = 'tpv_led|' + $container.find('.tpv-led-command').val();
+                    break;
+                case 'rs232':
+
+                    // Get values
+                    var deviceNameVal = $container.find('.rs232-device-name').val();
+                    var baudRateVal = $container.find('.rs232-baud-rate').val();
+                    var dataBitsVal = $container.find('.rs232-data-bits').val();
+                    var parityVal = $container.find('.rs232-parity').val();
+                    var stopBitsVal = $container.find('.rs232-stop-bits').val();
+                    var handshakeVal = $container.find('.rs232-handshake').val();
+                    var hexSupportVal = $container.find('.rs232-hex-support').val();
+                    var commandVal = $container.find('.rs232-command').val();
+
+                    if([deviceNameVal, baudRateVal, dataBitsVal].includes('')) {
+                        $container.addClass('invalid');
+                        invalidValue = true;
+                    }
+
+                    builtString = 'rs232|';
+                    builtString += (deviceNameVal != '') ? (deviceNameVal + ',') : '';
+                    builtString += (baudRateVal != '') ? (baudRateVal + ',') : '';
+                    builtString += (dataBitsVal != '') ? (dataBitsVal + ',') : '';
+                    builtString += (parityVal != '') ? (parityVal + ',') : '';
+                    builtString += (stopBitsVal != '') ? (stopBitsVal + ',') : '';
+                    builtString += (handshakeVal != '') ? (handshakeVal + ',') : '';
+                    builtString += hexSupportVal;
+                    builtString += '|' + commandVal;
+                    break;
+                case 'intent':
+                    builtString = 'intent|' + $container.find('.intent-type').val() + '|activity';
+                    // Extra values array
+                    var extraValues = [];
+
+                    // Get values from input fields
+                    $container.find('.intent-extra-element').each(function() {
+                        var $el = $(this);
+                        $el.removeClass('invalid');
+                        var extraName = $el.find('.extra-name').val();
+                        var extraType = $el.find('.extra-type').val();
+                        var extraValue = $el.find('.extra-value').val();
+
+                        // Validate values
+                        if(extraType == 'intArray') {
+                            // Transform the value into an array
+                            extraValue = extraValue.replace(' ', '').split(',').map(function(x) {
+                                return (x != '') ? Number(x) : '';
+                            });
+                            
+                            // Check if all the array elements are numbers ( and non empty )
+                            for (var index = 0; index < extraValue.length; index++) {
+                                var element = extraValue[index];
+                                
+                                if(isNaN(element) || element == '') {
+                                    extraValue = '';
+                                    break;
+                                }
+                            }
+                        } else if(extraType == 'int' && extraValue != '') {
+                            extraValue = isNaN(Number(extraValue)) ? '' : Number(extraValue);
+                        } else if(extraType == 'bool' && extraValue != '') {
+                            extraValue = (extraValue == 'true');
+                        }
+
+                        // Add to final command if all fields are correct
+                        if(![extraName, extraType, extraValue].includes('')) {
+                            extraValues.push({
+                                name: extraName,
+                                type: extraType,
+                                value: extraValue
+                            });
+                        } else {
+                            invalidValue = true;
+                            $el.addClass('invalid');
+                        }
+                    });
+
+                    // Append extra values array in JSON format
+                    if(extraValues.length > 0) {
+                        builtString += '|' + JSON.stringify(extraValues);
+                    }
+
+                    break;
+                default:
+                    builtString = $container.find('.free-text').val();
+                    break;
+            }
+
+            if(invalidValue) {
+                $input.val('');
+                $mainContainer.find('.command-preview').html($mainContainer.find('.command-preview').data('invalidMessage')).addClass('invalid');
+            } else {
+                $input.val(builtString);
+                $mainContainer.find('.command-preview').html(builtString).removeClass('invalid');
+            }
+        };
+
+        // Get init command type
+        var initType = parseValue($input.val()).type;
+
+        // Create basic type element
+        var optionsTemplate = Handlebars.compile($('#command-input-main-template').html());
+        $input.before(optionsTemplate({
+            types: commandTypes,
+            type: initType,
+            unique: new Date().valueOf()
+        }));
+
+        // Set template on first run
+        changeTypeTemplate(initType);
+
+        // Set template on command type change
+        $(this).find('.command-type').change(function () {
+            changeTypeTemplate($(this).val());
+        });
+
+        // Link checkbox to input preview
+        $(this).find('.show-command-preview').change(function () {
+            $mainContainer.find('.command-preview').toggle($(this).is(':checked'));
+        });
+
+        // Disable main input
+        $input.attr('readonly', 'readonly');
     });
 }
 
@@ -482,7 +803,7 @@ function XiboInitialise(scope) {
  */
 function dataTableProcessing(e, settings, processing) {
     if (processing)
-        $(e.target).closest('.widget').children(".widget-title").append(' <span class="saving fa fa-cog fa-spin"></span>');
+        $(e.target).closest('.widget').children(".widget-title").append('<span class="saving fa fa-cog fa-spin p-1"></span>');
     else
         $(e.target).closest('.widget').closest(".widget").find(".saving").remove();
 }
@@ -497,8 +818,13 @@ function dataTableDraw(e, settings) {
     var target = $("#" + e.target.id);
 
     // Check to see if we have any buttons that are multi-select
-    var enabledButtons = target.find("ul.dropdown-menu li[data-commit-url]");
-    if (enabledButtons.length > 0) {
+    var enabledButtons = target.find("div.dropdown-menu a[data-commit-url]");
+    
+    // Check to see if we have tag filter for the current table
+    var $tagsElement = target.closest(".XiboGrid").find('.FilterDiv #tags');
+
+    if (enabledButtons.length > 0 || $tagsElement.length > 0) {
+
         var searchByKey = function(array, item, key) {
             // return Object from array where array[object].item matches key
             for (var i in array) {
@@ -510,12 +836,10 @@ function dataTableDraw(e, settings) {
         };
 
         // Bind a click event to our table
-        if (target.data().initialised == undefined) {
-            target.find("tbody").on("click", "tr", function () {
-                $(this).toggleClass("selected");
-                target.data().initialised = true;
-            });
-        }
+        target.find("tbody").off("click", "tr").on("click", "tr", function () {
+            $(this).toggleClass("selected");
+            target.data().initialised = true;
+        });
 
         // Add a button set to the table
         var template = Handlebars.compile($("#multiselect-button-template").html());
@@ -524,15 +848,47 @@ function dataTableDraw(e, settings) {
         // Get every enabled button
         $(enabledButtons).each(function () {
             if (!searchByKey(buttons, "id", $(this).data("id")))
-                buttons.push({id: $(this).data("id"), gridId: e.target.id, text: $(this).data("text")})
+                buttons.push({id: $(this).data("id"), gridId: e.target.id, text: $(this).data("text"), customHandler: $(this).data("customHandler"), customHandlerUrl: $(this).data("customHandlerUrl"), contentIdName: $(this).data('contentIdName'), sortGroup: ($(this).data('sortGroup') != undefined) ? $(this).data('sortGroup') : 0})
         });
+
+        // Add tag button if exist in the filter ( and user has permissions)
+        if($tagsElement.length > 0 && userRoutePermissions.tags == 1) {
+            buttons.push({id: $tagsElement.attr("id"), gridId: e.target.id, text: translations.editTags, contentType: target.data('contentType'), contentIdName: target.data('contentIdName'), customHandler: "XiboMultiSelectTagFormRender", sortGroup: 0});
+        }
+        
+        // Sort buttons by groups/importance
+        buttons = buttons.sort(function(a, b) {
+            return ((a.sortGroup > b.sortGroup) ? 1 : -1);
+        });
+
+        // Add separators
+        var groupAux = 0;
+        if(buttons.length > 1) {
+            for (var index = 0; index < buttons.length; index++) {
+                var btn = buttons[index];
+
+                // If there's a new group ( and it's not the first element on the list)
+                if(btn.sortGroup > groupAux && index > 0) {
+                    buttons.splice(index, 0, {divider: true});
+                    groupAux = btn.sortGroup;
+                }
+            }
+        }
 
         var output = template({selectAll: translations.selectAll, withSelected: translations.withselected, buttons: buttons});
         target.closest(".dataTables_wrapper").find(".dataTables_info").prepend(output);
 
         // Bind to our output
-        target.closest(".dataTables_wrapper").find(".dataTables_info li.XiboMultiSelectFormButton").click(function(){
-            XiboMultiSelectFormRender(this);
+        target.closest(".dataTables_wrapper").find(".dataTables_info a.XiboMultiSelectFormButton").click(function(){
+            if($(this).data('customHandler') != undefined && typeof window[$(this).data('customHandler')] == 'function') {
+                window[$(this).data('customHandler')](this);
+            } else {
+                XiboMultiSelectFormRender(this);
+            }
+        });
+
+        target.closest(".dataTables_wrapper").find(".dataTables_info a.XiboMultiSelectFormCustomButton").click(function(){
+            window[$(this).data('customHandler')](this);
         });
         
         // Bind click to select all button
@@ -663,7 +1019,7 @@ function dataTableCreateTags(data, type) {
     var returnData = '';
 
     if(typeof data.tags != undefined && data.tags != null ) {
-        let arrayOfValues = [];
+        var arrayOfValues = [];
         var arrayOfTags = data.tags.split(',');
 
         if(typeof data.tagValues != undefined && data.tagValues != null) {
@@ -672,11 +1028,11 @@ function dataTableCreateTags(data, type) {
 
         returnData += '<div id="tagDiv">';
 
-        for (let i = 0; i < arrayOfTags.length; i++) {
+        for (var i = 0; i < arrayOfTags.length; i++) {
             if(arrayOfTags[i] != '' && (arrayOfValues[i] == undefined || arrayOfValues[i] === 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '</span></li>'
+                returnData += '<li class="btn btn-sm btn-white btn-tag">' + arrayOfTags[i] + '</span></li>'
             } else if (arrayOfTags[i] != '' && (arrayOfValues[i] != '' || arrayOfValues[i] !== 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '|' + arrayOfValues[i] + '</span></li>'
+                returnData += '<li class="btn btn-sm btn-white btn-tag">' + arrayOfTags[i] + '|' + arrayOfValues[i] + '</span></li>'
             }
         }
 
@@ -775,7 +1131,6 @@ function dataTableConfigureRefresh(gridId, table, refresh) {
 }
 
 function dataTableAddButtons(table, filter, allButtons) {
-
     allButtons = (allButtons === undefined) ? true : allButtons;
 
     if (allButtons) {
@@ -783,6 +1138,7 @@ function dataTableAddButtons(table, filter, allButtons) {
             buttons: [
                 {
                     extend: 'colvis',
+                    columns: ':not(.rowMenu)',
                     text: function (dt, button, config) {
                         return dt.i18n('buttons.colvis');
                     }
@@ -834,7 +1190,53 @@ function dataTableAddButtons(table, filter, allButtons) {
     }
 
     table.buttons( 0, null ).container().prependTo(filter);
+    $(filter).addClass('text-right');
     $(".ColVis_MasterButton").addClass("btn");
+    $(filter).find('.dt-buttons button.btn-secondary').addClass('btn-outline-primary').removeClass('btn-secondary');
+}
+
+/**
+ * State Load Callback
+ * @param settings
+ * @param callback
+ * @return {{}}
+ */
+function dataTableStateLoadCallback(settings, callback) {
+    var statePreferenceName = $("#"+settings.sTableId).data().statePreferenceName;
+    var option = (statePreferenceName !== undefined) ? statePreferenceName : settings.sTableId + "Grid";
+    var data = {};
+    $.ajax({
+        type: "GET",
+        async: false,
+        url: userPreferencesUrl + "?preference=" + option,
+        dataType: "json",
+        success: function (json) {
+            try {
+                if (json.success) {
+                    data = JSON.parse(json.data.value);
+                }
+            } catch (e) {
+                // Do nothing
+            }
+        }
+    });
+    return data;
+}
+
+/**
+ * Save State Callback
+ * @param settings
+ * @param data
+ */
+function dataTableStateSaveCallback(settings, data) {
+    var statePreferenceName = $("#"+settings.sTableId).data().statePreferenceName;
+    var option = (statePreferenceName !== undefined) ? statePreferenceName : settings.sTableId + "Grid";
+    updateUserPref([{
+        option: option,
+        value: JSON.stringify(data)
+    }], function() {
+        // ignore
+    });
 }
 
 /**
@@ -886,6 +1288,38 @@ function XiboFormRender(sourceObj, data) {
                 
             // Was the Call successful
             if (response.success) {
+                if(!(typeof sourceObj === "string" || sourceObj instanceof String)) {
+                    var commitUrl = sourceObj.data().commitUrl;
+
+                    // Handle auto-submit
+                    if (response.autoSubmit && commitUrl !== undefined) {
+                        // grab the auto submit URL and submit it immediately
+                        $.ajax({
+                            type: sourceObj.data().commitMethod || "POST",
+                            url: commitUrl,
+                            cache: false,
+                            dataType: "json",
+                            success: function(autoSubmitResponse) {
+                                if (autoSubmitResponse.success) {
+                                    // Success - what do we do now?
+                                    if (autoSubmitResponse.message !== '') {
+                                        SystemMessage(autoSubmitResponse.message, true);
+                                    }
+                                    XiboRefreshAllGrids();
+                                } else if (autoSubmitResponse.login) {
+                                    // We were logged out
+                                    LoginBox(autoSubmitResponse.message);
+                                } else {
+                                    SystemMessageInline(autoSubmitResponse.message);
+                                }
+                            },
+                            error: function(xhr) {
+                                SystemMessageInline(xhr.responseText);
+                            }
+                        });
+                        return false;
+                    }
+                }
 
                 // Set the dialog HTML to be the response HTML
                 var dialogTitle = "";
@@ -902,7 +1336,8 @@ function XiboFormRender(sourceObj, data) {
                 var dialog = bootbox.dialog({
                         message: response.html,
                         title: dialogTitle,
-                        animate: false
+                        animate: false,
+                        size: 'large'
                     }).attr("id", id);
 
                 // Store the extra
@@ -927,13 +1362,13 @@ function XiboFormRender(sourceObj, data) {
                                 extrabutton.addClass('btn-primary save-button');
                             }
                             else {
-                                extrabutton.addClass('btn-default');
+                                extrabutton.addClass('btn-white');
                             }
 
                             extrabutton.click(function(e) {
                                 e.preventDefault();
 
-                                let $button = $(this);
+                                var $button = $(this);
 
                                 if ($button.hasClass("save-button")) {
                                     if ($button.hasClass("disabled")) {
@@ -960,6 +1395,17 @@ function XiboFormRender(sourceObj, data) {
 
                             footer.append(extrabutton);
                         });
+
+                    // Check to see if we ought to render out a checkbox for autosubmit
+                    if(!(typeof sourceObj === "string" || sourceObj instanceof String)) {
+                        if (sourceObj.data().autoSubmit) {
+                            if (autoSubmitTemplate === null) {
+                                autoSubmitTemplate = Handlebars.compile($('#auto-submit-field-template').html());
+                            }
+
+                            footer.prepend(autoSubmitTemplate());
+                        }
+                    }
                 }
 
                 // Focus in the first input
@@ -1056,9 +1502,38 @@ function XiboFormRender(sourceObj, data) {
                         $(this).closest(".modal").addClass("modal-big");
                 });
 
+                // make bootstrap happy.
+                if ($('#folder-tree-form-modal').length != 0) {
+                    $('#folder-tree-form-modal').remove();
+                }
+
+                // if there is no modal appended to body and we are on a form that needs this modal, then append it
+                if ($('#folder-tree-form-modal').length === 0 && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').length && $('#select-folder-button').length) {
+                    // compile tree folder modal and append it to Form
+                    var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+                    var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+
+                    // append to body, instead of the form as it was before to make it more bootstrap friendly
+                    $('body').append(folderTreeModal(treeConfig));
+
+                    $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                        $(this).data('bs.modal', null);
+                    });
+                }
+
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
-                
+
+                if (dialog.find('.XiboForm').attr('id') != undefined) {
+                    // if this is add form and we have some folderId selected in grid view, put that as the working folder id for this form
+                    // edit forms will get the current folderId assigned to the edited object.
+                    if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val() == '') {
+                        $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
+                    }
+
+                    initJsTreeAjax('#container-folder-form-tree', dialog.find('.XiboForm').attr('id'), true, 600);
+                }
+
                 // Do we have to call any functions due to this success?
                 if (response.callBack !== "" && response.callBack !== undefined) {
                     eval(response.callBack)(dialog);
@@ -1237,7 +1712,7 @@ function XiboMultiSelectFormRender(button) {
     var message;
 
     if (matches.length > 0)
-        message = translations.multiselectMessage.replace('%1', "" + matches.length).replace("%2", $(button).find("a").html());
+        message = translations.multiselectMessage.replace('%1', "" + matches.length).replace("%2", $(button).html());
     else
         message = translations.multiselectNoItemsMessage;
 
@@ -1245,7 +1720,8 @@ function XiboMultiSelectFormRender(button) {
     var dialog = bootbox.dialog({
             message: message,
             title: translations.multiselect,
-            animate: false
+            animate: false,
+            size: 'large'
         });
 
     // Append a footer to the dialog
@@ -1352,7 +1828,7 @@ function XiboMultiSelectFormRender(button) {
     }
 
     // Close button
-    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-default');
+    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-white');
     extrabutton.click(function() {
 
         $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
@@ -1371,6 +1847,229 @@ function XiboMultiSelectFormRender(button) {
 
     footer.append(extrabutton);
 
+}
+
+function XiboMultiSelectPermissionsFormOpen(button) {
+    var $targetTable = $(button).parents('.XiboGrid').find('.dataTable');
+    var $matches = $targetTable.find('tr.selected')
+    var targetDataTable = $targetTable.DataTable();
+    var requestUrl = $(button).data('customHandlerUrl');
+    var elementIdName = $(button).data('contentIdName');
+    var matchIds = [];
+
+    // Get matches from the selected elements
+    $matches.each(function(index, row){
+        // Get data
+        var rowData = targetDataTable.row(row).data();
+
+        // Add match id to the array
+        matchIds.push(rowData[elementIdName]);
+    });
+
+    if($matches.length == 0) {
+        // If there are no matches, show dialog with no element selected message
+        bootbox.dialog({
+            message: translations.multiselectNoItemsMessage,
+            title: translations.multiselect,
+            animate: false,
+            size: 'large',
+            buttons: {
+                cancel: {
+                    label: translations.close,
+                    className: 'btn-white btn-bb-cancel'  
+                }
+            }
+        });
+    } else {
+        // Render multi edit permissions form
+        XiboFormRender(requestUrl, {ids: matchIds.toString()});
+    }
+}
+
+function XiboMultiSelectTagFormRender(button) {
+    var elementType = $(button).data('contentType');
+    var elementIdName = $(button).data('contentIdName');
+    var matches = [];
+    var $targetTable = $(button).parents('.XiboGrid').find('.dataTable');
+    var targetDataTable = $targetTable.DataTable();
+    var dialogContent = '';
+    var dialogId = "multiselectTagEditForm";
+    var matchIds = [];
+    var existingTags = [];
+
+    // Get matches from the selected elements
+    $targetTable.find('tr.selected').each(function(){
+        matches.push($(this));
+    });
+
+    // If there are no matches, show form with no element selected message
+    if(matches.length == 0) {
+        dialogContent = translations.multiselectNoItemsMessage;
+    } else {
+        // Create the data for the request
+        matches.forEach(function(row) {
+            // Get data
+            var rowData = targetDataTable.row(row).data();
+
+            // Add match id to the array
+            matchIds.push(rowData[elementIdName]);
+
+            var arrayOfValues = [];
+            if(typeof rowData.tagValues != undefined && rowData.tagValues != null) {
+                arrayOfValues = rowData.tagValues.split(',');
+            }
+
+            // Add existing tags to the array
+            if(['', null].indexOf(rowData.tags) === -1) {
+                var arrayOfTags = rowData.tags.split(',');
+
+                arrayOfTags.forEach(function(tag, index) {
+                    if(existingTags.indexOf(tag) === -1 && (arrayOfValues[index] == undefined || arrayOfValues[index] == 'NULL')) {
+                        existingTags.push(tag);
+                    } else if (existingTags.indexOf(tag) === -1 && (arrayOfValues[index] != '' || arrayOfValues[index] != 'NULL')) {
+                        existingTags.push(arrayOfTags[index] + '|' + arrayOfValues[index]);
+                    }
+                });
+            }
+        });
+        
+        dialogContent = Handlebars.compile($('#multiselect-tag-edit-form-template').html());
+    }
+
+    // Create dialog
+    var dialog = bootbox.dialog({
+        message: dialogContent,
+        title: translations.multiselect,
+        size: 'large',
+        animate: false
+    });
+
+    // Append a footer to the dialog
+    var dialogBody = dialog.find(".modal-body");
+    var footer = $("<div>").addClass("modal-footer");
+    dialog.find(".modal-content").append(footer);
+    dialog.attr("id", dialogId);
+
+    // Add some buttons
+    var extrabutton;
+
+    if (matches.length > 0) {
+        // Save button
+        extrabutton = $('<button class="btn">').html(translations.save).addClass('btn-primary save-button');
+
+        extrabutton.click(function() {
+            var newTagsToRemove = dialogBody.find('#tagsToRemove').val().split(',');
+            var requestURL = dialogBody.find('#requestURL').val();
+
+            var tagsToBeRemoved = function() {
+                var tags = [];
+                existingTags.forEach(function(oldTag) {
+                    if(newTagsToRemove.indexOf(oldTag) == -1) {
+                        tags.push(oldTag);
+                    }
+                });
+
+                return tags;
+            };
+
+            var requestData = {
+                targetIds: matchIds.toString(),
+                targetType: elementType,
+                addTags: dialogBody.find('#tagsToAdd').val(),
+                removeTags: tagsToBeRemoved().toString()
+            };
+
+            // Add loading icon to the button
+            $(this).append('<span class="saving fa fa-cog fa-spin"></span>');
+
+            // Make an AJAX call
+            $.ajax({
+                type: 'PUT',
+                url: requestURL,
+                cache: false,
+                dataType: "json",
+                data: requestData,
+                success: function(response, textStatus, error) {
+
+                    if (response.success) {
+                        toastr.success(response.message);
+
+                        // Hide modal
+                        dialog.modal('hide');
+                        targetDataTable.ajax.reload(null, false);
+                    }
+                    else {
+                        // Why did we fail?
+                        if (response.login) {
+                            // We were logged out
+                            LoginBox(response.message);
+                        }
+                        else {
+                            // Likely just an error that we want to report on
+                            footer.find(".saving").remove();
+                            SystemMessageInline(response.message, footer.closest(".modal"));
+                        }
+
+
+                        // Remove loading icon
+                        $(this).find('.saving').remove();
+                    }
+                },
+                error: function(responseText) {
+                    SystemMessage(responseText, false);
+
+                    // Remove loading icon
+                    $(this).find('.saving').remove();
+                }
+            });
+
+            // Keep the modal open
+            return false;
+        });
+
+        footer.append(extrabutton);
+
+        // Initialise existing tags ( and save a backup )
+        if(existingTags.length > 0) {
+            var tagsString = existingTags.toString();
+            dialogBody.find('#tagsToRemove').val(tagsString);
+        } else {
+            dialogBody.find('#tagsToRemoveContainer').hide();
+        }
+
+        // Add element type to the request hidden input
+        dialogBody.find('#requestURL').val(dialogBody.find('#requestURL').val().replace('[type]', elementType));
+
+        // Prevent tag add
+        dialogBody.find('#tagsToRemove').on('beforeItemAdd', function(event) {
+            // Cancel event if the tag doesn't belong in the starting tags
+            event.cancel = (existingTags.indexOf(event.item) == -1);
+        });
+    }
+
+    // Close button
+    extrabutton = $('<button class="btn">').html(translations.close).addClass('btn-white');
+    extrabutton.click(function() {
+
+        $(this).append(' <span class="saving fa fa-cog fa-spin"></span>');
+
+        // Do our thing
+        dialog.modal('hide');
+
+        // Bring other modals back to focus
+        if ($('.modal').hasClass('in')) {
+            $('body').addClass('modal-open');
+        }
+
+        // Keep the modal window open!
+        return false;
+    });
+    
+    // Append button
+    footer.append(extrabutton);
+
+    // Initialise controls
+    XiboInitialise('#' + dialogId);
 }
 
 function XiboHelpRender(url) {
@@ -1438,7 +2137,8 @@ function XiboClockUpdate(time)
 function XiboFormSubmit(form, e, callBack) {
 
     // Get the URL from the action part of the form)
-    var url = $(form).attr("action");
+    var $form = $(form);
+    var url = $form.attr("action");
 
     // Pull any text editor instances we have
     for (var editor in CKEDITOR.instances) {
@@ -1461,11 +2161,11 @@ function XiboFormSubmit(form, e, callBack) {
     }
 
     $.ajax({
-        type:$(form).attr("method"),
+        type:$form.attr("method"),
         url:url,
         cache:false,
         dataType:"json",
-        data:$(form).serialize(),
+        data:$form.serialize(),
         success: function(xhr, textStatus, error) {
             
             XiboSubmitResponse(xhr, form);
@@ -1477,6 +2177,15 @@ function XiboFormSubmit(form, e, callBack) {
             SystemMessage(xhr.responseText, false);
         }
     });
+
+    // Check to see if we need to call any auto-submit preferences
+    // get the formid
+    if ($form.closest('.modal-dialog').find('input[name=autoSubmit]').is(':checked')) {
+        updateUserPref([{
+            option: "autoSubmit." + $form.attr("id"),
+            value: true
+        }]);
+    }
 
     return false;
 }
@@ -1526,7 +2235,7 @@ function XiboSubmitResponse(response, form) {
         if (!apply) {
             // Next form URL is provided
             if ($(form).data("nextFormUrl") !== undefined) {
-                let responseId = ($(form).data("nextFormIdProperty") === undefined)
+                var responseId = ($(form).data("nextFormIdProperty") === undefined)
                     ? response.id
                     : response.data[$(form).data("nextFormIdProperty")];
                 XiboFormRender($(form).data().nextFormUrl.replace(":id", responseId));
@@ -1685,35 +2394,35 @@ function LoginBox(message) {
     location.reload(false);
 }
 
-function updateUserPref(prefs) {
+/**
+ * Update User preferences
+ * @param prefs
+ * @param success
+ */
+function updateUserPref(prefs, success) {
+    // If we do not have a success function provided, then set one.
+    if (success === undefined || success === null) {
+        success = function(response) {
+            if (response.success) {
+                SystemMessage(response.message, true);
+            } else if (response.login) {
+                LoginBox(response.message);
+            } else {
+                SystemMessage(response.message, response.success);
+            }
+            return false;
+        }
+    }
 
-    // Call with AJAX
     $.ajax({
         type: "post",
         url: userPreferencesUrl,
         cache: false,
         dataType: "json",
-        data: {preference: prefs},
-        success: function(response){
-
-            // Was the Call successful
-            if (response.success) {
-                SystemMessage(response.message, true);
-            }
-            else {
-                // Login Form needed?
-                if (response.login) {
-
-                    LoginBox(response.message);
-
-                    return false;
-                } else {
-                    SystemMessage(response.message, response.success);
-                }
-            }
-
-            return false;
-        }
+        data: {
+            preference: prefs
+        },
+        success: success
     });
 }
 
@@ -1734,8 +2443,10 @@ function SystemMessage(messageText, success) {
         var dialog = bootbox.dialog({
             message: messageText,
             title: "Application Message",
+            size: 'large',
             buttons: [{
                 label: 'Close',
+                className: 'btn-bb-close',
                 callback: function() {
                     if (lastForm != null && lastForm.indexOf("playlist/widget/form") > -1 && timelineForm != null) {
                         // Close button
@@ -1778,7 +2489,7 @@ function SystemMessageInline(messageText, modal) {
     $(modal).find(".btn").removeClass("disabled");
 
     $("<div/>", {
-        class: "well text-danger text-center form-error",
+        class: "card bg-light p-3 text-danger col-sm-12 text-center form-error",
         html: messageText
     }).appendTo(modal.find(".modal-footer"));
 }
@@ -1876,10 +2587,10 @@ function makePagedSelect(element, parent) {
     // Set initial value if exists
     if(element.data("initialValue") != undefined && element.data("initialKey") != undefined) {
 
-        const initialValue = element.data("initialValue");
-        const initialKey = element.data("initialKey");
+        var initialValue = element.data("initialValue");
+        var initialKey = element.data("initialKey");
 
-        let dataObj = {};
+        var dataObj = {};
         dataObj[initialKey] = initialValue;
 
         $.ajax({
@@ -1912,10 +2623,10 @@ function makeLocalSelect(element, parent) {
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         matcher: function(params, data) {
             // If filterClass is defined, try to filter the elements by it
-            const mainFilterClass = $(data.element.parentElement).data().filterClass;
+            var mainFilterClass = $(data.element.parentElement).data().filterClass;
 
             // Get element class array ( one or more elements split by comma)
-            const elementClassArray = ($(data.element).data().filterClass != undefined ) ? $(data.element).data().filterClass.replace(' ', '').split(',') : [];
+            var elementClassArray = ($(data.element).data().filterClass != undefined ) ? $(data.element).data().filterClass.replace(' ', '').split(',') : [];
 
             // If filter exists and it's not in one of the element filters, return empty data
             if(mainFilterClass != undefined && mainFilterClass != '' && !elementClassArray.includes(mainFilterClass)) {
@@ -1945,16 +2656,16 @@ function makeLocalSelect(element, parent) {
             queryTags = queryTags.replace(' ', '').split(',');
 
             // Find by text
-            for(let index = 0;index < queryText.length; index++) {
-                const text = queryText[index];
+            for(var index = 0;index < queryText.length; index++) {
+                var text = queryText[index];
                 if(text != '' && data.text.indexOf(text) > -1) {
                     return data;
                 }
             }
             
             // Find by tag ( data-tag )
-            for(let index = 0;index < queryTags.length;index++) {
-                const tag = queryTags[index];
+            for(var index = 0;index < queryTags.length;index++) {
+                var tag = queryTags[index];
                 if(tag != '' && $(data.element).data('tags') != undefined && $(data.element).data('tags').indexOf(tag) > -1) {
                     return data;
                 }
@@ -1981,12 +2692,12 @@ function makeLocalSelect(element, parent) {
 
 // Custom submit for user preferences
 function userPreferencesFormSubmit() {
-    let $form = $("#userPreferences");
+    var $form = $("#userPreferences");
     // Replace all checkboxes with hidden input fields
     $form.find('input[type="checkbox"]').each(function () {
         // Get checkbox values
-        let value = $(this).is(':checked') ? 'on' : 'off';
-        let id = $(this).attr('id');
+        var value = $(this).is(':checked') ? 'on' : 'off';
+        var id = $(this).attr('id');
 
         // Create hidden input
         $('<input type="hidden">')
@@ -2002,15 +2713,25 @@ function userPreferencesFormSubmit() {
 }
 
 // Initialise date time picker
-function initDatePicker($element, baseFormat, displayFormat, options = {}, onChangeCallback = null, clearButtonActive = true, onClearCallback = null) {
+function initDatePicker($element, baseFormat, displayFormat, options, onChangeCallback, clearButtonActive, onClearCallback) {
+    // Default values
+    options = (typeof options == 'undefined') ? {} : options;
+    onChangeCallback = (typeof onChangeCallback == 'undefined') ? null : onChangeCallback;
+    clearButtonActive = (typeof clearButtonActive == 'undefined') ? true : clearButtonActive;
+    onClearCallback = (typeof onClearCallback == 'undefined') ? null : onClearCallback;
+
     // Check for date format
     if(baseFormat == undefined || displayFormat == undefined) {
         console.error('baseFormat and displayFormat needs to be defined!');
         return false;
     }
 
-    let $inputElement = $element;
-    const initialValue = $element.val();
+    if ($element.data('customFormat')) {
+        baseFormat = $element.data('customFormat');
+    }
+
+    var $inputElement = $element;
+    var initialValue = $element.val();
 
     if(calendarType == 'Jalali') {
 
@@ -2040,6 +2761,8 @@ function initDatePicker($element, baseFormat, displayFormat, options = {}, onCha
         // Remove tabindex from modal to fix flatpickr bug
         $element.parents('.bootbox.modal').removeAttr('tabindex');
 
+        flatpickr.l10ns.default.firstDayOfWeek = parseInt(moment().startOf('week').format('d'));
+
         // Create flatpickr
         flatpickr($element, Object.assign({
             altInput: true,
@@ -2049,17 +2772,20 @@ function initDatePicker($element, baseFormat, displayFormat, options = {}, onCha
             altFormat: displayFormat,
             dateFormat: baseFormat,
             locale: language,
-            parseDate: (datestr, format) => {
+            getWeek: function(dateObj) {
+                return moment(dateObj).week();
+            },
+            parseDate: function(datestr, format) {
                 return moment(datestr, format, true).toDate();
             },
-            formatDate: (date, format, locale) => {
+            formatDate: function(date, format, locale) {
                 return moment(date).format(format);
             }
         }, options));
     }
 
     // Callback for on change event
-    $inputElement.change(()=> {
+    $inputElement.change(function() {
         // Callback if exists
         if(onChangeCallback != null && typeof onChangeCallback == 'function') {
             onChangeCallback();
@@ -2068,7 +2794,7 @@ function initDatePicker($element, baseFormat, displayFormat, options = {}, onCha
 
     // Clear button
     if(clearButtonActive) {
-        $inputElement.parent().find('.date-clear-button').removeClass('hidden').click(function() {
+        $inputElement.parent().find('.date-clear-button').removeClass('d-none').click(function() {
             updateDatePicker($inputElement, '');
 
             // Clear callback if defined
@@ -2091,7 +2817,10 @@ function initDatePicker($element, baseFormat, displayFormat, options = {}, onCha
 }
 
 // Update date picker/pickers
-function updateDatePicker($element, date, format, triggerChange = false) {
+function updateDatePicker($element, date, format, triggerChange) {
+    // Default values
+    triggerChange = (typeof triggerChange == 'undefined') ? false : triggerChange;
+    
     if(calendarType == 'Gregorian') {
         // Update gregorian calendar
         if($element[0]._flatpickr != undefined) {
@@ -2131,4 +2860,391 @@ function destroyDatePicker($element) {
         // Destroy jalali calendar
         $('#' + $element.attr('id') + 'Link').data().datepicker.destroy();
     }
+
+    // Unbind toggle button click
+    $element.parent().find('.date-open-button').off('click');
 }
+
+function initJsTreeAjax(container, table, isForm, ttl)
+{
+    // Default values
+    isForm = (typeof isForm == 'undefined') ? false : isForm;
+    ttl = (typeof ttl == 'undefined') ? false : ttl;
+    
+    var state = {};
+    if ($(container).length) {
+
+        // difference here is, that for grid trees we don't set ttl at all
+        // add/edit forms have short ttl, multi select will be cached for couple of minutes
+        if (isForm) {
+            state = {"key" : table + "_folder_tree", "ttl": ttl};
+        } else {
+            state = {"key" : table + "_folder_tree"}
+        }
+
+        $(container).jstree({
+            "state" : state,
+            "plugins" : ["contextmenu", "state", "unique", "sort", "themes"],
+            "contextmenu":{
+                "items": function($node, checkContextMenuPermissions) {
+                    // items in context menu need to check user permissions before we render them
+                    // as such each click on the node will execute the below ajax to check what permissions user has
+                    // permission may be different per node, therefore we cannot look this up just once for whole tree.
+                    var items = {};
+                    var tree = $(container).jstree(true);
+                    var buttonPermissions = null;
+
+                    $.ajax({
+                        url: "/folders/contextButtons/"+$node.id,
+                        method: "GET",
+                        dataType: "json",
+                        success: function (data) {
+                            buttonPermissions = data;
+
+                            if (buttonPermissions.create) {
+                                items['Create'] = {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeCreate,
+                                    "action": function (obj) {
+                                        $node = tree.create_node($node);
+                                        tree.edit($node);
+                                    }
+                                }
+                            }
+
+                            if (buttonPermissions.modify) {
+                                items['Rename'] = {
+                                    "separator_before": false,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeEdit,
+                                    "action": function (obj) {
+                                        tree.edit($node);
+                                    }
+                                };
+                            }
+
+                            if (buttonPermissions.delete) {
+                                items['Remove'] = {
+                                    "separator_before": true,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeDelete,
+                                    "action": function (obj) {
+                                        tree.delete_node($node);
+                                    }
+                                }
+                            }
+
+                            if (isForm === false && buttonPermissions.share) {
+                                items['Share'] = {
+                                    "separator_before": true,
+                                    "separator_after": false,
+                                    "label": translations.folderTreeShare,
+                                    "_class": "XiboFormRender",
+                                    "action": function (obj) {
+                                        XiboFormRender('/user/permissions/form/Folder/'+$node.id);
+                                    }
+                                }
+                            }
+                        },
+                        complete: function (data) {
+                            checkContextMenuPermissions(items);
+                        }
+                    });
+                }},
+            "themes" : {
+                "responsive" : true
+            },
+            'core' : {
+                "check_callback" : function (operation, node, parent, position, more) {
+                    // prevent edit/delete of the root node.
+                    if(operation === "delete_node" || operation === "rename_node") {
+                        if(node.id === "#" || node.id === "1") {
+                            toastr.error(translations.folderTreeError);
+                            return false;
+                        }
+                    }
+                    return true;
+                },
+                'data' : {
+                    "url": "/folders"
+                }
+            }
+        });
+
+        $(container).on('ready.jstree', function(e, data) {
+            // if we are on the form, we need to select tree node (currentWorkingFolder)
+            // this is set/passed to twigs on render time
+            if (isForm) {
+                var folderIdInputSelector = '#'+table+' #folderId';
+
+                // for upload forms
+                if ($(folderIdInputSelector).length === 0) {
+                    folderIdInputSelector = '#formFolderId';
+                }
+
+                var selectedFolder = $(folderIdInputSelector).val();
+
+                if (selectedFolder !== undefined && selectedFolder !== '') {
+                    $(this).jstree('select_node', selectedFolder);
+                    if ($('#originalFormFolder').length) {
+                        $('#originalFormFolder').text($(this).jstree().get_path($(this).jstree("get_selected", true)[0], ' > '));
+                    }
+
+                    if ($('#selectedFormFolder').length && folderIdInputSelector === '#formFolderId') {
+                        $('#selectedFormFolder').text($(this).jstree().get_path($(this).jstree("get_selected", true)[0], ' > '));
+                    }
+                }
+            }
+        });
+
+        $(container).on("rename_node.jstree", function (e, data) {
+
+            var dataObject = {};
+            var folderId  = data.node.id;
+            dataObject['text'] = data.text;
+
+            $.ajax({
+                url: "/folders/"+folderId,
+                method: "PUT",
+                dataType: "json",
+                data: dataObject,
+                success: function (data) {
+                    if (container === '#container-folder-form-tree') {
+                        // if we rename node on a form, make sure to refresh the js tree in the grid
+                        $('#container-folder-tree').jstree(true).refresh();
+                    }
+                }
+            });
+        });
+
+        $(container).on("create_node.jstree", function (e, data) {
+
+            var dataObject = {};
+            dataObject['parentId'] = data.parent;
+            dataObject['text'] = data.node.text;
+            var node = data.node;
+
+            // when we create a new node, by default it will get jsTree default id
+            // we need to change it to the folderId we have in our folder table
+            // rename happens just after add, therefore this needs to be set as soon as possible
+            $.ajax({
+                url: "/folders",
+                method: "POST",
+                dataType: "json",
+                data: dataObject,
+                success: function (data) {
+                    $(container).jstree(true).set_id(node, data.data.id);
+                    // if we add a new node on a form, make sure to refresh the js tree in the grid
+                    if (container === '#container-folder-form-tree') {
+                        $('#container-folder-tree').jstree(true).refresh();
+                    }
+                },
+            });
+        });
+
+        $(container).on("delete_node.jstree", function (e, data) {
+
+            var dataObject = {};
+            dataObject['parentId'] = data.parent;
+            dataObject['text'] = data.node.text;
+            var folderId = data.node.id;
+
+            // delete has a check built-in, if it fails to remove node, it will show suitable message in toast
+            // and reload the tree
+            $.ajax({
+                url: "/folders/"+folderId,
+                method: "DELETE",
+                dataType: "json",
+                data: dataObject,
+                success: function (data) {
+                    if (data.success) {
+                        toastr.success(translations.done)
+                        // if we delete node on a form, make sure to refresh the js tree in the grid
+                        if (container === '#container-folder-form-tree') {
+                            $('#container-folder-tree').jstree(true).refresh();
+                        }
+                    } else {
+                        toastr.error(translations.folderWithContent);
+                        console.log(data.message);
+                        $(container).jstree(true).refresh();
+                    }
+
+                }
+            });
+        });
+
+        $(container).on("changed.jstree", function (e, data) {
+            var selectedFolderId = data.selected[0];
+            var folderIdInputSelector = (isForm) ? '#'+table+' #folderId' : '#folderId';
+            var node = $(container).jstree("get_selected", true);
+
+            // for upload and multi select forms.
+            if (isForm && $(folderIdInputSelector).length === 0) {
+                folderIdInputSelector = '#formFolderId';
+            }
+
+            // on grids, depending on the selected folder, we need to handle the breadcrumbs
+            if ($(folderIdInputSelector).val() != selectedFolderId && isForm === false) {
+
+                if (selectedFolderId !== undefined) {
+                    $("#breadcrumbs").text($(container).jstree().get_path(node[0], ' > ')).hide();
+
+                    $('#folder-tree-clear-selection-button').prop('checked', false)
+                } else {
+                    $("#breadcrumbs").text('');
+                    $('#folder-tree-clear-selection-button').prop('checked', true)
+                }
+
+                $(folderIdInputSelector).val(selectedFolderId);
+                $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+            }
+
+            // on form we always want to show the breadcrumbs to current and selected folder
+            if (isForm && $(folderIdInputSelector).val() != selectedFolderId && selectedFolderId !== undefined) {
+                $(folderIdInputSelector).val(selectedFolderId).trigger('change');
+                if ($('#selectedFormFolder').length) {
+                    $('#selectedFormFolder').text($(container).jstree().get_path(node[0], ' > '));
+                }
+            }
+
+        });
+
+        // on froms that have more than one modal active, this is needed to not confuse bootstrap
+        // the (X) needs to close just the inner modal
+        // clicking outside of the tree select modal will work as well.
+        $(".btnCloseInnerModal").on('click', function(e) {
+            e.preventDefault();
+            var folderTreeModalId = (isForm) ? '#folder-tree-form-modal' : '#folder-tree-modal';
+            $(folderTreeModalId).modal('hide');
+        });
+
+        // this handler for the search everywhere checkbox on grid pages
+        $("#folder-tree-clear-selection-button").on('click', function() {
+
+            if ($("#folder-tree-clear-selection-button").is(':checked')) {
+                $(this).prop('checked', true);
+                $(container).jstree("deselect_all");
+            } else {
+                $(this).prop('checked', false);
+                $(container).jstree('select_node', 1)
+            }
+
+        });
+
+        // this is handler for the hamburger button on grid pages
+        $('#folder-tree-select-folder-button').off("click").on('click', function() {
+
+            // Shrink table to ease animation
+            if($('#grid-folder-filter').is(":hidden")) {
+                $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
+            }
+
+            $('#grid-folder-filter').toggle('fast', function() {
+                if ($(this).is(":hidden")) {
+
+                    if (!$("#folder-tree-clear-selection-button").is(':checked')) {
+                        // if folder tree is hidden and select everywhere is not checked, then show breadcrumbs
+                        $("#breadcrumbs").show('slow');
+                    }
+
+                    // if the folder tree is hidden, then make it so datatable can take whole available width
+                    $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
+                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                } else {
+                    // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
+                    $("#breadcrumbs").hide('slow');
+                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                }
+            });
+        })
+    }
+}
+
+function disableFolders () {
+    // if user does not have Folders feature enabled, then we need to remove couple of elements from the page
+    // to prevent jsTree from executing, make the datatable take whole available width as well.
+    $('#folder-tree-select-folder-button').parent().remove();
+    $('#container-folder-tree').remove();
+    $('#grid-folder-filter').remove();
+    $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
+}
+
+/**
+ * Create a mini layout preview
+ * @param  {string} previewUrl
+ */
+function createMiniLayoutPreview(previewUrl) {
+    // Add element to page if it's not already
+    if($('.page-content').find('.mini-layout-preview').length == 0) {
+        var miniPlayerTemplate = Handlebars.compile($('#mini-player-template').html());
+        $('.page-content').append(miniPlayerTemplate());
+    }
+
+    var $layoutPreview = $('.mini-layout-preview');
+    var $layoutPreviewContent = $layoutPreview.find('#content');
+
+    // Create base template for preview content
+    var previewTemplate = Handlebars.compile('<iframe scrolling="no" src="{{url}}" width="{{width}}px" height="{{height}}px" style="border:0;"></iframe>');
+    
+    // Clean all selected elements
+    $layoutPreviewContent.html('');
+
+    // Handle buttons
+    $layoutPreview.find('#playBtn').show().off().on('click', function() {
+        // Hide button
+        $(this).hide();
+
+        // Load and start preview
+        $layoutPreview.find('#content').append(previewTemplate({
+            url: previewUrl,
+            width: $layoutPreview.hasClass('large') ? '760' : '440',
+            height: $layoutPreview.hasClass('large') ? '420' : '240'
+        }));
+    });
+
+    $layoutPreview.find('#closeBtn').off().on('click', function() {
+        // Close preview and empty content
+        $layoutPreview.find('#content').html('');
+        $layoutPreview.removeClass('show');
+        $layoutPreview.remove();
+    });
+
+    $layoutPreview.find('#newTabBtn').off().on('click', function() {
+        // Open preview in new tab
+        window.open(previewUrl,'_blank');
+    });
+
+    $layoutPreview.find('#sizeBtn').off().on('click', function() {
+        // Empty content
+        $layoutPreview.find('#content').html('');
+
+        // Toggle size class
+        $layoutPreview.toggleClass('large');
+
+        // Change icon based on size state
+        $(this).toggleClass('fa-minus-square', $layoutPreview.hasClass('large'));
+
+        // Re-show play button
+        $layoutPreview.find('#playBtn').show();
+    });
+
+    // Show layout preview element
+    $layoutPreview.addClass('show');
+}
+
+/**
+ * https://stackoverflow.com/questions/15900485/correct-way-to-convert-size-in-bytes-to-kb-mb-gb-in-javascript
+ * @param {number} size
+ * @param {number} precision
+ * @returns {string}
+ */
+function formatBytes(size, precision){
+    if (size === 0) {
+        return "0 Bytes";
+    }
+
+    const c=0 > precision ? 0 : precision, d = Math.floor(Math.log(size)/Math.log(1024));
+    return parseFloat((size/Math.pow(1024,d)).toFixed(c))+" "+["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"][d]
+}
+

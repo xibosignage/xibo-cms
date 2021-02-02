@@ -27,6 +27,7 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Helper\DataSetUploadHandler;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
@@ -49,6 +50,12 @@ class DataSet extends Base
     /** @var  DataSetColumnFactory */
     private $dataSetColumnFactory;
 
+    /** @var \Xibo\Factory\UserFactory */
+    private $userFactory;
+
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -60,13 +67,17 @@ class DataSet extends Base
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param Twig $view
+     * @param \Xibo\Factory\UserFactory $userFactory
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetFactory, $dataSetColumnFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetFactory, $dataSetColumnFactory, Twig $view, $userFactory, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
+        $this->userFactory = $userFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -88,6 +99,9 @@ class DataSet extends Base
     public function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'dataset-page';
+        $this->getState()->setData([
+            'users' => $this->userFactory->query(),
+        ]);
 
         return $this->render($request, $response);
     }
@@ -128,10 +142,24 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="userId",
+     *      in="query",
+     *      description="Filter by user Id",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embed",
      *      in="query",
      *      description="Embed related data such as columns",
      *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Response(
@@ -148,7 +176,7 @@ class DataSet extends Base
     {
         $user = $this->getUser();
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
-        
+
         // Embed?
         $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
         
@@ -157,9 +185,11 @@ class DataSet extends Base
             'dataSet' => $sanitizedParams->getString('dataSet'),
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName'),
             'code' => $sanitizedParams->getString('code'),
+            'userId' => $sanitizedParams->getInt('userId'),
+            'folderId' => $sanitizedParams->getInt('folderId'),
         ];
 
-        $dataSets = $this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $dataSets = $this->dataSetFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedParams));
 
         foreach ($dataSets as $dataSet) {
             /* @var \Xibo\Entity\DataSet $dataSet */
@@ -175,98 +205,114 @@ class DataSet extends Base
             // Load the dataSet to get the columns
             $dataSet->load();
 
-            if ($user->checkEditable($dataSet)) {
-
+            if ($this->getUser()->featureEnabled('dataset.data') && $user->checkEditable($dataSet)) {
                 // View Data
                 $dataSet->buttons[] = array(
                     'id' => 'dataset_button_viewdata',
                     'class' => 'XiboRedirectButton',
-                    'url' => $this->urlFor($request,'dataSet.view.data', ['id' => $dataSet->dataSetId]),
+                    'url' => $this->urlFor($request, 'dataSet.view.data', ['id' => $dataSet->dataSetId]),
                     'text' => __('View Data')
                 );
+            }
 
-                // View Columns
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_viewcolumns',
-                    'url' => $this->urlFor($request,'dataSet.column.view', ['id' => $dataSet->dataSetId]),
-                    'class' => 'XiboRedirectButton',
-                    'text' => __('View Columns')
-                );
+            if ($this->getUser()->featureEnabled('dataset.modify')) {
 
-                // View RSS
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_viewrss',
-                    'url' => $this->urlFor($request,'dataSet.rss.view', ['id' => $dataSet->dataSetId]),
-                    'class' => 'XiboRedirectButton',
-                    'text' => __('View RSS')
-                );
-
-                // Divider
-                $dataSet->buttons[] = ['divider' => true];
-
-                // Import DataSet
-                if ($dataSet->isRemote !== 1) {
+                if ($user->checkEditable($dataSet)) {
+                    // View Columns
                     $dataSet->buttons[] = array(
-                        'id' => 'dataset_button_import',
-                        'class' => 'dataSetImportForm',
-                        'url' => $this->urlFor($request,'dataSet.import.form', ['id' => $dataSet->dataSetId]),
-                        'text' => __('Import CSV')
+                        'id' => 'dataset_button_viewcolumns',
+                        'url' => $this->urlFor($request,'dataSet.column.view', ['id' => $dataSet->dataSetId]),
+                        'class' => 'XiboRedirectButton',
+                        'text' => __('View Columns')
+                    );
+
+                    // View RSS
+                    $dataSet->buttons[] = array(
+                        'id' => 'dataset_button_viewrss',
+                        'url' => $this->urlFor($request,'dataSet.rss.view', ['id' => $dataSet->dataSetId]),
+                        'class' => 'XiboRedirectButton',
+                        'text' => __('View RSS')
+                    );
+
+                    // Divider
+                    $dataSet->buttons[] = ['divider' => true];
+
+                    // Import DataSet
+                    if ($dataSet->isRemote !== 1) {
+                        $dataSet->buttons[] = array(
+                            'id' => 'dataset_button_import',
+                            'class' => 'dataSetImportForm',
+                            'url' => $this->urlFor($request,'dataSet.import.form', ['id' => $dataSet->dataSetId]),
+                            'text' => __('Import CSV')
+                        );
+                    }
+
+                    // Copy
+                    $dataSet->buttons[] = array(
+                        'id' => 'dataset_button_copy',
+                        'url' => $this->urlFor($request,'dataSet.copy.form', ['id' => $dataSet->dataSetId]),
+                        'text' => __('Copy')
+                    );
+
+                    // Divider
+                    $dataSet->buttons[] = ['divider' => true];
+
+                    // Edit DataSet
+                    $dataSet->buttons[] = array(
+                        'id' => 'dataset_button_edit',
+                        'url' => $this->urlFor($request,'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
+                        'text' => __('Edit')
                     );
                 }
 
-                // Copy
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_copy',
-                    'url' => $this->urlFor($request,'dataSet.copy.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Copy')
-                );
+                if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
+                    // Delete DataSet
+                    $dataSet->buttons[] = [
+                        'id' => 'dataset_button_delete',
+                        'url' => $this->urlFor($request,'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
+                        'text' => __('Delete'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'dataSet.delete', ['id' => $dataSet->dataSetId])],
+                            ['name' => 'commit-method', 'value' => 'delete'],
+                            ['name' => 'id', 'value' => 'dataset_button_delete'],
+                            ['name' => 'text', 'value' => __('Delete')],
+                            ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
+                            ['name' => 'sort-group', 'value' => 1],
+                            ['name' => 'form-callback', 'value' => 'deleteMultiSelectFormOpen']
+                        ]
+                    ];
+                }
 
                 // Divider
                 $dataSet->buttons[] = ['divider' => true];
 
-                // Edit DataSet
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_edit',
-                    'url' => $this->urlFor($request,'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Edit')
-                );
-            }
-
-            if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
-                // Delete DataSet
-                $dataSet->buttons[] = [
-                    'id' => 'dataset_button_delete',
-                    'url' => $this->urlFor($request,'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
-                    'text' => __('Delete'),
-                    'multi-select' => true,
-                    'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'dataSet.delete', ['id' => $dataSet->dataSetId])],
-                        ['name' => 'commit-method', 'value' => 'delete'],
-                        ['name' => 'id', 'value' => 'dataset_button_delete'],
-                        ['name' => 'text', 'value' => __('Delete')],
-                        ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
-                        ['name' => 'form-callback', 'value' => 'deleteMultiSelectFormOpen']
-                    ]
-                ];
-            }
-
-            // Divider
-            $dataSet->buttons[] = ['divider' => true];
-
-            if ($user->checkPermissionsModifyable($dataSet)) {
-                // Edit Permissions
-                $dataSet->buttons[] = array(
-                    'id' => 'dataset_button_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
-                    'text' => __('Permissions')
-                );
+                if ($user->checkPermissionsModifyable($dataSet)) {
+                    // Edit Permissions
+                    $dataSet->buttons[] = [
+                        'id' => 'dataset_button_permissions',
+                        'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
+                        'text' => __('Share'),
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId])],
+                            ['name' => 'commit-method', 'value' => 'post'],
+                            ['name' => 'id', 'value' => 'dataset_button_permissions'],
+                            ['name' => 'text', 'value' => __('Share')],
+                            ['name' => 'rowtitle', 'value' => $dataSet->dataSet],
+                            ['name' => 'sort-group', 'value' => 2],
+                            ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                            ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DataSet'])],
+                            ['name' => 'content-id-name', 'value' => 'dataSetId']
+                        ]
+                    ];
+                }
             }
         }
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
         $this->getState()->setData($dataSets);
-        
+
         return $this->render($request, $response);
     }
 
@@ -283,10 +329,10 @@ class DataSet extends Base
     {
         $this->getState()->template = 'dataset-form-add';
         $this->getState()->setData([
-            'dataSets' => $this->dataSetFactory->query(null, [], $request),
+            'dataSets' => $this->dataSetFactory->query(),
             'help' => $this->getHelp()->link('DataSet', 'Add')
         ]);
-        
+
         return $this->render($request, $response);
     }
 
@@ -446,6 +492,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -469,13 +522,21 @@ class DataSet extends Base
     public function add(Request $request, Response $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        
+
         $dataSet = $this->dataSetFactory->createEmpty();
         $dataSet->dataSet = $sanitizedParams->getString('dataSet');
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
         $dataSet->userId = $this->getUser()->userId;
+        $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($dataSet->folderId);
+            $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        } else {
+            $dataSet->permissionsFolderId = 1;
+        }
 
         // Fields for remote
         if ($dataSet->isRemote === 1) {
@@ -727,6 +788,13 @@ class DataSet extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -747,6 +815,12 @@ class DataSet extends Base
         $dataSet->description = $sanitizedParams->getString('description');
         $dataSet->code = $sanitizedParams->getString('code');
         $dataSet->isRemote = $sanitizedParams->getCheckbox('isRemote');
+        $dataSet->folderId = $sanitizedParams->getInt('folderId', ['default' => $dataSet->folderId]);
+
+        if ($dataSet->hasPropertyChanged('folderId')) {
+            $folder = $this->folderFactory->getById($dataSet->folderId);
+            $dataSet->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        }
 
         if ($dataSet->isRemote === 1) {
             $dataSet->method = $sanitizedParams->getString('method');
@@ -1289,8 +1363,14 @@ class DataSet extends Base
         // Set this DataSet as active.
         $dataSet->setActive();
 
+        // Getting the dependant DataSet to process the current DataSet on
+        $dependant = null;
+        if ($dataSet->runsAfter != null && $dataSet->runsAfter != $dataSet->dataSetId) {
+            $dependant = $this->dataSetFactory->getById($dataSet->runsAfter);
+        }
+
         // Call the remote service requested
-        $data = $this->dataSetFactory->callRemoteService($dataSet, null, false);
+        $data = $this->dataSetFactory->callRemoteService($dataSet, $dependant, false);
 
         if ($data->number > 0) {
             // Process the results, but don't record them

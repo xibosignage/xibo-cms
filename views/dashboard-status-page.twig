@@ -26,9 +26,9 @@
 {% block pageContent %}
     {% include "theme-dashboard-message.twig" ignore missing %}
     <div class="row">
-        <div class="col-lg-3 col-md-6 col-xs-12">
+        <div class="col-xl-3 col-md-6 col-12">
             <div class="widget">
-                <div class="widget-body">
+                <div class="widget-body p-3 p-xl-2">
                     <div class="widget-icon orange pull-left">
                         <i class="fa fa-desktop"></i>
                     </div>
@@ -40,9 +40,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-xs-12">
+        <div class="col-xl-3 col-md-6 col-12">
             <div class="widget">
-                <div class="widget-body">
+                <div class="widget-body p-3 p-xl-2">
                     <div class="widget-icon red pull-left">
                         <i class="fa fa-tasks"></i>
                     </div>
@@ -54,9 +54,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-xs-12">
+        <div class="col-xl-3 col-md-6 col-12">
             <div class="widget">
-                <div class="widget-body">
+                <div class="widget-body p-3 p-xl-2">
                     <div class="widget-icon green pull-left">
                         <i class="fa fa-users"></i>
                     </div>
@@ -68,9 +68,9 @@
                 </div>
             </div>
         </div>
-        <div class="col-lg-3 col-md-6 col-xs-12">
+        <div class="col-xl-3 col-md-6 col-12">
             <div class="widget">
-                <div class="widget-body">
+                <div class="widget-body p-3 p-xl-2">
                     <div class="widget-icon blue pull-left">
                         <i class="fa fa-cogs"></i>
                     </div>
@@ -97,8 +97,8 @@
                     {% else %}
                         {% trans %}Bandwidth Usage ({{ bandwidthSuffix }}){% endtrans %}
                     {% endif %}
-                    {% if currentUser.routeViewable("/stats") %}
-                    <a class="pull-right" href="{{ url_for("stats.view") }}">{% trans "More Statistics" %}</a>
+                    {% if currentUser.featureEnabled("displays.reporting") %}
+                    <a class="pull-right" href="/report/form/bandwidth">{% trans "More Statistics" %}</a>
                     {% endif %}
                     <div class="clearfix"></div>
                 </div>
@@ -198,7 +198,7 @@
         </div>
     </div>
 
-    <div class="row hidden" id="displayGroupStatusChartRow">
+    <div class="row d-none" id="displayGroupStatusChartRow">
 
         <div class="col-lg-6">
             <div class="widget">
@@ -227,13 +227,13 @@
         </div>
     </div>
 
-    <div class="widget hidden" id="displaysGridTable">
+    <div class="widget d-none" id="displaysGridTable">
         <div class="widget-title">{% trans "Displays" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayGridView">
-                <div class="XiboFilter well hidden">
-                    <div class="FilterDiv" id="Filter">
-                        <form class="form-inline">
+                <div class="XiboFilter card mb-3 bg-light d-none">
+                    <div class="FilterDiv card-body" id="Filter">
+                        <form class="form-inline d-block">
                             <div class="tab-content">
                                 <div class="tab-pane active" id="filter-general">
                                     {{ inline.hidden("displayGroupId") }}
@@ -244,8 +244,8 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="displaysGrid" class="table table-striped" style="width: 100%;">
+                <div class="XiboData card pt-3">
+                    <table id="displaysGrid" class="table table-striped" data-state-preference-name="statusDashboardDisplays" style="width: 100%;">
                         <thead>
                         <tr>
                             <th>{% trans "ID" %}</th>
@@ -289,15 +289,15 @@
 {% block javaScript %}
     <script type="text/javascript">
 
-        let displayGroupStatusChart = null;
-        let displayGroupContentStatusChart = null;
+        var displayGroupStatusChart = null;
+        var displayGroupContentStatusChart = null;
 
-        let displayGroupId = null;
-        let loggedInStatus = null;
-        let mediaInventoryStatus = null;
+        var displayGroupId = null;
+        var loggedInStatus = null;
+        var mediaInventoryStatus = null;
 
-        let displayGroupIdsContent = [];
-        let displayGroupIdsStatus = [];
+        var displayGroupIdsContent = [];
+        var displayGroupIdsStatus = [];
 
         // Create our chart
         var bandwidthChart = new Chart($("#bandwidthChart"), {
@@ -353,38 +353,10 @@
             "language": dataTablesLanguage,
             serverSide: true,
             stateSave: true,
+            responsive: true,
             stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=statusDashboardDisplays",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "statusDashboardDisplays",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             order: [[0, "asc"]],
@@ -414,11 +386,11 @@
             },
             createdRow: function (row, data, index) {
                 if (data.mediaInventoryStatus === 1) {
-                    $(row).addClass('success');
+                    $(row).addClass('table-success');
                 } else if (data.mediaInventoryStatus === 1) {
-                    $(row).addClass('danger');
+                    $(row).addClass('table-danger');
                 } else {
-                    $(row).addClass('warning');
+                    $(row).addClass('table-warning');
                 }
             },
             lengthChange: false,
@@ -524,7 +496,7 @@
                                     }
                                 });
 
-                                $("#displayGroupStatusChartRow").removeClass('hidden');
+                                $("#displayGroupStatusChartRow").removeClass('d-none');
                             }
                         }
                     });
@@ -588,7 +560,7 @@
                                     }
                                 });
 
-                                $("#displayGroupStatusChartRow").removeClass('hidden');
+                                $("#displayGroupStatusChartRow").removeClass('d-none');
                             }
                         }
                     });
@@ -612,7 +584,7 @@
                     $('#loggedIn').val(loggedInStatus);
                     table2.ajax.reload();
 
-                    $("#displaysGridTable").removeClass('hidden');
+                    $("#displaysGridTable").removeClass('d-none');
                 }
             }
         );
@@ -634,46 +606,18 @@
                     $('#mediaInventoryStatus').val(mediaInventoryStatus);
                     table2.ajax.reload();
 
-                    $("#displaysGridTable").removeClass('hidden');
+                    $("#displaysGridTable").removeClass('d-none');
                 }
             }
         );
 
-        let table2 = $("#displaysGrid").DataTable({
+        var table2 = $("#displaysGrid").DataTable({
             "language": dataTablesLanguage,
             serverSide: true,
-            stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=displaysGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "displaysGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+            stateSave: true,
+            stateDuration: 0,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             order: [[1, "asc"]],
@@ -701,11 +645,11 @@
             },
             createdRow: function (row, data, index) {
                 if (data.mediaInventoryStatus === 1) {
-                    $(row).addClass('success');
+                    $(row).addClass('table-success');
                 } else if (data.mediaInventoryStatus === 1) {
-                    $(row).addClass('danger');
+                    $(row).addClass('table-danger');
                 } else {
-                    $(row).addClass('warning');
+                    $(row).addClass('table-warning');
                 }
             },
             "columns": [
@@ -860,6 +804,6 @@
         table2.on('draw', dataTableDraw);
         table2.on('draw', { form: $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
         table2.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table2, $('#displaysGrid_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table2, $('#displaysGrid_wrapper').find('.col-md-6').eq(1));
     </script>
 {% endblock %}

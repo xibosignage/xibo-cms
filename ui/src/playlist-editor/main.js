@@ -79,7 +79,10 @@ window.pE = {
     selectedObject: {},
 
     // Bottom toolbar
-    toolbar: {}
+    toolbar: {},
+
+    //folderId
+    folderId: ''
 };
 
 // Load Playlist and build app structure
@@ -119,7 +122,6 @@ pE.loadEditor = function() {
 
                 // Append layout html to the main div
                 pE.editorContainer.html(playlistEditorTemplate());
-
                 // Initialise dropabble containers
                 pE.editorContainer.find('#playlist-timeline, #dropzone-container').droppable({
                     accept: '[drop-to="region"]',
@@ -138,8 +140,10 @@ pE.loadEditor = function() {
 
                 // Initialize timeline and create data structure
                 pE.playlist = new Playlist(playlistId, res.data[0]);
+                // folder Id
+                pE.folderId = pE.playlist.folderId;
 
-                // Initialize properties panel
+                    // Initialize properties panel
                 pE.propertiesPanel = new PropertiesPanel(
                     pE,
                     pE.editorContainer.find('#playlist-properties-panel')
@@ -154,11 +158,15 @@ pE.loadEditor = function() {
                 $("#layout-manager").appendTo("#playlist-editor");
 
                 // Initialize manager
-                pE.manager = new Manager(
-                    pE,
-                    $('#playlist-editor').find('#layout-manager'),
-                    false //(serverMode == 'Test') Turn of manager visibility for now
-                );
+                if(typeof lD != 'undefined') {
+                    pE.manager = lD.manager;
+                } else {
+                    pE.manager = new Manager(
+                        pE,
+                        $('#playlist-editor').find('#layout-manager'),
+                        false //(serverMode == 'Test') Turn of manager visibility for now
+                    );
+                }
 
                 // Append toolbar to the modal container
                 $("#playlist-editor-toolbar").appendTo("#playlist-editor");
@@ -393,14 +401,15 @@ pE.deleteObject = function(objectType, objectId) {
         bootbox.dialog({
             title: editorsTrans.deleteTitle.replace('%obj%', objectType),
             message: htmlContent,
+            size: 'large',
             buttons: {
                 cancel: {
                     label: editorsTrans.no,
-                    className: 'btn-default'
+                    className: 'btn-white btn-bb-cancel'
                 },
                 confirm: {
                     label: editorsTrans.yes,
-                    className: 'btn-danger',
+                    className: 'btn-danger btn-bb-confirm',
                     callback: function() {
 
                         // Empty options object
@@ -502,7 +511,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
         let buttons = {
             cancel: {
                 label: editorsTrans.no,
-                className: 'btn-default'
+                className: 'btn-white btn-bb-cancel'
             }
         };
 
@@ -510,7 +519,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
         if($(htmlContent).find('input[type="checkbox"]').length > 1) {
             buttons.selectAll = {
                 label: editorsTrans.selectAll,
-                className: 'btn-warning',
+                className: 'btn-warning btn-bb-selectall',
                 callback: function() {
                     $(this).find('input[type="checkbox"]').prop('checked', true);
                     return false;
@@ -520,10 +529,11 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
         
         buttons.confirm = {
             label: editorsTrans.yes,
-            className: 'btn-danger',
+            className: 'btn-danger btn-bb-confirm',
             callback: function() {
                 const $objects = $(this).find('.multi-delete-element');
                 let deletedElements = 0;
+                let index = 0;
 
                 // Show modal
                 pE.common.showLoadingScreen('deleteObjects');
@@ -531,8 +541,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                 // Leave multi select mode
                 pE.toolbar.toggleMultiselectMode(false);
 
-                // Loop all items and make a delete request for each
-                for(let index = 0;index < $objects.length; index++) {
+                const deleteObject = function() {
                     const $element = $($objects[index]);
 
                     // Empty options object
@@ -547,9 +556,8 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                         };
                     }
 
-                    // Delete element from the layout
+                    // Delete element from the playlist
                     pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
-
                         // Behavior if successful 
                         toastr.success(res.message)
                         
@@ -564,6 +572,9 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
                             // Hide/close modal
                             bootbox.hideAll();
+                        } else {
+                            index++;
+                            deleteObject();
                         }
                         
                     }).catch((error) => { // Fail/error
@@ -580,8 +591,16 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                         }
 
                         toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
+
+                        // Reload data
+                        pE.reloadData();
+
+                        // Hide/close modal
+                        bootbox.hideAll();
                     });
-                }
+                };
+
+                deleteObject();
 
                 return false;
             }
@@ -590,6 +609,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
         bootbox.dialog({
             title: editorsTrans.deleteMultipleTitle,
             message: htmlContent,
+            size: 'large',
             buttons: buttons
         }).attr('data-test', 'deleteObjectModal');
     };
@@ -598,14 +618,14 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
         pE.common.showLoadingScreen('checkMediaIsUsed');
         let arrayOfWidgets = [];
+        let index = 0;
 
-        for(let index = 0;index < objectIds.length;index++) {
-
+        const getWidgetStatus = function() {
             let widgetId = objectIds[index];
             let widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + widgetId);
             let linkToAPI = urlsForApi.media.isUsed;
             let requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
-
+    
             if(widgetToDelete.isRegionSpecific()) {
                 arrayOfWidgets.push({
                     'objectId': widgetId,
@@ -614,10 +634,13 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                     'hasMedia': false,
                     'dataUsed': false
                 });
-
+    
                 if(arrayOfWidgets.length == objectIds.length) {
                     createMultiDeleteModal(arrayOfWidgets);
                     pE.common.hideLoadingScreen('checkMediaIsUsed');
+                } else {
+                    index++;
+                    getWidgetStatus();
                 }
             } else {
                 // Request with count as being 2, for the published layout and draft
@@ -631,10 +654,13 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                                 'hasMedia': true,
                                 'dataUsed': res.data.isUsed
                             });
-
+    
                             if(arrayOfWidgets.length == objectIds.length) {
                                 createMultiDeleteModal(arrayOfWidgets);
                                 pE.common.hideLoadingScreen('checkMediaIsUsed');
+                            } else {
+                                index++;
+                                getWidgetStatus();
                             }
                         } else {
                             if(res.login) {
@@ -645,14 +671,17 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                             }
                         }
                     }).fail(function(jqXHR, textStatus, errorThrown) {
-
+    
                         pE.common.hideLoadingScreen('checkMediaIsUsed');
-
+    
                         // Output error to console
                         console.error(jqXHR, textStatus, errorThrown);
                     });
             }
-        }
+        };
+
+        // Start getting widget status
+        getWidgetStatus();
     }
 };
 
@@ -736,7 +765,8 @@ pE.reloadData = function() {
 
             if(res.data != null && res.data.length > 0) {
                 pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
-
+                // folder Id
+                pE.folderId = pE.playlist.folderId;
                 pE.refreshDesigner();
             } else {
                 if(res.login) {
@@ -828,7 +858,6 @@ pE.close = function() {
     deleteObjectProperties(this.editorContainer);
     deleteObjectProperties(this.timeline);
     deleteObjectProperties(this.propertiesPanel);
-    deleteObjectProperties(this.manager);
     deleteObjectProperties(this.selectedObject);
     deleteObjectProperties(this.toolbar);
 
@@ -890,96 +919,12 @@ pE.getElementByTypeAndId = function(type, id) {
 };
 
 /**
- * Open Upload Form
- * @param {object} templateOptions
- * @param {object} buttons
+ * Get the class name for the upload dialog, used by form-helpers.
+ * @return {null}
  */
-pE.openUploadForm = function(templateOptions, buttons) {
-
-    var template = Handlebars.compile($("#template-file-upload").html());
-
-    // Handle bars and open a dialog
-    bootbox.dialog({
-        className: 'second-dialog',
-        message: template(templateOptions),
-        title: uploadTrans.uploadMessage,
-        buttons: buttons,
-        animate: false,
-        updateInAllChecked: uploadFormUpdateAllDefault,
-        deleteOldRevisionsChecked: uploadFormDeleteOldDefault
-    });
-
-    this.openUploadFormModelShown($(".second-dialog .modal-body").find("form"));
+pE.getUploadDialogClassName = function() {
+    return "second-dialog";
 };
-
-/**
- * Modal shown
- * @param {object} form
- */
-pE.openUploadFormModelShown = function(form) {
-
-    // Configure the upload form
-    var url = libraryAddUrl;
-
-    // Initialize the jQuery File Upload widget:
-    form.fileupload({
-        url: url,
-        disableImageResize: true
-    });
-
-    // Upload server status check for browsers with CORS support:
-    if($.support.cors) {
-        $.ajax({
-            url: url,
-            type: 'HEAD'
-        }).fail(function() {
-            $('<span class="alert alert-error"/>')
-                .text('Upload server currently unavailable - ' + new Date())
-                .appendTo(form);
-        });
-    }
-
-    // Enable iframe cross-domain access via redirect option:
-    form.fileupload(
-        'option',
-        'redirect',
-        window.location.href.replace(
-            /\/[^\/]*$/,
-            '/cors/result.html?%s'
-        )
-    );
-
-    form.bind('fileuploadsubmit', function(e, data) {
-        var inputs = data.context.find(':input');
-        if(inputs.filter('[required][value=""]').first().focus().length) {
-            return false;
-        }
-        data.formData = inputs.serializeArray().concat(form.serializeArray());
-
-        inputs.filter("input").prop("disabled", true);
-    }).bind('fileuploadstart', function(e, data) {
-        // Show progress data
-        form.find('.fileupload-progress .progress-extended').show();
-        form.find('.fileupload-progress .progress-end').hide();
-    }).bind('fileuploadprogressall', function(e, data) {
-        // Hide progress data and show processing
-        if(data.total > 0 && data.loaded == data.total) {
-            form.find('.fileupload-progress .progress-extended').hide();
-            form.find('.fileupload-progress .progress-end').show();
-        }
-    }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function(e, data) {
-        // Get uploaded and downloaded files and toggle Done button
-        var filesToUploadCount = form.find('tr.template-upload').length;
-        var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
-
-        if(filesToUploadCount == 0) {
-            $button.removeAttr('disabled');
-        } else {
-            $button.attr('disabled', 'disabled');
-        }
-    });
-};
-
 
 /**
  * Open object context menu

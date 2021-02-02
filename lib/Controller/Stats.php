@@ -124,39 +124,14 @@ class Stats extends Base
     }
 
     /**
-     * Stats page
+     * Report page
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    function displayPage(Request $request, Response $response)
-    {
-        $data = [
-            // List of Displays this user has permission for
-            'defaults' => [
-                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
-                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
-                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
-            ]
-        ];
-
-        $this->getState()->template = 'statistics-page';
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Stats page
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    function displayProofOfPlayPage(Request $request, Response $response)
+    function displayReportPage(Request $request, Response $response)
     {
         $data = [
             // List of Displays this user has permission for
@@ -168,7 +143,7 @@ class Stats extends Base
             ]
         ];
 
-        $this->getState()->template = 'stats-proofofplay-page';
+        $this->getState()->template = 'report-page';
         $this->getState()->setData($data);
 
         return $this->render($request, $response);
@@ -240,7 +215,7 @@ class Stats extends Base
      * )
      *
      *
-     * Shows the stats grid
+     * Stats API
      *
      * @SWG\Get(
      *  path="/stats",
@@ -377,6 +352,7 @@ class Stats extends Base
         $layoutIds = $sanitizedQueryParams->getIntArray('layoutId', ['default' => []]);
         $mediaIds = $sanitizedQueryParams->getIntArray('mediaId', ['default' => []]);
         $statDate = $sanitizedQueryParams->getDate('statDate');
+        $statDateLessThan = $sanitizedQueryParams->getDate('statDateLessThan');
         $statId = $sanitizedQueryParams->getString('statId');
         $campaignId = $sanitizedQueryParams->getInt('campaignId');
         $eventTag = $sanitizedQueryParams->getString('eventTag');
@@ -394,13 +370,6 @@ class Stats extends Base
         // Paging
         $start = $sanitizedQueryParams->getInt('start', ['default' => 0]);
         $length = $sanitizedQueryParams->getInt('length', ['default' => 10]);
-
-        // What if the fromdt and todt are exactly the same?
-        // in this case assume an entire day from midnight on the fromdt to midnight on
-        // the todt (i.e. add a day to the todt)
-        if ($fromDt == $toDt) {
-            $toDt->addDay();
-        }
 
         // Merge displayId and displayIds
         if ($displayId != 0) {
@@ -422,6 +391,7 @@ class Stats extends Base
                 'layoutIds' => $layoutIds,
                 'mediaIds' => $mediaIds,
                 'statDate' => $statDate,
+                'statDateLessThan' => $statDateLessThan,
                 'statId' => $statId,
                 'campaignId' => $campaignId,
                 'eventTag' => $eventTag,
@@ -512,7 +482,6 @@ class Stats extends Base
 
         return $this->render($request, $response);
     }
-
 
     /**
      * Bandwidth Data
@@ -863,423 +832,6 @@ class Stats extends Base
     }
 
     /**
-     * Stats page
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    function displayLibraryPage(Request $request, Response $response)
-    {
-        $this->getState()->template = 'stats-library-page';
-        $data = [];
-
-        // Set up some suffixes
-        $suffixes = array('B', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB');
-
-        // Widget for the library usage pie chart
-        try {
-            if ($this->getUser()->libraryQuota != 0) {
-                $libraryLimit = $this->getUser()->libraryQuota * 1024;
-            } else {
-                $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
-            }
-
-            // Library Size in Bytes
-            $params = [];
-            $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
-            $sql .= ' GROUP BY type ';
-
-            $sth = $this->store->getConnection()->prepare($sql);
-            $sth->execute($params);
-
-            $results = $sth->fetchAll();
-
-            // Do we base the units on the maximum size or the library limit
-            $maxSize = 0;
-            if ($libraryLimit > 0) {
-                $maxSize = $libraryLimit;
-            } else {
-                // Find the maximum sized chunk of the items in the library
-                foreach ($results as $library) {
-                    $maxSize = ($library['SumSize'] > $maxSize) ? $library['SumSize'] : $maxSize;
-                }
-            }
-
-            // Decide what our units are going to be, based on the size
-            $base = ($maxSize == 0) ? 0 : floor(log($maxSize) / log(1024));
-
-            $libraryUsage = [];
-            $libraryLabels = [];
-            $totalSize = 0;
-            foreach ($results as $library) {
-                $libraryUsage[] = round((double)$library['SumSize'] / (pow(1024, $base)), 2);
-                $libraryLabels[] = ucfirst($library['type']) . ' ' . $suffixes[$base];
-
-                $totalSize = $totalSize + $library['SumSize'];
-            }
-
-            // Do we need to add the library remaining?
-            if ($libraryLimit > 0) {
-                $remaining = round(($libraryLimit - $totalSize) / (pow(1024, $base)), 2);
-
-                $libraryUsage[] = $remaining;
-                $libraryLabels[] = __('Free') . ' ' . $suffixes[$base];
-            }
-
-            // What if we are empty?
-            if (count($results) == 0 && $libraryLimit <= 0) {
-                $libraryUsage[] = 0;
-                $libraryLabels[] = __('Empty');
-            }
-
-            $data['libraryLimitSet'] = ($libraryLimit > 0);
-            $data['libraryLimit'] = (round((double)$libraryLimit / (pow(1024, $base)), 2)) . ' ' . $suffixes[$base];
-            $data['librarySize'] = ByteFormatter::format($totalSize, 1);
-            $data['librarySuffix'] = $suffixes[$base];
-            $data['libraryWidgetLabels'] = json_encode($libraryLabels);
-            $data['libraryWidgetData'] = json_encode($libraryUsage);
-
-        } catch (\Exception $exception) {
-            $this->getLog()->error('Error rendering the library stats page widget');
-        }
-
-        $data['users'] = $this->userFactory->query();
-        $data['groups'] = $this->userGroupFactory->query();
-
-        $this->getState()->setData($data);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     */
-    public function libraryUsageGrid(Request $request, Response $response)
-    {
-        $params = [];
-        $select = '
-            SELECT `user`.userId,
-                `user`.userName,
-                IFNULL(SUM(`media`.FileSize), 0) AS bytesUsed,
-                COUNT(`media`.mediaId) AS numFiles
-        ';
-        $body = '     
-              FROM `user`
-                LEFT OUTER JOIN `media`
-                ON `media`.userID = `user`.UserID
-              WHERE 1 = 1
-        ';
-
-        // Restrict on the users we have permission to see
-        // Normal users can only see themselves
-        $permissions = '';
-        if ($this->getUser()->userTypeId == 3) {
-            $permissions .= ' AND user.userId = :currentUserId ';
-            $filterBy['currentUserId'] = $this->getUser()->userId;
-        }
-        // Group admins can only see users from their groups.
-        else if ($this->getUser()->userTypeId == 2) {
-            $permissions .= '
-                AND user.userId IN (
-                    SELECT `otherUserLinks`.userId
-                      FROM `lkusergroup`
-                        INNER JOIN `group`
-                        ON `group`.groupId = `lkusergroup`.groupId
-                            AND `group`.isUserSpecific = 0
-                        INNER JOIN `lkusergroup` `otherUserLinks`
-                        ON `otherUserLinks`.groupId = `group`.groupId
-                     WHERE `lkusergroup`.userId = :currentUserId
-                )
-            ';
-            $params['currentUserId'] = $this->getUser()->userId;
-        }
-
-        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
-
-        // Filter by userId
-        if ($sanitizedQueryParams->getInt('userId') !== null) {
-            $body .= ' AND user.userId = :userId ';
-            $params['userId'] = $sanitizedQueryParams->getInt('userId');
-        }
-
-        // Filter by groupId
-        if ($sanitizedQueryParams->getInt('groupId') !== null) {
-            $body .= ' AND user.userId IN (SELECT userId FROM `lkusergroup` WHERE groupId = :groupId) ';
-            $params['groupId'] = $sanitizedQueryParams->getInt('groupId');
-        }
-
-        $body .= $permissions;
-        $body .= '            
-            GROUP BY `user`.userId,
-              `user`.userName
-        ';
-
-
-        // Sorting?
-        $filterBy = $this->gridRenderFilter([], $request);
-        $sortOrder = $this->gridRenderSort($request);
-
-        $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-
-        $limit = '';
-        // Paging
-        if ($filterBy !== null && $sanitizedQueryParams->getInt('start') !== null && $sanitizedQueryParams->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedQueryParams->getInt('start'), 0) . ', ' . $sanitizedQueryParams->getInt('length',['default' => 10]);
-        }
-
-        $sql = $select . $body . $order . $limit;
-        $rows = [];
-
-        foreach ($this->store->select($sql, $params) as $row) {
-            $entry = [];
-            $sanitizedRow = $this->getSanitizer($row);
-
-            $entry['userId'] = $sanitizedRow->getInt('userId');
-            $entry['userName'] = $sanitizedRow->getString('userName');
-            $entry['bytesUsed'] = $sanitizedRow->getInt('bytesUsed');
-            $entry['bytesUsedFormatted'] = ByteFormatter::format($sanitizedRow->getInt('bytesUsed'), 2);
-            $entry['numFiles'] = $sanitizedRow->getInt('numFiles');
-
-            $rows[] = $entry;
-        }
-
-        // Paging
-        if ($limit != '' && count($rows) > 0) {
-            $results = $this->store->select('SELECT COUNT(*) AS total FROM `user` ' . $permissions, $params);
-            $this->getState()->recordsTotal = intval($results[0]['total']);
-        }
-
-        $this->getState()->template = 'grid';
-        $this->getState()->setData($rows);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * @param Request $request
-     * @param Response $response
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws InvalidArgumentException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
-     * @throws \Xibo\Support\Exception\GeneralException
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function timeDisconnectedData(Request $request, Response $response)
-    {
-        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
-        $fromDt = $sanitizedQueryParams->getDate('fromDt', ['default' => $sanitizedQueryParams->getDate('availabilityFromDt')]);
-        $toDt = $sanitizedQueryParams->getDate('toDt', ['default' => $sanitizedQueryParams->getDate('availabilityToDt')]);
-
-        $displayId = $sanitizedQueryParams->getInt('displayId');
-        $displayGroupId = $sanitizedQueryParams->getInt('displayGroupId');
-        $tags = $sanitizedQueryParams->getString('tags');
-        $onlyLoggedIn = $sanitizedQueryParams->getCheckbox('onlyLoggedIn') == 1;
-
-        $currentDate = Carbon::now()->startOfDay()->format('Y-m-d');
-
-        // fromDt is always start of selected day
-        $fromDt = $fromDt->startOfDay();
-
-        // If toDt is current date then make it current datetime
-        if ($toDt->startOfDay()->format('Y-m-d') == $currentDate) {
-            $toDt = Carbon::now();
-        } else {
-            $toDt =  Carbon::now()->startOfDay();
-        }
-
-        // Get an array of display id this user has access to.
-        $displayIds = [];
-
-        foreach ($this->displayFactory->query() as $display) {
-            $displayIds[] = $display->displayId;
-        }
-
-        if (count($displayIds) <= 0) {
-            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
-        }
-
-        // Get an array of display groups this user has access to
-        $displayGroupIds = [];
-
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
-            $displayGroupIds[] = $displayGroup->displayGroupId;
-        }
-
-        if (count($displayGroupIds) <= 0) {
-            throw new InvalidArgumentException(__('No display groups with View permissions'), 'displayGroup');
-        }
-
-        $params = array(
-            'start' => $fromDt->format('U'),
-            'end' => $toDt->format('U')
-        );
-
-        $select = '
-            SELECT display.display, display.displayId,
-            SUM(LEAST(IFNULL(`end`, :end), :end) - GREATEST(`start`, :start)) AS duration,
-            :end - :start as filter ';
-
-        if ($tags != '') {
-            $select .= ', (SELECT GROUP_CONCAT(DISTINCT tag)
-              FROM tag
-                INNER JOIN lktagdisplaygroup
-                  ON lktagdisplaygroup.tagId = tag.tagId
-                WHERE lktagdisplaygroup.displayGroupId = displaygroup.DisplayGroupID
-                GROUP BY lktagdisplaygroup.displayGroupId) AS tags ';
-        }
-
-        $body = 'FROM `displayevent`
-                INNER JOIN `display`
-                ON display.displayId = `displayevent`.displayId ';
-
-        if ($displayGroupId != 0) {
-            $body .= 'INNER JOIN `lkdisplaydg`
-                        ON lkdisplaydg.DisplayID = display.displayid ';
-        }
-
-        if ($tags != '') {
-            $body .= 'INNER JOIN `lkdisplaydg`
-                        ON lkdisplaydg.DisplayID = display.displayid
-                     INNER JOIN `displaygroup`
-                        ON displaygroup.displaygroupId = lkdisplaydg.displaygroupId
-                         AND `displaygroup`.isDisplaySpecific = 1 ';
-        }
-
-        $body .= 'WHERE `start` <= :end
-                  AND IFNULL(`end`, :end) >= :start
-                  AND :end <= UNIX_TIMESTAMP(NOW())
-                  AND display.displayId IN (' . implode(',', $displayIds) . ') ';
-
-        if ($displayGroupId != 0) {
-            $body .= '
-                     AND lkdisplaydg.displaygroupid = :displayGroupId ';
-            $params['displayGroupId'] = $displayGroupId;
-        }
-
-        if ($tags != '') {
-            if (trim($tags) === '--no-tag') {
-                $body .= ' AND `displaygroup`.displaygroupId NOT IN (
-                    SELECT `lktagdisplaygroup`.displaygroupId
-                     FROM tag
-                        INNER JOIN `lktagdisplaygroup`
-                        ON `lktagdisplaygroup`.tagId = tag.tagId
-                    )
-                ';
-            } else {
-                $operator = $sanitizedQueryParams->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `displaygroup`.displaygroupId IN (
-                SELECT `lktagdisplaygroup`.displaygroupId
-                  FROM tag
-                    INNER JOIN `lktagdisplaygroup`
-                    ON `lktagdisplaygroup`.tagId = tag.tagId
-                ";
-                $i = 0;
-
-                foreach (explode(',', $tags) as $tag) {
-                    $i++;
-
-                    if ($i == 1)
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    else
-                        $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-
-                    if ($operator === '=')
-                        $params['tags' . $i] = $tag;
-                    else
-                        $params['tags' . $i] = '%' . $tag . '%';
-                }
-
-                $body .= " ) ";
-            }
-        }
-
-        if ($displayId != 0) {
-            $body .= ' AND display.displayId = :displayId ';
-            $params['displayId'] = $displayId;
-        }
-
-        if ($onlyLoggedIn) {
-            $body .= ' AND `display`.loggedIn = 1 ';
-        }
-
-        $body .= '
-            GROUP BY display.display
-        ';
-
-        // Sorting?
-        $filterBy = $this->gridRenderFilter([], $request);
-        $sortOrder = $this->gridRenderSort($request);
-
-        $order = '';
-        if (is_array($sortOrder))
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-
-        $limit = '';
-
-        // Paging
-        $filterBy = $this->getSanitizer($filterBy);
-        if ($filterBy !== null && $filterBy->hasParam('start') && $filterBy->hasParam('length')) {
-            $limit = ' LIMIT ' . intval($filterBy->getInt('start', ['default' => 0])) . ', '
-                . $filterBy->getInt('length', ['default' => 10]);
-        }
-
-        $sql = $select . $body . $order . $limit;
-        $maxDuration = 0;
-        $rows = [];
-
-        foreach ($this->store->select($sql, $params) as $row) {
-            $maxDuration = $maxDuration + $this->getSanitizer($row)->getDouble('duration');
-        }
-
-        if ($maxDuration > 86400) {
-            $postUnits = __('Days');
-            $divisor = 86400;
-        }
-        else if ($maxDuration > 3600) {
-            $postUnits = __('Hours');
-            $divisor = 3600;
-        }
-        else {
-            $postUnits = __('Minutes');
-            $divisor = 60;
-        }
-
-        foreach ($this->store->select($sql, $params) as $row) {
-            $sanitizedRow = $this->getSanitizer($row);
-
-            $entry = [];
-            $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
-            $entry['display'] = $sanitizedRow->getString(('display'));
-            $entry['timeDisconnected'] =  round($sanitizedRow->getDouble('duration') / $divisor, 2);
-            $entry['timeConnected'] =  round($sanitizedRow->getDouble('filter') / $divisor - $entry['timeDisconnected'], 2);
-            $entry['postUnits'] = $postUnits;
-
-            $rows[] = $entry;
-        }
-
-        // Paging
-        if ($limit != '' && count($rows) > 0) {
-            $results = $this->store->select($select . $body, $params);
-            $this->getState()->recordsTotal = count($results);
-        }
-
-        $this->getState()->template = 'grid';
-        $this->getState()->setData($rows);
-
-        return $this->render($request, $response);
-    }
-
-    /**
      * @SWG\Definition(
      *  definition="TimeDisconnectedData",
      *  @SWG\Property(
@@ -1425,8 +977,8 @@ class Stats extends Base
         }
 
         // Sorting?
-        $filterBy = $this->gridRenderFilter([], $request);
-        $sortOrder = $this->gridRenderSort($request);
+        $filterBy = $this->gridRenderFilter([], $params);
+        $sortOrder = $this->gridRenderSort($params);
 
         $order = '';
         if (is_array($sortOrder))

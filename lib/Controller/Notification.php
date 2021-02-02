@@ -205,7 +205,7 @@ class Notification extends Base
             'subject' => $sanitizedQueryParams->getString('subject')
         ];
         $embed = ($sanitizedQueryParams->getString('embed') != null) ? explode(',', $sanitizedQueryParams->getString('embed')) : [];
-        $notifications = $this->notificationFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $notifications = $this->notificationFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
 
         foreach ($notifications as $notification) {
             /* @var \Xibo\Entity\Notification $notification */
@@ -217,20 +217,20 @@ class Notification extends Base
                 ]);
             }
 
-            if ($this->isApi($request))
+            if ($this->isApi($request) || !$this->getUser()->featureEnabled('notification.modify'))
                 continue;
 
             $notification->includeProperty('buttons');
 
             // Default Layout
-            $notification->buttons[] = array(
+            $notification->buttons[] = [
                 'id' => 'notification_button_edit',
                 'url' => $this->urlFor($request,'notification.edit.form', ['id' => $notification->notificationId]),
                 'text' => __('Edit')
-            );
+            ];
 
             if ($this->getUser()->checkDeleteable($notification)) {
-                $notification->buttons[] = array(
+                $notification->buttons[] = [
                     'id' => 'notification_button_delete',
                     'url' => $this->urlFor($request,'notification.delete.form', ['id' => $notification->notificationId]),
                     'text' => __('Delete'),
@@ -240,9 +240,10 @@ class Notification extends Base
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'notification_button_delete'],
                         ['name' => 'text', 'value' => __('Delete?')],
+                        ['name' => 'sort-group', 'value' => 1],
                         ['name' => 'rowtitle', 'value' => $notification->subject]
                     ]
-                );
+                ];
             }
         }
 
@@ -398,12 +399,13 @@ class Notification extends Base
      * Add attachment
      * @param Request $request
      * @param Response $response
-     * @return AttachmentUploadHandler
-     * @throws ConfigurationException
+     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function addAttachment(Request $request, Response $response)
     {
-
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
@@ -423,10 +425,12 @@ class Notification extends Base
         // Output handled by UploadHandler
         $this->setNoOutput(true);
 
-        $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
+        $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
-        return new AttachmentUploadHandler($options);
+        new AttachmentUploadHandler($options);
+
+        return $this->render($request, $response);
     }
 
     /**

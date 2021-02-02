@@ -36,6 +36,7 @@ class ApplicationState
     public $fieldActions;
     public $dialogTitle;
     public $callBack;
+    public $autoSubmit;
 
     public $login;
     public $clockUpdate;
@@ -101,6 +102,7 @@ class ApplicationState
         $response['fieldActions'] = $this->fieldActions;
         $response['dialogTitle'] = $this->dialogTitle;
         $response['callBack'] = $this->callBack;
+        $response['autoSubmit'] = $this->autoSubmit;
 
         $response['success'] = $this->success;
         $response['message'] = $this->message;

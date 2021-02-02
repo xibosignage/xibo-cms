@@ -196,7 +196,7 @@ class Action  extends Base
             'layoutCode' => $parsedParams->getString('layoutCode')
         ];
 
-        $actions = $this->actionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $actions = $this->actionFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));
 
         foreach ($actions as $action) {
             $action->widgetName = null;
@@ -394,7 +394,7 @@ class Action  extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $triggerType = $sanitizedParams->getString('triggerType');
-        $triggerCode = $sanitizedParams->getString('triggerCode');
+        $triggerCode = $sanitizedParams->getString('triggerCode', ['defaultOnEmptyString' => true]);
         $actionType = $sanitizedParams->getString('actionType');
         $target = $sanitizedParams->getString('target');
         $targetId = $sanitizedParams->getInt('targetId');
@@ -429,7 +429,7 @@ class Action  extends Base
         }
 
         $action = $this->actionFactory->create($triggerType, $triggerCode, $actionType, $source, $id, $target, $targetId, $widgetId, $layoutCode);
-        $action->save();
+        $action->save(['notifyLayout' => true, 'layoutId' => $layout->layoutId]);
 
         // Return
         $this->getState()->hydrate([
@@ -620,14 +620,14 @@ class Action  extends Base
         }
 
         $action->triggerType = $sanitizedParams->getString('triggerType');
-        $action->triggerCode = $sanitizedParams->getString('triggerCode');
+        $action->triggerCode = $sanitizedParams->getString('triggerCode', ['defaultOnEmptyString' => true]);
         $action->actionType = $sanitizedParams->getString('actionType');
         $action->target = $sanitizedParams->getString('target');
         $action->targetId = $sanitizedParams->getInt('targetId');
         $action->widgetId = $sanitizedParams->getInt('widgetId');
         $action->layoutCode = $sanitizedParams->getString('layoutCode');
 
-        $action->save();
+        $action->save(['notifyLayout' => true, 'layoutId' => $layout->layoutId]);
 
         // Return
         $this->getState()->hydrate([
@@ -732,6 +732,7 @@ class Action  extends Base
             throw new InvalidArgumentException(__('Layout is not checked out'), 'statusId');
         }
 
+        $action->notifyLayout($layout->layoutId);
         $action->delete();
 
         // Return

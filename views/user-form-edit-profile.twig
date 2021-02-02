@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -44,8 +44,8 @@
                 {{ forms.disabled("userName", title, currentUser.userName) }}
 
                 {% set title %}{% trans "Password" %}{% endset %}
-                {% set helpText %}{% trans "Please enter your current password" %}{% endset %}
-                {{ forms.password("password", title, "", helpText, "", "required") }}
+                {% set helpText %}{% trans "If you are changing your password or two factor settings, then please enter your current password" %}{% endset %}
+                {{ forms.password("password", title, "", helpText) }}
 
                 {% set title %}{% trans "New Password" %}{% endset %}
                 {% set helpText %}{% trans "Please enter your new password" %}{% endset %}
@@ -53,7 +53,7 @@
 
                 {% set title %}{% trans "Retype New Password" %}{% endset %}
                 {% set helpText %}{% trans "Please repeat the new Password." %}{% endset %}
-                {{ forms.password("retypeNewPassword", title, "", helptext) }}
+                {{ forms.password("retypeNewPassword", title, "", helpText) }}
 
                 {% set title %}{% trans "Email" %}{% endset %}
                 {% set helpText %}{% trans "The Email Address for this user." %}{% endset %}
@@ -78,11 +78,11 @@
                     <p>{% trans "Please use the buttons below to generate or show your two factor recovery codes." %}</p>
 
                     <ul class="nav nav-pills pull-left" style="margin-left: 5px;">
-                        <li class="btn btn-success btn-xs recBtn"><a class="btns generateCodes" id="generateCodesBtn" style="padding: 7px 7px;" title="{% trans "Generate Recovery codes, this action will invalidate all existing recovery codes." %}" > <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Generate" %}</a></li>
+                        <li class="btn btn-success btn-sm recBtn"><a class="btns generateCodes" id="generateCodesBtn" style="padding: 7px 7px;" title="{% trans "Generate Recovery codes, this action will invalidate all existing recovery codes." %}" > <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Generate" %}</a></li>
                     </ul>
 
                     <ul class="nav nav-pills pull-left" style="margin-left: 5px;">
-                        <li class="btn btn-info btn-xs recBtn"><a class="btns showCodes" id="showCodesBtn" style="padding: 7px 7px;" title="{% trans "Show existing recovery codes" %}" > <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Show" %}</a></li>
+                        <li class="btn btn-info btn-sm recBtn"><a class="btns showCodes" id="showCodesBtn" style="padding: 7px 7px;" title="{% trans "Show existing recovery codes" %}" > <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Show" %}</a></li>
                     </ul>
                 </div>
 

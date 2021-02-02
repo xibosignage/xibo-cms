@@ -43,7 +43,7 @@
     "operation": "is:checked",
     "actions": {
     ".dynamic-message": { "display": "none" },
-    ".static-message": { "display": "block" }
+    ".static-message": { "display": "" }
     }
     },{
     "field": "isDynamic",
@@ -52,7 +52,7 @@
     "operation": "is:checked",
     "actions": {
     ".dynamic-message": { "display": "none" },
-    ".static-message": { "display": "block" }
+    ".static-message": { "display": "" }
     }
     },{
     "field": "isDynamic",
@@ -60,7 +60,7 @@
     "value": true,
     "operation": "is:checked",
     "actions": {
-    ".dynamic-message": { "display": "block" },
+    ".dynamic-message": { "display": "" },
     ".static-message": { "display": "none" }
     }
     },{
@@ -69,7 +69,7 @@
     "value": true,
     "operation": "is:checked",
     "actions": {
-    ".dynamic-message": { "display": "block" },
+    ".dynamic-message": { "display": "" },
     ".static-message": { "display": "none" }
     }
     }]
@@ -79,28 +79,48 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#populate" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#populate" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
             </ul>
-            <form id="playlistAddForm" class="form-horizontal playlistForm" method="post" action="{{ url_for("playlist.add") }}" data-gettag="{{ url_for("tag.getByName") }}">
+            <form id="playlistAddForm" class="XiboForm form-horizontal playlistForm" method="post" action="{{ url_for("playlist.add") }}" data-gettag="{{ url_for("tag.getByName") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
+
+                        {% if currentUser.featureEnabled('folder.view') %}
+                        <div class="form-group row">
+                            <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
+                            <div class="col-sm-10">
+                                <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                                <span id="selectedFormFolder"></span>
+                            </div>
+                        </div>
+                        {{ forms.hidden('folderId') }}
+                        {% endif %}
+
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "The Name of the Playlist - (1 - 50 characters)" %}{% endset %}
                         {{ forms.input("name", title, "", helpText) }}
 
-                        {% set title %}{% trans "Tags" %}{% endset %}
-                        {% set helpText %}{% trans "Tags for this Playlist - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
-                        {{ forms.inputWithTags("tags", title, "", helpText, 'tags-with-value') }}
+                        {% if currentUser.featureEnabled("tag.tagging") %}
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "Tags for this Playlist - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
+                            {{ forms.inputWithTags("tags", title, "", helpText, 'tags-with-value') }}
 
-                        <p id="loadingValues" style="margin-left: 17%"></p>
+                            <p id="loadingValues" style="margin-left: 17%"></p>
 
-                        {% set title %}{% trans "Tag value" %}{% endset %}
-                        {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
+                            {% set title %}{% trans "Tag value" %}{% endset %}
+                            {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
 
-                        <div id="tagValueRequired" class="alert alert-info">
-                            <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
-                        </div>
+                            <div id="tagValueContainer">
+                                {% set title %}{% trans "Tag value" %}{% endset %}
+                                {% set helpText %}{% trans "Please provide the value for this Tag and confirm by pressing enter on your keyboard." %}{% endset %}
+                                {{ forms.input("tagValueInput", title, "", helpText) }}
+                            </div>
+
+                            <div id="tagValueRequired" class="alert alert-info">
+                                <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
+                            </div>
+                        {% endif %}
 
                         {% set title %}{% trans "Dynamic?" %}{% endset %}
                         {% set helpText %}{% trans "Is the Playlist to have Library media assignments managed automatically by the CMS based on filter criteria? Set a filter on the next tab." %}{% endset %}
@@ -135,25 +155,27 @@
                         <div class="widget">
                             <div class="widget-title">{% trans "Library Media" %}</div>
                             <div class="widget-body">
-                                <div class="FilterDiv" id="Filter">
+                                <div class="FilterDiv card-body" id="Filter">
                                     {% set message = "Populate with Library Media matching the criteria below and automatically maintain the Playlist."|trans %}
                                     {{ forms.message(message) }}
 
                                     {% set title %}{% trans "Name filter" %}{% endset %}
                                     {{ forms.input("filterMediaName", title) }}
 
-                                    {% set title %}{% trans "Tag filter" %}{% endset %}
-                                    {{ forms.inputWithTags("filterMediaTag", title) }}
+                                    {% if currentUser.featureEnabled("tag.tagging") %}
+                                        {% set title %}{% trans "Tag filter" %}{% endset %}
+                                        {{ forms.inputWithTags("filterMediaTag", title) }}
+                                    {% endif %}
                                 </div>
 
-                                <div class="XiboData">
+                                <div class="XiboData card pt-3">
                                     <table id="playlistLibraryMedia" class="table table-striped">
                                         <thead>
                                         <tr>
                                             <th>{% trans "ID" %}</th>
                                             <th>{% trans "Name" %}</th>
                                             <th>{% trans "Type" %}</th>
-                                            <th>{% trans "Tags" %}</th>
+                                            {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                             <th>{% trans "Duration" %}</th>
                                         </tr>
                                         </thead>

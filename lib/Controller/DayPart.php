@@ -160,7 +160,7 @@ class DayPart extends Base
             'isCustom' => $sanitizedParams->getInt('isCustom')
         ];
 
-        $dayParts = $this->dayPartFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $dayParts = $this->dayPartFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filter, $sanitizedParams));
         $embed = ($sanitizedParams->getString('embed') != null) ? explode(',', $sanitizedParams->getString('embed')) : [];
         
         foreach ($dayParts as $dayPart) {
@@ -173,7 +173,10 @@ class DayPart extends Base
 
             $dayPart->includeProperty('buttons');
 
-            if ($dayPart->isCustom !== 1 && $dayPart->isAlways !== 1) {
+            if ($dayPart->isCustom !== 1
+                && $dayPart->isAlways !== 1
+                && $this->getUser()->featureEnabled('daypart.modify')
+            ) {
                 // CRUD
                 $dayPart->buttons[] = array(
                     'id' => 'daypart_button_edit',
@@ -182,33 +185,46 @@ class DayPart extends Base
                 );
 
                 if ($this->getUser()->checkDeleteable($dayPart)) {
-                    $dayPart->buttons[] = array(
+                    $dayPart->buttons[] = [
                         'id' => 'daypart_button_delete',
                         'url' => $this->urlFor($request,'daypart.delete.form', ['id' => $dayPart->dayPartId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
-                        'dataAttributes' => array(
-                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'daypart.delete', ['id' => $dayPart->dayPartId])),
-                            array('name' => 'commit-method', 'value' => 'delete'),
-                            array('name' => 'id', 'value' => 'daypart_button_delete'),
-                            array('name' => 'text', 'value' => __('Delete')),
-                            array('name' => 'rowtitle', 'value' => $dayPart->name)
-                        )
-                    );
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'daypart.delete', ['id' => $dayPart->dayPartId])],
+                            ['name' => 'commit-method', 'value' => 'delete'],
+                            ['name' => 'id', 'value' => 'daypart_button_delete'],
+                            ['name' => 'text', 'value' => __('Delete')],
+                            ['name' => 'sort-group', 'value' => 1],
+                            ['name' => 'rowtitle', 'value' => $dayPart->name]
+                        ]
+                    ];
                 }
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($dayPart)) {
-
+            if ($this->getUser()->checkPermissionsModifyable($dayPart)
+                && $this->getUser()->featureEnabled('daypart.modify')
+            ) {
                 if (count($dayPart->buttons) > 0)
                     $dayPart->buttons[] = ['divider' => true];
 
                 // Edit Permissions
-                $dayPart->buttons[] = array(
+                $dayPart->buttons[] = [
                     'id' => 'daypart_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId]),
-                    'text' => __('Permissions')
-                );
+                    'text' => __('Share'),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'daypart_button_permissions'],
+                        ['name' => 'text', 'value' => __('Share')],
+                        ['name' => 'rowtitle', 'value' => $dayPart->name],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DayPart'])],
+                        ['name' => 'content-id-name', 'value' => 'dayPartId']
+                    ]
+                ];
             }
         }
 

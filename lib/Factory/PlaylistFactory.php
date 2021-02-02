@@ -105,8 +105,10 @@ class PlaylistFactory extends BaseFactory
     {
         $playlists = $this->query(null, array('disableUserCheck' => 1, 'regionId' => $regionId));
 
-        if (count($playlists) <= 0)
-            throw new NotFoundException(__('Cannot find playlist'));
+        if (count($playlists) <= 0) {
+            $this->getLog()->error('Region ' . $regionId . ' does not have a Playlist associated, please try to set a new owner in Permissions.');
+            throw new NotFoundException(__('One of the Regions on this Layout does not have a Playlist, please contact your administrator.'));
+        }
 
         return $playlists[0];
     }
@@ -183,6 +185,8 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.filterMediaTags,
                 `playlist`.requiresDurationUpdate,
                 `playlist`.enableStat,
+                `playlist`.folderId,
+                `playlist`.permissionsFolderId,
                 (
                 SELECT GROUP_CONCAT(DISTINCT tag) 
                   FROM tag 
@@ -218,7 +222,7 @@ class PlaylistFactory extends BaseFactory
 
         $body = '  
               FROM `playlist` 
-                INNER JOIN `user` 
+                LEFT OUTER JOIN `user` 
                 ON `user`.userId = `playlist`.ownerId
              WHERE 1 = 1 
         ';
@@ -295,7 +299,7 @@ class PlaylistFactory extends BaseFactory
         }
 
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy, '`playlist`.permissionsFolderId');
 
         // Playlist Like
         if ($parsedFilter->getString('name') != '') {
@@ -373,6 +377,11 @@ class PlaylistFactory extends BaseFactory
             ';
 
             $params['mediaLike'] = '%' . $parsedFilter->getString('mediaLike') . '%';
+        }
+
+        if ($parsedFilter->getInt('folderId') !== null) {
+            $body .= " AND `playlist`.folderId = :folderId ";
+            $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
         // Sorting?

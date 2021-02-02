@@ -26,9 +26,11 @@
 {% block title %}{{ "Commands"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("command.add.form") }}"><i class="fa fa-terminal" aria-hidden="true"></i> {% trans "Add Command" %}</a></li>
-    </ul>
+    {% if currentUser.featureEnabled("command.add") %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" href="{{ url_for("command.add.form") }}"><i class="fa fa-terminal" aria-hidden="true"></i> {% trans "Add Command" %}</button>
+    </div>
+    {% endif %}
 {% endblock %}
 
 
@@ -37,8 +39,8 @@
         <div class="widget-title">{% trans "Commands" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "Command" %}{% endset %}
                             {{ inline.input("command", title) }}
@@ -48,8 +50,8 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="commands" class="table table-striped">
+                <div class="XiboData card pt-3">
+                    <table id="commands" class="table table-striped" data-state-preference-name="commandGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "Name" %}</th>
@@ -57,7 +59,7 @@
                                 <th>{% trans "Available On" %}</th>
                                 <th>{% trans "Description" %}</th>
                                 <th>{% trans "Permissions" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
+                                <th class="rowMenu"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -73,38 +75,12 @@
 {% block javaScript %}
     <script type="text/javascript">
         var table = $("#commands").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=commandGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "commandGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            responsive: true,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
@@ -115,10 +91,11 @@
                 }
             },
             "columns": [
-                { "data": "command", "render": dataTableSpacingPreformatted },
-                { "data": "code" },
+                { "data": "command", "render": dataTableSpacingPreformatted , responsivePriority: 2},
+                { "data": "code" , responsivePriority: 2},
                 {
                     "data": "availableOn",
+                     responsivePriority: 3,
                     "render": function(data, type) {
 
                         if (type !== "display")
@@ -145,13 +122,15 @@
                         return returnData;
                     }
                 },
-                { "data": "description" },
+                { "data": "description", responsivePriority: 3 },
                 {
                     "data": "groupsWithPermissions",
+                     responsivePriority: 3,
                     "render": dataTableCreatePermissions
                 },
                 {
                     "orderable": false,
+                     responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]
@@ -159,6 +138,6 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#commands_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#commands_wrapper').find('.col-md-6').eq(1));
     </script>
 {% endblock %}

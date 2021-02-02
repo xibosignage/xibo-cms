@@ -145,7 +145,6 @@ PropertiesPanel.prototype.makeFormReadOnly = function() {
  * @param {Object} element - the element object to be rendered
  */
 PropertiesPanel.prototype.render = function(element, step) {
-
     // Prevent the panel to render if there's no selected object
     if(typeof element == 'undefined' || $.isEmptyObject(element) || typeof element.type == 'undefined' || typeof element[element.type + 'Id'] == 'undefined') {
         // Clean the property panel html
@@ -217,7 +216,7 @@ PropertiesPanel.prototype.render = function(element, step) {
             // append new tab
             let tabName = actionsTranslations.tableHeaders.name;
             const tabList = self.DOMObject.find('.nav-tabs');
-            let tabHtml = '<li><a href="#actionTab" role="tab" data-toggle="tab"><span id="actionTabName"></span></a></li>';
+            let tabHtml = '<li class="nav-item"><a class="nav-link" href="#actionTab" role="tab" data-toggle="tab"><span id="actionTabName"></span></a></li>';
             $(tabHtml).appendTo(tabList);
             $('#actionTabName').text(tabName);
 
@@ -253,9 +252,11 @@ PropertiesPanel.prototype.render = function(element, step) {
         }
         
         // Run form open module optional function
-        if(element.type === 'widget') { 
+        if(element.type === 'widget') {
             // Pass widget options to the form as data
-            self.DOMObject.find('form').data('elementOptions', element.getOptions());
+            if(element.getOptions != undefined) {
+                self.DOMObject.find('form').data('elementOptions', element.getOptions());
+            }
 
             formHelpers.widgetFormEditAfterOpen(self.DOMObject, element.subType);
         } else if(element.type === 'region' && typeof window.regionFormEditOpen === 'function') {

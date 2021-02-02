@@ -26,13 +26,13 @@
 {% block title %}{{ "Modules"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
+    <div class="widget-action-menu pull-right">
         {% if modulesToInstall|length > 0 %}
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Modules available to Install" %}" href="{{ url_for("module.install.list.form") }}"><i class="fa fa-upload" aria-hidden="true"></i> {% trans "Install Module" %}</a></li>
+        <button class="btn btn-success XiboFormButton" title="{% trans "Modules available to Install" %}" href="{{ url_for("module.install.list.form") }}"><i class="fa fa-upload" aria-hidden="true"></i> {% trans "Install Module" %}</button>
         {% endif %}
-        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Verify all modules have been installed correctly." %}" href="{{ url_for("module.verify.form") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Verify All" %}</a></li>
-        <li class="btn btn-warning btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
-    </ul>
+        <button class="btn btn-info XiboFormButton" title="{% trans "Verify all modules have been installed correctly." %}" href="{{ url_for("module.verify.form") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Verify All" %}</button>
+        <button class="btn btn btn-secondary" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -41,14 +41,14 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="modules" class="table table-striped">
+                <div class="XiboData card pt-3">
+                    <table id="modules" class="table table-striped" data-state-preference-name="moduleGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "Name" %}</th>
@@ -59,7 +59,7 @@
                                 <th>{% trans "Preview Enabled" %}</th>
                                 <th title="{% trans "Can this module be assigned to a Layout?" %}">{% trans "Assignable" %}</th>
                                 <th>{% trans "Enabled" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
+                                <th class="rowMenu"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -74,39 +74,14 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#modules").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=moduleGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "moduleGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+        var table = $("#modules").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            responsive: true,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
@@ -117,7 +92,7 @@
                 }
             },
             "columns": [
-                { "data": "name" },
+                { "data": "name" , responsivePriority: 2},
                 { "data": "description" },
                 { "data": "regionSpecific", "render": dataTableTickCrossInverseColumn },
                 { "data": "defaultDuration" },
@@ -127,6 +102,7 @@
                 { "data": "enabled", "render": dataTableTickCrossColumn },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]
@@ -134,7 +110,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#modules_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#modules_wrapper').find('.col-md-6').eq(1));
 
         function installModuleComplete()
         {

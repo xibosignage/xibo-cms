@@ -156,10 +156,10 @@ class DataSetRss extends Base
             throw new AccessDeniedException();
         }
         
-        $feeds = $this->dataSetRssFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $feeds = $this->dataSetRssFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([
             'dataSetId' => $id,
             'useRegexForName' => $sanitizedParams->getCheckbox('useRegexForName')
-        ], $request), $request);
+        ], $sanitizedParams));
 
         foreach ($feeds as $feed) {
 
@@ -168,20 +168,22 @@ class DataSetRss extends Base
 
             $feed->includeProperty('buttons');
 
-            // Edit
-            $feed->buttons[] = array(
-                'id' => 'datasetrss_button_edit',
-                'url' => $this->urlFor($request,'dataSet.rss.edit.form', ['id' => $id, 'rssId' => $feed->id]),
-                'text' => __('Edit')
-            );
-
-            if ($this->getUser()->checkDeleteable($dataSet)) {
-                // Delete
+            if ($this->getUser()->featureEnabled('dataset.data')) {
+                // Edit
                 $feed->buttons[] = array(
-                    'id' => 'datasetrss_button_delete',
-                    'url' => $this->urlFor($request,'dataSet.rss.delete.form', ['id' => $id, 'rssId' => $feed->id]),
-                    'text' => __('Delete')
+                    'id' => 'datasetrss_button_edit',
+                    'url' => $this->urlFor($request,'dataSet.rss.edit.form', ['id' => $id, 'rssId' => $feed->id]),
+                    'text' => __('Edit')
                 );
+
+                if ($this->getUser()->checkDeleteable($dataSet)) {
+                    // Delete
+                    $feed->buttons[] = array(
+                        'id' => 'datasetrss_button_delete',
+                        'url' => $this->urlFor($request,'dataSet.rss.delete.form', ['id' => $id, 'rssId' => $feed->id]),
+                        'text' => __('Delete')
+                    );
+                }
             }
         }
 

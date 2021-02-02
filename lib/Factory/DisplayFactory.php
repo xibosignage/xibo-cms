@@ -56,6 +56,9 @@ class DisplayFactory extends BaseFactory
      */
     private $displayProfileFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -67,8 +70,9 @@ class DisplayFactory extends BaseFactory
      * @param ConfigServiceInterface $config
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayProfileFactory $displayProfileFactory
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $displayNotifyService, $config, $displayGroupFactory, $displayProfileFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $displayNotifyService, $config, $displayGroupFactory, $displayProfileFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -77,6 +81,7 @@ class DisplayFactory extends BaseFactory
         $this->config = $config;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->displayProfileFactory = $displayProfileFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -94,7 +99,7 @@ class DisplayFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Display($this->getStore(), $this->getLog(), $this->config, $this->displayGroupFactory, $this->displayProfileFactory, $this);
+        return new Display($this->getStore(), $this->getLog(), $this->config, $this->displayGroupFactory, $this->displayProfileFactory, $this, $this->folderFactory);
     }
 
     /**
@@ -215,6 +220,10 @@ class DisplayFactory extends BaseFactory
                   displaygroup.displayGroupId,
                   displaygroup.description,
                   displaygroup.bandwidthLimit,
+                  displaygroup.createdDt,
+                  displaygroup.modifiedDt,
+                  displaygroup.folderId,
+                  displaygroup.permissionsFolderId,
                   `display`.xmrChannel,
                   `display`.xmrPubKey,
                   `display`.lastCommandSuccess, 
@@ -278,7 +287,7 @@ class DisplayFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy, '`displaygroup`.permissionsFolderId');
 
         // Filter by Display ID?
         if ($parsedBody->getInt('displayId') !== null) {
@@ -461,9 +470,10 @@ class DisplayFactory extends BaseFactory
         // run the special query to help sort by displays already assigned to this display group, we want to run it only if we're sorting by member column.
         if ($parsedBody->getInt('displayGroupIdMembers') !== null && ($sortOrder == ['`member`'] || $sortOrder == ['`member` DESC'] )) {
             $members = [];
+            $displayGroupId = $parsedBody->getInt('displayGroupIdMembers');
+            
             foreach ($this->getStore()->select($select . $body, $params) as $row) {
-                $displayId = $parsedBody->getInt($row['displayId']);
-                $displayGroupId = $parsedBody->getInt('displayGroupIdMembers');
+                $displayId = $this->getSanitizer($row)->getInt('displayId');
 
                 if ($this->getStore()->exists('SELECT display.display, display.displayId, displaygroup.displayGroupId
                                                     FROM display
@@ -488,6 +498,11 @@ class DisplayFactory extends BaseFactory
         if ($parsedBody->getInt('commercialLicence') !== null) {
             $body .= ' AND display.commercialLicence = :commercialLicence ';
             $params['commercialLicence'] = $parsedBody->getInt('commercialLicence');
+        }
+
+        if ($parsedBody->getInt('folderId') !== null) {
+            $body .= ' AND displaygroup.folderId = :folderId ';
+            $params['folderId'] = $parsedBody->getInt('folderId');
         }
 
         // Sorting?

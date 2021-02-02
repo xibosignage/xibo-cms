@@ -65,23 +65,23 @@
         if(container.length == 0)
             return;
 
-        const $worldClocksContainer = container.find('#worldClocksContainer');
-        const worldClockTemplate = formHelpers.getTemplate('worldClockTemplate');
-        const worldClocks = container.data().extra.worldClocks;
-        const timezones = container.data().extra.timezones;
+        var $worldClocksContainer = container.find('#worldClocksContainer');
+        var worldClockTemplate = formHelpers.getTemplate('worldClockTemplate');
+        var worldClocks = container.data().extra.worldClocks;
+        var timezones = container.data().extra.timezones;
 
         if(worldClocks.length == 0) {
             // Add a template row
-            const context = {title: '1', clockTimezone: '', timezones: timezones, buttonGlyph: 'fa-plus'};
+            var context = {title: '1', clockTimezone: '', timezones: timezones, buttonGlyph: 'fa-plus'};
             $(worldClockTemplate(context)).appendTo($worldClocksContainer);
             initClockRows(container);
         } else {
             // For each of the existing codes, create form components
-            let i = 0;
+            var i = 0;
             $.each(worldClocks, function(index, field) {
                 i++;
                 
-                const context = {title: i, clockTimezone: field.clockTimezone, clockHighlight: field.clockHighlight, clockLabel: field.clockLabel, timezones: timezones, buttonGlyph: ((i == 1) ? 'fa-plus' : 'fa-minus')};
+                var context = {title: i, clockTimezone: field.clockTimezone, clockHighlight: field.clockHighlight, clockLabel: field.clockLabel, timezones: timezones, buttonGlyph: ((i == 1) ? 'fa-plus' : 'fa-minus')};
                 $worldClocksContainer.append(worldClockTemplate(context));
 
             });
@@ -95,12 +95,12 @@
 
             // find the gylph
             if($(this).find('i').hasClass('fa-plus')) {
-                var context = {title: $worldClocksContainer.find('.form-inline').length + 1, clockTimezone: '', timezones: timezones, buttonGlyph: 'fa-minus'};
+                var context = {title: $worldClocksContainer.find('.form-clock').length + 1, clockTimezone: '', timezones: timezones, buttonGlyph: 'fa-minus'};
                 $worldClocksContainer.append(worldClockTemplate(context));
                 initClockRows(container);
             } else {
                 // Remove this row
-                $(this).closest('.form-inline').remove();
+                $(this).closest('.form-clock').remove();
             }
 
             updateClockCountLabel(container);
@@ -108,7 +108,7 @@
     }
 
     function updateClockCountLabel(container) {
-        const clockCount = container.find('#worldClocksContainer').find('.form-inline').length;
+        var clockCount = container.find('#worldClocksContainer').find('.form-clock').length;
         container.find('.clockCount').html((clockCount > 1) ? '(' + clockCount + ')' : '');
     }
 

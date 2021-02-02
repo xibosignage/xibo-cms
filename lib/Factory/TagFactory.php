@@ -28,6 +28,7 @@ use Xibo\Entity\Tag;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -67,10 +68,11 @@ class TagFactory extends BaseFactory
        return $tag;
     }
 
-        /**
+    /**
      * Get tags from a string
      * @param string $tagString
      * @return array[Tag]
+     * @throws InvalidArgumentException
      */
     public function tagsFromString($tagString)
     {
@@ -94,6 +96,7 @@ class TagFactory extends BaseFactory
      * Get Tag from String
      * @param string $tagString
      * @return Tag
+     * @throws InvalidArgumentException
      */
     public function tagFromString($tagString)
     {
@@ -104,6 +107,11 @@ class TagFactory extends BaseFactory
         // Add to the list
         try {
             $tag = $this->getByTag($explode[0]);
+
+            if ($tag->isRequired == 1 && !isset($explode[1])) {
+                throw new InvalidArgumentException(sprintf('Selected Tag %s requires a value, please enter the Tag in %s|Value format or provide Tag value in the dedicated field.', $explode[0], $explode[0]), 'options');
+            }
+
             if( isset($explode[1])) {
                 $tag->value = $explode[1];
             } else {
@@ -416,5 +424,23 @@ class TagFactory extends BaseFactory
             $this->_countLast = intval($results[0]['total']);
         }
         return $entries;
+    }
+
+    public function getTagsWithValues($entity)
+    {
+        $tags = '';
+        $arrayOfTags = array_filter(explode(',', $entity->tags));
+        $arrayOfTagValues = array_filter(explode(',', $entity->tagValues));
+
+        for ($i=0; $i<count($arrayOfTags); $i++) {
+            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
+                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
+                $tags .= ',';
+            } else {
+                $tags .= $arrayOfTags[$i] . ',';
+            }
+        }
+
+        return $tags;
     }
 }

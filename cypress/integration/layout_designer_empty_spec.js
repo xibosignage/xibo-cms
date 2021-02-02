@@ -33,7 +33,7 @@ describe('Layout Designer (Empty)', function() {
         it('goes into draft mode when checked out', function() {
 
             // Get the done button from the checkout modal
-            cy.get('[data-test="welcomeModal"] button[data-bb-handler="checkout"]').click();
+            cy.get('[data-test="welcomeModal"] button.btn-bb-checkout').click();
 
             // Check if campaign is deleted in toast message
             cy.contains('Checked out ' + layoutTempName);
@@ -53,7 +53,7 @@ describe('Layout Designer (Empty)', function() {
 
         beforeEach(function() {
             // Create random name
-            let uuid = Cypress._.random(0, 1e8);
+            let uuid = Cypress._.random(0, 1e9);
 
             // Create a new layout and go to the layout's designer page, then load toolbar prefs
             cy.createLayout(uuid).as('testLayoutId').then((res) => {
@@ -89,12 +89,12 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#layout-navigator #delete-btn').click();
 
             // Confirm modal
-            cy.get('[data-test="deleteRegionModal"]').should('be.visible').find('button[data-bb-handler="confirm"]').click();
+            cy.get('[data-test="deleteRegionModal"]').should('be.visible').find('button.btn-bb-confirm').click();
 
             cy.wait('@reloadLayout');
 
             // Check if there are no regions in the timeline ( there was 1 by default )
-            cy.get('#layout-timeline [data-type="region"]').should('not.be.visible');
+            cy.get('#layout-timeline [data-type="region"]').should('not.exist');
         });
 
         it('should delete a region using the toolbar bin', () => {
@@ -114,7 +114,7 @@ describe('Layout Designer (Empty)', function() {
                 cy.get('#layout-navigator-navbar button#delete-btn').click();
 
                 // Confirm delete on modal
-                cy.get('[data-test="deleteRegionModal"] button[data-bb-handler="confirm"]').click();
+                cy.get('[data-test="deleteRegionModal"] button.btn-bb-confirm').click();
 
                 // Check toast message
                 cy.get('.toast-success').contains('Deleted');
@@ -134,8 +134,8 @@ describe('Layout Designer (Empty)', function() {
             cy.route('POST', '**/playlist/widget/clock/*').as('createWidget');
 
             // Open toolbar Widgets tab
-            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
-            cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click();
+            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
+            cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click({force:true});
 
             cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="clock"]').should('be.visible').then(() => {
                 cy.dragToElement(
@@ -165,8 +165,8 @@ describe('Layout Designer (Empty)', function() {
             cy.route('/library?assignable=1&retired=0&draw=2&*').as('mediaLoad');
             
             // Open library search tab
-            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
-            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click();
+            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
+            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force:true});
 
             // Select and search image items
             cy.get('.toolbar-pane.active .input-type').select('image');
@@ -195,8 +195,8 @@ describe('Layout Designer (Empty)', function() {
             cy.populateLibraryWithMedia();
 
             // Open toolbar Widgets tab
-            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
-            cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click();
+            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
+            cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click({force:true});
 
             cy.get('#layout-viewer-navbar #navigator-edit-btn').click();
 

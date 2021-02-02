@@ -493,6 +493,13 @@ class Display extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -538,11 +545,12 @@ class Display extends Base
             'lastAccessed' => ($parsedQueryParams->getDate('lastAccessed') != null) ? $parsedQueryParams->getDate('lastAccessed')->format('U') : null,
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
             'orientation' => $parsedQueryParams->getString('orientation'),
-            'commercialLicence' => $parsedQueryParams->getInt('commercialLicence')
+            'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
+            'folderId' => $parsedQueryParams->getInt('folderId')
         ];
 
         // Get a list of displays
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $displays = $this->displayFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
 
         // Get all Display Profiles
@@ -641,9 +649,13 @@ class Display extends Base
             $display->teamViewerLink = (!empty($display->teamViewerSerial)) ? 'https://start.teamviewer.com/' . $display->teamViewerSerial : '';
             $display->webkeyLink = (!empty($display->webkeySerial)) ? 'https://webkeyapp.com/mgm?publicid=' . $display->webkeySerial : '';
 
-            // Edit and Delete buttons first
-            if ($this->getUser()->checkEditable($display)) {
+            // Is a transfer to another CMS in progress?
+            $display->isCmsTransferInProgress = (!empty($display->newCmsAddress));
 
+            // Edit and Delete buttons first
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkEditable($display)
+            ) {
                 // Manage
                 $display->buttons[] = array(
                     'id' => 'display_button_manage',
@@ -663,13 +675,17 @@ class Display extends Base
             }
 
             // Delete
-            if ($this->getUser()->checkDeleteable($display)) {
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkDeleteable($display)
+            ) {
                 $deleteButton = [
                     'id' => 'display_button_delete',
                     'url' => $this->urlFor($request,'display.delete.form', ['id' => $display->displayId]),
                     'text' => __('Delete')
                 ];
 
+                // We only include this in dev mode, because users have complained that it is too powerful a feature
+                // to have in the core product.
                 if (Environment::isDevMode()) {
                     $deleteButton['multi-select'] = true;
                     $deleteButton['dataAttributes'] = [
@@ -684,12 +700,15 @@ class Display extends Base
                 $display->buttons[] = $deleteButton;
             }
 
-            if ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display)) {
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && ($this->getUser()->checkEditable($display) || $this->getUser()->checkDeleteable($display))
+            ) {
                 $display->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->checkEditable($display)) {
-
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkEditable($display)
+            ) {
                 // Authorise
                 $display->buttons[] = array(
                     'id' => 'display_button_authorise',
@@ -697,6 +716,7 @@ class Display extends Base
                     'text' => __('Authorise'),
                     'multi-select' => true,
                     'dataAttributes' => array(
+                        ['name' => 'auto-submit', 'value' => true],
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.authorise', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_authorise'),
@@ -721,6 +741,24 @@ class Display extends Base
                     )
                 );
 
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    // Select Folder
+                    $display->buttons[] = [
+                        'id' => 'displaygroup_button_selectfolder',
+                        'url' => $this->urlFor($request,'displayGroup.selectfolder.form', ['id' => $display->displayGroupId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $display->displayGroupId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $display->display],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
+
                 if (in_array($display->clientType, ['android', 'lg', 'sssp'])) {
                     $display->buttons[] = array(
                         'id' => 'display_button_checkLicence',
@@ -728,6 +766,7 @@ class Display extends Base
                         'text' => __('Check Licence'),
                         'multi-select' => true,
                         'dataAttributes' => array(
+                            ['name' => 'auto-submit', 'value' => true],
                             array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.licencecheck', ['id' => $display->displayId])),
                             array('name' => 'commit-method', 'value' => 'put'),
                             array('name' => 'id', 'value' => 'display_button_checkLicence'),
@@ -741,16 +780,20 @@ class Display extends Base
             }
 
             // Schedule Now
-            if (($this->getUser()->checkEditable($display) || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1) && $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true ) {
+            if ($this->getUser()->featureEnabled('schedule.now')
+                && ($this->getUser()->checkEditable($display)
+                    || $this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1)
+            ) {
                 $display->buttons[] = array(
                     'id' => 'display_button_schedulenow',
-                    'url' => $this->urlFor($request,'schedulenow.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
+                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $display->displayGroupId, 'from' => 'DisplayGroup']),
                     'text' => __('Schedule Now')
                 );
             }
 
-            if ($this->getUser()->checkEditable($display)) {
-
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkEditable($display)
+            ) {
                 // File Associations
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
@@ -772,6 +815,7 @@ class Display extends Base
                     'text' => __('Request Screen Shot'),
                     'multi-select' => true,
                     'dataAttributes' => array(
+                        ['name' => 'auto-submit', 'value' => true],
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.requestscreenshot', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_requestScreenShot'),
@@ -787,6 +831,7 @@ class Display extends Base
                     'text' => __('Collect Now'),
                     'multi-select' => true,
                     'dataAttributes' => array(
+                        ['name' => 'auto-submit', 'value' => true],
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
                         array('name' => 'commit-method', 'value' => 'post'),
                         array('name' => 'id', 'value' => 'display_button_collectNow'),
@@ -795,11 +840,28 @@ class Display extends Base
                     )
                 );
 
+                // Trigger webhook
+                $display->buttons[] = [
+                    'id' => 'display_button_trigger_webhook',
+                    'url' => $this->urlFor($request,'displayGroup.trigger.webhook.form', ['id' => $display->displayGroupId]),
+                    'text' => __('Trigger a web hook'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.trigger.webhook', ['id' => $display->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'display_button_trigger_webhook'],
+                        ['name' => 'text', 'value' => __('Trigger a web hook')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
+                    ]
+                ];
+
                 $display->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($display)) {
-
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkPermissionsModifyable($display)
+            ) {
                 // Display Groups
                 $display->buttons[] = array(
                     'id' => 'display_button_group_membership',
@@ -808,15 +870,28 @@ class Display extends Base
                 );
 
                 // Permissions
-                $display->buttons[] = array(
+                $display->buttons[] = [
                     'id' => 'display_button_group_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId]),
-                    'text' => __('Permissions')
-                );
+                    'text' => __('Share'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $display->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'display_button_group_permissions'],
+                        ['name' => 'text', 'value' => __('Share')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
+                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
+                    ]
+                ];
             }
 
-            if ($this->getUser()->checkEditable($display)) {
-
+            if ($this->getUser()->featureEnabled('displays.modify')
+                && $this->getUser()->checkEditable($display)
+            ) {
                 if ($this->getUser()->checkPermissionsModifyable($display)) {
                     $display->buttons[] = ['divider' => true];
                 }
@@ -850,6 +925,30 @@ class Display extends Base
                         ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
                     ]
                 ];
+
+                $display->buttons[] = [
+                    'multi-select' => true,
+                    'multiSelectOnly' => true, // Show button only on multi-select menu
+                    'id' => 'display_button_set_bandwidth',
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'display.setBandwidthLimitMultiple')],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'display_button_set_bandwidth'],
+                        ['name' => 'text', 'value' => __('Set Bandwidth')],
+                        ['name' => 'rowtitle', 'value' => $display->display],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'display.setBandwidthLimitMultiple.form')],
+                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
+                    ]
+                ];
+
+                if ($display->isCmsTransferInProgress) {
+                    $display->buttons[] = [
+                        'id' => 'display_button_move_cancel',
+                        'url' => $this->urlFor($request,'display.moveCmsCancel.form', ['id' => $display->displayId]),
+                        'text' => __('Cancel CMS Transfer'),
+                    ];
+                }
             }
         }
 
@@ -881,20 +980,6 @@ class Display extends Base
 
         // We have permission - load
         $display->load();
-
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $display->tags));
-        $arrayOfTagValues = array_filter(explode(',', $display->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
 
         // Dates
         $display->auditingUntilIso =  Carbon::createFromTimestamp($display->auditingUntil)->format(DateFormatHelper::getSystemFormat());
@@ -970,7 +1055,7 @@ class Display extends Base
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
-            'tags' => $tags,
+            'tags' => $this->tagFactory->getTagsWithValues($display),
             'dayParts' => $dayparts
         ]);
 
@@ -1190,6 +1275,13 @@ class Display extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1207,8 +1299,9 @@ class Display extends Base
         }
 
         // Update properties
-        if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0)
+        if ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 0) {
             $display->display = $sanitizedParams->getString('display');
+        }
 
         $display->load();
 
@@ -1232,13 +1325,16 @@ class Display extends Base
         $display->bandwidthLimit = $sanitizedParams->getInt('bandwidthLimit');
         $display->teamViewerSerial = $sanitizedParams->getString('teamViewerSerial');
         $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
+        $display->folderId = $sanitizedParams->getInt('folderId', ['default' => $display->folderId]);
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
-        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), [], $request);
+        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), $sanitizedParams, [], $display);
 
         // Tags are stored on the displaygroup, we're just passing through here
-        $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $display->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        }
 
         if ($display->auditingUntil !== null) {
             $display->auditingUntil = $display->auditingUntil->format('U');
@@ -1392,6 +1488,108 @@ class Display extends Base
     }
 
     /**
+     * Set Bandwidth to one or more displays
+     * @param Request $request
+     * @param Response $response
+     * @param $ids
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function setBandwidthLimitMultipleForm(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Check if the array of ids is passed
+        if($sanitizedParams->getString('ids') == '') {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Get array of ids
+        $ids = $sanitizedParams->getString('ids');
+
+        $this->getState()->template = 'display-form-set-bandwidth';
+        $this->getState()->setData([
+            'ids' => $ids,
+            'help' =>  $this->getHelp()->link('Display', 'setBandwidthLimit')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+        /**
+     * Set Bandwidth to one or more displays
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function setBandwidthLimitMultiple(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Get array of ids
+        $ids = ($sanitizedParams->getString('ids') != '') ? explode(',', $sanitizedParams->getString('ids')) : [];
+        $bandwidthLimit = intval($sanitizedParams->getString('bandwidthLimit'));
+        $bandwidthLimitUnits = $sanitizedParams->getString('bandwidthLimitUnits');
+
+        // Check if the array of ids is passed
+        if (count($ids) == 0) {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Check if the bandwidth value has something
+        if ($bandwidthLimit == '') {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // convert bandwidth to kb based on form units
+        if ($bandwidthLimitUnits == 'mb') {
+            $bandwidthLimit = $bandwidthLimit * 1024;
+        } else if ($bandwidthLimitUnits == 'gb') {
+            $bandwidthLimit = $bandwidthLimit * 1024 * 1024;
+        }
+
+        // display group ids to be updated
+        $displayGroupIds = [];
+
+        foreach ($ids as $id) {
+            // get display
+            $display = $this->displayFactory->getById($id);
+
+            // check if the display is accessible by user
+            if (!$this->getUser()->checkViewable($display)) {
+                throw new AccessDeniedException();
+            }
+
+            $displayGroupIds[] = $display->displayGroupId;
+        }
+
+        // update bandwidth limit to the array of ids
+        $this->displayGroupFactory->setBandwidth($bandwidthLimit, $displayGroupIds);
+
+        // Audit Log message
+        $this->getLog()->audit('DisplayGroup', 0, 'Batch update of bandwidth limit for ' . count($displayGroupIds) . ' items', [
+            'bandwidthLimit' => $bandwidthLimit,
+            'displayGroupIds' => $displayGroupIds
+        ]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpCode' => 204,
+            'message' => __('Displays Updated')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+
+    /**
      * Assign Display to Display Groups
      * @param Request $request
      * @param Response $response
@@ -1535,6 +1733,7 @@ class Display extends Base
         }
 
         $this->getState()->template = 'display-form-request-screenshot';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('displayRequestScreenshotForm');
         $this->getState()->setData([
             'display' => $display,
             'nextCollect' => $nextCollect,
@@ -1827,6 +2026,7 @@ class Display extends Base
         }
 
         $this->getState()->template = 'display-form-authorise';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('displayAuthoriseForm');
         $this->getState()->setData([
             'display' => $display
         ]);
@@ -2049,7 +2249,7 @@ class Display extends Base
             $issuer = $appName;
         }
 
-        $authenticationCode = $sanitizedParams->getString('twoFactorCode', '');
+        $authenticationCode = $sanitizedParams->getString('twoFactorCode');
 
         $tfa = new TwoFactorAuth($issuer);
         $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode);
@@ -2084,12 +2284,62 @@ class Display extends Base
     /**
      * @param Request $request
      * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws NotFoundException
+     */
+    public function moveCmsCancelForm(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'display-form-moveCmsCancel';
+        $this->getState()->setData([
+            'display' => $display
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @param $id
+     * @throws NotFoundException
+     * @throws GeneralException
+     */
+    public function moveCmsCancel(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        $display->newCmsAddress = '';
+        $display->newCmsKey = '';
+        $display->save();
+
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Cancelled CMS Transfer for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function addViaCodeForm(Request $request, Response $response)
-    {
+    public function addViaCodeForm(Request $request, Response $response) {
         $this->getState()->template = 'display-form-addViaCode';
 
         return $this->render($request,$response);
@@ -2164,6 +2414,7 @@ class Display extends Base
         }
 
         $this->getState()->template = 'display-form-licence-check';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('displayLicenceCheckForm');
         $this->getState()->setData([
             'display' => $display
         ]);
@@ -2224,5 +2475,48 @@ class Display extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/display/status/{id}",
+     *  operationId="displayStatus",
+     *  tags={"display"},
+     *  summary="Display Status",
+     *  description="Get the display status window for this Display.",
+     *  @SWG\Parameter(
+     *      name="id",
+     *      in="path",
+     *      description="Display Id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(type="string")
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param int $id displayId
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\AccessDeniedException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function statusWindow(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        return $response->withJson($display->getStatusWindow($this->pool));
     }
 }

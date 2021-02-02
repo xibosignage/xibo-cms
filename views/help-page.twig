@@ -26,9 +26,9 @@
 {% block title %}{{ "Help Links"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-info btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Help page" %}" href="{{ url_for("help.add.form") }}"><i class="fa fa-question-circle" aria-hidden="true"></i> {% trans "Add Help Link" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-info XiboFormButton" title="{% trans "Add a new Help page" %}" href="{{ url_for("help.add.form") }}"><i class="fa fa-question-circle" aria-hidden="true"></i> {% trans "Add Help Link" %}</button>
+    </div>
 {% endblock %}
 
 
@@ -38,14 +38,14 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="helpLinks" class="table table-striped">
+                <div class="XiboData card pt-3">
+                    <table id="helpLinks" class="table table-striped" data-state-preference-name="helpGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "Topic" %}</th>
@@ -66,39 +66,14 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#helpLinks").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=helpGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "helpGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+        var table = $("#helpLinks").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true,
+            responsive: true,
+            stateDuration: 0,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
@@ -114,6 +89,7 @@
                 { "data": "link"},
                 {
                     "orderable": false,
+                     responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]
@@ -121,6 +97,6 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#helpLinks_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#helpLinks_wrapper').find('.col-md-6').eq(1));
     </script>
 {% endblock %}

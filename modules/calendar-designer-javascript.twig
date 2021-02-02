@@ -39,6 +39,9 @@
         formHelpers.setupDualTypeTextArea(this, 'template', !$(this).data('formEditorOnly'));
         formHelpers.setupDualTypeTextArea(this, 'currentEventTemplate');
         formHelpers.setupDualTypeTextArea(this, 'noDataMessage');
+
+        // set date range fields
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDateRange', '.date-range', '.interval');
     }
 
     // Runs before form submit

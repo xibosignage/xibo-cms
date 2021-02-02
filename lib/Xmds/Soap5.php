@@ -34,6 +34,10 @@ use Xibo\Helper\Random;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
+/**
+ * Class Soap5
+ * @package Xibo\Xmds
+ */
 class Soap5 extends Soap4
 {
     /**
@@ -148,7 +152,7 @@ class Soap5 extends Soap4
                     }
                   
                     // Override the XMR address if empty
-                    if (strtolower($settingName) == 'xmrnetworkaddress' && $arrayItem['value'] == '') {
+                    if (strtolower($settingName) == 'xmrnetworkaddress' && (!isset($arrayItem['value']) || $arrayItem['value'] == '')) {
                         $arrayItem['value'] = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
                     }
 
@@ -248,9 +252,7 @@ class Soap5 extends Soap4
 
                 $nodeName = ($clientType == 'windows') ? 'ScreenShotRequested' : 'screenShotRequested';
                 $node = $return->createElement($nodeName, $display->screenShotRequested);
-                if ($clientType == 'windows') {
-                    $node->setAttribute('type', 'checkbox');
-                }
+                $node->setAttribute('type', 'checkbox');
                 $displayElement->appendChild($node);
 
                 $nodeName = ($clientType == 'windows') ? 'DisplayTimeZone' : 'displayTimeZone';

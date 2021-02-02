@@ -32,6 +32,7 @@ use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -265,6 +266,8 @@ class Schedule implements \JsonSerializable
      * @var ScheduleEvent[]
      */
     private $scheduleEvents = [];
+
+    private $datesToFormat = ['toDt', 'fromDt'];
 
     /**
      * @var ConfigServiceInterface
@@ -607,8 +610,9 @@ class Schedule implements \JsonSerializable
             }
         }
 
-        if ($options['audit'])
-            $this->audit($this->getId(), $auditMessage);
+        if ($options['audit']) {
+            $this->audit($this->getId(), $auditMessage, null, true);
+        }
 
         // Drop the cache for this event
         $this->dropEventCache();
@@ -623,6 +627,9 @@ class Schedule implements \JsonSerializable
 
         // Notify display groups
         $notify = $this->displayGroups;
+
+        // Audit
+        $this->audit($this->getId(), 'Deleted', $this->toArray(true));
 
         // Delete display group assignments
         $this->displayGroups = [];
@@ -660,9 +667,6 @@ class Schedule implements \JsonSerializable
 
         // Drop the cache for this event
         $this->dropEventCache();
-
-        // Audit
-        $this->audit($this->getId(), 'Deleted', $this->toArray());
     }
 
     /**
@@ -725,7 +729,7 @@ class Schedule implements \JsonSerializable
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
-            'campaignId' => $this->campaignId,
+            'campaignId' => ($this->campaignId !== 0) ? $this->campaignId : null,
             'commandId' => $this->commandId,
             'userId' => $this->userId,
             'isPriority' => $this->isPriority,
@@ -808,6 +812,9 @@ class Schedule implements \JsonSerializable
             $this->getLog()->debug('The main event has a start and end date within the month, no need to pull it in from the prior month. [eventId:' . $this->eventId . ']');
         }
 
+        // Keep a cache of schedule exclusions, so we look them up by eventId only one time per event
+        $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);
+
         // Request month cache
         while ($fromDt < $toDt) {
 
@@ -823,8 +830,6 @@ class Schedule implements \JsonSerializable
             foreach ($this->scheduleEvents as $scheduleEvent) {
 
                 // Find the excluded recurring events
-                $scheduleExclusions = $this->scheduleExclusionFactory->query(null, ['eventId' => $this->eventId]);
-
                 $exclude = false;
                 foreach ($scheduleExclusions as $exclusion) {
                     if ($scheduleEvent->fromDt == $exclusion->fromDt &&
@@ -856,6 +861,9 @@ class Schedule implements \JsonSerializable
             // Move the month forwards
             $fromDt->addMonth();
         }
+
+        // Clear our cache of schedule exclusions
+        $scheduleExclusions = null;
 
         $this->getLog()->debug('Filtered ' . count($this->scheduleEvents) . ' to ' . count($events) . ', events: ' . json_encode($events, JSON_PRETTY_PRINT));
 
@@ -991,10 +999,10 @@ class Schedule implements \JsonSerializable
                         $daysSelected = explode(',', $this->recurrenceRepeatsOn);
 
                         // Are we on the start day of this week already?
-                        $onStartOfWeek = ($start->copy()->setTimeFromTimeString('00:00:00') == $start->copy()->startOfWeek()->setTimeFromTimeString('00:00:00'));
+                        $onStartOfWeek = ($start->copy()->setTimeFromTimeString('00:00:00') == $start->copy()->locale(Translate::GetLocale())->startOfWeek()->setTimeFromTimeString('00:00:00'));
 
                         // What is the end of this week
-                        $endOfWeek = $start->copy()->endOfWeek();
+                        $endOfWeek = $start->copy()->locale(Translate::GetLocale())->endOfWeek();
 
                         $this->getLog()->debug('Days selected: ' . $this->recurrenceRepeatsOn . '. End of week = ' . $endOfWeek . ' start date ' . $start . ' [eventId:' . $this->eventId . ']');
 
@@ -1447,5 +1455,88 @@ class Schedule implements \JsonSerializable
         }
 
         return $title;
+    }
+
+    private function toArray($jsonEncodeArrays = false)
+    {
+        $objectAsJson = $this->jsonSerialize();
+
+            foreach ($objectAsJson as $key => $value) {
+                $displayGroups = [];
+                if (is_array($value) && $jsonEncodeArrays) {
+                    if ($key === 'displayGroups') {
+                        foreach($value as $index => $displayGroup) {
+                            /** @var DisplayGroup $displayGroup */
+                            $displayGroups[$index] = $displayGroup->jsonSerialize(true);
+                        }
+
+                        $objectAsJson[$key] = json_encode($displayGroups);
+                    } else {
+                        $objectAsJson[$key] = json_encode($value);
+                    }
+                }
+
+                if (in_array($key, $this->datesToFormat)) {
+                    $objectAsJson[$key] = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                }
+
+                if ($key === 'campaignId' && isset($this->campaignFactory)) {
+                   $campaign = $this->campaignFactory->getById($value);
+                   $objectAsJson['campaign'] = $campaign->campaign;
+                }
+            }
+
+        return $objectAsJson;
+    }
+
+    /**
+     * Get all changed properties for this entity
+     * @param bool $jsonEncodeArrays
+     * @return array
+     * @throws NotFoundException
+     */
+    public function getChangedProperties($jsonEncodeArrays = false)
+    {
+        $changedProperties = [];
+
+        foreach ($this->jsonSerialize() as $key => $value) {
+
+            if (!is_array($value) && !is_object($value) && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
+                if (in_array($key, $this->datesToFormat)) {
+                    $changedProperties[$key] = Carbon::createFromTimestamp($this->getOriginalValue($key))->format(DateFormatHelper::getSystemFormat()) . ' > ' . Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                } else {
+                    $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
+
+                    if ($key === 'campaignId' && isset($this->campaignFactory)) {
+                        $campaign = $this->campaignFactory->getById($value);
+                        $changedProperties['campaign'] = $this->getOriginalValue('campaign') . ' > ' . $campaign->campaign;
+                    }
+                }
+            }
+
+            if (is_array($value) && $jsonEncodeArrays && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
+                if ($key === 'displayGroups') {
+                    $displayGroups = [];
+                    $originalDisplayGroups = [];
+
+                    foreach($this->getOriginalValue($key) as $index => $displayGroup) {
+                        /** @var DisplayGroup $displayGroup */
+                        $originalDisplayGroups[$index] = $displayGroup->jsonSerialize(true);
+                    }
+
+                    foreach($value as $index => $displayGroup) {
+                        $displayGroups[$index] = $displayGroup->jsonSerialize(true);
+                    }
+
+                    $changedProperties[$key] = json_encode($originalDisplayGroups) . ' > ' . json_encode($displayGroups);
+
+                } else {
+                    $changedProperties[$key] = json_encode($this->getOriginalValue($key)) . ' > ' . json_encode($value);
+                }
+
+            }
+        }
+
+        return $changedProperties;
     }
 }

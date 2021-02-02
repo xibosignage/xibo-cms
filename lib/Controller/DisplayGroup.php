@@ -29,6 +29,7 @@ use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -47,6 +48,7 @@ use Xibo\XMR\CollectNowAction;
 use Xibo\XMR\CommandAction;
 use Xibo\XMR\OverlayLayoutAction;
 use Xibo\XMR\RevertToSchedule;
+use Xibo\XMR\TriggerWebhookAction;
 
 /**
  * Class DisplayGroup
@@ -104,6 +106,9 @@ class DisplayGroup extends Base
      */
     private $campaignFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -123,8 +128,9 @@ class DisplayGroup extends Base
      * @param TagFactory $tagFactory
      * @param CampaignFactory $campaignFactory
      * @param Twig $view
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory, $campaignFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory, $campaignFactory, Twig $view, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -138,6 +144,7 @@ class DisplayGroup extends Base
         $this->scheduleFactory = $scheduleFactory;
         $this->tagFactory = $tagFactory;
         $this->campaignFactory = $campaignFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -210,6 +217,13 @@ class DisplayGroup extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="a successful response",
@@ -248,11 +262,12 @@ class DisplayGroup extends Base
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
             'userId' => $parsedQueryParams->getInt('userId'),
             'isDynamic' => $parsedQueryParams->getInt('isDynamic'),
+            'folderId' => $parsedQueryParams->getInt('folderId'),
         ];
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
-        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $displayGroups = $this->displayGroupFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
         foreach ($displayGroups as $group) {
             /* @var \Xibo\Entity\DisplayGroup $group */
@@ -269,9 +284,10 @@ class DisplayGroup extends Base
 
             $group->includeProperty('buttons');
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkEditable($group)
+            ) {
                 // Show the edit button, members button
-
                 if ($group->isDynamic == 0) {
                     // Group Members
                     $group->buttons[] = array(
@@ -295,30 +311,53 @@ class DisplayGroup extends Base
                     'url' => $this->urlFor($request,'displayGroup.copy.form', ['id' => $group->displayGroupId]),
                     'text' => __('Copy')
                 );
+
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    // Select Folder
+                    $group->buttons[] = [
+                        'id' => 'displaygroup_button_selectfolder',
+                        'url' => $this->urlFor($request,'displayGroup.selectfolder.form', ['id' => $group->displayGroupId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $group->displayGroupId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $group->displayGroup],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
             }
 
-            if ($this->getUser()->checkDeleteable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkDeleteable($group)
+            ) {
                 // Show the delete button
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_delete',
                     'url' => $this->urlFor($request,'displayGroup.delete.form', ['id' => $group->displayGroupId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.delete', ['id' => $group->displayGroupId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'displaygroup_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $group->displayGroup),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.delete', ['id' => $group->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
                         ['name' => 'form-callback', 'value' => 'setDeleteMultiSelectFormOpen'],
                         ['name' => 'form-confirm', 'value' => true]
-                    )
-                );
+                    ]
+                ];
             }
 
             $group->buttons[] = ['divider' => true];
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkEditable($group)
+            ) {
                 // File Associations
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
@@ -334,16 +373,31 @@ class DisplayGroup extends Base
                 );
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkPermissionsModifyable($group)
+            ) {
                 // Show the modify permissions button
-                $group->buttons[] = array(
+                $group->buttons[] = [
                     'id' => 'displaygroup_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
-                    'text' => __('Permissions')
-                );
+                    'text' => __('Share'),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_permissions'],
+                        ['name' => 'text', 'value' => __('Share')],
+                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
+                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
+                    ]
+                ];
             }
 
-            if ($this->getUser()->checkEditable($group)) {
+            if ($this->getUser()->featureEnabled('displaygroup.modify')
+                && $this->getUser()->checkEditable($group)
+            ) {
                 $group->buttons[] = ['divider' => true];
 
                 $group->buttons[] = array(
@@ -355,8 +409,28 @@ class DisplayGroup extends Base
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_collectNow',
                     'url' => $this->urlFor($request,'displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
-                    'text' => __('Collect Now')
+                    'text' => __('Collect Now'),
+                    'dataAttributes' => [
+                        ['name' => 'auto-submit', 'value' => true],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.collectNow', ['id' => $group->displayGroupId])],
+                    ]
                 );
+
+                // Trigger webhook
+                $group->buttons[] = [
+                    'id' => 'displaygroup_button_trigger_webhook',
+                    'url' => $this->urlFor($request,'displayGroup.trigger.webhook.form', ['id' => $group->displayGroupId]),
+                    'text' => __('Trigger a web hook'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.trigger.webhook', ['id' => $group->displayGroupId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'displaygroup_button_trigger_webhook'],
+                        ['name' => 'text', 'value' => __('Trigger a web hook')],
+                        ['name' => 'rowtitle', 'value' => $group->displayGroup],
+                        ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
+                    ]
+                ];
             }
         }
 
@@ -400,28 +474,15 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
-
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
-        $arrayOfTagValues = array_filter(explode(',', $displayGroup->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
         }
 
         $this->getState()->template = 'displaygroup-form-edit';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'help' => $this->getHelp()->link('DisplayGroup', 'Edit'),
-            'tags' => $tags
+            'tags' => $this->tagFactory->getTagsWithValues($displayGroup)
         ]);
 
         return $this->render($request, $response);
@@ -534,6 +595,13 @@ class DisplayGroup extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -559,10 +627,21 @@ class DisplayGroup extends Base
 
         $displayGroup->displayGroup = $sanitizedParams->getString('displayGroup');
         $displayGroup->description = $sanitizedParams->getString('description');
-        $displayGroup->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
         $displayGroup->isDynamic = $sanitizedParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = $sanitizedParams->getString('dynamicCriteria');
-        $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
+        $displayGroup->folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($displayGroup->folderId);
+            $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        } else {
+            $displayGroup->permissionsFolderId = 1;
+        }
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $displayGroup->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
+        }
 
         $displayGroup->userId = $this->getUser()->userId;
         $displayGroup->save();
@@ -636,6 +715,13 @@ class DisplayGroup extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -656,10 +742,19 @@ class DisplayGroup extends Base
         $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $displayGroup->displayGroup = $parsedRequestParams->getString('displayGroup');
         $displayGroup->description = $parsedRequestParams->getString('description');
-        $displayGroup->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
         $displayGroup->dynamicCriteria = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteria') : null;
-        $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
+        $displayGroup->folderId = $parsedRequestParams->getInt('folderId', ['default' => $displayGroup->folderId]);
+
+        if ($displayGroup->hasPropertyChanged('folderId')) {
+            $folder = $this->folderFactory->getById($displayGroup->folderId);
+            $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        }
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $displayGroup->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
+            $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
+        }
 
         // if we have changed the type from dynamic to non-dynamic or other way around, clear display/dg members
         if ($preEditIsDynamic != $displayGroup->isDynamic) {
@@ -1569,6 +1664,7 @@ class DisplayGroup extends Base
         }
 
         $this->getState()->template = 'displaygroup-form-collect-now';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('displayGroupCollectNow');
         $this->getState()->setData([
             'displayGroup' => $displayGroup
         ]);
@@ -1690,46 +1786,46 @@ class DisplayGroup extends Base
      *  operationId="displayGroupActionChangeLayout",
      *  tags={"displayGroup"},
      *  summary="Action: Change Layout",
-     *  description="Send the change layout action to this DisplayGroup, you can pass layoutId or layout specific campaignId",
+     *  description="Send a change layout action to the provided Display Group. This will be sent to Displays in that Group via XMR.",
      *  @SWG\Parameter(
      *      name="displayGroupId",
      *      in="path",
-     *      description="The Display Group Id",
+     *      description="This can be either a Display Group or the Display specific Display Group",
      *      type="integer",
      *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="layoutId",
      *      in="formData",
-     *      description="The Layout Id",
+     *      description="The ID of the Layout to change to. Either this or a campaignId must be provided.",
      *      type="integer",
-     *      required=true
+     *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="campaignId",
      *      in="formData",
-     *      description="The layout specific Campaign Id",
+     *      description="The Layout specific campaignId of the Layout to change to. Either this or a layoutId must be provided.",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="duration",
      *      in="formData",
-     *      description="The duration in seconds for this Layout change to remain in effect",
+     *      description="The duration in seconds for this Layout change to remain in effect, after which normal scheduling is resumed.",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="downloadRequired",
      *      in="formData",
-     *      description="Flag indicating whether the player should perform a collect before playing the Layout",
+     *      description="Flag indicating whether the player should perform a collect before playing the Layout.",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
      *      name="changeMode",
      *      in="formData",
-     *      description="Whether to queue or replace with this action",
+     *      description="Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately",
      *      type="string",
      *      required=true
      *   ),
@@ -1834,6 +1930,7 @@ class DisplayGroup extends Base
      * @throws GeneralException
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     *
      * @SWG\Post(
      *  path="/displaygroup/{displayGroupId}/action/revertToSchedule",
      *  operationId="displayGroupActionRevertToSchedule",
@@ -1843,7 +1940,7 @@ class DisplayGroup extends Base
      *  @SWG\Parameter(
      *      name="displayGroupId",
      *      in="path",
-     *      description="The display group id",
+     *      description="This can be either a Display Group or the Display specific Display Group",
      *      type="integer",
      *      required=true
      *   ),
@@ -1893,21 +1990,21 @@ class DisplayGroup extends Base
      *  @SWG\Parameter(
      *      name="displayGroupId",
      *      in="path",
-     *      description="The Display Group Id",
+     *      description="This can be either a Display Group or the Display specific Display Group",
      *      type="integer",
      *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="layoutId",
      *      in="formData",
-     *      description="The Layout Id",
+     *      description="The ID of the Layout to change to. Either this or a campaignId must be provided.",
      *      type="integer",
      *      required=true
      *   ),
      *  @SWG\Parameter(
      *      name="campaignId",
      *      in="formData",
-     *      description="The layout specific Campaign Id",
+     *      description="The Layout specific campaignId of the Layout to change to. Either this or a layoutId must be provided.",
      *      type="integer",
      *      required=false
      *   ),
@@ -1921,7 +2018,7 @@ class DisplayGroup extends Base
      *  @SWG\Parameter(
      *      name="downloadRequired",
      *      in="formData",
-     *      description="Flag indicating whether the player should perform a collect before adding the Overlay",
+     *      description="Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately",
      *      type="integer",
      *      required=false
      *   ),
@@ -2278,19 +2375,7 @@ class DisplayGroup extends Base
 
         // handle tags
         if ($copyTags) {
-            $tags = '';
-
-            $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
-            $arrayOfTagValues = array_filter(explode(',', $displayGroup->tagValues));
-
-            for ($i=0; $i<count($arrayOfTags); $i++) {
-                if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                    $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                    $tags .= ',';
-                } else {
-                    $tags .= $arrayOfTags[$i] . ',';
-                }
-            }
+            $tags = $this->tagFactory->getTagsWithValues($displayGroup);
             $new->replaceTags($this->tagFactory->tagsFromString($tags));
         }
 
@@ -2313,6 +2398,194 @@ class DisplayGroup extends Base
             'message' => sprintf(__('Added %s'), $new->displayGroup),
             'id' => $new->displayGroupId,
             'data' => $new
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Select Folder Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolderForm(Request $request, Response $response, $id)
+    {
+        // Get the Layout
+        $displayGroup = $this->displayGroupFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        $data = [
+            'displayGroup' => $displayGroup
+        ];
+
+        $this->getState()->template = 'displaygroup-form-selectfolder';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     *
+     * @SWG\Put(
+     *  path="/displaygroup/{id}/selectfolder",
+     *  operationId="displayGroupSelectFolder",
+     *  tags={"displayGroup"},
+     *  summary="Display Group Select folder",
+     *  description="Select Folder for Display Group, can also be used with Display specific Display Group ID",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The Display Group ID or Display specific Display Group ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolder(Request $request, Response $response, $id)
+    {
+        // Get the Display Group
+        $displayGroup = $this->displayGroupFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        $displayGroup->folderId = $folderId;
+
+        $folder = $this->folderFactory->getById($displayGroup->folderId);
+        $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
+        // Save
+        $displayGroup->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Display %s moved to Folder %s'), $displayGroup->displayGroup, $folder->text)
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function triggerWebhookForm(Request $request, Response $response, $id)
+    {
+        $displayGroup = $this->displayGroupFactory->getById($id);
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'displaygroup-form-trigger-webhook';
+        $this->getState()->setData([
+            'displayGroup' => $displayGroup
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Send a code to a Player to trigger a web hook associated with provided trigger code.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @SWG\Post(
+     *  path="/displaygroup/{displayGroupId}/action/triggerWebhook",
+     *  operationId="displayGroupActionTriggerWebhook",
+     *  tags={"displayGroup"},
+     *  summary="Action: Trigger Web hook",
+     *  description="Send the trigger webhook action to this DisplayGroup",
+     *  @SWG\Parameter(
+     *      name="displayGroupId",
+     *      in="path",
+     *      description="The display group id",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="triggerCode",
+     *      in="formData",
+     *      description="The trigger code that should be sent to the Player",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     */
+    public function triggerWebhook(Request $request, Response $response, $id)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $displayGroup = $this->displayGroupFactory->getById($id);
+        $triggerCode = $sanitizedParams->getString('triggerCode');
+
+        if (!$this->getUser()->checkEditable($displayGroup)) {
+            throw new AccessDeniedException();
+        }
+
+        if ($triggerCode == '') {
+            throw new InvalidArgumentException(__('Please provide a Trigger Code'), 'triggerCode');
+        }
+
+        $this->playerAction->sendAction($this->displayFactory->getByDisplayGroupId($id), new TriggerWebhookAction($triggerCode));
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Command Sent to %s'), $displayGroup->displayGroup),
+            'id' => $displayGroup->displayGroupId
         ]);
 
         return $this->render($request, $response);

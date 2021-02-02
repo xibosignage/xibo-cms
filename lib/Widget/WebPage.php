@@ -41,8 +41,9 @@ class WebPage extends ModuleWidget
     /** @inheritdoc */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+        
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-webpage-render.js')->save();
     }
     
@@ -146,6 +147,13 @@ class WebPage extends ModuleWidget
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="isPreNavigate",
+     *      in="formData",
+     *      description="Flag (0,1) - Should this Widget be loaded off screen so that it is made ready in the background? Dynamic content will run.",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation",
@@ -172,6 +180,7 @@ class WebPage extends ModuleWidget
         $this->setOption('pageWidth', $sanitizedParams->getInt('pageWidth'));
         $this->setOption('pageHeight', $sanitizedParams->getInt('pageHeight'));
         $this->setOption('modeid', $sanitizedParams->getInt('modeId'));
+        $this->setOption('isPreNavigate', $sanitizedParams->getCheckbox('isPreNavigate'));
 
         // Save the widget
         $this->isValid();
@@ -230,6 +239,8 @@ class WebPage extends ModuleWidget
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-webpage-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
         $javaScriptContent .= '<script>
             var options = ' . json_encode($options) . '
             $(document).ready(function() {

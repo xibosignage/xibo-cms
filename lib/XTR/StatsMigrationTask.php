@@ -377,6 +377,9 @@ class StatsMigrationTask implements TaskInterface
             $statCount = 0;
             foreach ($stats->fetchAll() as $stat) {
 
+                // We get the watermark now because if we skip the records our watermark will never reach 0
+                $watermark = $stat['statId'];
+
                 // Get display
                 $display = $this->getDisplay((int) $stat['displayId']);
 
@@ -401,8 +404,6 @@ class StatsMigrationTask implements TaskInterface
                 $entry['widgetId'] = (int) $stat['widgetId'];
                 $entry['duration'] = (int) $stat['duration'];
                 $entry['count'] = (int) $stat['count'];
-
-                $watermark = $stat['statId'];
 
                 // Add stats in store $this->stats
                 $this->timeSeriesStore->addStat($entry);
@@ -482,6 +483,9 @@ class StatsMigrationTask implements TaskInterface
             $statCount = 0;
             foreach ($stats->fetchAll() as $stat) {
 
+                // We get the watermark now because if we skip the records our watermark will never reach 0
+                $watermark = $stat['statId'];
+
                 // Get display
                 $display = $this->getDisplay((int) $stat['displayId']);
 
@@ -490,7 +494,6 @@ class StatsMigrationTask implements TaskInterface
                     continue;
                 }
 
-                $watermark = $stat['statId'];
                 $entry = [];
 
                 // Get campaignId

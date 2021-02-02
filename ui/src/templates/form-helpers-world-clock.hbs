@@ -1,24 +1,24 @@
-<div class="xol-xs-12">
-    <div class="form-inline text-center row">
-        <div class="form-group col-xs-5 localSelect">
-            <select class="form-control" name="clockTimezone[]">
-                <option value selected>Timezone</option>
-                {{#each timezones}}
-                    <option value="{{ id }}" {{#eq id ../clockTimezone}}selected{{/eq}}>{{ value }}</option>
-                {{/each}}
-            </select>
-        </div>
+<div class="form-clock row mb-4 mb-xl-1">
+    <div class="form-group col-6 col-xl-4 localSelect">
+        <select class="form-control" name="clockTimezone[]">
+            <option value selected>Timezone</option>
+            {{#each timezones}}
+                <option value="{{ id }}" {{#eq id ../clockTimezone}}selected{{/eq}}>{{ value }}</option>
+            {{/each}}
+        </select>
+    </div>
 
-        <div class="form-group col-xs-3">
-            <input class="form-control" name="clockLabel[]" type="text" value="{{ clockLabel }}" placeholder="Label" />
-        </div>
+    <div class="form-group col-6 col-xl-3">
+        <input class="form-control" name="clockLabel[]" type="text" value="{{ clockLabel }}" placeholder="Label" />
+    </div>
 
-        <div class="form-group col-xs-3">
-            <input type="hidden" name="clockHighlightValue[]" {{#if clockHighlight}}value="on"{{/if}}>
-            <input type="checkbox" name="clockHighlight[]" {{#if clockHighlight}}checked{{/if}}>
-            <label for="clockHighlight[]">Highlight?</label>
-        </div>
+    <div class="form-group col-6 col-xl-3 px-2 px-xl-0">
+        <input type="hidden" name="clockHighlightValue[]" {{#if clockHighlight}}value="on"{{/if}}>
+        <input type="checkbox" name="clockHighlight[]" {{#if clockHighlight}}checked{{/if}}>
+        <label for="clockHighlight[]">Highlight?</label>
+    </div>
 
+    <div class="form-group col-6 col-xl-2 px-2 px-xl-0">
         <button class="btn btn-primary pull-right"><i class="fa {{ buttonGlyph }}"></i></button>
     </div>
 </div>

@@ -1,0 +1,221 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=libraryusage"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}?reportName=libraryusage"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+        <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}?reportName=libraryusage"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
+    </div>
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <span>{% trans "Library Usage" %}</span>
+        </div>
+        <div class="widget-navigation-menu">
+            <ul class="nav nav-pills">
+                <li role="presentation" class="nav-item"><a class="nav-link" href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
+                    <div class="dropdown-menu">
+                        {% for reports in defaults.availableReports %}
+                            {% for report in reports %}
+                                {% if report.hidden == 0 and report.category == 'Library'%}
+                                    <a class="dropdown-item" href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
+                        <form class="form-inline">
+                            {% set attributes = [
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" }
+                            ] %}
+
+                            {% set title %}{% trans "User" %}{% endset %}
+                            {% set userFilterOptions = [{userId: null, user: ""}]|merge(defaults.users) %}
+                            {{ inline.dropdown("userId", "single", title, "", userFilterOptions, "userId", "userName", "", "selectPicker", "", "u", "", attributes) }}
+
+                            {% set title %}{% trans "User Group" %}{% endset %}
+                            {% set groupFilterOptions = [{groupId: null, group: ""}]|merge(defaults.groups) %}
+                            {{ inline.dropdown("groupId", "single", title, "", groupFilterOptions, "groupId", "group", "", "selectPicker", "", "g", "", attributes) }}
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData card pt-3">
+                    <table id="libraryUsage" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "User" %}</th>
+                            <th>{% trans "Usage" %}</th>
+                            <th>{% trans "Count Files" %}</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6">
+                <div class="widget">
+                    <div class="widget-title">
+                        <i class="fa fa-tasks"></i>
+                        {% if libraryLimitSet != "" %}
+                            {% trans %}Library Usage. Limit {{ libraryLimit }}{% endtrans %}
+                        {% else %}
+                            {% trans "Library Usage" %}
+                        {% endif %}
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="widget-body medium no-padding">
+                        <canvas id="libraryChart" style="clear:both;" width="350" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+            <div class="col-md-6">
+                <div class="widget">
+                    <div class="widget-title">
+                        <i class="fa fa-user"></i>
+                        {% trans "User Percentage Usage" %}
+                        <div class="clearfix"></div>
+                    </div>
+                    <div class="widget-body medium no-padding">
+                        <canvas id="userChart" style="clear:both;" width="350" height="220"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var userChart = null;
+
+        var table = $("#libraryUsage").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true, stateDuration: 0,
+            filter: false,
+            searchDelay: 3000,
+            ajax: {
+                url: "{{ url_for("report.data", {name: reportName}) }}",
+                data: function (d) {
+                    $.extend(d, $("#libraryUsage").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                }
+            },
+            "columns": [
+                { data: "userId" },
+                { data: "userName" },
+                { data: "bytesUsedFormatted" },
+                { data: "numFiles" }
+            ]
+        });
+
+        table.on('draw', dataTableDraw);
+        table.on('processing.dt', function(e, settings, processing) {
+            dataTableProcessing(e, settings, processing);
+
+            if (!processing) {
+                // Render a pie chart
+                if (userChart !== undefined && userChart !== null) {
+                    console.log('Destroying Chart');
+                    userChart.destroy();
+                }
+                // Organise our rows into datasets for the chart
+                var totalSize = 0;
+                var userData = new Array();
+                var userLabels = new Array();
+
+                $.each(table.data(), function(index, el) {
+                    totalSize += el.bytesUsed;
+                });
+
+                $.each(table.data(), function(index, el) {
+                    userData.push(((el.bytesUsed/totalSize)*100).toFixed(2));
+                    userLabels.push(el.userName);
+                });
+
+                var colours = new Array();
+                for(var i = 0; i < userData.length; i++) {
+                    colours.push($c.rand());
+                }
+
+                // Create our chart
+                userChart = new Chart($("#userChart"), {
+                    type: 'pie',
+                    data: {
+                        datasets: [{
+                            data: userData,
+                            backgroundColor: colours
+                        }],
+                        labels: userLabels
+                    },
+                    options: {
+                        maintainAspectRatio: false
+                    }
+                });
+            }
+        });
+
+
+
+        // Create a lovely library pie chart
+        var libraryData = {{ defaults.libraryWidgetData|raw }};
+        var colours = new Array();
+        for(var i = 0; i < libraryData.length; i++) {
+            colours.push($c.rand());
+        }
+        var libraryChart = new Chart($("#libraryChart"), {
+            type: 'pie',
+            data: {
+                datasets: [{
+                    data: libraryData,
+                    backgroundColor: colours
+                }],
+                labels: {{ defaults.libraryWidgetLabels|raw }}
+            },
+            options: {
+                maintainAspectRatio: false
+            }
+        });
+    </script>
+{% endblock %}

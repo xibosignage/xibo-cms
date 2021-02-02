@@ -24,6 +24,7 @@ namespace Xibo\Service;
 use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Helper\Environment;
+use Xibo\Helper\NatoAlphabet;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
 
@@ -181,10 +182,11 @@ class ConfigService implements ConfigServiceInterface
     /**
      * Loads the settings from file.
      *  DO NOT CALL ANY STORE() METHODS IN HERE
-     * @param string $settings
+     * @param \Psr\Container\ContainerInterface $container DI container which may be used in settings.php
+     * @param string $settings Settings Path
      * @return ConfigServiceInterface
      */
-    public static function Load($settings)
+    public static function Load($container, string $settings)
     {
         $config = new ConfigService();
 
@@ -245,7 +247,7 @@ class ConfigService implements ConfigServiceInterface
 
     /**
      * Loads the theme
-     * @param string[Optional] $themeName
+     * @param string|null $themeName
      * @throws ConfigurationException
      */
     public function loadTheme($themeName = null)
@@ -665,8 +667,8 @@ class ConfigService implements ConfigServiceInterface
         );
 
         $this->testItem($rows, __('Allow PHP to open external URLs'),
-            Environment::checkAllowUrlFopen(),
-            __('You must have allow_url_fopen = On in your PHP.ini file for RSS Feeds / Anonymous statistics gathering to function.'),
+            (Environment::checkCurl() || Environment::checkAllowUrlFopen()),
+            __('You must have the curl extension enabled or PHP configured with "allow_url_fopen = On" for the CMS to access external resources. We strongly recommend curl.'),
             false
         );
 
@@ -771,5 +773,10 @@ class ConfigService implements ConfigServiceInterface
             return false;
 
         return ($results[0]['Value'] != 'STATEMENT');
+    }
+
+    public function getPhoneticKey()
+    {
+        return NatoAlphabet::convertToNato($this->getSetting('SERVER_KEY'));
     }
 }

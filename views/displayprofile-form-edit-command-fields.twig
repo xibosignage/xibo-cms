@@ -22,20 +22,20 @@
 #}
 {% import "forms.twig" as forms %}
 {% block formHtml %}
-    <div class="panel-group" id="accordion" role="tablist" aria-multiselectable="true">
+    <div class="accordion" id="accordion" role="tablist" aria-multiselectable="true">
     {% for field in commands %}
-        <div class="panel panel-default">
-            <div class="panel-heading" role="tab" id="heading{{ field.commandId }}">
-                <h4 class="panel-title">
+        <div class="card">
+            <div class="card-header" role="tab" id="heading{{ field.commandId }}">
+                <h4 class="card-title">
                     <a role="button" data-toggle="collapse" data-parent="#accordion" href="#collapse{{ field.commandId }}"
                        aria-expanded="true" aria-controls="collapse{{ field.commandId }}">
                         {{ field.command }} | {{ field.code }}
                     </a>
                 </h4>
             </div>
-            <div id="collapse{{ field.commandId }}" class="panel-collapse collapse"
+            <div id="collapse{{ field.commandId }}" class="collapse"
                  role="tabpanel" aria-labelledby="heading{{ field.commandId }}" aria-expanded="false">
-                <div class="panel-body">
+                <div class="card-body">
                     {% set title %}{% trans "Name" %}{% endset %}
                     {{ forms.disabled("command", title, field.command, field.description) }}
 
@@ -46,7 +46,7 @@
                     {% set fieldId = "commandString_" ~ field.commandId %}
                     {% set title %}{% trans "Command" %}{% endset %}
                     {% set helpText %}{% trans "The Command String for this Command on this display" %}{% endset %}
-                    {{ forms.input(fieldId, title, field.commandStringDisplayProfile, helpText) }}
+                    {{ forms.input(fieldId, title, field.commandStringDisplayProfile, helpText, "XiboCommand") }}
 
                     {% if field.validationString != "" %}
                         {{ forms.disabled("", "", "This Command has a default Valildation String."|trans, field.validationString) }}

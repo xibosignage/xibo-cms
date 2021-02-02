@@ -128,10 +128,16 @@ class ReportScheduleDataTest extends LocalWebTestCase
             'type' => $this->type
         ], ['HTTP_ACCEPT'=>'application/json'], 'web', true);
 
+        $this->getLogger()->debug('Response code is: ' . $response->getStatusCode());
+
+        $body = $response->getBody();
+
+        $this->getLogger()->debug($body);
+
         $this->assertSame(200, $response->getStatusCode());
-        $this->assertNotEmpty($response->getBody());
-        $object = json_decode($response->getBody());
-        $this->assertObjectHasAttribute('data', $object, $response->getBody());
+        $this->assertNotEmpty($body);
+        $object = json_decode($body);
+        $this->assertObjectHasAttribute('data', $object, $body);
         $this->assertSame(1,  $object->data[0]->numberPlays);
     }
     
@@ -174,6 +180,6 @@ class ReportScheduleDataTest extends LocalWebTestCase
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $this->assertSame(86400, $object->extra->durationData[0]);
+        $this->assertSame(86400, $object->extra->chart->data->datasets[0]->data[0]);
     }
 }

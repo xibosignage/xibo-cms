@@ -33,23 +33,23 @@
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
-            <li><a href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
-                    <li><a href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a></li>
-                    <li><a href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
-                    <li><a href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a></li>
-                </ul>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
+                    <a class="dropdown-item" href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a>
+                    <a class="dropdown-item" href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
+                    <a class="dropdown-item" href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a>
+                </div>
             </li>
-            <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
-            <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
-            <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="dataSetTickerForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -97,6 +97,14 @@
                         {% set title %}{% trans "Upper Row Limit" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the Upper Row Limit for this DataSet (enter 0 for no limit)" %}{% endset %}
                         {{ forms.number("upperLimit", title, module.getOption("upperLimit"), helpText) }}
+
+                        {% set title %}{% trans "Number of Items" %}{% endset %}
+                        {% set helpText %}{% trans "The Number of items you want to display" %}{% endset %}
+                        {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
+
+                        {% set title %}{% trans "Randomise?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the order of the feed be randomised? When enabled each time the Widget is shown the items will be randomly shuffled and displayed in a random order." %}{% endset %}
+                        {{ forms.checkbox("randomiseItems", title, module.getOption("randomiseItems"), helpText) }}
                     </div>
 
                     <div class="tab-pane" id="appearanceTab">
@@ -164,14 +172,16 @@
 
                     <div class="tab-pane" id="templateTab">
 
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "Main Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "Main Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 0) == 1 %}checked{% endif %} 
+                                    data-size="small" 
+                                    data-label-text="{% trans "Visual editor" %}" 
+                                    data-label-width="80px" 
+                                    data-on-text="{% trans "On" %}" 
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
 
                         <div class="editor-messages">
@@ -195,9 +205,9 @@
                             {{ forms.message(playlistEditorMessage, 'playlist-editor-message ta_text-advanced-editor-show') }}
                         </div>
 
-                        <div class="ckeditor_controls inline-editor-hide container-fluid" data-linked-to="ta_text">
+                        <div class="ckeditor_controls row inline-editor-hide container-fluid" data-linked-to="ta_text">
                             <div class="col-sm-6">
-                                <div class="form-group">
+                                <div class="form-group row">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                     <div class="col-sm-8 ckeditor_select_container">
                                         <select id="ckeditor_snippets_select" 
@@ -214,14 +224,14 @@
                             </div>
 
                             <div class="col-sm-6">
-                                <div class="form-group">
+                                <div class="form-group row">
                                     <label class="col-sm-4 control-label" for="ckeditor_library_select3">{% trans "Library" %}</label>
                                     <div class="col-sm-8">
                                         <select id="ckeditor_library_select3"
                                                 class="ckeditor_library_select form-control"
                                                 data-linked-to="ta_text"
                                                 data-search-url="{{ url_for("library.search") }}"
-                                                data-image-url="{{ url_for("library.download") }}?preview=1">
+                                                data-image-url="{{ url_for("library.download", {id: ':id'}) }}?preview=1">
                                         </select>
                                     </div>
                                 </div>
@@ -232,14 +242,16 @@
                     </div>
 
                     <div class="tab-pane" id="noDataTemplateTab">
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "No Data Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "No Data Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
+                                    data-size="small" 
+                                    data-label-text="{% trans "Visual editor" %}" 
+                                    data-label-width="80px" 
+                                    data-on-text="{% trans "On" %}" 
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
 
                         {% set noDataMessageMessage1 %}
@@ -296,6 +308,9 @@
                         {% set message %}{% trans "The DataSet results can be filtered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated filter be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
                         {{ forms.message(message) }}
 
+                        {% set message %}{% trans "The substitution [DisplayId] can be used in filter clauses and will be substituted at run time with the Display ID. When shown in the CMS it will be substituted with 0." %}{% endset %}
+                        {{ forms.message(message) }}
+
                         <div id="filterClause">
 
                         </div>
@@ -314,6 +329,10 @@
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per hour this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+
+                        {% set title %}{% trans "Freshness (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "If the Player is offline it will switch to the No Data Template after this freshness time. Set this to 0 to never switch." %}{% endset %}
+                        {{ forms.number("freshnessTimeout", title, module.getOption("freshnessTimeout", 0), helpText) }}
 
                     </div>
 

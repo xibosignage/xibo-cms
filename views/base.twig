@@ -21,7 +21,7 @@
         <link href="{{ theme.uri("css/override.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/print.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet">
         <link href="{{ url_for("library.font.css") }}" rel="stylesheet">
-        <!-- Copyright 2006-2019 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <!-- Copyright 2006-2020 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <!-- Please be sure you read this before removing the Source/About links from your theme: http://bit.ly/agplv3 -->
         {% block headContent %}{% endblock %}
     </head>
@@ -38,19 +38,6 @@
 
         {# Import JS system tools #}
         <script src="{{ theme.rootUri() }}dist/systemTools.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
-
-        {# jquery-file-upload #}
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/tmpl.min.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-load-image/load-image.all.min.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.iframe-transport.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-process.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-resize.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-validate.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-ui.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-image.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-video.js?v={{ version }}&rev={{revision}}"></script>
-        <script src="{{ theme.rootUri() }}dist/vendor/jquery-file-upload/js/jquery.fileupload-audio.js?v={{ version }}&rev={{revision}}"></script>
 
         {# Import libraries copied to dist #}
         <script src="{{ theme.rootUri() }}dist/vendor/ckeditor/ckeditor.js?v={{ version }}&rev={{revision}}"></script>
@@ -88,9 +75,10 @@
             translations.withselected = "{{ "With Selected"|trans }}";
             translations.selectAll = "{{ "Select All"|trans }}";
             translations.multiselect = "{{ "Multiple Items Selected"|trans }}";
+            translations.indeterminate = "{{ "Indeterminate State"|trans }}";
             translations.multiselectNoItemsMessage = "{{ "Sorry, no items have been selected."|trans }}";
             translations.multiselectMessage = "{{ "Caution, you have selected %1 items. Clicking save will run the %2 transaction on all these items."|trans }}";
-            translations.validExtensions = "{{ "Valid Extensions"|trans }}";
+            translations.validExtensions = "{{ "Valid extensions are %s"|trans }}";
             translations.save = "{{ "Save"|trans }}";
             translations.cancel = "{{ "Cancel"|trans }}";
             translations.close = "{{ "Close"|trans }}";
@@ -103,6 +91,18 @@
             translations.deleteRecurring = "{{ "Delete from Schedule"|trans }}";
             translations.spacesWarning = "{{ "Warning - starts with or ends with a space, or contains double spaces"|trans }}";
             translations.done = "{{ "Done"|trans }}";
+            translations.freeTextCommand = "{{ "Free Text"|trans }}";
+            translations.editTags = "{{ "Edit Tags"|trans }}";
+            translations.tagInputValueHelpText = "{{ "Provide an optional Value for this Tag. If no Value is required, this field can be left blank"|trans }}";
+            translations.tagInputValueRequiredHelpText = "{{ "Please provide the value for this Tag and confirm by pressing enter on your keyboard."|trans }}";
+            translations.videoImageCoverHelpText = "{{ "Before Uploading, scroll through the progress bar or play and pause to select a still to be used as the video file thumbnail."|trans }}";
+            translations.folderTreeCreate = "{{ "Create"|trans }}";
+            translations.folderTreeEdit = "{{ "Rename"|trans }}";
+            translations.folderTreeDelete = "{{ "Remove"|trans }}";
+            translations.folderTreeShare = "{{ "Share"|trans }}";
+            translations.folderTreeError = "{{ "Cannot modify root folder."|trans }}";
+            translations.folderWithContent = "{{ "Cannot remove Folder with content"|trans }}";
+            translations.dayPartExceptionErrorMessage = "{{ "You already set an exception for this day."|trans }}";
             {% endautoescape %}
 
             var calendarType = "{{ settings.CALENDAR_TYPE }}";

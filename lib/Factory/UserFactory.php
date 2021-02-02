@@ -232,8 +232,7 @@ class UserFactory extends BaseFactory
                 UserPassword AS password,
                 group.groupId,
                 group.group,
-                `pages`.pageId AS homePageId,
-                `pages`.title AS homePage,
+                `user`.homePageId,
                 `user`.firstName,
                 `user`.lastName,
                 `user`.phone,
@@ -259,8 +258,6 @@ class UserFactory extends BaseFactory
                 INNER JOIN `group`
                 ON `group`.groupId = lkusergroup.groupId
                   AND isUserSpecific = 1
-                LEFT OUTER JOIN `pages`
-                ON pages.pageId = `user`.homePageId
              WHERE 1 = 1
          ';
 
@@ -353,7 +350,10 @@ class UserFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->create()->hydrate($row, ['intProperties' => ['libraryQuota', 'isPasswordChangeRequired']]);
+            $entries[] = $this->create()->hydrate($row, [
+                'intProperties' => ['libraryQuota', 'isPasswordChangeRequired', 'retired'],
+                'stringProperties' => ['homePageId']
+            ]);
         }
 
         // Paging

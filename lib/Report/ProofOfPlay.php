@@ -16,6 +16,7 @@ use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
@@ -218,7 +219,7 @@ class ProofOfPlay implements ReportInterface
     /** @inheritdoc */
     public function generateSavedReportName($filterCriteria)
     {
-        $saveAs = ucfirst($filterCriteria['filter']). ' report for ';
+        $saveAs = sprintf(__('%s report for ', ucfirst($filterCriteria['filter'])));
 
         switch ($filterCriteria['type']) {
 
@@ -324,17 +325,12 @@ class ProofOfPlay implements ReportInterface
         }
 
         // Return data to build chart
-        return [
+        return array_merge($json, [
             'template' => 'proofofplay-report-preview',
-            'chartData' => [
-                'savedReport' => $savedReport,
-                'filterInfo' => $filterInfo,
-                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat()),
-                'periodStart' => isset($json['periodStart']) ? $json['periodStart'] : '',
-                'periodEnd' => isset($json['periodEnd']) ? $json['periodEnd'] : '',
-                'result' => json_encode($json['result']),
-            ]
-        ];
+            'filterInfo' => $filterInfo,
+            'savedReport' => $savedReport,
+            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
+        ]);
     }
 
 
@@ -438,7 +434,7 @@ class ProofOfPlay implements ReportInterface
                 break;
 
             case 'thisweek':
-                $fromDt = $now->copy()->startOfWeek();
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek();
                 $toDt = $fromDt->copy()->addWeek();
                 break;
 
@@ -453,7 +449,7 @@ class ProofOfPlay implements ReportInterface
                 break;
 
             case 'lastweek':
-                $fromDt = $now->copy()->startOfWeek()->subWeek();
+                $fromDt = $now->copy()->locale(Translate::GetLocale())->startOfWeek()->subWeek();
                 $toDt = $fromDt->copy()->addWeek();
                 break;
 
@@ -552,7 +548,7 @@ class ProofOfPlay implements ReportInterface
         return [
             'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
-            'result' => $rows,
+            'table' => $rows,
         ];
 
     }
@@ -1149,6 +1145,20 @@ class ProofOfPlay implements ReportInterface
             'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
             'count' => count($rows),
             'totalStats' => $totalStats,
+        ];
+    }
+
+    /** @inheritdoc */
+    public function restructureSavedReportOldJson($result)
+    {
+        $periodStart = $result['periodStart'];
+        $periodEnd = $result['periodEnd'];
+        $table = $result['result'];
+
+        return [
+            'periodStart' => $periodStart,
+            'periodEnd' => $periodEnd,
+            'table' => $table,
         ];
     }
 }

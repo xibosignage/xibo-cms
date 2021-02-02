@@ -22,12 +22,14 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use Respect\Validation\Validator as v;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -279,6 +281,18 @@ class Layout implements \JsonSerializable
 
     public $tagValues;
 
+    /**
+     * @SWG\Property(description="The id of the Folder this Layout belongs to")
+     * @var int
+     */
+    public $folderId;
+
+    /**
+     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Layout")
+     * @var int
+     */
+    public $permissionsFolderId;
+
     // Private
     private $unassignTags = [];
 
@@ -351,6 +365,9 @@ class Layout implements \JsonSerializable
     /** @var ActionFactory */
     private $actionFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -366,8 +383,9 @@ class Layout implements \JsonSerializable
      * @param ModuleFactory $moduleFactory
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $config, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory)
+    public function __construct($store, $log, $config, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
@@ -382,6 +400,7 @@ class Layout implements \JsonSerializable
         $this->moduleFactory = $moduleFactory;
         $this->playlistFactory = $playlistFactory;
         $this->actionFactory = $actionFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     public function __clone()
@@ -434,6 +453,11 @@ class Layout implements \JsonSerializable
     public function getId()
     {
         return $this->campaignId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -759,7 +783,8 @@ class Layout implements \JsonSerializable
             'setBuildRequired' => true,
             'validate' => true,
             'notify' => true,
-            'audit' => true
+            'audit' => true,
+            'import' => false
         ], $options);
 
         if ($options['validate']) {
@@ -787,7 +812,7 @@ class Layout implements \JsonSerializable
         } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
             $this->update($options);
 
-            if ($options['audit']) {
+            if ($options['audit'] && count($this->getChangedProperties()) > 0) {
                 $change = $this->getChangedProperties();
                 $change['campaignId'][] = $this->campaignId;
 
@@ -820,16 +845,17 @@ class Layout implements \JsonSerializable
         if ($options['saveTags']) {
             $this->getLog()->debug('Saving tags on ' . $this);
 
-            // Save the tags
-            if (is_array($this->tags)) {
-                foreach ($this->tags as $tag) {
-                    /* @var Tag $tag */
-
-                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
-
-                    $tag->assignLayout($this->layoutId);
-                    $tag->save();
-                }
+            // if we are saving new Layout after import, we need to go through all Tags on the Layout
+            // double check if any of them match Tags added from imported Playlists or Media
+            // otherwise we would end up with duplicated Tags
+            if ($options['import']) {
+                $importedTags = $this->tags;
+                $this->tags = [];
+             foreach ($importedTags as $importedTag) {
+                 $this->tags[] = $this->tagFactory->tagFromString(
+                     $importedTag->tag . (!empty($importedTag->value) ? '|' . $importedTag->value : '')
+                 );
+             }
             }
 
             // Remove unwanted ones
@@ -839,6 +865,18 @@ class Layout implements \JsonSerializable
                     $this->getLog()->debug('Unassigning tag ' . $tag->tag);
 
                     $tag->unassignLayout($this->layoutId);
+                    $tag->save();
+                }
+            }
+
+            // Save the tags
+            if (is_array($this->tags)) {
+                foreach ($this->tags as $tag) {
+                    /* @var Tag $tag */
+
+                    $this->getLog()->debug('Assigning tag ' . $tag->tag);
+
+                    $tag->assignLayout($this->layoutId);
                     $tag->save();
                 }
             }
@@ -992,6 +1030,11 @@ class Layout implements \JsonSerializable
         }
 
         if ($this->code != null) {
+
+            if (!v::alnum('_')->validate($this->code)) {
+                throw new InvalidArgumentException(__('Please use only alphanumeric characters in Layout Code identifier', 'code'));
+            }
+
             $duplicateCode = $this->layoutFactory->query(null, [
                 'notLayoutId' => ($this->parentId !== null) ? $this->parentId : $this->layoutId,
                 'disableUserCheck' => 1,
@@ -1039,6 +1082,12 @@ class Layout implements \JsonSerializable
 
             if (!in_array($tag, $this->tags)) {
                 $this->tags[] = $tag;
+            } else {
+                foreach ($this->tags as $currentTag) {
+                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
+                        $this->tags[] = $tag;
+                    }
+                }
             }
         } else {
             $this->getLog()->debug('No Tags to assign');
@@ -1128,13 +1177,12 @@ class Layout implements \JsonSerializable
     {
         $this->load();
 
-        $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
-
-        $this->unassignTags[] = $tag;
+        foreach ($this->tags as $key => $currentTag) {
+            if ($currentTag->tagId === $tag->tagId && $currentTag->value === $tag->value) {
+                $this->unassignTags[] = $tag;
+                array_splice($this->tags, $key, 1);
+            }
+        }
 
         $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
 
@@ -1190,6 +1238,11 @@ class Layout implements \JsonSerializable
         $layoutNode->setAttribute('bgcolor', $this->backgroundColor);
         $layoutNode->setAttribute('schemaVersion', $this->schemaVersion);
 
+        // add Layout code only if code identifier is set on the Layout.
+        if ($this->code != null) {
+            $layoutNode->setAttribute('code', $this->code);
+        }
+
         // Layout stat collection flag
         if (is_null($this->enableStat)) {
             $layoutEnableStat =  $this->config->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
@@ -1231,9 +1284,7 @@ class Layout implements \JsonSerializable
                 $layoutActionNode->setAttribute('actionType', $action->actionType);
                 $layoutActionNode->setAttribute('triggerType', $action->triggerType);
                 $layoutActionNode->setAttribute('id', $action->actionId);
-            }
 
-            if ($layoutActionNode != null) {
                 $layoutNode->appendChild($layoutActionNode);
             }
         }
@@ -1276,9 +1327,7 @@ class Layout implements \JsonSerializable
                 $regionActionNode->setAttribute('actionType', $action->actionType);
                 $regionActionNode->setAttribute('triggerType', $action->triggerType);
                 $regionActionNode->setAttribute('id', $action->actionId);
-            }
 
-            if ($regionActionNode != null) {
                 $regionNode->appendChild($regionActionNode);
             }
 
@@ -1344,7 +1393,10 @@ class Layout implements \JsonSerializable
                 // Is this Widget one that does not have a duration of its own?
                 // Assuming we have at least 1 region with a set duration, then we ought to
                 // Reset to the minimum duration
-                if ($widget->useDuration == 0 && $countWidgets <= 1 && $regionLoop == 0 && $widget->type != 'video'
+                if ($widget->useDuration == 0
+                    && $countWidgets <= 1
+                    && $regionLoop == 0
+                    && $widget->type != 'video'
                     && $layoutCountRegionsWithDuration >= 1
                 ) {
                     // Make sure this Widget expires immediately so that the other Regions can be the leaders when
@@ -1381,7 +1433,8 @@ class Layout implements \JsonSerializable
                 }
 
                 // Set the duration according to whether we are using widget duration or not
-                $mediaNode->setAttribute('duration', $widgetDuration);
+                $isEndDetectVideoWidget = ($widget->type === 'video' && $widget->useDuration === 0);
+                $mediaNode->setAttribute('duration', ($isEndDetectVideoWidget ? 0 : $widgetDuration));
                 $mediaNode->setAttribute('useDuration', $widget->useDuration);
                 $widgetActionNode = null;
 
@@ -1396,9 +1449,7 @@ class Layout implements \JsonSerializable
                     $widgetActionNode->setAttribute('actionType', $action->actionType);
                     $widgetActionNode->setAttribute('triggerType', $action->triggerType);
                     $widgetActionNode->setAttribute('id', $action->actionId);
-                }
 
-                if ($widgetActionNode != null) {
                     $mediaNode->appendChild($widgetActionNode);
                 }
 
@@ -1530,6 +1581,9 @@ class Layout implements \JsonSerializable
                     $mediaNode->setAttribute('fileId', $media->mediaId);
                 }
 
+                // Tracker whether or not we have an updateInterval configured.
+                $hasUpdatedInterval = false;
+
                 foreach ($widget->widgetOptions as $option) {
 
                     /* @var WidgetOption $option */
@@ -1550,6 +1604,20 @@ class Layout implements \JsonSerializable
                         $optionNode = $document->createElement($option->option, $option->value);
                         $optionsNode->appendChild($optionNode);
                     }
+
+                    if ($option->option === 'updateInterval') {
+                        $hasUpdatedInterval = true;
+                    }
+                }
+
+                // If we do not have an update interval, should we set a default one?
+                // https://github.com/xibosignage/xibo/issues/2319
+                if (!$hasUpdatedInterval && $module->getModule()->regionSpecific == 1) {
+                    // For the moment we will assume that all update intervals are the same as the cache duration
+                    // remembering that the cache duration is in seconds and the updateInterval in minutes.
+                    $optionsNode->appendChild(
+                        $document->createElement('updateInterval', $module->getCacheDuration() / 60)
+                    );
                 }
 
                 // Handle associated audio
@@ -1595,7 +1663,8 @@ class Layout implements \JsonSerializable
 
         foreach ($this->tags as $tag) {
             /* @var Tag $tag */
-            $tagNode = $document->createElement('tag', $tag->tag);
+            $tagNode = $document->createElement('tag', $tag->tag . (!empty($tag->value) ? '|' . $tag->value : ''));
+
             $tagsNode->appendChild($tagNode);
         }
 
@@ -1665,9 +1734,10 @@ class Layout implements \JsonSerializable
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         $mappings = [];
 
-        foreach ($this->mediaFactory->getByLayoutId($this->layoutId, 1) as $media) {
+        foreach ($this->mediaFactory->getByLayoutId($this->layoutId, 1, 1) as $media) {
             /* @var Media $media */
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
+            $media->load();
 
             $mappings[] = [
                 'file' => $media->fileName,
@@ -1676,7 +1746,8 @@ class Layout implements \JsonSerializable
                 'type' => $media->mediaType,
                 'duration' => $media->duration,
                 'background' => 0,
-                'font' => 0
+                'font' => 0,
+                'tags' => $media->tags
             ];
         }
 
@@ -1684,7 +1755,8 @@ class Layout implements \JsonSerializable
         if ($this->backgroundImageId != 0) {
             $media = $this->mediaFactory->getById($this->backgroundImageId);
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
-
+            $media->load();
+            
             $mappings[] = [
                 'file' => $media->fileName,
                 'mediaid' => $media->mediaId,
@@ -1692,7 +1764,8 @@ class Layout implements \JsonSerializable
                 'type' => $media->mediaType,
                 'duration' => $media->duration,
                 'background' => 1,
-                'font' => 0
+                'font' => 0,
+                'tags' => $media->tags
             ];
         }
 
@@ -1771,8 +1844,13 @@ class Layout implements \JsonSerializable
                 foreach ($playlistIds as $playlistId) {
                     $count = 1;
                     $playlist = $this->playlistFactory->getById($playlistId);
-                    $playlist->load();
-                    $playlist->expandWidgets(0, false);
+
+                    // include Widgets only for non dynamic Playlists #2392
+                    $playlist->load(['loadWidgets' => ($playlist->isDynamic) ? false : true]);
+                    if ($playlist->isDynamic === 0) {
+                        $playlist->expandWidgets(0, false);
+                    }
+
                     $playlistDefinitions[$playlist->playlistId] = $playlist;
 
                     // this is a recursive function, we are adding Playlist definitions, Playlist mappings and DataSets existing on the nested Playlist.
@@ -1818,12 +1896,13 @@ class Layout implements \JsonSerializable
             'notify' => true,
             'collectNow' => true,
             'exceptionOnError' => false,
-            'exceptionOnEmptyRegion' => true
+            'exceptionOnEmptyRegion' => true,
+            'publishing' => false
         ], $options);
 
         $path = $this->getCachePath();
 
-        if ($this->status == 3 || !file_exists($path)) {
+        if ($this->status == 3 || !file_exists($path) || ($options['publishing'] && $this->status == 5) ) {
 
             $this->getLog()->debug('XLF needs building for Layout ' . $this->layoutId);
 
@@ -1886,12 +1965,12 @@ class Layout implements \JsonSerializable
                     throw new InvalidArgumentException(__('There is an error with this Layout: %s',
                         implode(',', $this->getStatusMessage())), 'status');
                 }
+            }
 
-                // If we have an empty region and we've not exceptioned, then we need to record that in our status
-                if ($this->hasEmptyRegion()) {
-                    $this->status = ModuleWidget::$STATUS_INVALID;
-                    $this->pushStatusMessage(__('Empty Region'));
-                }
+            // If we have an empty region and we've not exceptioned, then we need to record that in our status
+            if ($this->hasEmptyRegion()) {
+                $this->status = ModuleWidget::$STATUS_INVALID;
+                $this->pushStatusMessage(__('Empty Region'));
             }
 
             $this->save([
@@ -1934,6 +2013,11 @@ class Layout implements \JsonSerializable
         // Get my parent for later
         $parent = $this->layoutFactory->loadById($this->parentId);
 
+        $this->getStore()->isolated('UPDATE `layout` SET status = 5 WHERE layoutId = :layoutId', [
+            'layoutId' => $this->layoutId
+        ]);
+        $this->getStore()->commitIfNecessary('isolated');
+
         // I am the draft, so I clear my parentId, and set the parentId of my parent, to myself (swapping us)
         // Make me the parent.
         $this->getStore()->update('UPDATE `layout` SET parentId = NULL WHERE layoutId = :layoutId', [
@@ -1968,6 +2052,8 @@ class Layout implements \JsonSerializable
         $this->description = $parent->description;
         $this->retired = $parent->retired;
         $this->enableStat = $parent->enableStat;
+        $this->code = $parent->code;
+        $this->folderId = $parent->folderId;
 
         // Swap all tags over, any changes we've made to the parents tags should be moved to the child.
         $this->getStore()->update('UPDATE `lktaglayout` SET layoutId = :layoutId WHERE layoutId = :parentId', [
@@ -2011,7 +2097,7 @@ class Layout implements \JsonSerializable
             'saveLayout' => true,
             'saveRegions' => false,
             'saveTags' => false,
-            'setBuildRequired' => true,
+            'setBuildRequired' => false,
             'validate' => false,
             'audit' => true,
             'notify' => false
@@ -2103,6 +2189,16 @@ class Layout implements \JsonSerializable
             $campaign->campaign = $this->layout;
             $campaign->isLayoutSpecific = 1;
             $campaign->ownerId = $this->getOwnerId();
+            $campaign->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+
+            // if user has disabled folder feature, presumably said user also has no permissions to folder
+            // getById would fail here and prevent adding new Layout in web ui
+            try {
+                $folder = $this->folderFactory->getById($campaign->folderId);
+                $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            } catch (NotFoundException $exception) {
+                $campaign->permissionsFolderId = 1;
+            }
             $campaign->assignLayout($this);
 
             // Ready to save the Campaign
@@ -2198,6 +2294,16 @@ class Layout implements \JsonSerializable
             $campaign = $this->campaignFactory->getById($this->campaignId);
             $campaign->campaign = $this->layout;
             $campaign->ownerId = $this->ownerId;
+            $campaign->folderId = $this->folderId;
+
+            // if user has disabled folder feature, presumably said user also has no permissions to folder
+            // getById would fail here and prevent adding new Layout in web ui
+            try {
+                $folder = $this->folderFactory->getById($campaign->folderId);
+                $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            } catch (NotFoundException $exception) {
+                $campaign->permissionsFolderId = 1;
+            }
             $campaign->save(['validate' => false, 'notify' => $options['notify'], 'collectNow' => $options['collectNow'], 'layoutCode' => $this->code]);
         }
     }

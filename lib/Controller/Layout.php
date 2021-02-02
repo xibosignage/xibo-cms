@@ -26,11 +26,10 @@ use Parsedown;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Item;
-use Xibo\Entity\Permission;
-use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
@@ -315,6 +314,13 @@ class Layout extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -347,6 +353,13 @@ class Layout extends Base
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
+        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        } else {
+            $tags = [];
+        }
 
         $template = null;
 
@@ -364,7 +377,9 @@ class Layout extends Base
             $layout->code = $code;
 
             // Create some tags (overwriting the old ones)
-            $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+            if ($this->getUser()->featureEnabled('tag.tagging')) {
+                $layout->tags = $tags;
+            }
 
             // Set the owner
             $layout->setOwner($this->getUser()->userId);
@@ -374,9 +389,15 @@ class Layout extends Base
                 // Set the ownership of this region to the user creating from template
                 $region->setOwner($this->getUser()->userId, true);
             }
-        }
-        else {
-            $layout = $this->layoutFactory->createFromResolution($resolutionId, $this->getUser()->userId, $name, $description, $sanitizedParams->getString('tags'), $code);
+        } else {
+            $layout = $this->layoutFactory->createFromResolution(
+                $resolutionId,
+                $this->getUser()->userId,
+                $name,
+                $description,
+                $tags,
+                $code
+            );
         }
 
         // Set layout enableStat flag
@@ -385,14 +406,11 @@ class Layout extends Base
         // Set auto apply transitions flag
         $layout->autoApplyTransitions = $autoApplyTransitions;
 
+        // set folderId
+        $layout->folderId = $folderId;
+
         // Save
         $layout->save();
-
-        // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
 
         foreach ($layout->regions as $region) {
             /* @var Region $region */
@@ -404,56 +422,26 @@ class Layout extends Base
                 // Make sure Playlist closure table from the published one are copied over
                 $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
             }
-
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
+            $campaign = $this->campaignFactory->getById($layout->campaignId);
 
             $playlist = $region->getPlaylist();
-
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-
-            foreach ($playlist->widgets as $widget) {
-                /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                    /* @var Permission $permission */
-                    $permission->save();
-                }
-            }
+            $playlist->folderId = $campaign->folderId;
+            $playlist->permissionsFolderId = $campaign->permissionsFolderId;
+            $playlist->save();
         }
 
         $this->getLog()->debug('Layout Added');
 
-        // automatically checkout the new layout for edit
-        $this->checkout($request, $response, $layout->layoutId);
+        // Automatically checkout the new layout for edit
+        $layout = $this->layoutFactory->checkoutLayout($layout, $sanitizedParams->getCheckbox('returnDraft'));
 
-        if ($sanitizedParams->getCheckbox('returnDraft')) {
-            // This is a workaround really - the call to checkout above ought to be separated into a public/private
-            // method, with the private method returning the draft layout
-            // is it stands the checkout method will have already set the draft layout id to the state data property
-            // we just need to set the message.
-            $this->getState()->hydrate([
-                'httpStatus' => 201,
-                'message' => sprintf(__('Added %s'), $layout->layout),
-            ]);
-        } else {
-            // Make sure we adjust the published status
-            // again, this is a workaround because checkout doesn't return a Layout object
-            $layout->publishedStatus = __('Draft');
-            $layout->publishedStatusId = 2;
-
-            // Return
-            $this->getState()->hydrate([
-                'httpStatus' => 201,
-                'message' => sprintf(__('Added %s'), $layout->layout),
-                'id' => $layout->layoutId,
-                'data' => $layout
-            ]);
-        }
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $layout->layout),
+            'id' => $layout->layoutId,
+            'data' => $layout
+        ]);
 
         return $this->render($request, $response);
     }
@@ -523,6 +511,13 @@ class Layout extends Base
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -535,6 +530,7 @@ class Layout extends Base
         $layout = $this->layoutFactory->getById($id);
         $isTemplate = false;
         $sanitizedParams = $this->getSanitizer($request->getParams());
+        $folderChanged = false;
 
         // check if we're dealing with the template
         $currentTags = explode(',', $layout->tags);
@@ -555,10 +551,15 @@ class Layout extends Base
 
         $layout->layout = $sanitizedParams->getString('name');
         $layout->description = $sanitizedParams->getString('description');
-        $layout->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $layout->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
+
         $layout->retired = $sanitizedParams->getCheckbox('retired');
         $layout->enableStat = $sanitizedParams->getCheckbox('enableStat');
         $layout->code = $sanitizedParams->getString('code');
+        $layout->folderId = $sanitizedParams->getInt('folderId', ['default' => $layout->folderId]);
 
         $tags = $sanitizedParams->getString('tags');
         $tagsArray = explode(',', $tags);
@@ -571,6 +572,10 @@ class Layout extends Base
             }
         }
 
+        if ($layout->hasPropertyChanged('folderId')) {
+            $folderChanged = true;
+        }
+
         // Save
         $layout->save([
             'saveLayout' => true,
@@ -579,6 +584,18 @@ class Layout extends Base
             'setBuildRequired' => false,
             'notify' => false
         ]);
+
+        if ($folderChanged) {
+            $savedLayout = $this->layoutFactory->getById($layout->layoutId);
+            $savedLayout->load();
+            foreach ($savedLayout->regions as $region) {
+                /* @var Region $region */
+                $playlist = $region->getPlaylist();
+                $playlist->folderId = $savedLayout->folderId;
+                $playlist->permissionsFolderId = $savedLayout->permissionsFolderId;
+                $playlist->save();
+            }
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -1163,6 +1180,13 @@ class Layout extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1202,7 +1226,7 @@ class Layout extends Base
         }
 
         // Get all layouts
-        $layouts = $this->layoutFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $layouts = $this->layoutFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([
             'layout' => $parsedQueryParams->getString('layout'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'userId' => $parsedQueryParams->getInt('userId'),
@@ -1218,7 +1242,8 @@ class Layout extends Base
             'publishedStatusId' => $parsedQueryParams->getInt('publishedStatusId'),
             'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId'),
             'campaignId' => $parsedQueryParams->getInt('campaignId'),
-        ], $request));
+            'folderId' => $parsedQueryParams->getInt('folderId')
+        ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
@@ -1385,10 +1410,12 @@ class Layout extends Base
             $layout->publishedStatusFailed = __('Publish failed ');
 
             // Check if user has view permissions to the schedule now page - for layout designer to show/hide Schedule Now button
-            $layout->scheduleNowPermission = $this->getUser()->routeViewable('/schedulenow/form/now/:from/:id');
+            $layout->scheduleNowPermission = $this->getUser()->featureEnabled('schedule.now');
 
             // Add some buttons for this row
-            if ($this->getUser()->checkEditable($layout)) {
+            if ($this->getUser()->featureEnabled('layout.modify')
+                && $this->getUser()->checkEditable($layout)
+            ) {
                 // Design Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_design',
@@ -1422,7 +1449,12 @@ class Layout extends Base
                     $layout->buttons[] = array(
                         'id' => 'layout_button_checkout',
                         'url' => $this->urlFor($request,'layout.checkout.form', ['id' => $layout->layoutId]),
-                        'text' => __('Checkout')
+                        'text' => __('Checkout'),
+                        'dataAttributes' => [
+                            ['name' => 'auto-submit', 'value' => true],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.checkout', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-method', 'value' => 'PUT']
+                        ]
                     );
 
                     $layout->buttons[] = ['divider' => true];
@@ -1430,26 +1462,29 @@ class Layout extends Base
             }
 
             // Preview
-            $layout->buttons[] = array(
-                'id' => 'layout_button_preview',
-                'linkType' => '_blank',
-                'external' => true,
-                'url' => $this->urlFor($request,'layout.preview', ['id' => $layout->layoutId]),
-                'text' => __('Preview Layout')
-            );
+            if ($this->getUser()->featureEnabled('layout.view')) {
+                $layout->buttons[] = array(
+                    'id' => 'layout_button_preview',
+                    'external' => true,
+                    'url' => '#',
+                    'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '");',
+                    'text' => __('Preview Layout')
+                );
 
-            $layout->buttons[] = ['divider' => true];
+                $layout->buttons[] = ['divider' => true];
+            }
 
             // Schedule Now
-            if ($this->getUser()->routeViewable('/schedulenow/form/now/:from/:id') === true) {
+            if ($this->getUser()->featureEnabled('schedule.now')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_schedulenow',
-                    'url' => $this->urlFor($request,'schedulenow.now.form', ['id' => $layout->campaignId, 'from' => 'Campaign']),
+                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Layout']),
                     'text' => __('Schedule Now')
                 );
             }
+
             // Assign to Campaign
-            if ($this->getUser()->routeViewable('/campaign')) {
+            if ($this->getUser()->featureEnabled('campaign.modify')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_assignTo_campaign',
                     'url' => $this->urlFor($request,'layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
@@ -1460,14 +1495,33 @@ class Layout extends Base
             $layout->buttons[] = ['divider' => true];
 
             // Only proceed if we have edit permissions
-            if ($this->getUser()->checkEditable($layout)) {
-
+            if ($this->getUser()->featureEnabled('layout.modify')
+                && $this->getUser()->checkEditable($layout)
+            ) {
                 // Edit Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_edit',
                     'url' => $this->urlFor($request,'layout.edit.form', ['id' => $layout->layoutId]),
                     'text' => __('Edit')
                 );
+
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    // Select Folder
+                    $layout->buttons[] = [
+                        'id' => 'campaign_button_selectfolder',
+                        'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $layout->campaignId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $layout->campaignId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $layout->layout],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
 
                 // Copy Button
                 $layout->buttons[] = array(
@@ -1478,19 +1532,20 @@ class Layout extends Base
 
                 // Retire Button
                 if ($layout->retired == 0) {
-                    $layout->buttons[] = array(
+                    $layout->buttons[] = [
                         'id' => 'layout_button_retire',
                         'url' => $this->urlFor($request,'layout.retire.form', ['id' => $layout->layoutId]),
                         'text' => __('Retire'),
                         'multi-select' => true,
-                        'dataAttributes' => array(
-                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.retire', ['id' => $layout->layoutId])),
-                            array('name' => 'commit-method', 'value' => 'put'),
-                            array('name' => 'id', 'value' => 'layout_button_retire'),
-                            array('name' => 'text', 'value' => __('Retire')),
-                            array('name' => 'rowtitle', 'value' => $layout->layout)
-                        )
-                    );
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.retire', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'layout_button_retire'],
+                            ['name' => 'text', 'value' => __('Retire')],
+                            ['name' => 'sort-group', 'value' => 1],
+                            ['name' => 'rowtitle', 'value' => $layout->layout]
+                        ]
+                    ];
                 } else {
                     $layout->buttons[] = array(
                         'id' => 'layout_button_unretire',
@@ -1502,40 +1557,41 @@ class Layout extends Base
                 // Extra buttons if have delete permissions
                 if ($this->getUser()->checkDeleteable($layout)) {
                     // Delete Button
-                    $layout->buttons[] = array(
+                    $layout->buttons[] = [
                         'id' => 'layout_button_delete',
                         'url' => $this->urlFor($request,'layout.delete.form', ['id' => $layout->layoutId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
-                        'dataAttributes' => array(
-                            array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $layout->layoutId])),
-                            array('name' => 'commit-method', 'value' => 'delete'),
-                            array('name' => 'id', 'value' => 'layout_button_delete'),
-                            array('name' => 'text', 'value' => __('Delete')),
-                            array('name' => 'rowtitle', 'value' => $layout->layout)
-                        )
-                    );
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-method', 'value' => 'delete'],
+                            ['name' => 'id', 'value' => 'layout_button_delete'],
+                            ['name' => 'text', 'value' => __('Delete')],
+                            ['name' => 'sort-group', 'value' => 1],
+                            ['name' => 'rowtitle', 'value' => $layout->layout]
+                        ]
+                    ];
                 }
 
                 // Set Enable Stat
-                $layout->buttons[] = array(
+                $layout->buttons[] = [
                     'id' => 'layout_button_setenablestat',
                     'url' => $this->urlFor($request,'layout.setenablestat.form', ['id' => $layout->layoutId]),
                     'text' => __('Enable stats collection?'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.setenablestat', ['id' => $layout->layoutId])),
-                        array('name' => 'commit-method', 'value' => 'put'),
-                        array('name' => 'id', 'value' => 'layout_button_setenablestat'),
-                        array('name' => 'text', 'value' => __('Enable stats collection?')),
-                        array('name' => 'rowtitle', 'value' => $layout->layout),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.setenablestat', ['id' => $layout->layoutId])],
+                        ['name' => 'commit-method', 'value' => 'put'],
+                        ['name' => 'id', 'value' => 'layout_button_setenablestat'],
+                        ['name' => 'text', 'value' => __('Enable stats collection?')],
+                        ['name' => 'rowtitle', 'value' => $layout->layout],
                         ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
-                    )
-                );
+                    ]
+                ];
 
                 $layout->buttons[] = ['divider' => true];
 
-                if ($this->getUser()->routeViewable('template') && !$layout->isEditable()) {
+                if ($this->getUser()->featureEnabled('template.modify') && !$layout->isEditable()) {
                     // Save template button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_save_template',
@@ -1545,20 +1601,34 @@ class Layout extends Base
                 }
 
                 // Export Button
-                $layout->buttons[] = array(
-                    'id' => 'layout_button_export',
-                    'url' => $this->urlFor($request,'layout.export.form', ['id' => $layout->layoutId]),
-                    'text' => __('Export')
-                );
+                if ($this->getUser()->featureEnabled('layout.export')) {
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_export',
+                        'url' => $this->urlFor($request, 'layout.export.form', ['id' => $layout->layoutId]),
+                        'text' => __('Export')
+                    );
+                }
 
                 // Extra buttons if we have modify permissions
                 if ($this->getUser()->checkPermissionsModifyable($layout)) {
                     // Permissions button
-                    $layout->buttons[] = array(
+                    $layout->buttons[] = [
                         'id' => 'layout_button_permissions',
                         'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
-                        'text' => __('Permissions')
-                    );
+                        'text' => __('Share'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $layout->campaignId])],
+                            ['name' => 'commit-method', 'value' => 'post'],
+                            ['name' => 'id', 'value' => 'layout_button_permissions'],
+                            ['name' => 'text', 'value' => __('Share')],
+                            ['name' => 'rowtitle', 'value' => $layout->layout],
+                            ['name' => 'sort-group', 'value' => 2],
+                            ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                            ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])],
+                            ['name' => 'content-id-name', 'value' => 'campaignId']
+                        ]
+                    ];
                 }
             }
         }
@@ -1607,20 +1677,6 @@ class Layout extends Base
         // Get the layout
         $layout = $this->layoutFactory->getById($id);
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $layout->tags));
-        $arrayOfTagValues = array_filter(explode(',', $layout->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL')) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
         // Check Permissions
         if (!$this->getUser()->checkEditable($layout)) {
             throw new AccessDeniedException();
@@ -1629,7 +1685,7 @@ class Layout extends Base
         $this->getState()->template = 'layout-form-edit';
         $this->getState()->setData([
             'layout' => $layout,
-            'tags' => $tags,
+            'tags' => $this->tagFactory->getTagsWithValues($layout),
             'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
 
@@ -1658,7 +1714,11 @@ class Layout extends Base
             throw new AccessDeniedException();
             
         // Edits always happen on Drafts, get the draft Layout using the Parent Layout ID
-        $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+        if ($layout->schemaVersion < 2) {
+            $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
+        } else {
+            $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+        }
 
         // If we have a background image, output it
         $backgroundId = $sanitizedParams->getInt('backgroundOverride', ['default' => $layout->backgroundImageId]);
@@ -1787,19 +1847,7 @@ class Layout extends Base
 
         // Clone
         $layout = clone $layout;
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $layout->tags));
-        $arrayOfTagValues = array_filter(explode(',', $layout->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
+        $tags = $this->tagFactory->getTagsWithValues($layout);
 
         $layout->layout = $sanitizedParams->getString('name');
         $layout->description = $sanitizedParams->getString('description');
@@ -1871,35 +1919,6 @@ class Layout extends Base
 
             // Make sure Playlist closure table from the published one are copied over
             $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
-        }
-
-        // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), 'Xibo\\Entity\\Campaign', $layout->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
-        }
-
-        foreach ($allRegions as $region) {
-            /* @var Region $region */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($region), $region->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-
-            $playlist = $region->getPlaylist();
-            /* @var Playlist $playlist */
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($playlist), $playlist->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
-
-            foreach ($playlist->widgets as $widget) {
-                /* @var Widget $widget */
-                foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($widget), $widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                    /* @var Permission $permission */
-                    $permission->save();
-                }
-            }
         }
 
         // Return
@@ -2181,7 +2200,8 @@ class Layout extends Base
         // Render the form
         $this->getState()->template = 'layout-form-export';
         $this->getState()->setData([
-            'layout' => $layout
+            'layout' => $layout,
+            'saveAs' => 'export_' . preg_replace('/[^a-z0-9]+/', '-', strtolower($layout->layout))
         ]);
 
         return $this->render($request, $response);
@@ -2215,10 +2235,17 @@ class Layout extends Base
             throw new InvalidArgumentException(__('Cannot manage tags on a Draft Layout'), 'layoutId');
         }
 
-        // Make sure our file name is reasonable
-        $layoutName = preg_replace('/[^a-z0-9]+/', '-', strtolower($layout->layout));
+        // Save As?
+        $saveAs = $sanitizedParams->getString('saveAs');
 
-        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/export_' . $layoutName . '.zip';
+        // Make sure our file name is reasonable
+        if (empty($saveAs)) {
+            $saveAs = 'export_' . preg_replace('/[^a-z0-9]+/', '-', strtolower($layout->layout));
+        } else {
+            $saveAs = preg_replace('/[^a-z0-9]+/', '-', strtolower($saveAs));
+        }
+
+        $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $saveAs . '.zip';
         $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($sanitizedParams->getCheckbox('includeData')== 1)]);
 
         return $this->render($request, SendFile::decorateResponse(
@@ -2281,7 +2308,7 @@ class Layout extends Base
             'accept_file_types' => '/\.zip$/i',
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $libraryController->libraryUsage() > $libraryLimit),
-            'request' => $request
+            'routeParser' => RouteContext::fromRequest($request)->getRouteParser()
         );
 
         $this->setNoOutput(true);
@@ -2388,6 +2415,7 @@ class Layout extends Base
         $data = ['layout' => $layout];
 
         $this->getState()->template = 'layout-form-checkout';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('layoutCheckoutForm');
         $this->getState()->setData($data);
 
         return $this->render($request, $response);
@@ -2440,77 +2468,8 @@ class Layout extends Base
             throw new InvalidArgumentException(__('Layout is already checked out'), 'statusId');
         }
 
-        // Load the Layout
-        $layout->load();
-
-        // Make a skeleton copy of the Layout
-        $draft = clone $layout;
-        $draft->parentId = $layout->layoutId;
-        $draft->campaignId = $layout->campaignId;
-        $draft->publishedStatusId = 2; // Draft
-        $draft->publishedStatus = __('Draft');
-        $draft->autoApplyTransitions = $layout->autoApplyTransitions;
-        $draft->code = $layout->code;
-
-        // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
-        $draft->tags = [];
-
-        // Save without validation or notification.
-        $draft->save([
-            'validate' => false,
-            'notify' => false
-        ]);
-
-        // Update the original
-        $layout->publishedStatusId = 2; // Draft
-        $layout->save([
-            'saveLayout' => true,
-            'saveRegions' => false,
-            'saveTags' => false,
-            'setBuildRequired' => false,
-            'validate' => false,
-            'notify' => false
-        ]);
-
-        /** @var Region[] $allRegions */
-        $allRegions = array_merge($draft->regions, $draft->drawers);
-        $draft->copyActions($draft, $layout);
-
-        // Permissions && Sub-Playlists
-        // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
-        // Regions/Widgets need to copy down our layout permissions
-        foreach ($allRegions as $region) {
-            // Match our original region id to the id in the parent layout
-            $original = $layout->getRegionOrDrawer($region->getOriginalValue('regionId'));
-
-            // Make sure Playlist closure table from the published one are copied over
-            $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
-
-            // Copy over original permissions
-            foreach ($original->permissions as $permission) {
-                $new = clone $permission;
-                $new->objectId = $region->regionId;
-                $new->save();
-            }
-
-            // Playlist
-            foreach ($original->getPlaylist()->permissions as $permission) {
-                $new = clone $permission;
-                $new->objectId = $region->getPlaylist()->playlistId;
-                $new->save();
-            }
-
-            // Widgets
-            foreach ($region->getPlaylist()->widgets as $widget) {
-                $originalWidget = $original->getPlaylist()->getWidget($widget->getOriginalValue('widgetId'));
-                // Copy over original permissions
-                foreach ($originalWidget->permissions as $permission) {
-                    $new = clone $permission;
-                    $new->objectId = $widget->widgetId;
-                    $new->save();
-                }
-            }
-        }
+        // Checkout this Layout
+        $draft = $this->layoutFactory->checkoutLayout($layout);
 
         // Return
         $this->getState()->hydrate([
@@ -2624,7 +2583,7 @@ class Layout extends Base
 
             // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
             // error message
-            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
+            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false, 'publishing' => true]);
 
             // Return
             $this->getState()->hydrate([

@@ -33,19 +33,19 @@
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
             <li class="dropdown digital-control-group">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li><a href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a></li>
-                    <li><a href="#mainTemplateTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a></li>
-                    <li><a href="#optionalStylesheetTab" class="template-override-controls" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
-                </ul>
+                <div class="dropdown-menu">
+                    <a class="dropdown-item" href="#templatePreset" role="tab" data-toggle="tab"><span>{% trans "Preset" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#mainTemplateTab"  role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
+                    <a class="dropdown-item template-override-controls" href="#optionalStylesheetTab"  role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
+                </div>
             </li>
-            <li><a href="#analogueSettingsTab" role="tab" class="analogue-control-group" data-toggle="tab"><span>{% trans "Analogue Settings" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#analogueSettingsTab" role="tab" class="analogue-control-group" data-toggle="tab"><span>{% trans "Analogue Settings" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="clockFormEdit" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -78,12 +78,14 @@
                     </div>
 
                     <div class="tab-pane" id="configurationTab">
-                        <div class="col-sm-12">
-                            <h4>{% trans "Clocks" %}&nbsp;<span class="clockCount"></span></h4>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <h4>{% trans "Clocks" %}&nbsp;<span class="clockCount"></span></h4>
+                            </div>
                         </div>
 
-                        <div id="worldClocksContainer" class="col-sm-12 form-group text-center"></div>
-
+                        <div id="worldClocksContainer" class="form-group d-block px-3"></div>
+                        
                         {% set title %}{% trans "Clock Type" %}{% endset %}
                         {% set helpText %}{% trans "Please select the type of clock to display." %}{% endset %}
                         {% set analog %}{% trans "Analog" %}{% endset %}
@@ -217,9 +219,9 @@
                             {{ forms.message(playlistEditorMessage, 'playlist-editor-message mainTemplate-advanced-editor-show') }}
                         </div>
 
-                        <div class="ckeditor_controls inline-editor-hide container-fluid" data-linked-to="mainTemplate">
-                            <div class="col-sm-offset-4 col-sm-8">
-                                <div class="form-group">
+                        <div class="ckeditor_controls inline-editor-hide row" data-linked-to="mainTemplate">
+                            <div class="offset-sm-4 col-sm-8">
+                                <div class="form-group row">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                     <div class="col-sm-8 ckeditor_select_container">
                                         <select id="ckeditor_snippets_select" 

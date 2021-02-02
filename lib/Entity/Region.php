@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Xibo\Factory\ActionFactory;
+use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
@@ -167,6 +168,10 @@ class Region implements \JsonSerializable
 
     /** @var ActionFactory */
     private $actionFactory;
+
+    /** @var CampaignFactory */
+    private $campaignFactory;
+
     //</editor-fold>
 
     /**
@@ -179,7 +184,7 @@ class Region implements \JsonSerializable
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory)
+    public function __construct($store, $log, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory, $campaignFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->regionFactory = $regionFactory;
@@ -187,6 +192,7 @@ class Region implements \JsonSerializable
         $this->regionOptionFactory = $regionOptionFactory;
         $this->playlistFactory = $playlistFactory;
         $this->actionFactory = $actionFactory;
+        $this->campaignFactory = $campaignFactory;
     }
 
     /**
@@ -212,6 +218,11 @@ class Region implements \JsonSerializable
     public function __toString()
     {
         return sprintf('Region %s - %d x %d (%d, %d). RegionId = %d, LayoutId = %d. OwnerId = %d. Duration = %d', $this->name, $this->width, $this->height, $this->top, $this->left, $this->regionId, $this->layoutId, $this->ownerId, $this->duration);
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->getPlaylist()->permissionsFolderId;
     }
 
     /**
@@ -426,6 +437,13 @@ class Region implements \JsonSerializable
                 $this->regionPlaylist->regionId = $this->regionId;
                 $this->regionPlaylist->setOwner($this->ownerId);
             }
+
+            if (isset($campaignId)) {
+                $campaign = $this->campaignFactory->getById($campaignId);
+                $this->regionPlaylist->folderId = $campaign->folderId;
+                $this->regionPlaylist->permissionsFolderId = $campaign->permissionsFolderId;
+            }
+
             $this->regionPlaylist->save();
 
             // Audit
@@ -448,9 +466,16 @@ class Region implements \JsonSerializable
             }
 
             $this->regionPlaylist->name = $this->name;
+
+            if (isset($campaignId)) {
+                $campaign = $this->campaignFactory->getById($campaignId);
+                $this->regionPlaylist->folderId = $campaign->folderId;
+                $this->regionPlaylist->permissionsFolderId = $campaign->permissionsFolderId;
+            }
+
             $this->regionPlaylist->save();
 
-            if ($options['audit']) {
+            if ($options['audit'] && count($this->getChangedProperties()) > 0) {
                 $change = $this->getChangedProperties();
                 $change['campaignId'][] = $campaignId;
                 $this->audit($this->regionId, 'Saved', $change);

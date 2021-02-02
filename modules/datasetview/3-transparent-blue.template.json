@@ -1,0 +1,5 @@
+{
+  "id": "transparent-blue",
+  "value": "Striped blue table with darker blue header.",
+  "css": "table.DataSetTable {\nfont-family:\"Trebuchet MS\", Arial, Helvetica, sans-serif;  \nwidth:100%;\nborder-collapse:collapse;\ntable-layout: fixed;\nfont-size: 14px;\n}\n\ntr.HeaderRow {\nfont-size:1.1em;\ntext-align:center;\nbackground-color:#30426a;\ncolor:#f9f9f9;\n}\n\ntr#row_1 {\n\n}\n\ntd#col_1 {\n\n}\n\ntd.DataSetColumn {\npadding: 6px;\n}\n\ntd.DataSetColumn img {\nmax-width: 100%;\nmax-height: 50px;\ndisplay: block;\nmargin-left: auto;\nmargin-right: auto;\n}\n\ntr.DataSetRow {\ntext-align:center;\ncolor:#000000;\nbackground-color:#96acde;\nbackground-color:#96acde8e;\n}\n\ntr.DataSetRow:nth-child(even) {\nbackground-color:#758cc1;\nbackground-color:#758cc18e;\n}\n\nth.DataSetColumnHeaderCell {\npadding-top: 8px;\npadding-bottom: 6px;\n}\n\nspan#1_1 {\n\n}\n\nspan.DataSetColumnSpan {\n\n}"
+}

@@ -114,7 +114,7 @@ class Logging extends Base
         $intervalType = $parsedQueryParams->getInt('intervalType', ['default' => 1]);
         $fromDt = $parsedQueryParams->getDate('fromDt', ['default' => Carbon::now()]);
 
-        $logs = $this->logFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $logs = $this->logFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([
             'fromDt' => $fromDt->clone()->subSeconds($seconds * $intervalType)->format('U'),
             'toDt' => $fromDt->format('U'),
             'type' => $parsedQueryParams->getString('level'),
@@ -129,7 +129,7 @@ class Logging extends Base
             'display' => $parsedQueryParams->getString('display'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'displayGroupId' => $parsedQueryParams->getInt('displayGroupId'),
-        ], $request));
+        ], $parsedQueryParams));
 
         foreach ($logs as $log) {
             // Normalise the date
@@ -159,6 +159,7 @@ class Logging extends Base
         }
 
         $this->getState()->template = 'log-form-truncate';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('truncateForm');
         $this->getState()->setData([
             'help' => $this->getHelp()->link('Log', 'Truncate')
         ]);

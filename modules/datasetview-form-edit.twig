@@ -34,22 +34,22 @@
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
-            <li><a href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
-            <li class="dropdown">
-                <a class="dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
-                <ul class="dropdown-menu">
-                    <li class="template-override-controls"><a href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a></li>
-                    <li><a href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a></li>
-                    <li><a href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a></li>
-                </ul>
+                <div class="dropdown-menu">
+                    <a class="template-override-controls dropdown-item" href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
+                    <a class="dropdown-item" href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a>
+                    <a class="dropdown-item" href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a>
+                </div>
             </li>
-            <li><a href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
-            <li><a href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
-            <li><a href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#orderCriteria" role="tab" data-toggle="tab"><span>{% trans "Order" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#filterCriteria" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="dataSetViewEditForm2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -90,19 +90,19 @@
                         {{ forms.message(message) }}
 
                         <div class="row">
-                            <div class="col-md-12">
+                            <div class="col-md-12 row">
                                 <div class="connectedlist col-sm-6">
-                                    <p class="text-info">{% trans "Columns Selected" %}</p>
-                                    <ul id="columnsIn" class="connectedSortable">
-                                        {% for column in module.dataSetColumnsSelected() %}
+                                    <p class="text-info text-center">{% trans "Columns Available" %}</p>
+                                    <ul id="columnsOut" class="connectedSortable m-auto text-center">
+                                        {% for column in module.dataSetColumnsNotSelected() %}
                                             <li id="{{ column.dataSetColumnId }}" class="li-sortable">{{ column.heading }}</li>
                                         {% endfor %}
                                     </ul>
                                 </div>
                                 <div class="connectedlist col-sm-6">
-                                    <p class="text-info">{% trans "Columns Available" %}</p>
-                                    <ul id="columnsOut" class="connectedSortable">
-                                        {% for column in module.dataSetColumnsNotSelected() %}
+                                    <p class="text-info text-center">{% trans "Columns Selected" %}</p>
+                                    <ul id="columnsIn" class="connectedSortable m-auto text-center">
+                                        {% for column in module.dataSetColumnsSelected() %}
                                             <li id="{{ column.dataSetColumnId }}" class="li-sortable">{{ column.heading }}</li>
                                         {% endfor %}
                                     </ul>
@@ -135,24 +135,26 @@
 
                         {% set title %}{% trans "Override the template?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
-                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", "1"), helpText) }}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", "0"), helpText) }}
 
                         {% set useTemplatesMessage %}
                            {% trans "With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above." %}                     
                         {% endset %}
                         {{ forms.message(useTemplatesMessage, 'template-override-controls') }}
 
-                        {% set title %}{% trans "Background Colour" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText) }}
+                        <div class="template-selector-default">
+                            {% set title %}{% trans "Background Colour" %}{% endset %}
+                            {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
+                            {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "template-selector-control") }}
 
-                        {% set title %}{% trans "Border Colour" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the border colour" %}{% endset %}
-                        {{ forms.input("borderColor", title, module.getOption("borderColor"), helpText) }}
+                            {% set title %}{% trans "Border Colour" %}{% endset %}
+                            {% set helpText %}{% trans "Use the colour picker to select the border colour" %}{% endset %}
+                            {{ forms.input("borderColor", title, module.getOption("borderColor"), helpText, "template-selector-control") }}
 
-                        {% set title %}{% trans "Font Colour" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
-                        {{ forms.input("fontColor", title, module.getOption("fontColor"), helpText) }}
+                            {% set title %}{% trans "Font Colour" %}{% endset %}
+                            {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
+                            {{ forms.input("fontColor", title, module.getOption("fontColor"), helpText, "template-selector-control") }}
+                        </div>
 
                         {% set title %}{% trans "Font" %}{% endset %}
                         {% set attributes = [
@@ -160,22 +162,24 @@
                             { name: "data-value", value: module.getOption("fontFamily") }
                         ] %}
                         {% set helpText %}{% trans "Select a custom font - leave empty to use the default font." %}{% endset %}
-                        {{ forms.dropdown("fontFamily", "single", title, "", [{id: "", value: ""}], "id", "value", helpText, "", "", "", "", attributes) }}
+                        {{ forms.dropdown("fontFamily", "single", title, "", [{id: "", value: ""}], "id", "value", helpText, "template-selector-control", "", "", "", attributes) }}
 
                         {% set title %}{% trans "Font Size" %}{% endset %}
                         {% set helpText %}{% trans "Set the font size" %}{% endset %}
-                        {{ forms.number("fontSize", title, module.getOption("fontSize"), helpText) }}
+                        {{ forms.number("fontSize", title, module.getOption("fontSize"), helpText, "template-selector-control") }}
                     </div>
 
                     <div class="tab-pane" id="noDataTemplateTab">
-                        <div class="form-content-title container-fluid text-right">
-                            <h4 class="col-xs-6 text-left">{% trans "No Data Template" %}</h4>
-                            <input type="checkbox" class="col-xs-6 pull-right bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
-                                data-size="small" 
-                                data-label-text="{% trans "Visual editor" %}" 
-                                data-label-width="80px" 
-                                data-on-text="{% trans "On" %}" 
-                                data-off-text="{% trans "Off" %}">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "No Data Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %} 
+                                    data-size="small" 
+                                    data-label-text="{% trans "Visual editor" %}" 
+                                    data-label-width="80px" 
+                                    data-on-text="{% trans "On" %}" 
+                                    data-off-text="{% trans "Off" %}">
+                            </div>
                         </div>
                         
                         {% set noDataMessageMessage1 %}
@@ -234,6 +238,9 @@
                         {% set message %}{% trans "The DataSet results can be filtered by any column and set below. New fields can be added by selecting the plus icon at the end of the current row. Should a more complicated filter be required the advanced checkbox can be selected to provide custom SQL syntax." %}{% endset %}
                         {{ forms.message(message) }}
 
+                        {% set message %}{% trans "The substitution [DisplayId] can be used in filter clauses and will be substituted at run time with the Display ID. When shown in the CMS it will be substituted with 0." %}{% endset %}
+                        {{ forms.message(message) }}
+
                         <div id="filterClause">
 
                         </div>
@@ -251,6 +258,10 @@
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 5), helpText, "", "required") }}
+
+                        {% set title %}{% trans "Freshness (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "If the Player is offline it will switch to the No Data Template after this freshness time. Set this to 0 to never switch." %}{% endset %}
+                        {{ forms.number("freshnessTimeout", title, module.getOption("freshnessTimeout", 0), helpText) }}
                     </div>
 
                 </div>

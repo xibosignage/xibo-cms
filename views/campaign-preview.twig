@@ -56,7 +56,7 @@
                                 <small>{% trans "duration" %}:</small> {{ extendedLayout.duration|datehms }}<br/>
                             </div>
                             <div class="col-sm-4">
-                                <a class="btn btn-default btn-sm" href="{{ url_for("layout.preview", {id: extendedLayout.layout.layoutId}) }}" target="_blank">
+                                <a class="btn btn-white" href="{{ url_for("layout.preview", {id: extendedLayout.layout.layoutId}) }}" target="_blank">
                                     {% trans "Open full screen" %}
                                     <span class="fa fa-tablet"></span>
                                 </a>
@@ -73,7 +73,13 @@
     <script src="{{ theme.rootUri() }}dist/vendor/html5preloader/html5Preloader.js?v={{ version }}&rev={{revision}}"></script>
     <script src="{{ theme.rootUri() }}dist/preview/html-preview.js?v={{ version }}&rev={{revision}}"></script>
     <script type="text/javascript">
-        var emptyRegionMessage = "{% trans "Empty Region" %}"; 
+        var previewTranslations = {};
+        // Translations we want always available
+        {% autoescape "js" %}
+            previewTranslations.actionControllerTitle = "{{ "Action Controller"|trans }}";
+            previewTranslations.navigateToLayout = "{{ "Navigate to layout with code [layoutTag]?"|trans }}";
+            previewTranslations.emptyRegionMessage = "{{ "Empty Region"|trans }}";
+        {% endautoescape %}
 
         (function($){
           $(document).ready(function(){

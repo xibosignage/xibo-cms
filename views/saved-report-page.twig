@@ -25,10 +25,10 @@
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="btns" href="{{ url_for("stats.proofofplay.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Back to dashboard" %}</a></li>
-        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboRedirectButton" href="{{ url_for("report.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Back to dashboard" %}</button>
+        <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -36,18 +36,20 @@
         <div class="widget-title">{% trans "Saved reports" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="savedreportView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
-                            <div class="form-group ">
-                                <label class="control-label" title="" for="saveAs" accesskey="">{% trans "Name" %}</label>
+                            <div class="form-group mr-1 mb-1">
+                                <label class="control-label mr-1" title="" for="saveAs" accesskey="">{% trans "Name" %}</label>
                                 <div>
                                     <div class="input-group">
                                         <input class="form-control" name="saveAs" type="text" id="saveAs" value="">
-                                        <span class="input-group-addon">
-                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                        </span>
+                                        <div class="input-group-append input-group-addon">
+                                            <div class="input-group-text">
+                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
@@ -67,8 +69,8 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="savedreports" class="table table-striped">
+                <div class="XiboData card pt-3">
+                    <table id="savedreports" class="table table-striped" data-state-preference-name="savedreportGrid">
                         <thead>
                         <tr>
                             <th>{% trans "Report Schedule" %}</th>
@@ -94,47 +96,21 @@
         var table;
         $(document).ready(function() {
 
-            let url_string = window.location.href;
-            let url = new URL(url_string);
-            let reportName = url.searchParams.get("reportName");
+            var url_string = window.location.href;
+            var url = new URL(url_string);
+            var reportName = url.searchParams.get("reportName");
 
             if (reportName !== undefined && reportName != null) {
                 $('#reportName').val(reportName).trigger('change');
             }
 
-            table = $("#savedreports").DataTable({ "language": dataTablesLanguage,
-                serverSide: true, stateSave: true, stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=savedreportGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "savedreportGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+            table = $("#savedreports").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[ 1, "asc"]],
@@ -161,7 +137,7 @@
             });
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#savedreports_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#savedreports_wrapper').find('.col-md-6').eq(1));
         })
     </script>
 {% endblock %}

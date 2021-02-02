@@ -40,6 +40,7 @@ use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
@@ -155,6 +156,9 @@ class Library extends Base
     /** @var HttpCacheProvider */
     private $cacheProvider;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -184,8 +188,9 @@ class Library extends Base
      * @param PlayerVersionFactory $playerVersionFactory
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -209,6 +214,7 @@ class Library extends Base
         $this->dayPartFactory = $dayPartFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->cacheProvider = $cacheProvider;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -340,6 +346,14 @@ class Library extends Base
     public function getTagFactory()
     {
         return $this->tagFactory;
+    }
+
+    /**
+     * @return FolderFactory
+     */
+    public function getFolderFactory()
+    {
+        return $this->folderFactory;
     }
 
     /**
@@ -538,6 +552,13 @@ class Library extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -561,7 +582,7 @@ class Library extends Base
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
 
         // Construct the SQL
-        $mediaList = $this->mediaFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $mediaList = $this->mediaFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter([
             'mediaId' => $parsedQueryParams->getInt('mediaId'),
             'name' => $parsedQueryParams->getString('media'),
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
@@ -575,9 +596,10 @@ class Library extends Base
             'fileSize' => $parsedQueryParams->getString('fileSize'),
             'ownerUserGroupId' => $parsedQueryParams->getInt('ownerUserGroupId'),
             'assignable' => $parsedQueryParams->getInt('assignable'),
+            'folderId' => $parsedQueryParams->getInt('folderId'),
             'notPlayerSoftware' => 1,
             'notSavedReport' => 1
-        ], $request));
+        ], $parsedQueryParams));
 
         // Add some additional row content
         foreach ($mediaList as $media) {
@@ -589,7 +611,9 @@ class Library extends Base
             $media->thumbnailUrl = '';
             $media->downloadUrl = '';
 
-            if ($media->mediaType == 'image') {
+            $module = $this->moduleFactory->createWithMedia($media);
+
+            if ($module->hasThumbnail()) {
                 $download = $this->urlFor($request,'library.download', ['id' => $media->mediaId], ['preview' => 1]);
                 $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
                 $media->thumbnailUrl = $download . '&width=100&height=56&cache=1';
@@ -641,10 +665,12 @@ class Library extends Base
                     $media->enableStatDescription = __('This Media has enable stat collection set to INHERIT');
             }
 
-            $media->buttons = array();
+            $media->buttons = [];
 
             // Buttons
-            if ($user->checkEditable($media)) {
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $user->checkEditable($media)
+            ) {
                 // Edit
                 $media->buttons[] = array(
                     'id' => 'content_button_edit',
@@ -658,36 +684,72 @@ class Library extends Base
                     'url' => $this->urlFor($request,'library.copy.form', ['id' => $media->mediaId]),
                     'text' => __('Copy')
                 );
+
+                // Select Folder
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    $media->buttons[] = [
+                        'id' => 'library_button_selectfolder',
+                        'url' => $this->urlFor($request,'library.selectfolder.form', ['id' => $media->mediaId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'library.selectfolder', ['id' => $media->mediaId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'library_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $media->name],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
             }
 
-            if ($user->checkDeleteable($media)) {
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $user->checkDeleteable($media)
+            ) {
                 // Delete Button
-                $media->buttons[] = array(
+                $media->buttons[] = [
                     'id' => 'content_button_delete',
                     'url' => $this->urlFor($request,'library.delete.form', ['id' => $media->mediaId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'library.delete', ['id' => $media->mediaId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'content_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $media->name),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'library.delete', ['id' => $media->mediaId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'content_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $media->name],
                         ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
-                    )
-                );
+                    ]
+                ];
             }
 
-            if ($user->checkPermissionsModifyable($media)) {
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $user->checkPermissionsModifyable($media)
+            ) {
                 // Permissions
-                $media->buttons[] = array(
+                $media->buttons[] = [
                     'id' => 'content_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
-                    'text' => __('Permissions')
-                );
+                    'text' => __('Share'),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Media', 'id' => $media->mediaId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'content_button_permissions'],
+                        ['name' => 'text', 'value' => __('Share')],
+                        ['name' => 'rowtitle', 'value' => $media->name],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Media'])],
+                        ['name' => 'content-id-name', 'value' => 'mediaId']
+                    ]
+                ];
             }
 
             // Download
+            // No feature permissions here, anyone can get a file based on sharing.
+            $media->buttons[] = ['divider' => true];
             $media->buttons[] = array(
                 'id' => 'content_button_download',
                 'linkType' => '_self', 'external' => true,
@@ -696,28 +758,36 @@ class Library extends Base
             );
 
             // Set Enable Stat
-            $media->buttons[] = array(
-                'id' => 'library_button_setenablestat',
-                'url' => $this->urlFor($request,'library.setenablestat.form', ['id' => $media->mediaId]),
-                'text' => __('Enable stats collection?'),
-                'multi-select' => true,
-                'dataAttributes' => array(
-                    array('name' => 'commit-url', 'value' => $this->urlFor($request,'library.setenablestat', ['id' => $media->mediaId])),
-                    array('name' => 'commit-method', 'value' => 'put'),
-                    array('name' => 'id', 'value' => 'library_button_setenablestat'),
-                    array('name' => 'text', 'value' => __('Enable stats collection?')),
-                    array('name' => 'rowtitle', 'value' => $media->name),
-                    ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
-                )
-            );
+            if ($this->getUser()->featureEnabled('library.modify')
+                && $this->getUser()->checkEditable($media)
+            ) {
+                $media->buttons[] = ['divider' => true];
 
-            $media->buttons[] = ['divider' => true];
+                $media->buttons[] = array(
+                    'id' => 'library_button_setenablestat',
+                    'url' => $this->urlFor($request,'library.setenablestat.form', ['id' => $media->mediaId]),
+                    'text' => __('Enable stats collection?'),
+                    'multi-select' => true,
+                    'dataAttributes' => array(
+                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'library.setenablestat', ['id' => $media->mediaId])),
+                        array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'id', 'value' => 'library_button_setenablestat'),
+                        array('name' => 'text', 'value' => __('Enable stats collection?')),
+                        array('name' => 'rowtitle', 'value' => $media->name),
+                        ['name' => 'form-callback', 'value' => 'setEnableStatMultiSelectFormOpen']
+                    )
+                );
+            }
 
-            $media->buttons[] = array(
-                'id' => 'usage_report_button',
-                'url' => $this->urlFor($request,'library.usage.form', ['id' => $media->mediaId]),
-                'text' => __('Usage Report')
-            );
+            if ($this->getUser()->featureEnabled(['schedule.view', 'layout.view'])) {
+                $media->buttons[] = ['divider' => true];
+
+                $media->buttons[] = array(
+                    'id' => 'usage_report_button',
+                    'url' => $this->urlFor($request, 'library.usage.form', ['id' => $media->mediaId]),
+                    'text' => __('Usage Report')
+                );
+            }
         }
 
         $this->getState()->template = 'grid';
@@ -818,7 +888,7 @@ class Library extends Base
 
         // Do we need to reassess fonts?
         if ($media->mediaType == 'font') {
-            $this->installFonts();
+            $this->installFonts(RouteContext::fromRequest($request)->getRouteParser());
         }
 
         // Return
@@ -896,6 +966,41 @@ class Library extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="widgetFromDt",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s format, will set widget start date",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="widgetToDt",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s format, will set widget end date",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="deleteOnExpiry",
+     *      in="formData",
+     *      description="Flag (0, 1), set to 1 to remove the Widget from the Playlist when the widgetToDt has been reached",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="applyToMedia",
+     *      in="formData",
+     *      description="Flag (0, 1), set to 1 to apply the widgetFromDt as the expiry date on the Media",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation"
@@ -906,6 +1011,7 @@ class Library extends Base
     {
         $parsedBody = $this->getSanitizer($request->getParams());
         $options = $parsedBody->getArray('options', ['default' => []]);
+        $oldFolderId = 1;
 
         $options = array_merge([
             'oldMediaId' => null,
@@ -916,39 +1022,44 @@ class Library extends Base
 
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
-        if ($parsedBody->getDate('expires') != null ) {
+        // Handle any expiry date provided.
+        // this can come from the API via `expires` or via a widgetToDt
+        $expires = $parsedBody->getDate('expires');
+        $widgetFromDt = $parsedBody->getDate('widgetFromDt');
+        $widgetToDt = $parsedBody->getDate('widgetToDt');
 
-            if ($parsedBody->getDate('expires')->format('U') > Carbon::now()->format('U')) {
-                $expires = $parsedBody->getDate('expires')->format('U');
-            } else {
-                throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
-            }
-        } else {
-            $expires = 0;
+        // If applyToMedia has been selected, and we have a widgetToDt, then use that as our expiry
+        if ($widgetToDt !== null && $parsedBody->getCheckbox('applyToMedia', ['checkboxReturnInteger' => false])) {
+            $expires = $widgetToDt;
+        }
+
+        // Validate that this date is in the future.
+        if ($expires !== null && $expires->isBefore(Carbon::now())) {
+            throw new InvalidArgumentException(__('Cannot set Expiry date in the past'), 'expires');
         }
 
         // Make sure the library exists
         self::ensureLibraryExists($libraryFolder);
 
         // Get Valid Extensions
-        if ($parsedBody->getInt('oldMediaId') !== null) {
-            $media = $this->mediaFactory->getById($parsedBody->getInt('oldMediaId'));
-            $validExt = $this->moduleFactory->getValidExtensions(['type' => $media->mediaType]);
-        }
-        else {
+        if ($parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]) !== null) {
+            $media = $this->mediaFactory->getById($parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]));
+            $oldFolderId = $media->folderId;
+            $validExt = $this->moduleFactory->getValidExtensions(['type' => $media->mediaType, 'allowMediaTypeChange' => $options['allowMediaTypeChange']]);
+        } else {
             $validExt = $this->moduleFactory->getValidExtensions();
         }
 
         // Make sure there is room in the library
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
-        $options = array(
+        $options = [
             'userId' => $this->getUser()->userId,
             'controller' => $this,
             'oldMediaId' => $parsedBody->getInt('oldMediaId', ['default' => $options['oldMediaId']]),
             'widgetId' => $parsedBody->getInt('widgetId'),
-            'updateInLayouts' => $parsedBody->getCheckbox('updateInLayouts'),
-            'deleteOldRevisions' => $parsedBody->getCheckbox('deleteOldRevisions'),
+            'updateInLayouts' => $parsedBody->getCheckbox('updateInLayouts', ['default' => $options['updateInLayouts']]),
+            'deleteOldRevisions' => $parsedBody->getCheckbox('deleteOldRevisions', ['default' => $options['deleteOldRevisions']]),
             'allowMediaTypeChange' => $options['allowMediaTypeChange'],
             'displayOrder' => $parsedBody->getInt('displayOrder'),
             'playlistId' => $parsedBody->getInt('playlistId'),
@@ -956,17 +1067,22 @@ class Library extends Base
             'download_via_php' => true,
             'script_url' => $this->urlFor($request,'library.add'),
             'upload_url' => $this->urlFor($request,'library.add'),
-            'image_versions' => array(),
+            'image_versions' => [],
             'accept_file_types' => '/\.' . implode('|', $validExt) . '$/i',
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->libraryUsage() > $libraryLimit),
-            'expires' => $expires
-        );
+            'expires' => $expires === null ? null : $expires->format('U'),
+            'widgetFromDt' => $widgetFromDt === null ? null : $widgetFromDt->format('U'),
+            'widgetToDt' => $widgetToDt === null ? null : $widgetToDt->format('U'),
+            'deleteOnExpiry' => $parsedBody->getCheckbox('deleteOnExpiry', ['checkboxReturnInteger' => true]),
+            'oldFolderId' => $parsedBody->getInt('folderId', ['default' => $oldFolderId]),
+            'routeParser' => RouteContext::fromRequest($request)->getRouteParser()
+        ];
 
         // Output handled by UploadHandler
         $this->setNoOutput(true);
 
-        $this->getLog()->debug('Hand off to Upload Handler with options: %s', json_encode($options));
+        $this->getLog()->debug('Hand off to Upload Handler with options: ' . json_encode($options));
 
         // Hand off to the Upload Handler provided by jquery-file-upload
         new XiboUploadHandler($options);
@@ -993,20 +1109,6 @@ class Library extends Base
             throw new AccessDeniedException();
         }
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $media->tags));
-        $arrayOfTagValues = array_filter(explode(',', $media->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL')) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
         $media->enableStat = ($media->enableStat == null) ? $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT') : $media->enableStat;
 
         $this->getState()->template = 'library-form-edit';
@@ -1014,7 +1116,7 @@ class Library extends Base
             'media' => $media,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit'),
-            'tags' => $tags,
+            'tags' => $this->tagFactory->getTagsWithValues($media),
             'expiryDate' => ($media->expires == 0 ) ? null : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat(), $media->expires)
         ]);
 
@@ -1079,6 +1181,13 @@ class Library extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this media should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1114,8 +1223,18 @@ class Library extends Base
         $media->name = $sanitizedParams->getString('name');
         $media->duration = $sanitizedParams->getInt('duration');
         $media->retired = $sanitizedParams->getCheckbox('retired');
-        $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
+
         $media->enableStat = $sanitizedParams->getString('enableStat');
+        $media->folderId = $sanitizedParams->getInt('folderId', ['default' => $media->folderId]);
+
+        if ($media->hasPropertyChanged('folderId')) {
+            $folder = $this->folderFactory->getById($media->folderId);
+            $media->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        }
 
         if ($sanitizedParams->getDate('expires') != null ) {
 
@@ -1142,7 +1261,7 @@ class Library extends Base
         // Are we a font
         if ($media->mediaType == 'font') {
             // We may have made changes and need to regenerate
-            $this->installFonts();
+            $this->installFonts(RouteContext::fromRequest($request)->getRouteParser());
         }
 
         // Return
@@ -1313,7 +1432,7 @@ class Library extends Base
     {
         $results = $this->store->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
 
-        return $this->getSanitizer($results)->getInt([0]['SumSize']);
+        return $this->getSanitizer($results[0])->getInt('SumSize');
     }
 
     /**
@@ -1438,7 +1557,7 @@ class Library extends Base
     public function fontCss(Request $request, Response $response)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false], $request);
+        $css = $this->installFonts(RouteContext::fromRequest($request)->getRouteParser(),['invalidateCache' => false]);
 
         // Work out the etag
         /** @var $httpCache HttpCacheProvider*/
@@ -1474,7 +1593,7 @@ class Library extends Base
     public function fontList(Request $request, Response $response)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false], $request);
+        $css = $this->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => false]);
 
         // Return
         $this->getState()->hydrate([
@@ -1486,7 +1605,7 @@ class Library extends Base
 
     /**
      * Get font CKEditor config
-     * @param Request|null $request
+     * @param \Slim\Interfaces\RouteParserInterface $routeParser
      * @return string
      * @throws ConfigurationException
      * @throws GeneralException
@@ -1494,10 +1613,10 @@ class Library extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function fontCKEditorConfig(Request $request = null)
+    public function fontCKEditorConfig($routeParser)
     {
         // Regenerate the CSS for fonts
-        $css = $this->installFonts(['invalidateCache' => false], $request);
+        $css = $this->installFonts($routeParser, ['invalidateCache' => false]);
 
         return $css['ckeditor'];
     }
@@ -1505,7 +1624,7 @@ class Library extends Base
     /**
      * Installs fonts
      * @param array $options
-     * @param Request|null $request
+     * @param \Slim\Interfaces\RouteParserInterface $routeParser
      * @return array
      * @throws ConfigurationException
      * @throws GeneralException
@@ -1513,7 +1632,7 @@ class Library extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
-    public function installFonts($options = [], Request $request = null)
+    public function installFonts($routeParser, $options = [])
     {
         $options = array_merge([
             'invalidateCache' => true
@@ -1582,8 +1701,7 @@ class Library extends Base
                     // Test to see if this user should have access to this font
                     if ($this->getUser()->checkViewable($font)) {
                         // Css for the local CMS contains the full download path to the font
-                        $url = $this->urlFor($request, 'library.download',
-                                ['type' => 'font', 'id' => $font->mediaId]) . '?download=1&downloadFromLibrary=1';
+                        $url = $routeParser->urlFor('library.download', ['type' => 'font', 'id' => $font->mediaId]);
                         $localCss .= str_replace('[url]', $url, str_replace('[family]', $familyName, $fontTemplate));
 
                         // CKEditor string
@@ -1713,6 +1831,7 @@ class Library extends Base
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);
             $entry->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+            $this->getLog()->audit('Media', $entry->mediaId, 'Removing Expired', ['mediaId' => $entry->mediaId, 'name' => $entry->name, 'expired' => Carbon::createFromTimestamp($entry->expires)->format(DateFormatHelper::getSystemFormat())]);
             $entry->delete();
         }
     }
@@ -1721,6 +1840,7 @@ class Library extends Base
      * @param Request $request
      * @param Response $response
      * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException
      * @throws GeneralException
@@ -1730,27 +1850,20 @@ class Library extends Base
      */
     public function mcaas(Request $request, Response $response, $id)
     {
-        // TODO MCAAS
         // This is only available through the API
         if (!$this->isApi($request)) {
             throw new AccessDeniedException(__('Route is available through the API'));
         }
 
-        // We need to get the access token we used to authorize this request.
-        // as we are API we can expect that in the $app.
-        /** @var $accessToken \League\OAuth2\Server\Entity\AccessTokenEntity */
-        $accessToken = $this->getApp()->server->getAccessToken();
-
-        // Call Add with the oldMediaId
-        $this->add([
+        $options = [
             'oldMediaId' => $id,
             'updateInLayouts' => 1,
             'deleteOldRevisions' => 1,
             'allowMediaTypeChange' => 1
-        ]);
+        ];
 
-        // Expire the token
-        $accessToken->expire();
+        // Call Add with the oldMediaId
+        return $this->add($request->withParsedBody(['options' => $options]), $response);
     }
 
     /**
@@ -1915,13 +2028,14 @@ class Library extends Base
     public function usageForm(Request $request, Response $response, $id)
     {
         $media = $this->mediaFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
         // Get a list of displays that this mediaId is used on
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $id], $request));
+        $displays = $this->displayFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['disableUserCheck' => 1, 'mediaId' => $id], $sanitizedParams));
 
         $this->getState()->template = 'library-form-usage';
         $this->getState()->setData([
@@ -1971,7 +2085,7 @@ class Library extends Base
         }
 
         // Get a list of displays that this mediaId is used on by direct assignment
-        $displays = $this->displayFactory->query($this->gridRenderSort($request), $this->gridRenderFilter(['mediaId' => $id], $request));
+        $displays = $this->displayFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['mediaId' => $id], $sanitizedParams));
 
         // have we been provided with a date/time to restrict the scheduled events to?
         $mediaFromDate = $sanitizedParams->getDate('mediaEventFromDate');
@@ -2106,9 +2220,9 @@ class Library extends Base
                 // Preview
                 $layout->buttons[] = array(
                     'id' => 'layout_button_preview',
-                    'linkType' => '_blank',
                     'external' => true,
-                    'url' => $this->urlFor($request,'layout.preview', ['id' => $layout->layoutId]),
+                    'url' => '#',
+                    'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '");',
                     'text' => __('Preview Layout')
                 );
             }
@@ -2148,25 +2262,11 @@ class Library extends Base
             throw new AccessDeniedException();
         }
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $media->tags));
-        $arrayOfTagValues = array_filter(explode(',', $media->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
         $this->getState()->template = 'library-form-copy';
         $this->getState()->setData([
             'media' => $media,
             'help' => $this->getHelp()->link('Media', 'Copy'),
-            'tags' => $tags
+            'tags' => $this->tagFactory->getTagsWithValues($media)
         ]);
 
         return $this->render($request, $response);
@@ -2243,7 +2343,11 @@ class Library extends Base
 
         // Set new Name and tags
         $media->name = $sanitizedParams->getString('name');
-        $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $media->replaceTags($this->tagFactory->tagsFromString($sanitizedParams->getString('tags')));
+        }
+
         // Set the Owner to user making the Copy
         $media->setOwner($this->getUser()->userId);
 
@@ -2388,6 +2492,13 @@ class Library extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this media should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -2424,7 +2535,15 @@ class Library extends Base
         $optionalName = $sanitizedParams->getString('optionalName');
         $extension = $sanitizedParams->getString('extension');
         $enableStat = $sanitizedParams->getString('enableStat', ['default' => $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT')]);
-        
+        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($folderId);
+            $permissionsFolderId = ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
+        } else {
+            $permissionsFolderId = 1;
+        }
+
         if ($sanitizedParams->getDate('expires') != null ) {
 
             if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
@@ -2488,7 +2607,7 @@ class Library extends Base
         }
 
         // add our media to queueDownload and process the downloads
-        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), $expires, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat]);
+        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), $expires, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat, 'folderId' => $folderId, 'permissionsFolderId' => $permissionsFolderId]);
         $this->mediaFactory->processDownloads(function($media) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
@@ -2572,5 +2691,145 @@ class Library extends Base
         }
 
         return $extension;
+    }
+
+    /**
+     * This is called when video finishes uploading.
+     * Saves provided base64 image as an actual image to the library
+     *
+     * @param Request $request
+     * @param Response $response
+     *
+     * @return Response
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function addThumbnail($request, $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        $image = $request->getParam('image');
+        $mediaId = $sanitizedParams->getInt('mediaId');
+        $media = $this->mediaFactory->getById($mediaId);
+
+        if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
+            $image = substr($image, strpos($image, ',') + 1);
+            $type = strtolower($type[1]);
+
+            if (!in_array($type, [ 'jpg', 'jpeg', 'gif', 'png' ])) {
+                throw new InvalidArgumentException(__('Provided base64 encoded image has incorrect file extension.'));
+            }
+            $image = str_replace( ' ', '+', $image );
+            $image = base64_decode($image);
+
+            if ($image === false) {
+                throw new InvalidArgumentException(__("Image decoding failed."));
+            }
+        } else {
+            throw new InvalidArgumentException(__('Incorrect image data'));
+        }
+
+        file_put_contents($libraryLocation . "{$mediaId}_{$media->mediaType}cover.{$type}", $image);
+
+        return $response->withStatus(204);
+    }
+
+    /**
+     * Select Folder Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolderForm(Request $request, Response $response, $id)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($media)) {
+            throw new AccessDeniedException();
+        }
+
+        $data = [
+            'media' => $media
+        ];
+
+        $this->getState()->template = 'library-form-selectfolder';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Put(
+     *  path="/library/{id}/selectfolder",
+     *  operationId="librarySelectFolder",
+     *  tags={"library"},
+     *  summary="Media Select folder",
+     *  description="Select Folder for Media",
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     */
+    public function selectFolder(Request $request, Response $response, $id)
+    {
+        // Get the Media
+        $media = $this->mediaFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($media)) {
+            throw new AccessDeniedException();
+        }
+
+        $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        $media->folderId = $folderId;
+        $folder = $this->folderFactory->getById($media->folderId);
+        $media->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
+        $media->save(['saveTags' => false]);
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Media %s moved to Folder %s'), $media->name, $folder->text)
+        ]);
+
+        return $this->render($request, $response);
     }
 }

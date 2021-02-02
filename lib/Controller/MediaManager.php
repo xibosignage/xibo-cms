@@ -120,14 +120,14 @@ class MediaManager extends Base
 
         $rows = [];
 
-        $widgets = $this->widgetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $widgets = $this->widgetFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
             'layout' => $sanitizedQueryParams->getString('layout'),
             'region' => $sanitizedQueryParams->getString('region'),
             'media' => $sanitizedQueryParams->getString('media'),
             'type' => $sanitizedQueryParams->getString('type'),
             'playlist' => $sanitizedQueryParams->getString('playlist'),
             'showWidgetsFrom' => $sanitizedQueryParams->getInt('showWidgetsFrom')
-        ], $request));
+        ], $sanitizedQueryParams));
         $widgetsCount = $this->widgetFactory->countLast();
 
         foreach ($widgets as $widget) {
@@ -139,7 +139,10 @@ class MediaManager extends Base
             $module = $this->moduleFactory->createWithWidget($widget);
 
             // Get a list of Layouts that this playlist uses
-            $layouts = $this->layoutFactory->query(null, ['playlistId' => $widget->playlistId, 'showDrafts' => 1], $request);
+            $layouts = $this->layoutFactory->query(null, [
+                'playlistId' => $widget->playlistId,
+                'showDrafts' => 1
+            ]);
 
             $layoutNames = array_map(function($layout) {
                 return $layout->layout;
@@ -168,7 +171,9 @@ class MediaManager extends Base
             $row['buttons'] = [];
 
             // Check editable
-            if (!$this->getUser()->checkEditable($widget)) {
+            if (!$this->getUser()->featureEnabled('layout.modify')
+                && !$this->getUser()->checkEditable($widget)
+            ) {
                 $rows[] = $row;
                 continue;
             }
@@ -190,7 +195,7 @@ class MediaManager extends Base
                     ['name' => 'region-width', 'value' => $regionWidth],
                     ['name' => 'region-height', 'value' => $regionHeight]
                 ],
-                'url' => $this->urlFor($request,'module.widget.edit.form', ['id' => $widget->widgetId]),
+                'url' => $this->urlFor($request, 'module.widget.edit.form', ['id' => $widget->widgetId]),
                 'text' => __('Edit')
             ];
 

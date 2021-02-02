@@ -211,6 +211,9 @@ class Widget implements \JsonSerializable
      */
     public $isNew = false;
 
+    public $folderId;
+    public $permissionsFolderId;
+
     /** @var int[] Original Module Media Ids */
     private $originalModuleMediaIds = [];
 
@@ -225,6 +228,8 @@ class Widget implements \JsonSerializable
      * @var int
      */
     public static $widgetMinDuration = 1;
+
+    private $datesToFormat = ['toDt', 'fromDt'];
 
     //<editor-fold desc="Factories and Dependencies">
 
@@ -311,6 +316,11 @@ class Widget implements \JsonSerializable
     public function __toString()
     {
         return sprintf('Widget. %s on playlist %d in position %d. WidgetId = %d', $this->type, $this->playlistId, $this->displayOrder, $this->widgetId);
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -837,9 +847,9 @@ class Widget implements \JsonSerializable
                     $changedProperties['campaignId'][] = $campaignId;
                     $changedProperties['layoutId'][] = $layoutId;
                 }
-            }
 
-            $this->audit($this->widgetId, 'Saved', $changedProperties);
+                $this->audit($this->widgetId, 'Saved', $changedProperties);
+            }
         }
     }
 

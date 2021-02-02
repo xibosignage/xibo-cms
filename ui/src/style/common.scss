@@ -6,16 +6,8 @@ $fa-font-path: "~font-awesome/fonts";
 @import "~@fortawesome/fontawesome-free/scss/fontawesome";
 
 // CSS
-/* Properties Panel */
-.form-content-title {
-    margin: -5px 0 10px 0;
-    padding: 0;
-    border-bottom: 1px solid #e5e5e5;
-}
-
 /* Form Editor Controls */
 .form-editor-controls {
-    display: none;
     padding: 5px 10px;
     background: $form-editor-controls-bg-color;
     color: $form-editor-controls-fg-color;
@@ -135,7 +127,7 @@ $fa-font-path: "~font-awesome/fonts";
 
 .loading-overlay.loading .loading-icon {
     display: block;
-    font-size: 60px;
+    font-size: 4.3rem;
     position: absolute;
     left: 20px;
     bottom: 20px;
@@ -340,7 +332,7 @@ $fa-font-path: "~font-awesome/fonts";
 
 .context-menu .context-menu-btn {
     display: inline-block;
-    font-size: 18px;
+    font-size: 1.25rem;
     color: $context-menu-btn-color;
     cursor: pointer;
 }

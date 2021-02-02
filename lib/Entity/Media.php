@@ -202,6 +202,7 @@ class Media implements \JsonSerializable
     // Private
     private $unassignTags = [];
     private $requestOptions = [];
+    private $datesToFormat = ['expires'];
     // New file revision
     public $isSaveRequired;
     public $isRemote;
@@ -209,6 +210,18 @@ class Media implements \JsonSerializable
     public $cloned = false;
     public $newExpiry;
     public $alwaysCopy = false;
+
+    /**
+     * @SWG\Property(description="The id of the Folder this Media belongs to")
+     * @var int
+     */
+    public $folderId;
+
+    /**
+     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Media")
+     * @var int
+     */
+    public $permissionsFolderId;
 
     private $widgets = [];
     private $displayGroups = [];
@@ -335,6 +348,11 @@ class Media implements \JsonSerializable
         return $this->mediaId;
     }
 
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
+    }
+
     /**
      * Get Owner Id
      * @return int
@@ -389,6 +407,12 @@ class Media implements \JsonSerializable
 
             if (!in_array($tag, $this->tags)) {
                 $this->tags[] = $tag;
+            } else {
+                foreach ($this->tags as $currentTag) {
+                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
+                        $this->tags[] = $tag;
+                    }
+                }
             }
         } else {
             $this->getLog()->debug('No Tags to assign');
@@ -407,13 +431,12 @@ class Media implements \JsonSerializable
     {
         $this->load();
 
-        $this->tags = array_udiff($this->tags, [$tag], function ($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
-
-        $this->unassignTags[] = $tag;
+        foreach ($this->tags as $key => $currentTag) {
+            if ($currentTag->tagId === $tag->tagId && $currentTag->value === $tag->value) {
+                $this->unassignTags[] = $tag;
+                array_splice($this->tags, $key, 1);
+            }
+        }
 
         $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
 
@@ -551,6 +574,8 @@ class Media implements \JsonSerializable
 
             // Always set force to true as we always want to save new files
             $this->isSaveRequired = true;
+
+            $this->audit($this->mediaId, 'Added', ['mediaId' => $this->mediaId, 'name' => $this->name, 'mediaType' => $this->mediaType, 'fileName' => $this->fileName, 'folderId' => $this->folderId]);
         }
         else {
             $this->edit();
@@ -558,6 +583,7 @@ class Media implements \JsonSerializable
             // If the media file is invalid, then force an update (only applies to module files)
             $expires = $this->getOriginalValue('expires');
             $this->isSaveRequired = ($this->isSaveRequired || $this->valid == 0 || ($expires > 0 && $expires < Carbon::now()->format('U')));
+            $this->audit($this->mediaId, 'Updated', $this->getChangedProperties());
         }
 
         if ($options['deferred']) {
@@ -571,20 +597,20 @@ class Media implements \JsonSerializable
         }
 
         if ($options['saveTags']) {
-            // Save the tags
-            if (is_array($this->tags)) {
-                foreach ($this->tags as $tag) {
-                    /* @var Tag $tag */
-                    $tag->assignMedia($this->mediaId);
-                    $tag->save();
-                }
-            }
-
             // Remove unwanted ones
             if (is_array($this->unassignTags)) {
                 foreach ($this->unassignTags as $tag) {
                     /* @var Tag $tag */
                     $tag->unassignMedia($this->mediaId);
+                    $tag->save();
+                }
+            }
+
+            // Save the tags
+            if (is_array($this->tags)) {
+                foreach ($this->tags as $tag) {
+                    /* @var Tag $tag */
+                    $tag->assignMedia($this->mediaId);
                     $tag->save();
                 }
             }
@@ -716,7 +742,7 @@ class Media implements \JsonSerializable
             }
         }
 
-        $this->audit($this->mediaId, 'Deleted');
+        $this->audit($this->mediaId, 'Deleted', ['mediaId' => $this->mediaId, 'name' => $this->name, 'mediaType' => $this->mediaType, 'fileName' => $this->fileName]);
     }
 
     /**
@@ -725,8 +751,8 @@ class Media implements \JsonSerializable
     private function add()
     {
         $this->mediaId = $this->getStore()->insert('
-            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat)
+            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`, `permissionsFolderId`)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat, :folderId, :permissionsFolderId)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
@@ -740,7 +766,9 @@ class Media implements \JsonSerializable
             'valid' => 0,
             'createdDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
         ]);
 
     }
@@ -763,7 +791,9 @@ class Media implements \JsonSerializable
                 apiRef = :apiRef,
                 modifiedDt = :modifiedDt,
                 `enableStat` = :enableStat,
-                expires = :expires
+                expires = :expires,
+                folderId = :folderId,
+                permissionsFolderId = :permissionsFolderId
            WHERE mediaId = :mediaId
         ';
 
@@ -780,7 +810,9 @@ class Media implements \JsonSerializable
             'mediaId' => $this->mediaId,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'enableStat' => $this->enableStat,
-            'expires' => $this->expires
+            'expires' => $this->expires,
+            'folderId' => $this->folderId,
+            'permissionsFolderId' => $this->permissionsFolderId
         ];
 
         $this->getStore()->update($sql, $params);
@@ -973,11 +1005,22 @@ class Media implements \JsonSerializable
 
         // 3 things to check for..
         // the actual file, the thumbnail, the background
-        if (file_exists($libraryLocation . $this->storedAs))
+        // video cover image and its thumbnail
+        if (file_exists($libraryLocation . $this->storedAs)) {
             unlink($libraryLocation . $this->storedAs);
+        }
 
-        if (file_exists($libraryLocation . 'tn_' . $this->storedAs))
+        if (file_exists($libraryLocation . 'tn_' . $this->storedAs)) {
             unlink($libraryLocation . 'tn_' . $this->storedAs);
+        }
+
+        if (file_exists($libraryLocation . 'tn_' . $this->mediaId . '_videocover.png')) {
+            unlink($libraryLocation . 'tn_' . $this->mediaId . '_videocover.png');
+        }
+
+        if (file_exists($libraryLocation . $this->mediaId . '_videocover.png')) {
+            unlink($libraryLocation . $this->mediaId . '_videocover.png');
+        }
     }
 
     /**

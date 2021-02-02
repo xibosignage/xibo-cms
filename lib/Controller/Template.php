@@ -31,6 +31,8 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Template
@@ -49,6 +51,11 @@ class Template extends Base
     private $tagFactory;
 
     /**
+     * @var \Xibo\Factory\ResolutionFactory
+     */
+    private $resolutionFactory;
+
+    /**
      * Set common dependencies.
      * @param LogServiceInterface $log
      * @param SanitizerService $sanitizerService
@@ -59,13 +66,15 @@ class Template extends Base
      * @param LayoutFactory $layoutFactory
      * @param TagFactory $tagFactory
      * @param Twig $view
+     * @param \Xibo\Factory\ResolutionFactory $resolutionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, $tagFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, $tagFactory, Twig $view, $resolutionFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->layoutFactory = $layoutFactory;
         $this->tagFactory = $tagFactory;
+        $this->resolutionFactory = $resolutionFactory;
     }
 
     /**
@@ -115,12 +124,13 @@ class Template extends Base
         // Embed?
         $embed = ($sanitizedQueryParams->getString('embed') != null) ? explode(',', $sanitizedQueryParams->getString('embed')) : [];
 
-        $templates = $this->layoutFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([
+        $templates = $this->layoutFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter([
             'excludeTemplates' => 0,
             'tags' => $sanitizedQueryParams->getString('tags'),
             'layoutId' => $sanitizedQueryParams->getInt('templateId'),
-            'layout' => $sanitizedQueryParams->getString('template')
-        ], $request), $request);
+            'layout' => $sanitizedQueryParams->getString('template'),
+            'folderId' => $sanitizedQueryParams->getInt('folderId')
+        ], $sanitizedQueryParams));
 
         foreach ($templates as $template) {
             /* @var \Xibo\Entity\Layout $template */
@@ -150,8 +160,9 @@ class Template extends Base
             // Parse down for description
             $template->descriptionWithMarkup = \Parsedown::instance()->text($template->description);
 
-            if ($this->getUser()->checkEditable($template)) {
-
+            if ($this->getUser()->featureEnabled('template.modify')
+                && $this->getUser()->checkEditable($template)
+            ) {
                 // Design Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_design',
@@ -176,44 +187,62 @@ class Template extends Base
             }
 
             // Extra buttons if have delete permissions
-            if ($this->getUser()->checkDeleteable($template)) {
+            if ($this->getUser()->featureEnabled('template.modify')
+                && $this->getUser()->checkDeleteable($template)) {
                 // Delete Button
-                $template->buttons[] = array(
+                $template->buttons[] = [
                     'id' => 'layout_button_delete',
                     'url' => $this->urlFor($request,'layout.delete.form', ['id' => $template->layoutId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $template->layoutId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'layout_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $template->layout)
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $template->layoutId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'layout_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $template->layout]
+                    ]
+                ];
             }
 
             $template->buttons[] = ['divider' => true];
 
             // Extra buttons if we have modify permissions
-            if ($this->getUser()->checkPermissionsModifyable($template)) {
+            if ($this->getUser()->featureEnabled('template.modify')
+                && $this->getUser()->checkPermissionsModifyable($template)) {
                 // Permissions button
-                $template->buttons[] = array(
+                $template->buttons[] = [
                     'id' => 'layout_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $template->campaignId]),
-                    'text' => __('Permissions')
-                );
+                    'text' => __('Share'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $template->campaignId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'layout_button_permissions'],
+                        ['name' => 'text', 'value' => __('Share')],
+                        ['name' => 'rowtitle', 'value' => $template->layout],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])],
+                        ['name' => 'content-id-name', 'value' => 'campaignId']
+                    ]
+                ];
             }
 
-            $template->buttons[] = ['divider' => true];
+            if ($this->getUser()->featureEnabled('layout.export')) {
+                $template->buttons[] = ['divider' => true];
 
-            // Export Button
-            $template->buttons[] = array(
-                'id' => 'layout_button_export',
-                'linkType' => '_self', 'external' => true,
-                'url' => $this->urlFor($request,'layout.export', ['id' => $template->layoutId]),
-                'text' => __('Export')
-            );
+                // Export Button
+                $template->buttons[] = array(
+                    'id' => 'layout_button_export',
+                    'linkType' => '_self',
+                    'external' => true,
+                    'url' => $this->urlFor($request, 'layout.export', ['id' => $template->layoutId]),
+                    'text' => __('Export')
+                );
+            }
         }
 
         $this->getState()->template = 'grid';
@@ -239,20 +268,6 @@ class Template extends Base
         // Get the layout
         $layout = $this->layoutFactory->getById($id);
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $layout->tags));
-        $arrayOfTagValues = array_filter(explode(',', $layout->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL')) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
         // Check Permissions
         if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException(__('You do not have permissions to view this layout'));
@@ -261,8 +276,116 @@ class Template extends Base
         $this->getState()->template = 'template-form-add-from-layout';
         $this->getState()->setData([
             'layout' => $layout,
-            'tags' => $tags,
+            'tags' => $this->tagFactory->getTagsWithValues($layout),
             'help' => $this->getHelp()->link('Template', 'Add')
+        ]);
+
+        return $this->render($request, $response);
+    }
+    /**
+     * Add a Template
+     * @SWG\Post(
+     *  path="/template",
+     *  operationId="templateAdd",
+     *  tags={"template"},
+     *  summary="Add a Template",
+     *  description="Add a new Template to the CMS",
+     *  @SWG\Parameter(
+     *      name="name",
+     *      in="formData",
+     *      description="The layout name",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="description",
+     *      in="formData",
+     *      description="The layout description",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="resolutionId",
+     *      in="formData",
+     *      description="If a Template is not provided, provide the resolutionId for this Layout.",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="returnDraft",
+     *      in="formData",
+     *      description="Should we return the Draft Layout or the Published Layout on Success?",
+     *      type="boolean",
+     *      required=false
+     *  ),
+     *  @SWG\Response(
+     *      response=201,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Layout"),
+     *      @SWG\Header(
+     *          header="Location",
+     *          description="Location of the new record",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    function add(Request $request, Response $response)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        $name = $sanitizedParams->getString('name');
+        $description = $sanitizedParams->getString('description');
+        $resolutionId = $sanitizedParams->getInt('resolutionId');
+        $enableStat = $sanitizedParams->getCheckbox('enableStat');
+        $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
+        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+
+        // Tags
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        } else {
+            $tags = [];
+        }
+        $tags[] = $this->tagFactory->getByTag('template');
+
+        $layout = $this->layoutFactory->createFromResolution($resolutionId,
+            $this->getUser()->userId,
+            $name,
+            $description,
+            $tags,
+            null
+        );
+
+        // Set layout enableStat flag
+        $layout->enableStat = $enableStat;
+
+        // Set auto apply transitions flag
+        $layout->autoApplyTransitions = $autoApplyTransitions;
+
+        // Set folderId
+        $layout->folderId = $folderId;
+
+        // Save
+        $layout->save();
+
+        // Automatically checkout the new layout for edit
+        $layout = $this->layoutFactory->checkoutLayout($layout, $sanitizedParams->getCheckbox('returnDraft'));
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 201,
+            'message' => sprintf(__('Added %s'), $layout->layout),
+            'id' => $layout->layoutId,
+            'data' => $layout
         ]);
 
         return $this->render($request, $response);
@@ -331,7 +454,7 @@ class Template extends Base
      *  )
      * )
      */
-    function add(Request $request, Response $response, $id)
+    function addFromLayout(Request $request, Response $response, $id)
     {
         // Get the layout
         $layout = $this->layoutFactory->getById($id);
@@ -359,9 +482,15 @@ class Template extends Base
         $layout = clone $layout;
 
         $layout->layout = $sanitizedParams->getString('name');
-        $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $layout->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
+        } else {
+            $layout->tags = [];
+        }
         $layout->tags[] = $this->tagFactory->getByTag('template');
+
         $layout->description = $sanitizedParams->getString('description');
+        $layout->folderId = $sanitizedParams->getInt('folderId');
         $layout->setOwner($this->getUser()->userId, true);
         $layout->save();
 
@@ -382,6 +511,25 @@ class Template extends Base
             'message' => sprintf(__('Saved %s'), $layout->layout),
             'id' => $layout->layoutId,
             'data' => $layout
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Displays an Add/Edit form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    function addForm(Request $request, Response $response)
+    {
+        $this->getState()->template = 'template-form-add';
+        $this->getState()->setData([
+            'resolutions' => $this->resolutionFactory->query(['resolution']),
+            'help' => $this->getHelp()->link('Layout', 'Add')
         ]);
 
         return $this->render($request, $response);

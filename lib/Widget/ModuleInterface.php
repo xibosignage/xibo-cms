@@ -202,4 +202,10 @@ interface ModuleInterface
      * @return string
      */
     public function getStatusMessage();
+
+    /**
+     * Check if this Module has a thumbnail
+     * @return bool
+     */
+    public function hasThumbnail();
 }

@@ -27,6 +27,10 @@ var VERSION = "1.8.3";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
+
+/* Global preview object ( Layout ) */
+var previewLayout;
+
 function dsInit(layoutid, options, layoutPreview) {
     LOG_LEVEL = 10;
     /* Hide the info and log divs */
@@ -49,7 +53,7 @@ function dsInit(layoutid, options, layoutPreview) {
         }
     };
 
-    new Layout(layoutid, options, preload, layoutPreview);
+    previewLayout = new Layout(layoutid, options, preload, layoutPreview);
 }
 
 /* Generate a unique ID for region DIVs, media nodes etc */
@@ -217,14 +221,32 @@ function Layout(id, options, preload, layoutPreview) {
 
         // Set the background color
         layout.css("background-color", self.bgColour);
-        
-        $(self.layoutNode).find("region").each(function() {
-            playLog(4, "debug", "Creating region " + $(this).attr('id'), false);
 
-            self.regionObjects.push(new Region(self, $(this).attr('id'), this, options, preload));
+        // Create actions
+        var actions = [];
+        $($.parseXML(self.layoutNode)).find("action").each(function(key, element) {
+            playLog(4, "debug", "Creating action " + $(this).attr('id'), false);
+            actions.push(new Action($(this).attr('id'), this));
         });
 
+        // Create action controller
+        self.actionController = new ActionController(self, actions, options);
+
+        // Create drawer
+        $(self.layoutNode).find("drawer").each(function() {
+            playLog(4, "debug", "Creating drawer " + $(this).attr('id'), false);
+            self.drawer = this;
+        });
+
+        // Create regions
+        $(self.layoutNode).find("region").each(function() {
+            playLog(4, "debug", "Creating region " + $(this).attr('id'), false);
+            self.regionObjects.push(new Region(self, $(this).attr('id'), this, options, preload));
+        });
         playLog(4, "debug", "Layout " + self.id + " has " + self.regionObjects.length + " regions");
+
+        self.actionController.initTouchActions();
+
         self.ready = true;
         preload.addFiles(options.loaderUrl);
 
@@ -328,6 +350,7 @@ function Layout(id, options, preload, layoutPreview) {
     self.ready = false;
     self.id = id;
     self.regionObjects = [];
+    self.drawer = [];
     self.allExpired = false;
     
     playLog(3, "debug", "Loading Layout " + self.id , true);
@@ -344,6 +367,7 @@ function Region(parent, id, xml, options, preload) {
     self.id = id;
     self.xml = xml;
     self.mediaObjects = [];
+    self.mediaObjectsActions = [];
     self.currentMedia = -1;
     self.complete = false;
     self.containerName = "R-" + self.id + "-" + nextId();
@@ -354,8 +378,12 @@ function Region(parent, id, xml, options, preload) {
     self.curMedia = undefined;
     
     self.finished = function() {
+        // Remove temporary media elements
+        self.mediaObjects = self.mediaObjects.filter(function(media) { return !media.singlePlay; });
+
+        // Mark as complete
         self.complete = true;
-        self.layout.regionExpired()
+        self.layout.regionExpired();
     };
     
     self.exitTransition = function() {
@@ -393,14 +421,13 @@ function Region(parent, id, xml, options, preload) {
         }
         
         newMedia.run();
-        
+
         $("#" + newMedia.containerName).css("display", "block");
     };
     
     self.nextMedia = function() {
         /* The current media has finished running */
         /* Show the next item */
-        
         if (self.ended) {
             return;
         }
@@ -423,10 +450,35 @@ function Region(parent, id, xml, options, preload) {
         playLog(8, "debug", "nextMedia -> Next up is media " + (self.currentMedia + 1) + " of " + self.mediaObjects.length);
         
         self.curMedia = self.mediaObjects[self.currentMedia];
-        
+
         if (self.curMedia != undefined)
             playLog(8, "debug", "nextMedia -> New: " + self.curMedia.id);
         
+        /* Do the transition */
+        self.transitionNodes(self.oldMedia, self.curMedia);
+    };
+
+    self.previousMedia = function() {
+        self.currentMedia = self.currentMedia - 1;
+
+        if(self.currentMedia < 0 || self.ended) {
+            self.currentMedia = 0;
+            return;
+        }
+
+        if (self.curMedia) {
+            playLog(8, "debug", "previousMedia -> Old: " + self.curMedia.id);
+            self.oldMedia = self.curMedia;
+        }
+        else {
+            self.oldMedia = undefined;
+        }
+
+        self.curMedia = self.mediaObjects[self.currentMedia];
+
+        if (self.curMedia != undefined)
+            playLog(8, "debug", "previousMedia -> New: " + self.curMedia.id);
+
         /* Do the transition */
         self.transitionNodes(self.oldMedia, self.curMedia);
     };
@@ -465,8 +517,22 @@ function Region(parent, id, xml, options, preload) {
     
     $(self.xml).find("media").each(function() { 
         playLog(5, "debug", "Creating media " + $(this).attr('id'), false);
-                                                self.mediaObjects.push(new media(self, $(this).attr('id'), this, options, preload));
-                                              });
+        self.mediaObjects.push(new media(self, $(this).attr('id'), this, options, preload));
+    });
+
+    // Add media to region for targetted actions
+    for (var index = 0; index < self.layout.actionController.actions.length; index++) {
+        var action = self.layout.actionController.actions[index];
+        //Get action from drawer
+        var attributes = $(action.xml).prop('attributes');
+
+        if(attributes.target.value == 'region' && attributes.actionType.value == 'navWidget' && attributes.targetId.value == self.id) {
+            var drawerMedia = $(self.layout.drawer).find('media#' + attributes.widgetId.value)[0];
+
+            // Add drawer media to the region
+            self.mediaObjectsActions.push(new media(self, $(drawerMedia).attr('id'), drawerMedia, options, preload));
+        }
+    }
     
     // If the regions does not have any media change its background to transparent red
     if ($(self.xml).find("media").length == 0) {
@@ -479,7 +545,7 @@ function Region(parent, id, xml, options, preload) {
         
         $message = $("#empty_" + self.containerName);
         $message.append('<span class="empty-icon fa fa-exclamation-triangle" style="font-size:' + messageSize/4 + 'px"></span>');
-        $message.append('<span class="empty-icon">' + emptyRegionMessage + '</span>');
+        $message.append('<span class="empty-icon">' + previewTranslations.emptyRegionMessage + '</span>');
     }     
                                               
     playLog(4, "debug", "Region " + self.id + " has " + self.mediaObjects.length + " media items");
@@ -487,6 +553,7 @@ function Region(parent, id, xml, options, preload) {
 
 function media(parent, id, xml, options, preload) {
     var self = this;
+
     self.region = parent;
     self.xml = xml;
     self.id = id;
@@ -495,6 +562,8 @@ function media(parent, id, xml, options, preload) {
     self.mediaType = $(self.xml).attr('type');
     self.render = $(self.xml).attr('render');
     self.attachedAudio = false;
+    self.singlePlay = false;
+    self.timeoutId = undefined;
 
     if (self.render == undefined)
         self.render = "module";
@@ -531,16 +600,19 @@ function media(parent, id, xml, options, preload) {
             }
             else {
                 self.duration = 3;
-                setTimeout(self.region.nextMedia, self.duration * 1000);
+                self.timeoutId = setTimeout(self.region.nextMedia, self.duration * 1000);
             }
         }
         else {
-            setTimeout(self.region.nextMedia, self.duration * 1000);
+            self.timeoutId = setTimeout(self.region.nextMedia, self.duration * 1000);
         }
     };
     
     self.stop = function() {
         playLog(5, "debug", "Stop media " + self.id);
+
+        // Clear timeout
+        clearTimeout(self.timeoutId);
 
         // Hide container
         $("#" + self.containerName).css("display", "none");
@@ -604,7 +676,7 @@ function media(parent, id, xml, options, preload) {
         media.css("z-index", self.region.layout.regionMaxZIndex + 1);
     }
 
-    var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=true&raw=true&scale_override=' + self.region.layout.scaleFactor;
+    var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=1&layoutPreview=1&scale_override=' + self.region.layout.scaleFactor;
     
     if (self.render == "html" || self.mediaType == "ticker") {
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
@@ -693,6 +765,242 @@ function media(parent, id, xml, options, preload) {
         self.attachedAudio = true;
     }
     
-    playLog(5, "debug", "Created media " + self.id)
+    playLog(5, "debug", "Created media " + self.id);
 }
 
+function Action(id, xml) {
+    var self = this;
+
+    self.id = id;
+    self.xml = xml;
+}
+
+function ActionController(parent, actions, options) {
+    var self = this;
+    self.parent = parent;
+    self.actions = [];
+
+    $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
+    $container.append($('<div class="action-controller-title"><span class="title">' + previewTranslations.actionControllerTitle.toUpperCase() + '</span><button class="toggle"></button></div>'));
+
+    for (var index = 0; index < actions.length; index++) {
+        var newAction = actions[index];
+
+        // Add action to the controller
+        self.actions.push(newAction);
+
+        // Create new action object
+        var $newActionHTML = $('<div>');
+
+        // Copy element attributes
+        var attributes = $(newAction.xml).prop('attributes');
+
+        $.each(attributes, function() {
+            $newActionHTML.data(this.name, this.value);
+            $newActionHTML.attr(this.name, this.value);
+        });
+
+        // Append new action to the controller
+        $newActionHTML.html('<span class="action-row-title">' + $newActionHTML.attr('actiontype') + '</span>' + (($newActionHTML.attr('triggertype') != 'webhook') ? ($newActionHTML.attr('source') + '(' + $newActionHTML.attr('sourceid') + ') > ') : '') + $newActionHTML.attr('target') + '(' + $newActionHTML.attr('targetid') + $newActionHTML.attr('layoutcode') + ')');
+        $newActionHTML.addClass('action', newAction.id);
+        $newActionHTML.attr('originalId', newAction.id);
+        $newActionHTML.attr('id', 'A-' + newAction.id + '-' + nextId());
+        $newActionHTML.appendTo($container);
+    }
+
+    // Enable dragging
+    $container.draggable({
+        handle: '.action-controller-title',
+        scroll: false,
+        cursor: 'dragging',
+        containment: "parent"
+    });
+
+    // Toggle actions visibility
+    $container.find('.toggle').click(function() {
+        $container.toggleClass('d-none');
+    });
+
+    // Display according to the number of clickable actions
+    $container.toggle($container.find('.action[triggerType="webhook"]').length > 0);
+
+    // Actions
+    /** Open a layout preview in a new tab */
+    var openLayoutInNewTab = function(layoutCode) {
+        if(confirm(previewTranslations.navigateToLayout.replace('[layoutTag]', layoutCode))) {
+            var url = options.layoutPreviewUrl.replace('[layoutCode]', layoutCode) + '?findByCode=1';
+            window.open(url, '_blank');
+        }
+    };
+
+    /** Change media in region (next/previous) */
+    var nextMediaInRegion = function(regionId, actionType) {
+        // Find target region
+        for (var index = 0; index < self.parent.regionObjects.length; index++) {
+            var region = self.parent.regionObjects[index];
+            if(region.id == regionId){
+                if(actionType == 'next') {
+                    region.nextMedia();
+                } else {
+                    region.previousMedia();
+                }
+            }
+        }
+    };
+
+    /** Load media from drawer in a specific region  */
+    var loadMediaInRegion = function(regionId, widgetId) {
+        // Find target region
+        var targetRegion;
+        var index = 0;
+        for (index = 0; index < self.parent.regionObjects.length; index++) {
+            var regionEl = self.parent.regionObjects[index];
+            if(regionEl.id == regionId){
+                targetRegion = regionEl;
+            }
+        }
+
+        // Find media in actions
+        var targetMedia;
+        for (index = 0; index < targetRegion.mediaObjectsActions.length; index++) {
+            var media = targetRegion.mediaObjectsActions[index];
+
+            if(media.id == widgetId) {
+                targetMedia = media;
+            }
+        }
+
+        // Mark media as temporary ( removed after region stop playing or loops )
+        targetMedia.singlePlay = true;
+        
+        // Create media in region and play it next
+        targetRegion.mediaObjects.splice(targetRegion.currentMedia + 1, 0, targetMedia);
+        targetRegion.nextMedia();
+    };
+
+    /** Run action based on action data */
+    var runAction = function(actionData) {
+        if(actionData.actionType == 'navLayout') {
+            // Open layout preview in a new tab
+            openLayoutInNewTab(actionData.layoutCode);
+        } else if((actionData.actionType == 'previous' || actionData.actionType == 'next') && actionData.target == 'region') {
+            nextMediaInRegion(actionData.targetId, actionData.actionType);
+        } else if(actionData.actionType == 'navWidget' && actionData.target == 'region') {
+            loadMediaInRegion(actionData.targetId, actionData.widgetId);
+        } else {
+            // TODO Handle other action types ( later? )
+            console.log(actionData.actionType + ' > ' + actionData.target + '[' + actionData.targetId + ']');
+        }
+    };
+
+    // Handle webhook action trigger click
+    $container.find('.action[triggerType="webhook"]').click(function(event) {
+        event.stopPropagation();
+        runAction($(this).data());
+    }).addClass('clickable');
+
+    // Create/handle layout object user interactions
+    self.initTouchActions = function() {
+        $container.find('.action[triggerType="touch"]').each(function() {
+            var data = $(this).data();
+
+            // Find source object
+            var $sourceObj;
+
+            if(data.source == 'layout') {
+                $sourceObj = $('#' + self.parent.containerName);
+            } else {
+                for (var index = 0; index < self.parent.regionObjects.length; index++) {
+                    var region = self.parent.regionObjects[index];
+                    if(data.source == 'region') {
+                        // Try to find region
+                        if(region.id == data.sourceId) {
+                            $sourceObj = $('#' + region.containerName);
+                            break;
+                        }
+                    } else if(data.source == 'widget'){
+                        // Try to find widget/media
+                        for (var index2 = 0; index2 < region.mediaObjects.length; index2++) {
+                            var media = region.mediaObjects[index2];
+                            
+                            if(media.id == data.sourceId) {
+                                $sourceObj = $('#' + media.containerName);
+                                break;
+                            }
+                        }
+                    }
+    
+                    // Break loop if we already have a source object
+                    if($sourceObj != undefined) {
+                        break;
+                    }
+                }
+            }
+
+            // Handle source click
+            $sourceObj.click(function(event) {
+                event.stopPropagation();
+                runAction(data);
+            }).addClass('clickable');
+        });
+    };
+}
+
+/**
+ * 
+ * @param {string} path - request path
+ * @param {Object} [data] - optional data object
+ * @param {callback} [done] - done callback
+ */
+function previewActionTrigger(path, data, done) {
+    /**
+     * Find media by ID
+     * @param {string} id 
+     */
+    var findMediaById = function(id) {
+        var newMedia;
+
+        // Find media in all regions
+        main:
+        for (i = 0; i < previewLayout.regionObjects.length; i++) {
+            var region = previewLayout.regionObjects[i];
+            for (j = 0; j < region.mediaObjects.length; j++) {
+                var media = region.mediaObjects[j];
+                if(media.id == id) {
+                    newMedia = media;
+                    break main; // break to main loop
+                }
+            }
+        }
+
+        return newMedia;
+    };
+
+    // ACTIONS
+    if(path == '/duration/set') { 
+        // Set duration action
+        var mediaToChange = findMediaById(data.id);
+        
+        if(mediaToChange != undefined) {
+            // Change duration
+            mediaToChange.duration = data.duration;
+
+            // Update timeout
+            clearTimeout(mediaToChange.timeoutId);
+            mediaToChange.timeoutId = setTimeout(mediaToChange.region.nextMedia, mediaToChange.duration * 1000);
+        }
+    } else if(path == '/trigger') {
+        // trigger action
+        var $actionDOMObj = $('.action[triggercode=' + data.trigger + ']');
+
+        // If action object exists, click to simulate behaviour
+        if($actionDOMObj.length) {
+            $actionDOMObj.click();
+        }
+    }
+
+    // Call callback if exists
+    if(typeof done == 'function') {
+        done();
+    }
+}

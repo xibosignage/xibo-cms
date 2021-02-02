@@ -26,9 +26,11 @@
 {% block title %}{{ "Resolutions"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ url_for("resolution.add.form") }}"><span class="glyphicon glyphicon-plus-sign"></span> {% trans "Add Resolution" %}</a></li>
-    </ul>
+    {% if currentUser.featureEnabled("resolution.add") %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new resolution for use on layouts" %}" href="{{ url_for("resolution.add.form") }}"><span class="fa fa-plus"></span> {% trans "Add Resolution" %}</button>
+    </div>
+    {% endif %}
 {% endblock %}
 
 
@@ -37,8 +39,8 @@
         <div class="widget-title">{% trans "Resolution" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="resolutionView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "Enabled" %}{% endset %}
                             {% set option1 %}{% trans "Yes" %}{% endset %}
@@ -48,8 +50,8 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="resolutions" class="table table-striped">
+                <div class="XiboData card pt-3">
+                    <table id="resolutions" class="table table-striped" data-state-preference-name="resolutionGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
@@ -57,7 +59,7 @@
                                 <th>{% trans "Width" %}</th>
                                 <th>{% trans "Height" %}</th>
                                 <th>{% trans "Enabled?" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
+                                <th class="rowMenu"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -75,38 +77,12 @@
         $(document).ready(function() {
             var table = $("#resolutions").DataTable({
                 "language": dataTablesLanguage,
-                serverSide: true, stateSave: true, stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=resolutionGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "resolutionGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                serverSide: true,
+                stateSave: true,
+                responsive: true,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[1, "asc"]],
@@ -117,13 +93,14 @@
                     }
                 },
                 "columns": [
-                    {"data": "resolutionId"},
+                    {"data": "resolutionId", responsivePriority: 2},
                     {"data": "resolution"},
                     {"data": "width"},
                     {"data": "height"},
                     {"data": "enabled"},
                     {
                         "orderable": false,
+                        responsivePriority: 1,
                         "data": dataTableButtonsColumn
                     }
                 ]
@@ -131,7 +108,7 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#resolutions_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#resolutions_wrapper').find('.col-md-6').eq(1));
         });
     </script>
 {% endblock %}

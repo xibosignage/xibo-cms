@@ -41,14 +41,14 @@
     }
 
     .widget .widget-title {
-        font-size: 20px;
+        font-size: 1.4rem;
         color: #767676;
         background-color: #f6f6f6;
         text-align: center;
         line-height: 60px;
     }
 
-    .well {
+    .card.bg-light {
         border: 2px solid #e3e3e3;
     }
 

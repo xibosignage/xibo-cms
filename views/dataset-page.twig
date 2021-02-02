@@ -27,9 +27,11 @@
 {% block title %}{{ "DataSets"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ url_for("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</a></li>
-    </ul>
+    {% if currentUser.featureEnabled("dataset.add") %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton btns" title="{% trans "Add a new DataSet" %}" href="{{ url_for("dataSet.add.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add DataSet" %}</button>
+    </div>
+    {% endif %}
 {% endblock %}
 
 {% block pageContent %}
@@ -37,44 +39,74 @@
         <div class="widget-title">{% trans "DataSets" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline" onsubmit="return false">
-
-                            <div class="form-group ">
-                                <label class="control-label" title="" for="dataSet" accesskey="">{% trans "Name" %}</label>
+                            <div class="form-group mr-1 mb-1">
+                                <label class="control-label mr-1" title="" for="dataSet" accesskey="">{% trans "Name" %}</label>
                                 <div>
                                     <div class="input-group">
                                         <input class="form-control" name="dataSet" type="text" id="dataSet" value="">
-
-                                        <span class="input-group-addon">
-                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                        </span>
+                                        <div class="input-group-append input-group-addon">
+                                            <div class="input-group-text">
+                                                <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
+
+                            {% set title %}{% trans "Code" %}{% endset %}
+                            {% set helpText %}{% trans "Show items which match the provided code" %}{% endset %}
+                            {{ inline.input("code", title, "", helpText) }}
+
+                            {% set title %}{% trans "Owner" %}{% endset %}
+                            {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
+                            {{ inline.dropdown("userId", "single", title, "", [{userId:null, userName:""}]|merge(users), "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
+
+                            {{ inline.hidden("folderId") }}
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="datasets" class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>{% trans "ID" %}</th>
-                                <th>{% trans "Name" %}</th>
-                                <th>{% trans "Description" %}</th>
-                                <th>{% trans "Code" %}</th>
-                                <th>{% trans "Remote?" %}</th>
-                                <th>{% trans "Owner" %}</th>
-                                <th>{% trans "Permissions" %}</th>
-                                <th>{% trans "Last Sync" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div class="row">
+                    <div class="col-sm-1 form-group" style="padding: 0">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
+                    </div>
+                    <div class="form-group col-sm-11" style="padding: 0">
+                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
+                    </div>
+                </div>
 
-                        </tbody>
-                    </table>
+                <div class="row">
+                    <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
+                        </div>
+                        <div id="container-folder-tree"></div>
+                    </div>
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
+                        <div class="XiboData">
+                            <table id="datasets" class="table table-striped" data-state-preference-name="dataSetGrid" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Name" %}</th>
+                                        <th>{% trans "Description" %}</th>
+                                        <th>{% trans "Code" %}</th>
+                                        <th>{% trans "Remote?" %}</th>
+                                        <th>{% trans "Owner" %}</th>
+                                        <th>{% trans "Permissions" %}</th>
+                                        <th>{% trans "Last Sync" %}</th>
+                                        <th class="rowMenu"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -83,39 +115,18 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#datasets").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=dataSetGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "dataSetGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+        {% if not currentUser.featureEnabled("folder.view") %}
+        disableFolders();
+        {% endif %}
+
+        var table = $("#datasets").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            responsive: true,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
@@ -126,25 +137,29 @@
                 }
             },
             "columns": [
-                { "data": "dataSetId" },
-                { "data": "dataSet", "render": dataTableSpacingPreformatted },
-                { "data": "description" },
-                { "data": "code" },
+                { "data": "dataSetId", responsivePriority: 2 },
+                { "data": "dataSet", "render": dataTableSpacingPreformatted, responsivePriority: 2 },
+                { "data": "description", responsivePriority: 4 },
+                { "data": "code", responsivePriority: 3 },
                 {
                     "data": "isRemote",
+                    responsivePriority: 3,
                     "render": dataTableTickCrossColumn
                 },
-                { "data": "owner" },
+                { "data": "owner", responsivePriority: 3 },
                 {
                     "data": "groupsWithPermissions",
+                    responsivePriority: 3,
                     "render": dataTableCreatePermissions
                 },
                 {
                     "data": "lastSync",
+                    responsivePriority: 4,
                     "render": dataTableDateFromUnix
                 },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]
@@ -187,10 +202,11 @@
                         columns: columns
                     }),
                     title: "{% trans "CSV Import" %}",
+                    size: 'large',
                     buttons: {
                         main: {
                             label: "{% trans "Done" %}",
-                            className: "btn-primary",
+                            className: "btn-primary btn-bb-main",
                             callback: function() {
                                 table.ajax.reload();
                                 XiboDialogClose();
@@ -198,7 +214,7 @@
                         },
                         help: {
                             label: "{% trans "Help" %}",
-                            className: "default",
+                            className: "default btn-bb-help",
                             callback: function() {
                                 XiboHelpRender("{{ helpService.link("dataset") }}#Importing_from_CSV_file");
                             }
@@ -268,7 +284,7 @@
                     }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
                         // Get uploaded and downloaded files and toggle Done button
                         var filesToUploadCount = form.find('tr.template-upload').length;
-                        var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
+                        var $button = form.parents('.modal:first').find('button.btn-bb-main');
 
                         if(filesToUploadCount == 0) {
                             $button.removeAttr('disabled');
@@ -280,7 +296,7 @@
             });
         });
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-md-6').eq(1));
 
         function dataSetFormOpen(dialog) {
             // Bind the test button
@@ -320,9 +336,9 @@
             var $remoteTabs = $(dialog).find(".tabForRemoteDataSet");
 
             if (isRemote) {
-                $remoteTabs.removeClass("hidden");
+                $remoteTabs.removeClass("d-none");
             } else {
-                $remoteTabs.addClass("hidden");
+                $remoteTabs.addClass("d-none");
             }
         }
 
@@ -332,28 +348,28 @@
             var $authFieldPassword = $(dialog).find(".auth-field-password");
 
             if (authentication === "none") {
-                $authFieldUserName.addClass("hidden");
-                $authFieldPassword.addClass("hidden");
+                $authFieldUserName.addClass("d-none");
+                $authFieldPassword.addClass("d-none");
             } else if (authentication === "bearer") {
-                $authFieldUserName.addClass("hidden");
-                $authFieldPassword.removeClass("hidden");
+                $authFieldUserName.addClass("d-none");
+                $authFieldPassword.removeClass("d-none");
             } else {
-                $authFieldUserName.removeClass("hidden");
-                $authFieldPassword.removeClass("hidden");
+                $authFieldUserName.removeClass("d-none");
+                $authFieldPassword.removeClass("d-none");
             }
         }
 
         function onSourceFieldChanged(dialog) {
-            let sourceId = $(dialog).find('#sourceId').val();
-            let $jsonSource =  $(dialog).find(".json-source-field");
-            let $csvSource = $(dialog).find(".csv-source-field");
+            var sourceId = $(dialog).find('#sourceId').val();
+            var $jsonSource =  $(dialog).find(".json-source-field");
+            var $csvSource = $(dialog).find(".csv-source-field");
 
             if (sourceId == 1) {
-                $jsonSource.removeClass('hidden');
-                $csvSource.addClass('hidden');
+                $jsonSource.removeClass('d-none');
+                $csvSource.addClass('d-none');
             } else {
-                $jsonSource.addClass('hidden');
-                $csvSource.removeClass('hidden');
+                $jsonSource.addClass('d-none');
+                $csvSource.removeClass('d-none');
             }
         }
 
@@ -377,23 +393,23 @@
     <script type="text/x-handlebars-template" id="template-dataset-upload">
         <form class="form-horizontal" method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)csv/i">
             <div class="row fileupload-buttonbar">
-                <div class="well">
+                <div class="card p-3 mb-3 bg-light">
                     {{ upload.maxSizeMessage }} <br>
                     {{ upload.utf8Message }}
                 </div>
                 <div class="col-md-7">
                     <!-- The fileinput-button span is used to style the file input field as button -->
                     <span class="btn btn-success fileinput-button">
-                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
+                        <i class="fa fa-plus"></i>
                         <span>{{ trans.addFiles }}</span>
                         <input type="file" name="files">
                     </span>
                     <button type="submit" class="btn btn-primary start">
-                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                        <i class="fa fa-upload"></i>
                         <span>{{ trans.startUpload }}</span>
                     </button>
                     <button type="reset" class="btn btn-warning cancel">
-                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                        <i class="fa fa-ban"></i>
                         <span>{{ trans.cancelUpload }}</span>
                     </button>
                     <!-- The loading indicator is shown during file processing -->
@@ -429,7 +445,7 @@
 
         {% verbatim %}
                     {{#each columns}}
-                    <div class="form-group">
+                    <div class="form-group row">
                         <label class="col-sm-2 control-label" for="csvImport_{{dataSetColumnId}}">{{heading}}</label>
                         <div class="col-sm-10">
                             <input class="form-control" name="csvImport_{{dataSetColumnId}}" type="number" id="csvImport_{{dataSetColumnId}}" value="{{ index }}" />
@@ -447,7 +463,7 @@
     <!-- The template to display files available for upload -->
     <script id="template-dataset-upload" type="text/x-tmpl">
         {% for (var i=0, file; file=o.files[i]; i++) { %}
-            <tr class="template-upload fade">
+            <tr class="template-upload">
                 <td>
                     <span class="fileupload-preview"></span>
                 </td>
@@ -473,12 +489,12 @@
                 <td>
                     {% if (!o.files.error && !i && !o.options.autoUpload) { %}
                         <button class="btn btn-primary start">
-                            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
+                            <i class="fa fa-upload"></i>
                         </button>
                     {% } %}
                     {% if (!i) { %}
                         <button class="btn btn-warning cancel">
-                            <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
+                            <i class="fa fa-ban"></i>
                         </button>
                     {% } %}
                 </td>

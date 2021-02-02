@@ -848,7 +848,7 @@ abstract class ModuleWidget implements ModuleInterface
 
         $url = $this->urlFor('module.getResource', ['regionId' => $this->region->regionId, 'id' => $this->getWidgetId()]);
 
-        return '<iframe scrolling="no" src="' . $url . '?raw=true&preview=true" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
+        return '<iframe scrolling="no" src="' . $url . '?preview=1" width="' . $widthPx . '" height="' . $heightPx . '" style="border:0;"></iframe>';
     }
 
     /**
@@ -934,6 +934,7 @@ abstract class ModuleWidget implements ModuleInterface
         try {
             return $this->view->fetch($template . '.twig', $data);
         } catch (Error $exception) {
+            $this->getLog()->error($exception->getMessage());
             throw new ConfigurationException(__('Problem with template'));
         }
     }
@@ -991,7 +992,9 @@ abstract class ModuleWidget implements ModuleInterface
      */
     public function installFiles()
     {
-
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-interactive-control.min.js')->save();
     }
 
     /**
@@ -1701,7 +1704,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->data['styleSheet'] = '';
         $this->data['head'] = '';
         $this->data['body'] = '';
-        $this->data['controlMeta'] = '';
+        $this->data['controlMeta'] = [];
         $this->data['options'] = '{}';
         $this->data['items'] = '{}';
         return $this;
@@ -1743,6 +1746,13 @@ abstract class ModuleWidget implements ModuleInterface
     {
         $this->data['javaScript'] = '<script type="text/javascript">var options = ' . $this->data['options'] . '; var items = ' . $this->data['items'] . ';</script>' . PHP_EOL . $this->data['javaScript'];
 
+        // Parse control meta out into HTML comments
+        $controlMeta = '';
+        foreach ($this->data['controlMeta'] as $meta => $value) {
+            $controlMeta .= '<!-- ' . $meta . '=' . $value . ' -->' . PHP_EOL;
+        }
+        $this->data['controlMeta'] = $controlMeta;
+
         try {
             return $this->renderTemplate($this->data, $templateName);
         } catch (Error $e) {
@@ -1758,6 +1768,17 @@ abstract class ModuleWidget implements ModuleInterface
     protected function appendViewPortWidth($width)
     {
         $this->data['viewPortWidth'] = ($this->data['isPreview']) ? $width : '[[ViewPortWidth]]';
+        return $this;
+    }
+
+    /**
+     * @param $meta
+     * @param $value
+     * @return $this
+     */
+    protected function appendControlMeta($meta, $value)
+    {
+        $this->data['controlMeta'][$meta] = $value;
         return $this;
     }
 
@@ -1906,6 +1927,38 @@ abstract class ModuleWidget implements ModuleInterface
         }
 
         return $parsedContent;
+    }
+
+
+    /**
+     * Does this Widget has a thumbnail>
+     *
+     * @return bool
+     */
+    public function hasThumbnail()
+    {
+        return false;
+    }
+
+    /**
+     * Does this Widget has html editor available?
+     *
+     * @return bool
+     */
+    public function hasHtmlEditor()
+    {
+        return false;
+    }
+
+    /**
+     * This is called on Layout Import to find and replace Library references from text editor.
+     * For Widget with html editor, return an array of options that may contain Library references
+     *
+     * @return array
+     */
+    public function getHtmlWidgetOptions()
+    {
+        return [];
     }
 
     //</editor-fold>

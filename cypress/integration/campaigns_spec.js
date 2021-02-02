@@ -5,7 +5,7 @@ describe('Campaigns', function () {
     beforeEach(function () {
         cy.login();
 
-        testRun = Cypress._.random(0, 1e6);
+        testRun = Cypress._.random(0, 1e9);
     });
 
     /**
@@ -13,7 +13,7 @@ describe('Campaigns', function () {
      */
     function createTempLayouts(num) {
         for(let index = 1; index <= num; index++) {
-            var rand = Cypress._.random(0, 1e6);
+            var rand = Cypress._.random(0, 1e9);
             cy.createLayout(rand).as('testLayoutId' + index);
         }
     }
@@ -141,7 +141,7 @@ describe('Campaigns', function () {
             
             // Delete all
             cy.get('.dataTables_info button[data-toggle="dropdown"]').click();
-            cy.get('.dataTables_info li[data-button-id="campaign_button_delete"]').click();
+            cy.get('.dataTables_info a[data-button-id="campaign_button_delete"]').click();
 
             cy.get('button.save-button').click();
 

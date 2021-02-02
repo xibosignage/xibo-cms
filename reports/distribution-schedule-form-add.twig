@@ -41,6 +41,10 @@
                 {{ forms.hidden("hiddenFields", hiddenFields) }}
                 {{ forms.hidden("reportName", reportName) }}
 
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The name for this report schedule" %}{% endset %}
+                {{ forms.input("name", title, "", helpText, "", "required") }}
+
                 {% set title %}{% trans "Filter" %}{% endset %}
                 {% set helpText %}{% trans "Select the report filter you would like to run" %}{% endset %}
                 {% set daily %}{% trans "Daily" %}{% endset %}
@@ -66,14 +70,6 @@
                 ] %}
                 {{ forms.dropdown("groupByFilter", "single", title, "", options, "filterName", "groupByFilter", "", "group-by-filter") }}
 
-                {% set title %}{% trans "Start Time" %}{% endset %}
-                {% set helpText %}{% trans "Set a future date and time to run this report. Leave blank to run from the next collection point." %}{% endset %}
-                {{ forms.dateTime("fromDt", title, "", helpText, "starttime-control") }}
-
-                {% set title %}{% trans "End Time" %}{% endset %}
-                {% set helpText %}{% trans "Set a future date and time to end the schedule. Leave blank to run indefinitely." %}{% endset %}
-                {{ forms.dateTime("toDt", title, "", helpText, "endtime-control") }}
-
                 {% set title %}{% trans "Display" %}{% endset %}
                 {% set attributes = [
                     { name: "data-width", value: "100%" },
@@ -88,10 +84,13 @@
                 ] %}
                 {{ forms.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
+                {% set title %}{% trans "Start Time" %}{% endset %}
+                {% set helpText %}{% trans "Set a future date and time to run this report. Leave blank to run from the next collection point." %}{% endset %}
+                {{ forms.dateTime("fromDt", title, "", helpText, "starttime-control") }}
 
-                {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "The name for this report schedule" %}{% endset %}
-                {{ forms.input("name", title, "", helpText, "", "required") }}
+                {% set title %}{% trans "End Time" %}{% endset %}
+                {% set helpText %}{% trans "Set a future date and time to end the schedule. Leave blank to run indefinitely." %}{% endset %}
+                {{ forms.dateTime("toDt", title, "", helpText, "endtime-control") }}
 
                 {% set title %}{% trans "Should an email be sent?" %}{% endset %}
                 {{ forms.checkbox("sendEmail", title, sendEmail) }}

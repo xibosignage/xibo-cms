@@ -106,11 +106,13 @@ require('form-serializer');
 // datatables.net
 var dt_extras = [
          require("datatables.net"),
-         require("datatables.net-bs"),
+         require("datatables.net-bs4"),
          require("datatables.net-buttons"),
          require("datatables.net-buttons/js/buttons.colVis.min.js"),
          require("datatables.net-buttons/js/buttons.html5.min.js"),
-         require("datatables.net-buttons/js/buttons.print.min.js")
+         require("datatables.net-buttons/js/buttons.print.min.js"),
+         require("datatables.net-buttons-bs4"),
+         require('datatables.net-responsive')
      ];
 dt_extras.forEach(function(e) {e(window, window.$);});
 
@@ -128,3 +130,10 @@ require('leaflet-search');
 window.L = require('leaflet');
 window.leafletPip = require('@mapbox/leaflet-pip');
 
+// typeahead
+window.Bloodhound = require('corejs-typeahead/dist/bloodhound.min.js');
+require('corejs-typeahead/dist/typeahead.jquery.min.js');
+
+// jsTree
+require('jstree/dist/jstree.min.js');
+require('jstree/dist/themes/default/style.min.css');

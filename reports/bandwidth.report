@@ -1,0 +1,14 @@
+{
+  "name": "bandwidth",
+  "description": "Display Statistics: Bandwidth",
+  "class": "\\Xibo\\Report\\Bandwidth",
+  "type": "Chart",
+  "output_type": "chart",
+  "color":"green",
+  "fa_icon": "fa-bar-chart",
+  "sort_order": 3,
+  "hidden": 0,
+  "category": "Display",
+  "feature": "displays.reporting",
+  "adminOnly": 0
+}

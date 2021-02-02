@@ -1048,8 +1048,6 @@ class InstallMigration extends AbstractMigration
         // Add settings
         $this->execute('
 INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`, `options`, `cat`, `userChange`, `title`, `validation`, `ordering`, `default`, `userSee`, `type`) VALUES
-(1, \'MEDIA_DEFAULT\', \'private\', \'dropdown\', \'Media will be created with these settings. If public everyone will be able to view and use this media.\', \'private|group|group write|public|public write\', \'permissions\', 1, \'Media Permissions\', \'\', 20, \'private\', 1, \'word\'),
-(2, \'LAYOUT_DEFAULT\', \'private\', \'dropdown\', \'New layouts will be created with these settings. If public everyone will be able to view and use this layout.\', \'private|group|group write|public|public write\', \'permissions\', 1, \'Layout Permissions\', \'\', 10, \'private\', 1, \'word\'),
 (3, \'defaultUsertype\', \'User\', \'dropdown\', \'Sets the default user type selected when creating a user.\r\n<br />\r\nWe recommend that this is set to "User"\', \'User|Group Admin|Super Admin\', \'users\', 1, \'Default User Type\', \'\', 10, \'User\', 1, \'string\'),
 (7, \'userModule\', \'module_user_general.php\', \'dirselect\', \'This sets which user authentication module is currently being used.\', NULL, \'users\', 0, \'User Module\', \'\', 0, \'module_user_general.php\', 0, \'string\'),
 (11, \'defaultTimezone\', \'Europe/London\', \'timezone\', \'Set the default timezone for the application\', \'Europe/London\', \'regional\', 1, \'Timezone\', \'\', 20, \'Europe/London\', 1, \'string\'),
@@ -1108,7 +1106,6 @@ INSERT INTO `setting` (`settingid`, `setting`, `value`, `fieldType`, `helptext`,
 (83, \'LIBRARY_MEDIA_DELETEOLDVER_CHECKB\',\'Checked\',\'dropdown\',\'Default the checkbox for Deleting Old Version of media when a new file is being uploaded to the library.\',\'Checked|Unchecked\',\'defaults\',1,\'Default for "Delete old version of Media" checkbox. Shown when Editing Library Media.\', \'\', 50, \'Unchecked\', 1, \'dropdown\'),
 (84, \'PROXY_EXCEPTIONS\', \'\', \'text\', \'Hosts and Keywords that should not be loaded via the Proxy Specified. These should be comma separated.\', \'\', \'network\', 1, \'Proxy Exceptions\', \'\', 32, \'\', 1, \'text\'),
 (85, \'INSTANCE_SUSPENDED\', \'0\', \'checkbox\', \'Is this instance suspended?\', NULL, \'general\', 0, \'Instance Suspended\', \'\', 120, \'0\', 0, \'checkbox\'),
-(86, \'INHERIT_PARENT_PERMISSIONS\', \'1\', \'checkbox\', \'Inherit permissions from Parent when adding a new item?\', NULL, \'permissions\', 1, \'Inherit permissions\', \'\', 50, \'1\', 1, \'checkbox\'),
 (87, \'XMR_ADDRESS\', \'tcp://localhost:5555\', \'text\', \'Please enter the private address for XMR.\', NULL, \'displays\', 1, \'XMR Private Address\', \'\', 5, \'tcp:://localhost:5555\', 1, \'string\'),
 (88, \'XMR_PUB_ADDRESS\', \'\', \'text\', \'Please enter the public address for XMR.\', NULL, \'displays\', 1, \'XMR Public Address\', \'\', 6, \'\', 1, \'string\'),
 (89, \'CDN_URL\', \'\', \'text\', \'Content Delivery Network Address for serving file requests to Players\', \'\', \'network\', 0, \'CDN Address\', \'\', 33, \'\', 0, \'string\'),
@@ -1215,8 +1212,7 @@ INSERT INTO `help` (`HelpID`, `Topic`, `Category`, `Link`) VALUES
         $this->execute('
 INSERT INTO `module` (`ModuleID`, `Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `ImageUri`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`) VALUES
   (1, \'Image\', \'Image\', 1, 0, \'Upload Image files to assign to Layouts\', \'forms/image.gif\', 1, \'jpg,jpeg,png,bmp,gif\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Image\', 10),
-  (2, \'Video\', \'Video\', 1, 0, \'Upload Video files to assign to Layouts\', \'forms/video.gif\', 1, \'wmv,avi,mpg,mpeg,webm,mp4\', 0, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Video\', 0),
-  (3, \'Flash\', \'Flash\', 1, 0, \'Upload SWF files to assign to Layouts\', \'forms/flash.gif\', 1, \'swf\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Flash\', 10),
+  (2, \'Video\', \'Video\', 1, 0, \'Upload Video files to assign to Layouts\', \'forms/video.gif\', 1, \'wmv,avi,mpg,mpeg,webm,mp4\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\Video\', 0),
   (4, \'PowerPoint\', \'PowerPoint\', 1, 0, \'Upload a PowerPoint file to assign to Layouts\', \'forms/powerpoint.gif\', 1, \'ppt,pps,pptx\', 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\PowerPoint\', 10),
   (5, \'Webpage\', \'Webpage\', 1, 1, \'Embed a Webpage\', \'forms/webpage.gif\', 1, NULL, 1, 1, NULL, NULL, \'../modules\', \'Xibo\\\\Widget\\\\WebPage\', 60),
   (6, \'Ticker\', \'Ticker\', 1, 1, \'Display dynamic feed content\', \'forms/ticker.gif\', 1, NULL, 1, 1, NULL, \'[]\', \'../modules\', \'Xibo\\\\Widget\\\\Ticker\', 5),

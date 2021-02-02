@@ -38,8 +38,8 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
             </ul>
             <form id="commandEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("command.edit", {id: command.commandId}) }}">
                 <div class="tab-content">
@@ -56,7 +56,7 @@
                         {% set fieldId = "commandString" %}
                         {% set title %}{% trans "Command" %}{% endset %}
                         {% set helpText %}{% trans "The Command String for this Command. An override for this can be provided in Display Settings." %}{% endset %}
-                        {{ forms.input(fieldId, title, command.commandString, helpText) }}
+                        {{ forms.input(fieldId, title, command.commandString, helpText, "XiboCommand") }}
 
                         {% set fieldId = "validationString" %}
                         {% set title %}{% trans "Validation" %}{% endset %}

@@ -153,14 +153,15 @@ class DataSetColumn extends Base
     public function grid(Request $request, Response $response, $id)
     {
         $dataSet = $this->dataSetFactory->getById($id);
+        $parsedRequestParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
         }
 
-        $dataSetColumns = $this->dataSetColumnFactory->query($this->gridRenderSort($request), [
+        $dataSetColumns = $this->dataSetColumnFactory->query($this->gridRenderSort($parsedRequestParams), [
             'dataSetId' => $id,
-            'dataSetColumnId' => $this->getSanitizer($request->getParams())->getInt('dataSetColumnId')
+            'dataSetColumnId' => $parsedRequestParams->getInt('dataSetColumnId')
         ]);
 
         foreach ($dataSetColumns as $column) {
@@ -174,20 +175,22 @@ class DataSetColumn extends Base
 
             $column->includeProperty('buttons');
 
-            // Edit
-            $column->buttons[] = array(
-                'id' => 'dataset_button_edit',
-                'url' => $this->urlFor($request,'dataSet.column.edit.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
-                'text' => __('Edit')
-            );
-
-            if ($this->getUser()->checkDeleteable($dataSet)) {
-                // Delete
+            if ($this->getUser()->featureEnabled('dataset.modify')) {
+                // Edit
                 $column->buttons[] = array(
-                    'id' => 'dataset_button_delete',
-                    'url' => $this->urlFor($request,'dataSet.column.delete.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
-                    'text' => __('Delete')
+                    'id' => 'dataset_button_edit',
+                    'url' => $this->urlFor($request,'dataSet.column.edit.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
+                    'text' => __('Edit')
                 );
+
+                if ($this->getUser()->checkDeleteable($dataSet)) {
+                    // Delete
+                    $column->buttons[] = array(
+                        'id' => 'dataset_button_delete',
+                        'url' => $this->urlFor($request,'dataSet.column.delete.form', ['id' => $id, 'colId' => $column->dataSetColumnId]),
+                        'text' => __('Delete')
+                    );
+                }
             }
         }
 

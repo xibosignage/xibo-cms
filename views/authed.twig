@@ -29,37 +29,31 @@
 
         {% if hideNavigation == "0" %}
             {% if horizontalNav %}
-                <nav class="navbar navbar-default">
-                    <div class="container-fluid">
-                        <!-- Brand and toggle get grouped for better mobile display -->
-                        <div class="navbar-header">
-                            <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1" aria-expanded="false">
-                                <span class="sr-only">Toggle navigation</span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                            </button>
-                            <a class="navbar-brand" href="#">
-                                <img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}">
-                            </a>
-                        </div>
+                <nav class="navbar navbar-default navbar-expand-lg">
+                    <a class="navbar-brand" href="#">
+                        <img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}">
+                    </a>
 
-                        <!-- Collect the nav links, forms, and other content for toggling -->
-                        <div class="collapse navbar-collapse" id="navbar-collapse-1">
-                            {% include "authed-topbar.twig" %}
+                    <!-- Brand and toggle get grouped for better mobile display -->
+                    <button type="button" class="navbar-toggler" data-toggle="collapse" data-target="#navbar-collapse-1" aria-controls="navbarNav" aria-expanded="false">
+                        <span class="fa fa-bars"></span>
+                    </button>
 
-                            <ul class="nav navbar-nav navbar-right">
-                                {% include "authed-theme-topbar.twig" ignore missing %}
-                                {% if currentUser.routeViewable("/drawer") %}
-                                    {% include "authed-notification-drawer.twig" %}
-                                {% endif %}
-                                {% include "authed-user-menu.twig" %}
-                            </ul>
-                        </div><!-- /.navbar-collapse -->
-                    </div><!-- /.container-fluid -->
+                    <!-- Collect the nav links, forms, and other content for toggling -->
+                    <div class="navbar-collapse collapse justify-content-between" id="navbar-collapse-1">
+                        {% include "authed-topbar.twig" %}
+
+                        <ul class="nav navbar-nav navbar-right">
+                            {% include "authed-theme-topbar.twig" ignore missing %}
+                            {% if currentUser.featureEnabled("drawer") %}
+                                {% include "authed-notification-drawer.twig" %}
+                            {% endif %}
+                            {% include "authed-user-menu.twig" %}
+                        </ul>
+                    </div><!-- /.navbar-collapse -->
                 </nav>
             {% else %}
-                <div class="collapse navbar-collapse" id="navbar-collapse-1">
+                <div class="navbar-collapse navbar-collapse-side collapse" id="navbar-collapse-1">
                     {% include "authed-sidebar.twig" %}
                 </div>
             {% endif %}
@@ -68,22 +62,19 @@
         <div id="content-wrapper">
             <div class="page-content">
                 {% if not horizontalNav %}
-                <div class="row header">
+                <div class="row header header-side">
                     <div class="col-sm-12">
                         <div class="meta pull-left">
                             <div class="page"><img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}"></div>
                         </div>
+                        <button type="button" class="pull-right navbar-toggler navbar-toggler-side" data-toggle="collapse" data-target="#navbar-collapse-1" aria-controls="navbarNav" aria-expanded="false">
+                            <span class="fa fa-bars"></span>
+                        </button>
                         <div class="user pull-right">
-                            <button type="button"  class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar-collapse-1">
-                                <span class="sr-only">Toggle navigation</span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                                <span class="icon-bar"></span>
-                            </button>
                             {% include "authed-user-menu.twig" %}
                         </div>
-                        {% if currentUser.routeViewable("/drawer") %}
-                        <div class="user pull-right">
+                        {% if currentUser.featureEnabled("drawer") %}
+                        <div class="user user-notif pull-right">
                             {% include "authed-notification-drawer.twig" %}
                         </div>
                         {% endif %}
@@ -110,304 +101,363 @@
 {% block javaScriptTemplates %}
 
     <script type="text/javascript">
-        {% set userPreferences = currentUser.getUserOptions() %}
-        var userPreferences = {{ userPreferences|json_encode|raw }};
         var userPreferencesUrl = "{{ url_for("user.pref") }}";
+
+        // TODO: Change this to a call to all route permissions ( something like currentUser.getRoutePermissions() )
+        var userRoutePermissions = {
+            tags: "{{ currentUser.featureEnabled('tag.tagging') }}"
+        };
+
+        // Equals helper for the templates below
+        Handlebars.registerHelper('eq', function(v1, v2, opts) {
+            if (v1 === v2) {
+                return opts.fn(this);
+            } else {
+                return opts.inverse(this);
+            }
+        });
+
+        Handlebars.registerHelper('neq', function(v1, v2, opts) {
+            if (v1 !== v2) {
+                return opts.fn(this);
+            } else {
+                return opts.inverse(this);
+            }
+        });
     </script>
 
     {% verbatim %}
     <script type="text/x-handlebars-template" id="buttons-template">
-        <div class="btn-group pull-right">
-            <button class="btn dropdown-toggle" data-toggle="dropdown">
-                <span class="fa fa-caret-down"></span>
-            </button>
-            <ul class="dropdown-menu">
+        <div class="btn-group pull-right" title="{% endverbatim %}{% trans "Row Menu" %}{% verbatim %}">
+            <button class="btn btn-white dropdown-toggle" data-toggle="dropdown"></button>
+            <div class="dropdown-menu dropdown-menu-right">
                 {{#each buttons}}
                     {{#if divider}}
-                    <li class="divider"></li>
+                        <div class="dropdown-divider"></div>
+                    {{else multiSelectOnly}}
+                        <a {{#each dataAttributes}}
+                            data-{{ name }}="{{ value }}"
+                            {{/each}}
+                            class="dropdown-item {{#if class}}{{ class }}{{else}}XiboMultiHiddenButton{{/if}} {{ id }}" style="display: none;" tabindex="-1" href="#">
+                            {{ text }}
+                        </a>
                     {{else}}
                         {{#if external}}
-                        <li class="{{ id }}"><a tabindex="-1" target="{{ linkType }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a></li>
+                            <a class="dropdown-item {{ id }}" tabindex="-1" target="{{ linkType }}" onclick="{{ onclick }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}>{{ text }}</a>
                         {{/if}}
 
                         {{#unless external}}
-                            <li {{#each dataAttributes}}
+                            <a {{#each dataAttributes}}
                                 data-{{ name }}="{{ value }}"
                                 {{/each}}
-                                class="{{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}}><a tabindex="-1" href="#">{{ text }}</a>
-                            </li>
+                                class="dropdown-item {{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}} tabindex="-1" href="#">
+                                {{ text }}
+                            </a>
                         {{/unless}}
                     {{/if}}
                 {{/each}}
-            </ul>
+            </div>
         </div>
     </script>
 
     <script type="text/x-handlebars-template" id="multiselect-button-template">
-        <div class="btn-group">
-            <button class="btn select-all" data-toggle="selectAll">
+        <div class="btn-group dropup">
+            <button class="btn btn-primary select-all" data-toggle="selectAll">
                 {{ selectAll }}
             </button>
-            <button class="btn btn-default dropdown-toggle" data-toggle="dropdown">
-                <span class="fa fa-caret-down"></span>
+            <button class="btn btn-white dropdown-toggle" data-toggle="dropdown">
                 {{ withSelected }}
             </button>
-            <ul class="dropdown-menu">
+            <div class="dropdown-menu">
                 {{#each buttons}}
-                <li class="XiboMultiSelectFormButton" data-button-id="{{ id }}" data-grid-id="{{ gridId }}"><a tabindex="-1" href="#">{{ text }}</a></li>
+                    {{#if divider}}
+                        <div class="dropdown-divider"></div>
+                    {{else}}
+                        <a class="dropdown-item XiboMultiSelectFormButton" data-custom-handler="{{ customHandler }}" data-custom-handler-url="{{ customHandlerUrl }}" data-button-id="{{ id }}" data-grid-id="{{ gridId }}" data-content-type="{{ contentType }}" data-content-id-name="{{ contentIdName }}" tabindex="-1" href="#">{{ text }}</a>
+                    {{/if}}
                 {{/each}}
-            </ul>
+            </div>
         </div>
     </script>
 
-    <script type="text/x-handlebars-template" id="template-file-upload">
-        <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/){{ upload.validExt }}$/i">
-            {{#if playlistId}}
-                <input type="hidden" name="playlistId" value="{{ playlistId }}" />
-            {{/if}}
-            {{#if widgetId}}
-                <input type="hidden" name="widgetId" value="{{ widgetId }}" />
-            {{/if}}
-            {{#if oldMediaId}}
-                <input type="hidden" name="oldMediaId" value="{{ oldMediaId }}" />
-            {{/if}}
-            {{#if displayOrder}}
-                <input type="hidden" name="displayOrder" value="{{ displayOrder }}" />
-            {{/if}}
-            <div class="row fileupload-buttonbar">
-                <div class="col-md-7">
-                    <div class="well">
-                        <p>{{ upload.maxSizeMessage }}</p>
-                        {{#if upload.validExtensionsMessage}}
-                            <p><strong>{{ upload.validExtensionsMessage }}</strong></p>
-                        {{/if}}
-                    </div>
-                    <!-- The fileinput-button span is used to style the file input field as button -->
-                    <span class="btn btn-success fileinput-button">
-                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
-                        <span>{{ trans.addFiles }}</span>
-                        {{#if oldMediaId }}
-                        <input type="file" name="files[]">
-                        {{else}}
-                        <input type="file" name="files[]" multiple>
-                        {{/if}}
-                    </span>
-                    <button type="submit" class="btn btn-primary start">
-                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
-                        <span>{{ trans.startUpload }}</span>
-                    </button>
-                    <button type="reset" class="btn btn-warning cancel">
-                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
-                        <span>{{ trans.cancelUpload }}</span>
-                    </button>
-                    <!-- The loading indicator is shown during file processing -->
-                    <span class="fileupload-loading"></span>
-                </div>
-                <!-- The global progress information -->
-                <div class="col-md-4 fileupload-progress fade">
-                    <!-- The global progress bar -->
-                    <div class="progress">
-                        <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
-                            <div class="sr-only"></div>
-                        </div>
-                    </div>
-                    <!-- The extended global progress information -->
-                    <div class="progress-extended">&nbsp;</div>
-                    <!-- Processing info container -->
-                    <div class="progress-end" style="display:none;">{{ trans.processing }}</div>
-                </div>
+    <script type="text/x-handlebars-template" id="command-input-main-template">
+        <input type="checkbox" class="show-command-preview pull-right" id="showCommandPreview{{ unique }}" name="showCommandPreview{{ unique }}" title="{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}">
+        <label for="showCommandPreview{{ unique }}" class="pull-right show-command-preview-label">{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}</label>
+
+        <select class="command-type form-control form-control-inline">
+            {{#each types}}
+                <option value="{{ @key }}" {{#eq @key ../type}}selected="selected"{{/eq}}>{{ this }}</option>
+            {{/each}}
+        </select>
+        <div class="command-inputs panel panel-default"></div>
+
+        <pre class="command-preview" data-invalid-message="{% endverbatim %}{% trans 'Invalid command!' %}{% verbatim %}">
+            <code>
+            <!-- your code here -->
+            </code>
+        </pre>
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-freetext-template">
+        <input class="free-text form-control form-control-inline" value="{{ initVal }}">
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-tpv_led-template">
+        <select name="tpv_ledCommand{{ unique }}" id="tpv_ledCommand{{ unique }}" class="tpv-led-command form-control form-control-inline" style="width:100%">
+            <option value="off" {{#eq value "off"}}selected="selected"{{/eq}}>{% endverbatim %}{% trans "Off" %}{% verbatim %}</option>
+            <option value="red" {{#eq value "red"}}selected="selected"{{/eq}}>{% endverbatim %}{% trans "Red" %}{% verbatim %}</option>
+            <option value="green" {{#eq value "green"}}selected="selected"{{/eq}}>{% endverbatim %}{% trans "Green" %}{% verbatim %}</option>
+            <option value="blue" {{#eq value "blue"}}selected="selected"{{/eq}}>{% endverbatim %}{% trans "Blue" %}{% verbatim %}</option>
+            <option value="white" {{#eq value "white"}}selected="selected"{{/eq}}>{% endverbatim %}{% trans "White" %}{% verbatim %}</option>
+        </select>
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-rs232-template">
+        <div class="form-group-command form-group-rs232">
+            <input class="form-control form-control-inline rs232-text-input rs232-device-name" placeholder="{% endverbatim %}{% trans "Device Name/COM" %}{% verbatim %}" value="{{ value.cs.deviceName }}">
+            <input class="form-control form-control-inline rs232-text-input rs232-baud-rate" placeholder="{% endverbatim %}{% trans "Baud Rate" %}{% verbatim %}" value="{{ value.cs.baudRate }}">
+            <input class="form-control form-control-inline rs232-text-input rs232-data-bits" placeholder="{% endverbatim %}{% trans "Data Bits" %}{% verbatim %}" value="{{ value.cs.dataBits }}">
+        </div>
+        <div class="form-group-command form-group-rs232">
+            <div class="col-12 col-sm-6">
+                <label for="rs232Parity{{ unique }}">{% endverbatim %}{% trans "Parity:" %}{% verbatim %}</label>
+                <select name="rs232Parity{{ unique }}" id="rs232Parity{{ unique }}" class="rs232-parity form-control">
+                    <option value="None" {{#eq value.cs.parity "None"}}selected="selected"{{/eq}}>None</option>
+                    <option value="Odd" {{#eq value.cs.parity "Odd"}}selected="selected"{{/eq}}>Odd</option>
+                    <option value="Even" {{#eq value.cs.parity "Even"}}selected="selected"{{/eq}}>Even</option>
+                    <option value="Mark" {{#eq value.cs.parity "Mark"}}selected="selected"{{/eq}}>Mark</option>
+                    <option value="Space" {{#eq value.cs.parity "Space"}}selected="selected"{{/eq}}>Space</option>
+                </select>
             </div>
-            {{#if oldMediaId}}
-            <div class="row">
-                <div class="col-md-12">
-                    <label for="updateInLayouts">
-                        <input type="checkbox" id="updateInLayouts" name="updateInLayouts" {{#if updateInAllChecked}}checked{{/if}}>
-                        {{ trans.updateInLayouts.title }}
-                    </label>
-                    <span class="help-block">{{ trans.updateInLayouts.helpText }}</span>
 
-                    <label for="deleteOldRevisions">
-                        <input type="checkbox" id="deleteOldRevisions" name="deleteOldRevisions" {{#if deleteOldRevisionsChecked}}checked{{/if}}>
-                        {{ trans.deleteOldRevisions.title }}
-                    </label>
-                    <span class="help-block">{{ trans.deleteOldRevisions.helpText }}</span>
-                </div>
+            <div class="col-12 col-sm-6">
+                <label for="rs232StopBits{{ unique }}">{% endverbatim %}{% trans "Stop Bits:" %}{% verbatim %}</label>
+                <select name="rs232StopBits{{ unique }}" id="rs232StopBits{{ unique }}" class="rs232-stop-bits form-control">
+                    <option value="None" {{#eq value.cs.stopBits "None"}}selected="selected"{{/eq}}>None</option>
+                    <option value="One" {{#eq value.cs.stopBits "One"}}selected="selected"{{/eq}}>One</option>
+                    <option value="Two" {{#eq value.cs.stopBits "Two"}}selected="selected"{{/eq}}>Two</option>
+                    <option value="OnePointFive" {{#eq value.cs.stopBits "OnePointFive"}}selected="selected"{{/eq}}>OnePointFive</option>
+                </select>
             </div>
-            {{/if}}
-            <!-- The table listing the files available for upload/download -->
-            <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
-        </form>
+
+            <div class="col-12 col-sm-6">
+                <label for="rs232Handshake{{ unique }}">{% endverbatim %}{% trans "Handshake:" %}{% verbatim %}</label>
+                <select name="rs232Handshake{{ unique }}" id="rs232Handshake{{ unique }}" class="rs232-handshake form-control">
+                    <option value="None" {{#eq value.cs.handshake "None"}}selected="selected"{{/eq}}>None</option>
+                    <option value="XOnXOff" {{#eq value.cs.handshake "XOnXOff"}}selected="selected"{{/eq}}>XOnXOff</option>
+                    <option value="RequestToSend" {{#eq value.cs.handshake "RequestToSend"}}selected="selected"{{/eq}}>RequestToSend</option>
+                    <option value="RequestToSendXOnXOff" {{#eq value.cs.handshake "RequestToSendXOnXOff"}}selected="selected"{{/eq}}>RequestToSendXOnXOff</option>
+                </select>
+            </div>
+            
+            <div class="col-12 col-sm-6">
+                <label for="rs232HexSupport{{ unique }}">{% endverbatim %}{% trans "HexSupport:" %}{% verbatim %}</label>
+                <select name="rs232HexSupport{{ unique }}" id="rs232HexSupport{{ unique }}" class="rs232-hex-support form-control">
+                    <option value="0" {{#eq value.cs.hexSupport "0"}}selected="selected"{{/eq}}>0</option>
+                    <option value="1" {{#eq value.cs.hexSupport "1"}}selected="selected"{{/eq}}>1</option>
+                    <option value="default 0" {{#eq value.cs.hexSupport "default 0"}}selected="selected"{{/eq}}>default 0</option>
+                </select>
+            </div>
+        </div>
+        <div class="form-group-command form-group-rs232 command-group">
+            <input class="form-control rs232-command" placeholder="{% endverbatim %}{% trans "Command" %}{% verbatim %}" value="{{ value.command }}">
+        </div>
     </script>
 
-    <!-- The template for simple upload -->
-    <script id="template-upload-simple" type="text/x-tmpl">
-    {% for (var i=0, file; file=o.files[i]; i++) { %}
-        <tr class="template-upload fade">
-            <td>
-                <span class="preview"></span>
-            </td>
-            <td>
-                <p class="size">{%=o.formatFileSize(file.size)%}</p>
-                    <div class="progress">
-                        <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
-                            <div class="sr-only"></div>
-                        </div>
-                    </div>
-                </div>
-            </td>
-            <td>
-                {% if (!i && !o.options.autoUpload) { %}
-                    <button class="btn btn-primary start" disabled>
-                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
-                    </button>
-                {% } %}
-                {% if (!i) { %}
-                    <button class="btn btn-warning cancel">
-                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
-                    </button>
-                {% } %}
-            </td>
-        </tr>
-    {% } %}
+    <script type="text/x-handlebars-template" id="command-input-intent-template">
+        <div class="form-group-command">
+            <label for="intentType{{ unique }}">{% endverbatim %}{% trans "Type:" %}{% verbatim %}</label>
+            <select name="intentType{{ unique }}" id="intentType{{ unique }}" class="intent-type form-control form-control-inline">
+                <option value="activity" {{#eq value.type "activity"}}selected="selected"{{/eq}}>activity</option>
+                <option value="service" {{#eq value.type "service"}}selected="selected"{{/eq}}>service</option>
+                <option value="broadcast" {{#eq value.type "broadcast"}}selected="selected"{{/eq}}>broadcast</option>
+            </select>
+        </div>
+
+        <div class="form-group-command">
+            <label for="intentExtraContainer{{ unique }}" class="intent-extra-container-label">{% endverbatim %}{% trans "Extra:" %}{% verbatim %}</label>
+            <button class="intent-add-extra btn btn-info btn-sm pull-right" type="button">
+                <i class="fa fa-plus"></i>
+            </button>
+
+            <div id="intentExtraContainer{{ unique }}" class="intent-extra-container"></div>
+        </div>
     </script>
 
-    <!-- The template to display files available for upload -->
-    <script id="template-upload" type="text/x-tmpl">
-    {% for (var i=0, file; file=o.files[i]; i++) { %}
-        <tr class="template-upload fade">
-            <td>
-                <span class="preview"></span>
-            </td>
-            <td class="title" title="Name">
-                <label class="control-label" title="Optional media name" for="name">Name</label>
-                <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
-                <div><span class="error"></span></div>
-            </td>
-            <td class="title" title="Tags">
-                <label class="control-label" title="A comma separated list of tags to assign to this Media" for="tags">Tags</label>
-                <label for="tags[]"><input name="tags[]" type="text" id="name" value="" /></label>
-                <div><span class="error"></span></div>
-            </td>
-            <td>
-                <p class="size">{%=o.formatFileSize(file.size)%}</p>
-                    <div class="progress">
-                        <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
-                            <div class="sr-only"></div>
-                        </div>
-                    </div>
-                </div>
-            </td>
-            <td>
-                {% if (!i && !o.options.autoUpload) { %}
-                    <button class="btn btn-primary start" disabled>
-                        <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
-                    </button>
-                {% } %}
-                {% if (!i) { %}
-                    <button class="btn btn-warning cancel">
-                        <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
-                    </button>
-                {% } %}
-            </td>
-        </tr>
-    {% } %}
-    </script>
-    <!-- The template to display files available for download -->
-    <script id="template-download" type="text/x-tmpl">
-    {% for (var i=0, file; file=o.files[i]; i++) { %}
-        <tr class="template-download fade">
-           <td>
-                <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
-                    {%=file.name%}
-                </p>
-                {% if (file.error) { %}
-                    <div><span class="label label-danger">{%=file.error%}</span></div>
-                {% } %}
-            </td>
-            <td>
-                <span class="size">{%=o.formatFileSize(file.size)%}</span>
-            </td>
-        </tr>
-    {% } %}
+    <script type="text/x-handlebars-template" id="command-input-intent-extra-template">
+        <div class="intent-extra-element">
+            <input class="form-control form-control-inline extra-name" placeholder="{% endverbatim %}{% trans "Name" %}{% verbatim %}" value="{{ name }}">
+            <select class="form-control form-control-inline extra-type">
+                <option value="string" {{#eq type "string"}}selected="selected"{{/eq}}>string</option>
+                <option value="int" {{#eq type "int"}}selected="selected"{{/eq}}>int</option>
+                <option value="bool" {{#eq type "bool"}}selected="selected"{{/eq}}>bool</option>
+                <option value="intArray" {{#eq type "intArray"}}selected="selected"{{/eq}}>intArray</option
+            </select>
+            <input class="form-control form-control-inline extra-value" placeholder="{% endverbatim %}{% trans "Value" %}{% verbatim %}" value="{{ value }}">
+            <button type="button" class="btn btn-sm btn-warning pull-right intent-remove-extra"><i class="fa fa-minus fa-plus"></i></button>
+        </div>
     </script>
     {% endverbatim %}
 
-    <script type="text/x-handlebars-template" id="layout-background-image-upload-template">
-        <form method="post" action="{{ url_for("library.add") }}" enctype="multipart/form-data" data-max-file-size="{{ libraryUpload.maxSize }}" data-accept-file-types="/(\.|\/){{ libraryUpload.validImageExt }}$/i">
-            <div class="row">
-                <div class="text-center">
-                    <span class="btn btn-success fileinput-button">
-                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
-                        <span>{% trans "Browse/Add image" %}</span>
-                        <input type="file" name="files[]">
-                    </span>
-                    <span class="btn btn-danger fileinput-close-button">
-                        <i class="glyphicon glyphicon-remove glyphicon glyphicon-white"></i>
-                    </span>
+    <script type="text/x-handlebars-template" id="multiselect-tag-edit-form-template">
+        <form id="multiselectTagEditForm" data-gettag="{{ url_for("tag.getByName") }}">
+            <input type="hidden" id="requestURL" name="requestURL" value="{{ url_for('tag.editMultiple', {type: '[type]'}) }}">
+            <div class="form-group tags-with-value tags-input-wide row">
+                <label class="col-sm-2 control-label" for="tagsToAdd">{% trans "New tags" %}</label>
+                <div class="col-sm-10">
+                    <input class="form-control" name="tagsToAdd" type="email" id="tagsToAdd" data-role="tagsInputForm" data-auto-complete-url="{{ url_for('tag.search') }}" />
+                    <span class="help-block">{% trans "A comma separated list of tags to add to the selected elements." %}</span>
                 </div>
+            </div>
 
-                <div class="upload-table-container">
-                    <!-- The table listing the files available for upload/download -->
-                    <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+            <p id="loadingValues" style="margin-left: 17%"></p>
+
+            <div class="form-group row">
+                <label class="col-sm-2 control-label" for="tagValue" title="" accesskey="">{% trans "Tag value" %}</label>
+                <div class="col-sm-10">
+                    <select class="form-control" name="tagValue" id="tagValue"></select>
                 </div>
+            </div>
 
-                <div>
-                    <span class="fileupload-loading"></span>
-                    <div class="fileupload-progress fade">
-                        <!-- The global progress bar -->
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
-                                <div class="sr-only"></div>
-                            </div>
-                        </div>
-                        <!-- The extended global progress information -->
-                        <div class="progress-extended">&nbsp;</div>
-                        <!-- Processing info container -->
-                        <div class="progress-end" style="display:none;">{% trans "Processing..." %}</div>
+            <div id="tagValueContainer" style="display: none;">
+                <div class="form-group row">
+                    <label class="col-sm-2 control-label" for="tagValueInput" accesskey="">{% trans "Tag value" %}</label>
+                    <div class="col-sm-10">
+                        <input class="form-control" name="tagValueInput" type="text" id="tagValueInput" value="">
+                        <span class="help-block">{% trans "Provide an optional Value for this Tag. If no Value is required, this field can be left blank." %}</span>
                     </div>
+                </div>
+            </div>
+
+            <div id="tagValueRequired" class="alert alert-info d-none">
+                <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
+            </div>
+
+            <div id="tagsToRemoveContainer" class="form-group tags-with-value tags-input-wide row">
+                <label class="col-sm-2 control-label" for="tagsToRemove">{% trans "Existing tags" %}</label>
+                <div class="col-sm-10">
+                    <input class="form-control" name="tagsToRemove" type="email" id="tagsToRemove" data-role="tagsInputForm" data-auto-complete-url="{{ url_for('tag.search') }}" />
+                    <span class="help-block">{% trans "Remove tags from the list to remove them from elements that contain them." %}</span>
                 </div>
             </div>
         </form>
     </script>
 
-    <script type="text/x-handlebars-template" id="attachment-upload-template">
-        <form method="post" action="{{ url_for("notification.addattachment") }}" enctype="multipart/form-data" data-max-file-size="{{ libraryUpload.maxSize }}" data-accept-file-types="/(\.|\/)jpg|jpeg|png|bmp|gif|zip|pdf$/i">
-            <div class="row">
-                <div class="text-center">
-                    <span class="btn btn-success fileinput-button">
-                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
-                        <span>{% trans "Browse/Add attachment" %}</span>
-                        <input type="file" name="files[]">
-                    </span>
-                    <span class="btn btn-danger hidden fileinput-close-button">
-                        <i class="glyphicon glyphicon-remove glyphicon glyphicon-white"></i>
-                    </span>
-                </div>
-
-                <div>
-                    <!-- The table listing the files available for upload/download -->
-                    <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
-                </div>
-
-                <div>
-                    <span class="fileupload-loading"></span>
-                    <div class="fileupload-progress fade">
-                        <!-- The global progress bar -->
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
-                                <div class="sr-only"></div>
-                            </div>
-                        </div>
-                        <!-- The extended global progress information -->
-                        <div class="progress-extended">&nbsp;</div>
-                        <!-- Processing info container -->
-                        <div class="progress-end" style="display:none;">{% trans "Processing..." %}</div>
+    <script type="text/x-handlebars-template" id="display-status-window-template">
+        <div style="margin-top:5px; max-height: 400px; overflow-y: auto;">
+            {% verbatim %}
+            {{#if data}}
+            {% endverbatim %}
+            {% trans "Player Status Window"%}:
+            {% verbatim %}
+                {{#eq type "android"}}
+                    <div class="card p-3 mb-3 bg-light">
+                          <span>{{{data}}}</span>
                     </div>
-                </div>
-            </div>
-        </form>
+                {{/eq}}
+                {{#neq type "android"}}
+                    <div class="card p-3 mb-3 bg-light">
+                        <ul>
+                            {{#each data as |value key|}}
+                            <li>{{key}}: {{value}}</li>
+                            {{/each}}
+                        </ul>
+                    </div>
+                {{/neq}}
+            {{/if}}
+            {% endverbatim %}
+        </div>
     </script>
 
+    <script type="text/x-handlebars-template" id="auto-submit-field-template">
+        <div class="checkbox">
+            <label for="autoSubmit" accesskey="a" title="{% trans "When enabled, this form will automatically submit in future. Reset this in your User Profile." %}">
+                <input type="checkbox" id="autoSubmit" name="autoSubmit">
+                {% trans "Automatically submit this form?" %}
+            </label>
+        </div>
+    </script>
 
+    <script type="text/x-handlebars-template" id="folder-tree-template">
+        <!-- Modal -->
+        {% verbatim %}
+        <div id="{{ modal }}" class="modal fade inner-modal" role="dialog">
+         {% endverbatim %}
+            <div class="modal-dialog modal-sm" style="width:450px;">
 
+                <!-- Modal content-->
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h4 class="modal-title">{% trans "Select Folder" %}</h4>
+                        <button type="button" class="close btnCloseInnerModal">&times;</button>
+                    </div>
+                    <div class="modal-body">
+                        <div class="form-group card p-3 mb-3 bg-light">
+                            {% verbatim %}
+                                <div id="{{ container }}"></div>
+                            {% endverbatim %}
+                        </div>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-white btnCloseInnerModal">{% trans "Done" %}</button>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="mini-player-template">
+        <div id="miniLayoutPreview" class="mini-layout-preview">
+            <div id="playBtn" class="fa fa-play preview-button" title="{% trans "Play Preview" %}"></div>
+            <div id="closeBtn" class="fa fa-close preview-button" title="{% trans "Close Preview" %}"></div>
+            <div id="sizeBtn" class="fa fa-plus-square preview-button" title="{% trans "Change window size" %}"></div>
+            <div id="newTabBtn" class="fa fa-external-link-square preview-button" title="{% trans "Preview in new window" %}"></div>
+            <div id="content"></div>
+        </div>
+    </script>
+
+    <script  type="text/javascript">
+        function moveFolderMultiSelectFormOpen(dialog) {
+            // make bootstrap happy.
+            if ($('#folder-tree-form-modal').length != 0) {
+                $('#folder-tree-form-modal').remove();
+            }
+
+            var folderContainer = '<div class="card p-3 mb-3 bg-light" id="container-folder-form-tree"></div>';
+            var $hiddenInput = $('<input name="folderId" type="hidden" id="formFolderId">');
+
+            $hiddenInput.on('change', function() {
+                dialog.data().commitData = {folderId: $(this).val()};
+            });
+
+            $(dialog).find('.modal-body').append(folderContainer);
+            $(dialog).find('.modal-body').append($hiddenInput);
+            initJsTreeAjax('#container-folder-form-tree', "multi-select-folder", true, 600000);
+        }
+
+        function triggerWebhookMultiSelectFormOpen(dialog) {
+            var $triggerCode =   $(
+                '<div class="form-group row">' +
+                '<label class="col-sm-2 control-label" for="triggerCode" accesskey="">{% trans "Trigger Code" %}</label>' +
+                '<div class="col-sm-10">' +
+                '<input class="form-control" name="triggerCode" type="text" id="triggerCode" value="">' +
+                '<span class="help-block">{% trans "Enter the code associated with the web hook you wish to trigger. Please note that for this action to work, the webhook trigger code has to be added to Interactive Actions in scheduled content for this Player."%}</span>' +
+                '</div>' +
+                '</div>'
+            );
+
+            $(dialog).find('.modal-body').append($triggerCode);
+
+            $('#triggerCode').on('change', function() {
+
+                dialog.data().commitData = {
+                    triggerCode: $('#triggerCode').val()
+                };
+            });
+        }
+    </script>
+
+    {# File upload templates and scripts #}
+    {% include "include-file-upload.twig" %}
 {% endblock %}

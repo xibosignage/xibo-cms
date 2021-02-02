@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Xibo\Controller\Library;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\GeneralException;
 
@@ -74,9 +75,6 @@ class MaintenanceDailyTask implements TaskInterface
 
         // Tidy Cache
         $this->tidyCache();
-
-        // API tokens
-        $this->purgeExpiredApiTokens();
     }
 
     /**
@@ -86,21 +84,17 @@ class MaintenanceDailyTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Tidy Logs') . PHP_EOL;
 
-        if ($this->config->getSetting('MAINTENANCE_LOG_MAXAGE') != 0) {
+        $maxage = $this->config->getSetting('MAINTENANCE_LOG_MAXAGE');
+        if ($maxage != 0) {
+            // Run this in the log handler so that we share the same connection and don't deadlock.
+            DatabaseLogHandler::tidyLogs(
+                Carbon::now()
+                    ->subDays(intval($maxage))
+                    ->format(DateFormatHelper::getSystemFormat())
+            );
 
-            $maxage = Carbon::now()->subSeconds(86400 * intval($this->config->getSetting('MAINTENANCE_LOG_MAXAGE')))->format(DateFormatHelper::getSystemFormat());
-
-            try {
-                $this->store->update('DELETE FROM `log` WHERE logdate < :maxage', ['maxage' => $maxage]);
-
-                $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
-            }
-            catch (\PDOException $e) {
-                $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
-                $this->log->error($e->getMessage());
-            }
-        }
-        else {
+            $this->runMessage .= ' - ' . __('Done') . PHP_EOL . PHP_EOL;
+        } else {
             $this->runMessage .= ' - ' . __('Disabled') . PHP_EOL . PHP_EOL;
         }
     }
@@ -138,11 +132,14 @@ class MaintenanceDailyTask implements TaskInterface
                         true,
                         false,
                         true,
-                        $this->libraryController
+                        $this->libraryController,
+                        null,
+                        null
                     );
 
                     $layout->save([
-                        'audit' => false
+                        'audit' => false,
+                        'import' => true
                     ]);
                 }
             }
@@ -161,81 +158,5 @@ class MaintenanceDailyTask implements TaskInterface
     private function installModuleFiles()
     {
         $this->libraryController->installAllModuleFiles();
-    }
-
-    /**
-     * Purge expired API tokens
-     */
-    private function purgeExpiredApiTokens()
-    {
-        $this->runMessage .= '## ' . __('Purge Expired API Tokens') . PHP_EOL;
-
-        $params = ['now' => Carbon::now()->format('U')];
-
-        try {
-            // Run delete SQL for all token and session tables.
-            $this->store->update('DELETE FROM `oauth_refresh_tokens` WHERE expire_time < :now', $params);
-
-            $this->store->update('
-              DELETE FROM `oauth_sessions` 
-               WHERE id IN (
-                 SELECT session_id 
-                   FROM oauth_access_tokens
-                  WHERE expire_time < :now
-                    AND access_token NOT IN (SELECT access_token FROM oauth_refresh_tokens)
-               )
-            ', $params);
-
-            // Delete access_tokens without a refresh token
-            $this->store->update('
-              DELETE FROM `oauth_access_tokens` 
-               WHERE expire_time < :now AND access_token NOT IN (
-                  SELECT access_token FROM oauth_refresh_tokens
-               )
-           ', $params);
-
-            $this->store->update('
-              DELETE FROM `oauth_access_token_scopes`
-                WHERE access_token NOT IN (
-                  SELECT access_token FROM oauth_access_tokens
-                )
-            ', []);
-
-            // Auth codes
-            $this->store->update('
-              DELETE FROM `oauth_sessions` 
-               WHERE id IN (
-                 SELECT session_id 
-                   FROM oauth_auth_codes
-                  WHERE expire_time < :now
-               )
-            ', $params);
-
-            $this->store->update('
-              DELETE FROM `oauth_auth_codes` WHERE expire_time < :now', $params);
-
-            $this->store->update('
-              DELETE FROM `oauth_auth_code_scopes`
-                WHERE auth_code NOT IN (
-                  SELECT auth_code FROM oauth_auth_codes
-                )
-            ', []);
-
-            // Delete session scopes
-            $this->store->update('
-              DELETE FROM `oauth_session_scopes`
-                WHERE session_id NOT IN (
-                  SELECT id FROM oauth_sessions
-                )
-            ', []);
-
-            $this->runMessage .= ' - ' . __('Done.') . PHP_EOL . PHP_EOL;
-
-        } catch (\PDOException $PDOException) {
-            $this->log->debug($PDOException->getTraceAsString());
-            $this->log->error($PDOException->getMessage());
-
-            $this->runMessage .= ' - ' . __('Error.') . PHP_EOL . PHP_EOL;
-        }
     }
 }

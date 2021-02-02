@@ -30,15 +30,17 @@
 
         // Handle set region as fullscreen button
         // Get layout object
-        const layout = lD.layout;
-        const form = $(this).find('form');
-        let buttonText = form.find('#setFullScreenButton').html();
+        var layout = lD.layout;
+        var form = $(this).find('form');
+        var buttonText = form.find('#setFullScreenButton').html();
 
         // Replace button text tags
-        form.find('#setFullScreenButton').html(buttonText.replace('[width]', layout.width).replace('[height]', layout.height));
+        if(buttonText) {
+            form.find('#setFullScreenButton').html(buttonText.replace('[width]', layout.width).replace('[height]', layout.height));
+        }
 
         // Handle click action
-        form.find('#setFullScreenButton').click(() => {
+        form.find('#setFullScreenButton').click(function() {
             // Set position values to 0
             form.find('#top').val(0);
             form.find('#left').val(0);
@@ -67,10 +69,10 @@
     }
 
     function formChangesRegion() {
-        const app = lD;
-        const layout = app.layout;
-        const regionId = app.selectedObject.id;
-        const form = $(app.propertiesPanel.DOMObject).find('form');
+        var app = lD;
+        var layout = app.layout;
+        var regionId = app.selectedObject.id;
+        var form = $(app.propertiesPanel.DOMObject).find('form');
 
         layout.regions[regionId].transform({
             'width': form.find('#width').val(),
@@ -83,24 +85,24 @@
     }
 
     function formChangesRegionZIndex() {
-        const app = lD;
-        const form = $(app.propertiesPanel.DOMObject).find('form');
-        const newZIndex = parseInt(form.find('#zIndex').val());
+        var app = lD;
+        var form = $(app.propertiesPanel.DOMObject).find('form');
+        var newZIndex = parseInt(form.find('#zIndex').val());
 
         app.navigator.DOMObject.find('#' + app.selectedObject.id).css('zIndex', newZIndex);
         app.selectedObject.zIndex = newZIndex;
     }
 
     function regionChangesForm() {
-        const app = lD;
-        const form = $(app.propertiesPanel.DOMObject).find('form')
+        var app = lD;
+        var form = $(app.propertiesPanel.DOMObject).find('form')
         
         // If form not loaded, prevent changes
         if(form.length == 0 || app.layout.regions[app.selectedObject.id] == undefined) {
             return;
         }
         
-        const regionDimensions = app.layout.regions[app.selectedObject.id].dimensions;
+        var regionDimensions = app.layout.regions[app.selectedObject.id].dimensions;
 
         form.find('#top').val(regionDimensions.top);
         form.find('#left').val(regionDimensions.left);

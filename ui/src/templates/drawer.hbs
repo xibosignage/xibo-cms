@@ -1,7 +1,11 @@
 <div id="actions-drawer-content" data-type="region" class="editable">
     {{#if drawer.isEmpty}}
         <div id="actions-drawer-empty-message">
-            <span>{{ trans.emptyDrawer }}</span>
+            {{#if readOnlyModeOn}}
+                <span>{{ trans.notInitEmptyDrawer }}</span>
+            {{else}}
+                <span>{{ trans.emptyDrawer }}</span>
+            {{/if}}
         </div>
     {{else}}
         <div class="text-left" id="actions-drawer-search-bar">
@@ -19,6 +23,6 @@
 </div>
 
 <div id="actions-drawer-toggle" class="btn btn-toggle"
-    data-toggle="tooltip" data-title="{{ trans.toggleDrawer }}">
+    data-toggle="tooltip" data-container="#actions-drawer" data-title="{{ trans.toggleDrawer }}">
     <i class="fa fa-inbox"></i>
 </div>

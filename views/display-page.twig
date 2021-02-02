@@ -26,10 +26,12 @@
 {% block title %}{{ "Displays"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ url_for("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</a></li>
-        <li class="btn btn-success btn-xs"><a class="btns" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        {% if currentUser.featureEnabled("displays.add") %}
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add a Display via user_code displayed on the Player screen" %}" href="{{ url_for("display.addViaCode.form") }}"> <i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Display (Code)" %}</button>
+        {% endif %}
+        <button class="btn btn-primary" id="refreshGrid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -37,11 +39,11 @@
         <div class="widget-title">{% trans "Displays" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <ul class="nav nav-tabs" role="tablist">
-                            <li class="active"><a href="#filter-general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
-                            <li><a href="#filter-advanced" role="tab" data-toggle="tab">{% trans "Advanced" %}</a></li>
+                            <li class="nav-item"><a class="nav-link active" href="#filter-general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
+                            <li class="nav-item"><a class="nav-link" href="#filter-advanced" role="tab" data-toggle="tab">{% trans "Advanced" %}</a></li>
                         </ul>
                         <form class="form-inline">
                             <div class="tab-content">
@@ -49,14 +51,16 @@
                                     {% set title %}{% trans "ID" %}{% endset %}
                                     {{ inline.number("displayId", title) }}
 
-                                    <div class="form-group ">
-                                        <label class="control-label" title="" for="display" accesskey="">{% trans "Name" %}</label>
+                                    <div class="form-group mr-1 mb-1">
+                                        <label class="control-label mr-1" title="" for="display" accesskey="">{% trans "Name" %}</label>
                                         <div>
                                             <div class="input-group">
                                                 <input class="form-control" name="display" type="text" id="display" value="">
-                                                <span class="input-group-addon">
-                                                    <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                                </span>
+                                                <div class="input-group-append input-group-addon">
+                                                    <div class="input-group-text">
+                                                        <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                                    </div>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
@@ -93,33 +97,29 @@
                                     ] %}
                                     {{ inline.dropdown("authorised", "single", title, "", options, "optionid", "option") }}
 
-                                    {% set title %}{% trans "Tags" %}{% endset %}
-                                    {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
-                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                    {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    {% if currentUser.featureEnabled("tag.tagging") %}
+                                        {% set title %}{% trans "Tags" %}{% endset %}
+                                        {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                        {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
+                                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    {% endif %}
 
-                                    {% set title %}{% trans "Display Group" %}{% endset %}
-                                    {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+                                    {% if currentUser.featureEnabled("displaygroup.view") %}
+                                        {% set title %}{% trans "Display Group" %}{% endset %}
+                                        {{ inline.dropdown("displayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup") }}
+                                    {% endif %}
 
-                                    {% set title %}{% trans "Display Profile" %}{% endset %}
-                                    {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
+                                    {% if currentUser.featureEnabled("displayprofile.view") %}
+                                        {% set title %}{% trans "Display Profile" %}{% endset %}
+                                        {{ inline.dropdown("displayProfileId", "single", title, "", [{displayProfileId:null, name:""}]|merge(displayProfiles), "displayProfileId", "name") }}
+                                    {% endif %}
 
+                                    {{ inline.hidden("folderId") }}
                                 </div>
 
                                 <div class="tab-pane" id="filter-advanced">
                                     {% set title %}{% trans "Last Accessed" %}{% endset %}
-                                    <div class="form-group">
-                                        <label class="control-label" for="lastAccessed">{{ title }}</label>
-                                        <div class="input-group date" style="display:table;">
-                                            <input type="hidden" name="lastAccessed" id="lastAccessed" />
-                                            <input class="form-control datePicker dateControl" name="lastAccessedLink"
-                                                   type="text" id="lastAccessedLink" data-link-field="lastAccessed"
-                                                   data-link-format="yyyy-mm-dd hh:ii:ss" readonly />
-                                            <span class="input-group-addon" id="lastAccessedControlCancel">
-                                                <span class="fa fa-times-circle"></span>
-                                            </span>
-                                        </div>
-                                    </div>
+                                    {{ inline.date("lastAccessed", title) }}
 
                                     {% set title %}{% trans "Player Type" %}{% endset %}
                                     {% set android %}{% trans "Android" %}{% endset %}
@@ -174,49 +174,72 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="displays" class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>{% trans "ID" %}</th>
-                                <th>{% trans "Display" %}</th>
-                                <th>{% trans "Status" %}</th>
-                                <th>{% trans "Authorised?" %}</th>
-                                <th>{% trans "Current Layout" %}</th>
-                                <th>{% trans "Storage Available" %}</th>
-                                <th>{% trans "Storage Total" %}</th>
-                                <th>{% trans "Storage Free %" %}</th>
-                                <th>{% trans "Description" %}</th>
-                                <th>{% trans "Orientation" %}</th>
-                                <th>{% trans "Resolution" %}</th>
-                                <th>{% trans "Tags" %}</th>
-                                <th>{% trans "Default Layout" %}</th>
-                                <th>{% trans "Interleave Default" %}</th>
-                                <th>{% trans "Email Alert" %}</th>
-                                <th>{% trans "Logged In" %}</th>
-                                <th>{% trans "Last Accessed" %}</th>
-                                <th>{% trans "Display Profile" %}</th>
-                                <th>{% trans "Version" %}</th>
-                                <th>{% trans "Device Name" %}</th>
-                                <th>{% trans "IP Address" %}</th>
-                                <th>{% trans "Mac Address" %}</th>
-                                <th>{% trans "Timezone" %}</th>
-                                <th>{% trans "Latitude" %}</th>
-                                <th>{% trans "Longitude" %}</th>
-                                <th>{% trans "Screen shot?" %}</th>
-                                <th>{% trans "Thumbnail" %}</th>
-                                <th>{% trans "Bandwidth Limit" %}</th>
-                                <th>{% trans "Last Command" %}</th>
-                                <th>{% trans "XMR Registered" %}</th>
-                                <th>{% trans "Commercial Licence" %}</th>
-                                <th>{% trans "Remote" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div class="row">
+                    <div class="col-sm-1 form-group" style="padding: 0">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
+                    </div>
+                    <div class="form-group col-sm-11" style="padding: 0">
+                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
+                    </div>
+                </div>
 
-                        </tbody>
-                    </table>
+                <div class="row">
+                    <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
+                        </div>
+                        <div id="container-folder-tree"></div>
+                    </div>
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
+                        <div class="XiboData">
+                            <table id="displays" class="table table-striped" data-content-type="display" data-content-id-name="displayId" data-state-preference-name="displayGrid" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Display" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Authorised?" %}</th>
+                                        <th>{% trans "Current Layout" %}</th>
+                                        <th>{% trans "Storage Available" %}</th>
+                                        <th>{% trans "Storage Total" %}</th>
+                                        <th>{% trans "Storage Free %" %}</th>
+                                        <th>{% trans "Description" %}</th>
+                                        <th>{% trans "Orientation" %}</th>
+                                        <th>{% trans "Resolution" %}</th>
+                                        {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
+                                        <th>{% trans "Default Layout" %}</th>
+                                        <th>{% trans "Interleave Default" %}</th>
+                                        <th>{% trans "Email Alert" %}</th>
+                                        <th>{% trans "Logged In" %}</th>
+                                        <th>{% trans "Last Accessed" %}</th>
+                                        <th>{% trans "Display Profile" %}</th>
+                                        <th>{% trans "Version" %}</th>
+                                        <th>{% trans "Device Name" %}</th>
+                                        <th>{% trans "IP Address" %}</th>
+                                        <th>{% trans "Mac Address" %}</th>
+                                        <th>{% trans "Timezone" %}</th>
+                                        <th>{% trans "Latitude" %}</th>
+                                        <th>{% trans "Longitude" %}</th>
+                                        <th>{% trans "Screen shot?" %}</th>
+                                        <th>{% trans "Thumbnail" %}</th>
+                                        <th>{% trans "CMS Transfer?" %}</th>
+                                        <th>{% trans "Bandwidth Limit" %}</th>
+                                        <th>{% trans "Last Command" %}</th>
+                                        <th>{% trans "XMR Registered" %}</th>
+                                        <th>{% trans "Commercial Licence" %}</th>
+                                        <th>{% trans "Remote" %}</th>
+                                        <th>{% trans "Created Date" %}</th>
+                                        <th>{% trans "Modified Date" %}</th>
+                                        <th class="rowMenu"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -225,42 +248,19 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+        {% if not currentUser.featureEnabled("folder.view") %}
+        disableFolders();
+        {% endif %}
+
         $(document).ready(function() {
             var table = $("#displays").DataTable({
                 "language": dataTablesLanguage,
                 serverSide: true,
-                stateSave: true, stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=displayGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "displayGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                stateSave: true,
+                stateDuration: 0,
+                responsive: true,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
                 order: [[1, "asc"]],
@@ -290,18 +290,19 @@
                 },
                 createdRow: function (row, data, index) {
                     if (data.mediaInventoryStatus === 1) {
-                        $(row).addClass('success');
+                        $(row).addClass('table-success');
                     } else if (data.mediaInventoryStatus === 1) {
-                        $(row).addClass('danger');
+                        $(row).addClass('table-danger');
                     } else {
-                        $(row).addClass('warning');
+                        $(row).addClass('table-warning');
                     }
                 },
                 "columns": [
-                    {"data": "displayId"},
-                    {"data": "display"},
+                    {"data": "displayId", responsivePriority: 2},
+                    {"data": "display", responsivePriority: 2},
                     {
                         "data": "mediaInventoryStatus",
+                        responsivePriority: 2,
                         "render": function (data, type, row) {
                             if (type != "display")
                                 return data;
@@ -317,10 +318,11 @@
                             return '<span class="fa ' + icon + '" title="' + (row.statusDescription) + '"></span>';
                         }
                     },
-                    {"data": "licensed", "render": dataTableTickCrossColumn},
-                    {"data": "currentLayout", "visible": false, "sortable": false},
+                    {"data": "licensed", "render": dataTableTickCrossColumn, responsivePriority: 3},
+                    {"data": "currentLayout", "visible": false, "sortable": false, responsivePriority: 5},
                     {
                         "data": "storageAvailableSpace",
+                        responsivePriority: 5,
                         "visible": false,
                         "render": function (data, type, row) {
                             if (type != "display")
@@ -331,6 +333,7 @@
                     },
                     {
                         "data": "storageTotalSpace",
+                        responsivePriority: 5,
                         "visible": false,
                         "render": function (data, type, row) {
                             if (type != "display")
@@ -339,23 +342,27 @@
                             return row.storageTotalSpaceFormatted;
                         }
                     },
-                    {"data": "storagePercentage", "visible": false, "sortable": false},
-                    {"data": "description", "visible": false},
-                    {"data": "orientation", "visible": false},
-                    {"data": "resolution", "visible": false},
+                    {"data": "storagePercentage", "visible": false, "sortable": false, responsivePriority: 5},
+                    {"data": "description", "visible": false, responsivePriority: 4},
+                    {"data": "orientation", "visible": false, responsivePriority: 6},
+                    {"data": "resolution", "visible": false, responsivePriority: 6},
+                    {% if currentUser.featureEnabled("tag.tagging") %}
                     {
                         "name": "tags",
+                        responsivePriority: 3,
                         "sortable": false,
                         "visible": false,
                         "data": dataTableCreateTags
                     },
-                    {"data": "defaultLayout", "visible": false},
-                    {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false},
-                    {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false},
-                    {"data": "loggedIn", "render": dataTableTickCrossColumn},
-                    {"data": "lastAccessed", "render": dataTableDateFromUnix},
+                    {% endif %}
+                    {"data": "defaultLayout", "visible": false, responsivePriority: 4},
+                    {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false, responsivePriority: 5},
+                    {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false, responsivePriority: 5},
+                    {"data": "loggedIn", "render": dataTableTickCrossColumn, responsivePriority: 3},
+                    {"data": "lastAccessed", "render": dataTableDateFromUnix, responsivePriority: 4},
                     {
                         "name": "displayProfileId",
+                        responsivePriority: 5,
                         "data": function (data, type) {
                             return data.displayProfile;
                         },
@@ -363,6 +370,7 @@
                     },
                     {
                         "name": "clientSort",
+                        responsivePriority: 4,
                         "data": function (data) {
                             if (data.clientType === 'lg') {
                                 data.clientType = 'webOS'
@@ -372,22 +380,23 @@
                         },
                         "visible": false
                     },
-                    {"data": "deviceName", "visible": false},
-                    {"data": "clientAddress", "visible": false},
-                    {"data": "macAddress"},
-                    {"data": "timeZone", "visible": false},
-                    {"data": "latitude", "visible": false},
-                    {"data": "longitude", "visible": false},
-                    {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
+                    {"data": "deviceName", "visible": false, responsivePriority: 5},
+                    {"data": "clientAddress", "visible": false, responsivePriority: 6},
+                    {"data": "macAddress", responsivePriority: 5},
+                    {"data": "timeZone", "visible": false, responsivePriority: 5},
+                    {"data": "latitude", "visible": false, responsivePriority: 6},
+                    {"data": "longitude", "visible": false, responsivePriority: 6},
+                    {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested", responsivePriority: 7},
                     {
                         "name": "thumbnail",
+                        responsivePriority: 4,
                         "orderable": false,
                         "data": function (data, type) {
                             if (type != "display")
                                 return data.thumbnail;
 
                             if (data.thumbnail != "") {
-                                return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
+                                return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" data-display-id="'+ data.displayId +'" data-type="'+ data.clientType +'" /></a>';
                             }
                             else {
                                 return "";
@@ -396,13 +405,21 @@
                         "visible": false
                     },
                     {
+                        "data": "isCmsTransferInProgress",
+                        "render": dataTableTickCrossColumn,
+                        "visible": false,
+                        "name": "isCmsTransferInProgress"
+                    },
+                    {
                         "name": "bandwidthLimit",
+                        responsivePriority: 5,
                         "data": null,
                         "render": {"_": "bandwidthLimit", "display": "bandwidthLimitFormatted", "sort": "bandwidthLimit"},
                         "visible": false
                     },
                     {
                         "data": "lastCommandSuccess",
+                        responsivePriority: 6,
                         "render": function (data, type, row) {
                             if (type != "display")
                                 return data;
@@ -421,6 +438,7 @@
                     },
                     {
                         "data": "xmrChannel",
+                        responsivePriority: 6,
                         "render": function (data, type, row) {
                             if (type === "export") {
                                 return (data !== null && data !== "") ? 1 : 0;
@@ -442,6 +460,7 @@
                     {
                         "data": "commercialLicence",
                         "name": "commercialLicence",
+                        responsivePriority: 5,
                         "render": function (data, type, row) {
                             if (type != "display")
                                 return data;
@@ -465,34 +484,48 @@
                     },
                     {
                         "name": "remote",
+                        "data": null,
+                        responsivePriority: 4,
                         "render": function (data, type, row) {
-                            if (type !== "display")
+                            if (type === "display") {
+                                var html = "<div class='remote-icons'>";
+                                if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" !== "" && row.clientAddress != null && row.clientAddress !== "") {
+                                    var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', row.clientAddress);
+                                    html += '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">'
+                                        + '<i class="fa fa-eye"></i></a>';
+                                }
+
+                                if (row.teamViewerLink !== "") {
+                                    html += '<a href="' + row.teamViewerLink + '" title="{% trans "TeamViewer to this Display" %}" target="_blank">'
+                                        + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/teamviewer.png" alt="TeamViewer Icon"></a>';
+                                }
+
+                                if (row.webkeyLink !== "") {
+                                    html += '<a href="' + row.webkeyLink + '" title="{% trans "Webkey to this Display" %}" target="_blank">'
+                                        + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/webkey.png" alt="Webkey Icon"></a>';
+                                }
+
+                                return html + "</div>";
+
+                            } else if (type === "export") {
+                                if (row.teamViewerLink !== "") {
+                                    return "TeamViewer: " + row.teamViewerLink;
+                                }
+                                if (row.webkeyLink !== "") {
+                                    return "Webkey: " + row.webkeyLink;
+                                }
+                            } else {
                                 return "";
-
-                            var html = "<div class='remote-icons'>";
-                            if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" !== "" && row.clientAddress != null && row.clientAddress !== "") {
-                                var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', row.clientAddress);
-                                html += '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">'
-                                    + '<i class="fa fa-eye"></i></a>';
                             }
-
-                            if (row.teamViewerLink !== "") {
-                                html += '<a href="' + row.teamViewerLink + '" title="{% trans "TeamViewer to this Display" %}" target="_blank">'
-                                    + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/teamviewer.png" alt="TeamViewer Icon"></a>';
-                            }
-
-                            if (row.webkeyLink !== "") {
-                                html += '<a href="' + row.webkeyLink + '" title="{% trans "Webkey to this Display" %}" target="_blank">'
-                                    + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/webkey.png" alt="Webkey Icon"></a>';
-                            }
-
-                            return html + "</div>";
                         },
                         "visible": true,
                         "orderable": false
                     },
+                    {"data": "createdDt", "visible": false, responsivePriority: 6},
+                    {"data": "modifiedDt", "visible": false, responsivePriority: 6},
                     {
                         "orderable": false,
+                        responsivePriority: 1,
                         "data": dataTableButtonsColumn
                     }
                 ]
@@ -501,22 +534,10 @@
             table.on('draw', dataTableDraw);
             table.on('draw', { form: $("#displays").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#displays_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#displays_wrapper').find('.col-md-6').eq(1));
 
             $("#refreshGrid").click(function () {
                 table.ajax.reload();
-            });
-
-            $("#lastAccessedControlCancel").on('click', function() {
-                // Clear the date picker
-                var $lastAccessed = $("#lastAccessed");
-                $lastAccessed.val("");
-                $("#lastAccessedLink").val("");
-
-                table.ajax.reload();
-
-                // Reset local storage
-                localStorage.setItem("displayView", JSON.stringify($lastAccessed.closest("form").serializeArray()));
             });
         });
 
@@ -562,7 +583,7 @@
         function setMoveCmsMultiSelectFormOpen(dialog) {
             console.log('Multi-select form opened for move CMS');
 
-            let $message = $(
+            var $message = $(
                 '<div class="col-sm-12 alert alert-info">' +
                     "<p>{% trans 'Please note: Once the CMS Address and Key are authenticated in this form the Display will attempt to register with the CMS Instance details entered. Once transferred the Display will stop communicating with this CMS Instance.' %}</p>" +
                 '</div>'
@@ -570,8 +591,8 @@
 
             $(dialog).find('.modal-body').append($message);
 
-            let $cmsAddress =   $(
-                '<div class="form-group">' +
+            var $cmsAddress =   $(
+                '<div class="form-group row">' +
                     '<label class="col-sm-2 control-label" for="newCmsAddress" accesskey="">New CMS Address</label>' +
                     '<div class="col-sm-10">' +
                         '<input class="form-control" name="newCmsAddress" type="text" id="newCmsAddress" value="">' +
@@ -580,8 +601,8 @@
                 '</div>'
             );
 
-            let $cmsKey = $(
-                '<div class="form-group">' +
+            var $cmsKey = $(
+                '<div class="form-group row">' +
                     '<label class="col-sm-2 control-label" for="newCmsKey" accesskey="">New CMS Key</label>' +
                     '<div class="col-sm-10">' +
                         '<input class="form-control" name="newCmsKey" type="text" id="newCmsKey" value="">' +
@@ -590,8 +611,8 @@
                 '</div>'
             );
 
-            let $authenticationCode =   $(
-                '<div class="form-group">' +
+            var $authenticationCode =   $(
+                '<div class="form-group row">' +
                     '<label class="col-sm-2 control-label" for="twoFactorCode" accesskey="">Two Factor Code</label>' +
                     '<div class="col-sm-10">' +
                         '<input class="form-control" name="twoFactorCode" type="text" id="twoFactorCode" value="">' +
@@ -625,7 +646,7 @@
             // Parse special fields
             override.forEach(function(field, index) {
                 if(['lockOptions','pictureOptions', 'timers'].includes(field.name)) {
-                    let parsedValues = JSON.parse(field.value);
+                    var parsedValues = JSON.parse(field.value);
                     
                     // Add values to the override array
                     $.each(parsedValues, function(name, value){
@@ -652,23 +673,23 @@
             });
 
             // Method to create a new input field based on the hidden form
-            const createInputField = function(target, inputName, newValue = null) {
-                let select2FixFlag = false;
-                let timepickerFixFlag = false;
-                let timepickerOptionsFixFlag = false;
-                let sliderFixFlag = false;
-                let sliderFixOptions = {};
+            var createInputField = function(target, inputName, newValue = null) {
+                var select2FixFlag = false;
+                var timepickerFixFlag = false;
+                var timepickerOptionsFixFlag = false;
+                var sliderFixFlag = false;
+                var sliderFixOptions = {};
 
                 // Grab input field from hidden table
-                let $inputFields = $settings.find('#' + inputName);
+                var $inputFields = $settings.find('#' + inputName);
 
                 // If no input field is capture by ID, get special fields
                 if($inputFields.length == 0) {
                     if( $settings.find('.multiSelect').length > 0) {
                         // Copy special fields ( timers, pictureOptions ) by selected option
                         $inputFields = $settings.find('.multiSelect option:selected[value="' + inputName + '"]').parents('.form-group:first').find('.multiSelect, .multiSelectInputs');
-                        
-                        $inputFields.each((key, el) => {
+
+                        $inputFields.each(function(key, el) {
                             if($(el).find('.timePickerDisplayEditForm').length > 0) {
                                 timepickerOptionsFixFlag = true;
 
@@ -681,7 +702,7 @@
                                 $(el).find('.pictureControlsSlider').bootstrapSlider('destroy');
                             }
                         });
-                    } 
+                    }
                 } else if($inputFields.length == 1 && $inputFields.hasClass('timePicker')) {
                     timepickerFixFlag  = true;
 
@@ -722,7 +743,7 @@
                     $inputFieldsOld.find('.pictureControlsSlider').bootstrapSlider(sliderFixOptions);
                     $inputFields.find('.pictureControlsSlider').bootstrapSlider(sliderFixOptions);
                 }
-                
+
                 // Set value if defined
                 if(newValue != null) {
                     if($(target).find('.multiSelectInputs .pictureControlsSlider').length > 0) {
@@ -741,6 +762,8 @@
                     } else if($inputFields.attr('type') == 'checkbox') {
                         // CHECKBOX
                         $($inputFields).prop('checked', newValue);
+                    } else if(timepickerFixFlag) {
+                        $($inputFields).find('input').val(newValue);
                     } else {
                         $($inputFields).val(newValue);
                     }
@@ -758,7 +781,7 @@
                 // Style multi selects
                 if($(target).find('.multiSelectInputs').length > 0) {
                     // Calculate column size for bootstrap
-                    let colSize = Math.round(12/$(target).find('.multiSelectInputs').length);
+                    var colSize = Math.round(12/$(target).find('.multiSelectInputs').length);
                     
                     //Remove all style classes and add the new size class
                     $(target).find('.multiSelectInputs').attr('class', 'multiSelectInputs col-sm-' + colSize)
@@ -775,7 +798,13 @@
                 $(target).find('.slider').addClass('scaled-slider');
                 $(target).find('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
 
-                let $newButton = $('<button class="btn btn-danger btn-xs pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
+                // Add help text if exists on label
+                let inputHelpText = $(target).parent('tr').find('td:first strong').attr('title');
+                if(inputHelpText) {
+                    $(target).append('<div class="text-muted">' + inputHelpText + '</div>');
+                }
+
+                var $newButton = $('<button class="btn btn-outline-danger btn-sm pull-right button-close-override" type="button"><i class="fa fa-times"></i></button>').click(function (e) {
                     e.stopPropagation();
                     restoreInputField(target, inputName);
                  });
@@ -784,9 +813,9 @@
 
 
             // Method to restore the input field to the edit button
-            const restoreInputField = function(target, inputName) {
+            var restoreInputField = function(target, inputName) {
 
-                $(target).html('<button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button>');
+                $(target).html('<button class="btn btn-block btn-outline-secondary" type="button"><i class="fa fa-edit"></i></button>');
 
                 // Handlers for field edit
                 $(target).off().click(function() {
@@ -802,9 +831,11 @@
             $.each($settings, function(index, element) {
                 var $label = $(element).find('label');
                 var $input = $(element).find('input,select');
+                var $help = $(element).find('small.form-text.text-muted');
                 var over = $label.prop("for");
                 var value = '';
                 var text = '';
+                var help = $help.length > 0 ? $help.text() : '';
 
                 // Skip for some fields
                 if(['name', 'isDefault'].includes(over)) {
@@ -857,10 +888,10 @@
                 }
 
                 // Append new row to the table
-                var $tableNewRow = $('<tr class="row-fluid"><td class="col-xs-5"><strong>' + text + '</strong></td><td class="col-xs-3"><div>' + value + '</div></td><td class="col-xs-4 override-input" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
+                var $tableNewRow = $('<tr><td style="width: 40%;"><strong title="' + help + '">' + text + '</strong></td><td style="width: 25%;"><div>' + value + '</div></td><td class="override-input text-center" style="width: 35%;" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block btn-outline-secondary" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
 
                 // Get override element
-                var overrideEl = override.find((x) => { return x.name === over; });
+                var overrideEl = override.find(function(x) { return x.name === over; });
                 if(overrideEl != undefined) { //If element was found, create an input
 
                     // Create input with override value
@@ -870,12 +901,12 @@
 
             // Handlers for field edit
             $(dialog).find('.override-input[data-editing="false"]').click(function() {
-                const inputName = $(this).data('inputName');
+                var inputName = $(this).data('inputName');
                 createInputField($(this), inputName);
             });
 
             // Refresh on tab switch to fix broken labels
-            $('a[data-toggle="tab"]').on('shown.bs.tab', () =>  {
+            $('a[data-toggle="tab"]').on('shown.bs.tab', function() {
                 $('.pictureControlsSlider').bootstrapSlider('refresh', { useCurrentValue: true });
             });
 
@@ -885,11 +916,11 @@
 
         // Custom submit for display form
         function displayEditFormSubmit() {
-            let $form = $('#displayEditForm');
+            var $form = $('#displayEditForm');
             // Grab and alter the value in the bandwidth limit field
-            let bandwidthLimitField = $form.find("input[name=bandwidthLimit]");
-            let bandwidthLimitUnitsField = $form.find("select[name=bandwidthLimitUnits]");
-            let bandwidthLimit = bandwidthLimitField.val();
+            var bandwidthLimitField = $form.find("input[name=bandwidthLimit]");
+            var bandwidthLimitUnitsField = $form.find("select[name=bandwidthLimitUnits]");
+            var bandwidthLimit = bandwidthLimitField.val();
 
             if (bandwidthLimitUnitsField.val() == 'mb') {
                 bandwidthLimit = bandwidthLimit * 1024;
@@ -918,8 +949,8 @@
             // Replace all checkboxes with hidden input fields
             $form.find('input[type="checkbox"]').each(function () {
                 // Get checkbox values
-                let value = $(this).is(':checked') ? 'on' : 'off';
-                let id = $(this).attr('id');
+                var value = $(this).is(':checked') ? 'on' : 'off';
+                var id = $(this).attr('id');
 
                 // Create hidden input
                 $('<input type="hidden" class="temp-input">')
@@ -935,6 +966,42 @@
             // Submit form
             $form.submit();
         }
+
+        $('body').on('click', '.display-screenshot', function(el) {
+            var displayId = el.target.dataset.displayId;
+            var displayType = el.target.dataset.type;
+
+            var statusWindowData = {};
+
+            $.ajax({
+                url: "/display/status/" + displayId,
+                method: "GET",
+                dataType: "json",
+                success: function (data) {
+                    if (data != null) {
+                        // do some processing on data received from webOS and Tizen Players.
+                        if (displayType === 'webOS' || displayType === 'tizen') {
+                            data.logMessagesArray = JSON.stringify(data.logMessagesArray);
+                            data.allLayouts = JSON.stringify(data.allLayouts);
+                            data.scheduledLayouts = JSON.stringify(data.scheduledLayouts);
+                            data.validLayouts = JSON.stringify(data.validLayouts);
+                            data.invalidLayouts = JSON.stringify(data.invalidLayouts);
+                            data.blacklistArray = JSON.stringify(data.blacklistArray);
+                            data.spaceTotal = formatBytes(data.spaceTotal, 2);
+                            data.spaceFree = formatBytes(data.spaceFree, 2);
+                            data.spaceUsed = formatBytes(data.spaceUsed, 2);
+                            data.trialLicenseRemain = moment.unix(data.trialLicenseRemain).format('YYYY-MM-DD HH:mm:ss');
+                            data.mainLicenseRemain = moment.unix(data.mainLicenseRemain).format('YYYY-MM-DD HH:mm:ss');
+                        }
+
+                        statusWindowData['data'] = data;
+                        statusWindowData['type'] = displayType;
+                        var statusWindowTemplate = Handlebars.compile($('#display-status-window-template').html());
+                        $('.modal-body').append(statusWindowTemplate(statusWindowData));
+                    }
+                }
+            });
+        });
     </script>
 
     <style>

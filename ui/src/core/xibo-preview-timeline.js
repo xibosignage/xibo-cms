@@ -38,8 +38,8 @@ function Preview(regionElement)
 	
 	// Create the Nav Buttons
 	$('.previewNav', this.previewElement)
-		.append("<div class='prevSeq glyphicon glyphicon-arrow-left'></div>")
-		.append("<div class='nextSeq glyphicon glyphicon-arrow-right'></div>")
+		.append("<div class='prevSeq fa fa-arrow-left'></div>")
+		.append("<div class='nextSeq fa fa-arrow-right'></div>")
 		.append("<div class='preview-media-information'></div>");
 
 	$('.prevSeq', $(this.previewElement)).click(function() {

@@ -40,12 +40,12 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "Details" %}</span></a></li>
-                <li><a href="#reference" role="tab" data-toggle="tab"><span>{% trans "Reference" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "Details" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#reference" role="tab" data-toggle="tab"><span>{% trans "Reference" %}</span></a></li>
                 {% if currentUser.userTypeId == 1 %}
-                    <li><a href="#notifications" role="tab" data-toggle="tab"><span>{% trans "Notifications" %}</span></a></li>
+                    <li class="nav-item"><a class="nav-link" href="#notifications" role="tab" data-toggle="tab"><span>{% trans "Notifications" %}</span></a></li>
                 {% endif %}
-                <li><a href="#optionsTab" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#optionsTab" role="tab" data-toggle="tab"><span>{% trans "Options" %}</span></a></li>
             </ul>
             <form id="userAddForm" class="UserForm form-horizontal" method="post" action="{{ url_for("user.add") }}">
                 <div class="tab-content">
@@ -62,17 +62,13 @@
                         {% set helpText %}{% trans "The Email Address for this user." %}{% endset %}
                         {{ forms.email("email", title, "", helpText) }}
 
-                        {% set title %}{% trans "Homepage" %}{% endset %}
-                        {% set helpText %}{% trans "Homepage for this user. This is the page they will be taken to when they login." %}{% endset %}
-                        {{ forms.dropdown("homePageId", "single", title, 1, options.homepage, "pageId", "title", helpText) }}
-
                         {% set title %}{% trans "User Type" %}{% endset %}
                         {% set helpText %}{% trans "What is this users type?" %}{% endset %}
                         {{ forms.dropdown("userTypeId", "single", title, options.defaultUserType, options.userTypes, "userTypeId", "userType", helpText) }}
 
                         {% set title %}{% trans "Library Quota" %}{% endset %}
                         {% set helpText %}{% trans "The quota that should be applied. Enter 0 for no quota." %}{% endset %}
-                        <div class="form-group">
+                        <div class="form-group row">
                             <label class="col-sm-2 control-label" for="libraryQuota">{{ title }}</label>
                             <div class="col-sm-6">
                                 <input class="form-control" name="libraryQuota" type="number" id="libraryQuota" min="0" />
@@ -89,14 +85,33 @@
 
                         {% set attributes = [
                         { name: "data-live-search", value: "true" },
+                        { name: "data-placeholder--id", value: null },
+                        { name: "data-placeholder--value", value: "" },
+                        { name: "data-search-url", value: url_for("group.search") },
+                        { name: "data-search-term", value: "group" },
+                        { name: "data-id-property", value: "groupId" },
+                        { name: "data-text-property", value: "group" },
+                        { name: "data-initial-key", value: "userGroupId" },
+                        { name: "data-initial-value", value: options.defaultGroupId },
                         { name: "data-selected-text-format", value: "count > 4" }
                         ] %}
 
                         {% set title %}{% trans "Initial User Group" %}{% endset %}
                         {% set helpText %}{% trans "Select a User Group for this User so that they get access to the parts of the application they need." %}{% endset %}
-                        {{ forms.dropdown("groupId", "single", title, options.defaultGroupId, options.groups, "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
+                        {{ forms.dropdown("groupId", "single", title, null, [], "groupId", "group", helpText, "pagedSelect", "", "", "", attributes) }}
 
-                        {{ forms.message("User Groups are an easy way to configure a set of features and permissions which can be applied to multiple users. After adding a User they can be assigned to multiple Groups or have individual permissions assigned to them directly."|trans, "well") }}
+                        {{ forms.message("User Groups are an easy way to configure a set of features and permissions which can be applied to multiple users. After adding a User they can be assigned to multiple Groups or have individual permissions assigned to them directly."|trans, "card p-3 mb-3 bg-light") }}
+
+                        {% set title %}{% trans "Homepage" %}{% endset %}
+                        {% set helpText %}{% trans "Homepage for this user. This is the page they will be taken to when they login." %}{% endset %}
+                        <div class="form-group row">
+                            <label class="col-sm-2 control-label" for="homePageId">{{ title }}</label>
+                            <div class="col-sm-10">
+                                <select name="homePageId" class="form-control homepage-select" required data-search-url="{{ url_for("user.homepages.search") }}">
+                                </select>
+                                <span class="help-block">{{ helpText }}</span>
+                            </div>
+                        </div>
                     </div>
                     <div class="tab-pane" id="reference">
                         {% set title %}{% trans "First Name" %}{% endset %}

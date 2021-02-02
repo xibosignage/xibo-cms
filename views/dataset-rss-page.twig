@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2018 Xibo Signage Ltd
+ * Copyright (C) 2020 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,9 +27,9 @@
 {% block title %}{% trans %}RSS Feeds for {{ dataSetName }}{% endtrans %} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add RSS" %}" href="{{ url_for("dataSet.rss.add.form", {id: dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add RSS" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add RSS" %}" href="{{ url_for("dataSet.rss.add.form", {id: dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add RSS" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -39,14 +39,14 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="datasets" class="table table-striped">
+                <div class="XiboData card pt-3">
+                    <table id="datasets" class="table table-striped" data-state-preference-name="dataSetRssGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "ID" %}</th>
@@ -73,37 +73,9 @@
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=dataSetRssGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "dataSetColumnGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+            responsive: true,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
@@ -123,13 +95,14 @@
                         if (type !== "display")
                             return "";
 
-                        var url = window.location.origin + "{{ url_for("dataSet.rss.feed") }}".replace(':psk', data.psk);
+                        var url = window.location.origin + "{{ url_for("dataSet.rss.feed", {psk: ':psk'}) }}".replace(':psk', data.psk);
 
                         return "<a href=\"" + url + "\" target=\"_blank\">" + url + "</a>";
                     }
                 },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]
@@ -137,7 +110,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-md-6').eq(1));
 
         /**
          * Configure the Query Building on DataSetRss Add/Edit forms.
@@ -313,7 +286,7 @@
 
     {% verbatim %}
         <script type="text/x-handlebars-template" id="dataSetViewOrderClauseTemplate">
-            <div class="form-group">
+            <div class="form-group row">
                 <label class="col-sm-1 control-label" for="orderClause[]">{{ title }}</label>
                 <div class="col-sm-7">
                     <select class="form-control" name="orderClause[]">
@@ -332,16 +305,16 @@
                     </label>
                 </div>
                 <div class="col-sm-1">
-                    <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+                    <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
                 </div>
             </div>
         </script>
 
         <script type="text/x-handlebars-template" id="dataSetViewFilterClauseTemplate">
-            <div class="form-group">
+            <div class="form-group row">
                 <label class="col-sm-1 control-label" for="filterClause[]">{{ title }}</label>
                 <div class="col-sm-2">
-                    <label for="filterClauseOperator[]" {{#eq title "1"}}class="hidden"{{/eq}}>
+                    <label for="filterClauseOperator[]" {{#eq title "1"}}class="d-none"{{/eq}}>
                     <select class="form-control" name="filterClauseOperator[]">
                         {{#each filterOperatorOptions}}
                         <option value="{{ id }}" {{#eq id ../filterClauseOperator}}selected{{/eq}}>{{ value }}</option>
@@ -372,7 +345,7 @@
                     </label>
                 </div>
                 <div class="col-sm-1">
-                    <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+                    <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
                 </div>
             </div>
         </script>

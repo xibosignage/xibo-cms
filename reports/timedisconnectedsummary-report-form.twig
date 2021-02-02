@@ -1,0 +1,247 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=timedisconnectedsummary"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}?reportName=timedisconnectedsummary"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+        <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}?reportName=timedisconnectedsummary"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
+    </div>
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <span>{% trans "Time Connected" %}</span>
+        </div>
+        <div class="widget-navigation-menu">
+            <ul class="nav nav-pills">
+                <li role="presentation" class="nav-item"><a class="nav-link" href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
+                    <div class="dropdown-menu">
+                        {% for reports in defaults.availableReports %}
+                            {% for report in reports %}
+                                {% if report.hidden == 0 and report.category == 'Display'%}
+                                    <a class="dropdown-item" href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </li>
+            </ul>
+        </div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboFilter">
+                    <div class="FilterDiv card-body" id="availabilityFilter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "From Date" %}{% endset %}
+                            {{ inline.date("availabilityFromDt", title, defaults.fromDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "To Date" %}{% endset %}
+                            {{ inline.date("availabilityToDt", title, defaults.toDate, "", "", "", "") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {% set title %}{% trans "Display Group" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value:  url_for("displayGroup.search") },
+                                { name: "data-search-term", value: "displayGroup" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "displayGroupId" },
+                                { name: "data-text-property", value: "displayGroup" }
+                            ] %}
+                            {{ inline.dropdown("displayGroupId", "single", title, "", null, "displayGroupId", "displayGroup", "", "pagedSelect", "", "d", "", attributes) }}
+
+                            {% if currentUser.featureEnabled("tag.tagging") %}
+                                {% set title %}{% trans "Tags" %}{% endset %}
+                                {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                            {% endif %}
+
+                            {% set title %}{% trans "Only show currently logged in?" %}{% endset %}
+                            {{ inline.checkbox("onlyLoggedIn", title) }}
+                        </form>
+                    </div>
+                </div>
+                <br/>
+                <div class="XiboData card pt-3">
+                    <table id="stats" class="table table-striped">
+                        <thead>
+                        <tr>
+                            <th>{% trans "Display ID" %}</th>
+                            <th>{% trans "Display" %}</th>
+                            <th>{% trans "Time Disconnected" %}</th>
+                            <th>{% trans "Time Connected" %}</th>
+                            <th>{% trans "Units" %}</th>
+
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="widget">
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}">
+                <div class="XiboData" style="margin-top: 25px;">
+                    <canvas id="availabilityChart" style="clear:both; margin-top:25px;" height="330"></canvas>
+                </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+
+        $(function () {
+            $('[data-toggle="popover"]').popover();
+        });
+
+        var availabilityChart = null;
+
+        $(document).ready(function() {
+            var table = $("#stats").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true, stateDuration: 0,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[0, "asc"]],
+                ajax: {
+                    "url": "{{ url_for("report.data", {name: reportName}) }}",
+                    "data": function (d) {
+                        $.extend(d, $("#stats").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "displayId"},
+                    {"data": "display"},
+                    {"data": "timeDisconnected", "sortable": false},
+                    {"data": "timeConnected", "sortable": false},
+                    {"data": "postUnits", "sortable": false}
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', function(e, settings, processing) {
+                dataTableProcessing(e, settings, processing);
+
+                if (!processing) {
+                    // Render a Time Disconnected graph
+                    if (availabilityChart !== undefined && availabilityChart !== null) {
+                        console.log('Destroying Chart');
+                        availabilityChart.destroy();
+                    }
+
+                    // Organise our rows into datasets for the chart
+                    var availabilityData = [];
+                    var availabilityDataConnected = [];
+                    var availabilityLabels = [];
+                    var postUnits = "";
+                    var dataSets = [];
+
+                    $.each(table.data(), function(index, el) {
+                        availabilityData.push(el.timeDisconnected);
+                        availabilityDataConnected.push(el.timeConnected);
+                        availabilityLabels.push(el.display);
+                        postUnits = el.postUnits;
+                    });
+                    dataSets.push({
+                        label: "{% trans "Downtime" %}",
+                        backgroundColor: "rgb(11, 98, 164)",
+                        data: availabilityData
+                    });
+                    if (availabilityDataConnected != null) {
+                        dataSets.push({
+                            label: "{% trans "Uptime" %}",
+                            backgroundColor: "rgb(0, 255, 0)",
+                            data: availabilityDataConnected
+                        });
+                    }
+
+                    // Create our chart
+                    availabilityChart = new Chart($("#availabilityChart"), {
+                        type: "bar",
+                        data: {
+                            labels: availabilityLabels,
+                            datasets: dataSets
+                        },
+                        options: {
+                            scales: {
+                                xAxes: [{
+                                    stacked: true
+                                }],
+                                yAxes: [{
+                                    scaleLabel: {
+                                        display: true,
+                                        labelString: postUnits,
+                                    },
+                                    stacked: true
+                                }]
+                            },
+                            legend: {
+                                display: false
+                            },
+                            maintainAspectRatio: false,
+                        }
+                    });
+                }
+            });
+
+            $("#refreshGrid").click(function () {
+                table.ajax.reload();
+            });
+        });
+
+    </script>
+{% endblock %}

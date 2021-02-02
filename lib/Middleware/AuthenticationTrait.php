@@ -82,14 +82,6 @@ trait AuthenticationTrait
     }
 
     /**
-     * @return \Xibo\Factory\PageFactory
-     */
-    protected function getPageFactory()
-    {
-        return $this->app->getContainer()->get('pageFactory');
-    }
-
-    /**
      * @return \Xibo\Factory\UserGroupFactory
      */
     protected function getUserGroupFactory()
@@ -106,7 +98,7 @@ trait AuthenticationTrait
 
         /** @var User $user */
         $user = $container->get('userFactory')->create();
-        $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
+        $user->setChildAclDependencies($container->get('userGroupFactory'));
 
         return $user;
     }
@@ -121,7 +113,7 @@ trait AuthenticationTrait
         $user = $container->get('userFactory')->getById($userId);
 
         // Pass the page factory into the user object, so that it can check its page permissions
-        $user->setChildAclDependencies($container->get('userGroupFactory'), $container->get('pageFactory'));
+        $user->setChildAclDependencies($container->get('userGroupFactory'));
 
         // Load the user
         $user->load(false);

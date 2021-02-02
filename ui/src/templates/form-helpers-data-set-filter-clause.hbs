@@ -1,6 +1,6 @@
-<div class="form-inline text-center">
+<div class="form-inline justify-content-between p-1">
     <label class="form-group">{{ title }}</label>
-    <div class="form-group" {{#eq title "1"}}class="hidden"{{/eq}}>
+    <div class="form-group" {{#eq title "1"}}class="d-none"{{/eq}}>
         <select class="form-control" name="filterClauseOperator[]">
             {{#each filterOperatorOptions}}
                 <option value="{{ id }}" {{#eq id ../filterClauseOperator}}selected{{/eq}}>{{ value }}</option>
@@ -25,5 +25,5 @@
     <div class="form-group">
         <input class="form-control" name="filterClauseValue[]" type="text" value="{{ filterClauseValue }}" />
     </div>
-    <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+    <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
 </div>

@@ -1,0 +1,212 @@
+{#
+/*
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ * Copyright (C) 2019 Xibo Signage Ltd
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block pageContent %}
+    {% for key,reports in defaults.availableReports %}
+        <div class="row reports-available">
+            <div class="reports-available-title col-12">
+                <span>{{ key }}</span>
+            </div>
+            {% if key == "Proof of Play" and currentUser.featureEnabled("proof-of-play") %}
+                <div class="col-lg-3 col-md-6 col-12">
+                    <div class="widget content" style="min-height: 210px">
+                        <div class="widget-body">
+                            <div class="widget-icon green">
+                                <a class="XiboFormButton btns" href="{{ url_for("stats.export.form") }}"> <i class="fa fa-external-link"></i></a>
+                            </div>
+                            <div class="widget-content">
+                                <div class="report-title">{% trans "Proof of Play" %}</div>
+                                <div class="comment"><a class="XiboFormButton btns" href="{{ url_for("stats.export.form") }}">{% trans "Export" %}</a></div>
+                            </div>
+                            <div class="clearfix"></div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+            {% for report in reports %}
+                {% if report.hidden == 0 %}
+                    <div class="report-box col-lg-3 col-md-6 col-12">
+                        <div class="widget content" style="min-height: 210px">
+                            <div class="widget-body">
+                                <div class="widget-icon {{ report.color }} ">
+                                    <i class="fa {{ report.fa_icon }}"></i>
+                                </div>
+                                <div class="widget-content">
+                                    <div class="report-title">  {{ report.description }}  </div>
+                                    <div class="comment"><a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.type }}</a></div>
+                                </div>
+                                <div class="clearfix"></div>
+                            </div>
+                        </div>
+                    </div>
+                {% endif %}
+            {% endfor %}
+        </div>
+    {% endfor %}
+{% endblock %}
+
+
+{% block javaScript %}
+    <script type="text/javascript">
+        function statsExportFormSelect(dialog) {
+            var fromDtLink;
+            var toDtLink;
+            var displayId;
+
+            $(dialog).find("input, select").on("change", function() {
+
+                fromDtLink =  $(dialog).find("#fromDt").val();
+                toDtLink =  $(dialog).find("#toDt").val();
+                displayId =  $(dialog).find("#displayId").val();
+
+                if (!(
+                    fromDtLink === null ||  toDtLink === null  ||
+                    fromDtLink === '' ||  toDtLink === ''  ||
+                    fromDtLink === undefined || toDtLink === undefined
+                )) {
+
+                    $(dialog).find(".total-stat").remove();
+                    $(dialog).find('.save-button').prop('disabled', true);
+                    $(dialog).find(".loading-overlay").show();
+
+                    $.ajax({
+                        type: "get",
+                        url: "{{ url_for("stats.getExportStatsCount") }}",
+                        cache: false,
+                        dataType: "json",
+                        data: {
+                            fromDt: fromDtLink,
+                            toDt: toDtLink,
+                            displayId: displayId
+                        },
+
+                        success: function(response) {
+
+                            $(dialog).find(".loading-overlay").hide();
+
+                            if (response.success === false) {
+                                $(dialog).find("#totalStat").append('<div class="total-stat alert alert-danger">' + response.message + '</strong></div>');
+                                return;
+                            } else {
+                                var total = response.data.total;
+                                $(dialog).find("#totalStat").append('<div class="total-stat alert alert-success">{% trans "Total number of records to be exported: <strong> " %}' + total + '</strong></div>');
+                            }
+
+                            $(dialog).find('.save-button').prop('disabled', false);
+                        }
+                    });
+                }
+            });
+        }
+
+        function statsExportFormSubmit() {
+            var form = $("#statisticsExportForm");
+            var valid = true;
+
+            var validateForm = function(element) {
+                if (element.val() == null || element.val() == '') {
+                    valid = false;
+                    element.closest('.form-group').removeClass('has-success').addClass('has-error');
+                } else {
+                    element.closest('.form-group').addClass('has-success').removeClass('has-error');
+                }
+            };
+
+            validateForm(form.find("#fromDt"));
+            validateForm(form.find("#toDt"));
+
+            if (valid) {
+                form.submit();
+                form.find(".form-error").remove();
+
+                XiboDialogClose();
+
+            } else {
+                // Remove the spinner
+                form.closest(".modal-dialog").find(".saving").remove();
+                // https://github.com/xibosignage/xibo/issues/1589
+                form.closest(".modal-dialog").find(".save-button").removeClass("disabled");
+
+                if (!form.find(".form-error").length) {
+                    form.append('<div class="alert alert-danger form-error">{% trans "Form field is required." %}</div>');
+                }
+            }
+        }
+
+        // Or use this to Open link in same window (similar to target=_blank)
+        $(".report-box").click(function(){
+            window.location = $(this).find("a:first").attr("href");
+            return false;
+        });
+
+    </script>
+
+    <style>
+        .row-flex {
+            display: flex;
+            flex-wrap: wrap;
+        }
+
+        .content {
+            height: 100%;
+            padding: 20px;
+            border-radius: 5px;
+        }
+
+        .reports-available {
+            background-color: #d2e0db;
+            border: 1px solid #d2e0db;
+            border-radius: 5px;
+            margin: 0 1rem 1rem 1rem !important;
+        }
+
+        .reports-available-title {
+            width: 100%;
+            margin-top: 1rem;
+            color: #273759;
+            font-size: 1.4rem;
+        }
+
+        div.report-box {
+            position: relative;
+        }
+
+        div.report-box:hover {
+            cursor: pointer;
+            opacity: .9;
+        }
+
+        .widget .widget-content .report-title {
+            font-size: 1.15rem;
+            padding: 10px 0 0;
+            display: block;
+        }
+
+        .widget .widget-content .comment {
+            font-size: 1rem;
+        }
+    </style>
+{% endblock %}

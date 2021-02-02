@@ -31,7 +31,7 @@
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="htmlPackageEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}" data-widget-id="{{ module.widget.widgetId }}" data-media-id="{{ module.getMediaId() }}" data-media-editable="{{ currentUser.checkEditable(module.getMedia()) }}" data-valid-extensions="{{ validExtensions }}">
@@ -43,7 +43,7 @@
 
                         {% set title %}{% trans "Nominated File" %}{% endset %}
                         {% set helpText %}{% trans "Enter a nominated file name that player will attempt to open after extracting the .htz archive" %}{% endset %}
-                        {{ forms.input("nominatedFile", title, module.getOption("nominatedFile", 'index.html'), helpText) }}
+                        {{ forms.input("nominatedFile", title, module.getOption("nominatedFile", 'index.html')|url_decode, helpText) }}
 
                         {% set title %}{% trans "Set a duration?" %}{% endset %}
                         {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}

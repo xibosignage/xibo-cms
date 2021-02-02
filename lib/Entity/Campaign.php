@@ -85,6 +85,18 @@ class Campaign implements \JsonSerializable
     public $tagValues;
 
     /**
+     * @SWG\Property(description="The id of the Folder this Campaign belongs to")
+     * @var int
+     */
+    public $folderId;
+
+    /**
+     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Campaign")
+     * @var int
+     */
+    public $permissionsFolderId;
+
+    /**
      * @var Layout[]
      */
     private $layouts = [];
@@ -180,6 +192,11 @@ class Campaign implements \JsonSerializable
     public function getId()
     {
         return $this->campaignId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -288,6 +305,12 @@ class Campaign implements \JsonSerializable
 
             if (!in_array($tag, $this->tags)) {
                 $this->tags[] = $tag;
+            } else {
+                foreach ($this->tags as $currentTag) {
+                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
+                        $this->tags[] = $tag;
+                    }
+                }
             }
         } else {
             $this->getLog()->debug('No Tags to assign');
@@ -306,13 +329,12 @@ class Campaign implements \JsonSerializable
     {
         $this->load();
 
-        $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
-
-        $this->unassignTags[] = $tag;
+        foreach ($this->tags as $key => $currentTag) {
+            if ($currentTag->tagId === $tag->tagId && $currentTag->value === $tag->value) {
+                $this->unassignTags[] = $tag;
+                array_splice($this->tags, $key, 1);
+            }
+        }
 
         $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
 
@@ -373,6 +395,17 @@ class Campaign implements \JsonSerializable
             $this->update();
 
         if ($options['saveTags']) {
+            // Remove unwanted ones
+            if (is_array($this->unassignTags)) {
+                foreach ($this->unassignTags as $tag) {
+                    /* @var Tag $tag */
+                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
+
+                    $tag->unassignCampaign($this->campaignId);
+                    $tag->save();
+                }
+            }
+
             // Save the tags
             if (is_array($this->tags)) {
                 foreach ($this->tags as $tag) {
@@ -381,17 +414,6 @@ class Campaign implements \JsonSerializable
                     $this->getLog()->debug('Assigning tag ' . $tag->tag);
 
                     $tag->assignCampaign($this->campaignId);
-                    $tag->save();
-                }
-            }
-
-            // Remove unwanted ones
-            if (is_array($this->unassignTags)) {
-                foreach ($this->unassignTags as $tag) {
-                    /* @var Tag $tag */
-                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
-
-                    $tag->unassignCampaign($this->campaignId);
                     $tag->save();
                 }
             }
@@ -557,19 +579,23 @@ class Campaign implements \JsonSerializable
 
     private function add()
     {
-        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId) VALUES (:campaign, :isLayoutSpecific, :userId)', array(
+        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId, folderId, permissionsFolderId) VALUES (:campaign, :isLayoutSpecific, :userId, :folderId, :permissionsFolderId)', array(
             'campaign' => $this->campaign,
             'isLayoutSpecific' => $this->isLayoutSpecific,
-            'userId' => $this->ownerId
+            'userId' => $this->ownerId,
+            'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
         ));
     }
 
     private function update()
     {
-        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId WHERE CampaignID = :campaignId', [
+        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE CampaignID = :campaignId', [
             'campaignId' => $this->campaignId,
             'campaign' => $this->campaign,
-            'userId' => $this->ownerId
+            'userId' => $this->ownerId,
+            'folderId' => $this->folderId,
+            'permissionsFolderId' => $this->permissionsFolderId
         ]);
     }
 

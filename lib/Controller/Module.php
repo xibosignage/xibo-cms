@@ -217,7 +217,7 @@ class Module extends Base
             'moduleId' => $parsedQueryParams->getInt('moduleId')
         ];
 
-        $modules = $this->moduleFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $modules = $this->moduleFactory->query($this->gridRenderSort($parsedQueryParams), $this->gridRenderFilter($filter, $parsedQueryParams));
 
         foreach ($modules as $module) {
             /* @var \Xibo\Entity\Module $module */
@@ -239,7 +239,12 @@ class Module extends Base
                 $module->buttons[] = array(
                     'id' => 'module_button_clear_cache',
                     'url' => $this->urlFor($request,'module.clear.cache.form', ['id' => $module->moduleId]),
-                    'text' => __('Clear Cache')
+                    'text' => __('Clear Cache'),
+                    'dataAttributes' => [
+                        ['name' => 'auto-submit', 'value' => true],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'module.clear.cache', ['id' => $module->moduleId])],
+                        ['name' => 'commit-method', 'value' => 'PUT']
+                    ]
                 );
             }
 
@@ -594,21 +599,6 @@ class Module extends Base
         // existing Widgets are also saved.
         if ($displayOrder !== null) {
             $playlist->save();
-        }
-
-        // Permissions
-        if ($this->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
-            // Apply permissions from the Parent
-            foreach ($playlist->permissions as $permission) {
-                /* @var Permission $permission */
-                $permission = $this->permissionFactory->create($permission->groupId, get_class($module->widget), $module->widget->getId(), $permission->view, $permission->edit, $permission->delete);
-                $permission->save();
-            }
-        } else {
-            foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($module->widget), $module->widget->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-                /* @var Permission $permission */
-                $permission->save();
-            }
         }
 
         // Successful
@@ -1263,12 +1253,14 @@ class Module extends Base
      */
     public function getDataSets(Request $request, Response $response)
     {
+        $parsedRequestParams = $this->getSanitizer($request->getParams());
+
         $this->getState()->template = 'grid';
         $filter = [
             'dataSet' => $this->getSanitizer($request->getParams())->getString('dataSet')
         ];
 
-        $this->getState()->setData($this->dataSetFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request)));
+        $this->getState()->setData($this->dataSetFactory->query($this->gridRenderSort($parsedRequestParams), $this->gridRenderFilter($filter, $parsedRequestParams)));
         $this->getState()->recordsTotal = $this->dataSetFactory->countLast();
 
         return $this->render($request, $response);
@@ -1325,19 +1317,19 @@ class Module extends Base
             )
         ;
 
-        if ($module->getModule()->regionSpecific == 0) {
+        if ($module->getModule()->regionSpecific == 0 && $module->getModule()->renderAs != 'html') {
             // Non region specific module - no caching required as this is only ever called via preview.
-            $resource = $module->getResource();
+            $response = $module->download($request, $response);
         } else {
             // Region-specific module, need to handle caching and locking.
             $resource = $module->getResourceOrCache();
+
+            if (!empty($resource)) {
+                $response->getBody()->write($resource);
+            }
         }
 
         $this->setNoOutput(true);
-
-        if (!empty($resource)) {
-            $response->getBody()->write($resource);
-        }
 
         return $this->render($request, $response);
     }
@@ -1460,6 +1452,7 @@ class Module extends Base
         $module = $this->moduleFactory->getById($id);
 
         $this->getState()->template = 'module-form-clear-cache';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('clearCache');
         $this->getState()->setData([
             'module' => $module,
             'help' => $this->getHelp()->link('Module', 'General')

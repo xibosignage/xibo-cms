@@ -591,7 +591,20 @@ class Soap4 extends Soap
         $statusDialog = $sanitizedStatus->getString('statusDialog', ['default' => null]);
 
         if ($statusDialog !== null) {
+            // special handling for Android Players (Other Players send status as json already)
+            if ($this->display->clientType == 'android') {
+                $statusDialog = json_encode($statusDialog);
+            }
+
+            // Log in as an alert
             $this->getLog()->alert($statusDialog);
+
+            // Cache on the display as transient data
+            try {
+                $this->display->setStatusWindow($this->getPool(), json_decode($statusDialog, true));
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Unable to cache display status. e = ' . $exception->getMessage());
+            }
         }
 
         // Resolution

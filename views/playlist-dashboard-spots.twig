@@ -84,11 +84,11 @@
                                     <button class="btn btn-block btn-warning spot-action-button">{{ widget.module.getName() }} </button>
                                 {% endif %}
                             {% else %}
-                                <button class="btn btn-block btn-default" disabled>{{ widget.module.getName() }} - {% trans "Locked" %}</button>
+                                <button class="btn btn-block btn-white" disabled>{{ widget.module.getName() }} - {% trans "Locked" %}</button>
                             {% endif %}
                         </div>
                         <div class="col-md-1">
-                            {% if widget.deletable == 1 and currentUser.routeViewable("/playlist") and widget.module.getModule().regionSpecific == 0 %}
+                            {% if widget.deletable == 1 and currentUser.featureEnabled("playlist.modify") and widget.module.getModule().regionSpecific == 0 %}
                                 <a class="XiboFormButton btns" title="{% trans "Delete" %}" href="{{ url_for("playlist.module.widget.delete.form", {id: widget.widgetId}) }}">
                                     <i class="fa fa-lg fa-trash" aria-hidden="true" style="padding:8px 0 8px; color:#d9534f;"></i>
                                 </a>
@@ -113,11 +113,11 @@
                                  data-playlist-id="{{ playlist.playlistId }}"
                                  data-widget-preview="{{ url_for("library.download") }}?preview=1"
                                  data-widget-del="{{ url_for("playlist.module.widget.delete.form", {id:':id'}) }}"
-                                 data-route-viewable="{{ currentUser.routeViewable("/playlist")  }}">
+                                 data-feature-enabled="{{ currentUser.featureEnabled("playlist.modify")  }}">
                                 {% if loop.first %}
                                     <button class="btn btn-block btn-success spot-action-button">{% trans "Add" %}</button>
                                 {% else %}
-                                    <button class="btn btn-block btn-default" disabled>{% trans "Empty" %}</button>
+                                    <button class="btn btn-block btn-white" disabled>{% trans "Empty" %}</button>
                                 {% endif %}
                             </div>
 

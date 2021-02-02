@@ -85,11 +85,11 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         cy.populateLibraryWithMedia();
 
         // Open toolbar Widgets tab
-        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
-        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
+        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click({force:true});
 
         // Activate the Add button
-        cy.get('#layout-editor-toolbar #content-2 .toolbar-pane-content [data-sub-type="audio"] .add-area').invoke('show').click();
+        cy.get('#layout-editor-toolbar #content-2 .toolbar-pane-content [data-sub-type="audio"] .add-area').invoke('show').click({force:true});
 
         // Click on the region to add
         cy.get('#layout-timeline .designer-region:first').click();

@@ -66,12 +66,12 @@
                 <div class="alert alert-danger">{{ message }}</div>
             {% endif %}
 
-            <p><button class="btn btn-large btn-primary" type="submit">{% trans "Verify" %}</button></p>
+            <p><button class="btn btn-primary" type="submit">{% trans "Verify" %}</button></p>
 
             <p><a href="#" id="recovery-form-toggle">{% trans "Use Recovery Code instead?" %}</a></p>
         </form>
 
-    <form id="recovery-form" class="form-signin text-center hidden" action="{{ url_for("tfa.auth.validate") }}" method="post">
+    <form id="recovery-form" class="form-signin text-center d-none" action="{{ url_for("tfa.auth.validate") }}" method="post">
         {% for priorRoute in flash('priorRoute') %}
             <input name="priorRoute" type="hidden" value="{{ priorRoute }}" />
         {% endfor %}
@@ -85,7 +85,7 @@
             <div class="alert alert-danger">{{ loginMessage }}</div>
         {% endfor %}
 
-        <p><button class="btn btn-large btn-primary" type="submit">{% trans "Verify" %}</button></p>
+        <p><button class="btn btn-primary" type="submit">{% trans "Verify" %}</button></p>
 
         <p><a href="#" id="login-form-toggle">{% trans "Use Two Factor Code instead?" %}</a></p>
     </form>
@@ -97,15 +97,15 @@
         $("#recovery-form-toggle").on("click", function (e) {
             e.preventDefault();
 
-            $("#login-form").addClass("hidden");
-            $("#recovery-form").removeClass("hidden");
+            $("#login-form").addClass("d-none");
+            $("#recovery-form").removeClass("d-none");
         });
 
         $("#login-form-toggle").on("click", function (e) {
             e.preventDefault();
 
-            $("#login-form").removeClass("hidden");
-            $("#recovery-form").addClass("hidden");
+            $("#login-form").removeClass("d-none");
+            $("#recovery-form").addClass("d-none");
         });
     });
 </script>

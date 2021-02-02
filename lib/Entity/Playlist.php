@@ -93,7 +93,7 @@ class Playlist implements \JsonSerializable
     /**
      * @var string
      * @SWG\Property(
-     *  description="The datetime the Layout was created"
+     *  description="The datetime this entity was created"
      * )
      */
     public $createdDt;
@@ -101,7 +101,7 @@ class Playlist implements \JsonSerializable
     /**
      * @var string
      * @SWG\Property(
-     *  description="The datetime the Layout was last modified"
+     *  description="The datetime this entity was last modified"
      * )
      */
     public $modifiedDt;
@@ -159,6 +159,18 @@ class Playlist implements \JsonSerializable
     // Read only properties
     public $owner;
     public $groupsWithPermissions;
+
+    /**
+     * @SWG\Property(description="The id of the Folder this Playlist belongs to")
+     * @var int
+     */
+    public $folderId;
+
+    /**
+     * @SWG\Property(description="The id of the Folder responsible for providing permissions for this Playlist")
+     * @var int
+     */
+    public $permissionsFolderId;
 
     private $unassignTags = [];
 
@@ -251,7 +263,7 @@ class Playlist implements \JsonSerializable
      */
     private function hash()
     {
-        return md5($this->regionId . $this->playlistId . $this->ownerId . $this->name . $this->duration . $this->requiresDurationUpdate);
+        return md5($this->regionId . $this->playlistId . $this->ownerId . $this->name . $this->duration . $this->requiresDurationUpdate . $this->folderId);
     }
 
     /**
@@ -261,6 +273,11 @@ class Playlist implements \JsonSerializable
     public function getId()
     {
         return $this->playlistId;
+    }
+
+    public function getPermissionFolderId()
+    {
+        return $this->permissionsFolderId;
     }
 
     /**
@@ -482,6 +499,34 @@ class Playlist implements \JsonSerializable
     }
 
     /**
+     * Assign Tag
+     * @param Tag $tag
+     * @return $this
+     * @throws NotFoundException
+     */
+    public function assignTag($tag)
+    {
+        $this->load();
+
+        if ($this->tags != [$tag]) {
+
+            if (!in_array($tag, $this->tags)) {
+                $this->tags[] = $tag;
+            } else {
+                foreach ($this->tags as $currentTag) {
+                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
+                        $this->tags[] = $tag;
+                    }
+                }
+            }
+        } else {
+            $this->getLog()->debug('No Tags to assign');
+        }
+
+        return $this;
+    }
+
+    /**
      * Unassign tag
      * @param Tag $tag
      * @return $this
@@ -491,13 +536,12 @@ class Playlist implements \JsonSerializable
     {
         $this->load();
 
-        $this->tags = array_udiff($this->tags, [$tag], function($a, $b) {
-            /* @var Tag $a */
-            /* @var Tag $b */
-            return $a->tagId - $b->tagId;
-        });
-
-        $this->unassignTags[] = $tag;
+        foreach ($this->tags as $key => $currentTag) {
+            if ($currentTag->tagId === $tag->tagId && $currentTag->value === $tag->value) {
+                $this->unassignTags[] = $tag;
+                array_splice($this->tags, $key, 1);
+            }
+        }
 
         $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
 
@@ -626,6 +670,17 @@ class Playlist implements \JsonSerializable
         if ($options['saveTags']) {
             $this->getLog()->debug('Saving tags on ' . $this);
 
+            // Remove unwanted ones
+            if (is_array($this->unassignTags)) {
+                foreach ($this->unassignTags as $tag) {
+                    /* @var Tag $tag */
+                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
+
+                    $tag->unassignPlaylist($this->playlistId);
+                    $tag->save();
+                }
+            }
+
             // Save the tags
             if (is_array($this->tags)) {
                 foreach ($this->tags as $tag) {
@@ -634,17 +689,6 @@ class Playlist implements \JsonSerializable
                     $this->getLog()->debug('Assigning tag ' . $tag->tag);
 
                     $tag->assignPlaylist($this->playlistId);
-                    $tag->save();
-                }
-            }
-
-            // Remove unwanted ones
-            if (is_array($this->unassignTags)) {
-                foreach ($this->unassignTags as $tag) {
-                    /* @var Tag $tag */
-                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
-
-                    $tag->unassignPlaylist($this->playlistId);
                     $tag->save();
                 }
             }
@@ -762,8 +806,8 @@ class Playlist implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $sql = '
-        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`) 
-          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat)
+        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`, `folderId`, `permissionsFolderId`) 
+          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat, :folderId, :permissionsFolderId)
         ';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
@@ -775,7 +819,9 @@ class Playlist implements \JsonSerializable
             'createdDt' => $time,
             'modifiedDt' => $time,
             'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : $this->requiresDurationUpdate,
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
         ));
 
         // Insert my self link
@@ -803,7 +849,9 @@ class Playlist implements \JsonSerializable
                 `filterMediaName` = :filterMediaName,
                 `filterMediaTags` = :filterMediaTags,
                 `requiresDurationUpdate` = :requiresDurationUpdate,
-                `enableStat` = :enableStat
+                `enableStat` = :enableStat,
+                `folderId` = :folderId,
+                `permissionsFolderId` = :permissionsFolderId
              WHERE `playlistId` = :playlistId
         ';
 
@@ -818,7 +866,9 @@ class Playlist implements \JsonSerializable
             'filterMediaTags' => $this->filterMediaTags,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'requiresDurationUpdate' => $this->requiresDurationUpdate,
-            'enableStat' => $this->enableStat
+            'enableStat' => $this->enableStat,
+            'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this-> permissionsFolderId
         ));
     }
 

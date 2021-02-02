@@ -25,9 +25,11 @@
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="btns" href="#" id="playerSoftwareUploadForm" title="{% trans "Add a new media item to the player software library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Version" %}</a></li>
-    </ul>
+    {% if currentUser.featureEnabled("playersoftware.add") %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success" href="#" id="playerSoftwareUploadForm" title="{% trans "Add a new media item to the player software library" %}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Version" %}</button>
+    </div>
+    {% endif %}
 {% endblock %}
 
 
@@ -36,8 +38,8 @@
         <div class="widget-title">{% trans "Player Software" %}</div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="playerSoftwareView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% set title %}{% trans "Type" %}{% endset %}
                             {% set android %}{% trans "Android" %}{% endset %}
@@ -61,8 +63,8 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="playerSoftwareItems" class="table table-striped">
+                <div class="XiboData card pt-3">
+                    <table id="playerSoftwareItems" class="table table-striped" data-state-preference-name="playerSoftwareGrid">
                         <thead>
                         <tr>
                             <th>{% trans "Version ID" %}</th>
@@ -73,7 +75,7 @@
                             <th>{% trans "Media ID" %}</th>
                             <th>{% trans "Original File Name" %}</th>
                             <th>{% trans "Permissions" %}</th>
-                            <th>{% trans "Row Menu" %}</th>
+                            <th class="rowMenu"></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -92,38 +94,11 @@
         $(document).ready(function() {
             table = $("#playerSoftwareItems").DataTable({
                 "language": dataTablesLanguage,
-                serverSide: true, stateSave: true, stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=playerSoftwareGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "playerSoftwareGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
                 "order": [[2, "asc"]],
@@ -153,7 +128,7 @@
 
                 createdRow: function (row, data, index) {
                     if (data.version === "" || data.version === null || data.code === 0) {
-                        $(row).addClass('danger');
+                        $(row).addClass('table-danger');
                         $(row).attr('Title', "{{ warningLabel }}");
                     }
                 },
@@ -161,138 +136,45 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#playerSoftwareItems_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#playerSoftwareItems_wrapper').find('.col-md-6').eq(1));
         });
 
         $("#playerSoftwareUploadForm").click(function(e) {
             e.preventDefault();
 
             openUploadForm({
-                trans: {
-                    addFiles: "{% trans "Add files" %}",
-                    startUpload: "{% trans "Start upload" %}",
-                    cancelUpload: "{% trans "Cancel upload" %}",
-                    processing: "{% trans "Processing..." %}"
-                },
-                upload: {
-                    maxSize: {{ libraryUpload.maxSize }},
-                    maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
-                    validExt: "{{ validExt }}"
-                }
-            });
-        });
-
-        /**
-         * Opens the upload form
-         * @param templateOptions
-         */
-        function openUploadForm(templateOptions) {
-
-            var template = Handlebars.compile($("#template-file-upload").html());
-
-            // Handle bars and open a dialog
-            bootbox.dialog({
-                message: template(templateOptions),
+                url: "{{ url_for("library.add") }}",
                 title: "{% trans "Upload Version" %}",
+                multi: false,
+                videoImageCovers: false,
                 buttons: {
                     main: {
                         label: "{% trans "Done" %}",
-                        className: "btn-primary",
-                        callback: function() {
+                        className: "btn-primary btn-bb-main",
+                        callback: function () {
                             table.ajax.reload();
                             XiboDialogClose();
                         }
                     }
+                },
+                templateOptions: {
+                    trans: {
+                        addFiles: "{% trans "Add files" %}",
+                        startUpload: "{% trans "Start upload" %}",
+                        cancelUpload: "{% trans "Cancel upload" %}",
+                        processing: "{% trans "Processing..." %}"
+                    },
+                    upload: {
+                        maxSize: {{ libraryUpload.maxSize }},
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
+                        validExt: "{{ validExt }}"
+                    },
+                    updateInAllChecked: false,
+                    deleteOldRevisionsChecked: false,
+                    folderSelector: false
                 }
-            }).on('shown.bs.modal', function() {
-                // Configure the upload form
-                var url = "{{ url_for("library.add") }}";
-                var form = $(this).find("form");
-                var options = {
-                    url: url,
-                    disableImageResize: true,
-                    previewMaxWidth: 100,
-                    previewMaxHeight: 100,
-                    previewCrop: true
-                };
-                var refreshSessionInterval;
-
-                // Initialize the jQuery File Upload widget:
-                if(templateOptions.oldMediaId === undefined || templateOptions.oldMediaId === null) {
-                    form.fileupload(options);
-                } else {
-                    options = $.extend({}, options, {
-                        maxNumberOfFiles: 1,
-                        limitMultiFileUploads: 1
-                    });
-                    form.fileupload(options);
-                }
-
-                // Upload server status check for browsers with CORS support:
-                if ($.support.cors) {
-                    $.ajax({
-                        url: url,
-                        type: 'HEAD'
-                    }).fail(function () {
-                        $('<span class="alert alert-error"/>')
-                            .text('Upload server currently unavailable - ' + new Date())
-                            .appendTo(form);
-                    });
-                }
-
-                // Enable iframe cross-domain access via redirect option:
-                form.fileupload(
-                    'option',
-                    'redirect',
-                    window.location.href.replace(
-                        /\/[^\/]*$/,
-                        '/cors/result.html?%s'
-                    )
-                );
-
-                form.bind('fileuploadsubmit', function (e, data) {
-                    var inputs = data.context.find(':input');
-                    if (inputs.filter('[required][value=""]').first().focus().length) {
-                        return false;
-                    }
-                    data.formData = inputs.serializeArray().concat(form.serializeArray());
-
-                    inputs.filter("input").prop("disabled", true);
-                }).bind('fileuploadstart', function (e, data) {
-                    // Show progress data
-                    form.find('.fileupload-progress .progress-extended').show();
-                    form.find('.fileupload-progress .progress-end').hide();
-                                        
-                    if (form.fileupload("active") <= 0)
-                        refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
-
-                    return true;
-                }).bind('fileuploaddone', function (e, data) {
-                    if (refreshSessionInterval != null && form.fileupload("active") <= 0)
-                        clearInterval(refreshSessionInterval);
-                    if (templateOptions.oldMediaId !== undefined && templateOptions.oldMediaId !== null) {
-                        XiboDialogClose();
-                        table.ajax.reload();
-                    }
-                }).bind('fileuploadprogressall', function (e, data) {
-                    // Hide progress data and show processing
-                    if(data.total > 0 && data.loaded == data.total) {
-                        form.find('.fileupload-progress .progress-extended').hide();
-                        form.find('.fileupload-progress .progress-end').show();
-                    }
-                }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
-                    // Get uploaded and downloaded files and toggle Done button
-                    var filesToUploadCount = form.find('tr.template-upload').length;
-                    var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
-
-                    if(filesToUploadCount == 0) {
-                        $button.removeAttr('disabled');
-                    } else {
-                        $button.attr('disabled', 'disabled');
-                    }
-                });
             });
-        }
+        });
 
     </script>
 {% endblock %}

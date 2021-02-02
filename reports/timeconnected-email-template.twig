@@ -1,0 +1,70 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+<div>
+    <img class="logo right" src="{{ logo }}">
+</div>
+<div class="header">{{ header }}</div>
+<div class="title">{{ title }} <span class="small">({% trans "Generated on: " %}{{ generatedOn }})</span></div>
+<div>
+    <span class="small">{% trans "From" %} {{ periodStart }} {% trans "To" %} {{ periodEnd }}</span>
+</div>
+<span class="small" style="background-color: #d2d2d2; width:150px;">Grey is disconnected %</span>
+<span class="small" style="background-color: #5cb85c; width:150px;">Green is connected %</span>
+<p></p>
+
+<table class=" ">
+    <tbody>
+
+    {% set displays = tableData.displays %}
+    {% set timeConnected = tableData.timeConnected %}
+
+    {% for key,displayStat in timeConnected %}
+
+        <tr>
+            {% for option in displays[key] %}
+                <th colspan="2">{{ option }}</th>
+            {% endfor %}
+        </tr>
+
+        {% for item in displayStat %}
+            <tr>
+                {% for displayData in item %}
+                    {% set percent = "0%" %}
+                    {% if displayData.percent > 0 %}
+                        {% set percent = displayData.percent~"%" %}
+                    {% endif %}
+
+                    <td style="width:180px; text-align: right">{{ displayData.label }} - {{ displayData.percent }}%</td>
+                    <td>
+                        <progress id="file" value="{{ displayData.percent }}" max="100"> {{ displayData.percent }}% </progress>
+
+                    </td>
+                {% endfor %}
+            </tr>
+        {% endfor %}
+    {% endfor %}
+    </tbody>
+</table>
+
+

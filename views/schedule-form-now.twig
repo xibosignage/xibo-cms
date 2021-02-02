@@ -40,7 +40,7 @@
     <div class="row">
         <div class="col-md-12">
             <form id="scheduleNowForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("schedule.add") }}">
-                {{ forms.hidden("eventTypeId", "1") }}
+                {{ forms.hidden("eventTypeId", eventTypeId) }}
                 {{ forms.hidden("dayPartId", customDayPart.dayPartId) }}
                 {{ forms.hidden("alwaysDayPartId", alwaysDayPart.dayPartId) }}
                 {{ forms.hidden("customDayPartId", customDayPart.dayPartId) }}
@@ -49,31 +49,18 @@
                 {{ forms.hidden("syncTimezone", "1") }}
 
                 {# Campaign / Layout list. We want to build two arrays for us to use. #}
-                {% set layoutOptions = [] %}
-                {% set campaignOptions = [] %}
-
-                {% for item in campaigns %}
-                    {% if item.isLayoutSpecific == 1 %}
-                        {% set layoutOptions = [{id: item.campaignId, value: item.campaign}]|merge(layoutOptions) %}
-                    {% else %}
-                        {% set campaignOptions = [{id: item.campaignId, value: item.campaign}]|merge(campaignOptions) %}
-                    {% endif %}
-                {% endfor %}
-
-                {% set campaigns %}{% trans "Campaigns" %}{% endset %}
-                {% set layouts %}{% trans "Layouts" %}{% endset %}
-                {% set optionGroups = [
-                {id: "campaign", label: campaigns},
-                {id: "layout", label: layouts}
-                ] %}
-                {% set title %}{% trans "Layout / Campaign" %}{% endset %}
-                {% set helpText %}{% trans "Please select a Layout or Campaign for this Event to show" %}{% endset %}
                 {% set attributes = [
-                    { name: "data-live-search", value: "true" },
-                    { name: "data-selected-text-format", value: "count > 4" },
-                    { name: "data-width", value: "100%" },
+                    { name: "data-search-url", value:  url_for("campaign.search") },
+                    { name: "data-search-is-layout-specific", value: -1 },
+                    { name: "data-trans-layout", value: "Layout"|trans },
+                    { name: "data-trans-layout-help-text", value: "Please select a Layout for this Event to show"|trans },
+                    { name: "data-trans-campaign", value: "Campaign"|trans },
+                    { name: "data-trans-campaign-help-text", value: "Please select a Campaign for this Event to show"|trans },
                 ] %}
-                {{ forms.dropdown("campaignId", "single", title, campaignId, {campaign: campaignOptions, layout: layoutOptions}, "id", "value", helpText, "", "", "", "", attributes, optionGroups) }}
+
+                {% set title %}{% trans "Layout" %}{% endset %}
+                {% set helpText %}{% trans "Please select a Layout for this Event to show" %}{% endset %}
+                {{ forms.dropdown("campaignId", "single", title, campaign.campaignId, [campaign], "campaignId", "campaign", helpText, "layout-control", "", "", "", attributes) }}
 
                 {% set title %}{% trans "Always?" %}{% endset %}
                 {% set helpText %}{% trans "Run this event from now and dont stop." %}{% endset %}
@@ -92,22 +79,16 @@
                 {{ forms.number("seconds", title, "", helpText, "schedule-now-seconds-field duration-part") }}
 
                 {% set title %}{% trans %}Your event will be scheduled from [fromDt] to [toDt] in the CMS timezone, please check this covers each of your Displays in their respective timezones.{% endtrans %}{% endset %}
-                <div class="alert alert-info scheduleNowMessage hidden" data-template="{{ title }}"></div>
+                <div class="alert alert-info scheduleNowMessage d-none" data-template="{{ title }}"></div>
 
                 {% set title %}{% trans "Display" %}{% endset %}
                 {% set helpText %}{% trans "Please select one or more displays / groups for this event to be shown on." %}{% endset %}
                 {% set attributes = [
-                    { name: "data-live-search", value: "true" },
-                    { name: "data-selected-text-format", value: "count > 4" },
-                    { name: "data-width", value: "100%" },
+                    { name: "data-search-url", value:  url_for("displayGroup.search") },
+                    { name: "data-trans-groups", value:  "Groups"|trans },
+                    { name: "data-trans-display", value:  "Display"|trans }
                 ] %}
-                {% set transGroups %}{% trans "Groups" %}{% endset %}
-                {% set transDisplays %}{% trans "Display" %}{% endset %}
-                {% set optionGroups = [
-                {id: "group", label: transGroups},
-                {id: "display", label: transDisplays}
-                ] %}
-                {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, [displayGroupId], {group: displayGroups, display: displays}, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes, optionGroups) }}
+                {{ forms.dropdown("displayGroupIds[]", "dropdownmulti", title, [displayGroupId], displayGroup, "displayGroupId", "displayGroup", helpText, "", "", "", "", attributes) }}
 
                 {% set title %}{% trans "Display Order" %}{% endset %}
                 {% set helpText %}{% trans "Should this event have an order?" %}{% endset %}

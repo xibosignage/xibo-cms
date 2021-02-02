@@ -339,7 +339,8 @@ class Schedule extends Base
             }
 
             // Event Permissions
-            $editable = $this->isEventEditable($row->displayGroups);
+            $editable = $this->getUser()->featureEnabled('schedule.modify')
+                && $this->isEventEditable($row->displayGroups);
 
             // Event Title
             if ($row->campaignId == 0) {
@@ -438,7 +439,7 @@ class Schedule extends Base
                     'editable' => $editable,
                     'event' => $row,
                     'scheduleEvent' => $scheduleEvent,
-                    'recurringEvent' => ($row->recurrenceType != '') ? true : false
+                    'recurringEvent' => $row->recurrenceType != ''
                 ];
             }
         }
@@ -932,6 +933,13 @@ class Schedule extends Base
      *      required=false,
      *      @SWG\Items(type="string")
      *   ),
+     *   @SWG\Parameter(
+     *      name="geoLocationJson",
+     *      in="formData",
+     *      description="Valid GeoJSON string, use as an alternative to geoLocation parameter",
+     *      type="string",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -972,16 +980,18 @@ class Schedule extends Base
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice') : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
 
-        if ($this->isApi($request)) {
-            if ($schedule->isGeoAware === 1) {
+        // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
+        if ($this->isApi($request) && $schedule->isGeoAware === 1) {
+            if ($sanitizedParams->getArray('geoLocation') != null) {
                 // get string array from API
                 $coordinates = $sanitizedParams->getArray('geoLocation');
-
-                // generate geo json and assign to Schedule
+                // generate GeoJSON and assign to Schedule
                 $schedule->geoLocation = $this->createGeoJson($coordinates);
+            } else {
+                // we were provided with GeoJSON
+                $schedule->geoLocation = $sanitizedParams->getString('geoLocationJson');
             }
         } else {
-
             // if we are not using API, then valid GeoJSON is created in the front end.
             $schedule->geoLocation = $sanitizedParams->getString('geoLocation');
         }
@@ -1061,6 +1071,9 @@ class Schedule extends Base
 
         // Ready to do the add
         $schedule->setDisplayFactory($this->displayFactory);
+        if ($schedule->campaignId != null) {
+            $schedule->setCampaignFactory($this->campaignFactory);
+        }
         $schedule->save();
 
         $this->getLog()->debug('Add Schedule Reminder');
@@ -1438,6 +1451,13 @@ class Schedule extends Base
      *      required=false,
      *      @SWG\Items(type="string")
      *   ),
+     *   @SWG\Parameter(
+     *      name="geoLocationJson",
+     *      in="formData",
+     *      description="Valid GeoJSON string, use as an alternative to geoLocation parameter",
+     *      type="string",
+     *      required=false
+     *   ),
      *   @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -1477,17 +1497,18 @@ class Schedule extends Base
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice') : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
 
-
-        if ($this->isApi($request)) {
-            if ($schedule->isGeoAware === 1) {
+        // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
+        if ($this->isApi($request) && $schedule->isGeoAware === 1) {
+            if ($sanitizedParams->getArray('geoLocation') != null) {
                 // get string array from API
                 $coordinates = $sanitizedParams->getArray('geoLocation');
-
-                // generate geo json and assign to Schedule
+                // generate GeoJSON and assign to Schedule
                 $schedule->geoLocation = $this->createGeoJson($coordinates);
+            } else {
+                // we were provided with GeoJSON
+                $schedule->geoLocation = $sanitizedParams->getString('geoLocationJson');
             }
         } else {
-
             // if we are not using API, then valid GeoJSON is created in the front end.
             $schedule->geoLocation = $sanitizedParams->getString('geoLocation');
         }
@@ -1555,6 +1576,9 @@ class Schedule extends Base
 
         // Ready to do the add
         $schedule->setDisplayFactory($this->displayFactory);
+        if ($schedule->campaignId != null) {
+            $schedule->setCampaignFactory($this->campaignFactory);
+        }
         $schedule->save();
 
         // Get form reminders
@@ -1760,6 +1784,10 @@ class Schedule extends Base
      */
     private function isEventEditable($displayGroups)
     {
+        if (!$this->getUser()->featureEnabled('schedule.modify')) {
+            return false;
+        }
+
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
 
         // Work out if this event is editable or not. To do this we need to compare the permissions
@@ -1793,32 +1821,12 @@ class Schedule extends Base
      */
     public function scheduleNowForm(Request $request, Response $response,$from, $id)
     {
-        $groups = [];
-        $displays = [];
-        $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
-
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $\Xibo\Entity\DisplayGroup */
-
-            // Can't schedule with view, but no edit permissions
-            if (!$scheduleWithView && !$this->getUser()->checkEditable($displayGroup)) {
-                continue;
-            }
-
-            if ($displayGroup->isDisplaySpecific == 1) {
-                $displays[] = $displayGroup;
-            } else {
-                $groups[] = $displayGroup;
-            }
-        }
-
         $this->getState()->template = 'schedule-form-now';
         $this->getState()->setData([
-            'campaignId' => (($from == 'Campaign') ? $id : 0),
-            'displayGroupId' => (($from == 'DisplayGroup') ? $id : 0),
-            'displays' => $displays,
-            'displayGroups' => $groups,
-            'campaigns' => $this->campaignFactory->query(null, ['isLayoutSpecific' => -1]),
+            'eventTypeId' => (($from == 'Campaign') ? \Xibo\Entity\Schedule::$CAMPAIGN_EVENT : \Xibo\Entity\Schedule::$LAYOUT_EVENT),
+            'campaign' => (($from == 'Campaign' || $from == 'Layout') ? $this->campaignFactory->getById($id) : null),
+            'displayGroup' => (($from == 'DisplayGroup') ? [$this->displayGroupFactory->getById($id)] : null),
+            'displayGroupId' => (($from == 'DisplayGroup') ? (int)$id : 0),
             'alwaysDayPart' => $this->dayPartFactory->getAlwaysDayPart(),
             'customDayPart' => $this->dayPartFactory->getCustomDayPart(),
             'help' => $this->getHelp()->link('Schedule', 'ScheduleNow')

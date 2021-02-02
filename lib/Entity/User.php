@@ -31,7 +31,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -228,12 +227,6 @@ class User implements \JsonSerializable, UserEntityInterface
     public $playlists = [];
 
     /**
-     * @SWG\Property(description="The name of home page")
-     * @var string
-     */
-    public $homePage;
-
-    /**
      * @SWG\Property(description="Does this Group receive system notifications.")
      * @var int
      */
@@ -280,6 +273,9 @@ class User implements \JsonSerializable, UserEntityInterface
      */
     private $userOptionsRemoved = [];
 
+    /** @var array Resolved Features for the User and their Groups */
+    private $resolvedFeatures = null;
+
     /**
      * Cached Permissions
      * @var array[Permission]
@@ -296,11 +292,6 @@ class User implements \JsonSerializable, UserEntityInterface
      * @var ConfigServiceInterface
      */
     private $configService;
-
-    /**
-     * @var PageFactory
-     */
-    private $pageFactory;
 
     /**
      * @var UserFactory
@@ -395,18 +386,15 @@ class User implements \JsonSerializable, UserEntityInterface
     /**
      * Set the user group factory
      * @param UserGroupFactory $userGroupFactory
-     * @param PageFactory $pageFactory
      * @return $this
      */
-    public function setChildAclDependencies($userGroupFactory, $pageFactory)
+    public function setChildAclDependencies($userGroupFactory)
     {
         // Assert myself on these factories
         $userGroupFactory->setAclDependencies($this, $this->userFactory);
-        $pageFactory->setAclDependencies($this, $this->userFactory);
         $this->userFactory->setAclDependencies($this, $this->userFactory);
 
         $this->userGroupFactory = $userGroupFactory;
-        $this->pageFactory = $pageFactory;
         return $this;
     }
 
@@ -528,6 +516,7 @@ class User implements \JsonSerializable, UserEntityInterface
             $userOption = $this->getOption($option);
             return $userOption->value;
         } catch (NotFoundException $e) {
+            $this->getLog()->debug('Returning the default value: ' . var_export($default, true));
             return $default;
         }
     }
@@ -550,6 +539,24 @@ class User implements \JsonSerializable, UserEntityInterface
         } catch (NotFoundException $e) {
             $this->userOptions[] = $this->userOptionFactory->create($this->userId, $option, $value);
         }
+    }
+
+    /**
+     * Remove all user options by a prefix
+     * @param string $optionPrefix The option prefix
+     * @return $this
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function removeOptionByPrefix(string $optionPrefix)
+    {
+        $this->load();
+
+        foreach ($this->userOptions as $userOption) {
+            if (str_starts_with($userOption->option, $optionPrefix)) {
+                $this->removeOption($userOption);
+            }
+        }
+        return $this;
     }
 
     /**
@@ -846,17 +853,7 @@ class User implements \JsonSerializable, UserEntityInterface
 
             if ($this->userId == null || $this->userId != $user->userId)
                 throw new DuplicateEntityException(__('There is already a user with this name. Please choose another.'));
-        }
-        catch (NotFoundException $e) {
-
-        }
-
-        try {
-            $this->pageFactory->getById($this->homePageId);
-        }
-        catch (NotFoundException $e) {
-            throw new InvalidArgumentException(__('Selected home page does not exist'), 'homePageId');
-        }
+        } catch (NotFoundException $ignored) {}
 
         // System User
         if ($this->userId == $this->configService->getSetting('SYSTEM_USER') &&  $this->userTypeId != 1) {
@@ -1153,95 +1150,53 @@ class User implements \JsonSerializable, UserEntityInterface
     }
 
     /**
-     * Authenticates the route given against the user credentials held
-     * @param $route string
-     * @param $method string
-     * @param $scopes array[ScopeEntity]
-     * @throws AccessDeniedException
-     * @throws ConfigurationException
-     * @throws NotFoundException
+     * Get all features allowed for this user, including ones from their group
+     * @return array
      */
-    public function routeAuthentication($route, $method = null, $scopes = null)
+    public function getFeatures()
     {
-        // Scopes provided?
-        if ($scopes !== null && is_array($scopes)) {
-            //$this->getLog()->debug('Scopes: %s', json_encode($scopes));
-            foreach ($scopes as $scope) {
-                /** @var \Xibo\Storage\ScopeEntity $scope */
-
-                // Valid routes
-                if ($scope->getId() != 'all') {
-                    $this->getLog()->debug('Test authentication for route %s %s against scope %s', $method, $route, $scope->getId());
-
-                    // Check the route and request method
-                    $this->applicationScopeFactory->getById($scope->getId())->checkRoute($method, $route);
-                }
-            }
+        if ($this->resolvedFeatures === null) {
+            $this->resolvedFeatures = $this->userGroupFactory->getGroupFeaturesForUser($this);
         }
 
-        // Check route
-        if (!$this->routeViewable($route)) {
-            $this->getLog()->debug('Blocked assess to unrecognised page: ' . $route . '.');
-            throw new AccessDeniedException();
-        }
+        return $this->resolvedFeatures;
     }
 
     /**
-     * Authenticates the route given against the user credentials held
-     * @param $route string
+     * Check whether the requested feature is available.
+     * @param string|array $feature
+     * @param bool $bothRequired
      * @return bool
-     * @throws ConfigurationException
-     * @throws NotFoundException
      */
-    public function routeViewable($route)
+    public function featureEnabled($feature, $bothRequired = false)
     {
-        if ($this->pageFactory == null)
-            throw new ConfigurationException('routeViewable called before user object has been initialised');
-
-        // Super-admins get all routes
-        if ($this->isSuperAdmin())
+        if ($this->isSuperAdmin()) {
             return true;
-
-        // All users have access to the logout page
-        if ($route === '/logout')
-            return true;
-
-        try {
-            if ($this->pagePermissionCache == null) {
-                // Load all viewable pages into the permissions cache
-                $this->pagePermissionCache = $this->pageFactory->query();
-            }
-        } catch (\PDOException $e) {
-            $this->getLog()->info('SQL Error getting permissions: ' . $e->getMessage());
-
-            return false;
         }
 
-        // Home route
-        if ($route === '/')
-            return true;
+        if (!is_array($feature)) {
+            $feature = [$feature];
+        }
 
-        $route = explode('/', ltrim($route, '/'));
+        if ($bothRequired) {
+            return count($feature) === $this->featureEnabledCount($feature);
+        }
 
-        // See if our route is in the page permission cache
-        foreach ($this->pagePermissionCache as $page) {
-            /* @var Page $page */
-            if ($page->name == $route[0])
+        foreach ($feature as $item) {
+            if (in_array($item, $this->getFeatures())) {
                 return true;
+            }
         }
 
-        $this->getLog()->debug('Route %s not viewable', $route[0]);
         return false;
     }
 
     /**
-     * Given an array of routes, count the ones that are viewable
-     * @param $routes
+     * Given an array of features, count the ones that are enabled
+     * @param array $routes
      * @return int
-     * @throws ConfigurationException
-     * @throws NotFoundException
      */
-    public function countViewable($routes)
+    public function featureEnabledCount(array $routes)
     {
         // Shortcut for super admins.
         if ($this->isSuperAdmin()) {
@@ -1252,7 +1207,7 @@ class User implements \JsonSerializable, UserEntityInterface
         $count = 0;
 
         foreach ($routes as $route) {
-            if ($this->routeViewable($route)) {
+            if ($this->featureEnabled($route)) {
                 $count++;
             }
         }
@@ -1263,9 +1218,9 @@ class User implements \JsonSerializable, UserEntityInterface
     /**
      * Load permissions for a particular entity
      * @param string $entity
-     * @return array[Permission]
+     * @return \Xibo\Entity\Permission[]
      */
-    private function loadPermissions($entity)
+    private function loadPermissions(string $entity)
     {
         // Check our cache to see if we have permissions for this entity cached already
         if (!isset($this->permissionCache[$entity])) {
@@ -1360,12 +1315,16 @@ class User implements \JsonSerializable, UserEntityInterface
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
+        $folderPermissions = $this->loadPermissions('Xibo\Entity\Folder');
 
         // Check to see if our object is in the list
-        if (array_key_exists($object->getId(), $permissions))
+        if (array_key_exists($object->getId(), $permissions)) {
             return ($permissions[$object->getId()]->view == 1);
-        else
+        } else if (method_exists($object, 'getPermissionFolderId') && array_key_exists($object->getPermissionFolderId(), $folderPermissions)) {
+            return ($folderPermissions[$object->getPermissionFolderId()]->view == 1);
+        } else {
             return false;
+        }
     }
 
     /**
@@ -1390,12 +1349,16 @@ class User implements \JsonSerializable, UserEntityInterface
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
+        $folderPermissions = $this->loadPermissions('Xibo\Entity\Folder');
 
         // Check to see if our object is in the list
-        if (array_key_exists($object->getId(), $permissions))
+        if (array_key_exists($object->getId(), $permissions)) {
             return ($permissions[$object->getId()]->edit == 1);
-        else
+        } else if (method_exists($object, 'getPermissionFolderId') && array_key_exists($object->getPermissionFolderId(), $folderPermissions)) {
+            return ($folderPermissions[$object->getPermissionFolderId()]->edit == 1);
+        } else {
             return false;
+        }
     }
 
     /**
@@ -1422,12 +1385,16 @@ class User implements \JsonSerializable, UserEntityInterface
 
         // Get the permissions for that entity
         $permissions = $this->loadPermissions($object->permissionsClass());
+        $folderPermissions = $this->loadPermissions('Xibo\Entity\Folder');
 
         // Check to see if our object is in the list
-        if (array_key_exists($object->getId(), $permissions))
+        if (array_key_exists($object->getId(), $permissions)) {
             return ($permissions[$object->getId()]->delete == 1);
-        else
+        }  else if (method_exists($object, 'getPermissionFolderId') && array_key_exists($object->getPermissionFolderId(), $folderPermissions)) {
+            return ($folderPermissions[$object->getPermissionFolderId()]->delete == 1);
+        } else {
             return false;
+        }
     }
 
     /**
@@ -1443,10 +1410,10 @@ class User implements \JsonSerializable, UserEntityInterface
 
         // Admin users
         // Note here that the DOOH user isn't allowed to outright delete other users things
-        if ($this->userTypeId == 1 || $this->userId == $object->getOwnerId())
+        if ($this->userTypeId == 1 || ($this->userId == $object->getOwnerId() && $this->featureEnabled('user.sharing')))
             return true;
         // Group Admins
-        else if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId()))))
+        else if ($this->userTypeId == 2 && count(array_intersect($this->groups, $this->userGroupFactory->getByUserId($object->getOwnerId()))) && $this->featureEnabled('user.sharing'))
             // Group Admin and in the same group as the owner.
             return true;
         else
@@ -1564,9 +1531,9 @@ class User implements \JsonSerializable, UserEntityInterface
     public function getUserOptions()
     {
         // Don't return anything with Grid in it (these have to be specifically requested).
-        return array_filter($this->userOptions, function($element) {
+        return array_values(array_filter($this->userOptions, function($element) {
             return !(stripos($element->option, 'Grid'));
-        });
+        }));
     }
 
     /**
@@ -1593,6 +1560,9 @@ class User implements \JsonSerializable, UserEntityInterface
         $this->getStore()->update($sql, $params);
     }
 
+    /**
+     * @param $recoveryCodes
+     */
     public function updateRecoveryCodes($recoveryCodes)
     {
         $sql = 'UPDATE `user` SET twoFactorRecoveryCodes = :twoFactorRecoveryCodes WHERE userId = :userId';

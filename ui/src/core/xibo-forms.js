@@ -348,7 +348,7 @@ var FileAssociationsCallback = function()
 
         // Add a span to that new item
         $("<span/>", {
-            "class": "glyphicon glyphicon-minus-sign",
+            "class": "fa fa-minus",
             click: function(){
                 $(this).parent().remove();
                 $(".modal-body .XiboGrid").each(function(){
@@ -367,7 +367,7 @@ var FileAssociationsCallback = function()
     });
 
     // Attach a click handler to all of the little points in the trough
-    $("#FileAssociationsSortable li .glyphicon-minus-sign").click(function() {
+    $("#FileAssociationsSortable li .fa-minus").click(function() {
 
         // Remove this and refresh the table
         $(this).parent().remove();
@@ -397,429 +397,6 @@ var settingsUpdated = function(response) {
         SystemMessage((response.message == "") ? translation.failure : response.message, true);
     }
 };
-
-var attachmentFormSubmit = function(dialog) {
-
-    var form = $(dialog);
-
-    // Pull any text editor instances we have
-    for (var editor in CKEDITOR.instances) {
-
-        // Parse the data for library preview references, and replace those with their original values
-        // /\/library\/download\/(.[0-9]+)\?preview=1/;
-        var regex = new RegExp(CKEDITOR_DEFAULT_CONFIG.imageDownloadUrl.replace(/[\-\[\]\/\{\}\(\)\*\+\?\.\\\^\$\|]/g, "\\$&").replace(":id", "([0-9]+)"), "g");
-
-        var data = CKEDITOR.instances[editor].getData().replace(regex, function (match, group1) {
-            var replacement = "[" + group1 + "]";
-            //console.log("match = " + match + ". replacement = " + replacement);
-            return replacement;
-        });
-
-        // Set the appropriate text editor field with this data.
-        $("#" + editor).val(data);
-    }
-
-    // Submit via ajax - change the attachment color on success
-    $.ajax({
-        type: form.attr("method"),
-        url: form.attr("action"),
-        cache: false,
-        dataType: "json",
-        data: $(form).serialize(),
-        success: function(xhr, textStatus, error) {
-
-            XiboSubmitResponse(xhr, form);
-
-            if (xhr.success) {
-
-                console.log('success');
-
-            }
-        },
-        error: function(xhr, textStatus, errorThrown) {
-            SystemMessage(xhr.responseText, false);
-        }
-    });
-}
-
-var attachmentFormSetup = function(dialog) {
-
-    // Conjure up a text editor
-    CKEDITOR.replace("body", CKEDITOR_DEFAULT_CONFIG);
-
-    // Make sure when we close the dialog we also destroy the editor
-    dialog.on("hide.bs.modal", function(event) {
-        if (event.target.className == "bootbox modal in" && CKEDITOR.instances["body"] != undefined) {
-            CKEDITOR.instances["body"].destroy();
-        }
-    });
-
-    var attachmentImageList = $('#attachmentImageId');
-    var attachmentChanged = false;
-
-    // Bind to the attachment add button click
-    $("#attachmentAddButton").on("click", function(e) {
-        $(this).addClass("disabled");
-        notificationAddFormAttachmentButtonClicked(e, dialog);
-    });
-
-    // Search for any forms that will need submitting
-    // NOTE: The validation plugin does not like binding to multiple forms at once.
-    dialog.find("#notificationForm").validate({
-        submitHandler: attachmentFormSubmit,
-        errorElement: "span",
-        highlight: function(element) {
-            $(element).closest('.form-group').removeClass('has-success').addClass('has-error');
-        },
-        success: function(element) {
-            $(element).closest('.form-group').removeClass('has-error').addClass('has-success');
-        },
-        invalidHandler: function(event, validator) {
-            // Remove the spinner
-            $(this).closest(".modal-dialog").find(".saving").remove();
-            // https://github.com/xibosignage/xibo/issues/1589
-            $(this).closest(".modal-dialog").find(".save-button").removeClass("disabled");
-        }
-    });
-
-};
-
-/**
- * Add notification attachment add image button
- * @param e the event
- * @param dialog the dialog
- */
-function notificationAddFormAttachmentButtonClicked(e, dialog) {
-    e.preventDefault();
-
-    // Hide the original button
-    dialog.find('.attachment-add-button').hide();
-    dialog.find('#notificationAddFormAttachmentUpload').show();
-
-    // Append a background upload button to the dialog footer.
-    var template = Handlebars.compile($("#attachment-upload-template").html());
-    var footer = dialog.find("#notificationAddFormAttachmentUpload");
-
-    footer.append(template());
-
-    var form = footer.find("form");
-    var url = form.prop("action");
-    var refreshSessionInterval;
-
-    // Initialize the jQuery File Upload widget:
-    form.fileupload({
-        url: url,
-        uploadTemplateId: 'template-upload-simple',
-        disableImageResize: true,
-        previewMaxWidth: 100,
-        previewMaxHeight: 100,
-        previewCrop: true
-    });
-
-    // Upload server status check for browsers with CORS support:
-    if ($.support.cors) {
-        $.ajax({
-            url: url,
-            type: 'HEAD'
-        }).fail(function () {
-            $('<span class="alert alert-error"/>')
-                .text('Upload server currently unavailable - ' + new Date())
-                .appendTo(form);
-        });
-    }
-
-    // Enable iframe cross-domain access via redirect option:
-    form.fileupload(
-        'option',
-        'redirect',
-        window.location.href.replace(
-            /\/[^\/]*$/,
-            '/cors/result.html?%s'
-        )
-    );
-
-    form.bind('fileuploadsubmit', function (e, data) {
-
-        // Disable the buttons on the form
-        footer.find("button").addClass("disabled");
-
-    }).bind('fileuploadstart', function (e, data) {
-
-        // Show progress data
-        form.find('.fileupload-progress .progress-extended').show();
-        form.find('.fileupload-progress .progress-end').hide();
-
-        if (form.fileupload("active") <= 0)
-            refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
-
-        return true;
-
-    }).bind('fileuploaddone', function (e, data) {
-
-        // Enable the buttons on the form
-        footer.find("button").removeClass("disabled");
-
-        if (refreshSessionInterval != null && form.fileupload("active") <= 0)
-            clearInterval(refreshSessionInterval);
-
-        console.log(data.result);
-
-        if (data.result.files[0].error != null && data.result.files[0].error != "") {
-            return;
-        }
-
-        // Take the image URL from the response, and use it to replace the background image fields
-        dialog.find(".attachment-fields").slideUp();
-
-        console.log(' hidefileinput-button');
-
-        dialog.find(".fileinput-button").hide();
-        dialog.find(".fileinput-close-button").removeClass('hidden');
-        // Get the attachment filename
-        var filename = data.result.files[0].name;
-
-        dialog.find("input[name='attachedFilename']").remove();
-
-        // Create a hidden field with the filename
-        $("#notificationForm").append($("<input type='hidden' name='attachedFilename' value='" + filename + "'/>"));
-
-        // Hide the stuff we've added
-        // form.slideUp();
-    }).bind('fileuploadprogressall', function(e, data) {
-        // Hide progress data and show processing
-        if(data.total > 0 && data.loaded == data.total) {
-            form.find('.fileupload-progress .progress-extended').hide();
-            form.find('.fileupload-progress .progress-end').show();
-        }
-    });
-
-    // Click the browse button
-    dialog.find('.fileinput-button input').click();
-
-    // Click the close button
-    dialog.find('.fileinput-close-button').click(function() {
-
-        // dialog.find(".fileinput-button").show();
-        // dialog.find(".fileinput-close-button").hide();
-        dialog.find("input[name='attachedFilename']").remove();
-        dialog.find('.attachment-add-button').show();
-        dialog.find('#attachmentAddButton').removeClass('disabled');
-        dialog.find('#notificationAddFormAttachmentUpload').hide();
-        footer.html('');
-    });
-}
-
-var backGroundFormSetup = function(dialog) {
-    $('#backgroundColor').colorpicker({format: "hex"});
-
-    // Tidy up colorpickers on modal close
-    if(dialog.hasClass('modal')) {
-        dialog.on("hide.bs.modal", function(e) {
-            if(e.namespace === 'bs.modal') {
-                // Remove colour pickers
-                dialog.find("#backgroundColor").colorpicker('destroy');
-            }
-        });
-    }
-
-    var backgroundImageList = $('#backgroundImageId');
-    var notFoundIcon = $('#bg_not_found_icon');
-    var backgroundImage = $('#bg_image_image');
-    var initialBackgroundImageId = backgroundImageList.val();
-    var backgroundChanged = false;
-
-    function backgroundImageChange() {
-        // Want to attach an onchange event to the drop down for the bg-image
-        var id = backgroundImageList.val();
-
-        var src;
-        // If the image is not defined
-        if ([0, ''].indexOf(id) !== -1) {
-
-            // Show not found icon and hide image
-            notFoundIcon.show();
-            backgroundImage.hide();
-        } else {
-
-            // Hide not found icon and show image
-            notFoundIcon.hide();
-            backgroundImage.show();
-
-            // Replace image source
-            src = backgroundImage.data().url.replace("?", "/" + id + "?");
-            backgroundImage.attr("src", src);
-        }
-
-        if (id != initialBackgroundImageId)
-            backgroundChanged = true;
-    }
-
-    backgroundImageList.change(backgroundImageChange);
-
-    backgroundImageChange();
-
-    // Bind to the background add button click
-    $("#backgroundAddButton").on("click", function(e) {
-        $(this).addClass("disabled");
-        layoutEditBackgroundButtonClicked(e, dialog);
-    });
-
-    // Bind to the layout form submit
-    $("#layoutEditForm").submit(function(e) {
-        e.preventDefault();
-
-        var form = $(this);
-
-        // Submit via ajax - change the background color on success
-        $.ajax({
-            type: form.attr("method"),
-            url: form.attr("action"),
-            cache: false,
-            dataType: "json",
-            data: $(form).serialize(),
-            success: function(xhr, textStatus, error) {
-
-                XiboSubmitResponse(xhr, form);
-
-                if (xhr.success) {
-                    var layout = $("div#layout");
-
-                    if (layout.length > 0) {
-                        var color = form.find("#backgroundColor").val();
-                        layout.data().backgroundColor = color;
-                        layout.css("background-color", color);
-
-                        if (backgroundChanged)
-                            window.location.reload();
-                    } else {
-                        // We assume we're on the layout page - call render
-                        // If we're not, table is a Chrome/Safari/FireBug global function
-                        if (backgroundChanged && typeof(table) !== 'undefined' && table.hasOwnProperty('ajax'))
-                            table.ajax.reload(null, false);
-                    }
-                }
-            },
-            error: function(xhr, textStatus, errorThrown) {
-                SystemMessage(xhr.responseText, false);
-            }
-        });
-    })
-};
-
-/**
- * Layout edit background add image button
- * @param e the event
- * @param dialog the dialog
- */
-function layoutEditBackgroundButtonClicked(e, dialog) {
-    e.preventDefault();
-
-    // Hide the original button
-    dialog.find('.background-image-add-button').hide();
-    dialog.find('#layoutEditFormBackgroundUpload').show();
-
-    // Append a background upload button to the dialog footer.
-    var template = Handlebars.compile($("#layout-background-image-upload-template").html());
-    var footer = dialog.find("#layoutEditFormBackgroundUpload");
-
-    footer.append(template());
-
-    var form = footer.find("form");
-    var url = form.prop("action");
-    var refreshSessionInterval;
-
-    // Initialize the jQuery File Upload widget:
-    form.fileupload({
-        url: url,
-        disableImageResize: true,
-        previewMaxWidth: 100,
-        previewMaxHeight: 100,
-        previewCrop: true
-    });
-
-    // Upload server status check for browsers with CORS support:
-    if ($.support.cors) {
-        $.ajax({
-            url: url,
-            type: 'HEAD'
-        }).fail(function () {
-            $('<span class="alert alert-error"/>')
-                .text('Upload server currently unavailable - ' + new Date())
-                .appendTo(form);
-        });
-    }
-
-    // Enable iframe cross-domain access via redirect option:
-    form.fileupload(
-        'option',
-        'redirect',
-        window.location.href.replace(
-            /\/[^\/]*$/,
-            '/cors/result.html?%s'
-        )
-    );
-
-    form.bind('fileuploadsubmit', function (e, data) {
-
-        // Disable the buttons on the form
-        footer.find("button").addClass("disabled");
-
-    }).bind('fileuploadstart', function (e, data) {
-
-        // Show progress data
-        form.find('.fileupload-progress .progress-extended').show();
-        form.find('.fileupload-progress .progress-end').hide();
-        
-        if (form.fileupload("active") <= 0)
-            refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
-
-        return true;
-
-    }).bind('fileuploaddone', function (e, data) {
-
-        // Enable the buttons on the form
-        footer.find("button").removeClass("disabled");
-
-        if (refreshSessionInterval != null && form.fileupload("active") <= 0)
-            clearInterval(refreshSessionInterval);
-
-        if (data.result.files[0].error != null && data.result.files[0].error != "") {
-            return;
-        }
-
-        // Take the image URL from the response, and use it to replace the background image fields
-        dialog.find(".background-image-fields").slideUp();
-
-        // Get the mediaId
-        var mediaId = data.result.files[0].mediaId;
-
-        // Create a hidden field with the mediaId
-        $("#layoutEditForm").append($("<input type='hidden' name='backgroundImageId' value='" + mediaId + "'/>"));
-
-        var bgImagePreview = dialog.find("#bg_image_image");
-        bgImagePreview.prop("src", bgImagePreview.data().url.replace(":id", mediaId));
-
-        // Hide the stuff we've added
-        form.slideUp();
-    }).bind('fileuploadprogressall', function(e, data) {
-        // Hide progress data and show processing
-        if(data.total > 0 && data.loaded == data.total) {
-            form.find('.fileupload-progress .progress-extended').hide();
-            form.find('.fileupload-progress .progress-end').show();
-        }
-    });
-
-    // Click the browse button
-    dialog.find('.fileinput-button input').click();
-
-    // Click the close button
-    dialog.find('.fileinput-close-button').click(function() {
-        dialog.find('.background-image-add-button').show();
-        dialog.find('#backgroundAddButton').removeClass('disabled');
-        dialog.find('#layoutEditFormBackgroundUpload').hide();
-        footer.html('');
-    });
-}
 
 function permissionsFormOpen(dialog) {
 
@@ -936,11 +513,239 @@ function permissionsFormSubmit(id) {
     var $formContainer = form.closest(".permissions-form");
     var permissions = {
         "groupIds": $(form).data().permissions,
-        "ownerId": $formContainer.find("select[name=ownerId]").val(),
-        "cascade": $formContainer.find("#cascade").is(":checked")
+        "ownerId": $formContainer.find("select[name=ownerId]").val()
     };
     var data = $.param(permissions);
 
+    $.ajax({
+        type: "POST",
+        url: form.data().url,
+        cache: false,
+        dataType: "json",
+        data: data,
+        success: function(xhr, textStatus, error) {
+            XiboSubmitResponse(xhr, form);
+        },
+        error: function(xhr, textStatus, errorThrown) {
+            SystemMessage(xhr.responseText, false);
+        }
+    });
+}
+
+function permissionsMultiFormOpen(dialog) {
+    var $permissionsTable = $(dialog).find("#permissionsMultiTable");
+    var $grid = $permissionsTable.closest(".XiboGrid");
+
+    var table = $permissionsTable.DataTable({ "language": dataTablesLanguage,
+        serverSide: true, 
+        stateSave: true,
+        "filter": false,
+        searchDelay: 3000,
+        "order": [[ 0, "asc"]],
+        ajax: {
+            url: $grid.data().url,
+            "data": function(d) {
+                $.extend(d, $grid.find(".permissionsMultiTableFilter form").serializeObject());
+
+                $.extend(d, {
+                    ids: $grid.data().targetIds
+                });
+            },
+            "dataSrc": function(json) {
+                var newData = json.data;
+
+                for (var dataKey in newData) {
+                    if (newData.hasOwnProperty(dataKey)) {
+                        var permissionGrouped = {
+                            "view": null,
+                            "edit": null,
+                            "delete": null
+                        }
+
+                        for (var key in newData[dataKey].permissions) {
+                            if (newData[dataKey].permissions.hasOwnProperty(key)) {
+                                var permission = newData[dataKey].permissions[key];
+
+                                if(permission.view != permissionGrouped.view) {
+                                    if(permissionGrouped.view != null) {
+                                        permissionGrouped.view = 2;
+                                    } else {
+                                        permissionGrouped.view = permission.view;
+                                    }
+                                }
+
+                                if(permission.edit != permissionGrouped.edit) {
+                                    if(permissionGrouped.edit != null) {
+                                        permissionGrouped.edit = 2;
+                                    } else {
+                                        permissionGrouped.edit = permission.edit;
+                                    }
+                                }
+
+                                if(permission.delete != permissionGrouped.delete) {
+                                    if(permissionGrouped.delete != null) {
+                                        permissionGrouped.delete = 2;
+                                    } else {
+                                        permissionGrouped.delete = permission.delete;
+                                    }
+                                }
+                            }
+                        }
+
+                        newData[dataKey] = Object.assign(permissionGrouped, newData[dataKey]);
+                        delete newData[dataKey].permissions;
+                    }
+                }
+
+                // initialise the permission and start permissions arrays
+                if ($grid.data().permissions == undefined) {
+                    $grid.data().permissions = newData;
+                }
+
+                if ($grid.data().startPermissions == undefined) {
+                    $grid.data().startPermissions = JSON.parse(JSON.stringify(newData));
+                }
+
+                if ($grid.data().savePermissions == undefined) {
+                    $grid.data().savePermissions = {};
+                }
+
+                // Return an array of permissions
+                return Object.values(newData);
+            }
+        },
+        "columns": [
+            {
+                "data": "group",
+                "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    if (row.isUser == 1)
+                        return data;
+                    else
+                        return '<strong>' + data + '</strong>';
+                }
+            },
+            { "data": "view", "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    var checked;
+                    if (row.groupId in $grid.data().permissions) {
+                        var cache = $grid.data().permissions[row.groupId];
+
+                        checked = (cache.view !== undefined && cache.view !== 0) ? cache.view : 0;
+                    } else {
+                        checked = data;
+                    }
+
+                    // Cached changes to this field?
+                    return "<input type=\"checkbox\" class=\"" + ((checked === 2) ? "indeterminate" : "") + "\" data-permission=\"view\" data-group-id=\"" + row.groupId + "\" " + ((checked === 1) ? "checked" : "") + " />";
+                }
+            },
+            { "data": "edit", "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    var checked;
+                    if (row.groupId in $grid.data().permissions) {
+                        var cache = $grid.data().permissions[row.groupId];
+
+                        checked = (cache.edit !== undefined && cache.edit !== 0) ? cache.edit : 0;
+                    } else {
+                        checked = data;
+                    }
+
+                    return "<input type=\"checkbox\" class=\"" + ((checked === 2) ? "indeterminate" : "") + "\" data-permission=\"edit\" data-group-id=\"" + row.groupId + "\" " + ((checked === 1) ? "checked" : "") + " />";
+                }
+            },
+            { "data": "delete", "render": function (data, type, row, meta) {
+                    if (type != "display")
+                        return data;
+
+                    var checked;
+                    if (row.groupId in $grid.data().permissions) {
+                        var cache = $grid.data().permissions[row.groupId];
+
+                        checked = (cache.delete !== undefined && cache.delete !== 0) ? cache.delete : 0;
+                    } else {
+                        checked = data;
+                    }
+
+                    return "<input type=\"checkbox\" class=\"" + ((checked === 2) ? "indeterminate" : "") + "\" data-permission=\"delete\" data-group-id=\"" + row.groupId + "\" " + ((checked === 1) ? "checked" : "") + " />";
+                }
+            }
+        ]
+    });
+
+    table.on('draw', function (e, settings) {
+        dataTableDraw(e, settings);
+
+        // Bind to the checkboxes change event
+        var target = $("#" + e.target.id);
+        target.find("input[type=checkbox]").change(function() {
+            // Update our global permissions data with this
+            var groupId = $(this).data().groupId;
+            var permission = $(this).data().permission;
+            var value = $(this).is(":checked");
+            var valueNumeric = (value) ? 1 : 0;
+
+            //console.log("Setting permissions on groupId: " + groupId + ". Permission " + permission + ". Value: " + value);
+            // Update main permission object
+            if ($grid.data().permissions[groupId] === undefined) {
+                $grid.data().permissions[groupId] = {};
+            }
+            $grid.data().permissions[groupId][permission] = valueNumeric;
+
+            // Update save permissions object
+            if($grid.data().savePermissions[groupId] === undefined) {
+                $grid.data().savePermissions[groupId] = {};
+                $grid.data().savePermissions[groupId][permission] = valueNumeric;
+            } else {
+                if($grid.data().startPermissions[groupId][permission] === valueNumeric) {
+                    // if changed value is the same as the initial permission object, remove it from the save permissions object
+                    delete $grid.data().savePermissions[groupId][permission];
+
+                    // Remove group if it's an empty object
+                    if($.isEmptyObject($grid.data().savePermissions[groupId])) {
+                        delete $grid.data().savePermissions[groupId]; 
+                    }
+                } else {
+                    // Add new change to the save permissions object
+                    $grid.data().savePermissions[groupId][permission] = valueNumeric;
+                }
+            }
+
+            // Enable save button only if we have permission changes to save
+            $(dialog).find('.save-button').toggleClass('disabled', $.isEmptyObject($grid.data().savePermissions));
+        });
+
+        // Mark indeterminate checkboxes and add title
+        target.find('input[type=checkbox].indeterminate').prop('indeterminate', true).prop('title', translations.indeterminate);
+    });
+
+    // Disable save button by default
+    $(dialog).find('.save-button').addClass('disabled');
+
+    table.on('processing.dt', dataTableProcessing);
+
+    // Bind our filter
+    $grid.find(".permissionsMultiTableFilter form input, .permissionsMultiTableFilter form select").change(function() {
+        table.ajax.reload();
+    });
+}
+
+function permissionsMultiFormSubmit(id) {
+    var form = $("#" + id);
+    var permissions = $(form).data().savePermissions;
+    var targetIds = $(form).data().targetIds;
+    
+    var data = $.param({
+        groupIds: permissions,
+        ids: targetIds
+    });
+    
     $.ajax({
         type: "POST",
         url: form.data().url,
@@ -1047,7 +852,7 @@ function mediaDisplayGroupFormCallBack() {
                         return "";
 
                     // Create a click-able span
-                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                    return "<a href=\"#\" class=\"assignItem\"><span class=\"fa fa-plus\"></a>";
                 }
             }
         ]
@@ -1068,14 +873,14 @@ function mediaDisplayGroupFormCallBack() {
             var newItem = $("<li/>", {
                 "text": data.name,
                 "data-media-id": data.mediaId,
-                "class": "btn btn-sm btn-default"
+                "class": "btn btn-sm btn-white"
             });
 
             newItem.appendTo("#FileAssociationsSortable");
 
             // Add a span to that new item
             $("<span/>", {
-                "class": "glyphicon glyphicon-minus-sign",
+                "class": "fa fa-minus",
                 click: function(){
                     container.data().media[$(this).parent().data().mediaId] = 0;
                     $(this).parent().remove();
@@ -1158,7 +963,7 @@ function layoutFormCallBack() {
                         return "";
 
                     // Create a click-able span
-                    return "<a href=\"#\" class=\"assignItem\"><span class=\"glyphicon glyphicon-plus-sign\"></a>";
+                    return "<a href=\"#\" class=\"assignItem\"><span class=\"fa fa-plus\"></a>";
                 }
             }
         ]
@@ -1179,14 +984,14 @@ function layoutFormCallBack() {
             var newItem = $("<li/>", {
                 "text": data.layout,
                 "data-layout-id": data.layoutId,
-                "class": "btn btn-sm btn-default"
+                "class": "btn btn-sm btn-white"
             });
 
             newItem.appendTo("#FileAssociationsSortable");
 
             // Add a span to that new item
             $("<span/>", {
-                "class": "glyphicon glyphicon-minus-sign",
+                "class": "fa fa-minus",
                 click: function(){
                     container.data().layout[$(this).parent().data().layoutId] = 0;
                     $(this).parent().remove();
@@ -1252,9 +1057,9 @@ function regionEditFormSubmit() {
 
 function userProfileEditFormOpen() {
 
-    $("#qRCode").addClass("hidden");
-    $("#recoveryButtons").addClass("hidden");
-    $("#recoveryCodes").addClass("hidden");
+    $("#qRCode").addClass("d-none");
+    $("#recoveryButtons").addClass("d-none");
+    $("#recoveryCodes").addClass("d-none");
 
     $("#twoFactorTypeId").on("change", function (e) {
         e.preventDefault();
@@ -1273,29 +1078,29 @@ function userProfileEditFormOpen() {
                     $("#qr").removeClass('fa fa-spinner fa-spin loading-icon')
                 }
             });
-            $("#qRCode").removeClass("hidden");
+            $("#qRCode").removeClass("d-none");
         } else {
-            $("#qRCode").addClass("hidden");
+            $("#qRCode").addClass("d-none");
         }
 
         if ($("#twoFactorTypeId").val() == 0) {
-            $("#recoveryButtons").addClass("hidden");
-            $("#recoveryCodes").addClass("hidden");
+            $("#recoveryButtons").addClass("d-none");
+            $("#recoveryCodes").addClass("d-none");
         }
 
         if ($('#userEditProfileForm').data().currentuser != 0 && $("#twoFactorTypeId").val() != 0) {
-            $("#recoveryButtons").removeClass("hidden");
+            $("#recoveryButtons").removeClass("d-none");
         }
     });
 
     if ($('#userEditProfileForm').data().currentuser != 0) {
-        $("#recoveryButtons").removeClass("hidden");
+        $("#recoveryButtons").removeClass("d-none");
     }
     let generatedCodes = '';
 
     $('#generateCodesBtn').on("click", function (e) {
         $("#codesList").html("");
-        $("#recoveryCodes").removeClass('hidden');
+        $("#recoveryCodes").removeClass('d-none');
         $(".recBtn").attr("disabled", true).addClass("disabled");
         generatedCodes = '';
 
@@ -1304,11 +1109,11 @@ function userProfileEditFormOpen() {
             async: false,
             type: "GET",
             beforeSend: function () {
-                $("#codesList").removeClass('well').addClass('fa fa-spinner fa-spin loading-icon');
+                $("#codesList").removeClass('card').addClass('fa fa-spinner fa-spin loading-icon');
             },
             success: function (response) {
                 generatedCodes = JSON.parse(response.data.codes);
-                $("#recoveryCodes").addClass('hidden');
+                $("#recoveryCodes").addClass('d-none');
                 $(".recBtn").attr("disabled", false).removeClass("disabled");
                 $('#showCodesBtn').click();
             },
@@ -1321,7 +1126,7 @@ function userProfileEditFormOpen() {
     $('#showCodesBtn').on("click", function (e) {
         $(".recBtn").attr("disabled", true).addClass("disabled");
         $("#codesList").html("");
-        $("#recoveryCodes").toggleClass('hidden');
+        $("#recoveryCodes").toggleClass('d-none');
         let codesList = [];
 
         $.ajax({
@@ -1341,7 +1146,7 @@ function userProfileEditFormOpen() {
                 $.each(codesList, function (index, value) {
                     $("#codesList").append(value + "<br/>");
                 });
-                $("#codesList").addClass('well');
+                $("#codesList").addClass('card');
                 $(".recBtn").attr("disabled", false).removeClass("disabled");
             }
         });
@@ -1349,7 +1154,8 @@ function userProfileEditFormOpen() {
 }
 
 function tagsWithValues(formId) {
-    $('#tagValue, label[for="tagValue"], #tagValueRequired').addClass("hidden");
+    $('#tagValue, label[for="tagValue"], #tagValueRequired').addClass("d-none");
+    $('#tagValueContainer').hide();
 
     let tag;
     let tagWithOption = '';
@@ -1358,10 +1164,11 @@ function tagsWithValues(formId) {
     let tagOptions = [];
     let tagIsRequired = 0;
 
-    let formSelector = '#' + formId + ' input#tags';
+    let formSelector = '#' + formId + ' input#tags' + ', #' + formId + ' input#tagsToAdd';
 
     $(formSelector).on('beforeItemAdd', function(event) {
         $('#tagValue').html('');
+        $('#tagValueInput').val('');
         tag = event.item;
         tagOptions = [];
         tagIsRequired = 0;
@@ -1370,7 +1177,7 @@ function tagsWithValues(formId) {
 
         if ($(formSelector).val().indexOf(tagN) === -1 && tagV === undefined) {
             $.ajax({
-                url: $('#'+formId).data().gettag,
+                url: $('form#'+formId).data().gettag,
                 type: "GET",
                 data: {
                     name: tagN,
@@ -1379,27 +1186,51 @@ function tagsWithValues(formId) {
                     $("#loadingValues").addClass('fa fa-spinner fa-spin loading-icon')
                 },
                 success: function (response) {
+                    if (response.success) {
+                        if (response.data.tag != null) {
+                            tagOptions = JSON.parse(response.data.tag.options);
+                            tagIsRequired = response.data.tag.isRequired;
 
-                    if (response.success && response.data.tag != null) {
-                        tagOptions = JSON.parse(response.data.tag.options);
-                        tagIsRequired = response.data.tag.isRequired;
+                            if (tagOptions != null && tagOptions != []) {
+                                $('#tagValue, label[for="tagValue"]').removeClass("d-none");
 
-                        if (tagOptions != null && tagOptions != []) {
-                            $('#tagValue, label[for="tagValue"]').removeClass("hidden");
+                                if ($('#tagValue option[value=""]').length <= 0) {
+                                    $('#tagValue')
+                                        .append($("<option></option>")
+                                            .attr("value", '')
+                                            .text(''));
+                                }
 
-                            $('#tagValue')
-                                .append($("<option></option>")
-                                    .attr("value", '')
-                                    .text(''));
+                                $.each(tagOptions, function (key, value) {
+                                    if ($('#tagValue option[value='+value+']').length <= 0) {
+                                        $('#tagValue')
+                                            .append($("<option></option>")
+                                                .attr("value", value)
+                                                .text(value));
+                                    }
+                                });
 
-                            $.each(tagOptions, function (key, value) {
-                                $('#tagValue')
-                                    .append($("<option></option>")
-                                        .attr("value", value)
-                                        .text(value));
-                            });
+                                $('#tagValue').focus();
+                            } else {
+                                // existing Tag without specified options (values)
+                                $('#tagValueContainer').show();
 
-                            $('#tagValue').focus();
+                                // if the isRequired flag is set to 0 change the helpText to be more user friendly.
+                                if (tagIsRequired === 0) {
+                                    $('#tagValueInput').parent().find('span.help-block').text(translations.tagInputValueHelpText)
+                                } else {
+                                    $('#tagValueInput').parent().find('span.help-block').text(translations.tagInputValueRequiredHelpText)
+                                }
+
+                                $('#tagValueInput').focus();
+                            }
+                        } else {
+                            // new Tag
+                            $('#tagValueContainer').show();
+                            $('#tagValueInput').focus();
+
+                            // isRequired flag is set to 0 (new Tag) change the helpText to be more user friendly.
+                            $('#tagValueInput').parent().find('span.help-block').text(translations.tagInputValueHelpText)
                         }
                     }
                 },
@@ -1420,16 +1251,20 @@ function tagsWithValues(formId) {
     });
 
     $(formSelector).on('itemRemoved', function(event) {
-
         if(tagN === event.item) {
-            $('#tagValueRequired, label[for="tagValue"]').addClass('hidden');
+            $('#tagValueRequired, label[for="tagValue"]').addClass('d-none');
             $('.save-button').prop('disabled', false);
-            $('#tagValue').html('').addClass("hidden");
+            $('#tagValue').html('').addClass("d-none");
+            $('#tagValueInput').val('');
+            $('#tagValueContainer').hide();
+            tagN = '';
         } else if ($(".save-button").is(":disabled")) {
             // do nothing with jQuery
         } else {
-            $('#tagValue').html('').addClass("hidden");
-            $('label[for="tagValue"]').addClass("hidden");
+            $('#tagValue').html('').addClass("d-none");
+            $('#tagValueInput').val('');
+            $('#tagValueContainer').hide();
+            $('label[for="tagValue"]').addClass("d-none");
         }
     });
 
@@ -1437,26 +1272,129 @@ function tagsWithValues(formId) {
         e.preventDefault();
         tagWithOption = tagN + '|' + $(this).val();
 
-        if (tagIsRequired === 0 || (tagIsRequired === 1 && $(this).val() !== '')) {
-            $(formSelector).tagsinput('add', tagWithOption);
-            $(formSelector).tagsinput('remove', tagN);
-            $('#tagValue').html('').addClass("hidden");
-            $('#tagValueRequired, label[for="tagValue"]').addClass('hidden');
-            $('.save-button').prop('disabled', false);
-        } else {
-            $('#tagValueRequired').removeClass('hidden');
-            $('#tagValue').focus();
+        // additional check, helpful for multi tagging.
+        if (tagN != '') {
+            if (tagIsRequired === 0 || (tagIsRequired === 1 && $(this).val() !== '')) {
+                $(formSelector).tagsinput('add', tagWithOption);
+                $(formSelector).tagsinput('remove', tagN);
+                $('#tagValue').html('').addClass("d-none");
+                $('#tagValueRequired, label[for="tagValue"]').addClass('d-none');
+                $('.save-button').prop('disabled', false);
+            } else {
+                $('#tagValueRequired').removeClass('d-none');
+                $('#tagValue').focus();
+            }
         }
     });
 
     $('#tagValue').blur(function() {
         if($(this).val() === '' && tagIsRequired === 1 ) {
-            $('#tagValueRequired').removeClass('hidden');
+            $('#tagValueRequired').removeClass('d-none');
             $('#tagValue').focus();
             $('.save-button').prop('disabled', true);
         } else {
-            $('#tagValue').html('').addClass("hidden");
-            $('label[for="tagValue"]').addClass("hidden");
+            $('#tagValue').html('').addClass("d-none");
+            $('label[for="tagValue"]').addClass("d-none");
         }
     });
+
+    $('#tagValueInput').on('keypress focusout', function(event) {
+
+        if ( (event.keyCode === 13 || event.type === 'focusout') && tagN != '') {
+            event.preventDefault();
+            let tagInputValue = $(this).val();
+            tagWithOption = (tagInputValue !== '') ? tagN + '|' + tagInputValue : tagN;
+
+            if (tagIsRequired === 0 || (tagIsRequired === 1 && tagInputValue !== '')) {
+                $(formSelector).tagsinput('add', tagWithOption);
+                // remove only if we have value (otherwise it would be left empty)
+                if (tagInputValue !== '') {
+                    $(formSelector).tagsinput('remove', tagN);
+                }
+
+                $('#tagValueInput').val('');
+                $('#tagValueContainer').hide();
+                $('#tagValueRequired').addClass('d-none');
+                $('.save-button').prop('disabled', false);
+            } else {
+                $('#tagValueContainer').show();
+                $('#tagValueRequired').removeClass('d-none');
+                $('#tagValueInput').focus();
+            }
+        }
+    })
+}
+
+
+
+/**
+ * Called when the ACL form is opened on Users/User Groups
+ * @param dialog
+ */
+function featureAclFormOpen(dialog) {
+    // Start everything collapsed.
+    $(dialog).find("tr.feature-row").hide();
+
+    // Bind to clicking on the feature header cells
+    $(dialog).find("td.feature-group-header-cell").on("click", function() {
+        // Toggle state
+        var $header = $(this);
+        var isOpen = $header.hasClass("open");
+
+        if (isOpen) {
+            // Make closed
+            $header.find(".feature-group-description").show();
+            $header.find("i.fa").removeClass("fa-arrow-circle-up").addClass("fa fa-arrow-circle-down");
+            $header.closest("tbody.feature-group").find("tr.feature-row").hide();
+            $header.removeClass("open").addClass("closed");
+        } else {
+            // Make open
+            $header.find(".feature-group-description").hide();
+            $header.find("i.fa").removeClass("fa-arrow-circle-down").addClass("fa fa-arrow-circle-up");
+            $header.closest("tbody.feature-group").find("tr.feature-row").show();
+            $header.removeClass("closed").addClass("open");
+        }
+    }).each(function(index, el) {
+        // Set the initial state of the 3 way checkboxes
+        setFeatureGroupCheckboxState($(this));
+    });
+
+    // Bind to checkbox change event
+    $(dialog).find("input[name='features[]']").on("click", function() {
+        setFeatureGroupCheckboxState($(this));
+    });
+
+    // Bind to group checkboxes to check/uncheck all below.
+    $(dialog).find("input.feature-select-all").on("click", function() {
+        // Force this down to all child checkboxes
+        $(this)
+            .closest("tbody.feature-group")
+            .find("input[name='features[]']")
+            .prop("checked", $(this).is(":checked"));
+    });
+}
+
+/**
+ * Set the checkbox state based on the adjacent features
+ * @param triggerElement
+ */
+function setFeatureGroupCheckboxState(triggerElement) {
+    // collect up the checkboxes belonging to the same group
+    var $featureGroup = triggerElement.closest("tbody.feature-group");
+    var countChecked = $featureGroup.find("input[name='features[]']:checked").length;
+    var countTotal = $featureGroup.find("input[name='features[]']").length;
+
+    if (countChecked <= 0) {
+        $featureGroup.find(".feature-select-all")
+            .prop("checked", false)
+            .prop("indeterminate", false);
+    } else if (countChecked === countTotal) {
+        $featureGroup.find(".feature-select-all")
+            .prop("checked", true)
+            .prop("indeterminate", false);
+    } else {
+        $featureGroup.find(".feature-select-all")
+            .prop("checked", false)
+            .prop("indeterminate", true);
+    }
 }

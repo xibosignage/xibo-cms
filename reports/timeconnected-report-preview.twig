@@ -1,0 +1,114 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block actionMenu %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+    </div>
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="widget">
+        <div class="widget-title">
+            <i class="fa fa-list"></i>
+            {{ savedReport.saveAs }}
+                <span class="small">({% trans "Generated on: " %}{{ generatedOn }})</span>
+            <div><span class="small">{% trans "From" %} {{ periodStart }} {% trans "To" %} {{ periodEnd }}</span></div>
+            <div class="clearfix"></div>
+        </div>
+
+        <style>
+            table {
+                table-layout: fixed;
+                border-collapse: collapse;
+                border-spacing: 20px 0;
+                padding: 20px 0 0;
+            }
+            th {
+                text-align: center;
+            }
+            td.display-label {
+                padding-right: 10px;
+                text-align: right;
+            }
+            td.display-percent {
+                border: 1px solid #408640;
+            }
+            .note-box {
+                height: 15px;
+                width: 15px;
+                float:left;
+            }
+        </style>
+        <div class="widget-body">
+            <div class="pull-right">
+                <div>
+                    <div class="note-box" style="background-color: #03a9f4;"></div>
+                    <div style="padding-left: 20px">Blue is disconnected %</div>
+                </div>
+                <div>
+                    <div class="note-box" style="background-color: #5cb85c;"></div>
+                    <div style="padding-left: 20px">Green is Connected %</div>
+                </div>
+            </div>
+            
+            <div class="XiboGrid" id="{{ random() }}" style="margin-top: 40px;">
+                <div class="XiboData card pt-3">
+                    <table id="" class="">
+                        <tbody>
+                        {% for key,displayStat in resultObj.timeConnected %}
+                            <tr>
+                                {% for option in resultObj.displays[key] %}
+                                    <th colspan="2">{{ option }} </th>
+                                {% endfor %}
+                            </tr>
+                            {% for item in displayStat %}
+                                <tr>
+                                    {% for displayData in item %}
+                                        {% set percent = "0%" %}
+                                        {% if displayData.percent > 0 %}
+                                            {% set percent = displayData.percent~"%" %}
+                                        {% endif %}
+
+                                        <td class="display-label" style="width:300px">{{ displayData.label }}</td>
+                                        <td class="display-percent" style="width:300px; background-color:#03a9f4; color:white">
+                                            <div style="background-color:#5cb85c; width:{{ percent }}">
+                                                {% if displayData.percent > 0 %}{{ displayData.percent }}%{% endif %}
+                                            </div>
+                                        </td>
+                                    {% endfor %}
+                                </tr>
+                            {% endfor %}
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                 </div>
+            </div>
+        </div>
+    </div>
+
+{% endblock %}

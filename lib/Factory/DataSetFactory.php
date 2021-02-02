@@ -217,6 +217,8 @@ class DataSetFactory extends BaseFactory
             dataset.`ignoreFirstRow`,
             dataset.`rowLimit`,
             dataset.`limitPolicy`,
+            dataset.`folderId`,
+            dataset.`permissionsFolderId`,
             user.userName AS owner,
             (
               SELECT GROUP_CONCAT(DISTINCT `group`.group)
@@ -239,7 +241,7 @@ class DataSetFactory extends BaseFactory
         ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy, '`dataset`.permissionsFolderId');
 
         if ($parsedFilter->getInt('dataSetId') !== null) {
             $body .= ' AND dataset.dataSetId = :dataSetId ';
@@ -269,6 +271,11 @@ class DataSetFactory extends BaseFactory
         if ($parsedFilter->getString('code') != null) {
             $body .= ' AND `dataset`.`code` = :code ';
             $params['code'] = $parsedFilter->getString('code');
+        }
+
+        if ($parsedFilter->getInt('folderId') !== null) {
+            $body .= ' AND dataset.folderId = :folderId ';
+            $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
         // Sorting?
@@ -436,6 +443,9 @@ class DataSetFactory extends BaseFactory
                         // use the md5
                         $md5 = md5($request->getBody());
 
+                        // Rewind so we can use it again
+                        $request->getBody()->rewind();
+
                         if ($cacheControlKeyValue === $md5) {
                             $this->getLog()->debug('Skipping due to MD5');
                             continue;
@@ -452,9 +462,18 @@ class DataSetFactory extends BaseFactory
                     $this->pool->saveDeferred($cacheControlKey);
                 }
 
-                // TODO: we should probably do some checking to ensure we have JSON back
                 if ($dataSet->sourceId === 1) {
-                    $result->entries[] = json_decode($request->getBody());
+                    // Make sure we have JSON in the response
+                    $body = $request->getBody()->getContents();
+
+                    try {
+                        $json = \GuzzleHttp\json_decode($body);
+                    } catch (\GuzzleHttp\Exception\InvalidArgumentException $invalidArgumentException) {
+                        $this->getLog()->debug('JSON decode error: ' . $invalidArgumentException->getMessage());
+                        throw new InvalidArgumentException(__('Unable to get Data for %s because the response was not valid JSON.', $dataSet->dataSet), 'url');
+                    }
+
+                    $result->entries[] = $json;
                     foreach ($result->entries as $entry) {
                         $data = $this->getDataRootFromResult($dataSet->dataRoot, $entry);
 
@@ -465,7 +484,7 @@ class DataSetFactory extends BaseFactory
                         }
                     }
                 } else {
-                    $csv = $request->getBody();
+                    $csv = $request->getBody()->getContents();
                     $array = array_map("str_getcsv", explode("\n", $csv));
 
                     if ($dataSet->ignoreFirstRow == 1) {
@@ -620,6 +639,8 @@ class DataSetFactory extends BaseFactory
      * @return array|\stdClass The Data hold in the configured dataRoot
      */
     private function getDataRootFromResult($dataRoot, $result) {
+        $this->getLog()->debug('Getting ' . $dataRoot . 'from result.');
+
         if (empty($dataRoot)) {
             return $result;
         }

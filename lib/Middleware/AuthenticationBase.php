@@ -69,9 +69,6 @@ abstract class AuthenticationBase implements Middleware, AuthenticationInterface
                 // Replace our user with a fully loaded one
                 $user = $this->getUser($user->userId);
 
-                // Do they have permission?
-                $user->routeAuthentication($resource);
-
                 // We are authenticated, override with the populated user object
                 $this->setUserForRequest($user);
 
@@ -80,7 +77,7 @@ abstract class AuthenticationBase implements Middleware, AuthenticationInterface
             } else {
                 // Session has expired or the user is already logged out.
                 // in either case, capture the route
-                $this->rememberRoute($resource);
+                $this->rememberRoute($request->getUri()->getPath());
 
                 $this->getLog()->debug('not in public routes, expired, should redirect to login');
 

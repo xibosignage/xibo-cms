@@ -31,13 +31,13 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
 
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="transitions" class="table table-striped">
                         <thead>
                             <tr>
@@ -46,7 +46,7 @@
                                 <th>{% trans "Has Direction" %}</th>
                                 <th>{% trans "Enabled for In" %}</th>
                                 <th>{% trans "Enabled for Out" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
+                                <th class="rowMenu"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -61,39 +61,14 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#transitions").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=transitionGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "transitionGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+        var table = $("#transitions").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            responsive: true,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
@@ -104,13 +79,14 @@
                 }
             },
             "columns": [
-                { "data": "transition" },
-                { "data": "hasDuration", "render": dataTableTickCrossColumn },
-                { "data": "hasDirection", "render": dataTableTickCrossColumn },
-                { "data": "availableAsIn", "render": dataTableTickCrossColumn },
-                { "data": "availableAsOut", "render": dataTableTickCrossColumn },
+                { "data": "transition", responsivePriority: 2 },
+                { "data": "hasDuration", "render": dataTableTickCrossColumn, responsivePriority: 3 },
+                { "data": "hasDirection", "render": dataTableTickCrossColumn, responsivePriority: 3 },
+                { "data": "availableAsIn", "render": dataTableTickCrossColumn, responsivePriority: 3 },
+                { "data": "availableAsOut", "render": dataTableTickCrossColumn, responsivePriority: 3 },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]
@@ -118,6 +94,6 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#transitions_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#transitions_wrapper').find('.col-md-6').eq(1));
     </script>
 {% endblock %}

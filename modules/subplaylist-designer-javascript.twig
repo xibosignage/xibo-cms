@@ -27,22 +27,22 @@
     function subplaylist_form_edit_open() {
 
         // Get form object
-        const $form = $(this);
+        var $form = $(this);
 
         // Bind our tooltips
         $form.find('[data-toggle="tooltip"]').tooltip();
 
         // Translations
-        let fillTitle = "{% trans "Fill" %}";
-        let fillHelpText = "{% trans "Fill - use the first Playlist to fill any remaining Spots" %}";
-        let padTitle = "{% trans "Pad" %}";
-        let padHelpText = "{% trans "Pad - use the first Playlist to pad any remaining Spots" %}";
-        let repeatTitle = "{% trans "Repeat" %}";
-        let repeatHelpText = "{% trans "Repeat - repeat the Widgets in this Playlist until the number of Spots have been filled" %}";
-        let noPlaylistsMessage = "{% trans "No playlists" %}";
-        let noPlaylistsHelpMessage = "{% trans "You don't have available playlists" %}";
-        let noPlaylistsAccessHelpMessage = "{% trans "You don't have access to this playlist" %}";
-        let playlistIdMessage = "{% trans "Playlist Id " %}";
+        var fillTitle = "{% trans "Fill" %}";
+        var fillHelpText = "{% trans "Fill - use the first Playlist to fill any remaining Spots" %}";
+        var padTitle = "{% trans "Pad" %}";
+        var padHelpText = "{% trans "Pad - use the first Playlist to pad any remaining Spots" %}";
+        var repeatTitle = "{% trans "Repeat" %}";
+        var repeatHelpText = "{% trans "Repeat - repeat the Widgets in this Playlist until the number of Spots have been filled" %}";
+        var noPlaylistsMessage = "{% trans "No playlists" %}";
+        var noPlaylistsHelpMessage = "{% trans "You don't have available playlists" %}";
+        var noPlaylistsAccessHelpMessage = "{% trans "You don't have access to this playlist" %}";
+        var playlistIdMessage = "{% trans "Playlist Id " %}";
 
         // Order Clause
         var subPlaylistFields = $(".sub-playlists", $form);
@@ -81,7 +81,7 @@
             $.each($form.data().extra.subPlaylistId, function(index, field) {
                 i++;
 
-                let isPlaylistEditable = false;
+                var isPlaylistEditable = false;
 
                 $.each($form.data().extra.playlists, function(index2, field2) {
                     if(field == field2.playlistId) {
@@ -121,7 +121,7 @@
                 subPlaylistFields.append(subPlaylistFormTemplate({
                     playlists: $form.data().extra.playlists,
                     isPlaylistEditable: true,
-                    title: subPlaylistFields.find('.form-group').length + 1,
+                    title: subPlaylistFields.find('.row-special').length + 1,
                     subPlaylistId: "",
                     subPlaylistIdSpots: "",
                     subPlaylistIdSpotLength: "",
@@ -142,7 +142,7 @@
                 subplaylist_init_row($form);
             } else {
                 // Remove this row
-                $(this).closest(".form-group").remove();
+                $(this).closest(".row-special").remove();
             }
         });
 

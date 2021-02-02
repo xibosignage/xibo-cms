@@ -26,6 +26,7 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
 use Xibo\Entity\Permission;
 use Xibo\Factory\CampaignFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\TagFactory;
@@ -70,6 +71,9 @@ class Campaign extends Base
      */
     private $userGroupFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -85,7 +89,7 @@ class Campaign extends Base
      * @param TagFactory $tagFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory, $tagFactory, Twig $view)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory, $tagFactory, Twig $view, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -94,6 +98,7 @@ class Campaign extends Base
         $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->tagFactory = $tagFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -175,6 +180,13 @@ class Campaign extends Base
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="query",
+     *      description="Filter by Folder ID",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -201,7 +213,8 @@ class Campaign extends Base
             'tags' => $parsedParams->getString('tags'),
             'hasLayouts' => $parsedParams->getInt('hasLayouts'),
             'isLayoutSpecific' => $parsedParams->getInt('isLayoutSpecific'),
-            'retired' => $parsedParams->getInt('retired')
+            'retired' => $parsedParams->getInt('retired'),
+            'folderId' => $parsedParams->getInt('folderId')
         ];
 
         $options = [
@@ -210,7 +223,7 @@ class Campaign extends Base
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];
 
-        $campaigns = $this->campaignFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request), $options);
+        $campaigns = $this->campaignFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams), $options);
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
@@ -235,24 +248,29 @@ class Campaign extends Base
             $campaign->buttons = [];
 
             // Schedule Now
-            $campaign->buttons[] = array(
-                'id' => 'campaign_button_schedulenow',
-                'url' => $this->urlFor($request,'schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
-                'text' => __('Schedule Now')
-            );
+            if ($this->getUser()->featureEnabled('schedule.now')) {
+                $campaign->buttons[] = array(
+                    'id' => 'campaign_button_schedulenow',
+                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $campaign->campaignId, 'from' => 'Campaign']),
+                    'text' => __('Schedule Now')
+                );
+            }
 
             // Preview
-            $campaign->buttons[] = array(
-                'id' => 'campaign_button_preview',
-                'linkType' => '_blank',
-                'external' => true,
-                'url' => $this->urlFor($request,'campaign.preview', ['id' => $campaign->campaignId]),
-                'text' => __('Preview Campaign')
-            );
+            if ($this->getUser()->featureEnabled(['layout.view', 'campaign.view'], true)) {
+                $campaign->buttons[] = array(
+                    'id' => 'campaign_button_preview',
+                    'linkType' => '_blank',
+                    'external' => true,
+                    'url' => $this->urlFor($request, 'campaign.preview', ['id' => $campaign->campaignId]),
+                    'text' => __('Preview Campaign')
+                );
+            }
 
             // Buttons based on permissions
-            if ($this->getUser()->checkEditable($campaign)) {
-
+            if ($this->getUser()->featureEnabled('campaign.modify')
+                && $this->getUser()->checkEditable($campaign)
+            ) {
                 $campaign->buttons[] = ['divider' => true];
 
                 // Edit the Campaign
@@ -261,6 +279,24 @@ class Campaign extends Base
                     'url' => $this->urlFor($request,'campaign.edit.form', ['id' => $campaign->campaignId]),
                     'text' => __('Edit')
                 );
+
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    // Select Folder
+                    $campaign->buttons[] = [
+                        'id' => 'campaign_button_selectfolder',
+                        'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $campaign->campaignId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $campaign->campaignId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $campaign->campaign],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
 
                 // Copy the campaign
                 $campaign->buttons[] = [
@@ -272,33 +308,49 @@ class Campaign extends Base
                 $campaign->buttons[] = ['divider' => true];
             }
 
-            if ($this->getUser()->checkDeleteable($campaign)) {
+            if ($this->getUser()->featureEnabled('campaign.modify') &&
+                $this->getUser()->checkDeleteable($campaign)
+            ) {
                 // Delete Campaign
-                $campaign->buttons[] = array(
+                $campaign->buttons[] = [
                     'id' => 'campaign_button_delete',
                     'url' => $this->urlFor($request,'campaign.delete.form', ['id' => $campaign->campaignId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
-                    'dataAttributes' => array(
-                        array('name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.delete', ['id' => $campaign->campaignId])),
-                        array('name' => 'commit-method', 'value' => 'delete'),
-                        array('name' => 'id', 'value' => 'campaign_button_delete'),
-                        array('name' => 'text', 'value' => __('Delete')),
-                        array('name' => 'rowtitle', 'value' => $campaign->campaign)
-                    )
-                );
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.delete', ['id' => $campaign->campaignId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'campaign_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $campaign->campaign]
+                    ]
+                ];
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($campaign)) {
-
+            if ($this->getUser()->featureEnabled('campaign.modify') &&
+                $this->getUser()->checkPermissionsModifyable($campaign)
+            ) {
                 $campaign->buttons[] = ['divider' => true];
 
                 // Permissions for Campaign
-                $campaign->buttons[] = array(
+                $campaign->buttons[] = [
                     'id' => 'campaign_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $campaign->campaignId]),
-                    'text' => __('Permissions')
-                );
+                    'text' => __('Share'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $campaign->campaignId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'campaign_button_permissions'],
+                        ['name' => 'text', 'value' => __('Share')],
+                        ['name' => 'rowtitle', 'value' => $campaign->campaign],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])],
+                        ['name' => 'content-id-name', 'value' => 'campaignId']
+                    ]
+                ];
             }
         }
 
@@ -347,6 +399,13 @@ class Campaign extends Base
      *      type="string",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -372,14 +431,16 @@ class Campaign extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $campaign = $this->campaignFactory->create($sanitizedParams->getString('name'), $this->getUser()->userId, $sanitizedParams->getString('tags'));
-        $campaign->save();
+        $campaign = $this->campaignFactory->create($sanitizedParams->getString('name'), $this->getUser()->userId, $sanitizedParams->getString('tags'), $sanitizedParams->getInt('folderId', ['default' => 1]));
 
-        // Permissions
-        foreach ($this->permissionFactory->createForNewEntity($this->getUser(), get_class($campaign), $campaign->getId(), $this->getConfig()->getSetting('LAYOUT_DEFAULT'), $this->userGroupFactory) as $permission) {
-            /* @var Permission $permission */
-            $permission->save();
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($campaign->folderId);
+            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        } else {
+            $campaign->permissionsFolderId = 1;
         }
+
+        $campaign->save();
 
         // Assign layouts
         $this->assignLayout($request, $response, $campaign->campaignId);
@@ -410,20 +471,6 @@ class Campaign extends Base
     {
         $campaign = $this->campaignFactory->getById($id);
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $campaign->tags));
-        $arrayOfTagValues = array_filter(explode(',', $campaign->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] != 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
         if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
         }
@@ -449,7 +496,7 @@ class Campaign extends Base
             'campaign' => $campaign,
             'layouts' => $layouts,
             'help' => $this->getHelp()->link('Campaign', 'Edit'),
-            'tags' => $tags
+            'tags' => $this->tagFactory->getTagsWithValues($campaign)
         ]);
 
         return $this->render($request, $response);
@@ -487,6 +534,13 @@ class Campaign extends Base
      *      type="string",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -504,10 +558,23 @@ class Campaign extends Base
         }
 
         $campaign->campaign = $parsedRequestParams->getString('name');
-        $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
-        $campaign->save([
-            'saveTags' => true
-        ]);
+        $campaign->folderId = $parsedRequestParams->getInt('folderId', ['default' => $campaign->folderId]);
+
+        if ($campaign->hasPropertyChanged('folderId')) {
+            $folder = $this->folderFactory->getById($campaign->folderId);
+            $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+        }
+
+        if ($this->getUser()->featureEnabled('tag.tagging')) {
+            $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
+            $campaign->save([
+                'saveTags' => true
+            ]);
+        } else {
+            $campaign->save([
+                'saveTags' => false
+            ]);
+        }
 
         // Assign layouts
         $this->assignLayout($request, $response, $campaign->campaignId);
@@ -888,18 +955,20 @@ class Campaign extends Base
         $duration = 0 ;
         $extendedLayouts = [];
 
-        foreach($layouts as $layout)
+        foreach ($layouts as $layout)
         {
             $duration += $layout->duration;
-            $extendedLayouts[] = ['layout' => $layout,
-                                  'duration' => $layout->duration,
-                                  'previewOptions' => [
-                                      'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
-                                      'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
-                                      'libraryDownloadUrl' => $this->urlFor($request,'library.download'),
-                                      'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
-                                      'loaderUrl' => $this->getConfig()->uri('img/loader.gif')]
-                                 ];
+            $extendedLayouts[] = [
+                'layout' => $layout,
+                'duration' => $layout->duration,
+                'previewOptions' => [
+                    'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
+                    'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
+                    'libraryDownloadUrl' => $this->urlFor($request,'library.download', ['id' => ':id']),
+                    'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
+                    'loaderUrl' => $this->getConfig()->uri('img/loader.gif')
+                ]
+            ];
         }
         $this->getState()->template = 'campaign-preview';
         $this->getState()->setData([
@@ -981,6 +1050,122 @@ class Campaign extends Base
             'message' => sprintf(__('Added %s'), $newCampaign->campaign),
             'id' => $newCampaign->campaignId,
             'data' => $newCampaign
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Select Folder Form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function selectFolderForm(Request $request, Response $response, $id)
+    {
+        // Get the Campaign
+        $campaign = $this->campaignFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($campaign)) {
+            throw new AccessDeniedException();
+        }
+
+        $data = [
+            'campaign' => $campaign
+        ];
+
+        $this->getState()->template = 'campaign-form-selectfolder';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Select Folder
+     *
+     * @SWG\Put(
+     *  path="/campaign/{id}/selectfolder",
+     *  operationId="campaignSelectFolder",
+     *  tags={"campaign"},
+     *  summary="Campaign Select folder",
+     *  description="Select Folder for Campaign, can also be used with Layout specific Campaign ID",
+     *  @SWG\Parameter(
+     *      name="campaignId",
+     *      in="path",
+     *      description="The Campaign ID or Layout specific Campaign ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="formData",
+     *      description="Folder ID to which this object should be assigned to",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     *
+     */
+    public function selectFolder(Request $request, Response $response, $id)
+    {
+        // Get the Campaign
+        $campaign = $this->campaignFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($campaign)) {
+            throw new AccessDeniedException();
+        }
+
+        $folderId = $this->getSanitizer($request->getParams())->getInt('folderId');
+
+        $campaign->folderId = $folderId;
+        $folder = $this->folderFactory->getById($campaign->folderId);
+        $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+
+        if ($campaign->isLayoutSpecific === 1) {
+            $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
+
+            foreach ($layouts as $layout) {
+                $layout->load();
+                foreach ($layout->regions as $region) {
+                    /* @var Region $region */
+                    $playlist = $region->getPlaylist();
+                    $playlist->folderId = $campaign->folderId;
+                    $playlist->permissionsFolderId = $campaign->permissionsFolderId;
+                    $playlist->save();
+                }
+            }
+        }
+
+        // Save
+        $campaign->save();
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Layout %s moved to Folder %s'), $campaign->campaign, $folder->text)
         ]);
 
         return $this->render($request, $response);

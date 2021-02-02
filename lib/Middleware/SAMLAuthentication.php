@@ -196,9 +196,9 @@ class SAMLAuthentication extends AuthenticationBase
 
                         // Home page
                         if (isset($samlSettings['workflow']['homePage'])) {
-                            $user->homePageId = $this->getPageFactory()->getByName($samlSettings['workflow']['homePage'])->pageId;
+                            $user->homePageId = $this->getUserGroupFactory()->getHomepageByName($samlSettings['workflow']['homePage']);
                         } else {
-                            $user->homePageId = $this->getPageFactory()->getByName('dashboard')->pageId;
+                            $user->homePageId = 'icondashboard.view';
                         }
 
                         // Library Quota

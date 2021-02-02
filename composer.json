@@ -46,10 +46,10 @@
     "ext-json": "*",
     "ext-zip": "*",
     "slim/slim": "^4.3",
-    "slim/http": "^0.8",
+    "slim/http": "^1.2",
     "slim/flash": "^0.4",
-    "nyholm/psr7": "^1.2.1",
-    "nyholm/psr7-server": "^0.3",
+    "nyholm/psr7": "^1.3",
+    "nyholm/psr7-server": "^1.0.1",
     "erusev/parsedown": "~1.5",
     "league/oauth2-server": "^8.0",
     "flynsarmy/slim-monolog": "~1.0",
@@ -94,7 +94,10 @@
     "phpunit/phpunit": "^5",
     "zircote/swagger-php": "^2",
     "doctrine/instantiator": "1.0.*",
-    "doctrine/annotations": "^1"
+    "doctrine/annotations": "^1",
+    "squizlabs/php_codesniffer": "3.*",
+    "exussum12/coverage-checker": "^0.11.2",
+    "micheh/phpcs-gitlab": "^1.1"
   },
   "autoload": {
     "psr-4": { "Xibo\\" : "lib/", "Xibo\\Custom\\": "custom/" }

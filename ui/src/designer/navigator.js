@@ -271,11 +271,11 @@ Navigator.prototype.renderNavbar = function() {
                 buttons: {
                     confirm: {
                         label: editorsTrans.yes,
-                        className: 'btn-danger'
+                        className: 'btn-danger btn-bb-confirm'
                     },
                     cancel: {
                         label: editorsTrans.no,
-                        className: 'btn-default'
+                        className: 'btn-white btn-bb-cancel'
                     }
                 },
                 callback: function(result) {

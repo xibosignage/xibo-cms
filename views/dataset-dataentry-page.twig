@@ -27,10 +27,10 @@
 {% block title %}{% trans %}Data Entry for {{ dataSetName }}{% endtrans %} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ url_for("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Row" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("dataSet.column.view", {"id": dataSet.dataSetId}) }}"><i class="fa fa-columns" aria-hidden="true"></i> {% trans "View Columns" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ url_for("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Row" %}</button>
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("dataSet.column.view", {"id": dataSet.dataSetId}) }}"><i class="fa fa-columns" aria-hidden="true"></i> {% trans "View Columns" %}</button>
+    </div>
 {% endblock %}
 
 
@@ -41,7 +41,7 @@
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
-                    <div class="FilterDiv" id="Filter">
+                    <div class="FilterDiv card-body" id="Filter">
                         <form class="form-inline">
                             {% for col in dataSet.getColumn() %}
                                 {% if col.dataSetColumnTypeId == 1 and (col.dataTypeId == 1 or col.dataTypeId == 2) and col.showFilter == 1 %}
@@ -51,7 +51,7 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <table id="datasets" class="table table-striped" data-image-url="{{ url_for("library.download", {"id":":id"}) }}?preview=1&width=150&height=150">
                         <thead>
                         <tr>
@@ -70,10 +70,10 @@
             </div>
         </div>
         <ul class="nav nav-pills pull-left" style="margin-left: 5px;">
-            <li class="btn btn-success btn-xs"><a class="btns toggleMultiSelectMode" id="toggleMultiSelectMode" style="padding: 7px 7px;" title="{% trans "Click to toggle between Data Edit and Multi Select modes" %}" > <i class="" aria-hidden="true"></i> {% trans "Edit Mode" %}</a></li>
+            <li class="btn btn-success btn-sm"><a class="btns toggleMultiSelectMode" id="toggleMultiSelectMode" style="padding: 7px 7px;" title="{% trans "Click to toggle between Data Edit and Multi Select modes" %}" > <i class="" aria-hidden="true"></i> {% trans "Edit Mode" %}</a></li>
         </ul>
-        <ul class="nav nav-pills pull-right deleteRowsControl" style="margin-left: 5px;">
-            <li class="btn btn-danger btn-xs"><a class="btns deleteSelectedRows" id="deleteSelectedRows" style="padding: 7px 7px;" title="{% trans "Click to delete selected rows" %}" > <i class="" aria-hidden="true"></i> {% trans "Delete Selected Rows" %}</a></li>
+        <ul class="nav nav-pills pull-right p-2 deleteRowsControl" style="margin-left: 5px;">
+            <li class="btn btn-danger btn-sm"><a class="btns deleteSelectedRows" id="deleteSelectedRows" style="padding: 7px 7px;" title="{% trans "Click to delete selected rows" %}" > <i class="" aria-hidden="true"></i> {% trans "Delete Selected Rows" %}</a></li>
         </ul>
     </div>
 
@@ -84,7 +84,7 @@
 
         var imageUrl = $("#datasets").data("imageUrl");
         var cols = [];
-        let editMode = 'Edit';
+        var editMode = 'Edit';
 
         cols.push({ "name": "id", "data": "id" });
         {% for col in dataSet.getColumn() %}
@@ -121,6 +121,7 @@
         var table = $("#datasets").DataTable({ "language": dataTablesLanguage,
             serverSide: true, stateSave: true, stateDuration: 0,
             filter: false,
+            responsive: true,
             searchDelay: 3000,
             "order": [[ 0, "asc"]],
             ajax: {
@@ -148,7 +149,7 @@
                 complete: function (response) {
 
                     if (response.responseJSON.data.exception != '' && response.responseJSON.data.exception != undefined) {
-                        let error = response.responseJSON.data.exception;
+                        var error = response.responseJSON.data.exception;
                         $("#datasets tbody").html(error)
                     }
                 }
@@ -158,7 +159,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-md-6').eq(1));
 
         var dataSetEditFormOpen = _.debounce(function() {
             var data = table.row($(this)).data();
@@ -183,10 +184,10 @@
                 $(this).text('Multi Select Mode');
                 $("#datasets tbody").off('click', 'tr');
                 $(".deleteRowsControl").show();
-                $('#datasets tbody').on('click', 'tr', (ev) => {
+                $('#datasets tbody').on('click', 'tr', function(ev) {
 
                     // See if element has class already
-                    let hasClass = $(ev.currentTarget).hasClass('selected')
+                    var hasClass = $(ev.currentTarget).hasClass('selected')
 
                     // Add class to the clicked one ( or remove it if there was already there )
                     $(ev.currentTarget).toggleClass('selected', !hasClass);
@@ -207,15 +208,15 @@
         $('#deleteSelectedRows').on("click", function(e) {
             e.preventDefault();
 
-            let rows = [];
-            let rowIds = [];
-            let processedRows = 0;
+            var rows = [];
+            var rowIds = [];
+            var processedRows = 0;
 
-            $('#datasets tbody tr[role="row"].selected').each((idx, ele) => {
+            $('#datasets tbody tr[role="row"].selected').each(function(idx, ele) {
                 rows.push(table.row(ele).data());
             });
 
-            for (let i = 0; i < rows.length; i++) {
+            for (var i = 0; i < rows.length; i++) {
                 rowIds.push(rows[i].id);
             }
 

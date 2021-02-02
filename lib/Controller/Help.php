@@ -28,7 +28,6 @@ use Xibo\Factory\HelpFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
-use Xibo\Support\Exception\AccessDeniedException;
 
 /**
  * Class Help
@@ -83,7 +82,8 @@ class Help extends Base
      */
     public function grid(Request $request, Response $response)
     {
-        $helpLinks = $this->helpFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $helpLinks = $this->helpFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([], $sanitizedParams));
 
         foreach ($helpLinks as $row) {
             /* @var \Xibo\Entity\Help $row */
@@ -127,18 +127,12 @@ class Help extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function addForm(Request $request, Response $response)
     {
-        if ($this->getUser()->userTypeId != 1) {
-            throw new AccessDeniedException();
-        }
-
         $this->getState()->template = 'help-form-add';
-
         return $this->render($request, $response);
     }
 
@@ -148,17 +142,12 @@ class Help extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function editForm(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->userTypeId != 1) {
-            throw new AccessDeniedException();
-        }
-
         $help = $this->helpFactory->getById($id);
 
         $this->getState()->template = 'help-form-edit';
@@ -175,17 +164,12 @@ class Help extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function deleteForm(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->userTypeId != 1) {
-            throw new AccessDeniedException();
-        }
-
         $help = $this->helpFactory->getById($id);
 
         $this->getState()->template = 'help-form-delete';
@@ -201,17 +185,12 @@ class Help extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function add(Request $request, Response $response)
     {
-        if ($this->getUser()->userTypeId != 1) {
-            throw new AccessDeniedException();
-        }
-
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $help = $this->helpFactory->createEmpty();
         $help->topic = $sanitizedParams->getString('topic');
@@ -236,7 +215,6 @@ class Help extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
@@ -244,10 +222,6 @@ class Help extends Base
      */
     public function edit(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->userTypeId != 1) {
-            throw new AccessDeniedException();
-        }
-
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $help = $this->helpFactory->getById($id);
@@ -273,17 +247,12 @@ class Help extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function delete(Request $request, Response $response, $id)
     {
-        if ($this->getUser()->userTypeId != 1) {
-            throw new AccessDeniedException();
-        }
-
         $help = $this->helpFactory->getById($id);
         $help->delete();
 

@@ -41,17 +41,35 @@
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li><a href="#location" role="tab" data-toggle="tab"><span>{% trans "Location" %}</span></a></li>
-                <li><a href="#maintenance" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
-                <li><a href="#wol" role="tab" data-toggle="tab"><span>{% trans "Wake on LAN" %}</span></a></li>
-                <li><a href="#settings" role="tab" data-toggle="tab"><span>{% trans "Profile Settings" %}</span></a></li>
-                <li><a href="#remote" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
-                <li><a href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#location" role="tab" data-toggle="tab"><span>{% trans "Location" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#maintenance" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#wol" role="tab" data-toggle="tab"><span>{% trans "Wake on LAN" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#settings" role="tab" data-toggle="tab"><span>{% trans "Profile Settings" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#remote" role="tab" data-toggle="tab"><span>{% trans "Remote" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#advanced" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
             </ul>
             <form id="displayEditForm" class="DisplayForm XiboForm form-horizontal" method="put" action="{{ url_for("display.edit", {id: display.displayId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
+                        {% if currentUser.featureEnabled('folder.view') %}
+                        <div class="form-group row">
+                            <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
+                            <div class="col-sm-10" style="padding-top: 7px">
+                                <span id="originalFormFolder"></span>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-2 control-label">{% trans "Move to Selected Folder:" %}</label>
+                            <div class="col-sm-10">
+                                <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                                <span id="selectedFormFolder"></span>
+                            </div>
+                        </div>
+
+                        {{ forms.hidden('folderId', display.folderId) }}
+                        {% endif %}
 
                         {% set title %}{% trans "Display" %}{% endset %}
                         {% if displayLockName %}
@@ -70,18 +88,26 @@
                         {% set helpText %}{% trans "A description - (1 - 254 characters)." %}{% endset %}
                         {{ forms.input("description", title, display.description, helpText) }}
 
-                        {% set title %}{% trans "Tags" %}{% endset %}
-                        {% set helpText %}{% trans "Tags for this Display - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
-                        {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
+                        {% if currentUser.featureEnabled("tag.tagging") %}
+                            {% set title %}{% trans "Tags" %}{% endset %}
+                            {% set helpText %}{% trans "Tags for this Display - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
+                            {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
 
-                        <p id="loadingValues" style="margin-left: 17%"></p>
+                            <p id="loadingValues" style="margin-left: 17%"></p>
 
-                        {% set title %}{% trans "Tag value" %}{% endset %}
-                        {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
+                            {% set title %}{% trans "Tag value" %}{% endset %}
+                            {{ forms.dropdown("tagValue", "single", title, "", options, "key", "value") }}
 
-                        <div id="tagValueRequired" class="alert alert-info">
-                            <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown." %}</p>
-                        </div>
+                            <div id="tagValueContainer">
+                                {% set title %}{% trans "Tag value" %}{% endset %}
+                                {% set helpText %}{% trans "Please provide the value for this Tag and confirm by pressing enter on your keyboard." %}{% endset %}
+                                {{ forms.input("tagValueInput", title, "", helpText) }}
+                            </div>
+
+                            <div id="tagValueRequired" class="alert alert-info">
+                                <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
+                            </div>
+                        {% endif %}
 
                         {% set title %}{% trans "Authorise display?" %}{% endset %}
                         {% set helpText %}{% trans "Use one of the available slots for this display?" %}{% endset %}
@@ -201,7 +227,7 @@
 
                         {% set title %}{% trans "Bandwidth limit" %}{% endset %}
                         {% set helpText %}{% trans "The bandwidth limit that should be applied. Enter 0 for no limit." %}{% endset %}
-                        <div class="form-group">
+                        <div class="form-group row">
                             <label class="col-sm-2 control-label" for="bandwidthLimit">{{ title }}</label>
                             <div class="col-sm-6">
                                 <input class="form-control" name="bandwidthLimit" type="number" id="bandwidthLimit" min="0" value="{{ display.bandwidthLimit }}"/>

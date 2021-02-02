@@ -22,6 +22,7 @@
 
 namespace Xibo\Storage;
 
+use Carbon\Carbon;
 use MongoDB\BSON\ObjectId;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
@@ -88,40 +89,69 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
      */
     public function __construct($config = null)
     {
-
         $this->config = $config;
     }
 
     /**
      * @inheritdoc
      */
-    public function setDependencies($log, $layoutFactory = null, $campaignFactory = null, $mediaFactory = null, $widgetFactory = null, $displayFactory = null, $displayGroupFactory = null)
+    public function setDependencies($log, $layoutFactory, $campaignFactory, $mediaFactory, $widgetFactory, $displayFactory, $displayGroupFactory)
     {
         $this->log = $log;
+        $this->layoutFactory = $layoutFactory;
+        $this->campaignFactory = $campaignFactory;
         $this->mediaFactory = $mediaFactory;
         $this->widgetFactory = $widgetFactory;
-        $this->layoutFactory = $layoutFactory;
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;
-        $this->campaignFactory = $campaignFactory;
+        return $this;
+    }
 
-        try {
-            $uri = isset($this->config['uri']) ? $this->config['uri'] : 'mongodb://' . $this->config['host'] . ':' . $this->config['port'];
-            $this->client = new Client($uri, [
-                'username' => $this->config['username'],
-                'password' => $this->config['password']
-            ], (array_key_exists('driverOptions', $this->config) ? $this->config['driverOptions'] : []));
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->critical($e->getMessage());
+    /**
+     * @param \Xibo\Storage\StorageServiceInterface $store
+     * @return $this|\Xibo\Storage\MongoDbTimeSeriesStore
+     */
+    public function setStore($store)
+    {
+        return $this;
+    }
+
+    /**
+     * Set Client in the event you want to completely replace the configuration options and roll your own client.
+     * @param \MongoDB\Client $client
+     */
+    public function setClient($client)
+    {
+        $this->client = $client;
+    }
+
+    /**
+     * Get a MongoDB client to use.
+     * @return \MongoDB\Client
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    private function getClient()
+    {
+        if ($this->client === null) {
+            try {
+                $uri = isset($this->config['uri']) ? $this->config['uri'] : 'mongodb://' . $this->config['host'] . ':' . $this->config['port'];
+                $this->client = new Client($uri, [
+                    'username' => $this->config['username'],
+                    'password' => $this->config['password']
+                ], (array_key_exists('driverOptions', $this->config) ? $this->config['driverOptions'] : []));
+            } catch (\MongoDB\Exception\RuntimeException $e) {
+                $this->log->error('Unable to connect to MongoDB: ' . $e->getMessage());
+                $this->log->debug($e->getTraceAsString());
+                throw new GeneralException('Connection to Time Series Database failed, please try again.');
+            }
         }
 
-        return $this;
+        return $this->client;
     }
 
     /** @inheritdoc */
     public function addStat($statData)
     {
-
         // We need to transform string date to UTC date
         $statData['statDate'] = new UTCDateTime($statData['statDate']->format('U') * 1000);
 
@@ -134,7 +164,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         unset($statData['fromDt']);
         unset($statData['toDt']);
         unset($statData['tag']);
-        
+
         // Make an empty array to collect layout/media/display tags into
         $tagFilter = [];
 
@@ -358,12 +388,14 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
     }
 
-    /** @inheritdoc */
+    /** @inheritdoc
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
     public function addStatFinalize()
     {
         // Insert statistics
         if (count($this->stats) > 0) {
-            $collection = $this->client->selectCollection($this->config['database'], $this->table);
+            $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
 
             try {
                 $collection->insertMany($this->stats);
@@ -375,7 +407,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         // Create a period collection if it doesnot exist
-        $collectionPeriod = $this->client->selectCollection($this->config['database'], $this->periodTable);
+        $collectionPeriod = $this->getClient()->selectCollection($this->config['database'], $this->periodTable);
 
         try {
             $cursor = $collectionPeriod->findOne(['name' => 'period']);
@@ -397,37 +429,36 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function getEarliestDate()
     {
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
+        $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
         try {
-            $earliestDate = $collection->aggregate([
-                [
-                    '$group' => [
-                        '_id' => [],
-                        'minDate' => ['$min' => '$statDate'],
-                    ]
-                ]
+            // _id is the same as statDate for the purposes of sorting (stat date being the date/time of stat insert)
+            $earliestDate = $collection->find([], [
+                'limit' => 1,
+                'sort' => ['start' => 1]
             ])->toArray();
 
-            if(count($earliestDate) > 0) {
-                return [
-                    'minDate' => $earliestDate[0]['minDate']->toDateTime()->format('U')
-                ];
+            if (count($earliestDate) > 0) {
+                return Carbon::instance($earliestDate[0]['start']->toDateTime());
             }
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
 
-        return [];
+        return null;
     }
 
-    /** @inheritdoc */
+    /**
+     * @inheritdoc
+     * @throws \Xibo\Exception\GeneralException|\Xibo\Exception\InvalidArgumentException
+     */
     public function getStats($filterBy = [])
     {
         // do we consider that the fromDt and toDt will always be provided?
         $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
         $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
         $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
+        $statDateLessThan = isset($filterBy['statDateLessThan']) ? $filterBy['statDateLessThan'] : null;
 
         // In the case of user switches from mysql to mongo - laststatId were saved as integer
         if (isset($filterBy['statId'])) {
@@ -468,11 +499,21 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['start'] = ['$gte' => $fromDt];
         }
 
-        // statDate Filter
+        // statDate and statDateLessThan Filter
         // get the next stats from the given date
+        $statDateQuery = [];
         if ($statDate != null) {
             $statDate = new UTCDateTime($statDate->format('U')*1000);
-            $match['$match']['statDate'] = [ '$gte' => $statDate];
+            $statDateQuery['$gte'] = $statDate;
+        }
+        
+        if ($statDateLessThan != null) {
+            $statDateLessThan = new UTCDateTime($statDateLessThan->format('U')*1000);
+            $statDateQuery['$lt'] = $statDateLessThan;
+        }
+
+        if (count($statDateQuery) > 0) {
+            $match['$match']['statDate'] = $statDateQuery;
         }
 
         if (!empty($statId)) {
@@ -521,7 +562,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     $campaignIds[] = $this->layoutFactory->getCampaignIdFromLayoutHistory($layoutId);
                 } catch (NotFoundException $notFoundException) {
                     // Ignore the missing one
-                    $this->getLog()->debug('Filter for Layout without Layout History Record, layoutId is ' . $layoutId);
+                    $this->log->debug('Filter for Layout without Layout History Record, layoutId is ' . $layoutId);
                 }
             }
             $match['$match']['campaignId'] = [ '$in' => $campaignIds ];
@@ -532,66 +573,69 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['mediaId'] = [ '$in' => $mediaIds ];
         }
 
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
+        // Select collection
+        $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
 
-        $group = [
-            '$group' => [
-                '_id'=> null,
-                'count' => ['$sum' => 1],
-            ]
-        ];
+        // Paging
+        // ------
+        // Check whether or not we've requested a page, if we have then we need a count of records total for paging
+        // if we haven't then we don't bother getting a count
+        $total = 0;
+        if ($start !== null && $length !== null) {
+            // We add a group pipeline to get a total count of records
+            $group = [
+                '$group' => [
+                    '_id' => null,
+                    'count' => ['$sum' => 1],
+                ]
+            ];
 
-        if (count($match) > 0) {
-            $totalQuery = [
-                $match,
-                $group,
-            ];
-        } else {
-            $totalQuery = [
-                $group,
-            ];
+            if (count($match) > 0) {
+                $totalQuery = [
+                    $match,
+                    $group,
+                ];
+            } else {
+                $totalQuery = [
+                    $group,
+                ];
+            }
+
+            // Get total
+            try {
+                $totalCursor = $collection->aggregate($totalQuery, ['allowDiskUse' => true]);
+
+                $totalCount = $totalCursor->toArray();
+                $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
+
+            } catch (\Exception $e) {
+                $this->log->error('Error: Total Count. ' . $e->getMessage());
+                throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
+            }
         }
 
-        // Get total
         try {
-            $totalCursor = $collection->aggregate($totalQuery, ['allowDiskUse' => true]);
-
-            $totalCount = $totalCursor->toArray();
-            $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
-
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error('Error: Total Count. '. $e->getMessage());
-            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
-        } catch (\Exception $e) {
-            $this->log->error('Error: Total Count. '. $e->getMessage());
-            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
-        }
-
-        try {
-            $query = [
-                $match,
-                [
-                    '$project' => [
-                        'id'=> '$_id',
-                        'type'=> 1,
-                        'start'=> 1,
-                        'end'=> 1,
-                        'layout'=> '$layoutName',
-                        'display'=> '$displayName',
-                        'media'=> '$mediaName',
-                        'tag'=> '$eventName',
-                        'duration'=> '$duration',
-                        'count'=> '$count',
-                        'displayId'=> 1,
-                        'layoutId'=> 1,
-                        'widgetId'=> 1,
-                        'mediaId'=> 1,
-                        'campaignId'=> 1,
-                        'statDate'=> 1,
-                        'engagements'=> 1,
-                        'tagFilter' => 1
-                    ]
-                ],
+            $project = [
+                '$project' => [
+                    'id'=> '$_id',
+                    'type'=> 1,
+                    'start'=> 1,
+                    'end'=> 1,
+                    'layout'=> '$layoutName',
+                    'display'=> '$displayName',
+                    'media'=> '$mediaName',
+                    'tag'=> '$eventName',
+                    'duration'=> '$duration',
+                    'count'=> '$count',
+                    'displayId'=> 1,
+                    'layoutId'=> 1,
+                    'widgetId'=> 1,
+                    'mediaId'=> 1,
+                    'campaignId'=> 1,
+                    'statDate'=> 1,
+                    'engagements'=> 1,
+                    'tagFilter' => 1
+                ]
             ];
 
             if (count($match) > 0) {
@@ -607,10 +651,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ];
             }
 
-            // Sort by id (statId) - we must sort before we do pagination as mongo stat has descending order indexing on start/end
-            $query[]['$sort'] = ['id'=> 1];
-
+            // Paging
             if ($start !== null && $length !== null) {
+                // Sort by id (statId) - we must sort before we do pagination as mongo stat has descending order indexing on start/end
+                $query[]['$sort'] = ['id'=> 1];
                 $query[]['$skip'] =  $start;
                 $query[]['$limit'] = $length;
             }
@@ -619,12 +663,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $result = new TimeSeriesMongoDbResults($cursor);
 
-            // Total
+            // Total (we have worked this out above if we have paging enabled, otherwise its 0)
             $result->totalCount = $total;
 
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error('Error: Get total. '. $e->getMessage());
-            throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
         } catch (\Exception $e) {
             $this->log->error('Error: Get total. '. $e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
@@ -658,7 +699,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['displayId'] = [ '$in' => $displayIds ];
         }
 
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
+        $collection = $this->getClient()->selectCollection($this->config['database'], $this->table);
 
         // Get total
         try {
@@ -676,9 +717,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $totalCount = $totalCursor->toArray();
             $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
 
-        } catch (\MongoDB\Exception\RuntimeException $e) {
-            $this->log->error($e->getMessage());
-            throw new GeneralException(__('Sorry we encountered an error getting total number of Proof of Play data, please consult your administrator'));
         } catch (\Exception $e) {
             $this->log->error($e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting total number of Proof of Play data, please consult your administrator'));
@@ -690,60 +728,30 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     /** @inheritdoc */
     public function deleteStats($maxage, $fromDt = null, $options = [])
     {
-        // Set default options
-        $options = array_merge([
-            'maxAttempts' => 10,
-            'statsDeleteSleep' => 3,
-            'limit' => 1000,
-        ], $options);
-
+        // Filter the records we want to delete.
         // we dont use $options['limit'] anymore.
         // we delete all the records at once based on filter criteria (no-limit approach)
+        $filter = [
+            'start' => ['$lte' => new UTCDateTime($maxage->format('U')*1000)],
+        ];
 
-        $toDt = new UTCDateTime($maxage->format('U')*1000);
-
-        $collection = $this->client->selectCollection($this->config['database'], $this->table);
-
-        $rows = 1;
-        $count = 0;
-
-        if ($fromDt != null) {
-
-            $start = new UTCDateTime($fromDt->format('U')*1000);
-            $filter =  [
-                'start' => ['$lte' => $toDt],
-                'end' => ['$gt' => $start]
-            ];
-
-        } else {
-
-            $filter =  [
-                'start' => ['$lte' => $toDt]
-            ];
+        // Do we also limit the from date?
+        if ($fromDt !== null) {
+            $filter['end'] = ['$gt' => new UTCDateTime($fromDt->format('U')*1000)];
         }
 
+        // Run the delete and return the number of records we deleted.
         try {
-            $deleteResult = $collection->deleteMany(
-                $filter
-            );
-            $rows = $deleteResult->getDeletedCount();
+            $deleteResult = $this->getClient()
+                ->selectCollection($this->config['database'], $this->table)
+                ->deleteMany($filter);
 
+            return $deleteResult->getDeletedCount();
 
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
+            throw new GeneralException('Stats cannot be deleted.');
         }
-
-        $count += $rows;
-
-        // Give MongoDB time to recover
-        if ($rows > 0) {
-            $this->log->debug('Stats delete effected ' . $rows . ' rows, sleeping.');
-            sleep($options['statsDeleteSleep']);
-        }
-
-
-        return $count;
-
     }
 
     /** @inheritdoc */
@@ -767,21 +775,21 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $aggregateConfig['maxTimeMS']= $options['maxTimeMS'];
         }
 
-        $collection = $this->client->selectCollection($this->config['database'], $options['collection']);
+        $collection = $this->getClient()->selectCollection($this->config['database'], $options['collection']);
         try {
             $cursor = $collection->aggregate($options['query'], $aggregateConfig);
 
             // log query
-            $this->log->debug($cursor);
+            $this->log->debug(json_encode($options['query']));
 
             $results = $cursor->toArray();
 
         } catch (\MongoDB\Driver\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
+            $this->log->debug($e->getTraceAsString());
             throw new GeneralException($e->getMessage());
         }
 
         return $results;
-
     }
 }

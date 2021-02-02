@@ -5,7 +5,7 @@ describe('Playlists Admin', function () {
     beforeEach(function () {
         cy.login();
 
-        testRun = Cypress._.random(0, 1e7);
+        testRun = Cypress._.random(0, 1e9);
     });
 
     it('should add a non-dynamic playlist', function() {
@@ -63,7 +63,7 @@ describe('Playlists Admin', function () {
 
             // Delete all
             cy.get('.dataTables_info button[data-toggle="dropdown"]').click();
-            cy.get('.dataTables_info li[data-button-id="playlist_button_delete"]').click();
+            cy.get('.dataTables_info a[data-button-id="playlist_button_delete"]').click();
 
             cy.get('button.save-button').click();
 

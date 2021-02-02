@@ -62,6 +62,11 @@ $container->set('logger', function () {
     $logger->pushProcessor($uidProcessor);
     $logger->pushHandler($dbhandler);
 
+    // Optionally allow console logging
+    if (isset($_SERVER['LOG_TO_CONSOLE']) && $_SERVER['LOG_TO_CONSOLE']) {
+        $logger->pushHandler(new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG));
+    }
+
     return $logger;
 });
 
@@ -76,6 +81,9 @@ if (\Xibo\Helper\Environment::migrationPending()) {
     die('Upgrade pending');
 }
 
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
+
 $twigMiddleware = TwigMiddleware::createFromContainer($app);
 
 $app->add(new \Xibo\Middleware\Storage($app));
@@ -84,9 +92,6 @@ $app->add(new \Xibo\Middleware\State($app));
 $app->add($twigMiddleware);
 $app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
-
-// Handle additional Middleware
-\Xibo\Middleware\State::setMiddleWare($app);
 
 $app->addRoutingMiddleware();
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);

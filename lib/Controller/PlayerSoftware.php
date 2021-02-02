@@ -159,7 +159,7 @@ class PlayerSoftware extends Base
             'playerShowVersion' => $sanitizedQueryParams->getString('playerShowVersion')
         ];
 
-        $versions = $this->playerVersionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $versions = $this->playerVersionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
 
         // add row buttons
         foreach ($versions as $version) {
@@ -191,11 +191,22 @@ class PlayerSoftware extends Base
 
             if ($user->checkPermissionsModifyable($media)) {
                 // Permissions
-                $version->buttons[] = array(
+                $version->buttons[] = [
                     'id' => 'content_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
-                    'text' => __('Permissions')
-                );
+                    'text' => __('Share'),
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Media', 'id' => $media->mediaId])],
+                        ['name' => 'commit-method', 'value' => 'post'],
+                        ['name' => 'id', 'value' => 'content_button_permissions'],
+                        ['name' => 'text', 'value' => __('Share')],
+                        ['name' => 'rowtitle', 'value' => $media->name],
+                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Media'])],
+                        ['name' => 'content-id-name', 'value' => 'mediaId']
+                    ]
+                ];
             }
 
             // Download

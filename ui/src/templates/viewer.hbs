@@ -1,9 +1,9 @@
 {{#if smallPreview}}
     <div class="preview-paging text-right">
-        <span class="preview-paging-name pull-left tooltip-always-on" data-toggle="tooltip" data-placement="bottom"></span>
-        <i class="fa fa-arrow-circle-o-left widget-arrow widget-left" data-toggle="tooltip" data-placement="bottom" data-title="{{ trans.previousWidget }}"></i>
+        <span class="preview-paging-name pull-left tooltip-always-on" data-toggle="tooltip" data-container="#layout-viewer-container" data-placement="bottom"></span>
+        <i class="fa fa-arrow-circle-o-left widget-arrow widget-left" data-toggle="tooltip" data-container="#layout-viewer-container" data-placement="bottom" data-title="{{ trans.previousWidget }}"></i>
         <span class="preview-paging-message"></span>
-        <i class="fa fa-arrow-circle-o-right widget-arrow widget-right" data-toggle="tooltip" data-placement="bottom" data-title="{{ trans.nextWidget }}"></i>
+        <i class="fa fa-arrow-circle-o-right widget-arrow widget-right" data-toggle="tooltip" data-container="#layout-viewer-container" data-placement="bottom" data-title="{{ trans.nextWidget }}"></i>
     </div>
     <div class="preview-select"></div>
 {{else}}
@@ -35,7 +35,7 @@
 
             <div id="inline-editor-overlay" class="inline-editor-closed">
                 <div class="edit-btn-container">
-                    <i id="edit-btn" class="fa fa-edit" data-toggle="tooltip" data-placement="bottom" data-title="{{ trans.inlineEditor }}"></i>
+                    <i id="edit-btn" class="fa fa-edit" data-toggle="tooltip" data-container="#layout-viewer-container" data-placement="bottom" data-title="{{ trans.inlineEditor }}"></i>
                 </div>
             </div>
         {{/unless}}

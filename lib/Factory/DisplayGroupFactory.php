@@ -116,7 +116,7 @@ class DisplayGroupFactory extends BaseFactory
 
     /**
      * @param int $displayId
-     * @return array[DisplayGroup]
+     * @return DisplayGroup[]
      * @throws NotFoundException
      */
     public function getByDisplayId($displayId)
@@ -127,7 +127,7 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * Get Display Groups by MediaId
      * @param int $mediaId
-     * @return array[DisplayGroup]
+     * @return DisplayGroup[]
      * @throws NotFoundException
      */
     public function getByMediaId($mediaId)
@@ -138,7 +138,7 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * Get Display Groups by eventId
      * @param int $eventId
-     * @return array[DisplayGroup]
+     * @return DisplayGroup[]
      * @throws NotFoundException
      */
     public function getByEventId($eventId)
@@ -149,7 +149,7 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * Get Display Groups by isDynamic
      * @param int $isDynamic
-     * @return array[DisplayGroup]
+     * @return DisplayGroup[]
      * @throws NotFoundException
      */
     public function getByIsDynamic($isDynamic)
@@ -160,7 +160,7 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * Get Display Groups by their ParentId
      * @param int $parentId
-     * @return array[DisplayGroup]
+     * @return DisplayGroup[]
      * @throws NotFoundException
      */
     public function getByParentId($parentId)
@@ -235,6 +235,29 @@ class DisplayGroupFactory extends BaseFactory
     }
 
     /**
+     * Set Bandwidth limit
+     * @param int $bandwidthLimit
+     * @param array $displayIds
+     * @return DisplayGroup[]
+     * @throws NotFoundException
+     */
+    public function setBandwidth($bandwidthLimit, $displayGroupIds)
+    {
+        $sql = 'UPDATE `displaygroup` SET bandwidthLimit = :bandwidthLimit WHERE displayGroupId IN (0';
+        $params['bandwidthLimit'] = $bandwidthLimit;
+        
+        $i = 0;
+        foreach ($displayGroupIds as $displayGroupId) {
+            $i++;
+            $sql .= ',:displayGroupId' . $i;
+            $params['displayGroupId' . $i] = $displayGroupId;
+        }
+        $sql .= ')';
+
+        $this->getStore()->update($sql, $params);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return array[DisplayGroup]
@@ -258,7 +281,11 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.dynamicCriteria,
                 `displaygroup`.dynamicCriteriaTags,
                 `displaygroup`.bandwidthLimit,
+                `displaygroup`.createdDt,
+                `displaygroup`.modifiedDt,
                 `displaygroup`.userId,
+                `displaygroup`.folderId,
+                `displaygroup`.permissionsFolderId,
                 (
                   SELECT GROUP_CONCAT(DISTINCT tag) 
                     FROM tag 
@@ -302,7 +329,7 @@ class DisplayGroupFactory extends BaseFactory
         $body .= ' WHERE 1 = 1 ';
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy, '`displaygroup`.permissionsFolderId');
         if ($parsedBody->getInt('displayGroupId') !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
             $params['displayGroupId'] = $parsedBody->getInt('displayGroupId');
@@ -404,6 +431,11 @@ class DisplayGroupFactory extends BaseFactory
                     $members[] = $displayGroupId;
                 }
             }
+        }
+
+        if ($parsedBody->getInt('folderId') !== null) {
+            $body .= ' AND `displaygroup`.folderId = :folderId ';
+            $params['folderId'] = $parsedBody->getInt('folderId');
         }
 
         // Sorting?

@@ -30,6 +30,7 @@ use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Playlist;
+use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Helper\SanitizerService;
@@ -109,6 +110,9 @@ class LayoutFactory extends BaseFactory
     /** @var ActionFactory */
     private $actionFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -133,7 +137,7 @@ class LayoutFactory extends BaseFactory
      */
     public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $dispatcher, $permissionFactory,
                                 $regionFactory, $tagFactory, $campaignFactory, $mediaFactory, $moduleFactory, $resolutionFactory,
-                                $widgetFactory, $widgetOptionFactory, $playlistFactory, $widgetAudioFactory, $actionFactory)
+                                $widgetFactory, $widgetOptionFactory, $playlistFactory, $widgetAudioFactory, $actionFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -151,6 +155,7 @@ class LayoutFactory extends BaseFactory
         $this->playlistFactory = $playlistFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->actionFactory = $actionFactory;
+        $this->folderFactory = $folderFactory;
     }
 
     /**
@@ -172,7 +177,8 @@ class LayoutFactory extends BaseFactory
             $this->mediaFactory,
             $this->moduleFactory,
             $this->playlistFactory,
-            $this->actionFactory
+            $this->actionFactory,
+            $this->folderFactory
         );
     }
 
@@ -182,7 +188,7 @@ class LayoutFactory extends BaseFactory
      * @param int $ownerId
      * @param string $name
      * @param string $description
-     * @param string $tags
+     * @param string|array $tags
      * @param string $code
      * @return Layout
      *
@@ -210,7 +216,11 @@ class LayoutFactory extends BaseFactory
         $layout->setOwner($ownerId);
 
         // Create some tags
-        $layout->tags = $this->tagFactory->tagsFromString($tags);
+        if (is_array($tags)) {
+            $layout->tags = $tags;
+        } else {
+            $layout->tags = $this->tagFactory->tagsFromString($tags);
+        }
 
         // Add a blank, full screen region
         $layout->regions[] = $this->regionFactory->create($ownerId, $name . '-1', $layout->width, $layout->height, 0, 0);
@@ -694,12 +704,13 @@ class LayoutFactory extends BaseFactory
      * @param null $playlistJson
      * @param null $nestedPlaylistJson
      * @param bool $useJson
+     * @param bool $importTags
      * @return array
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false)
+    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false, $importTags = false)
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
@@ -741,6 +752,16 @@ class LayoutFactory extends BaseFactory
             // create all nested Playlists, save their widgets to key=>value array
             foreach ($nestedPlaylistJson as $nestedPlaylist) {
                 $newPlaylist = $this->playlistFactory->createEmpty()->hydrate($nestedPlaylist);
+                $newPlaylist->tags = [];
+
+                // Populate tags
+                if ($nestedPlaylist['tags'] !== null && count($nestedPlaylist['tags']) > 0 && $importTags) {
+                    foreach ($nestedPlaylist['tags'] as $tag) {
+                        $newPlaylist->tags[] = $this->tagFactory->tagFromString(
+                            $tag['tag'] . (!empty($tag['value']) ? '|' . $tag['value'] : '')
+                        );
+                    }
+                }
 
                 $oldIds[] = $newPlaylist->playlistId;
                 $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
@@ -759,8 +780,10 @@ class LayoutFactory extends BaseFactory
             $this->getLog()->debug('Finished creating nested playlists there are ' . count($playlists) . ' Playlists created');
         }
 
+        $drawers = (array_key_exists('drawers', $layoutJson['layoutDefinitions'])) ? $layoutJson['layoutDefinitions']['drawers'] : [];
+
         // merge Layout Regions and Drawers into one array.
-        $allRegions = array_merge($layoutJson['layoutDefinitions']['regions'], $layoutJson['layoutDefinitions']['drawers']);
+        $allRegions = array_merge($layoutJson['layoutDefinitions']['regions'], $drawers );
 
         // Populate Region Nodes
         foreach ($allRegions as $regionJson) {
@@ -817,7 +840,7 @@ class LayoutFactory extends BaseFactory
                 $widget->ownerId = $mediaOwnerId;
                 $widget->duration = $mediaNode['duration'];
                 $widget->useDuration = $mediaNode['useDuration'];
-                $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
+                $widget->mediaIds = $mediaNode['mediaIds'];
                 $widget->tempWidgetId = $mediaNode['widgetId'];
 
                 // Widget from/to dates.
@@ -834,7 +857,6 @@ class LayoutFactory extends BaseFactory
                     continue;
                 }
 
-                $module = $modules[$widget->type];
                 /* @var \Xibo\Entity\Module $module */
 
                 //
@@ -861,18 +883,7 @@ class LayoutFactory extends BaseFactory
                     // Convert the module type of known legacy widgets
                     if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
                         $widget->type = 'datasetticker';
-                        $module = $modules[$widget->type];
                     }
-                }
-
-                //
-                // Get the MediaId associated with this widget
-                //
-                if ($module->regionSpecific == 0) {
-                    $this->getLog()->debug('Library Widget, getting mediaId');
-
-                    $this->getLog()->debug(sprintf('Assigning mediaId %d', $widget->tempId));
-                    $widget->assignMedia($widget->tempId);
                 }
 
                 //
@@ -904,6 +915,16 @@ class LayoutFactory extends BaseFactory
                     foreach ($playlistJson as $playlistDetail) {
 
                         $newPlaylist = $this->playlistFactory->createEmpty()->hydrate($playlistDetail);
+                        $newPlaylist->tags = [];
+
+                        // Populate tags
+                        if ($playlistDetail['tags'] !== null && count($playlistDetail['tags']) > 0 && $importTags) {
+                            foreach ($playlistDetail['tags'] as $tag) {
+                                $newPlaylist->tags[] = $this->tagFactory->tagFromString(
+                                    $tag['tag'] . (!empty($tag['value']) ? '|' . $tag['value'] : '')
+                                );
+                            }
+                        }
 
                         // Check to see if it matches our Sub-Playlist widget config
                         if (in_array($newPlaylist->playlistId, $layoutSubPlaylistId)) {
@@ -985,16 +1006,17 @@ class LayoutFactory extends BaseFactory
 
         $this->getLog()->debug(sprintf('Finished loading layout - there are %d drawer regions.', count($layout->drawers)));
 
-        // Load any existing tags
-        if (!is_array($layout->tags)) {
-            $layout->tags = $this->tagFactory->tagsFromString($layout->tags);
-        }
+        if ($importTags) {
+            foreach ($layoutJson['layoutDefinitions']['tags'] as $tagNode) {
+                if ($tagNode == []) {
+                    continue;
+                }
 
-        foreach ($layoutJson['layoutDefinitions']['tags'] as $tagNode) {
-            if ($tagNode == [])
-                continue;
+                $layout->tags[] = $this->tagFactory->tagFromString(
+                    $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
+                );
 
-            $layout->tags[] = $this->tagFactory->tagFromString($tagNode['tag']);
+            }
         }
 
         // The parsed, finished layout
@@ -1012,6 +1034,8 @@ class LayoutFactory extends BaseFactory
      * @param bool $useExistingDataSets
      * @param bool $importDataSetData
      * @param \Xibo\Controller\Library $libraryController
+     * @param string $tags
+     * @param \Slim\Interfaces\RouteParserInterface $routeParser $routeParser
      * @return Layout
      * @throws DuplicateEntityException
      * @throws GeneralException
@@ -1019,7 +1043,7 @@ class LayoutFactory extends BaseFactory
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ConfigurationException
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, $tags, $routeParser)
     {
         $this->getLog()->debug(sprintf('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName));
 
@@ -1045,35 +1069,35 @@ class LayoutFactory extends BaseFactory
         $regionActions = false;
         $widgetActions = false;
 
-        // check if we have any actions in regions and/or widgets.
-        if (!empty($layoutDetails['layoutDefinitions']['drawers'])) {
-            $allRegions = array_merge($layoutDetails['layoutDefinitions']['regions'], $layoutDetails['layoutDefinitions']['drawers']);
-        } else {
-            $allRegions = $layoutDetails['layoutDefinitions']['regions'];
-        }
-
-        foreach ($allRegions as $region) {
-            $regionActions = (!empty($region['actions'])) ? true : false;
-
-            if ($regionActions) {
-                break;
-            }
-
-            foreach ($region['regionPlaylist']['widgets'] as $widget) {
-                $widgetActions = (!empty($widget['actions'])) ? true : false;
-
-                if ($widgetActions) {
-                    break;
-                }
-            }
-        }
-
-        $actionsExist = (!empty($layoutDetails['layoutDefinitions']['actions']) || $regionActions || $widgetActions) ? true : false;
+        $actionsExist = !empty($layoutDetails['layoutDefinitions']['actions']) || $regionActions || $widgetActions;
 
         // should we use json import?
-        $useJsonImport = (!empty($layoutDetails['layoutDefinitions']['drawers']) || $playlistDetails !== false || $actionsExist) ? true : false;
+        $useJsonImport = !empty($layoutDetails['layoutDefinitions']['drawers']) || $playlistDetails !== false || $actionsExist;
 
         if ($useJsonImport) {
+            // check if we have any actions in regions and/or widgets.
+            if (!empty($layoutDetails['layoutDefinitions']['drawers'])) {
+                $allRegions = array_merge($layoutDetails['layoutDefinitions']['regions'], $layoutDetails['layoutDefinitions']['drawers']);
+            } else {
+                $allRegions = $layoutDetails['layoutDefinitions']['regions'];
+            }
+
+            foreach ($allRegions as $region) {
+                $regionActions = (!empty($region['actions'])) ? true : false;
+
+                if ($regionActions) {
+                    break;
+                }
+
+                foreach ($region['regionPlaylist']['widgets'] as $widget) {
+                    $widgetActions = (!empty($widget['actions'])) ? true : false;
+
+                    if ($widgetActions) {
+                        break;
+                    }
+                }
+            }
+
             // Construct the Layout
             if ($playlistDetails !== false) {
                 $playlistDetails = json_decode(($playlistDetails), true);
@@ -1083,14 +1107,24 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true);
+            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true, $importTags);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
+
+            // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
+            // if the code does not exist, then persist it on import.
+            try {
+                $this->getByCode($layoutDetails['layoutDefinitions']['code']);
+                $layout->code = null;
+            } catch (NotFoundException $exception) {
+                $layout->code = $layoutDetails['layoutDefinitions']['code'];
+            }
         } else {
             $layout = $this->loadByXlf($zip->getFromName('layout.xml'));
         }
 
         $this->getLog()->debug('Layout Loaded: ' . $layout);
+
         // Ensure width and height are integer type for resolution validation purpose xibosignage/xibo#1648
         $layout->width = (int)$layout->width;
         $layout->height = (int)$layout->height;
@@ -1099,15 +1133,6 @@ class LayoutFactory extends BaseFactory
         $layout->layout = (($layoutName != '') ? $layoutName : $layoutDetails['layout']);
         $layout->description = (isset($layoutDetails['description']) ? $layoutDetails['description'] : '');
 
-        // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
-        // if the code does not exist, then persist it on import.
-        try {
-            $this->getByCode($layoutDetails['layoutDefinitions']['code']);
-            $layout->code = null;
-        } catch (NotFoundException $exception) {
-            $layout->code = $layoutDetails['layoutDefinitions']['code'];
-        }
-
         // Get global stat setting of layout to on/off proof of play statistics
         $layout->enableStat = $this->config->getSetting('LAYOUT_STATS_ENABLED_DEFAULT');
 
@@ -1115,11 +1140,11 @@ class LayoutFactory extends BaseFactory
 
         // Check that the resolution we have in this layout exists, and if not create it.
         try {
-            if ($layout->schemaVersion < 2)
+            if ($layout->schemaVersion < 2) {
                 $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
-            else
+            } else {
                 $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
-
+            }
         } catch (NotFoundException $notFoundException) {
             $this->getLog()->info('Import is for an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
 
@@ -1163,6 +1188,12 @@ class LayoutFactory extends BaseFactory
 
         // Tag as imported
         $layout->tags[] = $this->tagFactory->tagFromString('imported');
+
+        // Tag from the upload form
+        $tagsFromForm = (($tags != '') ? $this->tagFactory->tagsFromString($tags) : []);
+        foreach ($tagsFromForm as $tagFromForm) {
+            $layout->tags[] = $tagFromForm;
+        }
 
         // Set the owner
         $layout->setOwner($userId, true);
@@ -1231,6 +1262,20 @@ class LayoutFactory extends BaseFactory
                 $this->getLog()->debug('Media does not exist in Library, add it ' .  $file['file']);
 
                 $media = $this->mediaFactory->create($intendedMediaName, $file['file'], $file['type'], $userId, $file['duration']);
+
+                if ($importTags && isset($file['tags'])) {
+                    foreach ($file['tags'] as $tagNode) {
+                        if ($tagNode == []) {
+                            continue;
+                        }
+
+                        $media->tags[] = $this->tagFactory->tagFromString(
+                            $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
+                        );
+
+                    }
+                }
+
                 $media->tags[] = $this->tagFactory->tagFromString('imported');
 
                 // Get global stat setting of media to set to on/off/inherit
@@ -1287,6 +1332,11 @@ class LayoutFactory extends BaseFactory
                         // Assign the new ID
                         $widget->assignMedia($newMediaId);
                     }
+
+                    // change mediaId references in applicable widgets, outside of the if condition, because if the Layout is loadByXLF we will not have mediaIds set on Widget at this point
+                    // the mediaIds array for Widgets with Library references will be correctly populated on getResource call from Player/CMS.
+                    // if the Layout was loadByJson then it will already have correct mediaIds array at this point.
+                    $this->handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId);
                 }
             }
 
@@ -1323,6 +1373,10 @@ class LayoutFactory extends BaseFactory
 
                             // Assign the new ID
                             $widget->assignMedia($newMediaId);
+
+                            // change mediaId references in applicable widgets in all Playlists we have created on this import.
+                            $this->handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId);
+
                             $widget->save();
 
                             if (!in_array($widget, $playlist->widgets)) {
@@ -1332,7 +1386,7 @@ class LayoutFactory extends BaseFactory
                             }
                         }
 
-                        // add Playlist widgetsto the $widgets (which already has all widgets from layout regionPlaylists)
+                        // add Playlist widgets to the $widgets (which already has all widgets from layout regionPlaylists)
                         // this will be needed if any Playlist has widgets with dataSets
                         if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
                             $widgets[] = $widget;
@@ -1556,9 +1610,9 @@ class LayoutFactory extends BaseFactory
             $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
         }
 
-        if ($fontsAdded) {
+        if ($fontsAdded && $routeParser != null) {
             $this->getLog()->debug('Fonts have been added');
-            $libraryController->installFonts();
+            $libraryController->installFonts($routeParser);
         }
 
         return $layout;
@@ -1680,7 +1734,7 @@ class LayoutFactory extends BaseFactory
                 $playlist->requiresDurationUpdate = 1;
 
                 // save non-media based widget, we can't save media based widgets here as we don't have updated mediaId yet.
-                if ($module->regionSpecific == 1) {
+                if ($module->regionSpecific == 1 && $playlistWidget->mediaIds == []) {
                     $playlistWidget->save();
                 }
             }
@@ -1767,6 +1821,8 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.publishedDate, ";
         $select .= "        layout.autoApplyTransitions, ";
         $select .= "        layout.code, ";
+        $select .= "        campaign.folderId,  ";
+        $select .= "        campaign.permissionsFolderId,  ";
 
         if ($parsedFilter->getInt('campaignId') !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -1904,7 +1960,7 @@ class LayoutFactory extends BaseFactory
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy);
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
 
         // Layout Like
         if ($parsedFilter->getString('layout') != '') {
@@ -2097,6 +2153,11 @@ class LayoutFactory extends BaseFactory
                        AND ( schedule.fromDt < '. $date . ' OR schedule.fromDt = 0 ) ' . ' AND schedule.toDt > ' . $date;
         }
 
+        if ($parsedFilter->getInt('folderId') !== null) {
+            $body .= " AND campaign.folderId = :folderId ";
+            $params['folderId'] = $parsedFilter->getInt('folderId');
+        }
+
         // Sorting?
         $order = '';
 
@@ -2147,6 +2208,8 @@ class LayoutFactory extends BaseFactory
             $layout->publishedDate = $parsedRow->getString('publishedDate');
             $layout->autoApplyTransitions = $parsedRow->getInt('autoApplyTransitions');
             $layout->code = $parsedRow->getString('code');
+            $layout->folderId = $parsedRow->getInt('folderId');
+            $layout->permissionsFolderId = $parsedRow->getInt('permissionsFolderId');
 
             $layout->groupsWithPermissions = $row['groupsWithPermissions'];
             $layout->setOriginals();
@@ -2215,5 +2278,114 @@ class LayoutFactory extends BaseFactory
         }
 
         return $newPlaylist;
+    }
+
+    /**
+     * Checkout a Layout
+     * @param \Xibo\Entity\Layout $layout
+     * @param bool $returnDraft Should we return the Draft or the pre-checkout Layout
+     * @return \Xibo\Entity\Layout
+     * @throws \Xibo\Support\Exception\GeneralException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function checkoutLayout($layout, $returnDraft = true)
+    {
+        // Load the Layout
+        $layout->load();
+
+        // Make a skeleton copy of the Layout
+        $draft = clone $layout;
+        $draft->parentId = $layout->layoutId;
+        $draft->campaignId = $layout->campaignId;
+        $draft->publishedStatusId = 2; // Draft
+        $draft->publishedStatus = __('Draft');
+        $draft->autoApplyTransitions = $layout->autoApplyTransitions;
+        $draft->code = $layout->code;
+        $draft->folderId = $layout->folderId;
+
+        // Do not copy any of the tags, these will belong on the parent and are not editable from the draft.
+        $draft->tags = [];
+
+        // Save without validation or notification.
+        $draft->save([
+            'validate' => false,
+            'notify' => false
+        ]);
+
+        // Update the original
+        $layout->publishedStatusId = 2; // Draft
+        $layout->publishedStatus = __('Draft');
+        $layout->save([
+            'saveLayout' => true,
+            'saveRegions' => false,
+            'saveTags' => false,
+            'setBuildRequired' => false,
+            'validate' => false,
+            'notify' => false
+        ]);
+
+        /** @var Region[] $allRegions */
+        $allRegions = array_merge($draft->regions, $draft->drawers);
+        $draft->copyActions($draft, $layout);
+
+        // Permissions && Sub-Playlists
+        // Layout level permissions are managed on the Campaign entity, so we do not need to worry about that
+        // Regions/Widgets need to copy down our layout permissions
+        foreach ($allRegions as $region) {
+            // Match our original region id to the id in the parent layout
+            $original = $layout->getRegionOrDrawer($region->getOriginalValue('regionId'));
+
+            // Make sure Playlist closure table from the published one are copied over
+            $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
+
+            // Copy over original permissions
+            foreach ($original->permissions as $permission) {
+                $new = clone $permission;
+                $new->objectId = $region->regionId;
+                $new->save();
+            }
+
+            // Playlist
+            foreach ($original->getPlaylist()->permissions as $permission) {
+                $new = clone $permission;
+                $new->objectId = $region->getPlaylist()->playlistId;
+                $new->save();
+            }
+
+            // Widgets
+            foreach ($region->getPlaylist()->widgets as $widget) {
+                $originalWidget = $original->getPlaylist()->getWidget($widget->getOriginalValue('widgetId'));
+                // Copy over original permissions
+                foreach ($originalWidget->permissions as $permission) {
+                    $new = clone $permission;
+                    $new->objectId = $widget->widgetId;
+                    $new->save();
+                }
+            }
+        }
+
+        return $returnDraft ? $draft : $layout;
+    }
+
+    /**
+     * Function called during Layout Import
+     * Check if provided Widget has options to have Library references
+     * if it does, then go through them find and replace old media references
+     *
+     * @param Widget $widget
+     * @param $newMediaId
+     * @param $oldMediaId
+     * @throws NotFoundException
+     */
+    public function handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId)
+    {
+        $module = $this->moduleFactory->createWithWidget($widget);
+
+        if ($module->hasHtmlEditor()) {
+            foreach ($module->getHtmlWidgetOptions() as $option) {
+                $widget->setOptionValue($option, 'cdata', str_replace('[' . $oldMediaId . ']', '[' . $newMediaId . ']', $widget->getOptionValue($option, null)));
+            }
+        }
     }
 }

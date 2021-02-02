@@ -6,8 +6,8 @@
         <div class="col-md-12">
             {% set themeName = theme.getThemeConfig("app_name") %}
             <ul class="nav nav-tabs" role="tablist">
-                <li class="active"><a href="#new" role="tab" data-toggle="tab"><span>{% trans "New" %}</span></a></li>
-                <li><a href="#existing" role="tab" data-toggle="tab"><span>{% trans "Existing" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#new" role="tab" data-toggle="tab"><span>{% trans "New" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#existing" role="tab" data-toggle="tab"><span>{% trans "Existing" %}</span></a></li>
             </ul>
             <form action="{{ url_for("install", {step: 3}) }}" class="form-horizontal" method="post">
                 <div class="tab-content">

@@ -189,11 +189,13 @@ class Image extends ModuleWidget
     public function download(Request $request, Response $response): Response
     {
         $sanitizedParams = $this->getSanitizer($request->getQueryParams());
-        $this->getLog()->debug('Image Module: GetResource for ' . $this->getMediaId());
+        $this->getLog()->debug('Image Module: download for ' . $this->getMediaId());
 
-        $media = $this->mediaFactory->getById($this->getMediaId());
         $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        $media = $this->mediaFactory->getById($this->getMediaId());
         $filePath = $libraryLocation . $media->storedAs;
+        $this->getLog()->debug('Media Returned: ' . $media->storedAs);
+
         $proportional = $sanitizedParams->getInt('proportional', ['default' => 1]) == 1;
         $preview = $sanitizedParams->getInt('preview', ['default' => 0]) == 1;
         $cache = $sanitizedParams->getInt('cache', ['default' => 0]) == 1;
@@ -209,9 +211,10 @@ class Image extends ModuleWidget
             $extension = null;
         }
 
+        $this->getLog()->debug('Preview: ' . var_export($preview, true));
+
         // Preview or download?
         if ($preview) {
-
             // We expect the preview to load, manipulate and output a thumbnail (even on error).
             // therefore we need to end output buffering and wipe any output so far.
             // this means that we do not buffer the image output into memory
@@ -314,5 +317,10 @@ class Image extends ModuleWidget
     public function getResource($displayId = 0)
     {
         return '';
+    }
+
+    public function hasThumbnail()
+    {
+        return true;
     }
 }

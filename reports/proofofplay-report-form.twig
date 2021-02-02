@@ -25,36 +25,40 @@
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}?reportName=proofofplayReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
-        <li class="btn btn-primary btn-xs"><a class="btns" href="{{ url_for("reportschedule.view") }}?reportName=proofofplayReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</a></li>
-    </ul>
-    <div class="proof-of-play-report-div pull-right btn-group">
-        <button class="proof-of-play-report-btn btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-expanded="false">
-            <span class="fa fa-caret-down"></span>
-            {% trans "Reports" %}
-        </button>
-        <ul class="dropdown-menu">
-            {% for report in defaults.availableReports %}
-                {% if report.hidden == 0 %}
-                    <li>
-                        <a href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
-                    </li>
-                {% endif %}
-            {% endfor %}
-        </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Select a type and an item (i.e., layout/media/tag)" %}" id="reportAddBtn"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}?reportName=proofofplayReport"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+        <button class="btn btn-primary XiboRedirectButton" href="{{ url_for("reportschedule.view") }}?reportName=proofofplayReport"><i class="fa fa-th-list" aria-hidden="true"></i> {% trans "Report Schedules" %}</button>
     </div>
 {% endblock %}
 
 {% block pageContent %}
 
     <div class="widget">
-        <div class="widget-title">{% trans "Proof of Play" %}</div>
+        <div class="widget-title">
+            <span>{% trans "Proof of Play" %}</span>
+        </div>
+        <div class="widget-navigation-menu">
+            <ul class="nav nav-pills">
+                <li role="presentation" class="nav-item"><a class="nav-link" href="{{ url_for("report.view") }}">{% trans "All Reports" %}</a></li>
+                <li role="presentation" class="nav-item dropdown">
+                    <a href="#" class="nav-link dropdown-toggle" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false"> Reports <span class="caret"></span> </a>
+                    <div class="dropdown-menu">
+                        {% for reports in defaults.availableReports %}
+                            {% for report in reports %}
+                                {% if report.hidden == 0 and report.category == 'Proof of Play' %}
+                                    <a class="dropdown-item" href="{{ url_for("report.form", {name: report.name}) }}">{{ report.description }}</a>
+                                {% endif %}
+                            {% endfor %}
+                        {% endfor %}
+                    </div>
+                </li>
+            </ul>
+        </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="statsView">
-                <div class="XiboFilterCustom well">
-                    <div class="FilterDiv" id="proofofplayReport">
+                <div class="XiboFilterCustom card bg-light mb-3">
+                    <div class="FilterDiv card-body" id="proofofplayReport">
                         <form class="form-inline">
                             {% set title %}{% trans "Range" %}{% endset %}
                             {% set range %}{% trans "Select a range" %}{% endset %}
@@ -159,13 +163,14 @@
                             ] %}
                             {{ inline.dropdown("tagsType", "single", title, "dg", options, "tagsTypeid", "tagsType") }}
 
-                            {% set title %}{% trans "Tags" %}{% endset %}
-                            {% set exactMatchTitle %}{% trans "Should Tags filter by exact match?" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
-                            {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactMatchTitle) }}
+                            {% if currentUser.featureEnabled("tag.tagging") %}
+                                {% set title %}{% trans "Tags" %}{% endset %}
+                                {% set exactMatchTitle %}{% trans "Should Tags filter by exact match?" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactMatchTitle) }}
+                            {% endif %}
 
-                            <p></p>
-                            <div class="row">
+                            <div class="w-100">
                                 <a id="applyBtn" class="btn btn-success">
                                     <span>{% trans "Apply" %}</span>
                                 </a>
@@ -174,8 +179,8 @@
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="stats" class="table table-striped">
+                <div class="XiboData card pt-3">
+                    <table id="stats" class="table table-striped" data-state-preference-name="proofOfPlayGrid">
                         <thead>
                         <tr>
                             <th>{% trans "Type" %}</th>
@@ -215,37 +220,8 @@
                 stateSave: true,
                 deferLoading: 0,
                 stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=proofOfPlayGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "proofOfPlayGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 drawCallback: function( settings ) {
                     setTimeout(function() {
                         $("#applyBtn").removeClass('disabled');
@@ -276,28 +252,28 @@
                             if (type != "display")
                                 return "";
 
-                            let durationData = moment.duration(data, "seconds");
-                            let dataM = '';
+                            var durationData = moment.duration(data, "seconds");
+                            var dataM = '';
 
-                            let months = durationData.months();
+                            var months = durationData.months();
                             if (months > 0) {
                                 durationData.subtract(moment.duration(months,'months'));
                                 dataM += months + '{% trans "month" %} ';
                             }
 
-                            let days = durationData.days();
+                            var days = durationData.days();
                             durationData.subtract(moment.duration(days,'days'));
                             dataM += days + '{% trans "day" %} ';
 
-                            let hours = durationData.hours();
+                            var hours = durationData.hours();
                             durationData.subtract(moment.duration(hours,'hours'));
                             dataM += hours + '{% trans "hr" %} ';
 
-                            let minutes = durationData.minutes();
+                            var minutes = durationData.minutes();
                             durationData.subtract(moment.duration(minutes,'minutes'));
                             dataM += minutes + '{% trans "min" %} ';
 
-                            let seconds = durationData.seconds();
+                            var seconds = durationData.seconds();
                             dataM += seconds + '{% trans "sec" %} ';
 
                             return  dataM;
@@ -311,7 +287,7 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#stats_wrapper').find('.col-sm-6').eq(1));
+            dataTableAddButtons(table, $('#stats_wrapper').find('.col-md-6').eq(1));
 
             // Apply
             $("#applyBtn").click(function () {
@@ -338,12 +314,12 @@
             }
 
             // Calculate the difference of number of days of a selected range
-            const calculateDaysShowHideWarn = function() {
+            var calculateDaysShowHideWarn = function() {
 
-                let fromDt = moment($("#statsFromDt").val());
-                let toDt = moment($("#statsToDt").val());
+                var fromDt = moment($("#statsFromDt").val());
+                var toDt = moment($("#statsToDt").val());
                 
-                let days = toDt.diff(fromDt, 'days');
+                var days = toDt.diff(fromDt, 'days');
 
                 warning.hide();
                 if ( days >= 30) {
@@ -361,7 +337,7 @@
                 calculateDaysShowHideWarn();
             });
 
-            const checkFilterAndApply = function() {
+            var checkFilterAndApply = function() {
 
                 reportFilter.off('change').change( function() {
                     var value = reportFilter.val();
@@ -378,7 +354,7 @@
                     }
                 });
 
-                var anchorReportAddBtn = $("a#reportAddBtn");
+                var anchorReportAddBtn = $("button#reportAddBtn");
                 var type = $("#type").val();
                 var tagsType = $("#tagsType").val();
                 var tags = $("#tags").val();
@@ -395,12 +371,12 @@
 
         function proofOfPlayScheduleCallback() {
 
-            const $displayId = $('#proofofplayReport #displayId');
-            const $layoutId = $('#proofofplayReport [id="layoutId[]"]');
-            const $mediaId = $('#proofofplayReport [id="mediaId[]"]');
-            const $newDisplayId = $('#proofofplayScheduleAddForm #displayId');
-            const $newLayoutId = $('#proofofplayScheduleAddForm [id="layoutId[]"]');
-            const $newMediaId = $('#proofofplayScheduleAddForm [id="mediaId[]"]');
+            var $displayId = $('#proofofplayReport #displayId');
+            var $layoutId = $('#proofofplayReport [id="layoutId[]"]');
+            var $mediaId = $('#proofofplayReport [id="mediaId[]"]');
+            var $newDisplayId = $('#proofofplayScheduleAddForm #displayId');
+            var $newLayoutId = $('#proofofplayScheduleAddForm [id="layoutId[]"]');
+            var $newMediaId = $('#proofofplayScheduleAddForm [id="mediaId[]"]');
 
             appendOptions($newDisplayId, $displayId.find('option:selected').clone());
             appendOptions($newLayoutId, $layoutId.find('option:selected').clone());
@@ -411,7 +387,7 @@
 
             for (var i = 0; i < options.length; i++) {
 
-                let option = options[i];
+                var option = options[i];
                 element.append(option).trigger('change');
                 $(option).prop('selected', true);
                 element.trigger({

@@ -36,12 +36,12 @@ class ApplicationScope implements \JsonSerializable, ScopeEntityInterface
     use EntityTrait;
 
     /**
-     * @var
+     * @var string
      */
     public $id;
 
     /**
-     * @var
+     * @var string
      */
     public $description;
 

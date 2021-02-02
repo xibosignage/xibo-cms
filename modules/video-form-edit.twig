@@ -31,8 +31,8 @@
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="videoEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}" data-widget-id="{{ module.widget.widgetId }}" data-media-id="{{ module.getMediaId() }}" data-media-editable="{{ currentUser.checkEditable(module.getMedia()) }}" data-valid-extensions="{{ validExtensions }}" data-media-duration="{{ media.duration }}">
@@ -80,7 +80,7 @@
                         {% set title %}{% trans "Scale type" %}{% endset %}
                         {% set helpText %}
                             {% trans "How should this video be scaled?" %}
-                            {% trans "Please note that video scaling is only supported by Android and webOS players at the current time." %}
+                            {% trans "Please note that video scaling is only supported by Android, webOS and Tizen players at the current time." %}
                         {% endset %}
                         {% set aspect %}{% trans "Aspect" %}{% endset %}
                         {% set stretch %}{% trans "Stretch" %}{% endset %}

@@ -23,6 +23,7 @@
 
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
+{% import _self as flow %}
 
 {% block formTitle %}
     {% trans %}Turn Features on/off for {{ group }}{% endtrans %}
@@ -34,34 +35,288 @@
     {% trans "Save" %}, $("#AclForm").submit()
 {% endblock %}
 
+{% block callBack %}featureAclFormOpen{% endblock %}
+
+{% macro hasFeature(features, feature) %}
+    {% if feature in features %}
+        checked
+    {% endif %}
+{% endmacro %}
+
+{% macro featureTitleRow(title, description, isUserSpecific) %}
+    <tr class="feature-group-row">
+        <td class="feature-group-header-cell closed">
+            <strong>{{ title }}</strong> <i class="fa fa-arrow-circle-down"></i>
+            <p class="feature-group-description">
+                {{ description }}
+            </p>
+        </td>
+        <td><input class="feature-select-all" type="checkbox" /></td>
+        {% if isUserSpecific == 1 %}
+            <td></td>
+        {% endif %}
+    </tr>
+{% endmacro %}
+
+{% macro featureRow(feature, title, features, inheritedFeatures, isUserSpecific) %}
+    <tr class="feature-row">
+        <td>{{ title }}</td>
+        <td>
+            <input type="checkbox" name="features[]" value="{{ feature }}" {{ flow.hasFeature(features, feature) }}>
+        </td>
+        {% if isUserSpecific == 1 %}
+            <td>
+                <input type="checkbox" disabled {{ flow.hasFeature(inheritedFeatures, feature) }}>
+            </td>
+        {% endif %}
+    </tr>
+{% endmacro %}
+
 {% block formHtml %}
+
     <div class="row">
         <div class="col-md-12">
+
+            {% set helpText %}{% trans %}Check or un-check the options against each item to control whether access to a Feature is allowed or not.{% endtrans %}{% endset %}
+            {{ forms.message(helpText) }}
+
+            <ul class="nav nav-tabs" role="tablist">
+                <li class="nav-item"><a class="nav-link active" href="#mediaTab" role="tab" data-toggle="tab"><span>{% trans "Content" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#displaysTab" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#homepagesTab" role="tab" data-toggle="tab"><span>{% trans "Reports" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#usersTab" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#systemTab" role="tab" data-toggle="tab"><span>{% trans "System" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#customTab" role="tab" data-toggle="tab"><span>{% trans "Custom" %}</span></a></li>
+            </ul>
             <form id="AclForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("group.acl", {id: groupId}) }}">
-                {% set helpText %}{% trans %}Check or un-check the options against each item to control whether access to a Feature is allowed or not.{% endtrans %}{% endset %}
-                {{ forms.message(helpText) }}
-                {% if isUserSpecific == 1 %}
-                    {% set helpTextUserSpecific %}{% trans %}The Features from Groups column shows Features that are enabled by User Groups that this User belongs to.{% endtrans %}{% endset %}
-                    {{ forms.message(helpTextUserSpecific) }}
-                {% endif %}
-                <table class="table table-bordered">
-                    <tr>
-                        <th>{{ entity }}</th>
-                        <th>{% trans "Feature Enabled?" %}</th>
-                        {% if isUserSpecific == 1 %}
-                            <th>{% trans "Features from Groups" %}</th>
-                        {% endif %}
-                    </tr>
-                    {% for item in permissions %}
-                        <tr>
-                            <td width="70%">{{ item.name }}</td>
-                            <td width="15%"><input type="checkbox" name="objectId[]" value="{{ item.value_view }}" {{ item.value_view_checked }}></td>
-                            {% if isUserSpecific == 1 %}
-                                <td width="15%"><input type="checkbox" name="effectivePermissions" disabled value="{{ item.value_view }}" {{ item.value_view_group_checked }}></td>
-                            {% endif %}
-                        </tr>
-                    {% endfor %}
-                </table>
+                <div class="tab-content">
+                    <div class="tab-pane" id="homepagesTab">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{{ "Feature"|trans }}</th>
+                                    <th>
+                                        {% trans "Enabled?" %}
+                                        <i class="fa fa-info-circle" title="{{ "Check this box to give this User access to this Feature." }}"></i>
+                                    </th>
+                                    {% if isUserSpecific == 1 %}
+                                        <th>
+                                            {% trans "Inherited?" %}
+                                            <i class="fa fa-info-circle" title="{{ "If checked this User already has access to this Feature due to the User Groups they belong to." }}"></i>
+                                        </th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Reporting"|trans, "Run reporting on a variety of different KPI's and metrics applicable to the Features enabled."|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("reporting") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane active" id="mediaTab">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{{ "Feature"|trans }}</th>
+                                    <th>
+                                        {% trans "Enabled?" %}
+                                        <i class="fa fa-info-circle" title="{{ "Check this box to give this User access to this Feature." }}"></i>
+                                    </th>
+                                    {% if isUserSpecific == 1 %}
+                                        <th>
+                                            {% trans "Inherited?" %}
+                                            <i class="fa fa-info-circle" title="{{ "If checked this User already has access to this Feature due to the User Groups they belong to." }}"></i>
+                                        </th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Folders"|trans, "Organise content permissions with Folders"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("folders") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Library"|trans, "Media Library that stores file based content for use in Layouts, DataSets and Playlists"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("library") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("playlist-design") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Layout Design"|trans, "Allow content creators to create Layouts - which hold the content you want to show on your Displays"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("layout-design") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Campaigns"|trans, "Ensure ordering by grouping Layouts into Campaigns"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("campaigns") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Tagging"|trans, "Organise and filter items by using Tags"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("tagging") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="displaysTab">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{{ "Feature"|trans }}</th>
+                                    <th>
+                                        {% trans "Enabled?" %}
+                                        <i class="fa fa-info-circle" title="{{ "Check this box to give this User access to this Feature." }}"></i>
+                                    </th>
+                                    {% if isUserSpecific == 1 %}
+                                        <th>
+                                            {% trans "Inherited?" %}
+                                            <i class="fa fa-info-circle" title="{{ "If checked this User already has access to this Feature due to the User Groups they belong to." }}"></i>
+                                        </th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Scheduling"|trans, "Create and manage Scheduled Events for Displays and Display Groups"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("scheduling") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Display Management"|trans, "Connect and manage Displays."|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("displays") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="usersTab">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{{ "Feature"|trans }}</th>
+                                    <th>
+                                        {% trans "Enabled?" %}
+                                        <i class="fa fa-info-circle" title="{{ "Check this box to give this User access to this Feature." }}"></i>
+                                    </th>
+                                    {% if isUserSpecific == 1 %}
+                                        <th>
+                                            {% trans "Inherited?" %}
+                                            <i class="fa fa-info-circle" title="{{ "If checked this User already has access to this Feature due to the User Groups they belong to." }}"></i>
+                                        </th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("User functions"|trans, "User profile preferences for the logged in User"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("users") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Notifications"|trans, "Notification Centre allows for users to to create/edit Notifications sent to other Users or used in Layouts"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("notifications") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("User Management"|trans, "Manage Users that can authenticate with the CMS. Create and organise them into User Groups to enable 'Group Features'"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("users-management") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Dashboards"|trans, "Dashboards bring together key features for Users"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("dashboards") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="systemTab">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{{ "Feature"|trans }}</th>
+                                    <th>
+                                        {% trans "Enabled?" %}
+                                        <i class="fa fa-info-circle" title="{{ "Check this box to give this User access to this Feature." }}"></i>
+                                    </th>
+                                    {% if isUserSpecific == 1 %}
+                                        <th>
+                                            {% trans "Inherited?" %}
+                                            <i class="fa fa-info-circle" title="{{ "If checked this User already has access to this Feature due to the User Groups they belong to." }}"></i>
+                                        </th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Configuration"|trans, "Restricted high level access advised - potentially damaging system settings"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("system") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Troubleshooting"|trans, "Tools to diagnose problems when seeking help"|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("troubleshooting") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                        </table>
+                    </div>
+                    <div class="tab-pane" id="customTab">
+                        <table class="table table-bordered">
+                            <thead>
+                                <tr>
+                                    <th>{{ "Feature"|trans }}</th>
+                                    <th>
+                                        {% trans "Enabled?" %}
+                                        <i class="fa fa-info-circle" title="{{ "Check this box to give this User access to this Feature." }}"></i>
+                                    </th>
+                                    {% if isUserSpecific == 1 %}
+                                        <th>
+                                            {% trans "Inherited?" %}
+                                            <i class="fa fa-info-circle" title="{{ "If checked this User already has access to this Feature due to the User Groups they belong to." }}"></i>
+                                        </th>
+                                    {% endif %}
+                                </tr>
+                            </thead>
+
+                            <tbody class="feature-group">
+                                {{ flow.featureTitleRow("Custom"|trans, "Third party extensions to the platform."|trans, isUserSpecific) }}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("custom") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                            </tbody>
+
+                        </table>
+                    </div>
+                </div>
             </form>
         </div>
     </div>

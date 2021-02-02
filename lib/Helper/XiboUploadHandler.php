@@ -34,7 +34,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
         $fileName = $file->name;
         $filePath = $controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName;
 
-        $controller->getLog()->debug('Upload complete for name: ' . $fileName . '. Index is %s.', $index);
+        $controller->getLog()->debug('Upload complete for name: ' . $fileName . '. Index is ' . $index);
 
         // Upload and Save
         try {
@@ -49,36 +49,16 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $controller->getUser()->isQuotaFullByUser(true);
 
             // Get some parameters
-            if ($index === null) {
-                if (isset($_REQUEST['name'])) {
-                    $name = $_REQUEST['name'];
-                } else {
-                    $name = $fileName;
-                }
+            $name = $this->getParam($index, 'name', $fileName);
+            $tags = $controller->getUser()->featureEnabled('tag.tagging')
+                ? $this->getParam($index, 'tags', '')
+                : '';
 
-                if (isset($_REQUEST['tags'])) {
-                    $tags = $_REQUEST['tags'];
-                } else {
-                    $tags = '';
-                }
-            } else {
-                if (isset($_REQUEST['name'][$index])) {
-                    $name = $_REQUEST['name'][$index];
-                } else {
-                    $name = $fileName;
-                }
-
-                if (isset($_REQUEST['tags'][$index])) {
-                    $tags = $_REQUEST['tags'][$index];
-                } else {
-                    $tags = '';
-                }
-            }
             // Guess the type
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
 
-            $controller->getLog()->debug('Module Type = %s, Name = %s', $module->getModuleType(), $module->getModuleName());
+            $controller->getLog()->debug(sprintf('Module Type = %s, Name = %s', $module->getModuleType(), $module->getModuleName()));
 
             // Do we need to run any pre-processing on the file?
             $module->preProcessFile($filePath);
@@ -89,7 +69,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $updateInLayouts = ($this->options['updateInLayouts'] == 1);
                 $deleteOldRevisions = ($this->options['deleteOldRevisions'] == 1);
 
-                $controller->getLog()->debug('Replacing old with new - updateInLayouts = %d, deleteOldRevisions = %d', $updateInLayouts, $deleteOldRevisions);
+                $controller->getLog()->debug(sprintf('Replacing old with new - updateInLayouts = %d, deleteOldRevisions = %d',
+                    $updateInLayouts, $deleteOldRevisions));
 
                 // Load old media
                 $oldMedia = $controller->getMediaFactory()->getById($this->options['oldMediaId']);
@@ -120,7 +101,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $name,
                     $fileName,
                     $module->getModuleType(),
-                    (($this->options['allowMediaTypeChange'] == 1) ? $oldMedia->getOwnerId() : $this->options['userId'])
+                    $oldMedia->getOwnerId()
                 );
 
                 if ($tags != '') {
@@ -142,6 +123,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 $media->enableStat = $oldMedia->enableStat;
                 $media->expires = $this->options['expires'];
+                $media->folderId = $this->options['oldFolderId'];
+                $media->permissionsFolderId = $oldMedia->permissionsFolderId;
 
                 // Save
                 $media->save(['oldMedia' => $oldMedia]);
@@ -297,7 +280,17 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $media->enableStat = $controller->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 }
 
+                // Media library expiry.
                 $media->expires = $this->options['expires'];
+                $media->folderId = $this->options['oldFolderId'];
+
+                // Permissions
+                try {
+                    $folder = $controller->getFolderFactory()->getById($this->options['oldFolderId']);
+                    $media->permissionsFolderId = ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
+                } catch (NotFoundException $exception) {
+                    $media->permissionsFolderId = 1;
+                }
 
                 // Save
                 $media->save();
@@ -308,12 +301,6 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     $playerVersionFactory = $controller->getPlayerVersionFactory();
                 }
                 $module->postProcess($media, $playerVersionFactory);
-
-                // Permissions
-                foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($media), $media->getId(), $controller->getConfig()->getSetting('MEDIA_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
-                    /* @var Permission $permission */
-                    $permission->save();
-                }
             }
 
             // Configure the return values according to the media item we've added
@@ -326,6 +313,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $file->md5 = $media->md5;
             $file->enableStat = $media->enableStat;
             $file->mediaType = $module->getModuleType();
+            $file->fileName = $fileName;
 
             // Test to ensure the final file size is the same as the file size we're expecting
             if ($file->fileSize != $file->size)
@@ -333,7 +321,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
             // Fonts, then install
             if ($module->getModuleType() == 'font') {
-                $controller->installFonts();
+                $controller->installFonts($this->options['routeParser']);
             }
 
             // Are we assigning to a Playlist?
@@ -345,13 +333,23 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 $playlist = $controller->getPlaylistFactory()->getById($this->options['playlistId']);
 
                 // Create a Widget and add it to our region
-                $widget = $controller->getWidgetFactory()->create($this->options['userId'], $playlist->playlistId, $module->getModuleType(), $media->duration);
+                $widget = $controller->getWidgetFactory()->create(
+                    $this->options['userId'],
+                    $playlist->playlistId,
+                    $module->getModuleType(),
+                    $media->duration
+                );
 
                 // Assign the widget to the module
                 $module->setWidget($widget);
 
                 // Set default options (this sets options on the widget)
                 $module->setDefaultWidgetOptions();
+
+                // From/To dates?
+                $widget->fromDt = $this->options['widgetFromDt'];
+                $widget->toDt = $this->options['widgetToDt'];
+                $widget->setOptionValue('deleteOnExpiry', 'attrib', $this->options['deleteOnExpiry']);
 
                 // Assign media
                 $widget->assignMedia($media->mediaId);
@@ -367,33 +365,39 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Configure widgetId is reponse
                 $file->widgetId = $widget->widgetId;
-
-                // Handle permissions
-                // https://github.com/xibosignage/xibo/issues/1274
-                if ($controller->getConfig()->getSetting('INHERIT_PARENT_PERMISSIONS') == 1) {
-                    // Apply permissions from the Parent
-                    foreach ($playlist->permissions as $permission) {
-                        /* @var Permission $permission */
-                        $permission = $controller->getPermissionFactory()->create($permission->groupId, get_class($widget), $widget->getId(), $permission->view, $permission->edit, $permission->delete);
-                        $permission->save();
-                    }
-                } else {
-                    foreach ($controller->getPermissionFactory()->createForNewEntity($controller->getUser(), get_class($widget), $widget->getId(), $controller->getConfig()->getSetting('LAYOUT_DEFAULT'), $controller->getUserGroupFactory()) as $permission) {
-                        /* @var Permission $permission */
-                        $permission->save();
-                    }
-                }
             }
         } catch (Exception $e) {
-            $controller->getLog()->error('Error uploading media: %s', $e->getMessage());
+            $controller->getLog()->error('Error uploading media: ' . $e->getMessage());
             $controller->getLog()->debug($e->getTraceAsString());
 
             // Unlink the temporary file
             @unlink($filePath);
 
             $file->error = $e->getMessage();
+        }
+    }
 
-            //$controller->getApp()->commit = false;
+    /**
+     * Get Param from File Input, taking into account multi-upload index if applicable
+     * @param int $index
+     * @param string $param
+     * @param mixed $default
+     * @return mixed
+     */
+    private function getParam($index, $param, $default)
+    {
+        if ($index === null) {
+            if (isset($_REQUEST[$param])) {
+                return $_REQUEST[$param];
+            } else {
+                return $default;
+            }
+        } else {
+            if (isset($_REQUEST[$param][$index])) {
+                return $_REQUEST[$param][$index];
+            } else {
+                return $default;
+            }
         }
     }
 }

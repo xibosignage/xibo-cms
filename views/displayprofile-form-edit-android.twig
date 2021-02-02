@@ -26,13 +26,13 @@
 <div class="row">
     <div class="col-md-12">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
-            <li><a href="#network" role="tab" data-toggle="tab">{% trans "Network" %}</a></li>
-            <li><a href="#location" role="tab" data-toggle="tab">{% trans "Location" %}</a></li>
-            <li><a href="#troubleshooting" role="tab" data-toggle="tab">{% trans "Troubleshooting" %}</a></li>
-            <li><a href="#advanced" role="tab" data-toggle="tab">{% trans "Advanced" %}</a></li>
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab">{% trans "General" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="#network" role="tab" data-toggle="tab">{% trans "Network" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="#location" role="tab" data-toggle="tab">{% trans "Location" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="#troubleshooting" role="tab" data-toggle="tab">{% trans "Troubleshooting" %}</a></li>
+            <li class="nav-item"><a class="nav-link" href="#advanced" role="tab" data-toggle="tab">{% trans "Advanced" %}</a></li>
             {% if commands|length > 0 %}
-                <li><a href="#commands" role="tab" data-toggle="tab">{% trans "Commands" %}</a></li>
+                <li class="nav-item"><a class="nav-link" href="#commands" role="tab" data-toggle="tab">{% trans "Commands" %}</a></li>
             {% endif %}
         </ul>
         <form id="displayProfileForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("displayProfile.edit", {id: displayProfile.displayProfileId}) }}">
@@ -92,7 +92,7 @@
                     {{ forms.dropdown("aggregationLevel", "single", title, displayProfile.getSetting("aggregationLevel"), options, "id", "value", helpText, "aggregation-level") }}
 
                     {% set title = "Player Version"|trans %}
-                    {% set helpText = "Please ensure that the Player version you select here is suitable for all devices that use this display profile. You can override the version on the display record, but you must do that before making a change here"|trans %}
+                    {% set helpText = "Set the Player Version to install, making sure that the selected version is suitable for your device"|trans %}
                     {% set attributes = [
                         { name: "data-width", value: "300px" },
                         { name: "data-allow-clear", value: "true" },
@@ -111,19 +111,19 @@
 
                     {% set title = "Download Window Start Time"|trans %}
                     {% set helpText = "The start of the time window to connect to the CMS and download updates."|trans %}
-                    {{ forms.time("downloadStartWindow", title, displayProfile.getSetting("downloadStartWindow"), helpText) }}
+                    {{ forms.time("downloadStartWindow", title, displayProfile.getSetting("downloadStartWindow"), helpText, "", "", "","HH:mm") }}
 
                     {% set title = "Download Window End Time"|trans %}
                     {% set helpText = "The end of the time window to connect to the CMS and download updates."|trans %}
-                    {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText) }}
+                    {{ forms.time("downloadEndWindow", title, displayProfile.getSetting("downloadEndWindow"), helpText, "", "", "","HH:mm") }}
 
                     {% set title = "Update Window Start Time"|trans %}
                     {% set helpText = "The start of the time window to install application updates."|trans %}
-                    {{ forms.time("updateStartWindow", title, displayProfile.getSetting("updateStartWindow"), helpText) }}
+                    {{ forms.time("updateStartWindow", title, displayProfile.getSetting("updateStartWindow"), helpText, "", "", "","HH:mm") }}
 
                     {% set title = "Update Window End Time"|trans %}
                     {% set helpText = "The end of the time window to install application updates."|trans %}
-                    {{ forms.time("updateEndWindow", title, displayProfile.getSetting("updateEndWindow"), helpText) }}
+                    {{ forms.time("updateEndWindow", title, displayProfile.getSetting("updateEndWindow"), helpText, "", "", "","HH:mm") }}
 
                     {% set title = "Force HTTPS?"|trans %}
                     {% set helpText = "Should Displays be forced to use HTTPS connection to the CMS?"|trans %}
@@ -159,7 +159,7 @@
                     {{ forms.dropdown("orientation", "single", title, displayProfile.getSetting("orientation"), options, "id", "value", helpText) }}
 
                     {% set title = "Screen Dimensions"|trans %}
-                    {% set helpText = "Override the screen dimensions (left,top,width,height). Requires restart. Care should be taken to ensure these are within the actual screen size."|trans %}
+                    {% set helpText = "Set dimensions to be used for the Player window ensuring that they do not exceed the actual screen size. Enter a comma separated string representing the pixel sizings for; Left,Top,Width,Height. eg:\"100,100,720,480\". This requires a Player Restart to action."|trans %}
                     {{ forms.input("screenDimensions", title, displayProfile.getSetting("screenDimensions"), helpText) }}
 
                 </div>
@@ -274,6 +274,10 @@
                     {% set helpText = "The port number to use for the embedded web server on the Player. Only change this if there is a port conflict reported on the status screen."|trans %}
                     {{ forms.number("serverPort", title, displayProfile.getSetting("serverPort"), helpText) }}
 
+                    {% set title = "Embedded Web Server allow WAN?"|trans %}
+                    {% set helpText = "Should we allow access to the Player Embedded Web Server from WAN? You may need to adjust the device firewall to allow external traffic"|trans %}
+                    {{ forms.checkbox("embeddedServerAllowWan", title, displayProfile.getSetting("embeddedServerAllowWan"), helpText) }}
+
                     {% set title = "Load Link Libraries for APK Update"|trans %}
                     {% set helpText = "Should the update command include dynamic link libraries? Only change this if your updates are failing."|trans %}
                     {{ forms.checkbox("installWithLoadedLinkLibraries", title, displayProfile.getSetting("installWithLoadedLinkLibraries"), helpText) }}
@@ -285,8 +289,11 @@
                         { id: "on", value: "On"|trans },
                         { id: "off", value: "Off"|trans }
                     ] %}
-                    {{ forms.dropdown("useMultipleVideoDecoders", "single", title, displayProfile.getSetting("useMultipleVideoDecoders"), options, "id", "value", helpText) }}
+                    {{ forms.dropdown("isUseMultipleVideoDecoders", "single", title, displayProfile.getSetting("isUseMultipleVideoDecoders"), options, "id", "value", helpText) }}
 
+                    {% set title = "Maximum Region Count"|trans %}
+                    {% set helpText = "This setting is a memory limit protection setting which will stop rendering regions beyond the limit set. Leave at 0 for no limit."|trans %}
+                    {{ forms.number("maxRegionCount", title, displayProfile.getSetting("maxRegionCount"), helpText) }}
                 </div>
 
                 {% if commands|length > 0 %}

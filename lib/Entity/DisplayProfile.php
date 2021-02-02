@@ -381,8 +381,13 @@ class DisplayProfile implements \JsonSerializable
             throw new InvalidArgumentException(__('Missing type'), 'type');
 
         for ($j = 0; $j < count($this->config); $j++) {
-            if ($this->config[$j]['name'] == 'MaxConcurrentDownloads' && $this->config[$j]['value'] <= 0 && $this->type = 'windows')
+            if ($this->config[$j]['name'] == 'MaxConcurrentDownloads' && $this->config[$j]['value'] <= 0 && $this->type = 'windows') {
                 throw new InvalidArgumentException(__('Concurrent downloads must be a positive number'), 'MaxConcurrentDownloads');
+            }
+
+            if ($this->config[$j]['name'] == 'maxRegionCount' && !v::intType()->min(0)->validate($this->config[$j]['value'])) {
+                throw new InvalidArgumentException(__('Maximum Region Count must be a positive number'), 'maxRegionCount');
+            }
         }
         // Check there is only 1 default (including this one)
         $sql = '
@@ -401,8 +406,9 @@ class DisplayProfile implements \JsonSerializable
 
         $count = $this->getStore()->select($sql, $params);
 
-        if ($count[0]['cnt'] + $this->isDefault > 1)
+        if ($count[0]['cnt'] + $this->isDefault > 1) {
             throw new InvalidArgumentException(__('Only 1 default per display type is allowed.'), 'isDefault');
+        }
     }
 
     /**
@@ -555,7 +561,10 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'maxLogFileUploads', 'default' => 3, 'type' => 'int'],
                 ['name' => 'embeddedServerPort', 'default' => 9696, 'type' => 'int'],
                 ['name' => 'preventSleep', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'authServerWhitelist', 'default' => null, 'type' => 'string'],
+                ['name' => 'edgeBrowserWhitelist', 'default' => null, 'type' => 'string'],
+                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
             ],
             'android' => [
                 ['name' => 'emailAddress', 'default' => ''],
@@ -594,7 +603,9 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'serverPort', 'default' => 9696],
                 ['name' => 'installWithLoadedLinkLibraries', 'default' => 1, 'type' => 'checkbox'],
                 ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'useMultipleVideoDecoders', 'default' => 'default', 'type' => 'string']
+                ['name' => 'isUseMultipleVideoDecoders', 'default' => 'default', 'type' => 'string'],
+                ['name' => 'maxRegionCount', 'default' => 0],
+                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
             ],
             'linux' => [
                 ['name' => 'collectInterval', 'default' => 300],
@@ -619,7 +630,8 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'maxLogFileUploads', 'default' => 3],
                 ['name' => 'embeddedServerPort', 'default' => 9696],
                 ['name' => 'preventSleep', 'default' => 1, 'type' => 'checkbox'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
             ],
             'lg' => [
                 ['name' => 'emailAddress', 'default' => ''],
@@ -641,7 +653,10 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
                 ['name' => 'lockOptions', 'default' => '{}'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'updateStartWindow', 'default' => '00:00'],
+                ['name' => 'updateEndWindow', 'default' => '00:00'],
+                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
             ],
             'sssp' => [
                 ['name' => 'emailAddress', 'default' => ''],
@@ -663,7 +678,10 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'timers', 'default' => '{}'],
                 ['name' => 'pictureOptions', 'default' => '{}'],
                 ['name' => 'lockOptions', 'default' => '{}'],
-                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox']
+                ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
+                ['name' => 'updateStartWindow', 'default' => '00:00'],
+                ['name' => 'updateEndWindow', 'default' => '00:00'],
+                ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox']
             ]
         );
 

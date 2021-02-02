@@ -132,7 +132,7 @@ class Resolution extends Base
             'resolution' => $sanitizedQueryParams->getString('resolution')
         ];
 
-        $resolutions = $this->resolutionFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filter, $request));
+        $resolutions = $this->resolutionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
 
         foreach ($resolutions as $resolution) {
             /* @var \Xibo\Entity\Resolution $resolution */
@@ -142,7 +142,9 @@ class Resolution extends Base
 
             $resolution->includeProperty('buttons');
 
-            if ($this->getUser()->checkEditable($resolution)) {
+            if ($this->getUser()->featureEnabled('resolution.modify')
+                && $this->getUser()->checkEditable($resolution)
+            ) {
                 // Edit Button
                 $resolution->buttons[] = array(
                     'id' => 'resolution_button_edit',
@@ -151,7 +153,9 @@ class Resolution extends Base
                 );
             }
 
-            if ($this->getUser()->checkDeleteable($resolution)) {
+            if ($this->getUser()->featureEnabled('resolution.modify')
+                && $this->getUser()->checkDeleteable($resolution)
+            ) {
                 // Delete Button
                 $resolution->buttons[] = array(
                     'id' => 'resolution_button_delete',

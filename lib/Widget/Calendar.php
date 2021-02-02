@@ -77,9 +77,10 @@ class Calendar extends ModuleWidget
     /** @inheritdoc */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
     }
 
@@ -286,6 +287,41 @@ class Calendar extends ModuleWidget
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="useDateRange",
+     *      in="formData",
+     *      description="Should we look for events with provided date range?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rangeStart",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="rangeEnd",
+     *      in="formData",
+     *      description="Date in Y-m-d H:i:s",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="noEventTrigger",
+     *      in="formData",
+     *      description="Trigger code for a no event action",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="currentEventTrigger",
+     *      in="formData",
+     *      description="Trigger code for a current event action",
+     *      type="string",
+     *      required=false
+     *  ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -333,6 +369,13 @@ class Calendar extends ModuleWidget
         $this->setOption('useCalendarTimezone', $sanitizedParams->getCheckbox('useCalendarTimezone'));
         $this->setOption('windowsFormatCalendar', $sanitizedParams->getCheckbox('windowsFormatCalendar'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+
+        $this->setOption('useDateRange', $sanitizedParams->getCheckbox('useDateRange'));
+        $this->setOption('rangeStart', $sanitizedParams->getDate('rangeStart'));
+        $this->setOption('rangeEnd', $sanitizedParams->getDate('rangeEnd'));
+
+        $this->setOption('noEventTrigger', $sanitizedParams->getString('noEventTrigger'));
+        $this->setOption('currentEventTrigger', $sanitizedParams->getString('currentEventTrigger'));
 
         $this->isValid();
         $this->saveWidget();
@@ -391,8 +434,9 @@ class Calendar extends ModuleWidget
 
         // Work out how many pages we will be showing.
         $pages = $numItems;
-        if ($numItems > count($items) || $numItems == 0)
+        if ($numItems > count($items) || $numItems == 0) {
             $pages = count($items);
+        }
 
         $pages = ($itemsPerPage > 0) ? ceil($pages / $itemsPerPage) : $pages;
         $totalDuration = ($durationIsPerItem == 0) ? $duration : ($duration * $pages);
@@ -421,6 +465,8 @@ class Calendar extends ModuleWidget
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScriptFile('xibo-text-render.js')
+            ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
+            ->appendJavaScriptFile('xibo-interactive-control.min.js')
             ->appendFontCss()
             ->appendCss($headContent)
             ->appendCss($styleSheet)
@@ -440,10 +486,15 @@ class Calendar extends ModuleWidget
                     var excludeCurrent = ' . ($this->getOption('excludeCurrent', 0) == 0 ? 'false' : 'true') . ';
                     var parsedItems = [];
                     var now = moment();
-                
+                    var ongoingEvent = false;
+                    
+                    var noEventTrigger = ' . ($this->getOption('noEventTrigger', '') == '' ? 'false' : ('"' . $this->getOption('noEventTrigger') . '"')) . ';
+                    var currentEventTrigger = ' . ($this->getOption('currentEventTrigger', '') == '' ? 'false' : ('"' . $this->getOption('currentEventTrigger'). '"')) . ';
+
                     // Prepare the items array, sorting it and removing any items that have expired.
                     $.each(items, function(index, element) {
                         // Parse the item and add it to the array if it has not finished yet
+                        var startDate = moment(element.startDate);
                         var endDate = moment(element.endDate);
                         
                         // If its the no data message element and the item array already have some elements
@@ -451,6 +502,9 @@ class Calendar extends ModuleWidget
                         if(parsedItems.length > 0 && element.noDataMessage === 1) {
                             return true;
                         }
+
+                        // Check if there is an event ongoing
+                        ongoingEvent = (startDate.isBefore(now) && endDate.isAfter(now) && element.noDataMessage != 1);
                         
                         if (endDate.isAfter(now)) {
                             if (moment(element.startDate).isBefore(now)) {
@@ -466,18 +520,30 @@ class Calendar extends ModuleWidget
                 
                     $("body").find("img").xiboImageRender(options);
                     $("body").xiboLayoutScaler(options);
-                    $("#content").xiboTextRender(options, parsedItems);
+                    
+                    const runOnVisible = function() { $("#content").xiboTextRender(options, parsedItems); };
+                    (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
+
+                    if(ongoingEvent && currentEventTrigger) {
+                        // If there is an event now, send the Current Event trigger ( if exists )
+                        xiboIC.trigger(currentEventTrigger);
+                    } else if(noEventTrigger) {
+                        // If there is no event now, send the No Event trigger
+                        xiboIC.trigger(noEventTrigger);
+                    }
                 });
             ')
             ->appendItems($items);
 
         // Need the marquee plugin?
-        if (stripos($effect, 'marquee') !== false)
+        if (stripos($effect, 'marquee') !== false) {
             $this->appendJavaScriptFile('vendor/jquery.marquee.min.js');
+        }
 
         // Need the cycle plugin?
-        if ($effect != 'none')
+        if ($effect != 'none') {
             $this->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js');
+        }
 
         return $this->finaliseGetResource();
     }
@@ -595,8 +661,17 @@ class Calendar extends ModuleWidget
         // Force timezone of each event?
         $useEventTimezone = $this->getOption('useEventTimezone', 1);
 
+        // do we use interval or provided date range?
+        if ($this->getOption('useDateRange')) {
+            $rangeStart = $this->getOption('rangeStart');
+            $rangeEnd = $this->getOption('rangeEnd');
+            $events = $iCal->eventsFromRange($rangeStart, $rangeEnd);
+        } else {
+            $events = $iCal->eventsFromInterval($this->getOption('customInterval', '1 week'));
+        }
+
         // Go through each event returned
-        foreach ($iCal->eventsFromInterval($this->getOption('customInterval', '1 week')) as $event) {
+        foreach ($events as $event) {
             try {
                 /** @var \ICal\Event $event */
                 $startDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtstart));
@@ -741,5 +816,17 @@ class Calendar extends ModuleWidget
     {
         // Make sure we lock for the entire iCal URI to prevent any clashes
         return md5(urldecode($this->getOption('uri')));
+    }
+
+    /** @inheritDoc */
+    public function hasHtmlEditor()
+    {
+        return true;
+    }
+
+    /** @inheritDoc */
+    public function getHtmlWidgetOptions()
+    {
+        return ['template', 'currentEventTemplate', 'noDataMessage'];
     }
 }

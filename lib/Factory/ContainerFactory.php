@@ -42,7 +42,6 @@ use Xibo\Storage\PdoStorageService;
 use Xibo\Twig\ByteFormatterTwigExtension;
 use Xibo\Twig\DateFormatTwigExtension;
 use Xibo\Twig\TransExtension;
-use Xibo\Twig\UrlDecodeTwigExtension;
 
 if (!defined('PROJECT_ROOT')) {
     define('PROJECT_ROOT', realpath(__DIR__ . '/..'));
@@ -109,7 +108,6 @@ class ContainerFactory
                 ]);
                 $view->addExtension(new TransExtension());
                 $view->addExtension(new ByteFormatterTwigExtension());
-                $view->addExtension(new UrlDecodeTwigExtension());
                 $view->addExtension(new DateFormatTwigExtension());
 
                 return $view;
@@ -122,16 +120,14 @@ class ContainerFactory
             },
             'timeSeriesStore' => function(ContainerInterface $c) {
                 if ($c->get('configService')->timeSeriesStore == null) {
-                    return (new MySqlTimeSeriesStore())
-                        ->setDependencies($c->get('logService'),
-                            $c->get('layoutFactory'),
-                            $c->get('campaignFactory'))
-                        ->setStore($c->get('store'));
+                    $timeSeriesStore = new MySqlTimeSeriesStore();
                 } else {
                     $timeSeriesStore = $c->get('configService')->timeSeriesStore;
                     $timeSeriesStore = $timeSeriesStore();
+                }
 
-                    return $timeSeriesStore->setDependencies(
+                return $timeSeriesStore
+                    ->setDependencies(
                         $c->get('logService'),
                         $c->get('layoutFactory'),
                         $c->get('campaignFactory'),
@@ -139,8 +135,8 @@ class ContainerFactory
                         $c->get('widgetFactory'),
                         $c->get('displayFactory'),
                         $c->get('displayGroupFactory')
-                    );
-                }
+                    )
+                    ->setStore($c->get('store'));
             },
             'state' => function() {
                 return new ApplicationState();
@@ -159,7 +155,7 @@ class ContainerFactory
                 );
             },
             'configService' => function(ContainerInterface $c) {
-                return ConfigService::Load(PROJECT_ROOT . '/web/settings.php');
+                return ConfigService::Load($c, PROJECT_ROOT . '/web/settings.php');
             },
             'user' => function (ContainerInterface $c) {
                 return new User(

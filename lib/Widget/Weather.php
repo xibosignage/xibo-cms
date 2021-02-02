@@ -198,8 +198,9 @@ class Weather extends ModuleWidget
     /** @inheritDoc */
     public function installFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+        
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
 
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
@@ -244,11 +245,11 @@ class Weather extends ModuleWidget
      * Edit Widget
      *
      * @SWG\Put(
-     *  path="/playlist/widget/{widgetId}?weather",
-     *  operationId="WidgetWeatherEdit",
+     *  path="/playlist/widget/{widgetId}?weatherTiles",
+     *  operationId="WidgetWeatherTilesEdit",
      *  tags={"widget"},
-     *  summary="Edit Weather Widget",
-     *  description="Edit Weather Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+     *  summary="Edit Weather Tiles Widget",
+     *  description="Edit Weather Tiles Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
      *  @SWG\Parameter(
      *      name="widgetId",
      *      in="path",
@@ -887,6 +888,8 @@ class Weather extends ModuleWidget
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-layout-scaler.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-image-render.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
+        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
         $javaScriptContent .= '<script>
 
             var options = ' . json_encode($options) . '
@@ -1025,5 +1028,17 @@ class Weather extends ModuleWidget
     public function hasTemplates()
     {
         return true;
+    }
+
+    /** @inheritDoc */
+    public function hasHtmlEditor()
+    {
+        return true;
+    }
+
+    /** @inheritDoc */
+    public function getHtmlWidgetOptions()
+    {
+        return ['template'];
     }
 }

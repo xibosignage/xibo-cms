@@ -22,7 +22,9 @@
 
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -168,8 +170,8 @@ class Action implements \JsonSerializable
             throw new InvalidArgumentException(__('Please select a Region'), 'targetId');
         }
 
-        if ($this->source !== 'layout' && $this->triggerCode !== null) {
-            throw new InvalidArgumentException(__('Trigger code can only be set with source set to Layout'), 'triggerCode');
+        if ($this->triggerType === 'webhook' && $this->triggerCode === null) {
+            throw new InvalidArgumentException(__('Please provide trigger code'), 'triggerCode');
         }
 
         if (!in_array($this->triggerType, ['touch', 'webhook'])) {
@@ -205,6 +207,8 @@ class Action implements \JsonSerializable
     {
         $options = array_merge([
             'validate' => true,
+            'notifyLayout' => false,
+            'layoutId' => null
         ], $options);
 
         $this->getLog()->debug('Saving ' . $this);
@@ -218,6 +222,10 @@ class Action implements \JsonSerializable
             $this->loaded = true;
         } else {
             $this->update();
+        }
+
+        if ($options['notifyLayout'] && $options['layoutId'] != null) {
+            $this->notifyLayout($options['layoutId']);
         }
     }
 
@@ -258,6 +266,22 @@ class Action implements \JsonSerializable
     public function delete()
     {
         $this->getStore()->update('DELETE FROM `action` WHERE actionId = :actionId', ['actionId' => $this->actionId]);
+    }
+
+    /**
+     * Notify the Layout (set to building)
+     * @param $layoutId
+     */
+    public function notifyLayout($layoutId)
+    {
+        $this->getLog()->debug(sprintf('Saving Interactive Action ID %d triggered layout ID %d build', $this->actionId, $layoutId));
+
+        $this->getStore()->update('
+            UPDATE `layout` SET `status` = 3, `modifiedDT` = :modifiedDt WHERE layoutId = :layoutId
+        ', [
+            'layoutId' => $layoutId,
+            'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
+        ]);
     }
 
 }

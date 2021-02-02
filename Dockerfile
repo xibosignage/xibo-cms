@@ -85,6 +85,8 @@ RUN apk update && apk upgrade && apk add tar \
     php7-fileinfo \
     php7-xml \
     php7-simplexml \
+    php7-xmlwriter \
+    php7-tokenizer \
     php7-mbstring \
     php7-memcached \
     php7-zlib \
@@ -111,7 +113,9 @@ COPY --from=sendfile /usr/lib/apache2/mod_xsendfile.so /usr/lib/apache2/mod_xsen
 # Update the PHP.ini file
 RUN sed -i "s/error_reporting = .*$/error_reporting = E_ERROR | E_WARNING | E_PARSE/" /etc/php7/php.ini && \
     sed -i "s/session.gc_probability = .*$/session.gc_probability = 1/" /etc/php7/php.ini && \
-    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini
+    sed -i "s/session.gc_divisor = .*$/session.gc_divisor = 100/" /etc/php7/php.ini && \
+    sed -i "s/allow_url_fopen = .*$/allow_url_fopen = Off/" /etc/php7/php.ini && \
+    sed -i "s/expose_php = .*$/expose_php = Off/" /etc/php7/php.ini
 
 # Capture the git commit for this build if we provide one
 ARG GIT_COMMIT=prod

@@ -1,0 +1,227 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{{ "Welcome"|trans }} | {% endblock %}
+
+{% block headContent %}
+    <style type="text/css">
+        .tour-card {
+            max-width: 320px;
+            min-height: 320px;
+            margin: 0 auto;
+            position: relative;
+            border-radius: 0 0 6px 6px;
+        }
+
+        .tour-title {
+            font-size: 1.3rem;
+            padding: 16px 16px 0px 16px;
+        }
+
+        .tour-image {
+            width: 100%;
+            border-bottom: 6px solid #30426a;
+        }
+
+        .tour-text {
+            line-height: 18px;
+            padding: 6px 16px 16px 16px;
+            letter-spacing: 0.25px;
+        }
+
+        .tour-icon {
+            position: absolute;
+            opacity: 0.9;
+            right: 16px;
+            top: 0;
+            padding: 10px 12px;
+            background-color: #333;
+            color: #f9f9f9;
+            border-radius: 0 0 6px 6px;
+            font-size: 1.3rem;
+        }
+
+        /* running */
+        .tour-card.running .tour-image {
+            border-color: #e99d1a;
+        }
+
+        .tour-card.running .tour-icon {
+            background-color: #e99d1a;
+        }
+
+        /* done */
+        .tour-card.done .tour-image {
+            border-color: #5cb85c;
+        }
+
+        .tour-card.done .tour-icon {
+            background-color: #5cb85c;
+        }
+
+        .welcome-title {
+            font-size: 1.4rem;
+            margin: 20px 0 20px 0;
+        }
+
+        /* player icons */
+        .welcome-players-section .player-icon {
+            width: 60px;
+            height: 60px;
+            padding: 12px;
+            background-color: #337ab7;
+            border-radius: 10px;
+            display: block;
+            margin: 0 auto;
+        }
+
+        .player-title {
+            margin-top: 8px;
+        }
+
+        .tour-cards-section, .welcome-players-section {
+            width: 100%;
+            max-width: 1200px;
+            margin-bottom: 10px;
+            margin-right: auto !important;
+            margin-left: auto !important;
+        }
+
+        .tour-card-container {
+            margin-bottom: 20px;
+        }
+
+        .tour-link {
+            cursor: pointer;
+            border-collapse: separate; /* IE fix */
+            box-shadow: 0px 0px 10px 1px #00000026;
+            opacity: 0.9;
+        }
+
+        .tour-link:hover {
+            opacity: 1;
+            box-shadow: 0px 0px 10px 3px #00000026;
+        }
+    </style>
+{% endblock %}
+
+{% block pageContent %}
+
+    <div class="container-fluid welcome-container">
+        <div class="col-12">
+
+            {% set productName = theme.getThemeConfig('theme_title') %}
+            <h2>{% trans %}Welcome to the {{productName}} CMS{% endtrans %}</h2>
+            <p>{% trans %}The {{productName}} system comprises a central content management system (the CMS you are currently logged into) and Player software to download content from the CMS and play on screens.{% endtrans %}</p>
+        </div>
+
+        <div class="col-12">
+            <div class="welcome-title">{% trans "How does it all work?" %}</div>
+            <p>{% trans "The Player application needs to run on a device attached to each screen that is to be used and will connect over the network to the CMS to download any new content at regular defined intervals." %}</p>
+            <p>{% trans "Downloaded content from the CMS is cached to the Player so if there is a problem connecting to the CMS, it can continue to show the stored content until the connection between the CMS and Player is re-established." %}</p>
+            <p>{% trans "Once downloaded, the Player checks the schedule it has been sent and will show the appropriate content based on the local date and time." %}</p>
+        </div>
+
+        {# CMS players #}
+        {% include "welcome-page_players.twig" %}
+
+        <div class="col-12 welcome-title">{% trans "We’d like to take you on a tour of the CMS using a series of short tutorials to get you up and running in no time. If you already know your way around, please skip." %}</div>
+        
+        <div class="tour-cards-section row">
+            <div class="col-12 col-sm-6 col-md-4 tour-card-container">
+                <div class="tour-card tour-link" data-tour-name="authDisplayTour">
+                    <img class="tour-image" src="{{ theme.uri("img/tours/authDisplayTour.png") }}">
+                    <div class="tour-title">{% trans "Authorise Displays..." %}</div>
+                    <div class="tour-text">{% trans "Once you have chosen your Player and installed the software, this tour will take you through the steps needed to connect and authorise Displays with your CMS." %}</div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 tour-card-container">
+                <div class="tour-card tour-link" data-tour-name="mainTour">
+                    <img class="tour-image" src="{{ theme.uri("img/tours/mainTour.png") }}">
+                    <div class="tour-title">{% trans "Create Content..." %}</div>
+                    <div class="tour-text">{% trans "Do you want to see how easy it is to create a basic Layout using the Layout designer? This tutorial will take you through the basics, step by step so you can start creating your own content with ease." %}</div>
+                </div>
+            </div>
+            <div class="col-12 col-sm-6 col-md-4 tour-card-container">
+                <div class="tour-card tour-link" data-tour-name="schedulingTour">
+                    <img class="tour-image" src="{{ theme.uri("img/tours/schedulingTour.png") }}">
+                    <div class="tour-title">{% trans "Get Scheduling..." %}</div>
+                    <div class="tour-text">{% trans "Get your content seen at the right time in the right place using flexible scheduling capabilities. This tutorial will take you through each stage needed to create scheduled events with confidence." %}</div>
+                </div>
+            </div>
+        </div>
+
+        <p class="col-12">{{ "Explore more of the features and functionality that [[PRODUCTNAME]] has to offer by clicking on the Manual link from the CMS main menu."|trans|replace({'[[PRODUCTNAME]]': theme.getThemeConfig('theme_title') }) }}</p>
+
+        {# CMS support #}
+        {% include "welcome-page_support.twig" %}
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(document).ready(function () {
+            $('.tour-card').click(function() {
+                // Handle click to start tour
+                var startTourResult = startTour(cmsTours[$(this).data('tourName')]);
+
+                // Update buttons status
+                if(startTourResult) {
+                    updateTourCardStatus();
+                }
+            });
+
+            // Update buttons status
+            updateTourCardStatus();
+        });
+
+
+        function updateTourCardStatus() {
+            $('.tour-card').each(function() {
+                var tourName = $(this).data('tourName');
+                var tourSeen = (localStorage[tourName + '_seen'] == 1);
+                var tourPlaying = (localStorage.tour_playing == tourName);
+
+                console.log(tourName);
+                console.log('tourSeen: ' + tourSeen);
+                console.log('tourPlaying: ' + tourPlaying);
+
+                // Reset to original state by removing all temporary classes/elements
+                $(this).find('.tour-icon').remove();
+                $(this).removeClass('done running');
+
+                if(tourPlaying) {
+                    // Mark tour as playing
+                    $(this).removeClass('done').addClass('running');
+                    $(this).prepend('<span class="fa fa-play tour-icon" title="{% trans "Tour playing!" %}"></span>');
+                } else if(tourSeen) {
+                    // Mark tour as seen
+                    $(this).removeClass('running').addClass('done');
+                    $(this).prepend('<span class="fa fa-check tour-icon" title="{% trans "Tour seen!" %}"></span>');
+                }
+            });
+        }
+    </script>
+{% endblock %}

@@ -184,7 +184,7 @@
             </div>
         </div>
     </div>
-    {% if currentUser.routeViewable("/stats") %}
+    {% if currentUser.featureEnabled("displays.reporting") %}
     <div class="row">
         <div class="col-lg-12">
             <div class="widget">
@@ -192,7 +192,7 @@
                 <div class="widget-body">
                     <div class="XiboGrid" id="{{ random() }}">
                         <div class="XiboFilter">
-                            <div class="FilterDiv" id="bandwidthFilter">
+                            <div class="FilterDiv card-body" id="bandwidthFilter">
                                 <form class="form-inline">
                                     {{ inline.date("fromDt", "From Date", defaults.fromDate, "", "", "", "") }}
                                     {{ inline.date("toDt", "To Date", defaults.toDate, "", "", "", "") }}
@@ -219,6 +219,7 @@
                 "language": dataTablesLanguage,
                 serverSide: true, stateSave: true, stateDuration: 0,
                 filter: false,
+                responsive: true,
                 searchDelay: 3000,
                 "order": [[0, "desc"]],
                 ajax: {
@@ -290,7 +291,7 @@
 
         $(document).ready(function() {
 
-            {% if currentUser.routeViewable("/stats") %}
+            {% if currentUser.featureEnabled("displays.reporting") %}
             setBandwidthChart();
 
             // Bind to form change

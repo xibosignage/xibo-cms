@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,6 +22,8 @@
 namespace Xibo\Entity;
 
 
+use Carbon\Carbon;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\ObjectVars;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -39,7 +41,7 @@ trait EntityTrait
     private $canChangeOwner = true;
 
     public $buttons = [];
-    private $jsonExclude = ['buttons', 'jsonExclude', 'originalValues'];
+    private $jsonExclude = ['buttons', 'jsonExclude', 'originalValues', 'jsonInclude', 'datesToFormat'];
 
     /** @var array Original values hydrated */
     protected $originalValues = [];
@@ -161,14 +163,25 @@ trait EntityTrait
 
     /**
      * Get all changed properties for this entity
+     * @param bool $jsonEncodeArrays
+     * @return array
      */
-    public function getChangedProperties()
+    public function getChangedProperties($jsonEncodeArrays = false, $datesToFormat = [])
     {
         $changedProperties = [];
 
         foreach ($this->jsonSerialize() as $key => $value) {
             if (!is_array($value) && !is_object($value) && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
-                $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
+
+                if ( isset($this->datesToFormat) && in_array($key, $this->datesToFormat)) {
+                    $changedProperties[$key] = Carbon::createFromTimestamp($this->getOriginalValue($key))->format(DateFormatHelper::getSystemFormat()) . ' > ' . Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                } else {
+                    $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
+                }
+            }
+
+            if (is_array($value) && $jsonEncodeArrays && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
+                $changedProperties[$key] = json_encode($this->getOriginalValue($key)) . ' > ' . json_encode($value);
             }
         }
 
@@ -177,16 +190,19 @@ trait EntityTrait
 
     /**
      * Json Serialize
+     * @param bool $forAudit
      * @return array
      */
-    public function jsonSerialize()
+    public function jsonSerialize($forAudit = false)
     {
         $exclude = $this->jsonExclude;
 
         $properties = ObjectVars::getObjectVars($this);
         $json = [];
         foreach ($properties as $key => $value) {
-            if (!in_array($key, $exclude)) {
+            if (!in_array($key, $exclude) && !$forAudit) {
+                $json[$key] = $value;
+            } else if ($forAudit && in_array($key, $this->jsonInclude)) {
                 $json[$key] = $value;
             }
         }
@@ -195,11 +211,26 @@ trait EntityTrait
 
     /**
      * To Array
+     * @param bool $jsonEncodeArrays
      * @return array
      */
-    public function toArray()
+    public function toArray($jsonEncodeArrays = false)
     {
-        return $this->jsonSerialize();
+        $objectAsJson = $this->jsonSerialize();
+
+            foreach ($objectAsJson as $key => $value) {
+                if (in_array($key, $this->datesToFormat)) {
+                    $objectAsJson[$key] = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+                }
+
+                if ($jsonEncodeArrays) {
+                    if (is_array($value)) {
+                        $objectAsJson[$key] = json_encode($value);
+                    }
+                }
+            }
+
+        return $objectAsJson;
     }
 
     /**
@@ -258,16 +289,17 @@ trait EntityTrait
     /**
      * @param $entityId
      * @param $message
-     * @param array[Optional] $changedProperties
+     * @param null $changedProperties
+     * @param bool $jsonEncodeArrays
      */
-    protected function audit($entityId, $message, $changedProperties = null)
+    protected function audit($entityId, $message, $changedProperties = null, $jsonEncodeArrays = false)
     {
         $class = substr(get_class($this), strrpos(get_class($this), '\\') + 1);
 
         if ($changedProperties === null) {
             // No properties provided, so we should work them out
             // If we have originals, then get changed, otherwise get the current object state
-            $changedProperties = (count($this->originalValues) <= 0) ? $this->toArray() : $this->getChangedProperties();
+            $changedProperties = (count($this->originalValues) <= 0) ? $this->toArray($jsonEncodeArrays) : $this->getChangedProperties($jsonEncodeArrays);
         } else if (count($changedProperties) <= 0) {
             // We provided changed properties, so we only audit if there are some
             return;

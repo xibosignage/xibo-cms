@@ -1,10 +1,32 @@
 <?php
+/*
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Report;
 
 use Carbon\Carbon;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Controller\DataTablesDotNetTrait;
 use Xibo\Helper\SanitizerService;
+use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -12,8 +34,13 @@ use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
+/**
+ * Trait ReportTrait
+ * @package Xibo\Report
+ */
 trait ReportTrait
 {
+    use DataTablesDotNetTrait;
 
     /**
      * @var \Xibo\Helper\ApplicationState
@@ -127,19 +154,8 @@ trait ReportTrait
         return $this->sanitizerService->getSanitizer($array);
     }
 
-    /**
-     * Get Request
-     * @return Request
-     */
-    private function getRequest()
+    public function generateHourPeriods($filterRangeStart, $filterRangeEnd, $start,$end, $ranges)
     {
-        if ($this->request == null)
-            throw new \RuntimeException('....... called before Request has been set');
-
-        return $this->request;
-    }
-
-    public function generateHourPeriods($filterRangeStart, $filterRangeEnd, $start,$end, $ranges) {
 
         $periodData = []; // to generate periods table
 
@@ -175,8 +191,8 @@ trait ReportTrait
         return $periodData;
     }
 
-    public function generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter = null) {
-
+    public function generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter = null)
+    {
         $periodData = []; // to generate periods table
 
         // Generate all days of the period
@@ -219,10 +235,12 @@ trait ReportTrait
      * @param Carbon $fromDt
      * @param Carbon $toDt
      * @param string $groupByFilter
+     * @param string $table
+     * @param string $customLabel Custom Label
      * @return string
      * @throws InvalidArgumentException
      */
-    public function getTemporaryPeriodsTable($fromDt, $toDt, $groupByFilter)
+    public function getTemporaryPeriodsTable($fromDt, $toDt, $groupByFilter, $table = 'temp_periods', $customLabel = 'Y-m-d H:i:s')
     {
         // My from/to dt represent the entire range we're interested in.
         // we need to generate periods according to our grouping, within that range.
@@ -236,7 +254,7 @@ trait ReportTrait
         // FromDT/ToDt should always be at the start of the day.
         switch ($groupByFilter) {
             case 'byweek':
-                $fromDt->startOfWeek();
+                $fromDt->locale(Translate::GetLocale())->startOfWeek();
                 break;
 
             case 'bymonth':
@@ -250,11 +268,12 @@ trait ReportTrait
         // Drop table if exists
 
         $this->getStore()->getConnection()->exec('
-                DROP TABLE IF EXISTS temp_periods ');
+                DROP TABLE IF EXISTS `' . $table . '`');
 
         $this->getStore()->getConnection()->exec('
-                CREATE TEMPORARY TABLE temp_periods (
+                CREATE TEMPORARY TABLE `' . $table . '` (
                     id INT,
+                    customLabel VARCHAR(20),
                     label VARCHAR(20),
                     start INT,
                     end INT
@@ -263,9 +282,10 @@ trait ReportTrait
 
         // Prepare an insert statement
         $periods = $this->getStore()->getConnection()->prepare('
-                INSERT INTO temp_periods (id, label, start, end) 
-                VALUES (:id, :label, :start, :end)
+                INSERT INTO `' . $table . '` (id, customLabel, label, start, end) 
+                VALUES (:id, :customLabel, :label, :start, :end)
             ');
+
 
         // Loop until we've covered all periods needed
         $loopDate = $fromDt->copy();
@@ -274,6 +294,7 @@ trait ReportTrait
             if ($groupByFilter == 'byhour') {
                 $periods->execute([
                     'id' => $loopDate->hour,
+                    'customLabel' => $loopDate->format($customLabel),
                     'label' => $loopDate->format('g:i A'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addHour()->format('U')
@@ -281,20 +302,25 @@ trait ReportTrait
             } else if ($groupByFilter == 'byday') {
                 $periods->execute([
                     'id' => $loopDate->year . $loopDate->month . $loopDate->day,
+                    'customLabel' => $loopDate->format($customLabel),
                     'label' => $loopDate->format('Y-m-d'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addDay()->format('U')
                 ]);
             } else if ($groupByFilter == 'byweek') {
+                $weekNo = $loopDate->locale(Translate::GetLocale())->week();
+                
                 $periods->execute([
                     'id' => $loopDate->weekOfYear . $loopDate->year,
-                    'label' => $loopDate->format('Y-m-d (\wW)'),
+                    'customLabel' => $loopDate->format($customLabel),
+                    'label' => $loopDate->format('Y-m-d') . '(w' . $weekNo . ')',
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addWeek()->format('U')
                 ]);
             } else if ($groupByFilter == 'bymonth') {
                 $periods->execute([
                     'id' => $loopDate->year . $loopDate->month,
+                    'customLabel' => $loopDate->format($customLabel),
                     'label' => $loopDate->format('M'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addMonth()->format('U')
@@ -302,6 +328,7 @@ trait ReportTrait
             } else if ($groupByFilter == 'bydayofweek') {
                 $periods->execute([
                     'id' => $loopDate->dayOfWeek,
+                    'customLabel' => $loopDate->format($customLabel),
                     'label' => $loopDate->format('D'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addDay()->format('U')
@@ -309,6 +336,7 @@ trait ReportTrait
             } else if ($groupByFilter == 'bydayofmonth') {
                 $periods->execute([
                     'id' => $loopDate->day,
+                    'customLabel' => $loopDate->format($customLabel),
                     'label' => $loopDate->format('d'),
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addDay()->format('U')
@@ -319,70 +347,26 @@ trait ReportTrait
             }
         }
 
-        $this->getLog()->debug(json_encode($this->store->select('SELECT * FROM temp_periods', []), JSON_PRETTY_PRINT));
+        $this->getLog()->debug(json_encode($this->store->select('SELECT * FROM ' . $table, []), JSON_PRETTY_PRINT));
 
-        return 'temp_periods';
+        return $table;
     }
 
-    public function getUserId() {
-
+    /**
+     * @return int
+     */
+    public function getUserId()
+    {
         return $this->userId;
-
     }
 
-    public function setUserId($userId) {
-
+    /**
+     * @param $userId
+     * @return $this
+     */
+    public function setUserId($userId)
+    {
         $this->userId = $userId;
-
-        return;
-    }
-
-    /**
-     * Set the filter
-     * @param array[Optional] $extraFilter
-     * @return array
-     */
-    public function gridRenderFilter($extraFilter)
-    {
-        $sanitizedParams = $this->getSanitizer($extraFilter);
-
-        // Handle filtering
-        $filter = [
-            'start' => $sanitizedParams->getInt('start', ['default' => 0]),
-            'length' => $sanitizedParams->getInt('length', ['default' => 10])
-        ];
-
-        $search = $sanitizedParams->getArray('search');
-        if (is_array($search) && isset($search['value'])) {
-            $filter['search'] = $search['value'];
-        }
-        else if ($search != '') {
-            $filter['search'] = $search;
-        }
-
-        // Merge with any extra filter items that have been provided
-        $filter = array_merge($extraFilter, $filter);
-
-        return $filter;
-    }
-
-    /**
-     * Set the sort order
-     * @param $filter
-     * @return array
-     */
-    public function gridRenderSort($filter)
-    {
-        $sanitizedParams = $this->getSanitizer($filter);
-        $columns = $sanitizedParams->getArray('columns');
-
-        if ($columns == null || !is_array($columns))
-            return null;
-
-        $order = array_map(function ($element) use ($columns) {
-            return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data'] . '`') . (($element['dir'] == 'desc') ? ' DESC' : '');
-        }, $sanitizedParams->getArray('order'));
-
-        return $order;
+        return $this;
     }
 }

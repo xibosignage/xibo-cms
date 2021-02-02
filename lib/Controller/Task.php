@@ -152,7 +152,8 @@ class Task extends Base
      */
     public function grid(Request $request, Response $response)
     {
-        $tasks = $this->taskFactory->query($this->gridRenderSort($request), $this->gridRenderFilter([], $request));
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $tasks = $this->taskFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([], $sanitizedParams));
 
         foreach ($tasks as $task) {
             /** @var \Xibo\Entity\Task $task */
@@ -167,7 +168,12 @@ class Task extends Base
             $task->buttons[] = array(
                 'id' => 'task_button_run.now',
                 'url' => $this->urlFor($request,'task.runNow.form', ['id' => $task->taskId]),
-                'text' => __('Run Now')
+                'text' => __('Run Now'),
+                'dataAttributes' => [
+                    ['name' => 'auto-submit', 'value' => true],
+                    ['name' => 'commit-url', 'value' => $this->urlFor($request,'task.runNow', ['id' => $task->taskId])],
+                    ['name' => 'commit-method', 'value' => 'POST']
+                ]
             );
 
             // Don't show any edit buttons if the config is locked.
@@ -394,6 +400,7 @@ class Task extends Base
         $task = $this->taskFactory->getById($id);
 
         $this->getState()->template = 'task-form-run-now';
+        $this->getState()->autoSubmit = $this->getAutoSubmit('taskRunNowForm');
         $this->getState()->setData([
             'task' => $task
         ]);
@@ -478,7 +485,7 @@ class Task extends Base
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_SUCCESS;
         }
         catch (\Exception $e) {
-            $this->getLog()->error($e->getMessage());
+            $this->getLog()->error($e->getMessage() . ' Exception Type: ' . get_class($e));
             $this->getLog()->debug($e->getTraceAsString());
 
             // We should rollback anything we've done so far

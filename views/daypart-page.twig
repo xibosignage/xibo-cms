@@ -26,9 +26,11 @@
 {% block title %}{{ "Dayparting"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" href="{{ url_for("daypart.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Daypart" %}</a></li>
-    </ul>
+    {% if currentUser.featureEnabled("daypart.add") %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" href="{{ url_for("daypart.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Daypart" %}</button>
+    </div>
+    {% endif %}
 {% endblock %}
 
 {% block pageContent %}
@@ -39,19 +41,18 @@
                 <div class="XiboFilter">
                     <div class="FilterDiv" id="Filter">
                         <form class="form-inline">
-
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="dayparts" class="table table-striped">
+                <div class="XiboData card pt-3">
+                    <table id="dayparts" class="table table-striped" data-state-preference-name="daypartGrid">
                         <thead>
                             <tr>
                                 <th>{% trans "Name" %}</th>
                                 <th>{% trans "Description" %}</th>
                                 <th>{% trans "Start Time" %}</th>
                                 <th>{% trans "End Time" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
+                                <th class="rowMenu"></th>
                             </tr>
                         </thead>
                         <tbody>
@@ -67,39 +68,14 @@
 {% block javaScript %}
     <script type="text/javascript">
 
-        var table = $("#dayparts").DataTable({ "language": dataTablesLanguage,
-            serverSide: true, stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ url_for("user.pref") }}?preference=daypartGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
-                            }
-                        } catch (e) {
-                            // Do nothing
-                        }
-                    }
-                });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ url_for("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "daypartGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
+        var table = $("#dayparts").DataTable({
+            "language": dataTablesLanguage,
+            serverSide: true,
+            stateSave: true,
+            stateDuration: 0,
+            responsive: true,
+            stateLoadCallback: dataTableStateLoadCallback,
+            stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
             "order": [[ 1, "asc"]],
@@ -110,12 +86,13 @@
                 }
             },
             "columns": [
-                { "data": "name", "render": dataTableSpacingPreformatted },
+                { "data": "name", "render": dataTableSpacingPreformatted , responsivePriority: 2},
                 { "data": "description" },
                 { "data": "startTime" },
                 { "data": "endTime" },
                 {
                     "orderable": false,
+                    responsivePriority: 1,
                     "data": dataTableButtonsColumn
                 }
             ]
@@ -123,7 +100,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#dayparts_wrapper').find('.col-sm-6').eq(1));
+        dataTableAddButtons(table, $('#dayparts_wrapper').find('.col-md-6').eq(1));
 
         function dayPartFormOpen(dialog) {
             // Render a set of exceptions
@@ -202,6 +179,20 @@
                     $(this).closest(".form-group").remove();
                 }
             });
+
+            // check if we already have this day in exceptions array, if so remove the row with a message.
+            $exceptions.on("change", "select", function() {
+                var selectedDays = [];
+                $('select').not('#' + $(this).attr('id')).each(function(i) {
+                    selectedDays.push($(this).val());
+                });
+
+                if (selectedDays.includes(this.value)) {
+                    toastr.error(translations.dayPartExceptionErrorMessage);
+                    // Remove this row
+                    $(this).closest(".form-group").remove();
+                }
+            })
         }
 
         // Equals helper for the templates below
@@ -215,25 +206,27 @@
     </script>
     {% verbatim %}
     <script type="text/x-handlebars-template" id="dayPartExceptionsTemplate">
-        <div class="form-group">
-            <div class="col-sm-3">
-                <select class="form-control" name="exceptionDays[]">
+        <div class="form-group row">
+            <div class="col-3">
+                <select class="form-control" name="exceptionDays[]" id="exceptionDays_{{fieldId}}">
                     <option value=""></option>
                     {{#each daysOfWeek}}
                     <option value="{{ day }}" {{#eq day ../exceptionDay}}selected{{/eq}}>{{ title }}</option>
                     {{/each}}
                 </select>
             </div>
-            <div class="col-sm-3">
-                <input type="hidden" name="exceptionStartTimes[]" id="exceptionStartTimes_{{ fieldId }}" value="{{ exceptionStart }}" />
-                <input class="form-control timePicker dateControl" name="exceptionStartTimesLink_{{ fieldId }}" type="text" id="exceptionStartTimesLink_{{ fieldId }}" data-link-field="exceptionStartTimes_{{ fieldId }}" data-link-format="hh:ii"/>
+            <div class="col-3">
+    {% endverbatim %}
+                {{ inline.time("exceptionStartTimes[]", "", "{{ exceptionStart }}"  ) }}
+    {% verbatim %}
             </div>
-            <div class="col-sm-3">
-                <input type="hidden" name="exceptionEndTimes[]" id="exceptionEndTimes_{{ fieldId }}" value="{{ exceptionEnd }}" />
-                <input class="form-control timePicker dateControl" name="exceptionEndTimesLink_{{ fieldId }}" type="text" id="exceptionEndTimesLink_{{ fieldId }}" data-link-field="exceptionEndTimes_{{ fieldId }}" data-link-format="hh:ii"/>
+            <div class="col-3">
+    {% endverbatim %}
+                {{ inline.time("exceptionEndTimes[]", "", "{{ exceptionEnd }}"  ) }}
+    {% verbatim %}
             </div>
-            <div class="col-sm-1">
-                <button class="btn btn-default btn-sm"><i class="fa {{ buttonGlyph }}"></i></button>
+            <div class="col-1">
+                <button class="btn btn-white"><i class="fa {{ buttonGlyph }}"></i></button>
             </div>
         </div>
     </script>

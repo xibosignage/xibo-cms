@@ -1,20 +1,25 @@
-<li class="dropdown item">
-    <a href="#" class="dropdown-toggle" data-toggle="dropdown">
+<li class="dropdown nav-item item">
+    <a href="#" class="nav-link" data-toggle="dropdown" id="navbarUserMenu">
         <img class="nav-avatar" src="{{ theme.uri("img/avatar.jpg") }}" />
     </a>
-    <ul class="dropdown-menu dropdown-menu-right">
-        <li class="dropdown-header">{{ currentUser.userName }}<br/>
+    <div class="dropdown-menu dropdown-menu-right" aria-labelledby="navbarUserMenu">
+        <h6 class="dropdown-header">{{ currentUser.userName }}<br/>
             <div id="XiboClock">{{ clock }}</div>
-        </li>
-        <li class="divider"></li>
-        <li><a class="XiboFormButton" href="{{ url_for("user.preferences.form") }}" title="{% trans "Preferences" %}">{% trans "Preferences" %}</a></li>
-        <li><a class="XiboFormButton" href="{{ url_for("user.edit.profile.form") }}" title="{% trans "Edit Profile" %}">{% trans "Edit Profile" %}</a></li>
-        <li><a id="reshowWelcomeMenuItem" href="#">{% trans "Reshow welcome" %}</a></li>
-        {% if horizontalNav %}
-            <li><a class="XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About the CMS" %}">{% trans "About" %}</a></li>
+        </h6>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item XiboFormButton" href="{{ url_for("user.preferences.form") }}" title="{% trans "Preferences" %}">{% trans "Preferences" %}</a>
+
+        {% if currentUser.featureEnabled("user.profile") %}
+            <a class="dropdown-item XiboFormButton" href="{{ url_for("user.edit.profile.form") }}" title="{% trans "Edit Profile" %}">{% trans "Edit Profile" %}</a>
         {% endif %}
-        <li><a class="XiboHelpButton" href="{{ helpService.link() }}">{% trans "Help" %}</a></li>
-        <li class="divider"></li>
-        <li><a title="{% trans "Logout" %}" href="{{ logoutUrl }}">{% trans "Logout" %}</a></li>
-    </ul>
+
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" id="reshowWelcomeMenuItem" href="{{ url_for("welcome.view") }}">{% trans "Reshow welcome" %}</a>
+        {% if horizontalNav %}
+            <a class="dropdown-item XiboFormButton" href="{{ url_for("about") }}" title="{% trans "About the CMS" %}">{% trans "About" %}</a>
+        {% endif %}
+        <a class="dropdown-item XiboHelpButton" href="{{ helpService.link() }}">{% trans "Help" %}</a>
+        <div class="dropdown-divider"></div>
+        <a class="dropdown-item" title="{% trans "Logout" %}" href="{{ logoutUrl }}">{% trans "Logout" %}</a>
+    </div>
 </li>

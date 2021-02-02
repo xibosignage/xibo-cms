@@ -74,9 +74,18 @@ class Preview extends Base
      */
     public function show(Request $request, Response $response, $id )
     {
-        $layout = $this->layoutFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+        $findByCode = $sanitizedParams->getInt('findByCode');
+        
+        if($findByCode == 1) {
+            $layout = $this->layoutFactory->getByCode($id);
+        } else {
+            $layout = $this->layoutFactory->getById($id);
+        }
 
-        if (!$this->getUser()->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($layout)
+            || !$this->getUser()->featureEnabled(['layout.view', 'playlist.view'])
+        ) {
             throw new AccessDeniedException();
         }
 
@@ -86,9 +95,10 @@ class Preview extends Base
             'previewOptions' => [
                 'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
                 'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
-                'libraryDownloadUrl' => $this->urlFor($request,'library.download'),
+                'libraryDownloadUrl' => $this->urlFor($request,'library.download', ['id' => ':id']),
                 'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
-                'loaderUrl' => $this->getConfig()->uri('img/loader.gif')
+                'loaderUrl' => $this->getConfig()->uri('img/loader.gif'),
+                'layoutPreviewUrl' => $this->urlFor($request,'layout.preview', ['id' => '[layoutCode]'])
             ]
         ]);
 

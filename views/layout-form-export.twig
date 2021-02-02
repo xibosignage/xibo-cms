@@ -30,7 +30,7 @@
 
 {% block formButtons %}
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Yes" %}, layoutExportFormSubmit()
+    {% trans "Export" %}, layoutExportFormSubmit()
 {% endblock %}
 
 {% block formHtml %}
@@ -44,6 +44,10 @@
                 {% set title %}{% trans "Include DataSet data?" %}{% endset %}
                 {% set helpText %}{% trans "Do you want to include the DataSet data?" %}{% endset %}
                 {{ forms.checkbox("includeData", title, 0, helpText) }}
+
+                {% set title %}{% trans "Save as" %}{% endset %}
+                {% set helpText %}{% trans "Change the name of the downloaded file if desired." %}{% endset %}
+                {{ forms.input("saveAs", title, saveAs, helpText) }}
 
             </form>
         </div>

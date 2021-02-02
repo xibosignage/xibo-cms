@@ -31,8 +31,8 @@
 {% block formHtml %}
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
-            <li class="active"><a href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-            <li><a href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="webpageEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
@@ -69,9 +69,13 @@
                         {% set helpText %}{% trans "The Location (URL) of the webpage" %}{% endset %}
                         {{ forms.input("uri", title, module.getOption("uri"), helpText, "required") }}
 
-                        {% set title %}{% trans "Background transparent?" %}{% endset %}
-                        {% set helpText %}{% trans "Should the HTML be shown with a transparent background. Not currently available on the Windows Display Client." %}{% endset %}
+                        {% set title %}{% trans "Background transparent?" %} {{ forms.playerCompat("", "", "", "", "v2 R253+") }}{% endset %}
+                        {% set helpText %}{% trans "Should the Widget be shown with a transparent background? Also requires the embedded content to have a transparent background." %}{% endset %}
                         {{ forms.checkbox("transparency", title, module.GetOption("transparency"), helpText) }}
+
+                        {% set title %}{% trans "Preload?" %} {{ forms.playerCompat("v2 R207+") }}{% endset %}
+                        {% set helpText %}{% trans "Should this Widget be loaded entirely off screen so that it is ready when shown? Dynamic content will start running off screen." %}{% endset %}
+                        {{ forms.checkbox("isPreNavigate", title, module.getOption("isPreNavigate"), helpText) }}
 
                         {% set title %}{% trans "Options" %}{% endset %}
                         {% set helpText %}{% trans "How should this web page be embedded?" %}{% endset %}

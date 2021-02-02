@@ -1,3 +1,13 @@
+/* Common styles */
+.noselect {
+    -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+    -khtml-user-select: none; /* Konqueror HTML */
+    -moz-user-select: none; /* Firefox */
+    -ms-user-select: none; /* Internet Explorer/Edge */
+    user-select: none; /* Non-prefixed version, currently supported by Chrome and Opera */
+}
+
 /* Make the player fill the screen */
 html, body {
     height: 100%;
@@ -27,7 +37,7 @@ div.preview-screen {
 div.preview-splash {
     height: 100%;
     background:#000000 url('../preview/img/xibologo.png') no-repeat center center;
-    background-size: 50%;
+    background-size: 45%;
 }
 
 div.preview-loader {
@@ -35,7 +45,7 @@ div.preview-loader {
     width: 220px;
     position: relative;
     margin:0 auto;
-    top: 80%;
+    top: 75%;
     background:#000000 url('../preview/img/loader.gif') no-repeat center center;
     background-size: 100%;
 }
@@ -45,7 +55,8 @@ div.preview-loaderCaption p {
     font-family: sans-serif;
     color: #ffffff;
     text-align:center;
-    top: 85%;
+    top: 82%;
+    margin: 10px 0;
     width: 100%;
 }
 
@@ -78,12 +89,22 @@ div.preview-end {
     background:#000000;
     font-family: sans-serif;
     color:#ffffff;
-    font-size: 300%;
+    font-size: 2em;
     margin:0 auto;
     z-index: 100;
     text-align: center;
-    vertical-align: middle;
-    line-height: 400px;
+}
+
+div.preview-end a {
+    position: absolute;
+    width: 100%;
+    top: 50%;
+    left: 0;
+    -webkit-transform: translateY(-50%);
+    -moz-transform: translateY(-50%);
+    -ms-transform: translateY(-50%);
+    -o-transform: translateY(-50%);
+    transform: translateY(-50%);
 }
 
 video {
@@ -102,4 +123,88 @@ span.empty-icon {
     color: rgba(255, 255, 80, 0.6);
     display:block;
     text-align: center;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+div.action-controller {
+    position: absolute;
+    z-index: 2;
+    font-family: monospace, monospace;
+    font-size: 1rem;
+    max-width: 280px;
+    background-color: #337ab7;
+    border-radius: 4px;
+    opacity: 0.9;
+    filter: alpha(opacity=90); /* IE8 and lower */
+}
+
+
+div.action-controller .action-controller-title {
+    padding: 3px;
+    color: #f3f3f3;
+    font-weight: bold;
+    cursor: grab;
+}
+
+div.action-controller .action-controller-title .title {
+    margin-right: 4px;
+}
+
+div.action-controller .action-controller-title .toggle {
+    float: right;
+    color: #f3f3f3;
+    width: 24px;
+    padding: 0;
+    background-color: #2568a0;
+    border: 1px solid #3a7db5;
+    font-size: 1rem;
+    font-weight: bold;
+}
+
+div.action-controller .action-controller-title .toggle:focus {
+    outline: none;
+}
+
+div.action-controller .action-controller-title .toggle:after {
+    content: ' \002D';
+}
+
+div.action-controller.d-none .action-controller-title .toggle:after {
+    content: ' \002B';
+}
+
+div.action-controller.d-none {
+    opacity: 0.7;
+    filter: alpha(opacity=70); /* IE8 and lower */
+}
+
+div.action-controller.d-none .action {
+    display: none;
+}
+
+div.action-controller .action {
+    position: relative;
+    height: 20px;
+    border-radius: 4px;
+    margin-bottom: 4px;
+    background-color: #273759;
+    padding: 2px 4px;
+    color: #f3f3f3;
+}
+
+div.action-controller .action:not([triggerType="webhook"]) {
+    display: none;
+}
+
+div.action-controller .action .action-row-title {
+    width: 75px;
+    display: inline-block;
+}
+
+/* Iframe click fix */
+iframe {
+    pointer-events: none;
 }

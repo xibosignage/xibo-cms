@@ -39,6 +39,9 @@ let Layout = function(id, data) {
     this.backgroundImage = data.backgroundImageId;
     this.backgroundColor = data.backgroundColor;
 
+    this.code = data.code;
+    this.folderId = data.folderId;
+
     // Get background image if exists, if not, get the background color
     this.backgroundCss = function(width = this.width, height = this.height) {       
         if(this.backgroundImage === null) {
@@ -215,14 +218,12 @@ Layout.prototype.addElement = function(elementType, positionToAdd = null) {
  * @param {object =} [options] - Delete submit params/options
  */
 Layout.prototype.deleteElement = function(elementType, elementId, options = null) {
-    
-    lD.common.showLoadingScreen('deleteElement'); 
+    lD.common.showLoadingScreen('deleteElement');
 
     // Save all changes first
     return lD.manager.saveAllChanges().then((res) =>  {
-
         // Remove changes from the history array
-        return lD.manager.removeAllChanges(lD.selectedObject.type, lD.selectedObject[lD.selectedObject.type + 'Id']).then((res) =>  {
+        return lD.manager.removeAllChanges(elementType, elementId).then((res) =>  {
 
             // Unselect selected object before deleting
             lD.selectObject();

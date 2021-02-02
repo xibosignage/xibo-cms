@@ -35,20 +35,20 @@
         formHelpers.setupDualTypeTextArea(this, 'ta_text', !$(this).data('formEditorOnly'), '[' + jsTimeFormat + ']');
 
         // For the clock type, we need to check if it's not digital, and destroy the inline editor for that specific case
-        const self = this;
-        const clockTypeChangeBehaviour = function(form) {
+        var self = this;
+        var clockTypeChangeBehaviour = function(form) {
             if(!$(self).data('formEditorOnly')) {
                 if($(form).find('form #clockTypeId').val() !== '2') {
                     $(form).data().viewerObject.setupInlineEditor('ta_text', false);
                 } else {
-                    let isChecked = $(form).find('#ta_text_advanced').is(':checked');
+                    var isChecked = $(form).find('#ta_text_advanced').is(':checked');
                     $(form).data().viewerObject.setupInlineEditor('ta_text', isChecked);
                 }
             }
         };
 
         // On select input change, check clock type
-        $(this).find('form #clockTypeId').on('change input', () => {
+        $(this).find('form #clockTypeId').on('change input', function() {
             clockTypeChangeBehaviour($(this));
         });
 

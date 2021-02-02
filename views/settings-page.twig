@@ -26,13 +26,11 @@
 {% block title %}{{ "Settings"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-info btn-xs" ><a class="XiboFormButton btns" title="{% trans "Export database" %}" href="{{ url_for("maintenance.export.form") }}"> <i class="fa fa-cloud-upload" aria-hidden="true"></i> {% trans "Export" %}</a></li>
-
+    <div class="widget-action-menu pull-right">
         {% if settings.SETTING_LIBRARY_TIDY_ENABLED %}
-            <li class="btn btn-danger btn-xs"><a class="XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("maintenance.libraryTidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</a></li>
+            <button class="btn btn-danger XiboFormButton btns" title="{% trans "Run through the library and remove unused and unnecessary files" %}" href="{{ url_for("maintenance.libraryTidy.form") }}"> <i class="fa fa-trash" aria-hidden="true"></i> {% trans "Tidy Library" %}</button>
         {% endif %}
-    </ul>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -42,16 +40,16 @@
             <div class="row">
                 <div class="col-md-12">
                     <ul class="nav nav-tabs" role="tablist">
-                        <li class="active"><a href="#tab_config" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
-                        <li><a href="#tab_defaults" role="tab" data-toggle="tab"><span>{% trans "Defaults" %}</span></a></li>
-                        <li><a href="#tab_displays" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
-                        <li><a href="#tab_general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                        <li><a href="#tab_maint" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
-                        <li><a href="#tab_network" role="tab" data-toggle="tab"><span>{% trans "Network" %}</span></a></li>
-                        <li><a href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Permissions" %}</span></a></li>
-                        <li><a href="#tab_regional" role="tab" data-toggle="tab"><span>{% trans "Regional" %}</span></a></li>
-                        <li><a href="#tab_troubleshooting" role="tab" data-toggle="tab"><span>{% trans "Troubleshooting" %}</span></a></li>
-                        <li><a href="#tab_users" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link active" href="#tab_config" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_defaults" role="tab" data-toggle="tab"><span>{% trans "Defaults" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_displays" role="tab" data-toggle="tab"><span>{% trans "Displays" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_maint" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_network" role="tab" data-toggle="tab"><span>{% trans "Network" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Permissions" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_regional" role="tab" data-toggle="tab"><span>{% trans "Regional" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_troubleshooting" role="tab" data-toggle="tab"><span>{% trans "Troubleshooting" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_users" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
                     </ul>
                     <form id="SettingsForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("settings.update") }}">
                         <div class="tab-content">
@@ -78,6 +76,12 @@
                                     {% else %}
                                         {{ forms.disabled("SERVER_KEY", title, theme.getSetting("SERVER_KEY"), helpText) }}
                                     {% endif %}
+                                    <div class="form-group row">
+                                        <label class="col-sm-2 control-label"></label>
+                                        <div class="col-sm-10">
+                                            <p><i>{{  theme.getPhoneticKey() }}</i></p>
+                                        </div>
+                                    </div>
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("GLOBAL_THEME_NAME") %}
@@ -142,13 +146,6 @@
                                     {% set helpText %}{% trans "When enabled draft Layouts will be automatically published 30 minutes after the last edit" %}{% endset %}
 
                                     {{ forms.checkbox("DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB", title, theme.getSetting("DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB"), helpText, "", "", not theme.isSettingEditable("DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB")) }}
-                                {% endif %}
-
-                                {% if theme.isSettingVisible("DEFAULT_CASCADE_PERMISSION_CHECKB") %}
-                                    {% set title %}{% trans "Default for \"Cascade permissions to all items underneath this one.\" checkbox. Shown when editing Permissions." %}{% endset %}
-                                    {% set helpText %}{% trans "Default the checkbox for \"Cascade permissions to all items underneath this one.\" when assigning permisions to content" %}{% endset %}
-
-                                    {{ forms.checkbox("DEFAULT_CASCADE_PERMISSION_CHECKB", title, theme.getSetting("DEFAULT_CASCADE_PERMISSION_CHECKB"), helpText, "", "", not theme.isSettingEditable("DEFAULT_CASCADE_PERMISSION_CHECKB")) }}
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("DEFAULT_TRANSITION_IN") %}
@@ -450,6 +447,17 @@
                                         {{ forms.number("DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT", 200), helpText) }}
                                     {% else %}
                                         {{ forms.disabled("DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT", title, theme.getSetting("DISPLAY_PROFILE_SCREENSHOT_SIZE_DEFAULT", 200), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DISPLAY_SCREENSHOT_TTL") %}
+                                    {% set title %}{% trans "Display screenshot Time to keep (days)" %}{% endset %}
+                                    {% set helpText %}{% trans "Display screenshots older than the TTL will be automatically removed. Set to 0 to never remove old screenshots." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DISPLAY_SCREENSHOT_TTL") %}
+                                        {{ forms.number("DISPLAY_SCREENSHOT_TTL", title, theme.getSetting("DISPLAY_SCREENSHOT_TTL", 0), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DISPLAY_SCREENSHOT_TTL", title, theme.getSetting("DISPLAY_SCREENSHOT_TTL", 0), helpText) }}
                                     {% endif %}
                                 {% endif %}
 
@@ -854,56 +862,6 @@
                             <div class="tab-pane" id="tab_permissions">
                                 <h3 class="section-heading">{% trans "Permissions" %}</h3>
 
-                                {% if theme.isSettingVisible("LAYOUT_DEFAULT") %}
-                                    {% set title %}{% trans "Layout Permissions" %}{% endset %}
-                                    {% set helpText %}{% trans "New layouts will be created with these settings. If public everyone will be able to view and use this layout." %}{% endset %}
-
-                                    {% set privateOption %}{% trans "Private" %}{% endset %}
-                                    {% set groupOption %}{% trans "Group Read" %}{% endset %}
-                                    {% set groupWriteOption %}{% trans "Group Write" %}{% endset %}
-                                    {% set groupDeleteOption %}{% trans "Group Delete" %}{% endset %}
-                                    {% set publicOption %}{% trans "Public Read" %}{% endset %}
-                                    {% set publicWriteOption %}{% trans "Public Write" %}{% endset %}
-                                    {% set options = [
-                                        { id: "private", value: privateOption },
-                                        { id: "group", value: groupOption },
-                                        { id: "group write", value: groupWriteOption },
-                                        { id: "group delete", value: groupDeleteOption },
-                                        { id: "public", value: publicOption },
-                                        { id: "public write", value: publicWriteOption }
-                                    ] %}
-                                    {% if theme.isSettingEditable("LAYOUT_DEFAULT") %}
-                                        {{ forms.dropdown("LAYOUT_DEFAULT", "single", title, theme.getSetting("LAYOUT_DEFAULT", "private"), options, "id", "value", helpText) }}
-                                    {% else %}
-                                        {{ forms.disabled("LAYOUT_DEFAULT", title, theme.getSetting("LAYOUT_DEFAULT", "private"), helpText) }}
-                                    {% endif %}
-                                {% endif %}
-
-                                {% if theme.isSettingVisible("MEDIA_DEFAULT") %}
-                                    {% set title %}{% trans "Media Permissions" %}{% endset %}
-                                    {% set helpText %}{% trans "Media will be created with these settings. If public everyone will be able to view and use this media." %}{% endset %}
-
-                                    {% set privateOption %}{% trans "Private" %}{% endset %}
-                                    {% set groupOption %}{% trans "Group Read" %}{% endset %}
-                                    {% set groupWriteOption %}{% trans "Group Write" %}{% endset %}
-                                    {% set groupDeleteOption %}{% trans "Group Delete" %}{% endset %}
-                                    {% set publicOption %}{% trans "Public Read" %}{% endset %}
-                                    {% set publicWriteOption %}{% trans "Public Write" %}{% endset %}
-                                    {% set options = [
-                                        { id: "private", value: privateOption },
-                                        { id: "group", value: groupOption },
-                                        { id: "group write", value: groupWriteOption },
-                                        { id: "group delete", value: groupDeleteOption },
-                                        { id: "public", value: publicOption },
-                                        { id: "public write", value: publicWriteOption }
-                                    ] %}
-                                    {% if theme.isSettingEditable("MEDIA_DEFAULT") %}
-                                        {{ forms.dropdown("MEDIA_DEFAULT", "single", title, theme.getSetting("MEDIA_DEFAULT", "private"), options, "id", "value", helpText) }}
-                                    {% else %}
-                                        {{ forms.disabled("MEDIA_DEFAULT", title, theme.getSetting("MEDIA_DEFAULT", "private"), helpText) }}
-                                    {% endif %}
-                                {% endif %}
-
                                 {% if theme.isSettingVisible("REGION_OPTIONS_COLOURING") %}
                                     {% set title %}{% trans "How to colour Media on the Region Timeline" %}{% endset %}
 
@@ -930,12 +888,6 @@
                                     {% set title %}{% trans "Show event Layout regardless of User permission?" %}{% endset %}
                                     {% set helpText %}{% trans "If checked then the Schedule will show the Layout for existing events even if the logged in User does not have permission to see that Layout." %}{% endset %}
                                     {{ forms.checkbox("SCHEDULE_SHOW_LAYOUT_NAME", title, theme.getSetting("SCHEDULE_SHOW_LAYOUT_NAME", 0), helpText, "", "", not theme.isSettingEditable("SCHEDULE_SHOW_LAYOUT_NAME")) }}
-                                {% endif %}
-
-                                {% if theme.isSettingVisible("INHERIT_PARENT_PERMISSIONS") %}
-                                    {% set title %}{% trans "Inherit permissions" %}{% endset %}
-                                    {% set helpText %}{% trans "Inherit permissions from Parent when adding a new item?" %}{% endset %}
-                                    {{ forms.checkbox("INHERIT_PARENT_PERMISSIONS", title, theme.getSetting("INHERIT_PARENT_PERMISSIONS", 1), helpText, "", "", not theme.isSettingEditable("INHERIT_PARENT_PERMISSIONS")) }}
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("MODULE_CONFIG_LOCKED_CHECKB") %}
@@ -1216,14 +1168,4 @@
             </div>
         </div>
     </div>
-{% endblock %}
-
-{% block javaScript %}
-    <script type="text/javascript">
-
-        function dbExportFormSubmit() {
-            $("#exportForm").submit();
-            XiboDialogClose();
-        }
-    </script>
 {% endblock %}

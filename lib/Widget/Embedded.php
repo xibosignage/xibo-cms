@@ -44,8 +44,9 @@ class Embedded extends ModuleWidget
      */
     public function InstallFiles()
     {
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery.min.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        // Extends parent's method
+        parent::installFiles();
+        
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
 
@@ -108,6 +109,13 @@ class Embedded extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="isPreNavigate",
+     *      in="formData",
+     *      description="Flag (0,1) - Should this Widget be loaded off screen so that it is made ready in the background? Dynamic content will run.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="embedHtml",
      *      in="formData",
      *      description="HTML to embed",
@@ -153,6 +161,7 @@ class Embedded extends ModuleWidget
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->setOption('transparency', $sanitizedParams->getCheckbox('transparency'));
         $this->setOption('scaleContent', $sanitizedParams->getCheckbox('scaleContent'));
+        $this->setOption('isPreNavigate', $sanitizedParams->getCheckbox('isPreNavigate'));
         $this->setRawNode('embedHtml', $request->getParam('embedHtml', null));
         $this->setOption('embedHtml_advanced', $sanitizedParams->getCheckbox('embedHtml_advanced'));
         $this->setRawNode('embedScript', $request->getParam('embedScript', null));
@@ -188,6 +197,8 @@ class Embedded extends ModuleWidget
             ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('xibo-layout-scaler.js')
             ->appendJavaScriptFile('xibo-image-render.js')
+            ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
+            ->appendJavaScriptFile('xibo-interactive-control.min.js')
             ->appendRaw('javaScript', $this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedScript', null)))
             ->appendCss($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('embedStyle', null)))
             ->appendFontCss()
@@ -219,5 +230,17 @@ class Embedded extends ModuleWidget
     {
         // We have a long cache interval because we don't depend on any external data.
         return 86400 * 365;
+    }
+
+    /** @inheritDoc */
+    public function hasHtmlEditor()
+    {
+        return true;
+    }
+
+    /** @inheritDoc */
+    public function getHtmlWidgetOptions()
+    {
+        return ['embedHtml', 'embedScript'];
     }
 }

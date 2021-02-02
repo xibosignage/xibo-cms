@@ -4,45 +4,49 @@
 {% block title %}{{ "Layouts"|trans }} | {% endblock %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-success btn-xs"><a class="XiboFormButton btns" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</a></li>
-        <li class="btn btn-info btn-xs"><a class="btns" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</a></li>
-    </ul>
+    {% if currentUser.featureEnabled("layout.add") %}
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</button>
+        <button class="btn btn-info" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</button>
+    </div>
+    {% endif %}
 {% endblock %}
 
 {% block pageContent %}
     <div class="widget">
         <div class="widget-title">{% trans "Layouts" %}</div>
         <div class="widget-body">
-            <div class="XiboGrid" id="{{ random() }}" data-grid-name="layoutView">
-                <div class="XiboFilter well">
-                    <div class="FilterDiv" id="Filter">
-                        <form class="form-inline">
-                            <ul class="nav nav-tabs" role="tablist">
-                                <li class="active"><a href="#general-filter" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                                <li><a href="#advanced-filter" role="tab" data-toggle="tab"><span>{% trans "Advanced" %}</span></a></li>
-                            </ul>
+            <div class="XiboGrid" id="{{ random() }}" data-grid-type="layout" data-grid-name="layoutView">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
+                        <ul class="nav nav-tabs" role="tablist">
+                            <li class="nav-item"><a class="nav-link active" href="#general-filter" role="tab" data-toggle="tab" aria-selected="true"><span>{% trans "General" %}</span></a></li>
+                            <li class="nav-item"><a class="nav-link" href="#advanced-filter" role="tab" data-toggle="tab" aria-selected="false"><span>{% trans "Advanced" %}</span></a></li>
+                        </ul>
+                        <form class="form-inline d-block">
                             <div class="tab-content">
-                                <div class="tab-pane active" id="general-filter">
+                                <div class="tab-pane active" id="general-filter" role="tabpanel">
                                     {% set title %}{% trans "ID" %}{% endset %}
                                     {{ inline.number("layoutId", title) }}
 
-                                    <div class="form-group ">
-                                        <label class="control-label" title="" for="layout" accesskey="">{% trans "Name" %}</label>
-                                        <div>
-                                            <div class="input-group">
-                                                <input class="form-control" name="layout" type="text" id="layout" value="">
-                                                <span class="input-group-addon">
+                                    <div class="form-group mr-1 mb-1">
+                                        <label class="control-label mr-1" title="" for="layout" accesskey="">{% trans "Name" %}</label>
+                                        <div class="input-group">
+                                            <input class="form-control" name="layout" type="text" id="layout" value="">
+                                            <div class="input-group-append input-group-addon">
+                                                <div class="input-group-text">
                                                     <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
-                                                </span>
+                                                </div>
                                             </div>
                                         </div>
                                     </div>
 
-                                    {% set title %}{% trans "Tags" %}{% endset %}
-                                    {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
-                                    {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                    {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    {% if currentUser.featureEnabled("tag.tagging") %}
+                                        {% set title %}{% trans "Tags" %}{% endset %}
+                                        {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                        {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
+                                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                    {% endif %}
 
                                     {% set attributes = [
                                     { name: "data-allow-clear", value: "true" },
@@ -58,12 +62,15 @@
                                     {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
                                     {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
-                                    {% set title %}{% trans "Display Group" %}{% endset %}
-                                    {% set helpText %}{% trans "Show Layouts active on the selected Display / Display Group" %}{% endset %}
-                                    {{ inline.dropdown("activeDisplayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes) }}
+                                    {% if currentUser.featureEnabled("displaygroup.view") %}
+                                        {% set title %}{% trans "Display Group" %}{% endset %}
+                                        {% set helpText %}{% trans "Show Layouts active on the selected Display / Display Group" %}{% endset %}
+                                        {{ inline.dropdown("activeDisplayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes) }}
+                                    {% endif %}
 
+                                    {{ inline.hidden("folderId") }}
                                 </div>
-                                <div class="tab-pane" id="advanced-filter">
+                                <div class="tab-pane" id="advanced-filter" role="tabpanel">
 
                                     {% set title %}{% trans "Retired" %}{% endset %}
                                     {% set option1 = "Yes"|trans %}
@@ -85,38 +92,60 @@
                                     {% set values = [{id: 1, value: option1}, {id: 2, value: option2}, {id: 3, value: option3}] %}
                                     {{ inline.dropdown("showDescriptionId", "single", title, 2, values, "id", "value") }}
 
-                                    {% set title %}{% trans "Media" %}{% endset %}
-                                    {{ inline.input("mediaLike", title) }}
+                                    {% if currentUser.featureEnabled("library.view") %}
+                                        {% set title %}{% trans "Media" %}{% endset %}
+                                        {{ inline.input("mediaLike", title) }}
+                                    {% endif %}
                                 </div>
                             </div>
                         </form>
                     </div>
                 </div>
-                <div class="XiboData">
-                    <table id="layouts" class="table table-striped">
-                        <thead>
-                            <tr>
-                                <th>{% trans "ID" %}</th>
-                                <th>{% trans "Name" %}</th>
-                                <th>{% trans "Status" %}</th>
-                                <th>{% trans "Description" %}</th>
-                                <th>{% trans "Duration" %}</th>
-                                <th>{% trans "Tags" %}</th>
-                                <th>{% trans "Thumbnail" %}</th>
-                                <th>{% trans "Owner" %}</th>
-                                <th>{% trans "Permissions" %}</th>
-                                <th>{% trans "Valid?" %}</th>
-                                <th>{% trans "Stats?" %}</th>
-                                <th>{% trans "Created" %}</th>
-                                <th>{% trans "Modified" %}</th>
-                                <th>{% trans "Code" %}</th>
-                                <th>{% trans "Row Menu" %}</th>
-                            </tr>
-                        </thead>
-                        <tbody>
+                <div class="row">
+                    <div class="col-sm-1 form-group" style="padding: 0">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
+                    </div>
+                    <div class="form-group col-sm-11" style="padding: 0">
+                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
+                    </div>
+                </div>
 
-                        </tbody>
-                    </table>
+                <div class="row">
+                    <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
+                        </div>
+                        <div id="container-folder-tree"></div>
+                    </div>
+                    <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
+                        <div class="XiboData">
+                            <table id="layouts" class="table table-striped responsive nowrap" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="layoutGrid" style="width: 100%;">
+                                <thead>
+                                    <tr>
+                                        <th>{% trans "ID" %}</th>
+                                        <th>{% trans "Name" %}</th>
+                                        <th>{% trans "Status" %}</th>
+                                        <th>{% trans "Description" %}</th>
+                                        <th>{% trans "Duration" %}</th>
+                                        {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
+                                        <th>{% trans "Thumbnail" %}</th>
+                                        <th>{% trans "Owner" %}</th>
+                                        <th>{% trans "Permissions" %}</th>
+                                        <th>{% trans "Valid?" %}</th>
+                                        <th>{% trans "Stats?" %}</th>
+                                        <th>{% trans "Created" %}</th>
+                                        <th>{% trans "Modified" %}</th>
+                                        <th>{% trans "Code" %}</th>
+                                        <th class="rowMenu"></th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
@@ -127,43 +156,19 @@
     <script type="text/javascript">
         var table;
         $(document).ready(function() {
+            {% if not currentUser.featureEnabled("folder.view") %}
+            disableFolders();
+            {% endif %}
+
             table = $("#layouts").DataTable({
                 "language": dataTablesLanguage,
                 "lengthMenu": [10, 25, 50, 100, 250, 500],
                 serverSide: true,
                 stateSave: true,
                 stateDuration: 0,
-                stateLoadCallback: function (settings, callback) {
-                    var data = {};
-                    $.ajax({
-                        type: "GET",
-                        async: false,
-                        url: "{{ url_for("user.pref") }}?preference=layoutGrid",
-                        dataType: 'json',
-                        success: function (json) {
-                            try {
-                                if (json.success) {
-                                    data = JSON.parse(json.data.value);
-                                }
-                            } catch (e) {
-                                // Do nothing
-                            }
-                        }
-                    });
-                    return data;
-                },
-                stateSaveCallback: function (settings, data) {
-                    $.ajax({
-                        type: "POST",
-                        url: "{{ url_for("user.pref") }}",
-                        data: {
-                            preference: [{
-                                option: "layoutGrid",
-                                value: JSON.stringify(data)
-                            }]
-                        }
-                    });
-                },
+                responsive: true,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 searchDelay: 3000,
                 dataType: 'json',
@@ -175,19 +180,21 @@
                     }
                 },
                 "columns": [
-                    {"data": "layoutId"},
+                    {"data": "layoutId", responsivePriority: 2},
                     {
                         "data": "layout",
+                        responsivePriority: 2,
                         "render": dataTableSpacingPreformatted
                     },
                     {
                         "name": "publishedStatus",
+                        responsivePriority: 2,
                         "data": function (data, type) {
                             if (data.publishedDate != null) {
-                                let now = moment();
-                                let published = moment(data.publishedDate);
-                                let differenceMinutes = published.diff(now, 'minutes');
-                                let momentDifference = moment(now).to(published);
+                                var now = moment();
+                                var published = moment(data.publishedDate);
+                                var differenceMinutes = published.diff(now, 'minutes');
+                                var momentDifference = moment(now).to(published);
 
                                 if (differenceMinutes < -5) {
                                     return data.publishedStatus.concat(" - ", data.publishedStatusFailed);
@@ -203,10 +210,12 @@
                     {
                         "name": "description",
                         "data": null,
+                        responsivePriority: 5,
                         "render": {"_": "description", "display": "descriptionFormatted", "sort": "description"}
                     },
                     {
                         "name": "duration",
+                        responsivePriority: 3,
                         "data": function (data, type) {
                             if (type != "display")
                                 return data.duration;
@@ -214,23 +223,27 @@
                             return dataTableTimeFromSeconds(data.duration, type);
                         }
                     },
-                    {
+                    {% if currentUser.featureEnabled("tag.tagging") %}{
                         "sortable": false,
                         "visible": false,
+                        responsivePriority: 3,
                         "data": dataTableCreateTags
-                    },
+                    },{% endif %}
                     {
                         "name": "layoutId",
+                        responsivePriority: 5,
                         "data": null,
                         "render": {"_": "thumbnail", "display": "thumbnail", "sort": "layoutId"}
                     },
-                    {"data": "owner"},
+                    {"data": "owner", responsivePriority: 4},
                     {
                         "data": "groupsWithPermissions",
+                        responsivePriority: 4,
                         "render": dataTableCreatePermissions
                     },
                     {
                         "name": "status",
+                        responsivePriority: 3,
                         "data": function (data, type) {
                             if (type != "display")
                                 return data.status;
@@ -250,6 +263,7 @@
                     },
                     {
                         "name": "enableStat",
+                        responsivePriority: 4,
                         "data": function (data) {
 
                             var icon = "";
@@ -263,17 +277,20 @@
                     },
                     {
                         "data": "createdDt",
+                        responsivePriority: 6,
                         "render": dataTableDateFromIso,
                         "visible": false
                     },
                     {
                         "data": "modifiedDt",
+                        responsivePriority: 6,
                         "render": dataTableDateFromIso,
                         "visible": false
                     },
-                    {"data": "code", "visible":false},
+                    {"data": "code", "visible":false, responsivePriority: 4},
                     {
                         "orderable": false,
+                        responsivePriority: 1,
                         "data": dataTableButtonsColumn
                     }
                 ]
@@ -282,22 +299,36 @@
             table.on('draw', dataTableDraw);
             table.on('draw', { form: $("#layouts").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#layouts_wrapper').find('.col-sm-6').eq(1));
-
+            dataTableAddButtons(table, $('#layouts_wrapper').find('.col-md-6').eq(1));
         });
 
-        $("#layoutUploadForm").click(function() {
+        $("#layoutUploadForm").click(function(e) {
+            e.preventDefault();
 
-            var template = Handlebars.compile($("#template-layout-upload").html());
-
-            // Handle bars and open a dialog
-            bootbox.dialog({
-                message: template({
+            // Open the upload dialog with our options.
+            openUploadForm({
+                url: "{{ url_for("layout.import") }}",
+                title: "{% trans "Upload Layout" %}",
+                multi: true,
+                videoImageCovers: false,
+                buttons: {
+                    main: {
+                        label: "{% trans "Done" %}",
+                        className: "btn-primary btn-bb-main",
+                        callback: function () {
+                            table.ajax.reload();
+                            XiboDialogClose();
+                        }
+                    }
+                },
+                templateOptions: {
+                    layoutImport: true,
+                    updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %},
+                    deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %},
                     trans: {
-                        addFiles: "{% trans "Add ZIP Files" %}",
-                        startUpload: "{% trans "Start upload" %}",
-                        cancelUpload: "{% trans "Cancel upload" %}",
-                        processing: "{% trans "Processing..." %}",
+                        addFiles: "{% trans "Add Layout Export ZIP Files" %}",
+                        startUpload: "{% trans "Start Import" %}",
+                        cancelUpload: "{% trans "Cancel Import" %}",
                         replaceExistingMediaMessage: "{% trans "Replace Existing Media?" %}",
                         importTagsMessage: "{% trans "Import Tags?" %}",
                         useExistingDataSetsMessage: "{% trans "Use existing DataSets matched by name?" %}",
@@ -305,101 +336,43 @@
                     },
                     upload: {
                         maxSize: {{ libraryUpload.maxSize }},
-                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
-                        validExt: "{{ libraryUpload.validExt }}"
-                    }
-                }),
-                title: "{% trans "Upload Layout" %}",
-                buttons: {
-                    main: {
-                        label: "{% trans "Done" %}",
-                        className: "btn-primary",
-                        callback: function() {
-                            table.ajax.reload();
-                            XiboDialogClose();
-                        }
-                    }
-                }
-            }).on('shown.bs.modal', function() {
-                // Configure the upload form
-                var url = "{{ url_for("layout.import") }}";
-                var form = $(this).find("form");
-                var refreshSessionInterval;
-
-                // Initialize the jQuery File Upload widget:
-                form.fileupload({
-                    url: url,
-                    disableImageResize: true
-                });
-
-                // Upload server status check for browsers with CORS support:
-                if ($.support.cors) {
-                    $.ajax({
-                        url: url,
-                        type: 'HEAD'
-                    }).fail(function () {
-                        $('<span class="alert alert-error"/>')
-                                .text('Upload server currently unavailable - ' + new Date())
-                                .appendTo(form);
+                        maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
+                        validExt: "zip"
+                    },
+                    folderSelector: false
+                },
+                formOpenedEvent: function () {
+                    // Configure the active behaviour of the checkboxes
+                    $("#useExistingDataSets").on("click", function () {
+                        $("#importDataSetData").prop("disabled", ($(this).is(":checked")));
                     });
+                },
+                uploadDoneEvent: function (data) {
+                    XiboDialogClose();
+                    table.ajax.reload();
                 }
-
-                // Enable iframe cross-domain access via redirect option:
-                form.fileupload(
-                        'option',
-                        'redirect',
-                        window.location.href.replace(
-                                /\/[^\/]*$/,
-                                '/cors/result.html?%s'
-                        )
-                );
-
-                form.bind('fileuploadsubmit', function (e, data) {
-                    var inputs = data.context.find(':input');
-                    if (inputs.filter('[required][value=""]').first().focus().length) {
-                        return false;
-                    }
-                    data.formData = inputs.serializeArray().concat(form.serializeArray());
-
-                    inputs.filter("input").prop("disabled", true);
-                }).bind('fileuploadstart', function (e, data) {
-                    // Show progress data
-                    form.find('.fileupload-progress .progress-extended').show();
-                    form.find('.fileupload-progress .progress-end').hide();
-
-                    if (form.fileupload("active") <= 0)
-                        refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
-
-                    return true;
-                }).bind('fileuploaddone', function (e, data) {
-                    if (refreshSessionInterval != null && form.fileupload("active") <= 0)
-                        clearInterval(refreshSessionInterval);
-                }).bind('fileuploadprogressall', function(e, data) {
-                    // Hide progress data and show processing
-                    if(data.total > 0 && data.loaded == data.total) {
-                        form.find('.fileupload-progress .progress-extended').hide();
-                        form.find('.fileupload-progress .progress-end').show();
-                    }
-                }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
-                    // Get uploaded and downloaded files and toggle Done button
-                    var filesToUploadCount = form.find('tr.template-upload').length;
-                    var $button = form.parents('.modal:first').find('button[data-bb-handler="main"]');
-
-                    if(filesToUploadCount == 0) {
-                        $button.removeAttr('disabled');
-                    } else {
-                        $button.attr('disabled', 'disabled');
-                    }
-                });
-
-                // Configure the active behaviour of the checkboxes
-                $("#useExistingDataSets").on("click", function () {
-                    $("#importDataSetData").prop("disabled", ($(this).is(":checked")));
-                });
             });
         });
 
         function layoutAddFormOpen() {
+            if ($('#folder-tree-form-modal').length === 0) {
+                // compile tree folder modal and append it to Form
+                var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+                var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+                $("body").append(folderTreeModal(treeConfig));
+
+                $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                    $(this).data('bs.modal', null);
+                });
+            }
+
+            // select current working folder if one is selected in the grid
+            if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined) {
+                $('#layoutAddForm' + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
+            }
+
+            initJsTreeAjax('#container-folder-form-tree', 'layoutAddForm', true, 600);
+
             $("#layoutAddForm").submit(function(e) {
                 e.preventDefault();
                 var form = $(this);
@@ -462,143 +435,4 @@
         }
 
     </script>
-{% endblock %}
-
-{% block javaScriptTemplates %}
-    {{ parent() }}
-
-    {% verbatim %}
-
-        <script type="text/x-handlebars-template" id="template-layout-upload">
-            <form method="post" enctype="multipart/form-data" data-max-file-size="{{ upload.maxSize }}" data-accept-file-types="/(\.|\/)zip$/i">
-                <div class="row fileupload-buttonbar">
-                    <div class="col-md-7">
-                        <div class="well">
-                            {{ upload.maxSizeMessage }}
-                        </div>
-                        <!-- The fileinput-button span is used to style the file input field as button -->
-                    <span class="btn btn-success fileinput-button">
-                        <i class="glyphicon glyphicon-plus glyphicon glyphicon-white"></i>
-                        <span>{{ trans.addFiles }}</span>
-                        <input type="file" name="files[]" multiple>
-                    </span>
-                        <button type="submit" class="btn btn-primary start">
-                            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
-                            <span>{{ trans.startUpload }}</span>
-                        </button>
-                        <button type="reset" class="btn btn-warning cancel">
-                            <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
-                            <span>{{ trans.cancelUpload }}</span>
-                        </button>
-                        <!-- The loading indicator is shown during file processing -->
-                        <span class="fileupload-loading"></span>
-                    </div>
-                    <!-- The global progress information -->
-                    <div class="col-md-4 fileupload-progress fade">
-                        <!-- The global progress bar -->
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-success progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
-                                <div class="sr-only"></div>
-                            </div>
-                        </div>
-                        <!-- The extended global progress information -->
-                        <div class="progress-extended">&nbsp;</div>
-                        <!-- Processing info container -->
-                    <div class="progress-end" style="display:none;">{{ trans.processing }}</div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <label for="replaceExisting" title="If the import finds existing media with the same name, should it be replaced in the Layout or should the Layout use that media.">
-                            <input type="checkbox" id="replaceExisting" name="replaceExisting">
-                            {{ trans.replaceExistingMediaMessage }}
-                        </label>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="importTags" title="Would you like to import any tags contained on the layout.">
-                            <input type="checkbox" id="importTags" name="importTags">
-                            {{ trans.importTagsMessage }}
-                        </label>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-md-6">
-                        <label for="useExistingDataSets">
-                            <input type="checkbox" id="useExistingDataSets" name="useExistingDataSets" checked>
-                            {{ trans.useExistingDataSetsMessage }}
-                        </label>
-                    </div>
-                    <div class="col-md-6">
-                        <label for="importDataSetData">
-                            <input type="checkbox" id="importDataSetData" name="importDataSetData" disabled>
-                            {{ trans.dataSetDataMessage }}
-                        </label>
-                    </div>
-                </div>
-                <!-- The table listing the files available for upload/download -->
-                <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
-            </form>
-        </script>
-
-        <!-- The template to display files available for upload -->
-        <script id="template-layout-upload" type="text/x-tmpl">
-        {% for (var i=0, file; file=o.files[i]; i++) { %}
-            <tr class="template-upload fade">
-                <td>
-                    <span class="fileupload-preview"></span>
-                </td>
-                <td class="title">
-                    {% if (file.error) { %}
-                        <div><span class="label label-danger">{%=file.error%}</span></div>
-                    {% } %}
-                    {% if (!file.error) { %}
-                    <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
-                    {% } %}
-                </td>
-                <td>
-                    <p class="size">{%=o.formatFileSize(file.size)%}</p>
-                    {% if (!o.files.error) { %}
-                        <div class="progress">
-                            <div class="progress-bar progress-bar-striped active" role="progressbar" aria-valuemin="0" aria-valuemax="100" style="width:0%;">
-                                <div class="sr-only"></div>
-                            </div>
-                        </div>
-                    </div>
-                    {% } %}
-                </td>
-                <td>
-                    {% if (!o.files.error && !i && !o.options.autoUpload) { %}
-                        <button class="btn btn-primary start">
-                            <i class="glyphicon glyphicon-upload glyphicon glyphicon-white"></i>
-                        </button>
-                    {% } %}
-                    {% if (!i) { %}
-                        <button class="btn btn-warning cancel">
-                            <i class="glyphicon glyphicon-ban-circle glyphicon glyphicon-white"></i>
-                        </button>
-                    {% } %}
-                </td>
-            </tr>
-        {% } %}
-        </script>
-        <!-- The template to display files available for download -->
-        <script id="template-layout-download" type="text/x-tmpl">
-        {% for (var i=0, file; file=o.files[i]; i++) { %}
-            <tr class="template-download fade">
-               <td>
-                    <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
-                        {%=file.name%}
-                    </p>
-                    {% if (file.error) { %}
-                        <div><span class="label label-danger">{%=file.error%}</span></div>
-                    {% } %}
-                </td>
-                <td>
-                    <span class="size">{%=o.formatFileSize(file.size)%}</span>
-                </td>
-            </tr>
-        {% } %}
-        </script>
-
-    {% endverbatim %}
 {% endblock %}

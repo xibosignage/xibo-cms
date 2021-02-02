@@ -25,22 +25,18 @@ use Psr\Container\ContainerInterface;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
-use Xibo\Entity\Campaign;
-use Xibo\Entity\Layout;
 use Xibo\Entity\Media;
 use Xibo\Entity\Permission;
-use Xibo\Entity\Playlist;
-use Xibo\Entity\Region;
-use Xibo\Entity\Widget;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
+use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\PageFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -60,6 +56,7 @@ use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class User
@@ -81,11 +78,6 @@ class User extends Base
      * @var UserGroupFactory
      */
     private $userGroupFactory;
-
-    /**
-     * @var PageFactory
-     */
-    private $pageFactory;
 
     /**
      * @var PermissionFactory
@@ -141,6 +133,9 @@ class User extends Base
     /** @var DataSetFactory */
     private $dataSetFactory;
 
+    /** @var FolderFactory */
+    private $folderFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -152,7 +147,6 @@ class User extends Base
      * @param UserFactory $userFactory
      * @param UserTypeFactory $userTypeFactory
      * @param UserGroupFactory $userGroupFactory
-     * @param PageFactory $pageFactory
      * @param PermissionFactory $permissionFactory
      * @param LayoutFactory $layoutFactory
      * @param ApplicationFactory $applicationFactory
@@ -168,17 +162,18 @@ class User extends Base
      * @param Twig $view
      * @param ContainerInterface $container
      * @param DataSetFactory $dataSetFactory
+     * @param FolderFactory $folderFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userFactory,
-                                $userTypeFactory, $userGroupFactory, $pageFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory)
+                                $userTypeFactory, $userGroupFactory, $permissionFactory,
+                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory,
+                                $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->userFactory = $userFactory;
         $this->userTypeFactory = $userTypeFactory;
         $this->userGroupFactory = $userGroupFactory;
-        $this->pageFactory = $pageFactory;
         $this->permissionFactory = $permissionFactory;
         $this->layoutFactory = $layoutFactory;
         $this->applicationFactory = $applicationFactory;
@@ -193,6 +188,55 @@ class User extends Base
         $this->playlistFactory = $playlistFactory;
         $this->container = $container;
         $this->dataSetFactory = $dataSetFactory;
+        $this->folderFactory = $folderFactory;
+    }
+
+    /**
+     * Home Page
+     * this redirects to the appropriate page for this user.
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function home(Request $request, Response $response)
+    {
+        // Should we show this user the welcome page?
+        if ($this->getUser()->newUserWizard == 0) {
+            return $response->withRedirect($this->urlFor($request, 'welcome.view'));
+        }
+
+        // User wizard seen, go to home page
+        $this->getLog()->debug('Showing the homepage: ' . $this->getUser()->homePageId);
+
+        $homepage = $this->userGroupFactory->getHomepageByName($this->getUser()->homePageId);
+
+        if (!$this->getUser()->featureEnabled($homepage->feature)) {
+            return $response->withRedirect($this->urlFor($request, 'icondashboard.view'));
+        } else {
+            return $response->withRedirect($this->urlFor($request, $homepage->homepage));
+        }
+    }
+
+    /**
+     * Welcome Page
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function welcome(Request $request, Response $response)
+    {
+        $this->getState()->template = 'welcome-page';
+
+        // Mark the page as seen
+        if ($this->getUser()->newUserWizard == 0) {
+            $this->getUser()->newUserWizard = 1;
+            $this->getUser()->save(['validate' => false]);
+        }
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -312,7 +356,7 @@ class User extends Base
         ];
 
         // Load results into an array
-        $users = $this->userFactory->query($this->gridRenderSort($request), $this->gridRenderFilter($filterBy, $request));
+        $users = $this->userFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($filterBy, $sanitizedParams));
 
         foreach ($users as $user) {
             /* @var \Xibo\Entity\User $user */
@@ -341,10 +385,19 @@ class User extends Base
             }
 
             $user->includeProperty('buttons');
-            $user->homePage = __($user->homePage);
+
+            // Deal with the home page
+            try {
+                $user->homePage = $this->userGroupFactory->getHomepageByName($user->homePageId)->title;
+            } catch (NotFoundException $exception) {
+                $this->getLog()->error('User has homepage which does not exist. userId: ' . $user->userId . ', homepage: ' . $user->homePageId);
+                $user->homePage = __('Unknown homepage, please edit to update.');
+            }
 
             // Super admins have some buttons
-            if ($this->getUser()->checkEditable($user)) {
+            if ($this->getUser()->featureEnabled('users.modify')
+                && $this->getUser()->checkEditable($user)
+            ) {
                 // Edit
                 $user->buttons[] = [
                     'id' => 'user_button_edit',
@@ -353,7 +406,9 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser()->isSuperAdmin() && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')) {
+            if ($this->getUser()->isSuperAdmin()
+                && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')
+            ) {
                 // Delete
                 $user->buttons[] = [
                     'id' => 'user_button_delete',
@@ -362,7 +417,9 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser()->checkPermissionsModifyable($user)) {
+            if ($this->getUser()->featureEnabled('users.modify')
+                && $this->getUser()->checkPermissionsModifyable($user)
+            ) {
                 $user->buttons[] = ['divider' => true];
 
                 // User Groups
@@ -376,7 +433,7 @@ class User extends Base
             if ($this->getUser()->isSuperAdmin()) {
                 $user->buttons[] = ['divider' => true];
 
-                // Page Security
+                // Features
                 $user->buttons[] = [
                     'id' => 'user_button_page_security',
                     'url' => $this->urlFor($request,'group.acl.form', ['id' => $user->groupId, 'userId' => $user->userId]),
@@ -559,11 +616,11 @@ class User extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Build a user entity and save it
         $user = $this->userFactory->create();
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
 
         $user->userName = $sanitizedParams->getString('userName');
         $user->email = $sanitizedParams->getString('email');
-        $user->homePageId = $sanitizedParams->getInt('homePageId');
+        $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota', ['default' => 0]);
         $user->setNewPassword($sanitizedParams->getString('password'));
 
@@ -605,9 +662,9 @@ class User extends Base
         $group->assignUser($user);
         $group->save(['validate' => false]);
 
-        // Test to see if the user group selected has permissions to see the homepage selected
-        // Make sure the user has permission to access this page.
-        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId))) {
+        // Handle enabled features for the homepage.
+        $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
+        if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
             throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
         }
 
@@ -801,13 +858,15 @@ class User extends Base
             throw new AccessDeniedException();
         }
 
+        $this->getLog()->debug('User Edit process started.');
+
         $sanitizedParams = $this->getSanitizer($request->getParams());
         // Build a user entity and save it
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
         $user->load();
         $user->userName = $sanitizedParams->getString('userName');
         $user->email = $sanitizedParams->getString('email');
-        $user->homePageId = $sanitizedParams->getInt('homePageId');
+        $user->homePageId = $sanitizedParams->getString('homePageId');
         $user->libraryQuota = $sanitizedParams->getInt('libraryQuota');
         $user->retired = $sanitizedParams->getCheckbox('retired');
 
@@ -831,10 +890,15 @@ class User extends Base
         $user->setOptionValue('hideNavigation', $sanitizedParams->getCheckbox('hideNavigation'));
         $user->isPasswordChangeRequired = $sanitizedParams->getCheckbox('isPasswordChangeRequired');
 
-        // Make sure the user has permission to access this page.
-        if (!$user->checkViewable($this->pageFactory->getById($user->homePageId))) {
-            throw new InvalidArgumentException(__('User does not have permission for this homepage'));
+        $this->getLog()->debug('Params read');
+
+        // Handle enabled features for the homepage.
+        $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
+        if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
+            throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
         }
+
+        $this->getLog()->debug('Homepage validated.');
 
         // If we are a super admin
         if ($this->getUser()->userTypeId == 1) {
@@ -843,6 +907,8 @@ class User extends Base
             $disableTwoFactor = $sanitizedParams->getCheckbox('disableTwoFactor');
 
             if ($newPassword != null && $newPassword != '') {
+                $this->getLog()->debug('New password provided, checking.');
+
                 // Make sure they are the same
                 if ($newPassword != $retypeNewPassword) {
                     throw new InvalidArgumentException(__('Passwords do not match'));
@@ -858,8 +924,12 @@ class User extends Base
             }
         }
 
+        $this->getLog()->debug('About to save.');
+
         // Save the user
         $user->save();
+
+        $this->getLog()->debug('User saved, about to return.');
 
         // Return
         $this->getState()->hydrate([
@@ -936,7 +1006,7 @@ class User extends Base
         }
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
         $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory);
 
         if ($sanitizedParams->getCheckbox('deleteAllItems') != 1) {
@@ -970,6 +1040,67 @@ class User extends Base
     }
 
     /**
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function homepages(Request $request, Response $response)
+    {
+        // Only group admins or super admins can create Users.
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
+            throw new AccessDeniedException(__('Only super and group admins can create users'));
+        }
+
+        // Get all homepages accessible for a user group
+        $params = $this->getSanitizer($request->getParams());
+        $userId = $params->getInt('userId');
+
+        if ($userId !== null) {
+            $homepages = [];
+            $user = $this->userFactory->getById($userId)
+                ->setChildAclDependencies($this->userGroupFactory);
+
+            foreach ($this->userGroupFactory->getHomepages() as $homepage) {
+                if (empty($homepage->feature) || $user->featureEnabled($homepage->feature)) {
+                    $homepages[] = $homepage;
+                }
+            }
+        } else {
+            $userTypeId = $params->getInt('userTypeId', [
+                'throw' => function () {
+                    throw new NotFoundException();
+                }
+            ]);
+
+            if ($userTypeId == 1 || $userTypeId == 4) {
+                $homepages = $this->userGroupFactory->getHomepages();
+            } else {
+                $groupId = $params->getInt('groupId', [
+                    'throw' => function () {
+                        throw new NotFoundException();
+                    }
+                ]);
+                $group = $this->userGroupFactory->getById($groupId);
+
+                $homepages = [];
+                foreach ($this->userGroupFactory->getHomepages() as $homepage) {
+                    if (empty($homepage->feature) || in_array($homepage->feature, $group->features)) {
+                        $homepages[] = $homepage;
+                    }
+                }
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = count($homepages);
+        $this->getState()->setData($homepages);
+
+        return $this->render($request, $response);
+    }
+
+    /**
      * User Add Form
      * @param Request $request
      * @param Response $response
@@ -987,15 +1118,15 @@ class User extends Base
         }
 
         $defaultUserTypeId = 3;
-        foreach ($this->userTypeFactory->query(null, ['userType' => $this->getConfig()->getSetting('defaultUsertype')] ) as $defaultUserType) {
+        foreach ($this->userTypeFactory->query(null, [
+            'userType' => $this->getConfig()->getSetting('defaultUsertype')
+        ]) as $defaultUserType) {
             $defaultUserTypeId = $defaultUserType->userTypeId;
         }
 
         $this->getState()->template = 'user-form-add';
         $this->getState()->setData([
             'options' => [
-                'homepage' => $this->pageFactory->query(null, ['asHome' => 1]),
-                'groups' => $this->userGroupFactory->query(),
                 'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles(),
                 'defaultGroupId' => $this->getConfig()->getSetting('DEFAULT_USERGROUP'),
                 'defaultUserType' => $defaultUserTypeId
@@ -1022,18 +1153,25 @@ class User extends Base
     public function editForm(Request $request, Response $response, $id)
     {
         $user = $this->userFactory->getById($id);
-        $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
+        $user->setChildAclDependencies($this->userGroupFactory);
 
         if (!$this->getUser()->checkEditable($user)) {
             throw new AccessDeniedException();
+        }
+
+        $homepage = [];
+        try {
+            $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
+        } catch (NotFoundException $notFoundException) {
+            $this->getLog()->error(sprintf('User %d has non existing homepage %s', $user->userId, $user->homePageId));
         }
 
         $this->getState()->template = 'user-form-edit';
         $this->getState()->setData([
             'user' => $user,
             'options' => [
-                'homepage' => $this->pageFactory->getForHomepage(),
-                'userTypes' => $this->userTypeFactory->query()
+                'homepage' => $homepage,
+                'userTypes' => ($this->getUser()->isSuperAdmin()) ? $this->userTypeFactory->getAllRoles() : $this->userTypeFactory->getNonAdminRoles()
             ],
             'help' => [
                 'edit' => $this->getHelp()->link('User', 'Edit')
@@ -1117,11 +1255,9 @@ class User extends Base
     public function editProfile(Request $request, Response $response)
     {
         $user = $this->getUser();
-        // Store current (before edit) value of twoFactorTypeId in a variable
-        $oldTwoFactorTypeId = $user->twoFactorTypeId;
-        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // get all other values from the form
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $oldPassword = $sanitizedParams->getString('password');
         $newPassword = $sanitizedParams->getString('newPassword');
         $retypeNewPassword = $sanitizedParams->getString('retypeNewPassword');
@@ -1132,6 +1268,14 @@ class User extends Base
 
         if ($recoveryCodes != null) {
             $user->twoFactorRecoveryCodes = json_decode($recoveryCodes);
+        }
+
+        // What situations do we need to check the old password is correct?
+        if ($user->hasPropertyChanged('twoFactorTypeId')
+            || ($user->hasPropertyChanged('email') && $user->twoFactorTypeId === 1)
+            || ($user->hasPropertyChanged('email') && $user->getOriginalValue('twoFactorTypeId') === 1)
+        ) {
+            $user->checkPassword($oldPassword);
         }
 
         // check if we have a new password provided, if so check if it was correctly entered
@@ -1167,7 +1311,9 @@ class User extends Base
 
         // if we are setting up Google auth, we are expecting a code from the form, validate the code here
         // we want to show QR code and validate the access code also with the previous auth method was set to email
-        if ($user->twoFactorTypeId === 2 && ($user->twoFactorSecret === null || $oldTwoFactorTypeId === 1)) {
+        if ($user->twoFactorTypeId === 2
+            && ($user->twoFactorSecret === null || $user->getOriginalValue('twoFactorTypeId') === 1)
+        ) {
             if (!isset($code)) {
                 throw new InvalidArgumentException(__('Access Code is empty'), 'code');
             }
@@ -1457,10 +1603,120 @@ class User extends Base
         }
 
         // List of all Groups with a view / edit / delete check box
-        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id, $this->gridRenderSort($request), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $request));
+        $permissions = $this->permissionFactory->getAllByObjectId($this->getUser(), $object->permissionsClass(), $id, $this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $sanitizedParams));
 
         $this->getState()->template = 'grid';
         $this->getState()->setData($permissions);
+        $this->getState()->recordsTotal = $this->permissionFactory->countLast();
+
+        return $this->render($request,  $response);
+    }
+
+
+    /**
+     * @SWG\Get(
+     *  path="/user/permissions/{entity}",
+     *  operationId="userPermissionsMultiSearch",
+     *  tags={"user"},
+     *  summary="Permission Data",
+     *  description="Permission data for the multiple Entities and Objects Provided.",
+     *  @SWG\Parameter(
+     *      name="entity",
+     *      in="path",
+     *      description="The Entity",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ids",
+     *      in="query",
+     *      description="The IDs of the Objects to return permissions for",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Permission")
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param string $entities
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function permissionsMultiGrid(Request $request, Response $response, $entity)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Check if the array of ids is passed
+        if($sanitizedParams->getString('ids') == '') {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Get array of ids
+        $ids = explode(',', $sanitizedParams->getString('ids'));
+
+        // Array of all the permissions
+        $permissions = [];
+        $newPermissions = [];
+        $objects = [];
+
+        // Load our objects
+        for ($i=0; $i < count($ids); $i++) {
+            $objectId = $ids[$i];
+
+            $entityTemp = $this->parsePermissionsEntity($entity, $objectId);
+
+            $objects[$i] = $entityTemp->getById($objectId);
+
+            // Does this user have permission to edit the permissions?!
+            if (!$this->getUser()->checkPermissionsModifyable($objects[$i])) {
+                throw new AccessDeniedException(__('You do not have permission to edit all the entities permissions.'));
+            }
+
+            // List of all Groups with a view / edit / delete check box
+            $permissions = array_merge_recursive($permissions, $this->permissionFactory->getAllByObjectId($this->getUser(), $objects[$i]->permissionsClass(), $objectId, $this->gridRenderSort($sanitizedParams), $this->gridRenderFilter(['name' => $sanitizedParams->getString('name')], $sanitizedParams)));
+        }
+
+        // Change permissions structure to be grouped by user group
+        foreach ($permissions as $permission) {
+
+            if(!array_key_exists($permission->groupId, $newPermissions)) {
+                $newPermissions[$permission->groupId] = [
+                    "groupId" => $permission->groupId,
+                    "group" => $permission->group,
+                    "isUser" => $permission->isUser,
+                    "entity" => $permission->entity,
+                    "permissions" => [
+                        $permission->objectId => [
+                            "permissionId" => $permission->permissionId,
+                            "view" => $permission->view,
+                            "edit" => $permission->edit,
+                            "delete" => $permission->delete
+                        ]
+                    ]
+                ];
+            } else {
+                $newPermissions[$permission->groupId]["permissions"][] = [
+                    "permissionId" => $permission->permissionId,
+                    "view" => $permission->view,
+                    "edit" => $permission->edit,
+                    "delete" => $permission->delete
+                ];
+            }
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->setData($newPermissions);
         $this->getState()->recordsTotal = $this->permissionFactory->countLast();
 
         return $this->render($request,  $response);
@@ -1515,6 +1771,45 @@ class User extends Base
         ];
 
         $this->getState()->template = 'user-form-permissions';
+        $this->getState()->setData($data);
+
+        return $this->render($request, $response);
+    }
+
+
+    /**
+     * Permissions to users for the provided entity
+     * @param Request $request
+     * @param Response $response
+     * @param $entity
+     * @param $ids
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function permissionsMultiForm(Request $request, Response $response, $entity)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Check if the array of ids is passed
+        if($sanitizedParams->getString('ids') == '') {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Get array of ids
+        $ids = $sanitizedParams->getString('ids');
+
+        $data = [
+            'entity' => $entity,
+            'objectIds' => $ids,
+            'help' => [
+                'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
+            ]
+        ];
+
+        $this->getState()->template = 'user-form-multiple-permissions';
         $this->getState()->setData($data);
 
         return $this->render($request, $response);
@@ -1623,59 +1918,99 @@ class User extends Base
             }
         }
 
-        // Cascade permissions
-        if ($object->permissionsClass() == 'Xibo\Entity\Campaign' && $sanitizedParams->getCheckbox('cascade') == 1) {
-            /* @var Campaign $object */
-            $this->getLog()->debug('Cascade permissions down');
+        if ($object->permissionsClass() === 'Xibo\Entity\Folder') {
+            $folder = $this->folderFactory->getById($object->getId());
+            $folder->managePermissions();
 
-            // Define a function that can be called for each layout we find
-            $updatePermissionsOnLayout = function($layout) use ($object, $groupIds, $request) {
-
-                // Regions
-                foreach ($layout->regions as $region) {
-                    /* @var Region $region */
-                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($region), $region->getId()), $groupIds);
-                    // Playlists
-                    /* @var Playlist $playlist */
-                    $playlist = $region->regionPlaylist;
-                    $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($playlist), $playlist->getId()), $groupIds);
-                    // Widgets
-                    foreach ($playlist->widgets as $widget) {
-                        /* @var Widget $widget */
-                        $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
-                    }
-                }
-            };
-
-            foreach ($this->layoutFactory->getByCampaignId($object->campaignId, true, true) as $layout) {
-                /* @var Layout $layout */
-                // Assign the same permissions to the Layout
-                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object), $layout->campaignId), $groupIds);
-
-                // Load the layout
-                $layout->load();
-
-                $updatePermissionsOnLayout($layout);
-            }
-        } else if ($object->permissionsClass() == 'Xibo\Entity\Region') {
-            // We always cascade region permissions down to the Playlist
-            $object->load(['loadPlaylists' => true]);
-
-            $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($object->regionPlaylist), $object->regionPlaylist->getId()), $groupIds);
-        } else if ($object->permissionsClass() == 'Xibo\Entity\Playlist' && $sanitizedParams->getCheckbox('cascade') == 1) {
-            $object->load();
-
-            // Push the permissions down to each Widget
-            foreach ($object->widgets as $widget) {
-                $this->updatePermissions($this->permissionFactory->getAllByObjectId($this->getUser(), get_class($widget), $widget->getId()), $groupIds);
-            }
         } else if ($object->permissionsClass() == 'Xibo\Entity\Media') {
             // Are we a font?
             /** @var $object Media */
             if ($object->mediaType === 'font') {
                 // Drop permissions (we need to reassess).
-                $this->container->get('\Xibo\Controller\Library')->installFonts(['invalidateCache' => true], $request);
+                $this->container->get('\Xibo\Controller\Library')->installFonts(RouteContext::fromRequest($request)->getRouteParser(),['invalidateCache' => true]);
             }
+        }
+
+        // Return
+        $this->getState()->hydrate([
+            'httpCode' => 204,
+            'message' => __('Permissions Updated')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+
+    /**
+     * @SWG\Post(
+     *  path="/user/permissions/{entity}/multiple",
+     *  operationId="userPermissionsMultiSet",
+     *  tags={"user"},
+     *  summary="Multiple Permission Set",
+     *  description="Set Permissions to users/groups for multiple provided entities.",
+     *  @SWG\Parameter(
+     *      name="entity",
+     *      in="path",
+     *      description="The Entity type",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ids",
+     *      in="formData",
+     *      description="Array of object IDs",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="groupIds",
+     *      in="formData",
+     *      description="Array of permissions with groupId as the key",
+     *      type="array",
+     *      required=true,
+     *      @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="ownerId",
+     *      in="formData",
+     *      description="Change the owner of this item. Leave empty to keep the current owner",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param string $entity
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function permissionsMulti(Request $request, Response $response, $entity)
+    {
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        // Get array of ids
+        $ids = ($sanitizedParams->getString('ids') != '') ? explode(',', $sanitizedParams->getString('ids')) : [];
+
+        // Check if the array of ids is passed
+        if (count($ids) == 0) {
+            throw new InvalidArgumentException(__('The array of ids is empty!'));
+        }
+
+        // Set permissions for all the object ids, one by one
+        foreach ($ids as $id) {
+            $this->permissions($request, $response, $entity, $id);
         }
 
         // Return
@@ -1734,9 +2069,18 @@ class User extends Base
             // If all permissions are 0, then the record is deleted
             if (is_array($groupIds)) {
                 if (array_key_exists($row->groupId, $groupIds)) {
-                    $row->view = (array_key_exists('view', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['view'] : 0);
-                    $row->edit = (array_key_exists('edit', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['edit'] : 0);
-                    $row->delete = (array_key_exists('delete', $groupIds[$row->groupId]) ? $groupIds[$row->groupId]['delete'] : 0);
+                    if(array_key_exists('view', $groupIds[$row->groupId])) {
+                        $row->view = $groupIds[$row->groupId]['view'];
+                    }
+
+                    if(array_key_exists('edit', $groupIds[$row->groupId])) {
+                        $row->edit = $groupIds[$row->groupId]['edit'];
+                    }
+
+                    if(array_key_exists('delete', $groupIds[$row->groupId])) {
+                        $row->delete = $groupIds[$row->groupId]['delete'];
+                    }
+
                     $row->save();
                 }
             }
@@ -1796,10 +2140,9 @@ class User extends Base
     {
         $requestedPreference =  $request->getQueryParam('preference');
 
-        if ($requestedPreference != '') {
+        if (!empty($requestedPreference)) {
             $this->getState()->setData($this->getUser()->getOption($requestedPreference));
-        }
-        else {
+        } else {
             $this->getState()->setData($this->getUser()->getUserOptions());
         }
 
@@ -2094,6 +2437,11 @@ class User extends Base
 
         if (!$this->getUser()->isSuperAdmin() && $parsedParams->getInt('showContentFrom') == 2) {
             throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
+        }
+
+        // Clear auto submits?
+        if ($parsedParams->getCheckbox('autoSubmitClearAll', ['checkboxReturnInteger' => false])) {
+            $this->getUser()->removeOptionByPrefix('autoSubmit.');
         }
 
         $this->getUser()->save();

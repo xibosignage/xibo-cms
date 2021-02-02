@@ -25,9 +25,9 @@
 {% import "inline.twig" as inline %}
 
 {% block actionMenu %}
-    <ul class="nav nav-pills pull-right">
-        <li class="btn btn-info btn-xs"><a class="btns" href="{{ url_for("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</a></li>
-    </ul>
+    <div class="widget-action-menu pull-right">
+        <button class="btn btn-info XiboRedirectButton" href="{{ url_for("savedreport.view") }}"><i class="fa fa-eye" aria-hidden="true"></i> {% trans "Saved Reports" %}</button>
+    </div>
 {% endblock %}
 
 {% block pageContent %}
@@ -37,14 +37,14 @@
             <i class="fa fa-list"></i>
             {{ savedReport.saveAs }}
                 <span class="small">({% trans "Generated on: " %}{{ generatedOn }})</span>
-            <div><span class="small">From {{ periodStart }} To {{ periodEnd }}</span></div>
+            <div><span class="small">{% trans "From" %} {{ periodStart }} {% trans "To" %} {{ periodEnd }}</span></div>
             <div class="clearfix"></div>
         </div>
 
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
 
-                <div class="XiboData">
+                <div class="XiboData card pt-3">
                     <canvas id="reportChart" style="clear:both; margin-top:25px;" height="70%"></canvas>
                 </div>
             </div>
@@ -55,57 +55,6 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-
-        var reportChart = new Chart($("#reportChart"), {
-            type: "bar",
-            data: {
-                labels: {{ labels|raw }},
-                datasets: [{
-                    label: "{% trans "Total duration" %}",
-                    yAxisID: 'Duration',
-                    backgroundColor: {{ backgroundColor|raw }},
-                    data: {{ durationData|raw }},
-                },
-                    {
-                        label: "{% trans "Total count" %}",
-                        yAxisID: 'Count',
-                        borderColor: {{ borderColor|raw }},
-                        data: {{ countData|raw }},
-                        type: 'line',
-                        fill: false
-                    }]
-            },
-            options: {
-                scales: {
-                    yAxes: [{
-                        id: 'Duration',
-                        type: 'linear',
-                        position: 'left',
-                        display: true,
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Duration(s)'
-                        },
-                        ticks: {
-                            beginAtZero:true
-                        }
-                    }, {
-                        id: 'Count',
-                        type: 'linear',
-                        position: 'right',
-                        display: true,
-                        scaleLabel: {
-                            display: true,
-                            labelString: 'Count'
-                        },
-                        ticks: {
-                            beginAtZero:true
-                        }
-                    }]
-                },
-                maintainAspectRatio: true,
-            }
-        });
-
+        var reportChart = new Chart($("#reportChart"), {{ chart|json_encode|raw }});
     </script>
 {% endblock %}
