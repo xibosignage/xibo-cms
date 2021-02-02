@@ -36,7 +36,7 @@ class UserOnboardingMigration extends AbstractMigration
             ->save();
 
         // If we only have the preset user groups, add some more.
-        $countGroups = $this->execute('SELECT COUNT(*) AS cnt FROM `group` WHERE isUserSpecific = 0 AND isEveryone = 0');
+        $countGroups = $this->fetchRow('SELECT COUNT(*) AS cnt FROM `group` WHERE isUserSpecific = 0 AND isEveryone = 0');
 
         if ($countGroups['cnt'] <= 2) {
             // These can't be translated out the box as we don't know language on install?
@@ -45,6 +45,39 @@ class UserOnboardingMigration extends AbstractMigration
                     [
                         'group' => 'Content Manager',
                         'description' => 'Management of all features related to Content Creation only.',
+                        'defaultHomepageId' => 'icondashboard.view',
+                        'isUserSpecific' => 0,
+                        'isEveryone' => 0,
+                        'isSystemNotification' => 0,
+                        'isDisplayNotification' => 0,
+                        'isShownForAddUser' => 1,
+                        'features' => '["folder.view","folder.add","folder.modify","library.view","library.add","library.modify","dataset.view","dataset.add","dataset.modify","dataset.data","playlist.view","playlist.add","playlist.modify","layout.view","layout.add","layout.modify","layout.export","template.view","template.add","template.modify","resolution.view","resolution.add","resolution.modify","campaign.view","campaign.add","campaign.modify","tag.view","tag.tagging","user.profile"]'
+                    ],
+                    [
+                        'group' => 'Playlist Manager',
+                        'description' => 'Management of specific Playlists to edit / replace Media only.',
+                        'defaultHomepageId' => 'icondashboard.view',
+                        'isUserSpecific' => 0,
+                        'isEveryone' => 0,
+                        'isSystemNotification' => 0,
+                        'isDisplayNotification' => 0,
+                        'isShownForAddUser' => 1,
+                        'features' => '["user.profile","dashboard.playlist"]'
+                    ],
+                    [
+                        'group' => 'Schedule Manager',
+                        'description' => 'Management of all features for the purpose of Event Scheduling only.',
+                        'defaultHomepageId' => 'icondashboard.view',
+                        'isUserSpecific' => 0,
+                        'isEveryone' => 0,
+                        'isSystemNotification' => 0,
+                        'isDisplayNotification' => 0,
+                        'isShownForAddUser' => 1,
+                        'features' => '["folder.view","schedule.view","schedule.agenda","schedule.add","schedule.modify","schedule.now","daypart.view","daypart.add","daypart.modify","user.profile"]'
+                    ],
+                    [
+                        'group' => 'Display Manager',
+                        'description' => 'Management of all features for the purpose of Display Administration only.',
                         'defaultHomepageId' => 'statusdashboard.view',
                         'isUserSpecific' => 0,
                         'isEveryone' => 0,
