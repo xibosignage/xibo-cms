@@ -1886,7 +1886,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissions(Request $request, Response $response,$entity, $id)
+    public function permissions(Request $request, Response $response, $entity, $id)
     {
         $entity = $this->parsePermissionsEntity($entity, $id);
 
@@ -2002,7 +2002,6 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @param string $entity
-     * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException

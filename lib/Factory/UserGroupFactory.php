@@ -283,6 +283,11 @@ class UserGroupFactory extends BaseFactory
             $params['notificationId'] = $parsedFilter->getInt('notificationId');
         }
 
+        if ($parsedFilter->getInt('isShownForAddUser') !== null) {
+            $body .= ' AND `group`.isShownForAddUser = :isShownForAddUser ';
+            $params['isShownForAddUser'] = $parsedFilter->getInt('isShownForAddUser');
+        }
+
         if ($parsedFilter->getInt('displayGroupId') !== null) {
             $body .= ' 
                 AND `group`.groupId IN (

@@ -33,9 +33,10 @@
             {% else %}
                 {% set addUserFormUrl = url_for("user.onboarding.form") %}
             {% endif %}
-            <button class="btn btn-success XiboFormButton" title="{% trans "Add a new User" %}" href="{{ addUserFormUrl }}"><i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Add User" %}</button>
+            <button id="user-add-button" class="btn btn-success XiboFormButton" title="{% trans "Add a new User" %}" href="{{ addUserFormUrl }}"><i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Add User" %}</button>
         {% endif %}
         <button class="btn btn-info XiboFormButton" title="{% trans "View my authenticated applications" %}" href="{{ url_for("user.applications") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "My Applications" %}</button>
+        <button class="btn btn-primary refresh-grid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
     </div>
 {% endblock %}
 
@@ -106,6 +107,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+
         $(document).ready(function() {
             var table = $("#users").DataTable({
                 "language": dataTablesLanguage,
@@ -189,6 +191,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing)
             dataTableAddButtons(table, $('#users_wrapper').find('.col-md-6').eq(1));
+
+            $(".refresh-grid").click(function() {
+                table.ajax.reload();
+            });
         });
 
         function userFormOpen(dialog) {
@@ -241,9 +247,9 @@
                     var libraryQuotaUnitsField = $(form).find("select[name=libraryQuotaUnits]");
                     var libraryQuota = libraryQuotaField.val();
 
-                    if (libraryQuotaUnitsField.val() == 'mb') {
+                    if (libraryQuotaUnitsField.val() === 'mb') {
                         libraryQuota = libraryQuota * 1024;
-                    } else if (libraryQuotaUnitsField.val() == 'gb') {
+                    } else if (libraryQuotaUnitsField.val() === 'gb') {
                         libraryQuota = libraryQuota * 1024 * 1024;
                     }
 
@@ -272,8 +278,14 @@
          * Callback when the onboarding form is opened.
          */
         function onboardingFormOpen(dialog) {
-            var navListItems = $('div.setup-panel div a'),
-                allWells = $('.setup-content');
+            $(dialog).find('[data-toggle="popover"]').popover();
+
+            // Init the folder panel
+            initFolderPanel(dialog);
+
+            var navListItems = $(dialog).find('div.setup-panel div a'),
+                allWells = $(dialog).find('.setup-content'),
+                stepWizard = $(dialog).find('.stepwizard');
 
             navListItems.click(function (e) {
                 e.preventDefault();
@@ -281,38 +293,82 @@
                     $item = $(this);
 
                 if (!$item.attr('disabled')) {
-                    navListItems.removeClass('btn-success').addClass('btn-default');
+                    // Set all step links to inactive
+                    navListItems
+                        .removeClass('btn-success')
+                        .addClass('btn-default');
+
+                    // Activate this specific one
                     $item.addClass('btn-success');
+
+                    // Hide all the panels and show this specific one
                     allWells.hide();
                     $target.show();
                     $target.find('input:eq(0)').focus();
+
+                    // Set the active panel on the links
+                    stepWizard.data("active", $target.prop("id"))
+
+                    // Is the next action to finish?
+                    if ($target.data("next") === "finished") {
+                        $(dialog).find("#onboarding-steper-next-button").html("{{ "Save"|trans }}");
+                    } else {
+                        $(dialog).find("#onboarding-steper-next-button").html("{{ "Next"|trans }}")
+                    }
                 }
             });
 
             // Add some buttons.
             $(dialog).find(".modal-footer")
-                .append($('<a id="dialog_btn_1" class="btn">').html("{{ "Next"|trans }}")
+                .append($('<a id="onboarding-steper-next-button" class="btn">').html("{{ "Next"|trans }}")
                     .addClass("btn-primary")
                     .click(function(e) {
                         e.preventDefault();
-                        var steps = $(".stepwizard");
-                            curStep = $("#" + steps.data("active")),
+                        var steps = $(dialog).find(".stepwizard"),
+                            curStep = $(dialog).find("#" + steps.data("active")),
                             curInputs = curStep.find("input[type='text'],input[type='url']"),
                             isValid = true;
 
-                            console.log("Next step is: " + curStep.data("next"));
-
                         // What is the next step?
-                        if (curStep.data("next") === "submit") {
-                            // Submit the form.
-                        } else if (curStep.data("next") === "onboarding-step-2" && $("input[name='userType']:checked").val() === "admin") {
+                        if (curStep.data("next") === "finished") {
+                            // Keep the form open
+                            var $form = $(dialog).find("#userOnboardingForm");
+                            $form.data("apply", true);
+                            // Submit the form thereby creating the user
+                            XiboFormSubmit($form, e, function(xhr) {
+                                // Callback
+                                if (xhr.success && xhr.id) {
+                                    // Submit the folder ownerships
+                                    var selected = $(dialog).find("#container-folder-tree").jstree("get_selected");
+                                    var groupIds = {};
+                                    groupIds[xhr.data.groupId] = {
+                                        "view": 1,
+                                        "edit": 1
+                                    };
+                                    $.ajax(permissionsUrl.replace(":entity", "Folder"), {
+                                        "method": "POST",
+                                        "data": {
+                                            "ids": selected.join(","),
+                                            "groupIds": groupIds
+                                        },
+                                        "error": function() {
+                                            toastr.error("{{ "Problem saving folder sharing, please check the User created." }}");
+                                        }
+                                    });
+                                } else {
+                                    toastr.error("{{ "Problem saving folder sharing, please check the User created." }}");
+                                }
+
+                                XiboDialogClose();
+                            });
+                        } else if (curStep.data("next") === "onboarding-step-2" && $("input[name='groupId']:checked").val() === "manual") {
                             // Load the user add form.
                             XiboDialogClose();
-                            $("#userAddButton").trigger("click");
+                            XiboFormRender("{{ url_for("user.add.form") }}");
                         } else {
                             var nextStepWizard = steps.find("a[href='#" + curStep.data("next") + "']");
 
-                            $(".form-group").removeClass("has-error");
+                            $(dialog).find(".form-group").removeClass("has-error");
                             for (var i = 0; i < curInputs.length; i++) {
                                 if (!curInputs[i].validity.valid) {
                                     isValid = false;
@@ -320,16 +376,44 @@
                                 }
                             }
 
+                            // Set the defaults.
+                            if (curStep.data("next") === "onboarding-step-2") {
+                                var $userGroupSelected = $("input[name='groupId']:checked");
+                                $(dialog).find("input[name=libraryQuota]").val($userGroupSelected.data("defaultLibraryQuota"));
+                                $(dialog).find("input[name=homePageId]").val($userGroupSelected.data("defaultHomepageId"));
+                            }
+
                             if (isValid) {
                                 nextStepWizard.removeAttr('disabled').trigger('click');
                             }
                         }
                     }))
-                .append($('<a id="dialog_btn_2" class="btn">').html("{{ "Close"|trans }}")
+                .append($('<a class="btn btn-default">').html("{{ "Close"|trans }}")
                     .click(function(e) {
                         e.preventDefault();
                         XiboDialogClose();
                     }));
+        }
+
+        function initFolderPanel(dialog) {
+            var $container = $(dialog).find("#container-folder-tree");
+
+            $container.jstree({
+                "plugins": ["checkbox"],
+                "themes" : {
+                    "responsive" : true
+                },
+                "core": {
+                    "data": {
+                        "url": foldersUrl
+                    }
+                },
+                "checkbox" : {
+                    "three_state" : false
+                },
+            }).on("ready.jstree", function(e, data) {
+                $(this).jstree("open_all");
+            });
         }
     </script>
     <style type="text/css">
@@ -390,6 +474,9 @@
         }
         .onboarding-form .checkbox+.checkbox, .onboarding-form .radio+.radio {
             margin-top: 8px;
+        }
+        .onboarding-form .has-error {
+            color: red;
         }
     </style>
 {% endblock %}

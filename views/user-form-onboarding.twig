@@ -25,7 +25,7 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Onboarding" %}
+    {% trans "Add New User" %}
 {% endblock %}
 
 {% block callBack %}onboardingFormOpen{% endblock %}
@@ -37,105 +37,90 @@
                 <div class="stepwizard-row setup-panel">
                     <div class="stepwizard-step col-xs-3">
                         <a href="#onboarding-step-1" type="button" class="btn btn-success btn-circle">1</a>
-                        <p><small>Type</small></p>
+                        <p><small>{{ "Create"|trans }}</small></p>
                     </div>
                     <div class="stepwizard-step col-xs-3">
                         <a href="#onboarding-step-2" type="button" class="btn btn-default btn-circle" disabled="disabled">2</a>
-                        <p><small>Content</small></p>
+                        <p><small>{{ "Credentials"|trans }}</small></p>
                     </div>
                     <div class="stepwizard-step col-xs-3">
                         <a href="#onboarding-step-3" type="button" class="btn btn-default btn-circle" disabled="disabled">3</a>
-                        <p><small>Displays</small></p>
-                    </div>
-                    <div class="stepwizard-step col-xs-3">
-                        <a href="#onboarding-step-4" type="button" class="btn btn-default btn-circle" disabled="disabled">4</a>
-                        <p><small>Credentials</small></p>
+                        <p><small>{{ "Sharing"|trans }}</small></p>
                     </div>
                 </div>
             </div>
-            <form id="userOnboardingForm" class="onboarding-form form-horizontal" role="form" method="post">
+            <form id="userOnboardingForm" class="onboarding-form form-horizontal" role="form" method="post" action="{{ url_for("user.add") }}">
                 <div class="panel panel-default setup-content" id="onboarding-step-1" data-next="onboarding-step-2">
                     <div class="panel-heading">
-                        <h3 class="panel-title">Type</h3>
+                        <h3 class="panel-title">{{ "Create"|trans }}</h3>
                     </div>
                     <div class="panel-body">
                         <p>
-                            The User account you are using has full access to the CMS and all of its features and configuration.
-                            If you are not adding an administrator type User, then it is likely you'll want to restrict and simplify
-                            what this new User can do.<br>
-                            <br>
-                            You may even want to create a simplified User for your own usage to administer the system in a way tailored
-                            to your usage.
+                            {{ "Select the role which most closely matches what you want this User to do, or select manual."|trans }}
+                            &nbsp;<span class="fa fa-info-circle"
+                                        title="{{ "What does this mean?"|trans }}"
+                                        data-toggle="popover"
+                                        data-placement="right"
+                                        data-html="true"
+                                        data-content="{{ "The User account you are using has full access to the CMS and all of its features and configuration. If you are not adding an administrator type User, then it is likely you'll want to restrict and simplify what this new User can do. <br><br>You may even want to create a simplified User for your own usage to administer the system in a way tailored to your needs."|trans }}"
+                            ></span>
                         </p>
-                        <div class="radio">
-                            <label>
-                                <input type="radio" name="userType" id="userType-admin" value="admin" checked>
-                                System Administrator. <br>
-                                Selecting this option will direct you to the Add User form where you can manually create a Super Admin.
-                            </label>
-                        </div>
-                        <div class="radio">
-                            <label>
-                                <input type="radio" name="userType" id="userType-playlist" value="playlist">
-                                Playlist Manager. <br>
-                                This is a user who controls the content on one or more Playlists.
-                            </label>
-                        </div>
-                        <div class="radio">
-                            <label>
-                                <input type="radio" name="userType" id="userType-display" value="display">
-                                Display Manager. <br>
-                                This is a user who administrates the Displays on the network.
-                            </label>
+                        <div class="card card-body bg-light">
+                            {% for group in groups %}
+                                <div class="radio">
+                                    <label>
+                                        <input type="radio"
+                                               data-default-library-quota="{{ group.defaultLibraryQuota }}"
+                                               data-default-homepage-id="{{ group.defaultHomepageId }}"
+                                               name="groupId"
+                                               value="{{ group.groupId }}">
+                                        {{ group.group }}<br>
+                                        {{ group.description }}
+                                    </label>
+                                </div>
+                            {% endfor %}
+                            <div class="radio">
+                                <label>
+                                    <input type="radio" name="groupId" value="manual">
+                                    {{ "Manually create a user"|trans }}<br>
+                                    {{ "Selecting this option will direct you to the Add User form where you can manually
+                                    create user."|trans }}
+                                </label>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="panel panel-default setup-content" style="display:none;" id="onboarding-step-2" data-next="onboarding-step-3">
                     <div class="panel-heading">
-                        <h3 class="panel-title">Content</h3>
+                        <h3 class="panel-title">{{ "Credentials"|trans }}</h3>
                     </div>
                     <div class="panel-body">
-                        <div class="form-group">
-                            <label class="control-label">Company Name</label>
-                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Name" />
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label">Company Address</label>
-                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Address" />
-                        </div>
+                        {{ forms.hidden("userTypeId", "3") }}
+                        {{ forms.hidden("libraryQuota", "0") }}
+                        {{ forms.hidden("homePageId", "") }}
+
+                        {% set title %}{% trans "User Name" %}{% endset %}
+                        {% set helpText %}{% trans "The Login Name of the user." %}{% endset %}
+                        {{ forms.input("userName", title, "", helpText, "", "required maxlength='50'") }}
+
+                        {% set title %}{% trans "Password" %}{% endset %}
+                        {% set helpText %}{% trans "The Password for this user." %}{% endset %}
+                        {{ forms.password("password", title, "", helpText, "", "required") }}
+
+                        {% set title %}{% trans "Email" %}{% endset %}
+                        {% set helpText %}{% trans "The Email Address for this user." %}{% endset %}
+                        {{ forms.email("email", title, "", helpText) }}
                     </div>
                 </div>
 
-                <div class="panel panel-default setup-content" style="display:none;" id="onboarding-step-3" data-next="onboarding-step-4">
+                <div class="panel panel-default setup-content" style="display:none;" id="onboarding-step-3" data-next="finished">
                     <div class="panel-heading">
-                        <h3 class="panel-title">Schedule</h3>
+                        <h3 class="panel-title">{{ "Content"|trans }}</h3>
                     </div>
                     <div class="panel-body">
-                        <div class="form-group">
-                            <label class="control-label">Company Name</label>
-                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Name" />
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label">Company Address</label>
-                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Address" />
-                        </div>
-                    </div>
-                </div>
-
-                <div class="panel panel-default setup-content" style="display:none;" id="onboarding-step-4" data-next="submit">
-                    <div class="panel-heading">
-                        <h3 class="panel-title">Cargo</h3>
-                    </div>
-                    <div class="panel-body">
-                        <div class="form-group">
-                            <label class="control-label">Company Name</label>
-                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Name" />
-                        </div>
-                        <div class="form-group">
-                            <label class="control-label">Company Address</label>
-                            <input maxlength="200" type="text" required="required" class="form-control" placeholder="Enter Company Address" />
-                        </div>
+                        <p>{{ "Select any folders the new user should have shared with them for viewing and editing."|trans }}</p>
+                        <div id="container-folder-tree" class="card card-body bg-light"></div>
                     </div>
                 </div>
             </form>

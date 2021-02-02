@@ -1035,12 +1035,15 @@ class User implements \JsonSerializable, UserEntityInterface
         ]);
 
         // Add the user group
-        /* @var UserGroup $group */
         $group = $this->userGroupFactory->create($this->userName, $this->libraryQuota);
         $group->setOwner($this);
         $group->isSystemNotification = $this->isSystemNotification;
         $group->isDisplayNotification = $this->isDisplayNotification;
         $group->save();
+
+        // Assert the groupIds on the user (we do this so we have group in the API return)
+        $this->groupId = $group->getId();
+        $this->group = $group->group;
     }
 
     /**

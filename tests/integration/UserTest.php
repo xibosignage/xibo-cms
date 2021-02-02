@@ -53,9 +53,10 @@ class UserTest extends LocalWebTestCase
     public function testAdd()
     {
         $group = $this->getEntityProvider()->get('/group', ['userGroup' => 'Users'])[0];
+        $userName = Random::generateString();
 
         $response = $this->sendRequest('POST','/user', [
-            'userName' => Random::generateString(),
+            'userName' => $userName,
             'userTypeId' => 3,
             'homePageId' => 'icondashboard.view',
             'password' => 'newUserPassword',
@@ -70,7 +71,7 @@ class UserTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $this->assertObjectHasAttribute('id', $object, $response->getBody());
 
-        $this->assertSame('newUser', $object->data->userName);
+        $this->assertSame($userName, $object->data->userName);
         $this->assertSame(3, $object->data->userTypeId);
         $this->assertSame('icondashboard.view', $object->data->homePageId);
 
