@@ -83,7 +83,7 @@ class UserTest extends LocalWebTestCase
     {
         $group = $this->getEntityProvider()->get('/group', ['userGroup' => 'Users'])[0];
 
-        $response = $this->sendRequest('POST','/user', [
+        $response = $this->sendRequest('POST', '/user', [
             'userName' => Random::generateString(),
             'userTypeId' => 3,
             'homePageId' => 'icondashboard.view',

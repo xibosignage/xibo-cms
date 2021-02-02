@@ -22,7 +22,6 @@
 
 namespace Xibo\Tests\integration;
 
-
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Exception\XiboApiException;
 use Xibo\Tests\LocalWebTestCase;
@@ -57,7 +56,6 @@ class UserGroupTest extends LocalWebTestCase
             // Check our key parts match.
             $this->assertSame($params['group'], $group['group'], 'Name does not match');
             $this->assertSame($params['description'], $group['description'], 'Description does not match');
-
         } catch (XiboApiException $e) {
             $this->fail('Group not found. e = ' . $e->getMessage());
         }
