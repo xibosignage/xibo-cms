@@ -44,12 +44,12 @@
         <script src="{{ theme.rootUri() }}dist/vendor/bootstrap-fix/bootstrap-ckeditor-fix.js?v={{ version }}&rev={{revision}}"></script>
 
         {# Import XIBO js files #}
+        <script src="{{ theme.rootUri() }}dist/xibo.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
         <script src="{{ theme.rootUri() }}dist/core/xibo-cms.js?v={{ version }}&rev={{revision}}"></script>
         <script src="{{ theme.rootUri() }}dist/core/xibo-forms.js?v={{ version }}&rev={{revision}}"></script>
         <script src="{{ theme.rootUri() }}dist/core/xibo-preview-timeline.js?v={{ version }}&rev={{revision}}"></script>
         <script src="{{ theme.rootUri() }}dist/core/xibo-calendar.js?v={{ version }}&rev={{revision}}"></script>
         <script src="{{ theme.rootUri() }}dist/core/xibo-datasets.js?v={{ version }}&rev={{revision}}"></script>
-
 
         {# Dates #}
         {% if settings.CALENDAR_TYPE == "Jalali" %}

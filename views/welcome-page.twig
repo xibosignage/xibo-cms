@@ -185,7 +185,7 @@
         $(document).ready(function () {
             $('.tour-card').click(function() {
                 // Handle click to start tour
-                var startTourResult = startTour(cmsTours[$(this).data('tourName')]);
+                var startTourResult = cmsTours[$(this).data('tourName')].init();
 
                 // Update buttons status
                 if(startTourResult) {
@@ -203,10 +203,6 @@
                 var tourName = $(this).data('tourName');
                 var tourSeen = (localStorage[tourName + '_seen'] == 1);
                 var tourPlaying = (localStorage.tour_playing == tourName);
-
-                console.log(tourName);
-                console.log('tourSeen: ' + tourSeen);
-                console.log('tourPlaying: ' + tourPlaying);
 
                 // Reset to original state by removing all temporary classes/elements
                 $(this).find('.tour-icon').remove();
