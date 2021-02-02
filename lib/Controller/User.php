@@ -663,9 +663,11 @@ class User extends Base
         $group->save(['validate' => false]);
 
         // Handle enabled features for the homepage.
-        $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
-        if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
-            throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
+        if (!empty($user->homePageId)) {
+            $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
+            if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
+                throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
+            }
         }
 
         // Return
@@ -2487,7 +2489,11 @@ class User extends Base
         }
 
         $this->getState()->template = 'user-form-onboarding';
-        $this->getState()->setData([]);
+        $this->getState()->setData([
+            'groups' => $this->userGroupFactory->query(null, [
+                'isShownForAddUser' => 1
+            ])
+        ]);
 
         return $this->render($request, $response);
     }
