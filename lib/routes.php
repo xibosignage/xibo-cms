@@ -530,8 +530,8 @@ $app->put('/user/password/forceChange', ['\Xibo\Controller\User','forceChangePas
 // permissions
 $app->get('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissionsGrid'])->setName('user.permissions');
 $app->get('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMultiGrid'])->setName('user.permissions.multi');
-$app->post('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissions']);
-$app->post('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMulti']);
+$app->post('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissions'])->setName('user.set.permissions');
+$app->post('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMulti'])->setName('user.set.permissions.multi');
 
 $app->post('/user', ['\Xibo\Controller\User','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['user.add']))

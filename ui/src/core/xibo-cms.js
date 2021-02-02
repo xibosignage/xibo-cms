@@ -2942,7 +2942,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
                                     "label": translations.folderTreeShare,
                                     "_class": "XiboFormRender",
                                     "action": function (obj) {
-                                        XiboFormRender('/user/permissions/form/Folder/'+$node.id);
+                                        XiboFormRender(permissionsUrl.replace(":entity", "Folder/") + $node.id);
                                     }
                                 }
                             }
