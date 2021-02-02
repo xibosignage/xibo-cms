@@ -573,7 +573,7 @@ class User implements \JsonSerializable, UserEntityInterface
         }
 
         // Basic validation
-        if (!v::stringType()->notEmpty()->validate($this->password)) {
+        if (!v::stringType()->notEmpty()->validate($password)) {
             throw new InvalidArgumentException(__('Please enter a Password.'), 'password');
         }
 
