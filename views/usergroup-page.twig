@@ -140,23 +140,34 @@
             });
         });
 
+        function handleLibraryQuotaField(libraryQuotaField, libraryQuotaUnitsField) {
+            var libraryQuota = libraryQuotaField.val();
+
+            if (libraryQuotaUnitsField.val() === 'mb') {
+                libraryQuota = libraryQuota * 1024;
+            } else if (libraryQuotaUnitsField.val() === 'gb') {
+                libraryQuota = libraryQuota * 1024 * 1024;
+            }
+
+            // Set the field
+            libraryQuotaField.prop('value', libraryQuota);
+        }
+
         function userGroupFormOpen() {
             // Bind to the add form submit
             $(".UserGroupForm").validate({
                 submitHandler: function (form) {
                     // Grab and alter the value in the library quota field
-                    var libraryQuotaField = $(form).find("input[name=libraryQuota]");
-                    var libraryQuotaUnitsField = $(form).find("select[name=libraryQuotaUnits]");
-                    var libraryQuota = libraryQuotaField.val();
+                    handleLibraryQuotaField(
+                        $(form).find("input[name=libraryQuota]"),
+                        $(form).find("select[name=libraryQuotaUnits]")
+                    );
 
-                    if (libraryQuotaUnitsField.val() == 'mb') {
-                        libraryQuota = libraryQuota * 1024;
-                    } else if (libraryQuotaUnitsField.val() == 'gb') {
-                        libraryQuota = libraryQuota * 1024 * 1024;
-                    }
-
-                    // Set the field
-                    libraryQuotaField.prop('value', libraryQuota);
+                    // Grab and alter the value in the default library quota field
+                    handleLibraryQuotaField(
+                        $(form).find("input[name=defaultLibraryQuota]"),
+                        $(form).find("select[name=defaultLibraryQuotaUnits]")
+                    );
 
                     XiboFormSubmit(form);
                 },
