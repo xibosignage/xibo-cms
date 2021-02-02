@@ -2895,7 +2895,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
                     var buttonPermissions = null;
 
                     $.ajax({
-                        url: "/folders/contextButtons/"+$node.id,
+                        url: foldersUrl + "/contextButtons/"+$node.id,
                         method: "GET",
                         dataType: "json",
                         success: function (data) {
@@ -3005,7 +3005,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
             dataObject['text'] = data.text;
 
             $.ajax({
-                url: "/folders/"+folderId,
+                url: foldersUrl + "/" + folderId,
                 method: "PUT",
                 dataType: "json",
                 data: dataObject,
@@ -3029,7 +3029,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
             // we need to change it to the folderId we have in our folder table
             // rename happens just after add, therefore this needs to be set as soon as possible
             $.ajax({
-                url: "/folders",
+                url: foldersUrl,
                 method: "POST",
                 dataType: "json",
                 data: dataObject,
@@ -3053,7 +3053,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
             // delete has a check built-in, if it fails to remove node, it will show suitable message in toast
             // and reload the tree
             $.ajax({
-                url: "/folders/"+folderId,
+                url: foldersUrl + "/"+folderId,
                 method: "DELETE",
                 dataType: "json",
                 data: dataObject,

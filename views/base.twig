@@ -119,6 +119,7 @@
             var clockUrl = "{{ url_for("clock") }}";
             var calendarLanguage = "{{ translate.jsShortLocale }}";
             var pingUrl = "{{ url_for("ping") }}";
+            var foldersUrl = "{{ url_for("folders.search") }}";
 
             {% autoescape "js" %}
             var dataTablesLanguage = {
