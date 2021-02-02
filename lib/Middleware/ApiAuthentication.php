@@ -80,6 +80,11 @@ class ApiAuthentication implements Middleware
                     $encryptionKey
                 );
 
+                // Default scope
+                // must be set before we enable any grant types.
+                $server->setDefaultScope('all');
+
+                // Grant Types
                 $server->enableGrantType(
                     new \League\OAuth2\Server\Grant\ClientCredentialsGrant(),
                     new \DateInterval('PT1H')
@@ -93,9 +98,6 @@ class ApiAuthentication implements Middleware
                     ),
                     new \DateInterval('PT1H')
                 );
-
-                // Default scope
-                $server->setDefaultScope('all');
 
                 return $server;
             } catch (\LogicException $exception) {
