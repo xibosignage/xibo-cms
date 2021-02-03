@@ -355,11 +355,11 @@
                                             toastr.error("{{ "Problem saving folder sharing, please check the User created." }}");
                                         }
                                     });
+
+                                    XiboDialogClose();
                                 } else {
                                     toastr.error("{{ "Problem saving folder sharing, please check the User created." }}");
                                 }
-
-                                XiboDialogClose();
                             });
                         } else if (curStep.data("next") === "onboarding-step-2" && $("input[name='groupId']:checked").val() === "manual") {
                             // Load the user add form.
