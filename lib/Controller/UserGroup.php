@@ -347,13 +347,6 @@ class UserGroup extends Base
      *      type="integer",
      *      required=false
      *   ),
-     *  @SWG\Parameter(
-     *      name="defaultLibraryQuota",
-     *      in="formData",
-     *      description="If this user has been created via the onboarding form, this should be the default library quota",
-     *      type="integer",
-     *      required=false
-     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -392,7 +385,6 @@ class UserGroup extends Base
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
             $group->isShownForAddUser = $sanitizedParams->getCheckbox('isShownForAddUser');
             $group->defaultHomepageId = $sanitizedParams->getString('defaultHomepageId');
-            $group->defaultLibraryQuota = $sanitizedParams->getInt('defaultLibraryQuota');
         }
 
         // Save
@@ -472,13 +464,6 @@ class UserGroup extends Base
      *      type="integer",
      *      required=false
      *   ),
-     *  @SWG\Parameter(
-     *      name="defaultLibraryQuota",
-     *      in="formData",
-     *      description="If this user has been created via the onboarding form, this should be the default library quota",
-     *      type="integer",
-     *      required=false
-     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -525,7 +510,6 @@ class UserGroup extends Base
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
             $group->isShownForAddUser = $sanitizedParams->getCheckbox('isShownForAddUser');
             $group->defaultHomepageId = $sanitizedParams->getString('defaultHomepageId');
-            $group->defaultLibraryQuota = $sanitizedParams->getInt('defaultLibraryQuota');
         }
 
         // Save

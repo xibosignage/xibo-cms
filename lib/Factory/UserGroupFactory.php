@@ -209,7 +209,6 @@ class UserGroupFactory extends BaseFactory
             `group`.isDisplayNotification,
             `group`.isShownForAddUser,
             `group`.defaultHomepageId,
-            `group`.defaultLibraryQuota,
             `group`.features
         ';
 
@@ -319,7 +318,7 @@ class UserGroupFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $group = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'isUserSpecific', 'isEveryone', 'libraryQuota', 'isSystemNotification', 'isDisplayNotification', 'isShownForAddUser', 'defaultLibraryQuota'
+                    'isUserSpecific', 'isEveryone', 'libraryQuota', 'isSystemNotification', 'isDisplayNotification', 'isShownForAddUser'
                 ],
                 'stringProperties' => [
                     'defaultHomepageId'

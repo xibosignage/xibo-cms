@@ -379,7 +379,6 @@
                             // Set the defaults.
                             if (curStep.data("next") === "onboarding-step-2") {
                                 var $userGroupSelected = $("input[name='groupId']:checked");
-                                $(dialog).find("input[name=libraryQuota]").val($userGroupSelected.data("defaultLibraryQuota"));
                                 $(dialog).find("input[name=homePageId]").val($userGroupSelected.data("defaultHomepageId"));
                             }
 
