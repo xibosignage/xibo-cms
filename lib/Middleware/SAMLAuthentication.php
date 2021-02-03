@@ -72,12 +72,12 @@ class SAMLAuthentication extends AuthenticationBase
         $app->get('/saml/login', function (Request $request, Response $response) {
             // Initiate SAML SSO
             $auth = new Auth($this->getConfig()->samlSettings);
-            $auth->login();
+            return $auth->login();
         });
 
         // SAML Logout
         $app->get('/saml/logout', function (Request $request, Response $response) {
-            $this->samlLogout($request,  $response);
+            return $this->samlLogout($request,  $response);
         })->setName('saml.logout');
 
         // SAML Assertion Consumer Endpoint
