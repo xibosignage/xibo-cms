@@ -116,9 +116,6 @@ var dt_extras = [
      ];
 dt_extras.forEach(function(e) {e(window, window.$);});
 
-// bootstrap-tour
-require('bootstrap-tourist/bootstrap-tourist.js');
-
 //--- Add Local JS files ---
 // jquery-message-queuing
 require('./src/vendor/jquery-message-queuing/jquery.ba-jqmq.min.js');

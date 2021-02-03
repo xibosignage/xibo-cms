@@ -51,7 +51,6 @@
     "bootstrap-slider": "^10.6.2",
     "bootstrap-switch": "3.3.4",
     "bootstrap-tagsinput": "~0.7.1",
-    "bootstrap-tourist": "^0.3.2",
     "chart.js": "^2.9.3",
     "ckeditor": "^4.12.1",
     "clean-webpack-plugin": "^0.1.17",
