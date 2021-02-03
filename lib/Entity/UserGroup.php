@@ -104,12 +104,6 @@ class UserGroup
     public $defaultHomepageId;
 
     /**
-     * @SWG\Property(description="Default Library Quota for new users")
-     * @var int
-     */
-    public $defaultLibraryQuota;
-
-    /**
      * @SWG\Property(description="Features this User Group has direct access to")
      * @var array
      */
@@ -364,8 +358,7 @@ class UserGroup
                  `isSystemNotification`, 
                  `isDisplayNotification`,
                  `isShownForAddUser`,
-                 `defaultHomepageId`,
-                 `defaultLibraryQuota`
+                 `defaultHomepageId`
               )
               VALUES (
                       :group, 
@@ -375,8 +368,7 @@ class UserGroup
                       :isSystemNotification, 
                       :isDisplayNotification,
                       :isShownForAddUser,
-                      :defaultHomepageId,
-                      :defaultLibraryQuota
+                      :defaultHomepageId
               )
         ', [
             'group' => $this->group,
@@ -386,8 +378,7 @@ class UserGroup
             'isSystemNotification' => $this->isSystemNotification,
             'isDisplayNotification' => $this->isDisplayNotification,
             'isShownForAddUser' => $this->isShownForAddUser,
-            'defaultHomepageId' => $this->defaultHomepageId,
-            'defaultLibraryQuota' => $this->defaultLibraryQuota ?? 0
+            'defaultHomepageId' => $this->defaultHomepageId
         ]);
     }
 
@@ -404,8 +395,7 @@ class UserGroup
             `isSystemNotification` = :isSystemNotification,
             `isDisplayNotification` = :isDisplayNotification,
             `isShownForAddUser` = :isShownForAddUser,
-            `defaultHomepageId` = :defaultHomepageId,
-            `defaultLibraryQuota` = :defaultLibraryQuota
+            `defaultHomepageId` = :defaultHomepageId
            WHERE groupId = :groupId
         ', [
             'groupId' => $this->groupId,
@@ -415,8 +405,7 @@ class UserGroup
             'isSystemNotification' => $this->isSystemNotification,
             'isDisplayNotification' => $this->isDisplayNotification,
             'isShownForAddUser' => $this->isShownForAddUser,
-            'defaultHomepageId' => $this->defaultHomepageId,
-            'defaultLibraryQuota' => $this->defaultLibraryQuota ?? 0
+            'defaultHomepageId' => $this->defaultHomepageId
         ]);
     }
 

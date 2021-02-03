@@ -70,7 +70,6 @@
                                 <div class="radio">
                                     <label>
                                         <input type="radio"
-                                               data-default-library-quota="{{ group.defaultLibraryQuota }}"
                                                data-default-homepage-id="{{ group.defaultHomepageId }}"
                                                name="groupId"
                                                value="{{ group.groupId }}">
@@ -97,7 +96,6 @@
                     </div>
                     <div class="panel-body">
                         {{ forms.hidden("userTypeId", "3") }}
-                        {{ forms.hidden("libraryQuota", "0") }}
                         {{ forms.hidden("homePageId", "") }}
 
                         {% set title %}{% trans "User Name" %}{% endset %}

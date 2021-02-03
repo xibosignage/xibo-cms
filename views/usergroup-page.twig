@@ -163,12 +163,6 @@
                         $(form).find("select[name=libraryQuotaUnits]")
                     );
 
-                    // Grab and alter the value in the default library quota field
-                    handleLibraryQuotaField(
-                        $(form).find("input[name=defaultLibraryQuota]"),
-                        $(form).find("select[name=defaultLibraryQuotaUnits]")
-                    );
-
                     XiboFormSubmit(form);
                 },
                 errorElement: "span",

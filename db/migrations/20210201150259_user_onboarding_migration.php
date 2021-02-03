@@ -30,9 +30,6 @@ class UserOnboardingMigration extends AbstractMigration
                 'default' => null,
                 'limit' => '255'
             ])
-            ->addColumn('defaultLibraryQuota', 'integer', [
-                'default' => 0
-            ])
             ->save();
 
         // If we only have the preset user groups, add some more.

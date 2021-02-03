@@ -91,7 +91,7 @@
                             {{ forms.checkbox("isShownForAddUser", title, 0, helpText) }}
 
                             {% set title %}{% trans "Default Homepage" %}{% endset %}
-                            {% set helpText %}{% trans "Default Homepage users created with this group." %}{% endset %}
+                            {% set helpText %}{% trans "Default Homepage for users created with this group." %}{% endset %}
                             {% set homepagesUrl %}{{ url_for("user.homepages.search") }}?userTypeId=1{% endset %}
                             {% set attributes = [
                                 { name: "data-live-search", value: "true" },
@@ -106,23 +106,6 @@
                                 { name: "data-initial-value", value: group.defaultHomepageId }
                             ] %}
                             {{ forms.dropdown("defaultHomepageId", "single", title, "", null, "homepage", "title", helpText, "pagedSelect", "", "", "", attributes) }}
-
-                            {% set title %}{% trans "Default Library Quota" %}{% endset %}
-                            {% set helpText %}{% trans "The quota that should be applied to new users created with this group. Enter 0 for no quota." %}{% endset %}
-                            <div class="form-group row">
-                                <label class="col-sm-2 control-label" for="defaultLibraryQuota">{{ title }}</label>
-                                <div class="col-sm-6">
-                                    <input class="form-control" name="defaultLibraryQuota" type="number" id="defaultLibraryQuota" value="0" />
-                                    <span class="help-block">{{ helpText }}</span>
-                                </div>
-                                <div class="col-sm-4">
-                                    <select name="defaultLibraryQuotaUnits" class="form-control">
-                                        <option value="kb">KiB</option>
-                                        <option value="mb">MiB</option>
-                                        <option value="gb">GiB</option>
-                                    </select>
-                                </div>
-                            </div>
                         </div>
                     {% endif %}
                 </div>
