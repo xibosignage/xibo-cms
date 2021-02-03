@@ -6,7 +6,8 @@ const templates = {
     twittermetroColorsTemplate: require('../templates/form-helpers-twitter-metro-colors.hbs'),
     chartColorsTemplate: require('../templates/form-helpers-chart-colors.hbs'),
     chartGraphConfigTemplate: require('../templates/form-helpers-chart-graph-config.hbs'),
-    worldClockTemplate: require('../templates/form-helpers-world-clock.hbs')
+    worldClockTemplate: require('../templates/form-helpers-world-clock.hbs'),
+    menuProductOptions: require('../templates/form-helpers-menuboard-product.hbs')
 };
 
 let formHelpers = function() {

@@ -598,7 +598,8 @@ class Library extends Base
             'assignable' => $parsedQueryParams->getInt('assignable'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'notPlayerSoftware' => 1,
-            'notSavedReport' => 1
+            'notSavedReport' => 1,
+            'onlyMenuBoardAllowed' => $parsedQueryParams->getInt('onlyMenuBoardAllowed')
         ], $parsedQueryParams));
 
         // Add some additional row content

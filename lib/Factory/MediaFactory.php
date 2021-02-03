@@ -469,6 +469,11 @@ class MediaFactory extends BaseFactory
         return $this->query(null, ['disableUserCheck' => 1, 'layoutId' => $layoutId, 'isEdited' => $edited, 'excludeDynamicPlaylistMedia' => $excludeDynamicPlaylistMedia]);
     }
 
+    public function getForMenuBoards()
+    {
+        return $this->query(null, ['onlyMenuBoardAllowed' => 1]);
+    }
+
     /**
      * @param null $sortOrder
      * @param array $filterBy
@@ -788,6 +793,10 @@ class MediaFactory extends BaseFactory
         if ($sanitizedFilter->getInt('folderId') !== null) {
             $body .= " AND media.folderId = :folderId ";
             $params['folderId'] = $sanitizedFilter->getInt('folderId');
+        }
+
+        if ($sanitizedFilter->getInt('onlyMenuBoardAllowed') !== null) {
+            $body .= ' AND ( media.type = \'image\' OR media.type = \'video\' ) ';
         }
 
         // Sorting?

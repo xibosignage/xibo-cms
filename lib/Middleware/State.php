@@ -710,6 +710,49 @@ class State implements Middleware
                     $c->get('view')
                 );
             },
+            '\Xibo\Controller\MenuBoard' => function(ContainerInterface $c) {
+                return new \Xibo\Controller\MenuBoard(
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('state'),
+                    $c->get('user'),
+                    $c->get('helpService'),
+                    $c->get('configService'),
+                    $c->get('menuBoardFactory'),
+                    $c->get('userFactory'),
+                    $c->get('folderFactory'),
+                    $c->get('view')
+                );
+            },
+            '\Xibo\Controller\MenuBoardCategory' => function(ContainerInterface $c) {
+                return new \Xibo\Controller\MenuBoardCategory(
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('state'),
+                    $c->get('user'),
+                    $c->get('helpService'),
+                    $c->get('configService'),
+                    $c->get('menuBoardFactory'),
+                    $c->get('menuBoardCategoryFactory'),
+                    $c->get('mediaFactory'),
+                    $c->get('view')
+                );
+            },
+            '\Xibo\Controller\MenuBoardProduct' => function(ContainerInterface $c) {
+                return new \Xibo\Controller\MenuBoardProduct(
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('state'),
+                    $c->get('user'),
+                    $c->get('helpService'),
+                    $c->get('configService'),
+                    $c->get('menuBoardFactory'),
+                    $c->get('menuBoardCategoryFactory'),
+                    $c->get('menuBoardProductOptionFactory'),
+                    $c->get('mediaFactory'),
+                    $c->get('view')
+                );
+            },
             '\Xibo\Controller\PlaylistDashboard' => function(ContainerInterface $c) {
                 return new \Xibo\Controller\PlaylistDashboard(
                     $c->get('logService'),
@@ -1314,6 +1357,31 @@ class State implements Middleware
                     $c->get('permissionFactory'),
                     $c->get('tagFactory'),
                     $c->get('playlistFactory')
+                );
+            },
+            'menuBoardCategoryFactory' => function(ContainerInterface $c) {
+                return new \Xibo\Factory\MenuBoardCategoryFactory(
+                    $c->get('store'),
+                    $c->get('logService'),
+                    $c->get('sanitizerService')
+                );
+            },
+            'menuBoardProductOptionFactory' => function(ContainerInterface $c) {
+                return new \Xibo\Factory\MenuBoardProductOptionFactory(
+                    $c->get('store'),
+                    $c->get('logService'),
+                    $c->get('sanitizerService')
+                );
+            },
+            'menuBoardFactory' => function(ContainerInterface $c) {
+                return new \Xibo\Factory\MenuBoardFactory(
+                    $c->get('store'),
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('user'),
+                    $c->get('userFactory'),
+                    $c->get('permissionFactory'),
+                    $c->get('menuBoardCategoryFactory')
                 );
             },
             'moduleFactory' => function(ContainerInterface $c) {

@@ -30,7 +30,7 @@
             {% endif %}
         {% endif %}
 
-        {% set countViewable = currentUser.featureEnabledCount(["library.view", "playlist.view", "dataset.view"]) %}
+        {% set countViewable = currentUser.featureEnabledCount(["library.view", "playlist.view", "dataset.view", "menuboard.view"]) %}
         {% if countViewable > 0 %}
             <li class="sidebar-title"><a>{% trans "Library" %}</a></li>
             {% if currentUser.featureEnabled("playlist.view") %}
@@ -43,6 +43,10 @@
 
             {% if currentUser.featureEnabled("dataset.view") %}
                 <li class="sidebar-list"><a href="{{ url_for("dataset.view") }}">{% trans "DataSets" %}</a></li>
+            {% endif %}
+
+            {% if currentUser.featureEnabled("menuboard.view") %}
+                <li class="sidebar-list"><a href="{{ url_for("menuBoard.view") }}">{% trans "Menu Boards" %}</a></li>
             {% endif %}
         {% endif %}
 

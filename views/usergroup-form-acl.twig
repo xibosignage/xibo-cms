@@ -142,11 +142,14 @@
                             </tbody>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Library"|trans, "Media Library that stores file based content for use in Layouts, DataSets and Playlists"|trans, isUserSpecific) }}
+                                {{ flow.featureTitleRow("Library"|trans, "Media Library that stores file based content for use in Layouts, DataSets, Playlists and Menu Boards"|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("library") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("playlist-design") %}
+                                    {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
+                                {% endfor %}
+                                {% for customFeature in userGroupFactory.getFeaturesByGroup("menuboard-design") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
                             </tbody>

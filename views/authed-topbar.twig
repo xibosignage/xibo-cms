@@ -70,7 +70,7 @@
         {% endif %}
     {% endif %}
 
-    {% set countViewable = currentUser.featureEnabledCount(["library.view", "playlist.view", "dataset.view"]) %}
+    {% set countViewable = currentUser.featureEnabledCount(["library.view", "playlist.view", "dataset.view", "menuboard.view"]) %}
     {% if countViewable > 0 %}
         {% if countViewable > 1 %}
         <li class="nav-item dropdown">
@@ -87,6 +87,10 @@
 
             {% if currentUser.featureEnabled("dataset.view") %}
                 <a class="dropdown-item" href="{{ url_for("dataset.view") }}">{% trans "DataSets" %}</a>
+            {% endif %}
+
+            {% if currentUser.featureEnabled("menuboard.view") %}
+                <a class="dropdown-item" href="{{ url_for("menuBoard.view") }}">{% trans "Menu Boards" %}</a>
             {% endif %}
         {% if countViewable > 1 %}
             </div>
