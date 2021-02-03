@@ -572,6 +572,11 @@ class User implements \JsonSerializable, UserEntityInterface
             $this->checkPassword($oldPassword);
         }
 
+        // Basic validation
+        if (!v::stringType()->notEmpty()->validate($password)) {
+            throw new InvalidArgumentException(__('Please enter a Password.'), 'password');
+        }
+
         // Test against a policy if one exists
         $this->testPasswordAgainstPolicy($password);
 
@@ -836,11 +841,10 @@ class User implements \JsonSerializable, UserEntityInterface
      */
     public function validate()
     {
+        $this->getLog()->debug('Validate User');
+
         if (!v::alnum('_.-')->length(1, 50)->validate($this->userName) && !v::email()->validate($this->userName))
             throw new InvalidArgumentException(__('User name must be between 1 and 50 characters.'), 'userName');
-
-        if (!v::stringType()->notEmpty()->validate($this->password))
-            throw new InvalidArgumentException(__('Please enter a Password.'), 'password');
 
         if (!v::intType()->validate($this->libraryQuota))
             throw new InvalidArgumentException(__('Library Quota must be a whole number.'), 'libraryQuota');
@@ -885,8 +889,9 @@ class User implements \JsonSerializable, UserEntityInterface
             'saveUserOptions' => true
         ], $options);
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
         $this->getLog()->debug('Saving user. ' . $this);
 
@@ -1030,12 +1035,15 @@ class User implements \JsonSerializable, UserEntityInterface
         ]);
 
         // Add the user group
-        /* @var UserGroup $group */
         $group = $this->userGroupFactory->create($this->userName, $this->libraryQuota);
         $group->setOwner($this);
         $group->isSystemNotification = $this->isSystemNotification;
         $group->isDisplayNotification = $this->isDisplayNotification;
         $group->save();
+
+        // Assert the groupIds on the user (we do this so we have group in the API return)
+        $this->groupId = $group->getId();
+        $this->group = $group->group;
     }
 
     /**

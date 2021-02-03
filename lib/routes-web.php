@@ -306,6 +306,10 @@ $app->get('/user/form/add', ['\Xibo\Controller\User','addForm'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['users.add']))
     ->setName('user.add.form');
 
+$app->get('/user/form/onboarding', ['\Xibo\Controller\User','onboardingForm'])
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['users.add']))
+    ->setName('user.onboarding.form');
+
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/user/form/edit/{id}', ['\Xibo\Controller\User', 'editForm'])->setName('user.edit.form');
     $group->get('/user/form/delete/{id}', ['\Xibo\Controller\User', 'deleteForm'])->setName('user.delete.form');

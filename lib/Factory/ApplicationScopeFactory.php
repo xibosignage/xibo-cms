@@ -147,13 +147,29 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
      */
     public function finalizeScopes(array $scopes, $grantType, ClientEntityInterface $clientEntity, $userIdentifier = null)
     {
-        $this->getLog()->debug('finalizeScopes');
+        $this->getLog()->debug('finalizeScopes: provided scopes count = ' . count($scopes));
 
-        /** @var \Xibo\Entity\Application $clientEntity */
-        foreach ($clientEntity->scopes as $scope) {
-            $scopes[] = $this->getScopeEntityByIdentifier($scope->getIdentifier());
+        $finalScopes = [];
+
+        // $clientEntity->scopes are the valid scopes for this client.
+        // make sure all of the requested scopes are valid
+        foreach ($scopes as $scope) {
+            // See if we can find it
+            $found = false;
+
+            /** @var \Xibo\Entity\Application $clientEntity */
+            foreach ($clientEntity->scopes as $validScope) {
+                if ($validScope->getIdentifier() === $scope->getIdentifier()) {
+                    $found = true;
+                    break;
+                }
+            }
+
+            if ($found) {
+                $finalScopes[] = $scope;
+            }
         }
 
-        return $scopes;
+        return $finalScopes;
     }
 }

@@ -68,6 +68,12 @@ class UserGroup
     public $isEveryone = 0;
 
     /**
+     * @SWG\Property(description="Description of this User Group")
+     * @var string
+     */
+    public $description;
+
+    /**
      * @SWG\Property(description="This users library quota in bytes. 0 = unlimited")
      * @var int
      */
@@ -84,6 +90,18 @@ class UserGroup
      * @var int
      */
     public $isDisplayNotification = 0;
+
+    /**
+     * @SWG\Property(description="Is this Group shown in the list of choices when onboarding a new user")
+     * @var int
+     */
+    public $isShownForAddUser = 0;
+
+    /**
+     * @SWG\Property(description="Default Home page for new users")
+     * @var string
+     */
+    public $defaultHomepageId;
 
     /**
      * @SWG\Property(description="Features this User Group has direct access to")
@@ -331,13 +349,36 @@ class UserGroup
      */
     private function add()
     {
-        $this->groupId = $this->getStore()->insert('INSERT INTO `group` (`group`, IsUserSpecific, libraryQuota, `isSystemNotification`, `isDisplayNotification`)
-              VALUES (:group, :isUserSpecific, :libraryQuota, :isSystemNotification, :isDisplayNotification)', [
+        $this->groupId = $this->getStore()->insert('
+            INSERT INTO `group` (
+                 `group`, 
+                 IsUserSpecific,
+                 `description`,
+                 libraryQuota, 
+                 `isSystemNotification`, 
+                 `isDisplayNotification`,
+                 `isShownForAddUser`,
+                 `defaultHomepageId`
+              )
+              VALUES (
+                      :group, 
+                      :isUserSpecific, 
+                      :description, 
+                      :libraryQuota, 
+                      :isSystemNotification, 
+                      :isDisplayNotification,
+                      :isShownForAddUser,
+                      :defaultHomepageId
+              )
+        ', [
             'group' => $this->group,
             'isUserSpecific' => $this->isUserSpecific,
+            'description' => $this->description,
             'libraryQuota' => $this->libraryQuota,
             'isSystemNotification' => $this->isSystemNotification,
-            'isDisplayNotification' => $this->isDisplayNotification
+            'isDisplayNotification' => $this->isDisplayNotification,
+            'isShownForAddUser' => $this->isShownForAddUser,
+            'defaultHomepageId' => $this->defaultHomepageId
         ]);
     }
 
@@ -349,16 +390,22 @@ class UserGroup
         $this->getStore()->update('
           UPDATE `group` SET 
             `group` = :group, 
+            `description` = :description, 
             libraryQuota = :libraryQuota, 
             `isSystemNotification` = :isSystemNotification,
-            `isDisplayNotification` = :isDisplayNotification 
+            `isDisplayNotification` = :isDisplayNotification,
+            `isShownForAddUser` = :isShownForAddUser,
+            `defaultHomepageId` = :defaultHomepageId
            WHERE groupId = :groupId
         ', [
             'groupId' => $this->groupId,
             'group' => $this->group,
+            'description' => $this->description,
             'libraryQuota' => $this->libraryQuota,
             'isSystemNotification' => $this->isSystemNotification,
-            'isDisplayNotification' => $this->isDisplayNotification
+            'isDisplayNotification' => $this->isDisplayNotification,
+            'isShownForAddUser' => $this->isShownForAddUser,
+            'defaultHomepageId' => $this->defaultHomepageId
         ]);
     }
 

@@ -55,9 +55,6 @@ require('datatables.net-bs4/css/dataTables.bootstrap4.min.css');
 require('datatables.net-buttons-bs4/css/buttons.bootstrap4.min.css');
 //require('datatables.net-buttons-dt/css/buttons.dataTables.min.css');
 
-// bootstrap-tour
-require('bootstrap-tourist/bootstrap-tourist.css');
-
 require('./src/vendor/calendar/css/calendar.css');
 require('./src/vendor/jquery-file-upload/css/jquery.fileupload.css');
 require('./src/vendor/jquery-file-upload/css/jquery.fileupload-ui.css');

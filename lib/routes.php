@@ -466,7 +466,7 @@ $app->group('', function (RouteCollectorProxy $group) {
  *  Folders
  */
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.edit');
+    $group->get('/folders', ['\Xibo\Controller\Folder', 'grid'])->setName('folders.search');
     $group->get('/folders/contextButtons/{folderId}', ['\Xibo\Controller\Folder', 'getContextMenuButtons'])->setName('folders.context.buttons');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['folder.view']));
 
@@ -530,8 +530,8 @@ $app->put('/user/password/forceChange', ['\Xibo\Controller\User','forceChangePas
 // permissions
 $app->get('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissionsGrid'])->setName('user.permissions');
 $app->get('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMultiGrid'])->setName('user.permissions.multi');
-$app->post('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissions']);
-$app->post('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMulti']);
+$app->post('/user/permissions/{entity}/{id}', ['\Xibo\Controller\User','permissions'])->setName('user.set.permissions');
+$app->post('/user/permissions/{entity}', ['\Xibo\Controller\User','permissionsMulti'])->setName('user.set.permissions.multi');
 
 $app->post('/user', ['\Xibo\Controller\User','add'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['user.add']))

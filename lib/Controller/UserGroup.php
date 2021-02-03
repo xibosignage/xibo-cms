@@ -306,6 +306,13 @@ class UserGroup extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="decription",
+     *      in="formData",
+     *      description="A description of the User Group",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="libraryQuota",
      *      in="formData",
      *      description="The quota that should be applied (KiB). Provide 0 for no quota",
@@ -323,6 +330,20 @@ class UserGroup extends Base
      *      name="isDisplayNotification",
      *      in="formData",
      *      description="Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isShownForAddUser",
+     *      in="formData",
+     *      description="Flag (0, 1), should this Group be shown in the Add User onboarding form.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="defaultHomePageId",
+     *      in="formData",
+     *      description="If this user has been created via the onboarding form, this should be the default home page",
      *      type="integer",
      *      required=false
      *   ),
@@ -356,11 +377,14 @@ class UserGroup extends Base
         // Build a user entity and save it
         $group = $this->userGroupFactory->createEmpty();
         $group->group = $sanitizedParams->getString('group');
+        $group->description = $sanitizedParams->getString('description');
         $group->libraryQuota = $sanitizedParams->getInt('libraryQuota');
 
         if ($this->getUser()->userTypeId == 1) {
             $group->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
+            $group->isShownForAddUser = $sanitizedParams->getCheckbox('isShownForAddUser');
+            $group->defaultHomepageId = $sanitizedParams->getString('defaultHomepageId');
         }
 
         // Save
@@ -399,6 +423,13 @@ class UserGroup extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="decription",
+     *      in="formData",
+     *      description="A description of the User Group",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="libraryQuota",
      *      in="formData",
      *      description="The quota that should be applied (KiB). Provide 0 for no quota",
@@ -416,6 +447,20 @@ class UserGroup extends Base
      *      name="isDisplayNotification",
      *      in="formData",
      *      description="Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isShownForAddUser",
+     *      in="formData",
+     *      description="Flag (0, 1), should this Group be shown in the Add User onboarding form.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="defaultHomePageId",
+     *      in="formData",
+     *      description="If this user has been created via the onboarding form, this should be the default home page",
      *      type="integer",
      *      required=false
      *   ),
@@ -457,11 +502,14 @@ class UserGroup extends Base
         $group->load();
 
         $group->group = $sanitizedParams->getString('group');
+        $group->description = $sanitizedParams->getString('description');
         $group->libraryQuota = $sanitizedParams->getInt('libraryQuota');
 
         if ($this->getUser()->userTypeId == 1) {
             $group->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
+            $group->isShownForAddUser = $sanitizedParams->getCheckbox('isShownForAddUser');
+            $group->defaultHomepageId = $sanitizedParams->getString('defaultHomepageId');
         }
 
         // Save

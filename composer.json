@@ -94,7 +94,10 @@
     "phpunit/phpunit": "^5",
     "zircote/swagger-php": "^2",
     "doctrine/instantiator": "1.0.*",
-    "doctrine/annotations": "^1"
+    "doctrine/annotations": "^1",
+    "squizlabs/php_codesniffer": "3.*",
+    "exussum12/coverage-checker": "^0.11.2",
+    "micheh/phpcs-gitlab": "^1.1"
   },
   "autoload": {
     "psr-4": { "Xibo\\" : "lib/", "Xibo\\Custom\\": "custom/" }
