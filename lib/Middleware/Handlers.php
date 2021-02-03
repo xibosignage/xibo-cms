@@ -132,7 +132,15 @@ class Handlers
 
             // Handle 404's
             if ($exception instanceof HttpNotFoundException) {
-                return $twig->render($response, 'not-found.twig', $viewParams);
+                if ($request->isXhr()) {
+                    return $response->withJson([
+                        'success' => false,
+                        'error' => 404,
+                        'message' => __('Sorry we could not find that page.')
+                    ], 404);
+                } else {
+                    return $twig->render($response, 'not-found.twig', $viewParams);
+                }
             } else {
                 // Make a friendly message
                 $message = (!empty($exception->getMessage()))
