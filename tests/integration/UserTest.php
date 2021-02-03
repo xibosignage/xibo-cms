@@ -6,6 +6,7 @@
  */
 
 namespace Xibo\Tests\Integration;
+use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboUser;
 use Xibo\Tests\LocalWebTestCase;
 
@@ -52,9 +53,10 @@ class UserTest extends LocalWebTestCase
     public function testAdd()
     {
         $group = $this->getEntityProvider()->get('/group', ['userGroup' => 'Users'])[0];
+        $userName = Random::generateString();
 
         $response = $this->sendRequest('POST','/user', [
-            'userName' => 'newUser',
+            'userName' => $userName,
             'userTypeId' => 3,
             'homePageId' => 'icondashboard.view',
             'password' => 'newUserPassword',
@@ -69,11 +71,27 @@ class UserTest extends LocalWebTestCase
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
         $this->assertObjectHasAttribute('id', $object, $response->getBody());
 
-        $this->assertSame('newUser', $object->data->userName);
+        $this->assertSame($userName, $object->data->userName);
         $this->assertSame(3, $object->data->userTypeId);
         $this->assertSame('icondashboard.view', $object->data->homePageId);
 
         $userCheck = (new XiboUser($this->getEntityProvider()))->getById($object->id);
         $userCheck->delete();
+    }
+
+    public function testAddEmptyPassword()
+    {
+        $group = $this->getEntityProvider()->get('/group', ['userGroup' => 'Users'])[0];
+
+        $response = $this->sendRequest('POST', '/user', [
+            'userName' => Random::generateString(),
+            'userTypeId' => 3,
+            'homePageId' => 'icondashboard.view',
+            'password' => null,
+            'groupId' => $group['groupId'],
+            'libraryQuota' => 0
+        ]);
+
+        $this->assertSame(422, $response->getStatusCode(), $response->getBody());
     }
 }

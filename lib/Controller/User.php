@@ -663,9 +663,11 @@ class User extends Base
         $group->save(['validate' => false]);
 
         // Handle enabled features for the homepage.
-        $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
-        if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
-            throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
+        if (!empty($user->homePageId)) {
+            $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
+            if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
+                throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
+            }
         }
 
         // Return
@@ -1093,9 +1095,23 @@ class User extends Base
             }
         }
 
+        // Prepare output
         $this->getState()->template = 'grid';
+
+        // Have we asked for a specific homepage?
+        $homepageFilter = $params->getString('homepage');
+        if ($homepageFilter !== null) {
+            if (array_key_exists($homepageFilter, $homepages)) {
+                $this->getState()->recordsTotal = 1;
+                $this->getState()->setData([$homepages[$homepageFilter]]);
+                return $this->render($request, $response);
+            } else {
+                throw new NotFoundException(__('Homepage not found'));
+            }
+        }
+
         $this->getState()->recordsTotal = count($homepages);
-        $this->getState()->setData($homepages);
+        $this->getState()->setData(array_values($homepages));
 
         return $this->render($request, $response);
     }
@@ -1870,7 +1886,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\DuplicateEntityException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissions(Request $request, Response $response,$entity, $id)
+    public function permissions(Request $request, Response $response, $entity, $id)
     {
         $entity = $this->parsePermissionsEntity($entity, $id);
 
@@ -1986,7 +2002,6 @@ class User extends Base
      * @param Request $request
      * @param Response $response
      * @param string $entity
-     * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws AccessDeniedException
      * @throws ConfigurationException
@@ -2430,6 +2445,7 @@ class User extends Base
         $this->getUser()->setOptionValue('navigationMenuPosition', $parsedParams->getString('navigationMenuPosition'));
         $this->getUser()->setOptionValue('useLibraryDuration', $parsedParams->getCheckbox('useLibraryDuration'));
         $this->getUser()->setOptionValue('showThumbnailColumn', $parsedParams->getCheckbox('showThumbnailColumn'));
+        $this->getUser()->setOptionValue('isAlwaysUseManualAddUserForm', $parsedParams->getCheckbox('isAlwaysUseManualAddUserForm'));
 
         if ($this->getUser()->isSuperAdmin()) {
             $this->getUser()->showContentFrom = $parsedParams->getInt('showContentFrom');
@@ -2450,6 +2466,32 @@ class User extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => __('Updated Preferences')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * User Onboarding Form
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function onboardingForm(Request $request, Response $response)
+    {
+        // Only group admins or super admins can create Users.
+        if (!$this->getUser()->isSuperAdmin() && !$this->getUser()->isGroupAdmin()) {
+            throw new AccessDeniedException(__('Only super and group admins can create users'));
+        }
+
+        $this->getState()->template = 'user-form-onboarding';
+        $this->getState()->setData([
+            'groups' => $this->userGroupFactory->query(null, [
+                'isShownForAddUser' => 1
+            ])
         ]);
 
         return $this->render($request, $response);

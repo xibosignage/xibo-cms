@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -30,6 +30,7 @@
         {% if currentUser.isSuperAdmin() %}
             <button class="btn btn-success XiboFormButton" title="{% trans "Add a new User Group" %}" href="{{ url_for("group.add.form") }}"><i class="fa fa-users" aria-hidden="true"></i> {% trans "Add User Group" %}</button>
         {% endif %}
+        <button class="btn btn-primary refresh-grid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
     </div>
 {% endblock %}
 
@@ -64,9 +65,11 @@
                         <thead>
                             <tr>
                                 <th>{% trans "User Group" %}</th>
+                                <th>{% trans "Description" %}</th>
                                 <th>{% trans "Library Quota" %}</th>
                                 <th>{% trans "Receive System Notifications?" %}</th>
                                 <th>{% trans "Receive Display Notifications?" %}</th>
+                                <th>{% trans "Is shown for Add User?" %}</th>
                                 <th class="rowMenu"></th>
                             </tr>
                         </thead>
@@ -102,6 +105,7 @@
                 },
                 "columns": [
                     {"data": "group", "render": dataTableSpacingPreformatted, responsivePriority: 2 },
+                    {"data": "description", "visible": false },
                     {
                         "name": "libraryQuota",
                         "data": null,
@@ -116,6 +120,10 @@
                         "render": dataTableTickCrossColumn
                     },
                     {
+                        "data": "isShownForAddUser",
+                        "render": dataTableTickCrossColumn
+                    },
+                    {
                         "orderable": false,
                         responsivePriority: 1,
                         "data": dataTableButtonsColumn
@@ -126,25 +134,40 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#userGroups_wrapper').find('.col-md-6').eq(1));
+
+            $(".refresh-grid").click(function() {
+                table.ajax.reload();
+            });
         });
+
+        function handleLibraryQuotaField(libraryQuotaField, libraryQuotaUnitsField) {
+            var libraryQuota = libraryQuotaField.val();
+
+            if (libraryQuotaUnitsField.val() === 'mb') {
+                libraryQuota = libraryQuota * 1024;
+            } else if (libraryQuotaUnitsField.val() === 'gb') {
+                libraryQuota = libraryQuota * 1024 * 1024;
+            }
+
+            // Set the field
+            libraryQuotaField.prop('value', libraryQuota);
+        }
 
         function userGroupFormOpen() {
             // Bind to the add form submit
             $(".UserGroupForm").validate({
                 submitHandler: function (form) {
                     // Grab and alter the value in the library quota field
-                    var libraryQuotaField = $(form).find("input[name=libraryQuota]");
-                    var libraryQuotaUnitsField = $(form).find("select[name=libraryQuotaUnits]");
-                    var libraryQuota = libraryQuotaField.val();
+                    handleLibraryQuotaField(
+                        $(form).find("input[name=libraryQuota]"),
+                        $(form).find("select[name=libraryQuotaUnits]")
+                    );
 
-                    if (libraryQuotaUnitsField.val() == 'mb') {
-                        libraryQuota = libraryQuota * 1024;
-                    } else if (libraryQuotaUnitsField.val() == 'gb') {
-                        libraryQuota = libraryQuota * 1024 * 1024;
-                    }
-
-                    // Set the field
-                    libraryQuotaField.prop('value', libraryQuota);
+                    // Grab and alter the value in the default library quota field
+                    handleLibraryQuotaField(
+                        $(form).find("input[name=defaultLibraryQuota]"),
+                        $(form).find("select[name=defaultLibraryQuotaUnits]")
+                    );
 
                     XiboFormSubmit(form);
                 },

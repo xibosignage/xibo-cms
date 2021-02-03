@@ -164,7 +164,7 @@
 
                         {% set title %}{% trans "Hide User Guide?" %}{% endset %}
                         {% set helpText %}{% trans "Should this User see the new user guide when they log in?" %}{% endset %}
-                        {{ forms.checkbox("newUserWizard", title, 1, helpText) }}
+                        {{ forms.checkbox("newUserWizard", title, 0, helpText) }}
 
                         {% set title %}{% trans "Force Password Change" %}{% endset %}
                         {% set helpText %}{% trans "Should this User be forced to change password next time they log in?" %}{% endset %}

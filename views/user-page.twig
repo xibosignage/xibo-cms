@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,9 +28,15 @@
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
         {% if currentUser.isSuperAdmin() or (currentUser.isGroupAdmin() and currentUser.featureEnabled("users.add")) %}
-            <button class="btn btn-success XiboFormButton" title="{% trans "Add a new User" %}" href="{{ url_for("user.add.form") }}"><i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Add User" %}</button>
+            {% if currentUser.getOptionValue("isAlwaysUseManualAddUserForm", 0) %}
+                {% set addUserFormUrl = url_for("user.add.form") %}
+            {% else %}
+                {% set addUserFormUrl = url_for("user.onboarding.form") %}
+            {% endif %}
+            <button id="user-add-button" class="btn btn-success XiboFormButton" title="{% trans "Add a new User" %}" href="{{ addUserFormUrl }}"><i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Add User" %}</button>
         {% endif %}
         <button class="btn btn-info XiboFormButton" title="{% trans "View my authenticated applications" %}" href="{{ url_for("user.applications") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "My Applications" %}</button>
+        <button class="btn btn-primary refresh-grid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
     </div>
 {% endblock %}
 
@@ -101,6 +107,7 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+
         $(document).ready(function() {
             var table = $("#users").DataTable({
                 "language": dataTablesLanguage,
@@ -184,6 +191,10 @@
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing)
             dataTableAddButtons(table, $('#users_wrapper').find('.col-md-6').eq(1));
+
+            $(".refresh-grid").click(function() {
+                table.ajax.reload();
+            });
         });
 
         function userFormOpen(dialog) {
@@ -236,9 +247,9 @@
                     var libraryQuotaUnitsField = $(form).find("select[name=libraryQuotaUnits]");
                     var libraryQuota = libraryQuotaField.val();
 
-                    if (libraryQuotaUnitsField.val() == 'mb') {
+                    if (libraryQuotaUnitsField.val() === 'mb') {
                         libraryQuota = libraryQuota * 1024;
-                    } else if (libraryQuotaUnitsField.val() == 'gb') {
+                    } else if (libraryQuotaUnitsField.val() === 'gb') {
                         libraryQuota = libraryQuota * 1024 * 1024;
                     }
 
@@ -262,5 +273,210 @@
                 }
             });
         }
+
+        /**
+         * Callback when the onboarding form is opened.
+         */
+        function onboardingFormOpen(dialog) {
+            $(dialog).find('[data-toggle="popover"]').popover();
+
+            // Init the folder panel
+            initFolderPanel(dialog);
+
+            var navListItems = $(dialog).find('div.setup-panel div a'),
+                allWells = $(dialog).find('.setup-content'),
+                stepWizard = $(dialog).find('.stepwizard');
+
+            navListItems.click(function (e) {
+                e.preventDefault();
+                var $target = $($(this).attr('href')),
+                    $item = $(this);
+
+                if (!$item.attr('disabled')) {
+                    // Set all step links to inactive
+                    navListItems
+                        .removeClass('btn-success')
+                        .addClass('btn-default');
+
+                    // Activate this specific one
+                    $item.addClass('btn-success');
+
+                    // Hide all the panels and show this specific one
+                    allWells.hide();
+                    $target.show();
+                    $target.find('input:eq(0)').focus();
+
+                    // Set the active panel on the links
+                    stepWizard.data("active", $target.prop("id"))
+
+                    // Is the next action to finish?
+                    if ($target.data("next") === "finished") {
+                        $(dialog).find("#onboarding-steper-next-button").html("{{ "Save"|trans }}");
+                    } else {
+                        $(dialog).find("#onboarding-steper-next-button").html("{{ "Next"|trans }}")
+                    }
+                }
+            });
+
+            // Add some buttons.
+            $(dialog).find(".modal-footer")
+                .append($('<a id="onboarding-steper-next-button" class="btn">').html("{{ "Next"|trans }}")
+                    .addClass("btn-primary")
+                    .click(function(e) {
+                        e.preventDefault();
+                        var steps = $(dialog).find(".stepwizard"),
+                            curStep = $(dialog).find("#" + steps.data("active")),
+                            curInputs = curStep.find("input[type='text'],input[type='url']"),
+                            isValid = true;
+
+                        // What is the next step?
+                        if (curStep.data("next") === "finished") {
+                            // Keep the form open
+                            var $form = $(dialog).find("#userOnboardingForm");
+                            $form.data("apply", true);
+                            // Submit the form thereby creating the user
+                            XiboFormSubmit($form, e, function(xhr) {
+                                // Callback
+                                if (xhr.success && xhr.id) {
+                                    // Submit the folder ownerships
+                                    var selected = $(dialog).find("#container-folder-tree").jstree("get_selected");
+                                    var groupIds = {};
+                                    groupIds[xhr.data.groupId] = {
+                                        "view": 1,
+                                        "edit": 1
+                                    };
+                                    $.ajax(permissionsUrl.replace(":entity", "Folder"), {
+                                        "method": "POST",
+                                        "data": {
+                                            "ids": selected.join(","),
+                                            "groupIds": groupIds
+                                        },
+                                        "error": function() {
+                                            toastr.error("{{ "Problem saving folder sharing, please check the User created." }}");
+                                        }
+                                    });
+                                } else {
+                                    toastr.error("{{ "Problem saving folder sharing, please check the User created." }}");
+                                }
+
+                                XiboDialogClose();
+                            });
+                        } else if (curStep.data("next") === "onboarding-step-2" && $("input[name='groupId']:checked").val() === "manual") {
+                            // Load the user add form.
+                            XiboDialogClose();
+                            XiboFormRender("{{ url_for("user.add.form") }}");
+                        } else {
+                            var nextStepWizard = steps.find("a[href='#" + curStep.data("next") + "']");
+
+                            $(dialog).find(".form-group").removeClass("has-error");
+                            for (var i = 0; i < curInputs.length; i++) {
+                                if (!curInputs[i].validity.valid) {
+                                    isValid = false;
+                                    $(curInputs[i]).closest(".form-group").addClass("has-error");
+                                }
+                            }
+
+                            // Set the defaults.
+                            if (curStep.data("next") === "onboarding-step-2") {
+                                var $userGroupSelected = $("input[name='groupId']:checked");
+                                $(dialog).find("input[name=libraryQuota]").val($userGroupSelected.data("defaultLibraryQuota"));
+                                $(dialog).find("input[name=homePageId]").val($userGroupSelected.data("defaultHomepageId"));
+                            }
+
+                            if (isValid) {
+                                nextStepWizard.removeAttr('disabled').trigger('click');
+                            }
+                        }
+                    }))
+                .append($('<a class="btn btn-default">').html("{{ "Close"|trans }}")
+                    .click(function(e) {
+                        e.preventDefault();
+                        XiboDialogClose();
+                    }));
+        }
+
+        function initFolderPanel(dialog) {
+            var $container = $(dialog).find("#container-folder-tree");
+
+            $container.jstree({
+                "plugins": ["checkbox"],
+                "themes" : {
+                    "responsive" : true
+                },
+                "core": {
+                    "data": {
+                        "url": foldersUrl
+                    }
+                },
+                "checkbox" : {
+                    "three_state" : false
+                },
+            }).on("ready.jstree", function(e, data) {
+                $(this).jstree("open_all");
+            });
+        }
     </script>
+    <style type="text/css">
+        /* Onboarding Step Wizard */
+        .stepwizard-step p {
+            margin-top: 0px;
+            color:#666;
+        }
+        .stepwizard-row {
+            display: table-row;
+        }
+        .stepwizard {
+            display: table;
+            width: 100%;
+            position: relative;
+        }
+        .stepwizard-step button[disabled] {
+            /*opacity: 1 !important;
+            filter: alpha(opacity=100) !important;*/
+        }
+        .stepwizard .btn.disabled, .stepwizard .btn[disabled], .stepwizard fieldset[disabled] .btn {
+            opacity:1 !important;
+            color:#bbb;
+            background: white;
+            border: 1px solid #bbbbbb;
+        }
+        .stepwizard-row:before {
+            top: 14px;
+            bottom: 0;
+            position: absolute;
+            content:" ";
+            width: 100%;
+            height: 1px;
+            background-color: #ccc;
+            z-index: 0;
+        }
+        .stepwizard .stepwizard-step {
+            display: table-cell;
+            text-align: center;
+            position: relative;
+        }
+        .stepwizard .btn-circle {
+            width: 30px;
+            height: 30px;
+            text-align: center;
+            padding: 6px 0;
+            font-size: 12px;
+            line-height: 1.428571429;
+            border-radius: 15px;
+        }
+        .stepwizard .btn-default {
+            background: #bbbbbb;
+            border: 1px solid grey;
+        }
+        .stepwizard .btn-success {
+            background: #28a745;
+            border: 1px solid #28a745;
+        }
+        .onboarding-form .checkbox+.checkbox, .onboarding-form .radio+.radio {
+            margin-top: 8px;
+        }
+        .onboarding-form .has-error {
+            color: red;
+        }
+    </style>
 {% endblock %}

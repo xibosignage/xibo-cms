@@ -200,12 +200,16 @@ class UserGroupFactory extends BaseFactory
 
         $select = '
         SELECT 	`group`.group,
+            `group`.description,
             `group`.groupId,
             `group`.isUserSpecific,
             `group`.isEveryone,
             `group`.libraryQuota,
             `group`.isSystemNotification,
             `group`.isDisplayNotification,
+            `group`.isShownForAddUser,
+            `group`.defaultHomepageId,
+            `group`.defaultLibraryQuota,
             `group`.features
         ';
 
@@ -279,6 +283,11 @@ class UserGroupFactory extends BaseFactory
             $params['notificationId'] = $parsedFilter->getInt('notificationId');
         }
 
+        if ($parsedFilter->getInt('isShownForAddUser') !== null) {
+            $body .= ' AND `group`.isShownForAddUser = :isShownForAddUser ';
+            $params['isShownForAddUser'] = $parsedFilter->getInt('isShownForAddUser');
+        }
+
         if ($parsedFilter->getInt('displayGroupId') !== null) {
             $body .= ' 
                 AND `group`.groupId IN (
@@ -310,7 +319,10 @@ class UserGroupFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $group = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'isUserSpecific', 'isEveryone', 'libraryQuota', 'isSystemNotification', 'isDisplayNotification'
+                    'isUserSpecific', 'isEveryone', 'libraryQuota', 'isSystemNotification', 'isDisplayNotification', 'isShownForAddUser', 'defaultLibraryQuota'
+                ],
+                'stringProperties' => [
+                    'defaultHomepageId'
                 ]
             ]);
 

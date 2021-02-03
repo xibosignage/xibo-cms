@@ -120,6 +120,8 @@ class ApiAuthorization implements Middleware
             $applicationScopeFactory = $this->app->getContainer()->get('applicationScopeFactory');
             $scopes = $validatedRequest->getAttribute('oauth_scopes');
 
+            $logger->debug('Scopes provided with request: ' . count($scopes));
+
             // Only validate scopes if we have been provided some.
             if (is_array($scopes) && count($scopes) > 0) {
                 foreach ($scopes as $scope) {
