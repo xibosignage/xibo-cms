@@ -2704,10 +2704,11 @@ class Layout extends Base
      */
     public function getLayoutCodes(Request $request, Response $response)
     {
-        $this->getState()->template = 'grid';
-        $codes = $this->layoutFactory->getLayoutCodes($this->gridRenderFilter([], $request));
+        $parsedParams = $this->getSanitizer($request->getQueryParams());
+        $codes = $this->layoutFactory->getLayoutCodes($this->gridRenderFilter([], $parsedParams));
 
         // Store the table rows
+        $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->layoutFactory->countLast();
         $this->getState()->setData($codes);
 
