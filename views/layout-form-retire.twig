@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -40,7 +40,7 @@
     <div class="row">
         <div class="col-md-12">
             <form id="layoutRetireForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("layout.retire", {id: layout.layoutId}) }}">
-                {% set title %}{% trans "Are you sure you want to retire this layout?" %}{% endset %}
+                {% set title %}{% trans "Are you sure you want to retire this item?" %}{% endset %}
                 {{ forms.message(title) }}
             </form>
         </div>

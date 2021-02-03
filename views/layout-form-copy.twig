@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -46,12 +46,12 @@
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Name" %}{% endset %}
-                        {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
+                        {% set helpText %}{% trans "The Name for the copy (1 - 50 characters)" %}{% endset %}
                         {% set layoutName %}{{ layout.layout }} 2{% endset %}
                         {{ forms.input("name", title, layoutName, helpText) }}
 
-                        {% set title %}{% trans "Make new copies of all media on this layout?" %}{% endset %}
-                        {% set helpText %}{% trans "This will duplicate all media that is currently assigned to the Layout being copied." %}{% endset %}
+                        {% set title %}{% trans "Make new copies of all media?" %}{% endset %}
+                        {% set helpText %}{% trans "This will duplicate all media that is currently assigned to the item being copied." %}{% endset %}
                         {% if config.LAYOUT_COPY_MEDIA_CHECKB == 1 %}
                             {% set checked = 1 %}
                         {% else %}
@@ -61,7 +61,7 @@
                     </div>
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}
-                        {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
+                        {% set helpText %}{% trans "An optional description (1 - 250 characters)" %}{% endset %}
                         {{ forms.textarea("description", title, layout.description, helpText) }}
                     </div>
                 </div>

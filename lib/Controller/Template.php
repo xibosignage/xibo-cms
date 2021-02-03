@@ -174,7 +174,7 @@ class Template extends Base
                 // Edit Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_edit',
-                    'url' => $this->urlFor($request,'layout.edit.form', ['id' => $template->layoutId]),
+                    'url' => $this->urlFor($request,'template.edit.form', ['id' => $template->layoutId]),
                     'text' => __('Edit')
                 );
 
@@ -214,7 +214,7 @@ class Template extends Base
                 // Permissions button
                 $template->buttons[] = [
                     'id' => 'layout_button_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $template->campaignId]),
+                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $template->campaignId]) . '?nameOverride=' . __('Template'),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
@@ -530,6 +530,37 @@ class Template extends Base
         $this->getState()->setData([
             'resolutions' => $this->resolutionFactory->query(['resolution']),
             'help' => $this->getHelp()->link('Layout', 'Add')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Edit form
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    function editForm(Request $request, Response $response, $id)
+    {
+        // Get the layout
+        $template = $this->layoutFactory->getById($id);
+
+        // Check Permissions
+        if (!$this->getUser()->checkEditable($template)) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'template-form-edit';
+        $this->getState()->setData([
+            'layout' => $template,
+            'tags' => $this->tagFactory->getTagsWithValues($template),
+            'help' => $this->getHelp()->link('Template', 'Edit')
         ]);
 
         return $this->render($request, $response);
