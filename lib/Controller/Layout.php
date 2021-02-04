@@ -1828,26 +1828,27 @@ class Layout extends Base
     public function copy(Request $request, Response $response, $id)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($id);
+        $originalLayout = $this->layoutFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout)) {
+        if (!$this->getUser()->checkViewable($originalLayout)) {
             throw new AccessDeniedException();
         }
 
         // Make sure we're not a draft
-        if ($layout->isChild()) {
+        if ($originalLayout->isChild()) {
             throw new InvalidArgumentException(__('Cannot copy a Draft Layout'), 'layoutId');
         }
 
         // Load the layout for Copy
-        $layout->load(['loadTags' => false]);
-        $originalLayout = $layout;
+        $originalLayout->load(['loadTags' => false]);
 
         // Clone
-        $layout = clone $layout;
+        $layout = clone $originalLayout;
         $tags = $this->tagFactory->getTagsWithValues($layout);
+
+        $this->getLog()->debug('Tag values from original layout: ' . $tags);
 
         $layout->layout = $sanitizedParams->getString('name');
         $layout->description = $sanitizedParams->getString('description');

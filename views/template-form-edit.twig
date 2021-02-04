@@ -20,21 +20,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
-
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% trans "Add Template" %}
+    {% trans "Edit Template" %}
 {% endblock %}
 
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#templateAddForm").submit()
+    {% trans "Save" %}, $("#templateEditForm").submit()
 {% endblock %}
-
-{% block callBack %}templateFormOpen{% endblock %}
 
 {% block formHtml %}
     <div class="row">
@@ -43,29 +40,35 @@
                 <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
             </ul>
-            <form id="templateAddForm" class="form-horizontal" method="post" action="{{ url_for("template.add") }}" data-redirect="{{ url_for("layout.designer", {id: ':id'}) }}" data-gettag="{{ url_for("tag.getByName") }}">
+            <form id="templateEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("layout.edit", {id: layout.layoutId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
-
                         {% if currentUser.featureEnabled('folder.view') %}
-                            <div class="form-group row">
-                                <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
-                                <div class="col-sm-10">
-                                    <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
-                                    <span id="selectedFormFolder"></span>
-                                </div>
+                        <div class="form-group row">
+                            <label class="col-sm-2 control-label">{% trans "Current Folder" %}</label>
+                            <div class="col-sm-10" style="padding-top: 7px">
+                                <span id="originalFormFolder"></span>
                             </div>
-                            {{ forms.hidden('folderId') }}
+                        </div>
+
+                        <div class="form-group row">
+                            <label class="col-sm-2 control-label">{% trans "Move to Selected Folder:" %}</label>
+                            <div class="col-sm-10">
+                                <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                                <span id="selectedFormFolder"></span>
+                            </div>
+                        </div>
+                        {{ forms.hidden('folderId', layout.folderId) }}
                         {% endif %}
 
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "The Name of the Template - (1 - 50 characters)" %}{% endset %}
-                        {{ forms.input("name", title, "", helpText) }}
+                        {{ forms.input("name", title, layout.layout, helpText) }}
 
                         {% if currentUser.featureEnabled("tag.tagging") %}
                             {% set title %}{% trans "Tags" %}{% endset %}
                             {% set helpText %}{% trans "Tags for this Template - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
-                            {{ forms.inputWithTags("tags", title, "", helpText, 'tags-with-value') }}
+                            {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
 
                             <p id="loadingValues" style="margin-left: 17%"></p>
 
@@ -83,16 +86,14 @@
                             </div>
                         {% endif %}
 
-                        {% set title %}{% trans "Resolution" %}{% endset %}
-                        {% set helpText %}{% trans "Choose the resolution this Template should be designed for." %}{% endset %}
-                        {{ forms.dropdown("resolutionId", "single", title, "", resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
-
-                        {{ forms.message("You can also add a template from an existing Layout from the Layout Designer."|trans, "alert alert-info") }}
+                        {% set title %}{% trans "Retired" %}{% endset %}
+                        {% set helpText %}{% trans "Retire this template or not? It will no longer be visible in lists" %}{% endset %}
+                        {{ forms.checkbox("retired", title, layout.retired, helpText) }}
                     </div>
                     <div class="tab-pane" id="description">
                         {% set title %}{% trans "Description" %}{% endset %}
                         {% set helpText %}{% trans "An optional description of the Template. (1 - 250 characters)" %}{% endset %}
-                        {{ forms.textarea("description", title, "", helpText) }}
+                        {{ forms.textarea("description", title, layout.description, helpText) }}
                     </div>
                 </div>
             </form>
