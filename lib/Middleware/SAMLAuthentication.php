@@ -77,7 +77,7 @@ class SAMLAuthentication extends AuthenticationBase
 
         // SAML Logout
         $app->get('/saml/logout', function (Request $request, Response $response) {
-            return $this->samlLogout($request,  $response);
+            return $this->samlLogout($request, $response);
         })->setName('saml.logout');
 
         // SAML Assertion Consumer Endpoint
