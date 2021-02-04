@@ -36,8 +36,8 @@ COPY webpack.config.js .
 COPY package.json .
 COPY package-lock.json .
 
-# Install npm packages
-RUN npm install --only=prod
+# Install npm packages, including dev
+RUN npm install
 
 # Copy ui folder
 COPY ./ui ./ui
