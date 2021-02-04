@@ -20,9 +20,6 @@ jobs:
           git fetch origin ${GITHUB_BASE_REF}
           git diff origin/${GITHUB_BASE_REF} > diff.txt
           git diff origin/${GITHUB_BASE_REF} --name-only --diff-filter=ACMR -- "*.php" > files.txt
-      - name: Actions cache
-        uses: satackey/action-docker-layer-caching@v0.0.11
-        continue-on-error: true
       - name: Build
         run: |
           docker build . -f Dockerfile.ci -t cms-web --build-arg GIT_COMMIT=${GITHUB_SHA}
