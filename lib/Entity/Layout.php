@@ -1,7 +1,7 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
  *
  * This file is part of Xibo.
  *
@@ -687,6 +687,17 @@ class Layout implements \JsonSerializable
                 }
             }
 
+            // Remove unwanted ones
+            if (is_array($this->unassignTags)) {
+                foreach ($this->unassignTags as $tag) {
+                    /* @var Tag $tag */
+                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
+
+                    $tag->unassignLayout($this->layoutId);
+                    $tag->save();
+                }
+            }
+
             // Save the tags
             if (is_array($this->tags)) {
                 foreach ($this->tags as $tag) {
@@ -695,17 +706,6 @@ class Layout implements \JsonSerializable
                     $this->getLog()->debug('Assigning tag ' . $tag->tag);
 
                     $tag->assignLayout($this->layoutId);
-                    $tag->save();
-                }
-            }
-
-            // Remove unwanted ones
-            if (is_array($this->unassignTags)) {
-                foreach ($this->unassignTags as $tag) {
-                    /* @var Tag $tag */
-                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
-
-                    $tag->unassignLayout($this->layoutId);
                     $tag->save();
                 }
             }

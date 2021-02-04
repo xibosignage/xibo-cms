@@ -1550,35 +1550,25 @@ class Layout extends Base
     public function copy($layoutId)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $originalLayout = $this->layoutFactory->getById($layoutId);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser()->checkViewable($originalLayout)) {
             throw new AccessDeniedException();
-
+        }
         // Make sure we're not a draft
-        if ($layout->isChild())
-            throw new InvalidArgumentException('Cannot copy a Draft Layout', 'layoutId');
+        if ($originalLayout->isChild()) {
+            throw new InvalidArgumentException(__('Cannot copy a Draft Layout'), 'layoutId');
+        }
 
         // Load the layout for Copy
-        $layout->load(['loadTags' => false]);
-        $originalLayout = $layout;
+        $originalLayout->load(['loadTags' => false]);
 
         // Clone
-        $layout = clone $layout;
-        $tags = '';
+        $layout = clone $originalLayout;
+        $tags = $this->tagFactory->getTagsWithValues($layout);
 
-        $arrayOfTags = array_filter(explode(',', $layout->tags));
-        $arrayOfTagValues = array_filter(explode(',', $layout->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
+        $this->getLog()->debug('Tag values from original layout: ' . $tags);
 
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
