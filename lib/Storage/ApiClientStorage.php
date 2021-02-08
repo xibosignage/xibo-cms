@@ -99,6 +99,7 @@ class ApiClientStorage extends AbstractStorage implements ClientInterface
             switch ($grantType) {
 
                 case 'authorization_code':
+                case 'refresh_token':
                     if ($result[0]['authCode'] != 1)
                         return false;
 
