@@ -274,6 +274,8 @@
             </select>
         </div>
 
+        <input name="intentName{{ unique }}" id="intentName{{ unique }}" class="intent-name form-control form-control-inline" placeholder="{% endverbatim %}{% trans "Intent" %}{% verbatim %}" value="{{ value.name }}">
+
         <div class="form-group-command">
             <label for="intentExtraContainer{{ unique }}" class="intent-extra-container-label">{% endverbatim %}{% trans "Extra:" %}{% verbatim %}</label>
             <button class="intent-add-extra btn btn-info btn-sm pull-right" type="button">

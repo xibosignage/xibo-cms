@@ -30,7 +30,7 @@ width: {{ durationPercentage }}%;">
         {{/if}}
 
         {{#if actions }}
-            <i class="fa fa-paper-plane editProperty" data-property="Action" data-content="tooltip" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.widgetActions}} {{ actions.length}}" ></i>
+            <i class="fa fa-paper-plane editProperty tooltip-always-on" data-property="Action" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.widgetActions}} {{ actions.length}}" ></i>
         {{/if}}
 
         {{#gt expireStatus 0}}

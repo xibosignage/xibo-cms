@@ -1,3 +1,4 @@
+
 <div id="actions-drawer-content" data-type="region" class="editable">
     {{#if drawer.isEmpty}}
         <div id="actions-drawer-empty-message">
@@ -16,7 +17,7 @@
         {{!-- Draw widgets --}}
         <div id="actions-drawer-widgets">
             {{#each widgets}}
-                {{> drawer-widget}}
+                {{> drawer-widget trans=../trans}}
             {{/each}}
         </div>
     {{/if}}
