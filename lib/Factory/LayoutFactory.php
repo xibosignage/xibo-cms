@@ -1764,14 +1764,6 @@ class LayoutFactory extends BaseFactory
             $params['mediaLike'] = '%' . $this->getSanitizer()->getString('mediaLike', $filterBy) . '%';
         }
 
-        // LayoutHistoryID
-        if ($this->getSanitizer()->getInt('layoutHistoryId', $filterBy) !== null) {
-            $body .= '
-                INNER JOIN `layouthistory`
-                ON `layouthistory`.layoutId = `layout`.layoutId
-            ';
-        }
-
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
@@ -1861,7 +1853,11 @@ class LayoutFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getInt('layoutHistoryId', $filterBy) !== null) {
-            $body .= " AND `layouthistory`.layoutId = :layoutHistoryId ";
+            $body .= ' AND `campaign`.campaignId IN (
+                SELECT MAX(campaignId) 
+                  FROM `layouthistory` 
+                 WHERE `layouthistory`.layoutId = :layoutHistoryId
+                ) ';
             $params['layoutHistoryId'] = $this->getSanitizer()->getInt('layoutHistoryId', 0, $filterBy);
         }
 
