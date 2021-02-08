@@ -1,7 +1,7 @@
 # Multi-stage build
 # Stage 0
 # Compile xsendfile apache module
-FROM alpine:3.11 as sendfile
+FROM alpine:3.12 as sendfile
 ADD docker/mod_xsendfile.c /mod_xsendfile.c
 RUN apk update && apk upgrade && apk add \
     gcc \
@@ -60,7 +60,7 @@ RUN npm run publish
 
 # Stage 3
 # Build the CMS container
-FROM alpine:3.11
+FROM alpine:3.12
 MAINTAINER Xibo Signage <support@xibosignage.com>
 
 # Install apache, PHP, and supplimentary programs.
