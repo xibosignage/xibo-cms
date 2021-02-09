@@ -56,7 +56,7 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.mediaIds = data.mediaIds;
 
     // Widget colouring
-    if(playlistRegionColouring === 'Permissions Colouring') {
+    if(playlistRegionColouring === 'Permissions Colouring' || playlistRegionColouring === 'Sharing Colouring') {
         this.widgetColouring = (data.isEditable) ? 'timelineMediaItemColouring_enabled' : 'timelineMediaItemColouring_disabled';
     } else {
         this.widgetColouring = '';

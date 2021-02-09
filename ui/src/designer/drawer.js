@@ -117,7 +117,6 @@ Drawer.prototype.initDrawer = function(data) {
  * @param {Object} layout - the layout object to be rendered
  */
 Drawer.prototype.render = function() {
-
     const app = this.parent;
     const self = this;
     const readOnlyModeOn = (app.readOnlyMode != undefined && app.readOnlyMode === true);
@@ -248,7 +247,67 @@ Drawer.prototype.render = function() {
             // Prevent browser menu to open
             return false;
         });
+
+        // Custom dimensions
+        this.DOMObject.find('#drawer-custom-dimensions').off('change', 'input').on('change', 'input', _.debounce(self.saveDimensions.bind(self), 500));
     }
+};
+
+/**
+ * Save drawer dimensions
+ */
+Drawer.prototype.saveDimensions = function() {
+    const app = this.parent;
+
+    let newWidth = this.DOMObject.find('#drawerRegionWidth').val();
+    let newHeight = this.DOMObject.find('#drawerRegionHeight').val();
+
+    if (newWidth == '' || newHeight == '') {
+        console.log('No dimensions set, skip save');
+        return;
+    }
+
+    const saveData = {
+        width: newWidth,
+        height: newHeight
+    };
+
+    const linkToAPI = urlsForApi.layout.saveDrawer;
+    let requestPath = linkToAPI.url;
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', lD.layout.drawer.regionId);
+
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type,
+        data: saveData
+    }).done(function(res) {
+        if(res.success) {
+            // Drawer dimensions saved
+            // Set dimenions to the local object
+            lD.layout.drawer.dimensions.width = saveData.width;
+            lD.layout.drawer.dimensions.height = saveData.height;
+
+            // Refresh the viewer to reflect the changes
+            lD.renderContainer(lD.viewer, lD.selectedObject);
+        } else {
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload(false);
+            } else {
+                toastr.error(res.message);
+            }
+
+            lD.common.hideLoadingScreen();
+        }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        lD.common.hideLoadingScreen();
+
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+    });
 };
 
 module.exports = Drawer;

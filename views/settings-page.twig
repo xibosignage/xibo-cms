@@ -46,7 +46,7 @@
                         <li class="nav-item"><a class="nav-link" href="#tab_general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_maint" role="tab" data-toggle="tab"><span>{% trans "Maintenance" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_network" role="tab" data-toggle="tab"><span>{% trans "Network" %}</span></a></li>
-                        <li class="nav-item"><a class="nav-link" href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Permissions" %}</span></a></li>
+                        <li class="nav-item"><a class="nav-link" href="#tab_permissions" role="tab" data-toggle="tab"><span>{% trans "Sharing" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_regional" role="tab" data-toggle="tab"><span>{% trans "Regional" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_troubleshooting" role="tab" data-toggle="tab"><span>{% trans "Troubleshooting" %}</span></a></li>
                         <li class="nav-item"><a class="nav-link" href="#tab_users" role="tab" data-toggle="tab"><span>{% trans "Users" %}</span></a></li>
@@ -860,16 +860,16 @@
                                 {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_permissions">
-                                <h3 class="section-heading">{% trans "Permissions" %}</h3>
+                                <h3 class="section-heading">{% trans "Sharing" %}</h3>
 
                                 {% if theme.isSettingVisible("REGION_OPTIONS_COLOURING") %}
                                     {% set title %}{% trans "How to colour Media on the Region Timeline" %}{% endset %}
 
                                     {% set privateOption %}{% trans "Media Colouring" %}{% endset %}
-                                    {% set groupOption %}{% trans "Permissions Colouring" %}{% endset %}
+                                    {% set groupOption %}{% trans "Sharing Colouring" %}{% endset %}
                                     {% set options = [
                                         { id: "Media Colouring", value: privateOption },
-                                        { id: "Permissions Colouring", value: groupOption }
+                                        { id: "Sharing Colouring", value: groupOption }
                                     ] %}
                                     {% if theme.isSettingEditable("REGION_OPTIONS_COLOURING") %}
                                         {{ forms.dropdown("REGION_OPTIONS_COLOURING", "single", title, theme.getSetting("REGION_OPTIONS_COLOURING", "Media Colouring"), options, "id", "value") }}
@@ -879,8 +879,8 @@
                                 {% endif %}
 
                                 {% if theme.isSettingVisible("SCHEDULE_WITH_VIEW_PERMISSION") %}
-                                    {% set title %}{% trans "Schedule with view permissions?" %}{% endset %}
-                                    {% set helpText %}{% trans "Should users with View permissions on displays be allowed to schedule to them?" %}{% endset %}
+                                    {% set title %}{% trans "Schedule with view sharing?" %}{% endset %}
+                                    {% set helpText %}{% trans "Should users with View sharing on displays be allowed to schedule to them?" %}{% endset %}
                                     {{ forms.checkbox("SCHEDULE_WITH_VIEW_PERMISSION", title, theme.getSetting("SCHEDULE_WITH_VIEW_PERMISSION", 0), helpText, "", "", not theme.isSettingEditable("SCHEDULE_WITH_VIEW_PERMISSION")) }}
                                 {% endif %}
 
