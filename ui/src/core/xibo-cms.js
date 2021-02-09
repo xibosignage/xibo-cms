@@ -2976,7 +2976,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
                     return true;
                 },
                 'data' : {
-                    "url": "/folders"
+                    "url": foldersUrl
                 }
             }
         });
@@ -3029,10 +3029,12 @@ function initJsTreeAjax(container, table, isForm, ttl)
 
         $(container).on("create_node.jstree", function (e, data) {
 
+            var node = data.node;
+            node.text = translations.folderNew;
+
             var dataObject = {};
             dataObject['parentId'] = data.parent;
             dataObject['text'] = data.node.text;
-            var node = data.node;
 
             // when we create a new node, by default it will get jsTree default id
             // we need to change it to the folderId we have in our folder table

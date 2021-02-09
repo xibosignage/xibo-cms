@@ -180,6 +180,7 @@ $app->group('/region', function (RouteCollectorProxy $group) {
     $group->delete('/{id}', ['\Xibo\Controller\Region','delete'])->setName('region.delete');
     $group->put('/position/all/{id}', ['\Xibo\Controller\Region','positionAll'])->setName('region.position.all');
     $group->post('/drawer/{id}', ['\Xibo\Controller\Region','addDrawer'])->setName('region.add.drawer');
+    $group->put('/drawer/{id}', ['\Xibo\Controller\Region','saveDrawer'])->setName('region.save.drawer');
 })
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']))
     ->addMiddleware(new LayoutLock($app));

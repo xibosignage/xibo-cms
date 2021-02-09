@@ -2,7 +2,7 @@ FROM cypress/base:12
 
 WORKDIR /app
 
-RUN npm install --save-dev --slient cypress
+RUN npm install --save-dev --slient cypress@6.2.1
 
 RUN $(npm bin)/cypress verify
 

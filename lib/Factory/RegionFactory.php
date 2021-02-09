@@ -123,17 +123,16 @@ class RegionFactory extends BaseFactory
             throw new InvalidArgumentException(__('Height must be greater than 0'));
         }
 
-        $region = $this->createEmpty();
-        $region->ownerId = $ownerId;
-        $region->name = $name;
-        $region->width = $width;
-        $region->height = $height;
-        $region->top = $top;
-        $region->left = $left;
-        $region->zIndex = $zIndex;
-        $region->isDrawer = $isDrawer;
-
-        return $region;
+        return $this->hydrate($this->createEmpty(), [
+            'ownerId' => $ownerId,
+            'name' => $name,
+            'width' => $width,
+            'height' => $height,
+            'top' => $top,
+            'left' => $left,
+            'zIndex' => $zIndex,
+            'isDrawer' => $isDrawer,
+        ]);
     }
 
     /**
@@ -202,7 +201,7 @@ class RegionFactory extends BaseFactory
     /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array[Region]
+     * @return Region[]
      */
     public function query($sortOrder = [], $filterBy = [])
     {
@@ -254,9 +253,22 @@ class RegionFactory extends BaseFactory
         $sql .= ' ORDER BY `region`.name ';
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['zIndex', 'duration', 'isDrawer']]);
+            $entries[] = $this->hydrate($this->createEmpty(), $row);
         }
 
         return $entries;
+    }
+
+    /**
+     * @param Region $region
+     * @param array $row
+     * @return Region
+     */
+    private function hydrate($region, $row)
+    {
+        return $region->hydrate($row, [
+            'intProperties' => ['zIndex', 'duration', 'isDrawer'],
+            'doubleProperties' => ['width', 'height', 'top', 'left']
+        ]);
     }
 }
