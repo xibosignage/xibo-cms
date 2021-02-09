@@ -467,6 +467,7 @@ class Calendar extends ModuleWidget
             ->appendJavaScriptFile('xibo-text-render.js')
             ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.min.js')
+            ->appendJavaScript('xiboIC.lockAllInteractions();')
             ->appendFontCss()
             ->appendCss($headContent)
             ->appendCss($styleSheet)

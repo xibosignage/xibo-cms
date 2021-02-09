@@ -307,6 +307,7 @@ class GoogleTraffic extends ModuleWidget
         $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
+        $javaScriptContent .= '<script type="text/javascript">xiboIC.lockAllInteractions();</script>';
 
         return $this->renderTemplate([
             'viewPortWidth' => ($this->isPreview()) ? $this->region->width : '[[ViewPortWidth]]',

@@ -35,7 +35,7 @@
         {% set objectName = entity|trans %}
     {% endif %}
 
-    {% trans %}Permissions for {{ objectName }}{% endtrans %}
+    {% trans %}Sharing for {{ objectName }}{% endtrans %}
 {% endblock %}
 
 {% block formButtons %}
@@ -65,7 +65,7 @@
                     </div>
 
                     {% set multiplePermissionsMessage %}
-                        {% trans "Edit multiple permissions at the same time. Elements shown with an indeterminate state [-], result from a difference in permissions already set. All changes set here will be applied to all selected elements." %}<br>
+                        {% trans "Edit multiple sharing at the same time. Elements shown with an indeterminate state [-], result from a difference in sharing already set. All changes set here will be applied to all selected elements." %}<br>
                     {% endset %}
                     {{ forms.message(multiplePermissionsMessage) }}
                     

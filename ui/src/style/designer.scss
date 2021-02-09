@@ -1450,7 +1450,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         margin-left: 1%;
         z-index: 1;
         margin-top: -$drawer-height;
-        padding: 2px;
         
         &.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
@@ -1466,15 +1465,38 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             }
         }
 
+        .actions-drawer-controls {
+            background-color: $designer-module-bg-color;
+        }
+
         #actions-drawer-search-bar {
-            padding: 0 4px;
+            height: 35px;
+            margin-bottom: 0;
             color: $drawer-toggle-fg-color;
 
             input {
                 background: center;
-                border: none;
+                border: 1px solid #ced4da;
                 color: $drawer-toggle-fg-color;
-                margin: 4px;
+                height: 30px;
+                border-radius: 0.25rem;
+                background-color: #fff;
+                padding: 0.375rem 0.75rem;
+                margin: 2.5px;
+            }
+        }
+
+        #drawer-custom-dimensions {
+            margin-bottom: 0;
+            height: 35px;
+
+            & > div.dimensions-label {
+                padding: 5px;
+                line-height: 20px;
+            }
+
+            & > div.form-group > input {
+                height: 30px;
             }
         }
 
@@ -1490,7 +1512,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             display: flex;
             display: -webkit-box;
             display: -moz-box;
-            padding-top: 8px;
+            padding: 8px 2px 0 2px;
             height: 65px;
             overflow-x: auto;
             overflow-y: hidden;

@@ -938,10 +938,13 @@ function ActionController(parent, actions, options) {
             }
 
             // Handle source click
-            $sourceObj.click(function(event) {
-                event.stopPropagation();
-                runAction(data);
-            }).addClass('clickable');
+            // FIXME: We need to handle the case where a drawer widget has an action and it has been loaded to the preview
+            if($sourceObj != undefined) {
+                $sourceObj.on('click', function(event) {
+                    event.stopPropagation();
+                    runAction(data);
+                }).addClass('clickable');
+            }
         });
     };
 }

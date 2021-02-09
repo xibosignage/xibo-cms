@@ -25,7 +25,6 @@
     * Setup Display Profile setting forms
     */
     function displayProfileFormOpen() {
-        
         // TIMERS
         setupFormFields(
             $('#timers-container'),
@@ -45,6 +44,70 @@
             pictureOptionsFormInit,
             pictureOptionsFormUpdate
         );
+
+        // Android location field
+        setAndroidDimensions($('.tab-pane#location'));
+    }
+
+     /**
+    * Android dimension field
+    * @param {jquery} container
+    */
+    function setAndroidDimensions($container) {
+        const $inputField = $container.find('#screenDimensions');
+        const template = Handlebars.compile($('#android-dimension-fields').html());
+
+        // Prevent to run if screen dimensions does not exist
+        if($inputField.length <= 0){
+            return;
+        }
+
+        let fieldsTemplate;
+
+        // Hide input
+        $inputField.attr('type', 'hidden');
+
+        // Parse value if exists and assign it to the elements
+        if($inputField.val() != "") {
+            let values = $inputField.val().split(',');
+
+            fieldsTemplate = template({
+                left: values[0],
+                top: values[1],
+                width: values[2],
+                height:  values[3]
+            });
+        } else {
+            fieldsTemplate = template();
+        }
+
+        // Add fields to parent container
+        $inputField.parent().prepend(fieldsTemplate);
+
+        // Initialise values
+        $container.on('change', '.androidDimensionInput', function() {
+            // Get all separated values
+            var valueLeft = $container.find('#dimensionLeft').val();
+            var valueTop = $container.find('#dimensionTop').val();
+            var valueWidth = $container.find('#dimensionWidth').val();
+            var valueHeight = $container.find('#dimensionHeight').val();
+
+            // Set default colour
+            $('.androidDimensionInput').css('background-color', '#fff');
+
+            // Set value to hidden input
+            if(valueLeft != '' && valueTop != '' && valueWidth != '' && valueWidth >= 0 && valueHeight != '' && valueHeight >= 0) {
+                $inputField.val([valueLeft, valueTop, valueWidth, valueHeight].toString());
+            } else {
+                // Invalid value
+                $inputField.val('');
+
+                // If some of the elements aren't empty and it's invalid, show a specific background
+                if(valueLeft != '' || valueTop != '' || valueWidth != '' || valueHeight != ''){
+                    $('.androidDimensionInput').css('background-color', '#ffce9c');
+                }
+            }
+        });
     }
 
     /**
@@ -305,5 +368,14 @@
         {% endverbatim %}
             <p class="btn btn-block btn-primary" disabled>{% trans "Select a property to display inputs" %}</p>
         {% verbatim %}
+    </script>
+
+    <script type="text/x-handlebars-template" id="android-dimension-fields">
+        <div class="row">
+            <input type="number" value="{{ left }}" class="col-3 form-control androidDimensionInput" name="dimensionLeft" id="dimensionLeft" placeholder="{% endverbatim %}{{ "Left"|trans }}{% verbatim %}"></input>
+            <input type="number" value="{{ top }}" class="col-3 form-control androidDimensionInput" name="dimensionTop" id="dimensionTop" placeholder="{% endverbatim %}{{ "Top"|trans }}{% verbatim %}"></input>
+            <input type="number" value="{{ width }}" class="col-3 form-control androidDimensionInput" name="dimensionWidth" id="dimensionWidth" placeholder="{% endverbatim %}{{ "Width"|trans }}{% verbatim %}"></input>
+            <input type="number" value="{{ height }}" class="col-3 form-control androidDimensionInput" name="dimensionHeight" id="dimensionHeight" placeholder="{% endverbatim %}{{ "Height"|trans }}{% verbatim %}"></input>
+        </div>
     </script>
 {% endverbatim %}
