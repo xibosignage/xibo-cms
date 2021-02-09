@@ -840,7 +840,7 @@ class LayoutTest extends LocalWebTestCase
         $layout = $this->getDraft($layout);
 
         // Add Drawer
-        $response = $this->sendRequest('POST','/region/drawer/' . $layout->layoutId);
+        $response = $this->sendRequest('POST', '/region/drawer/' . $layout->layoutId);
 
         // Check if successful
         $this->assertSame(200, $response->getStatusCode(), $response->getBody());
@@ -868,7 +868,7 @@ class LayoutTest extends LocalWebTestCase
         $drawer = $this->getEntityProvider()->post('/region/drawer/' . $layout->layoutId);
 
         // Save drawer
-        $response = $this->sendRequest('PUT','/region/drawer/' . $drawer['regionId'], [
+        $response = $this->sendRequest('PUT', '/region/drawer/' . $drawer['regionId'], [
             'width' => 1280,
             'height' => 720
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);

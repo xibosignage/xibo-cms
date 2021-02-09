@@ -105,14 +105,15 @@ trait EntityTrait
         foreach ($properties as $prop => $val) {
             if (property_exists($this, $prop)) {
 
-                if ((stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties)) && !in_array($prop, $stringProperties))
+                if ((stripos(strrev($prop), 'dI') === 0 || in_array($prop, $intProperties)) && !in_array($prop, $stringProperties)) {
                     $val = intval($val);
-                else if (in_array($prop, $doubleProperties))
+                } else if (in_array($prop, $doubleProperties)) {
                     $val = doubleval($val);
-                else if (in_array($prop, $stringProperties))
+                } else if (in_array($prop, $stringProperties)) {
                     $val = filter_var($val, FILTER_SANITIZE_STRING);
-                else if (in_array($prop, $htmlStringProperties))
+                } else if (in_array($prop, $htmlStringProperties)) {
                     $val = htmlentities($val);
+                }
 
                 $this->{$prop} =  $val;
                 $this->originalValues[$prop] = $val;
