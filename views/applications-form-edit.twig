@@ -41,7 +41,7 @@
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li class="nav-item"><a class="nav-link" href="#scopes" role="tab" data-toggle="tab"><span>{% trans "Permissions" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#scopes" role="tab" data-toggle="tab"><span>{% trans "Sharing" %}</span></a></li>
             </ul>
             <form id="applicationFormSubmit" class="XiboForm form-horizontal" method="put" action="{{ url_for("application.edit", {id: client.key}) }}">
                 <div class="tab-content">
@@ -77,7 +77,7 @@
                         {{ forms.input("redirectUri[]", title, "", helpText) }}
                     </div>
                     <div class="tab-pane" id="scopes">
-                        {% set message %}{% trans "Select permissions to grant to this application (scopes)." %}{% endset %}
+                        {% set message %}{% trans "Select sharing to grant to this application (scopes)." %}{% endset %}
                         {{ forms.message(message) }}
 
                         {% for url in client.redirectUris %}
