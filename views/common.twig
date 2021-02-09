@@ -111,6 +111,10 @@
                 addDrawer: {
                     url: "{{ url_for("region.add.drawer", {id: ':id'}) }}",
                     type: 'POST'
+                },
+                saveDrawer: {
+                    url: "{{ url_for("region.save.drawer", {id: ':id'}) }}",
+                    type: 'PUT'
                 }
             },
             region: {
@@ -313,7 +317,7 @@
                 editExpiry: "{{ "Edit Expiry Dates" |trans }}",
                 editTransIn: "{{ "Edit Transition In"|trans }}",
                 editTransOut: "{{ "Edit Transition Out" |trans }}",
-                editPermissions: "{{ "Edit Permissions" |trans }}",
+                editPermissions: "{{ "Edit Sharing" |trans }}",
                 moveLeft: "{{ "Move one step left" |trans }}",
                 moveRight: "{{ "Move one step right" |trans }}",
                 moveTopLeft: "{{ "Move to the top left" |trans }}",
@@ -404,8 +408,8 @@
                         description: "{{ "Apply a Transition type for the end of a media item"|trans }}"
                     },
                     permissions: {
-                        name: "{{ "Permissions" |trans }}",
-                        description: "{{ "Set View, Edit and Delete Permissions for Widgets and Regions"|trans }}"
+                        name: "{{ "Sharing" |trans }}",
+                        description: "{{ "Set View, Edit and Delete Sharing for Widgets and Regions"|trans }}"
                     }
                 },
                 window: {

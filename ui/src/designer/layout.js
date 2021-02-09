@@ -428,6 +428,14 @@ Layout.prototype.createDrawer = function(drawerData) {
         newDrawer.isEmpty = false;
     }
 
+    // Dimensions
+    this.dimensions = {
+        width: drawerData.width,
+        height: drawerData.height,
+        top: drawerData.top,
+        left: drawerData.left
+    };
+
     // Push Region to the Layout region array
     this.drawer = newDrawer;
 };
