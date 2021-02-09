@@ -244,6 +244,10 @@ trait LayoutHelperTrait
         return $layout;
     }
 
+    /**
+     * @param $layout
+     * @return XiboLayout
+     */
     protected function getDraft($layout)
     {
         $draft = (new XiboLayout($this->getEntityProvider()))->get(['parentId' => $layout->layoutId, 'showDrafts' => 1, 'embed' => 'regions,playlists,widgets']);
