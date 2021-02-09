@@ -872,7 +872,7 @@ let formHelpers = function() {
         var validExtensions = dialog.find('form').data().validExtensions;
         
         // Append
-        var replaceButton = $('<button class="btn btn-warning">').html(playlistAddFilesTrans.uploadMessage);
+        var replaceButton = $('<button type="button" class="btn btn-warning">').html(playlistAddFilesTrans.uploadMessage);
         replaceButton.click(function(e) {
             e.preventDefault();
 
@@ -916,7 +916,8 @@ let formHelpers = function() {
             );
         });
 
-        footer.prepend(replaceButton);
+        // Add to the second to last position
+        footer.find('button:last').before(replaceButton);
     };
 
     /**

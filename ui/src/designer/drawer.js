@@ -202,7 +202,9 @@ Drawer.prototype.render = function() {
         this.DOMObject.find('#actions-drawer-content').droppable({
             accept: '[drop-to="region"]',
             drop: function(event, ui) {
-                lD.dropItemAdd(event.target, ui.draggable[0]);
+                if (self.opened) {
+                    lD.dropItemAdd(event.target, ui.draggable[0]);
+                }
             }
         }).click(function(e) {
             if(!$.isEmptyObject(lD.toolbar.selectedCard) || !$.isEmptyObject(lD.toolbar.selectedQueue)) {
@@ -218,7 +220,9 @@ Drawer.prototype.render = function() {
                     ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
             },
             drop: function(event, ui) {
-                lD.dropItemAdd(event.target, ui.draggable[0]);
+                if (self.opened) {
+                    lD.dropItemAdd(event.target, ui.draggable[0]);
+                }
             }
         });
 

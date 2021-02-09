@@ -200,7 +200,7 @@ function openUploadForm(options) {
             }
 
             // Init JS Tree
-            initJsTreeAjax('#container-folder-form-tree', options.initialisedBy, true, 600);
+            initJsTreeAjax($("#folder-tree-form-modal").find('#container-folder-form-tree'), options.initialisedBy, true, 600);
         }
 
         // Handle any form opened event

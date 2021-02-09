@@ -29,6 +29,8 @@
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
         <button class="btn btn-success XiboFormButton" title="{% trans "Add a row to the end of this DataSet" %}" href="{{ url_for("dataSet.data.add.form", {"id": dataSet.dataSetId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Row" %}</button>
+        <button class="btn btn-primary toggleMultiSelectMode" id="toggleMultiSelectMode" title="{% trans "Click to toggle between Data Edit and Multi Select modes" %}"><i class="fa fa-object-group" aria-hidden="true"></i> <span class="button-text">{% trans "Multi Select Mode" %}</span></button>
+        <button class="btn btn-danger d-none deleteSelectedRows" id="deleteSelectedRows" title="{% trans "Click to delete selected rows" %}" disabled="disabled"><i class="fa fa-trash" aria-hidden="true"></i> <span class="button-text">{% trans "Delete Rows" %}</span></button>
         <button class="btn btn-info XiboRedirectButton" href="{{ url_for("dataSet.column.view", {"id": dataSet.dataSetId}) }}"><i class="fa fa-columns" aria-hidden="true"></i> {% trans "View Columns" %}</button>
     </div>
 {% endblock %}
@@ -37,7 +39,7 @@
 {% block pageContent %}
     {% set widgetTitle %}{% trans %}Data Entry for {{ dataSetName }}{% endtrans %}{% endset %}
     <div class="widget">
-        <div class="widget-title">{{ widgetTitle }}</div>
+        <div class="widget-title">{{ widgetTitle }} | <strong class="dataset-edit-title-mode widget-sub-title">{% trans "Edit Mode" %}</strong><span title="{% trans "Click on any row to edit" %}" class="badge badge-pill badge-secondary px-1 mx-1">?</span></div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}">
                 <div class="XiboFilter">
@@ -69,12 +71,6 @@
                 </div>
             </div>
         </div>
-        <ul class="nav nav-pills pull-left" style="margin-left: 5px;">
-            <li class="btn btn-success btn-sm"><a class="btns toggleMultiSelectMode" id="toggleMultiSelectMode" style="padding: 7px 7px;" title="{% trans "Click to toggle between Data Edit and Multi Select modes" %}" > <i class="" aria-hidden="true"></i> {% trans "Edit Mode" %}</a></li>
-        </ul>
-        <ul class="nav nav-pills pull-right p-2 deleteRowsControl" style="margin-left: 5px;">
-            <li class="btn btn-danger btn-sm"><a class="btns deleteSelectedRows" id="deleteSelectedRows" style="padding: 7px 7px;" title="{% trans "Click to delete selected rows" %}" > <i class="" aria-hidden="true"></i> {% trans "Delete Selected Rows" %}</a></li>
-        </ul>
     </div>
 
 {% endblock %}
@@ -84,7 +80,12 @@
 
         var imageUrl = $("#datasets").data("imageUrl");
         var cols = [];
-        var editMode = 'Edit';
+        var editMode = true;
+        var editModeTitleTrans = "{% trans "Edit Mode" %}";
+        var multiSelectTitleTrans = "{% trans "Multi Select Mode" %}";
+        var editModeHelpTrans = "{% trans "Click on any row to edit" %}";
+        var multiSelectHelpTrans = "{% trans "Select one or more rows to delete" %}";
+
 
         cols.push({ "name": "id", "data": "id" });
         {% for col in dataSet.getColumn() %}
@@ -171,19 +172,21 @@
 
         // default is Edit mode, hence this should be our onclick event and deleteRows button should be hidden.
         $("#datasets tbody").on('click', 'tr', dataSetEditFormOpen);
-        $(".deleteRowsControl").hide();
 
         // Toggle between Edit and Multi Select modes
         // we also switch between two different onclick events depending on the mode and show/hide deleteRows button.
         $('#toggleMultiSelectMode').on("click", function(e) {
             e.preventDefault();
 
-            if (editMode === 'Edit') {
-
-                editMode = 'multiSelect';
-                $(this).text('Multi Select Mode');
+            if (editMode) {
+                // switch to multi select mode
+                editMode = false;
+                $(this).find('.button-text').text(editModeTitleTrans);
+                $(this).find('i').removeClass('fa-object-group').addClass('fa-edit');
+                $('.dataset-edit-title-mode').text(multiSelectTitleTrans);
+                $('.widget-title .badge').attr('title', multiSelectHelpTrans);
                 $("#datasets tbody").off('click', 'tr');
-                $(".deleteRowsControl").show();
+                $(".deleteSelectedRows").removeClass('d-none');
                 $('#datasets tbody').on('click', 'tr', function(ev) {
 
                     // See if element has class already
@@ -191,15 +194,26 @@
 
                     // Add class to the clicked one ( or remove it if there was already there )
                     $(ev.currentTarget).toggleClass('selected', !hasClass);
+
+                    // Change Delete button state according to the number of selected rows
+                    if ($('#datasets tbody tr.selected').length > 0) {
+                        $(".deleteSelectedRows").removeAttr('disabled');
+                    } else {
+                        $(".deleteSelectedRows").attr('disabled', 'disabled');
+                    }
+                     
                 });
-
-            } else if (editMode === 'multiSelect') {
-
-                editMode = 'Edit';
-                $(this).text('Edit Mode');
-                $(".deleteRowsControl").hide();
+            } else {
+                // switch to edit mode
+                editMode = true;
+                $(this).find('.button-text').text(multiSelectTitleTrans);
+                $(this).find('i').removeClass('fa-edit').addClass('fa-object-group');
+                $('.dataset-edit-title-mode').text(editModeTitleTrans);
+                $('.widget-title .badge').attr('title', editModeHelpTrans);
+                $(".deleteSelectedRows").addClass('d-none');
                 $("#datasets tbody").off('click', 'tr');
                 $('#datasets tbody tr[role="row"].selected').removeClass('selected');
+                $(".deleteSelectedRows").attr('disabled', 'disabled');
                 $("#datasets tbody").on('click', 'tr', dataSetEditFormOpen);
             }
         });

@@ -1,8 +1,7 @@
 <div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-parent-type="drawer" data-widget-region="{{ regionId }}" class="designer-widget drawer-widget {{#eq isValid 0}}invalid-widget{{/eq}} selectable {{selectedFlag}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}} {{#if isDeletable}}deletable{{/if}}">
-    
     <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
         <div class="widgetSubType">
-            <i class="fa module-icon-{{subType}}" data-toggle="tooltip" data-container="#actions-drawer" data-title="{{moduleName}}"></i>
+            <i class="fa module-icon-{{subType}}" data-toggle="tooltip" data-placement="left" data-container="#actions-drawer" data-title="{{moduleName}}"></i>
         </div>
         <div class="widgetDuration">
             {{ duration }}
@@ -10,7 +9,7 @@
     </div>
 
     <div class="widgetName">
-        <span data-toggle="tooltip" data-container="#actions-drawer" data-title="{{widgetName}}">{{widgetName}}</span>
+        <span class="tooltip-always-on" data-toggle="tooltip" data-placement="left" data-container="#actions-drawer" data-title="{{widgetName}}">{{widgetName}}</span>
     </div>
 
     <div class="widgetProperties">
@@ -18,9 +17,16 @@
             <i class="fa fa-volume-up editProperty" data-property="Audio"></i>
         {{/if}}
 
+        {{#if actions }}
+            <i class="fa fa-paper-plane editProperty tooltip-always-on" data-property="Action" data-content="tooltip" data-toggle="tooltip" data-placement="left" data-container="#actions-drawer" data-title="{{trans.widgetActions}} {{ actions.length}}" ></i>
+        {{/if}}
+
         {{#gt expireStatus 0}}
             <i class="fa {{expireStatusIcon}} editProperty" 
-            data-toggle="tooltip" data-container="#actions-drawer" data-html="true" 
+            data-toggle="tooltip" 
+            data-placement="right" 
+            data-container="#actions-drawer" 
+            data-html="true" 
             data-title="{{expireStatusTitle}}"
             data-property="Expiry"></i>
         {{/gt}}

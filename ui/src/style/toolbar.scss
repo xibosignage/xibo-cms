@@ -553,6 +553,7 @@ ul.sidebar {
             background: $xibo-color-white;
             height: $toolbar-height;
             scrollbar-width: thin; /* For firefox */
+            scrollbar-color: lighten($xibo-color-black, 40%) lighten($xibo-color-gray, 40%); /* For firefox */
 
             /* Internet explorer fix */
             @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {

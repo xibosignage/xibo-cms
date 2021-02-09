@@ -234,7 +234,7 @@
                 </div>
             </div>
         </td>
-        <td>
+        <td class="btn-group">
             {% if (!i && !o.options.autoUpload) { %}
                 <button class="btn btn-primary start" disabled>
                     <i class="fa fa-upload"></i>
@@ -280,7 +280,7 @@
                 </div>
             </div>
         </td>
-        <td>
+        <td class="btn-group">
             {% if (!i && !o.options.autoUpload) { %}
                 <button class="btn btn-primary start" disabled>
                     <i class="fa fa-upload"></i>
@@ -301,7 +301,7 @@
 {% verbatim %}
 <script id="template-download" type="text/x-tmpl">
 {% for (var i=0, file; file=o.files[i]; i++) { %}
-    <tr class="template-download fade">
+    <tr class="template-download">
        <td>
             <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
                 {%=file.name%}

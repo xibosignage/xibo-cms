@@ -371,7 +371,7 @@
                 $('#layoutAddForm' + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
             }
 
-            initJsTreeAjax('#container-folder-form-tree', 'layoutAddForm', true, 600);
+            initJsTreeAjax($('#folder-tree-form-modal').find('#container-folder-form-tree'), 'layoutAddForm', true, 600);
 
             $("#layoutAddForm").submit(function(e) {
                 e.preventDefault();

@@ -148,7 +148,7 @@ function XiboInitialise(scope) {
         $(this).find(".XiboFilter form input, .XiboFilter form select").on("change", filterRefresh);
 
         // init the jsTree
-        initJsTreeAjax('#container-folder-tree',  'grid-folder-tree-state', false)
+        initJsTreeAjax($(this).find('#container-folder-tree'), 'grid-folder-tree-state', false)
     });
 
     // Search for any Buttons / Links on the page that are used to load forms
@@ -613,6 +613,7 @@ function XiboInitialise(scope) {
                             valueObj.value = {
                                 // <type|activity,service,broadcast>
                                 type: splitValue[1],
+                                name: splitValue[2],
                                 // [<extras>]
                                 //{
                                 //  "name": "<extra name>",
@@ -699,7 +700,15 @@ function XiboInitialise(scope) {
                     builtString += '|' + commandVal;
                     break;
                 case 'intent':
-                    builtString = 'intent|' + $container.find('.intent-type').val() + '|activity';
+                    builtString = 'intent|' + $container.find('.intent-type').val() + '|' + $container.find('.intent-name').val();
+
+                    var nameVal = $container.find('.intent-name').val();
+
+                    if(nameVal == '') {
+                        $container.addClass('invalid');
+                        invalidValue = true;
+                    }
+
                     // Extra values array
                     var extraValues = [];
 
@@ -1531,7 +1540,7 @@ function XiboFormRender(sourceObj, data) {
                         $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
                     }
 
-                    initJsTreeAjax('#container-folder-form-tree', dialog.find('.XiboForm').attr('id'), true, 600);
+                    initJsTreeAjax($("#folder-tree-form-modal").find('#container-folder-form-tree'), dialog.find('.XiboForm').attr('id'), true, 600);
                 }
 
                 // Do we have to call any functions due to this success?
@@ -2771,7 +2780,7 @@ function initDatePicker($element, baseFormat, displayFormat, options, onChangeCa
             altInputClass: 'datePickerHelper ' + $element.attr('class'),
             altFormat: displayFormat,
             dateFormat: baseFormat,
-            locale: language,
+            locale: (language != 'en-GB') ? language : 'default',
             getWeek: function(dateObj) {
                 return moment(dateObj).week();
             },
@@ -3103,7 +3112,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
             }
 
             // on form we always want to show the breadcrumbs to current and selected folder
-            if (isForm && $(folderIdInputSelector).val() != selectedFolderId && selectedFolderId !== undefined) {
+            if (isForm && selectedFolderId !== undefined) {
                 $(folderIdInputSelector).val(selectedFolderId).trigger('change');
                 if ($('#selectedFormFolder').length) {
                     $('#selectedFormFolder').text($(container).jstree().get_path(node[0], ' > '));
