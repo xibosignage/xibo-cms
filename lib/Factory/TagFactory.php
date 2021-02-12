@@ -426,6 +426,11 @@ class TagFactory extends BaseFactory
         return $entries;
     }
 
+    /**
+     * Take the string values on an entity with tags and tag values, combine them into a | separated string
+     * @param $entity
+     * @return string
+     */
     public function getTagsWithValues($entity)
     {
         $tags = '';
@@ -433,6 +438,7 @@ class TagFactory extends BaseFactory
         $arrayOfTagValues = array_filter(explode(',', $entity->tagValues));
 
         for ($i=0; $i<count($arrayOfTags); $i++) {
+            // Is there a matching tag value?
             if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
                 $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
                 $tags .= ',';
@@ -441,6 +447,6 @@ class TagFactory extends BaseFactory
             }
         }
 
-        return $tags;
+        return rtrim($tags, ',');
     }
 }

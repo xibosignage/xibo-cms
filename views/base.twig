@@ -21,7 +21,7 @@
         <link href="{{ theme.uri("css/override.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/print.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet">
         <link href="{{ url_for("library.font.css") }}" rel="stylesheet">
-        <!-- Copyright 2006-2020 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <!-- Copyright 2006-2021 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
         <!-- Please be sure you read this before removing the Source/About links from your theme: http://bit.ly/agplv3 -->
         {% block headContent %}{% endblock %}
     </head>
@@ -102,6 +102,7 @@
             translations.folderTreeShare = "{{ "Share"|trans }}";
             translations.folderTreeError = "{{ "Cannot modify root folder."|trans }}";
             translations.folderWithContent = "{{ "Cannot remove Folder with content"|trans }}";
+            translations.folderNew = "{{ "New Folder"|trans }}";
             translations.dayPartExceptionErrorMessage = "{{ "You already set an exception for this day."|trans }}";
             {% endautoescape %}
 

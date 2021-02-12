@@ -205,7 +205,12 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     #properties-panel-container .button-container {
         padding: 5px;
         bottom: 0;
+        font-size: 0;
         width: 100%;
+
+        & > button {
+            margin: 0 2px;
+        }
     }
 
     #dropzone-container {

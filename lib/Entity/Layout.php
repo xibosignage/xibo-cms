@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -851,11 +851,11 @@ class Layout implements \JsonSerializable
             if ($options['import']) {
                 $importedTags = $this->tags;
                 $this->tags = [];
-             foreach ($importedTags as $importedTag) {
-                 $this->tags[] = $this->tagFactory->tagFromString(
-                     $importedTag->tag . (!empty($importedTag->value) ? '|' . $importedTag->value : '')
-                 );
-             }
+                foreach ($importedTags as $importedTag) {
+                    $this->tags[] = $this->tagFactory->tagFromString(
+                        $importedTag->tag . (!empty($importedTag->value) ? '|' . $importedTag->value : '')
+                    );
+                }
             }
 
             // Remove unwanted ones

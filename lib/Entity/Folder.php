@@ -29,6 +29,11 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
+/**
+ * Class Folder
+ * @package Xibo\Entity
+ * @SWG\Definition()
+ */
 class Folder
 {
     use EntityTrait;

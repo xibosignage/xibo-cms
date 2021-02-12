@@ -22,8 +22,21 @@
 #}
 
 <script type="text/javascript">
-    function actionFormOpen(dialog) {
+    function reloadLayoutDesignerData() {
+        // Reload layout designer data and show the target action tab
+        if(lD != undefined) {
+            lD.reloadData(lD.layout);
+            lD.propertiesPanel.openTabOnRender = 'a[href="#actionTab"]';
 
+            if(lD.selectedObject.type == 'layout') {
+                lD.selectObject();
+            } else {
+                lD.selectObject($('#' + lD.selectedObject.id), true);
+            }
+        }
+    }
+
+    function actionFormOpen(dialog) {
         onTargetChange(dialog);
 
         $(dialog).find("#target").on('change', function () {
@@ -40,6 +53,14 @@
         $(dialog).find("#triggerType").on('change', function() {
             onTriggerChange(dialog);
         })
+        
+        // On modal close, reload layout designer data
+        $(dialog).on('hidden.bs.modal', reloadLayoutDesignerData);
+    }
+
+    function actionFormDeleteOpen(dialog) {
+        // On confirm deletion, reload layout designer data
+        $(dialog).find('.save-button').on('click', reloadLayoutDesignerData);
     }
 
     function onTargetChange(dialog) {

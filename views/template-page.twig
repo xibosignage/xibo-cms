@@ -82,7 +82,7 @@
                                         <th>{% trans "Description" %}</th>
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                         <th>{% trans "Thumbnail" %}</th>
-                                        <th>{% trans "Permissions" %}</th>
+                                        <th>{% trans "Sharing" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
@@ -162,7 +162,7 @@
                 $('#templateAddForm' + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
             }
 
-            initJsTreeAjax('#container-folder-form-tree', 'templateAddForm', true, 600);
+            initJsTreeAjax($('#folder-tree-form-modal').find('#container-folder-form-tree'), 'templateAddForm', true, 600);
 
             $("#templateAddForm").submit(function(e) {
                 e.preventDefault();

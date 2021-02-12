@@ -27,7 +27,9 @@
 {% set randomId = random() %}
 
 {% block formTitle %}
-    {% if object.isLayoutSpecific == 1 %}
+    {% if objectNameOverride %}
+        {% set objectName = objectNameOverride %}
+    {% elseif object.isLayoutSpecific == 1 %}
         {% set objectName = "Layout"|trans %}
     {% elseif object.isDisplaySpecific == 1 %}
         {% set objectName = "Display"|trans %}
@@ -35,7 +37,7 @@
         {% set objectName = entity|trans %}
     {% endif %}
 
-    {% trans %}Permissions for {{ objectName }}{% endtrans %}
+    {% trans %}Sharing for {{ objectName }}{% endtrans %}
 {% endblock %}
 
 {% block formButtons %}

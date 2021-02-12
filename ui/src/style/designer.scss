@@ -72,7 +72,7 @@ $drawer-toggle-fg-color: #333333;
 $drawer-drop-bg-color: #ababab;
 $drawer-drop-fg-color: #333333;
 $drawer-hover-color:#337ab7;
-$drawer-height: 95px;
+$drawer-height: 105px;
 
 $designer-overlay-z-index: 1050;
 
@@ -93,7 +93,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 // CSS
 #layout-editor  {
     overflow: hidden;
-    margin: 45px -15px 0 -15px;
+    margin: 18px -15px 0 -15px;
 }
 
 #page-wrapper #layout-editor  {
@@ -104,7 +104,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     overflow-x: hidden;
     overflow-y: auto;
     padding-top: 8px;
-    height: calc(100vh - 100px - #{$toolbar-height});
+    max-height: calc(100vh - 95px - #{$toolbar-height});
 }
 
 #layout-editor .container-designer {
@@ -114,10 +114,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 @media (max-width: 1200px) {
     #layout-editor  {
         margin-top: -20px;
-    }
-
-    #page-wrapper #layout-editor  {
-        margin-top: 25px;
     }
 }
 
@@ -158,6 +154,8 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     padding: 4px;
     overflow-y: auto;
     @include border-radius(4px);
+    scrollbar-width: thin; /* For firefox */
+    scrollbar-color: $designer-secondary-color lighten($designer-secondary-color, 30%); /* For firefox */
 
     /* Custom scrollbar */
     /* width */
@@ -1118,7 +1116,12 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             padding: 5px;
             position: absolute;
             bottom: 0;
+            font-size: 0;
             width: 100%;
+
+            & > button {
+                margin: 0 2px;
+            }
         }
     }
 }
@@ -1447,7 +1450,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         margin-left: 1%;
         z-index: 1;
         margin-top: -$drawer-height;
-        padding: 2px;
         
         &.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
@@ -1463,15 +1465,38 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             }
         }
 
+        .actions-drawer-controls {
+            background-color: $designer-module-bg-color;
+        }
+
         #actions-drawer-search-bar {
-            padding: 0 4px;
+            height: 35px;
+            margin-bottom: 0;
             color: $drawer-toggle-fg-color;
 
             input {
                 background: center;
-                border: none;
+                border: 1px solid #ced4da;
                 color: $drawer-toggle-fg-color;
-                margin: 4px;
+                height: 30px;
+                border-radius: 0.25rem;
+                background-color: #fff;
+                padding: 0.375rem 0.75rem;
+                margin: 2.5px;
+            }
+        }
+
+        #drawer-custom-dimensions {
+            margin-bottom: 0;
+            height: 35px;
+
+            & > div.dimensions-label {
+                padding: 5px;
+                line-height: 20px;
+            }
+
+            & > div.form-group > input {
+                height: 30px;
             }
         }
 
@@ -1484,11 +1509,15 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         }
 
         #actions-drawer-widgets {
+            display: flex;
             display: -webkit-box;
-            height: 55px;
+            display: -moz-box;
+            padding: 8px 2px 0 2px;
+            height: 65px;
             overflow-x: auto;
             overflow-y: hidden;
             scrollbar-width: none; /* For firefox */
+            scrollbar-color: darken($xibo-color-gray, 20%) lighten($xibo-color-gray, 20%); /* For firefox */
 
             /* SCROLLBAR */
             /* width */
@@ -1515,7 +1544,8 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             }
 
             .designer-widget {
-                width: 140px;
+                min-width: 140px;
+                max-width: 150px;
                 height: 45px;
                 position: relative;
                 background: #f9f9f9;
@@ -1597,7 +1627,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
         .loading-container {
             position: relative;
-            height: 95px;
+            height: 100px;
 
             .loading-icon {
                 font-size: 3.6rem;

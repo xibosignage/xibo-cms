@@ -96,7 +96,7 @@
                                         <th>{% trans "Code" %}</th>
                                         <th>{% trans "Remote?" %}</th>
                                         <th>{% trans "Owner" %}</th>
-                                        <th>{% trans "Permissions" %}</th>
+                                        <th>{% trans "Sharing" %}</th>
                                         <th>{% trans "Last Sync" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
@@ -486,7 +486,7 @@
                     </div>
                     {% } %}
                 </td>
-                <td>
+                <td class="btn-group">
                     {% if (!o.files.error && !i && !o.options.autoUpload) { %}
                         <button class="btn btn-primary start">
                             <i class="fa fa-upload"></i>
@@ -504,7 +504,7 @@
     <!-- The template to display files available for download -->
     <script id="template-dataset-download" type="text/x-tmpl">
         {% for (var i=0, file; file=o.files[i]; i++) { %}
-            <tr class="template-download fade">
+            <tr class="template-download">
                <td>
                     <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
                         {%=file.name%}

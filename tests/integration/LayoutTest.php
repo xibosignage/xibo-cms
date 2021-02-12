@@ -829,4 +829,60 @@ class LayoutTest extends LocalWebTestCase
         $this->assertSame(false, $object->success);
         $this->assertSame(422, $object->httpStatus);
     }
+
+    /**
+     * Add a Drawer to the Layout
+     */
+    public function testAddDrawer()
+    {
+        // Create a Layout and Checkout
+        $layout = $this->createLayout();
+        $layout = $this->getDraft($layout);
+
+        // Add Drawer
+        $response = $this->sendRequest('POST', '/region/drawer/' . $layout->layoutId);
+
+        // Check if successful
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+
+        // Check if drawer has the right values
+        $this->assertSame($layout->width, $object->data->width);
+        $this->assertSame($layout->height, $object->data->height);
+        $this->assertSame(0, $object->data->top);
+        $this->assertSame(0, $object->data->left);
+    }
+
+    /**
+     * Edit a Drawer to the Layout
+     */
+    public function testSaveDrawer()
+    {
+        // Create a Layout and Checkout
+        $layout = $this->createLayout();
+        $layout = $this->getDraft($layout);
+
+        // Add Drawer
+        $drawer = $this->getEntityProvider()->post('/region/drawer/' . $layout->layoutId);
+
+        // Save drawer
+        $response = $this->sendRequest('PUT', '/region/drawer/' . $drawer['regionId'], [
+            'width' => 1280,
+            'height' => 720
+        ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
+
+        // Check if successful
+        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object);
+        $this->assertObjectHasAttribute('id', $object);
+
+        // Check if drawer has the right values
+        $this->assertSame(1280, $object->data->width);
+        $this->assertSame(720, $object->data->height);
+        $this->assertSame(0, $object->data->top);
+        $this->assertSame(0, $object->data->left);
+    }
 }

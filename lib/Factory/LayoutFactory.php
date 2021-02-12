@@ -1949,14 +1949,6 @@ class LayoutFactory extends BaseFactory
             $params['mediaLike'] = '%' . $parsedFilter->getString('mediaLike') . '%';
         }
 
-        // LayoutHistoryID
-        if ($parsedFilter->getInt('layoutHistoryId') !== null) {
-            $body .= '
-                INNER JOIN `layouthistory`
-                ON `layouthistory`.layoutId = `layout`.layoutId
-            ';
-        }
-
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
@@ -2045,8 +2037,12 @@ class LayoutFactory extends BaseFactory
         }
 
         if ($parsedFilter->getInt('layoutHistoryId') !== null) {
-            $body .= " AND `layouthistory`.layoutId = :layoutHistoryId ";
-            $params['layoutHistoryId'] = $parsedFilter->getInt('layoutHistoryId', ['default' => 0]);
+            $body .= ' AND `campaign`.campaignId IN (
+                SELECT MAX(campaignId) 
+                  FROM `layouthistory` 
+                 WHERE `layouthistory`.layoutId = :layoutHistoryId
+                ) ';
+            $params['layoutHistoryId'] = $parsedFilter->getInt('layoutHistoryId');
         }
 
         // Get by regionId

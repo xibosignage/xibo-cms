@@ -104,7 +104,7 @@ class UserGroup
     public $defaultHomepageId;
 
     /**
-     * @SWG\Property(description="Features this User Group has direct access to")
+     * @SWG\Property(description="Features this User Group has direct access to", @SWG\Items(type="string"))
      * @var array
      */
     public $features = [];

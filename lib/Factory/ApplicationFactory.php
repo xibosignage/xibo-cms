@@ -242,6 +242,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
         switch ($grantType) {
 
             case 'authorization_code':
+            case 'refresh_token':
                 if ($client->authCode != 1) {
                     return false;
                 }

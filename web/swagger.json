@@ -284,6 +284,13 @@
                         "description": "Embed related data such as layouts, permissions, tags and events",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -312,6 +319,13 @@
                         "description": "Name for this Campaign",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -352,6 +366,13 @@
                         "description": "Name for this Campaign",
                         "required": true,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -426,6 +447,40 @@
                 "responses": {
                     "204": {
                         "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/campaign/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "campaign"
+                ],
+                "summary": "Campaign Select folder",
+                "description": "Select Folder for Campaign, can also be used with Layout specific Campaign ID",
+                "operationId": "campaignSelectFolder",
+                "parameters": [
+                    {
+                        "name": "campaignId",
+                        "in": "path",
+                        "description": "The Campaign ID or Layout specific Campaign ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Campaign"
+                        }
                     }
                 }
             }
@@ -677,11 +732,25 @@
                         "type": "string"
                     },
                     {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "Filter by user Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "embed",
                         "in": "query",
                         "description": "Embed related data such as columns",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -850,6 +919,13 @@
                         "description": "For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1030,6 +1106,13 @@
                         "description": "For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -2130,6 +2213,13 @@
                         "description": "Filter by Display Last Accessed date, expects date in Y-m-d H:i:s format",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -2322,6 +2412,13 @@
                         "description": "The Webkey serial number for this Display, if applicable",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -2572,6 +2669,13 @@
                         "description": "Should the list be refined for only those groups the User can Schedule against?",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -2634,6 +2738,13 @@
                         "description": "The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -2702,6 +2813,13 @@
                         "description": "The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -3102,48 +3220,48 @@
                     "displayGroup"
                 ],
                 "summary": "Action: Change Layout",
-                "description": "Send the change layout action to this DisplayGroup, you can pass layoutId or layout specific campaignId",
+                "description": "Send a change layout action to the provided Display Group. This will be sent to Displays in that Group via XMR.",
                 "operationId": "displayGroupActionChangeLayout",
                 "parameters": [
                     {
                         "name": "displayGroupId",
                         "in": "path",
-                        "description": "The Display Group Id",
+                        "description": "This can be either a Display Group or the Display specific Display Group",
                         "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "layoutId",
                         "in": "formData",
-                        "description": "The Layout Id",
-                        "required": true,
+                        "description": "The ID of the Layout to change to. Either this or a campaignId must be provided.",
+                        "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "campaignId",
                         "in": "formData",
-                        "description": "The layout specific Campaign Id",
+                        "description": "The Layout specific campaignId of the Layout to change to. Either this or a layoutId must be provided.",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "duration",
                         "in": "formData",
-                        "description": "The duration in seconds for this Layout change to remain in effect",
+                        "description": "The duration in seconds for this Layout change to remain in effect, after which normal scheduling is resumed.",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "downloadRequired",
                         "in": "formData",
-                        "description": "Flag indicating whether the player should perform a collect before playing the Layout",
+                        "description": "Flag indicating whether the player should perform a collect before playing the Layout.",
                         "required": false,
                         "type": "integer"
                     },
                     {
                         "name": "changeMode",
                         "in": "formData",
-                        "description": "Whether to queue or replace with this action",
+                        "description": "Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately",
                         "required": true,
                         "type": "string"
                     }
@@ -3167,7 +3285,7 @@
                     {
                         "name": "displayGroupId",
                         "in": "path",
-                        "description": "The display group id",
+                        "description": "This can be either a Display Group or the Display specific Display Group",
                         "required": true,
                         "type": "integer"
                     }
@@ -3191,21 +3309,21 @@
                     {
                         "name": "displayGroupId",
                         "in": "path",
-                        "description": "The Display Group Id",
+                        "description": "This can be either a Display Group or the Display specific Display Group",
                         "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "layoutId",
                         "in": "formData",
-                        "description": "The Layout Id",
+                        "description": "The ID of the Layout to change to. Either this or a campaignId must be provided.",
                         "required": true,
                         "type": "integer"
                     },
                     {
                         "name": "campaignId",
                         "in": "formData",
-                        "description": "The layout specific Campaign Id",
+                        "description": "The Layout specific campaignId of the Layout to change to. Either this or a layoutId must be provided.",
                         "required": false,
                         "type": "integer"
                     },
@@ -3219,7 +3337,7 @@
                     {
                         "name": "downloadRequired",
                         "in": "formData",
-                        "description": "Flag indicating whether the player should perform a collect before adding the Overlay",
+                        "description": "Whether to queue or replace with this action. Queuing will keep the current change layout action and switch after it is finished. If no active change layout action is present, both options are actioned immediately",
                         "required": false,
                         "type": "integer"
                     }
@@ -3326,6 +3444,71 @@
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/displaygroup/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Display Group Select folder",
+                "description": "Select Folder for Display Group, can also be used with Display specific Display Group ID",
+                "operationId": "displayGroupSelectFolder",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The Display Group ID or Display specific Display Group ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Campaign"
+                        }
+                    }
+                }
+            }
+        },
+        "/displaygroup/{displayGroupId}/action/triggerWebhook": {
+            "post": {
+                "tags": [
+                    "displayGroup"
+                ],
+                "summary": "Action: Trigger Web hook",
+                "description": "Send the trigger webhook action to this DisplayGroup",
+                "operationId": "displayGroupActionTriggerWebhook",
+                "parameters": [
+                    {
+                        "name": "displayGroupId",
+                        "in": "path",
+                        "description": "The display group id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "triggerCode",
+                        "in": "formData",
+                        "description": "The trigger code that should be sent to the Player",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -3625,6 +3808,13 @@
                         "description": "Get all Layouts for a given campaignId",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -3688,6 +3878,13 @@
                         "description": "Code identifier for this Layout",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -3762,6 +3959,13 @@
                         "description": "Code identifier for this Layout",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4288,6 +4492,13 @@
                         "description": "Filter by users in this UserGroupId",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4358,6 +4569,41 @@
                         "description": "Date in Y-m-d H:i:s format, will set expiration date on the uploaded Media",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "widgetFromDt",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s format, will set widget start date",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "widgetToDt",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s format, will set widget end date",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "deleteOnExpiry",
+                        "in": "formData",
+                        "description": "Flag (0, 1), set to 1 to remove the Widget from the Playlist when the widgetToDt has been reached",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "applyToMedia",
+                        "in": "formData",
+                        "description": "Flag (0, 1), set to 1 to apply the widgetFromDt as the expiry date on the Media",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4424,6 +4670,13 @@
                         "description": "Date in Y-m-d H:i:s format, will set expiration date on the Media item",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this media should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4779,6 +5032,13 @@
                         "description": "Date in Y-m-d H:i:s format, will set expiration date on the Media item",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this media should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -4792,6 +5052,40 @@
                                 "description": "Location of the new record",
                                 "type": "string"
                             }
+                        }
+                    }
+                }
+            }
+        },
+        "/library/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "library"
+                ],
+                "summary": "Media Select folder",
+                "description": "Select Folder for Media",
+                "operationId": "librarySelectFolder",
+                "parameters": [
+                    {
+                        "name": "mediaId",
+                        "in": "path",
+                        "description": "The Media ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Campaign"
                         }
                     }
                 }
@@ -5432,6 +5726,13 @@
                         "description": "Embed related data such as regions, widgets, permissions, tags",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder ID",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5488,6 +5789,13 @@
                         "description": "Add Library Media matching the tag filter provided",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5556,6 +5864,13 @@
                         "description": "Add Library Media matching the tag filter provided",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5823,6 +6138,40 @@
                 }
             }
         },
+        "/playlist/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "playlist"
+                ],
+                "summary": "Playlist Select folder",
+                "description": "Select Folder for Playlist",
+                "operationId": "playlistSelectFolder",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The Playlist ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Campaign"
+                        }
+                    }
+                }
+            }
+        },
         "/region/{id}": {
             "put": {
                 "tags": [
@@ -6034,6 +6383,45 @@
             }
         },
         "/region/drawer/{id}": {
+            "put": {
+                "tags": [
+                    "layout"
+                ],
+                "summary": "Save Drawer",
+                "description": "Save Drawer",
+                "operationId": "regionDrawerSave",
+                "parameters": [
+                    {
+                        "name": "id",
+                        "in": "path",
+                        "description": "The Drawer ID to Save",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "width",
+                        "in": "formData",
+                        "description": "The Width, default 250",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "height",
+                        "in": "formData",
+                        "description": "The Height",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Region"
+                        }
+                    }
+                }
+            },
             "post": {
                 "tags": [
                     "layout"
@@ -6452,6 +6840,13 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "geoLocationJson",
+                        "in": "formData",
+                        "description": "Valid GeoJSON string, use as an alternative to geoLocation parameter",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -6653,6 +7048,13 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "geoLocationJson",
+                        "in": "formData",
+                        "description": "Valid GeoJSON string, use as an alternative to geoLocation parameter",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -7099,6 +7501,58 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/Layout"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "template"
+                ],
+                "summary": "Add a Template",
+                "description": "Add a new Template to the CMS",
+                "operationId": "templateAdd",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "The layout name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "The layout description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "resolutionId",
+                        "in": "formData",
+                        "description": "If a Template is not provided, provide the resolutionId for this Layout.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "returnDraft",
+                        "in": "formData",
+                        "description": "Should we return the Draft Layout or the Published Layout on Success?",
+                        "required": false,
+                        "type": "boolean"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Layout"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
                             }
                         }
                     }
@@ -7676,6 +8130,91 @@
                 }
             }
         },
+        "/user/permissions/{entity}": {
+            "get": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Permission Data",
+                "description": "Permission data for the multiple Entities and Objects Provided.",
+                "operationId": "userPermissionsMultiSearch",
+                "parameters": [
+                    {
+                        "name": "entity",
+                        "in": "path",
+                        "description": "The Entity",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ids",
+                        "in": "query",
+                        "description": "The IDs of the Objects to return permissions for",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Permission"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/user/permissions/{entity}/multiple": {
+            "post": {
+                "tags": [
+                    "user"
+                ],
+                "summary": "Multiple Permission Set",
+                "description": "Set Permissions to users/groups for multiple provided entities.",
+                "operationId": "userPermissionsMultiSet",
+                "parameters": [
+                    {
+                        "name": "entity",
+                        "in": "path",
+                        "description": "The Entity type",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "ids",
+                        "in": "formData",
+                        "description": "Array of object IDs",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "groupIds",
+                        "in": "formData",
+                        "description": "Array of permissions with groupId as the key",
+                        "required": true,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "ownerId",
+                        "in": "formData",
+                        "description": "Change the owner of this item. Leave empty to keep the current owner",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/user/pref": {
             "get": {
                 "tags": [
@@ -7817,6 +8356,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "decription",
+                        "in": "formData",
+                        "description": "A description of the User Group",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "libraryQuota",
                         "in": "formData",
                         "description": "The quota that should be applied (KiB). Provide 0 for no quota",
@@ -7834,6 +8380,20 @@
                         "name": "isDisplayNotification",
                         "in": "formData",
                         "description": "Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isShownForAddUser",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should this Group be shown in the Add User onboarding form.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "defaultHomePageId",
+                        "in": "formData",
+                        "description": "If this user has been created via the onboarding form, this should be the default home page",
                         "required": false,
                         "type": "integer"
                     }
@@ -7875,6 +8435,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "decription",
+                        "in": "formData",
+                        "description": "A description of the User Group",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "libraryQuota",
                         "in": "formData",
                         "description": "The quota that should be applied (KiB). Provide 0 for no quota",
@@ -7892,6 +8459,20 @@
                         "name": "isDisplayNotification",
                         "in": "formData",
                         "description": "Flag (0, 1), should members of this Group receive Display notifications for Displays they have permissions to see",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isShownForAddUser",
+                        "in": "formData",
+                        "description": "Flag (0, 1), should this Group be shown in the Add User onboarding form.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "defaultHomePageId",
+                        "in": "formData",
+                        "description": "If this user has been created via the onboarding form, this should be the default home page",
                         "required": false,
                         "type": "integer"
                     }
@@ -8330,6 +8911,41 @@
                         "description": "Does the calendar feed come from Windows - if unsure leave unselected.",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "useDateRange",
+                        "in": "formData",
+                        "description": "Should we look for events with provided date range?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rangeStart",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "rangeEnd",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noEventTrigger",
+                        "in": "formData",
+                        "description": "Trigger code for a no event action",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "currentEventTrigger",
+                        "in": "formData",
+                        "description": "Trigger code for a current event action",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -9011,6 +9627,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "freshnessTimeout",
+                        "in": "formData",
+                        "description": "How long should a Player in minutes show content before switching to the No Data Template?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "effect",
                         "in": "formData",
                         "description": "Effect that will be used to transitions between items, available options: fade, fadeout, scrollVert, scollHorz, flipVert, flipHorz, shuffle, tileSlide, tileBlind, marqueeUp, marqueeDown, marqueeRight, marqueeLeft",
@@ -9227,6 +9850,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "freshnessTimeout",
+                        "in": "formData",
+                        "description": "How long should a Player in minutes show content before switching to the No Data Template?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "rowsPerPage",
                         "in": "formData",
                         "description": "Number of rows per page, 0 for no pages",
@@ -9373,6 +10003,13 @@
                         "name": "scaleContent",
                         "in": "formData",
                         "description": "Flag (0,1) - Should the embedded content be scaled along with the layout?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isPreNavigate",
+                        "in": "formData",
+                        "description": "Flag (0,1) - Should this Widget be loaded off screen so that it is made ready in the background? Dynamic content will run.",
                         "required": false,
                         "type": "integer"
                     },
@@ -10095,6 +10732,13 @@
                         "name": "duration",
                         "in": "formData",
                         "description": "Edit Only - The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "durationIsPerItem",
+                        "in": "formData",
+                        "description": "A flag (0, 1), The duration specified is per item, otherwise it is per feed",
                         "required": false,
                         "type": "integer"
                     },
@@ -11655,6 +12299,13 @@
                         "description": "The mode option for Web page, 1- Open Natively, 2- Manual Position, 3- Best Ft",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "isPreNavigate",
+                        "in": "formData",
+                        "description": "Flag (0,1) - Should this Widget be loaded off screen so that it is made ready in the background? Dynamic content will run.",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -11996,6 +12647,14 @@
                 "totalDuration": {
                     "description": "The total duration of the campaign (sum of layout's durations)",
                     "type": "integer"
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Campaign belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Campaign",
+                    "type": "integer"
                 }
             }
         },
@@ -12168,6 +12827,14 @@
                 "limitPolicy": {
                     "description": "Type of action that should be taken on next remote DataSet sync - stop, fifo or truncate",
                     "type": "string"
+                },
+                "folderId": {
+                    "description": "The id of the Folder this DataSet belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this DataSet",
+                    "type": "integer"
                 }
             }
         },
@@ -12484,6 +13151,22 @@
                 "webkeySerial": {
                     "description": "The Webkey serial number for this Display",
                     "type": "string"
+                },
+                "createdDt": {
+                    "description": "The datetime this entity was created",
+                    "type": "string"
+                },
+                "modifiedDt": {
+                    "description": "The datetime this entity was last modified",
+                    "type": "string"
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Display belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Display",
+                    "type": "integer"
                 }
             }
         },
@@ -12531,6 +13214,22 @@
                 "bandwidthLimit": {
                     "description": "The display bandwidth limit",
                     "type": "integer"
+                },
+                "createdDt": {
+                    "description": "The datetime this entity was created",
+                    "type": "string"
+                },
+                "modifiedDt": {
+                    "description": "The datetime this entity was last modified",
+                    "type": "string"
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Display Group belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Display Group",
+                    "type": "integer"
                 }
             }
         },
@@ -12569,6 +13268,30 @@
                     "items": {
                         "type": "string"
                     }
+                }
+            }
+        },
+        "Folder": {
+            "properties": {
+                "id": {
+                    "description": "The ID of this Folder",
+                    "type": "integer"
+                },
+                "text": {
+                    "description": "The name of this Folder",
+                    "type": "string"
+                },
+                "parentId": {
+                    "description": "The folderId of the parent of this Folder",
+                    "type": "integer"
+                },
+                "isRoot": {
+                    "description": "Flag indicating whether this is root Folder",
+                    "type": "integer"
+                },
+                "children": {
+                    "description": "An array of children folderIds",
+                    "type": "string"
                 }
             }
         },
@@ -12709,6 +13432,14 @@
                     "items": {
                         "$ref": "#/definitions/Tag"
                     }
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Layout belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Layout",
+                    "type": "integer"
                 }
             }
         },
@@ -12852,6 +13583,14 @@
                 "enableStat": {
                     "description": "The option to enable the collection of Media Proof of Play statistics",
                     "type": "string"
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Media belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Media",
+                    "type": "integer"
                 }
             }
         },
@@ -12992,26 +13731,6 @@
                 }
             }
         },
-        "Page": {
-            "properties": {
-                "pageId": {
-                    "description": "The ID of the Page",
-                    "type": "integer"
-                },
-                "name": {
-                    "description": "A code name for the page",
-                    "type": "string"
-                },
-                "title": {
-                    "description": "A user friendly title for this page",
-                    "type": "string"
-                },
-                "asHome": {
-                    "description": "Flag indicating if the page can be used as a homepage",
-                    "type": "integer"
-                }
-            }
-        },
         "Permission": {
             "properties": {
                 "permissionId": {
@@ -13135,11 +13854,11 @@
                     "type": "string"
                 },
                 "createdDt": {
-                    "description": "The datetime the Layout was created",
+                    "description": "The datetime this entity was created",
                     "type": "string"
                 },
                 "modifiedDt": {
-                    "description": "The datetime the Layout was last modified",
+                    "description": "The datetime this entity was last modified",
                     "type": "string"
                 },
                 "duration": {
@@ -13174,6 +13893,14 @@
                     "items": {
                         "$ref": "#/definitions/Permission"
                     }
+                },
+                "folderId": {
+                    "description": "The id of the Folder this Playlist belongs to",
+                    "type": "integer"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Playlist",
+                    "type": "integer"
                 }
             }
         },
@@ -13778,10 +14505,6 @@
                         "$ref": "#/definitions/Playlist"
                     }
                 },
-                "homePage": {
-                    "description": "The name of home page",
-                    "type": "string"
-                },
                 "isSystemNotification": {
                     "description": "Does this Group receive system notifications.",
                     "type": "integer"
@@ -13829,6 +14552,10 @@
                     "description": "A flag indicating the special everyone group",
                     "type": "integer"
                 },
+                "description": {
+                    "description": "Description of this User Group",
+                    "type": "string"
+                },
                 "libraryQuota": {
                     "description": "This users library quota in bytes. 0 = unlimited",
                     "type": "integer"
@@ -13840,6 +14567,21 @@
                 "isDisplayNotification": {
                     "description": "Does this Group receive display notifications.",
                     "type": "integer"
+                },
+                "isShownForAddUser": {
+                    "description": "Is this Group shown in the list of choices when onboarding a new user",
+                    "type": "integer"
+                },
+                "defaultHomepageId": {
+                    "description": "Default Home page for new users",
+                    "type": "string"
+                },
+                "features": {
+                    "description": "Features this User Group has direct access to",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
                 }
             }
         },

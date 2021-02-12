@@ -1750,7 +1750,7 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsForm(Request $request, Response $response,$entity, $id)
+    public function permissionsForm(Request $request, Response $response, $entity, $id)
     {
         $requestEntity = $entity;
 
@@ -1781,6 +1781,7 @@ class User extends Base
             'canSetOwner' => $object->canChangeOwner(),
             'owners' => $this->userFactory->query(),
             'object' => $object,
+            'objectNameOverride' => $this->getSanitizer($request->getParams())->getString('nameOverride'),
             'help' => [
                 'permissions' => $this->getHelp()->link('Campaign', 'Permissions')
             ]

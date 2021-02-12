@@ -131,7 +131,7 @@
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                         <th>{% trans "Thumbnail" %}</th>
                                         <th>{% trans "Owner" %}</th>
-                                        <th>{% trans "Permissions" %}</th>
+                                        <th>{% trans "Sharing" %}</th>
                                         <th>{% trans "Valid?" %}</th>
                                         <th>{% trans "Stats?" %}</th>
                                         <th>{% trans "Created" %}</th>
@@ -371,7 +371,7 @@
                 $('#layoutAddForm' + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
             }
 
-            initJsTreeAjax('#container-folder-form-tree', 'layoutAddForm', true, 600);
+            initJsTreeAjax($('#folder-tree-form-modal').find('#container-folder-form-tree'), 'layoutAddForm', true, 600);
 
             $("#layoutAddForm").submit(function(e) {
                 e.preventDefault();

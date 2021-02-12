@@ -135,7 +135,7 @@
                             </thead>
 
                             <tbody class="feature-group">
-                                {{ flow.featureTitleRow("Folders"|trans, "Organise content permissions with Folders"|trans, isUserSpecific) }}
+                                {{ flow.featureTitleRow("Folders"|trans, "Organise content sharing with Folders"|trans, isUserSpecific) }}
                                 {% for customFeature in userGroupFactory.getFeaturesByGroup("folders") %}
                                     {{ flow.featureRow(customFeature.feature, customFeature.title, features, inheritedFeatures, isUserSpecific) }}
                                 {% endfor %}
