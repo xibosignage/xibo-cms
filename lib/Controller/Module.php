@@ -36,6 +36,7 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\MenuBoardFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlayerVersionFactory;
@@ -126,6 +127,9 @@ class Module extends Base
     /** @var DataSetFactory */
     private $dataSetFactory;
 
+    /** @var MenuBoardFactory */
+    private $menuBoardFactory;
+
     /** @var PlayerVersionFactory  */
     private $playerVersionFactory;
 
@@ -154,11 +158,12 @@ class Module extends Base
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param $dataSetFactory
+     * @param DataSetFactory $dataSetFactory
+     * @param MenuBoardFactory $menuBoardFactory
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory, Twig $view, ContainerInterface $container)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory, $menuBoardFactory, Twig $view, ContainerInterface $container)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -177,6 +182,7 @@ class Module extends Base
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->dataSetFactory = $dataSetFactory;
+        $this->menuBoardFactory = $menuBoardFactory;
         $this->container = $container;
     }
 
@@ -654,7 +660,7 @@ class Module extends Base
         // Do we have templates to load?
         $templates = [];
         if ($module->hasTemplates()) {
-            $templates = $module->templatesAvailable();
+            $templates = $module->templatesAvailable(true);
         }
 
         // Pass to view
@@ -1633,6 +1639,30 @@ class Module extends Base
             'id' => $widget->widgetId,
             'data' => $widget
         ]);
+
+        return $this->render($request, $response);
+    }
+
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function getMenuBoards(Request $request, Response $response)
+    {
+        $parsedRequestParams = $this->getSanitizer($request->getParams());
+
+        $this->getState()->template = 'grid';
+        $filter = [
+            'name' => $this->getSanitizer($request->getParams())->getString('name')
+        ];
+
+        $this->getState()->setData($this->menuBoardFactory->query($this->gridRenderSort($parsedRequestParams), $this->gridRenderFilter($filter, $parsedRequestParams)));
+        $this->getState()->recordsTotal = $this->menuBoardFactory->countLast();
 
         return $this->render($request, $response);
     }

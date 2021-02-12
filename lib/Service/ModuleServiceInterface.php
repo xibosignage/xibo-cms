@@ -20,6 +20,8 @@ use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\MenuBoardCategoryFactory;
+use Xibo\Factory\MenuBoardFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -60,11 +62,13 @@ interface ModuleServiceInterface
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
      * @param PlaylistFactory $playlistFactory
+     * @param MenuBoardFactory $menuBoardFactory
+     * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
      * @param Twig $view
      * @param ContainerInterface $container
      * @return ModuleWidget
      */
-    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, ContainerInterface $container);
+    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, ContainerInterface $container);
 
     /**
      * @param string $className
@@ -79,9 +83,11 @@ interface ModuleServiceInterface
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
      * @param PlaylistFactory $playlistFactory
+     * @param MenuBoardFactory $menuBoardFactory
+     * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
      * @param Twig $view
      * @param ContainerInterface $container
      * @return ModuleWidget
      */
-    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, ContainerInterface $container);
+    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, ContainerInterface $container);
 }

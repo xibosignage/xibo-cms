@@ -263,6 +263,10 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-globe;
 }
 
+.module-icon-menuboard {
+    @extend .fa-th;
+}
+
 /* Tools icons */
 .tool-icon-region {
     @extend .fa-clone;

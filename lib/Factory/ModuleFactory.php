@@ -105,6 +105,12 @@ class ModuleFactory extends BaseFactory
     /** @var  UserGroupFactory */
     protected $userGroupFactory;
 
+    /** @var MenuBoardFactory */
+    protected $menuBoardFactory;
+
+    /** @var MenuBoardCategoryFactory */
+    protected $menuBoardCategoryFactory;
+
     /** @var Twig */
     protected $view;
 
@@ -131,10 +137,12 @@ class ModuleFactory extends BaseFactory
      * @param ScheduleFactory $scheduleFactory
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param MenuBoardFactory $menuBoardFactory
+     * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $view, ContainerInterface $container)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, ContainerInterface $container)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -152,6 +160,8 @@ class ModuleFactory extends BaseFactory
         $this->scheduleFactory = $scheduleFactory;
         $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->menuBoardFactory = $menuBoardFactory;
+        $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
         $this->view = $view;
         $this->container = $container;
     }
@@ -193,6 +203,8 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
+            $this->menuBoardFactory,
+            $this->menuBoardCategoryFactory,
             $this->view,
             $this->container
         );
@@ -227,6 +239,8 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
+            $this->menuBoardFactory,
+            $this->menuBoardCategoryFactory,
             $this->view,
             $this->container
         );
@@ -253,6 +267,8 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
+            $this->menuBoardFactory,
+            $this->menuBoardCategoryFactory,
             $this->view,
             $this->container
         );
@@ -279,6 +295,8 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
+            $this->menuBoardFactory,
+            $this->menuBoardCategoryFactory,
             $this->view,
             $this->container
         );
@@ -317,6 +335,8 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
+            $this->menuBoardFactory,
+            $this->menuBoardCategoryFactory,
             $this->view,
             $this->container
         );

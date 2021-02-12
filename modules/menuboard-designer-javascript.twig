@@ -1,0 +1,144 @@
+{#
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+<script type="text/javascript">
+
+    // Runs after form opens
+    function menuboard_form_edit_open() {
+
+        if($(this).find('form').data('formStep') === 1) {
+            // If Menu Board ID exists, set the drop-down to that value
+            var menuId = $(this).find('form').data().elementOptions.menuId;
+
+            if(menuId !== undefined) {
+                $(this).find('#menuId').val(menuId);
+            }
+        } else if ($(this).find('form').data('formStep') === 2) {
+            // Setup lists drag and sort ( with double click )
+            $('#categoriesIn, #categoriesOut').sortable({
+                connectWith: '.connectedSortable',
+                dropOnEmpty: true
+            }).disableSelection();
+            $('.li-sortable.dbclick', this).dblclick(switchLists);
+        } else if($(this).find('form').data('formStep') === 3) {
+            formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+
+            // Set override template field, using the helper ()
+            formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
+
+            // Set clock type input field, using the helper ()
+            formHelpers.setupObjectValueInputFields($(this), '#templateId', ['.template-selector-default'], ['empty']);
+
+            // Initialise CKEditor for the noDataMessage
+            formHelpers.setupDualTypeTextArea(this, 'noDataMessage');
+
+            // Setup template override
+            formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId',
+                {
+                    '#styleSheet': 'css'
+                });
+
+            formHelpers.setupCheckboxInputFields($(this).find('form'), '#showUnavailable', '.unavailable-product');
+            formHelpers.setupCheckboxInputFields($(this).find('form'), '#showMenuBoardName', '.menu-name-control');
+            formHelpers.setupCheckboxInputFields($(this).find('form'), '#showMenuCategoryName', '.category-name-control');
+
+            menuBoardFormSetup(this);
+        }
+    }
+
+    // Runs before form submit
+    function menuboard_form_edit_submit() {
+
+        if($(this).find('form').data('formStep') === 2) {
+            var form2 = $("#menuBoardEditFormStep2");
+            // Clean the previous generated hidden menuBoardCategories from the form
+            form2.find('input[name="menuBoardCategories[]"]').remove();
+
+            // Add all the selected columns to the form as hidden input fields
+            $($('#categoriesIn').sortable('toArray')).each(function() {
+                form2.append('<input type="hidden" name="menuBoardCategories[]" value="' + this + '" />');
+            });
+
+            form2.data("apply", true);
+
+            formHelpers.updateCKEditor();
+
+        } else if($(this).find('form').data('formStep') === 3) {
+            var form3 = $("#menuBoardEditFormStep3");
+
+            for (var i = 1; i <= form3.find('#numOfColumns').val(); i++) {
+                form3.find('input[name="menuBoardCategories_'+ i + '[]"]').remove();
+
+                $($("#categoriesSelected_"+i).sortable('toArray')).each(function() {
+                    form3.append('<input type="hidden" name="menuBoardCategories_' + i +'[]" value="' + this + '" />');
+                });
+            }
+
+            form3.data("apply", true);
+
+            formHelpers.updateCKEditor();
+        }
+    }
+
+    function menuBoardFormSetup(dialog) {
+        // Setup lists drag and sort ( with double click )
+        $('.connectedSortable2').sortable({
+            connectWith: '.connectedSortable2',
+            dropOnEmpty: true
+        }).disableSelection();
+
+        // Configure some color pickers
+        $(dialog).find('#fontColorMenu').colorpicker();
+        $(dialog).find('#fontColorCategory').colorpicker();
+        $(dialog).find('#fontColorProduct').colorpicker();
+        $(dialog).find('#fontColorUnavailableProduct').colorpicker();
+        $(dialog).find('#fontColorHighlightProduct').colorpicker();
+
+        // Populate the font list with options
+        var $fontFamily = $(dialog).find('#fontFamily');
+        $.ajax({
+            method: 'GET',
+            url: $fontFamily.data('searchUrl'),
+            success: function(res) {
+                if (res.success) {
+                    $.each(res.data, function(index, element) {
+                        if ($fontFamily.data('value') === element.familyName) {
+                            $fontFamily.append($('<option value="' + element.familyName + '" selected>' + element.displayName + '</option>'));
+                        } else {
+                            $fontFamily.append($('<option value="' + element.familyName + '">' + element.displayName + '</option>'));
+                        }
+                    });
+                }
+            }
+        });
+
+        if($(dialog).hasClass('modal')) {
+            $(dialog).on('hide.bs.modal', function(e) {
+                if(e.namespace === 'bs.modal') {
+                    // Remove colour pickers
+                    $(dialog).find('.colorpicker-element').colorpicker('destroy');
+                }
+            });
+        }
+    }
+
+</script>

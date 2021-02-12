@@ -45,6 +45,8 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
+use Xibo\Factory\MenuBoardCategoryFactory;
+use Xibo\Factory\MenuBoardFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlayerVersionFactory;
@@ -217,6 +219,12 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var PlaylistFactory */
     protected $playlistFactory;
 
+    /** @var MenuBoardFactory */
+    protected $menuBoardFactory;
+
+    /** @var MenuBoardCategoryFactory */
+    protected $menuBoardCategoryFactory;
+
     /** @var Twig */
     protected $view;
 
@@ -244,10 +252,12 @@ abstract class ModuleWidget implements ModuleInterface
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
      * @param PlaylistFactory $playlistFactory
+     * @param MenuBoardFactory $menuBoardFactory
+     * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
      * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($store, $pool, $log, $config, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, Twig $view, ContainerInterface $container)
+    public function __construct($store, $pool, $log, $config, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, Twig $view, ContainerInterface $container)
     {
         $this->store = $store;
         $this->pool = $pool;
@@ -267,6 +277,8 @@ abstract class ModuleWidget implements ModuleInterface
         $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->playlistFactory = $playlistFactory;
+        $this->menuBoardFactory = $menuBoardFactory;
+        $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
         $this->view = $view;
         $this->container = $container;
 

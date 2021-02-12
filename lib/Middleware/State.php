@@ -793,6 +793,7 @@ class State implements Middleware
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('dataSetFactory'),
+                    $c->get('menuBoardFactory'),
                     $c->get('view'),
                     $c
                 );
@@ -1363,7 +1364,8 @@ class State implements Middleware
                 return new \Xibo\Factory\MenuBoardCategoryFactory(
                     $c->get('store'),
                     $c->get('logService'),
-                    $c->get('sanitizerService')
+                    $c->get('sanitizerService'),
+                    $c->get('menuBoardProductOptionFactory')
                 );
             },
             'menuBoardProductOptionFactory' => function(ContainerInterface $c) {
@@ -1380,8 +1382,11 @@ class State implements Middleware
                     $c->get('sanitizerService'),
                     $c->get('user'),
                     $c->get('userFactory'),
+                    $c->get('configService'),
+                    $c->get('pool'),
                     $c->get('permissionFactory'),
-                    $c->get('menuBoardCategoryFactory')
+                    $c->get('menuBoardCategoryFactory'),
+                    $c->get('displayFactory')
                 );
             },
             'moduleFactory' => function(ContainerInterface $c) {
@@ -1404,6 +1409,8 @@ class State implements Middleware
                     $c->get('scheduleFactory'),
                     $c->get('permissionFactory'),
                     $c->get('userGroupFactory'),
+                    $c->get('menuBoardFactory'),
+                    $c->get('menuBoardCategoryFactory'),
                     $c->get('view'),
                     $c
                 );

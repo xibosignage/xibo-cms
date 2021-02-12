@@ -194,6 +194,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/playlist/widget/form/audio/{id}', ['\Xibo\Controller\Module','widgetAudioForm'])->setName('module.widget.audio.form');
     $group->get('/playlist/widget/form/expiry/{id}', ['\Xibo\Controller\Module','widgetExpiryForm'])->setName('module.widget.expiry.form');
     $group->get('/playlist/widget/dataset', ['\Xibo\Controller\Module','getDataSets'])->setName('module.widget.dataset.search');
+    $group->get('/playlist/widget/menuboard', ['\Xibo\Controller\Module','getMenuBoards'])->setName('module.widget.menuboard.search');
 
     // Outputs
     $group->get('/playlist/widget/tab/{tab}/{id}', ['\Xibo\Controller\Module','getTab'])->setName('module.widget.tab.form');

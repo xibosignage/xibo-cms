@@ -1,0 +1,303 @@
+{#
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% set menuName = module.getExtra().menuBoard.name %}
+    {% trans %}Edit Menu Board Widget: Menu Board is {{ menuName }}{% endtrans %}
+{% endblock %}
+
+{% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            <li class="nav-item dropdown">
+                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Templates" %}<span class="caret"></span>
+                </a>
+                <div class="dropdown-menu">
+                    <a class="template-override-controls dropdown-item" href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
+                    <a class="dropdown-item" href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a>
+                    <a class="dropdown-item" href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a>
+                </div>
+            </li>
+            <li class="nav-item"><a class="nav-link" href="#cachingTab" role="tab"
+                                    data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
+        </ul>
+        <div class="col-md-12">
+            <form id="menuBoardEditFormStep3" class="XiboForm form-horizontal" data-form-step="3" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="general">
+                        {% set title %}{% trans "Name" %}{% endset %}
+                        {% set helpText %}{% trans "An optional name for this widget" %}{% endset %}
+                        {{ forms.input("name", title, module.getOption("name"), helpText) }}
+
+                        {% set title %}{% trans "Set a duration?" %}{% endset %}
+                        {% set helpText %}{% trans "Select to provide a specific duration for this Widget" %}{% endset %}
+                        {{ forms.checkbox("useDuration", title, module.getUseDuration(), helpText) }}
+
+                        {% set title %}{% trans "Duration" %}{% endset %}
+                        {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
+                        {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
+
+                        {% set title %}{% trans "Duration is per page" %}{% endset %}
+                        {% set helpText %}{% trans "The duration specified is per page otherwise it is overall Widget duration." %}{% endset %}
+                        {{ forms.checkbox("durationIsPerPage", title, module.getOption("durationIsPerPage"), helpText) }}
+
+                        {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
+                        {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
+
+                        {% set offOption %}{% trans "Off" %}{% endset %}
+                        {% set onOption %}{% trans "On" %}{% endset %}
+                        {% set inheritOption %}{% trans "Inherit" %}{% endset %}
+                        {% set options = [
+                            { id: "Off", value: offOption },
+                            { id: "On", value: onOption },
+                            { id: "Inherit", value: inheritOption }
+                        ] %}
+                        {{ forms.dropdown("enableStat", "single", title, module.getOption("enableStat", theme.getSetting("WIDGET_STATS_ENABLED_DEFAULT")), options, "id", "value", helpText) }}
+                    </div>
+
+                    <div class="tab-pane" id="configurationTab">
+                        {{ forms.hidden("numOfColumns", module.getOption("numOfColumns", 2)) }}
+                        <div id="columnsContainer">
+                            <div class="row">
+                                <div class="col-md-12 row">
+                                    {% for i in 1..module.getOption("numOfColumns", 2) %}
+                                        <div class="connectedlist col-sm">
+                                            <p class="text-info text-center">{% trans "Column" %} {{ i }}</p>
+                                            <ul id="categoriesSelected_{{ i }}"
+                                                class="connectedSortable2 m-auto text-center">
+                                                {% for category in module.menuBoardCategoriesSelectedAssigned(i) %}
+                                                    <li id="{{ category.menuCategoryId }}"
+                                                        class="li-sortable">{{ category.name }}</li>
+                                                {% endfor %}
+                                            </ul>
+                                        </div>
+                                    {% endfor %}
+                                    <div class="connectedlist col-sm">
+                                        <p class="text-info text-center">{% trans "Categories Unassigned" %}</p>
+                                        <ul id="categoriesSelectedNotAssigned"
+                                            class="connectedSortable2 m-auto text-center">
+                                            {% for category in module.menuBoardCategoriesSelectedNotAssigned() %}
+                                                <li id="{{ category.menuCategoryId }}"
+                                                    class="li-sortable">{{ category.name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {% set title %}{% trans "Show Media for" %}{% endset %}
+                        {% set helpText %}{% trans "Select which associated Media items should be rendered" %}{% endset %}
+                        {% set all %}{% trans "All" %}{% endset %}
+                        {% set product %}{% trans "Per Product" %}{% endset %}
+                        {% set category %}{% trans "Per Category" %}{% endset %}
+                        {% set noImages %}{% trans "None" %}{% endset %}
+                        {% set options = [
+                            { id: "all", value: all },
+                            { id: "product", value: product },
+                            { id: "category", value: category },
+                            { id: "none", value: noImages }
+                        ] %}
+                        {{ forms.dropdown("showImagesFor", "single", title, module.getOption("showImagesFor", "none"), options, "id", "value", helpText) }}
+
+                        {% set title %}{% trans "Show the Menu Board Name?" %}{% endset %}
+                        {{ forms.checkbox("showMenuBoardName", title, module.getOption("showMenuBoardName")) }}
+
+                        {% set title %}{% trans "Show the Menu Category Name?" %}{% endset %}
+                        {{ forms.checkbox("showMenuCategoryName", title, module.getOption("showMenuCategoryName")) }}
+
+                        {% set title %}{% trans "Show the Product Options?" %}{% endset %}
+                        {{ forms.checkbox("showProductOptions", title, module.getOption("showProductOptions")) }}
+
+                        {% set title %}{% trans "Show the Product Description?" %}{% endset %}
+                        {{ forms.checkbox("showProductDescription", title, module.getOption("showProductDescription")) }}
+
+                        {% set title %}{% trans "Show the Product Allergy Information?" %}{% endset %}
+                        {{ forms.checkbox("showProductAllergyInformation", title, module.getOption("showProductAllergyInformation")) }}
+
+                        {% set title %}{% trans "Show Unavailable Products?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the currently unavailable products appear in the menu?" %}{% endset %}
+                        {{ forms.checkbox('showUnavailable', title, module.getOption("showUnavailable"), helpText) }}
+
+                        {% set title %}{% trans "Number of Products in a row" %}{% endset %}
+                        {% set helpText %}{% trans "How many Products should be displayed in one row?" %}{% endset %}
+                        {{ forms.number("numOfRows", title, module.getOption("numOfRows", 1), helpText) }}
+
+                        {% set products = module.getExtra().products %}
+                        {% if products %}
+                            {% set attributes = [
+                                { name: "data-search-url", value: url_for("menuBoard.product.search.widget") },
+                                { name: "data-search-term", value: "name" },
+                                { name: "data-id-property", value: "menuProductId" },
+                                { name: "data-text-property", value: "name" },
+                                { name: "data-filter-options", value: '{"availability":"1","menuId":"' ~  module.getOption("menuId") ~ '", "categories":"' ~  module.getOption("categories") ~ '"}'  },
+                                { name: "data-allow-clear", value: "true"},
+                                { name: "data-placeholder", value: "Select a Product"}
+                            ] %}
+                            {% set title %}{% trans "Highlight Products" %}{% endset %}
+                            {% set helpText %}{% trans "Please select one or more Products that should be highlighted." %}{% endset %}
+                            {{ forms.dropdown("productsHighlight[]", "dropdownmulti", title, module.getExtra().highlightProducts, products, "menuProductId", "name", helpText, "pagedSelect", "", "", "", attributes) }}
+                        {% endif %}
+                    </div>
+
+                    <div class="tab-pane" id="appearanceTab">
+
+                        {% set title %}{% trans "Template" %}{% endset %}
+                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
+                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), templatesAvailable, "id", "value", helpText, "template-selector-control") }}
+
+                        {% set title %}{% trans "Override the template?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
+                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", "0"), helpText) }}
+
+                        {% set useTemplatesMessage %}
+                            {% trans "With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above." %}
+                        {% endset %}
+                        {{ forms.message(useTemplatesMessage, 'template-override-controls') }}
+
+                        {% set title %}{% trans "Background Colour" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "template-selector-control") }}
+
+                        {% set title %}{% trans "Font Colour for Menu Board Name" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
+                        {{ forms.input("fontColorMenu", title, module.getOption("fontColorMenu"), helpText, "template-selector-control menu-name-control") }}
+
+                        {% set title %}{% trans "Font Colour for Categories" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
+                        {{ forms.input("fontColorCategory", title, module.getOption("fontColorCategory"), helpText, "template-selector-control category-name-control") }}
+
+                        {% set title %}{% trans "Font Colour for Products" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
+                        {{ forms.input("fontColorProduct", title, module.getOption("fontColorProduct"), helpText, "template-selector-control") }}
+
+                        {% set title %}{% trans "Font Colour for Unavailable Products" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
+                        {{ forms.input("fontColorUnavailableProduct", title, module.getOption("fontColorUnavailableProduct"), helpText, "template-selector-control unavailable-product") }}
+
+                        {% set title %}{% trans "Font Colour for Highlighted Products" %}{% endset %}
+                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
+                        {{ forms.input("fontColorHighlightProduct", title, module.getOption("fontColorHighlightProduct"), helpText, "template-selector-control") }}
+
+                        {% set title %}{% trans "Font" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-search-url", value: url_for("library.font.list") },
+                            { name: "data-value", value: module.getOption("fontFamily") }
+                        ] %}
+                        {% set helpText %}{% trans "Select a custom font - leave empty to use the default font." %}{% endset %}
+                        {{ forms.dropdown("fontFamily", "single", title, "", [{id: "", value: ""}], "id", "value", helpText, "template-selector-control", "", "", "", attributes) }}
+
+                        {% set title %}{% trans "Font Size for Menu Board Name" %}{% endset %}
+                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
+                        {{ forms.number("fontSizeMenu", title, module.getOption("fontSizeMenu"), helpText, "template-selector-control menu-name-control") }}
+
+                        {% set title %}{% trans "Font Size for Categories" %}{% endset %}
+                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
+                        {{ forms.number("fontSizeCategory", title, module.getOption("fontSizeCategory"), helpText, "template-selector-control category-name-control") }}
+
+                        {% set title %}{% trans "Font Size for Products" %}{% endset %}
+                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
+                        {{ forms.number("fontSizeProduct", title, module.getOption("fontSizeProduct"), helpText, "template-selector-control") }}
+
+                        {% set title %}{% trans "Font Size for Product Description" %}{% endset %}
+                        {% set helpText %}{% trans "Set the font size, affects description and allergy information" %}{% endset %}
+                        {{ forms.number("fontSizeProductDescription", title, module.getOption("fontSizeProductDescription"), helpText, "template-selector-control") }}
+
+                        {% set title %}{% trans "Font Size for Unavailable Products" %}{% endset %}
+                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
+                        {{ forms.number("fontSizeProductUnavailable", title, module.getOption("fontSizeProductUnavailable"), helpText, "template-selector-control unavailable-product") }}
+
+                        {% set title %}{% trans "Font Size for Highlighted Products" %}{% endset %}
+                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
+                        {{ forms.number("fontSizeProductHighlight", title, module.getOption("fontSizeProductHighlight"), helpText, "template-selector-control") }}
+                    </div>
+
+                    <div class="tab-pane" id="noDataTemplateTab">
+                        <div class="form-content-title row">
+                            <h4 class="col-6 text-left">{% trans "No Data Template" %}</h4>
+                            <div class="col-6 text-right">
+                                <input type="checkbox" class="bootstrap-switch-target" id="noDataMessage_advanced"
+                                       name="noDataMessage_advanced"
+                                       {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %}
+                                       data-size="small"
+                                       data-label-text="{% trans "Visual editor" %}"
+                                       data-label-width="80px"
+                                       data-on-text="{% trans "On" %}"
+                                       data-off-text="{% trans "Off" %}">
+                            </div>
+                        </div>
+
+                        {% set noDataMessageMessage1 %}
+                            {% trans "Enter text or HTML in the box below." %}<br>
+                        {% endset %}
+                        {{ forms.message(noDataMessageMessage1, 'noDataMessage-advanced-editor-hide') }}
+
+                        {% set noDataMessageMessage2 %}
+                            {% trans "Enter the text to display." %}
+                            {% trans "The red rectangle reflects the size of the region you are editing." %}
+                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
+                        {% endset %}
+                        {{ forms.message(noDataMessageMessage2, 'noDataMessage-advanced-editor-show') }}
+
+                        {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
+                        {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
+                    </div>
+
+                    <div class="tab-pane" id="optionalStylesheetTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Optional Stylesheet Template" %}</h4>
+                        </div>
+
+                        {% set title %}{% trans "Enter a style sheet for the table" %}{% endset %}
+                        {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet", module.defaultStyleSheet()), title, "template-override-controls", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="optionalJavascriptTab">
+                        <div class="form-content-title">
+                            <h4>{% trans "Optional JavaScript" %}</h4>
+                        </div>
+
+                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), "", "", "", 10) }}
+                    </div>
+
+                    <div class="tab-pane" id="cachingTab">
+                        {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
+                        {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
+                        {{ forms.number("updateInterval", title, module.getOption("updateInterval", 60), helpText, "", "required") }}
+                    </div>
+
+                </div>
+
+                <input type="hidden" name="step" value="3"/>
+            </form>
+        </div>
+    </div>
+{% endblock %}
