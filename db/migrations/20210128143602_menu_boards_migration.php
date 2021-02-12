@@ -35,6 +35,7 @@ class MenuBoardsMigration extends AbstractMigration
             ->addColumn('name', 'string', ['limit' => 50])
             ->addColumn('description', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->addColumn('userId', 'integer')
+            ->addColumn('modifiedDt', 'integer', ['default' => 0])
             ->addColumn('folderId', 'integer', ['default' => 1])
             ->addColumn('permissionsFolderId', 'integer', ['default' => 1])
             ->addForeignKey('folderId', 'folder', 'folderId')

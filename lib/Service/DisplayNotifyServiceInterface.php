@@ -87,4 +87,10 @@ interface DisplayNotifyServiceInterface
      * @param $code
      */
     public function notifyByLayoutCode($code);
+
+    /**
+     * Notify by Menu Board ID
+     * @param $menuId
+     */
+    public function notifyByMenuBoardId($menuId);
 }

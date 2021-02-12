@@ -23,15 +23,23 @@
 namespace Xibo\Factory;
 
 
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\MenuBoard;
 use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 class MenuBoardFactory extends BaseFactory
 {
+    /** @var  ConfigServiceInterface */
+    private $config;
+
+    /** @var PoolInterface */
+    private $pool;
+
     /**
      * @var PermissionFactory
      */
@@ -42,6 +50,11 @@ class MenuBoardFactory extends BaseFactory
      */
     private $menuBoardCategoryFactory;
 
+    private $sanitizerService;
+
+    /** @var DisplayFactory */
+    private $displayFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
@@ -49,16 +62,22 @@ class MenuBoardFactory extends BaseFactory
      * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
+     * @param ConfigServiceInterface $config
+     * @param PoolInterface $pool
      * @param PermissionFactory $permissionFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
+     * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory, $menuBoardCategoryFactory)
+    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $permissionFactory, $menuBoardCategoryFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
+        $this->config = $config;
+        $this->pool = $pool;
 
         $this->permissionFactory = $permissionFactory;
         $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
+        $this->displayFactory = $displayFactory;
     }
 
     /**
@@ -70,8 +89,12 @@ class MenuBoardFactory extends BaseFactory
         return new MenuBoard(
             $this->getStore(),
             $this->getLog(),
+            $this->sanitizerService,
+            $this->pool,
+            $this->config,
             $this->permissionFactory,
-            $this->menuBoardCategoryFactory
+            $this->menuBoardCategoryFactory,
+            $this->displayFactory
         );
     }
 
@@ -151,6 +174,7 @@ class MenuBoardFactory extends BaseFactory
                `menu_board`.menuId,
                `menu_board`.name,
                `menu_board`.description,
+               `menu_board`.modifiedDt,
                `menu_board`.userId,
                `user`.UserName AS owner,
                `menu_board`.folderId,

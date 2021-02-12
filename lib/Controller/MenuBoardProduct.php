@@ -209,6 +209,30 @@ class MenuBoardProduct extends Base
             }
         }
 
+        $menuBoard->setActive();
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = $this->menuBoardCategoryFactory->countLast();
+        $this->getState()->setData($menuBoardProducts);
+
+        return $this->render($request, $response);
+    }
+
+    public function productsForWidget(Request $request, Response $response): Response
+    {
+        $parsedParams = $this->getSanitizer($request->getQueryParams());
+        $categories = $parsedParams->getString('categories');
+
+        $filter = [
+            'menuProductId' => $parsedParams->getInt('menuProductId'),
+            'menuCategoryId' => $parsedParams->getInt('menuCategoryId'),
+            'name' => $parsedParams->getString('name'),
+            'availability' => $parsedParams->getInt('availability'),
+            'categories' => $categories
+        ];
+
+        $menuBoardProducts = $this->menuBoardCategoryFactory->getProductData($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));
+
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->menuBoardCategoryFactory->countLast();
         $this->getState()->setData($menuBoardProducts);
@@ -319,6 +343,8 @@ class MenuBoardProduct extends Base
                 $productOption->save();
             }
         }
+
+        $menuBoard->save();
 
         // Return
         $this->getState()->hydrate([
@@ -480,6 +506,7 @@ class MenuBoardProduct extends Base
         }
 
         $menuBoardProduct->save();
+        $menuBoard->save();
 
         // Success
         $this->getState()->hydrate([

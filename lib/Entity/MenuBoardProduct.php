@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 use Respect\Validation\Validator as v;
+use Xibo\Factory\MenuBoardProductOptionFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -85,13 +86,20 @@ class MenuBoardProduct implements \JsonSerializable
     public $mediaId;
 
     /**
+     * @var MenuBoardProductOptionFactory
+     */
+    private $menuBoardProductOptionFactory;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param MenuBoardProductOptionFactory $menuBoardProductOptionFactory
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $menuBoardProductOptionFactory)
     {
         $this->setCommonDependencies($store, $log);
+        $this->menuBoardProductOptionFactory = $menuBoardProductOptionFactory;
     }
 
 
@@ -197,11 +205,12 @@ class MenuBoardProduct implements \JsonSerializable
         $this->getStore()->update('DELETE FROM `menu_product` WHERE menuProductId = :menuProductId', ['menuProductId' => $this->menuProductId]);
     }
 
+    /**
+     * @return MenuBoardProductOption[]
+     */
     public function getOptions()
     {
-        $options = $this->getStore()->select('SELECT `option`, `value` FROM `menu_product_options` WHERE menuProductId = :menuProductId', [
-            'menuProductId' => $this->menuProductId
-        ]);
+        $options = $this->menuBoardProductOptionFactory->getByMenuProductId($this->menuProductId);
 
         return $options;
     }

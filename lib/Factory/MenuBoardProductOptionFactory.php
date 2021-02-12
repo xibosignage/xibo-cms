@@ -70,7 +70,7 @@ class MenuBoardProductOptionFactory extends BaseFactory
      * @param int $menuProductId
      * @return MenuBoardProductOption[]
      */
-    public function getByWidgetId($menuProductId)
+    public function getByMenuProductId($menuProductId)
     {
         return $this->query(null, ['menuProductId' => $menuProductId]);
     }
@@ -86,7 +86,7 @@ class MenuBoardProductOptionFactory extends BaseFactory
         $sanitizedFilter = $this->getSanitizer($filterBy);
         $entries = [];
 
-        $sql = 'SELECT * FROM `menu_product_options` WHERE menuProductId = :menuProductId';
+        $sql = 'SELECT * FROM `menu_product_options` WHERE menuProductId = :menuProductId ORDER BY `option`';
 
         foreach ($this->getStore()->select($sql, [
             'menuProductId' => $sanitizedFilter->getInt('menuProductId')

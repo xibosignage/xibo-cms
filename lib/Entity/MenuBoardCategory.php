@@ -130,6 +130,9 @@ class MenuBoardCategory implements \JsonSerializable
         }
     }
 
+    /**
+     * @return MenuBoardProduct[]
+     */
     public function getProducts()
     {
         return $this->menuCategoryFactory->getProductData(null, ['menuCategoryId' => $this->menuCategoryId]);
@@ -180,9 +183,7 @@ class MenuBoardCategory implements \JsonSerializable
 
     /**
      * Delete Menu Board
-     * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function delete()
     {

@@ -31,15 +31,20 @@ use Xibo\Support\Exception\NotFoundException;
 
 class MenuBoardCategoryFactory extends BaseFactory
 {
+    /** @var MenuBoardProductOptionFactory */
+    private $menuBoardProductOptionFactory;
+
     /**
      * Construct a factory
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param SanitizerService $sanitizerService
+     * @param MenuBoardProductOptionFactory $menuBoardProductOptionFactory
      */
-    public function __construct($store, $log, $sanitizerService)
+    public function __construct($store, $log, $sanitizerService, $menuBoardProductOptionFactory)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->menuBoardProductOptionFactory = $menuBoardProductOptionFactory;
     }
 
     /**
@@ -63,7 +68,8 @@ class MenuBoardCategoryFactory extends BaseFactory
     {
         return new MenuBoardProduct(
             $this->getStore(),
-            $this->getLog()
+            $this->getLog(),
+            $this->menuBoardProductOptionFactory
         );
     }
 
@@ -293,6 +299,16 @@ class MenuBoardCategoryFactory extends BaseFactory
             $this->nameFilter('menu_product', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
+        if ($sanitizedFilter->getInt('availability') !== null) {
+            $body .= ' AND `menu_product`.availability = :availability ';
+            $params['availability'] = $sanitizedFilter->getInt('availability');
+        }
+
+        if ($sanitizedFilter->getString('categories') != null) {
+            $categories = implode('","', array_map('intval', explode(',', $sanitizedFilter->getString('categories'))));
+            $body .= ' AND `menu_product`.menuCategoryId IN ("' . $categories . '") ';
+        }
+
         // Sorting?
         $order = '';
 
@@ -309,7 +325,7 @@ class MenuBoardCategoryFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $menuProduct = $this->createEmptyProduct()->hydrate($row);
+            $menuProduct = $this->createEmptyProduct()->hydrate($row, ['intProperties' => ['availability']]);
             $entries[] = $menuProduct;
         }
 

@@ -22,9 +22,14 @@
 
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Respect\Validation\Validator as v;
+use Stash\Interfaces\PoolInterface;
+use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\SanitizerService;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -60,6 +65,12 @@ class MenuBoard implements \JsonSerializable
     public $owner;
 
     /**
+     * @SWG\Property(description="The Menu Board last modified date")
+     * @var int
+     */
+    public $modifiedDt;
+
+    /**
      * @SWG\Property(description="The Id of the Folder this Menu Board belongs to")
      * @var string
      */
@@ -77,27 +88,61 @@ class MenuBoard implements \JsonSerializable
      */
     public $groupsWithPermissions;
 
+    /** @var  SanitizerService */
+    private $sanitizerService;
+
+    /** @var PoolInterface */
+    private $pool;
+
+    /** @var  ConfigServiceInterface */
+    private $config;
+
     /**
      * @var Permission[]
      */
     private $permissions = [];
     private $categories;
 
+    /** @var PermissionFactory */
     private $permissionFactory;
+
+    /** @var MenuBoardCategoryFactory  */
     private $menuBoardCategoryFactory;
+
+    /** @var DisplayFactory */
+    private $displayFactory;
+
+    private $datesToFormat = ['modifiedDt'];
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param SanitizerService $sanitizerService
+     * @param PoolInterface $pool
+     * @param ConfigServiceInterface $config
      * @param PermissionFactory $permissionFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
+     * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $permissionFactory, $menuBoardCategoryFactory)
+    public function __construct($store, $log, $sanitizerService, $pool, $config, $permissionFactory, $menuBoardCategoryFactory, $displayFactory)
     {
         $this->setCommonDependencies($store, $log);
+        $this->sanitizerService = $sanitizerService;
+        $this->config = $config;
+        $this->pool = $pool;
         $this->permissionFactory = $permissionFactory;
         $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
+        $this->displayFactory = $displayFactory;
+    }
+
+    /**
+     * @param $array
+     * @return \Xibo\Support\Sanitizer\SanitizerInterface
+     */
+    protected function getSanitizer($array)
+    {
+        return $this->sanitizerService->getSanitizer($array);
     }
 
     public function __clone()
@@ -209,14 +254,56 @@ class MenuBoard implements \JsonSerializable
         } else {
             $this->update();
         }
+
+        // We've been touched
+        $this->setActive();
+
+        // Notify Displays?
+        $this->notify();
+    }
+
+    /**
+     * Is this MenuBoard active currently
+     * @return bool
+     */
+    public function isActive()
+    {
+        $cache = $this->pool->getItem('/menuboard/accessed/' . $this->menuId);
+        return $cache->isHit();
+    }
+
+    /**
+     * Indicate that this MenuBoard has been accessed recently
+     * @return $this
+     */
+    public function setActive()
+    {
+        $this->getLog()->debug('Setting ' . $this->menuId . ' as active');
+
+        $cache = $this->pool->getItem('/menuboard/accessed/' . $this->menuId);
+        $cache->set('true');
+        $cache->expiresAfter(intval($this->config->getSetting('REQUIRED_FILES_LOOKAHEAD')) * 1.5);
+        $this->pool->saveDeferred($cache);
+        return $this;
+    }
+
+    /**
+     * Notify displays of this campaign change
+     */
+    public function notify()
+    {
+        $this->getLog()->debug('MenuBoard ' . $this->menuId . ' wants to notify');
+
+        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByMenuBoardId($this->menuId);
     }
 
     private function add()
     {
-        $this->menuId = $this->getStore()->insert('INSERT INTO `menu_board` (name, description, userId, folderId, permissionsFolderId) VALUES (:name, :description, :userId, :folderId, :permissionsFolderId)', [
+        $this->menuId = $this->getStore()->insert('INSERT INTO `menu_board` (name, description, userId, modifiedDt, folderId, permissionsFolderId) VALUES (:name, :description, :userId, :modifiedDt, :folderId, :permissionsFolderId)', [
             'name' => $this->name,
             'description' => $this->description,
             'userId' => $this->userId,
+            'modifiedDt' => Carbon::now()->format('U'),
             'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
             'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
         ]);
@@ -224,11 +311,12 @@ class MenuBoard implements \JsonSerializable
 
     private function update()
     {
-        $this->getStore()->update('UPDATE `menu_board` SET name = :name, description = :description, userId = :userId, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE menuId = :menuId', [
+        $this->getStore()->update('UPDATE `menu_board` SET name = :name, description = :description, userId = :userId, modifiedDt = :modifiedDt, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE menuId = :menuId', [
             'menuId' => $this->menuId,
             'name' => $this->name,
             'description' => $this->description,
             'userId' => $this->userId,
+            'modifiedDt' => Carbon::now()->format('U'),
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId
         ]);
