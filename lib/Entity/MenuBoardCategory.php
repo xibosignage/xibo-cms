@@ -139,6 +139,14 @@ class MenuBoardCategory implements \JsonSerializable
     }
 
     /**
+     * @return MenuBoardProduct[]
+     */
+    public function getAvailableProducts()
+    {
+        return $this->menuCategoryFactory->getProductData(null, ['menuCategoryId' => $this->menuCategoryId, 'availability' => 1]);
+    }
+
+    /**
      * Save this Menu Board Category
      * @param array $options
      * @throws InvalidArgumentException

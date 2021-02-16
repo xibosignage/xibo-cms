@@ -65,10 +65,6 @@
                         {% set helpText %}{% trans "The duration in seconds this item should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
-                        {% set title %}{% trans "Duration is per page" %}{% endset %}
-                        {% set helpText %}{% trans "The duration specified is per page otherwise it is overall Widget duration." %}{% endset %}
-                        {{ forms.checkbox("durationIsPerPage", title, module.getOption("durationIsPerPage"), helpText) }}
-
                         {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                         {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
 
@@ -150,6 +146,10 @@
                         {% set title %}{% trans "Number of Products in a row" %}{% endset %}
                         {% set helpText %}{% trans "How many Products should be displayed in one row?" %}{% endset %}
                         {{ forms.number("numOfRows", title, module.getOption("numOfRows", 1), helpText) }}
+
+                        {% set title %}{% trans "Number of Products per page" %}{% endset %}
+                        {% set helpText %}{% trans "How many products per page should be displayed? If number of returned products for a category is larger than the number specified here Widget will cycle between pages of products for this category. Leave at 0 to show all category products in one page" %}{% endset %}
+                        {{ forms.number("productsPerPage", title, module.getOption("productsPerPage", 0), helpText) }}
 
                         {% set products = module.getExtra().products %}
                         {% if products %}

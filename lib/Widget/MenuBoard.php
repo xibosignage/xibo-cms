@@ -65,6 +65,19 @@ class MenuBoard extends ModuleWidget
         $this->installFiles();
     }
 
+    /**
+     * @inheritDoc
+     */
+    public function installFiles()
+    {
+        // Extends parent's method
+        parent::installFiles();
+
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/jquery-cycle-2.1.6.min.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-menuboard-render.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
+    }
+
     /** @inheritdoc */
     public function layoutDesignerJavaScript()
     {
@@ -346,7 +359,7 @@ class MenuBoard extends ModuleWidget
                 $this->setOption('categories', implode(',', $categories));
             }
 
-            $this->setOption('numOfColumns', $sanitizedParams->getInt('numOfColumns'));
+            $this->setOption('numOfColumns', $sanitizedParams->getInt('numOfColumns', ['default' => 1]));
         } else {
             $highlightProducts = $sanitizedParams->getIntArray('productsHighlight', ['default' => []]);
 
@@ -395,6 +408,7 @@ class MenuBoard extends ModuleWidget
             $this->setOption('fontSizeProductHighlight', $sanitizedParams->getInt('fontSizeProductHighlight'));
 
             $this->setOption('numOfRows', $sanitizedParams->getInt('numOfRows', ['default' => 1]));
+            $this->setOption('productsPerPage', $sanitizedParams->getInt('productsPerPage', ['default' => 0]));
 
             if ($this->getOption('overrideTemplate') == 1) {
                 $this->setRawNode('styleSheet', $request->getParam('styleSheet', null));
@@ -422,12 +436,12 @@ class MenuBoard extends ModuleWidget
             ->appendViewPortWidth($this->region->width)
             ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('vendor/jquery-cycle-2.1.6.min.js')
-            ->appendJavaScriptFile('vendor/moment.js')
             ->appendJavaScriptFile('xibo-layout-scaler.js')
+            ->appendJavaScriptFile('xibo-menuboard-render.js')
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
-            ->appendJavaScript('xiboIC.lockAllInteractions()')
             ->appendJavaScriptFile('xibo-interactive-control.min.js')
+            ->appendJavaScript('xiboIC.lockAllInteractions()')
             ->appendFontCss()
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
         ;
@@ -516,6 +530,8 @@ class MenuBoard extends ModuleWidget
             ->appendOptions([
                 'type' => $this->getModuleType(),
                 'duration' => $duration,
+                'maxPages' => $table['pages'],
+                'productsPerPage' => $this->getOption('productsPerPage'),
                 'originalWidth' => $this->region->width,
                 'originalHeight' => $this->region->height,
                 'generatedOn' => Carbon::now()->format('c'),
@@ -524,7 +540,9 @@ class MenuBoard extends ModuleWidget
             ->appendJavaScript('
                 $(document).ready(function() {
                     $("body").xiboLayoutScaler(options); 
-                    $("#MenuBoardContainer").find("img").xiboImageRender(options);
+                    const runOnVisible = function() { $(".MenuBoardContainer").menuBoardRender(options);  };
+                    (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
+                    $(".MenuBoardContainer").find("img").xiboImageRender(options);
                 });
             ')
             ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')))
@@ -548,6 +566,7 @@ class MenuBoard extends ModuleWidget
             return $this->noDataMessageOrDefault(__('No categories selected'));
         }
         $table = '';
+        $maxPages = 1;
 
         try {
 
@@ -567,36 +586,55 @@ class MenuBoard extends ModuleWidget
                     $rowCount = 1;
                     // Get the category
                     $category = $this->menuBoardCategoryFactory->getById((int)$categoryId);
-                    $categoryProductsData = $category->getProducts();
 
-                        $table .= '<div class="MenuBoardCategoryContainer">';
+                    if ($this->getOption('showUnavailable') == 0) {
+                        $categoryProductsData = $category->getAvailableProducts();
+                    } else {
+                        $categoryProductsData = $category->getProducts();
+                    }
 
-                        if ($this->getOption('showMenuCategoryName') == 1) {
-                            $table .= '<h2 class="MenuBoardCategoryName">' . $category->name . '</h2>';
+                    $table .= '<div class="MenuBoardCategoryContainer">';
+
+                    if ($this->getOption('showMenuCategoryName') == 1) {
+                        $table .= '<h2 class="MenuBoardCategoryName">' . $category->name . '</h2>';
+                    }
+
+                    if (in_array($this->getOption('showImagesFor'), ['all', 'category'])) {
+                        try {
+                            $file = $this->mediaFactory->getById($category->mediaId);
+
+                            // Already in the library - assign this mediaId to the Layout immediately.
+                            $this->assignMedia($file->mediaId);
+
+                            $replace = ($this->isPreview())
+                                ? '<img src="' . $this->urlFor('library.download',
+                                    ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                                : '<img src="' . $file->storedAs . '" />';
+
+                            $table .= '<p class="MenuBoardMedia MenuBoardCategoryMedia" id="category_media_' . $category->menuCategoryId . '">' . $replace . '</p>';
+                        } catch (NotFoundException $e) {
+                            //
                         }
-                            if (in_array($this->getOption('showImagesFor'), ['all', 'category'])) {
-                                try {
-                                    $file = $this->mediaFactory->getById($category->mediaId);
+                    }
 
-                                    // Already in the library - assign this mediaId to the Layout immediately.
-                                    $this->assignMedia($file->mediaId);
-
-                                    $replace = ($this->isPreview())
-                                        ? '<img src="' . $this->urlFor('library.download',
-                                            ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
-                                        : '<img src="' . $file->storedAs . '" />';
-
-                                    $table .= '<p class="MenuBoardMedia MenuBoardCategoryMedia" id="category_media_' . $category->menuCategoryId . '">' . $replace . '</p>';
-                                } catch (NotFoundException $e) {
-                                    continue;
-                                }
-                            }
-
-                        $table .= '</div>';
-
-                    $rowCount++;
+                    $table .= '</div>';
+                    $table .= '<div class="ProductsContainer">';
                     $productPerRowCount = 1;
+
+                    if ($this->getOption('productsPerPage') > 0) {
+                        $numberOfPages = ceil(count($categoryProductsData) / $this->getOption('productsPerPage'));
+
+                        if ($numberOfPages > $maxPages) {
+                            $maxPages = $numberOfPages;
+                        }
+                    }
+
                     foreach ($categoryProductsData as $categoryProduct) {
+
+                        if ($this->getOption('productsPerPage') > 0 && $rowCount === 1 && count($categoryProductsData) > $this->getOption('productsPerPage')) {
+                            $table .= '<div class="page">';
+                        }
+
                         if ($this->getOption('numOfRows') > 1 && $productPerRowCount == 1) {
                             $table .= '<div class="row" style="display: flex;">';
                         }
@@ -625,7 +663,7 @@ class MenuBoard extends ModuleWidget
                         }
 
                         if ($this->getOption('showProductAllergyInformation')) {
-                            $table .= '<div class="MenuBoardProduct MenuBoardProductAllergyInfo" id="productAllergyInfo_' . ($i + 1) . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $categoryProduct->allergyInfo . '</span></div>';
+                            $table .= '<div class="MenuBoardProduct MenuBoardProductAllergyInfo" id="productAllergyInfo_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $categoryProduct->allergyInfo . '</span></div>';
                         }
 
                         if (in_array($this->getOption('showImagesFor'), ['all', 'product'])) {
@@ -641,7 +679,7 @@ class MenuBoard extends ModuleWidget
                                     : '<img src="' . $file->storedAs . '" />';
 
 
-                                $table .= '<div class="MenuBoardMedia MenuBoardProductMedia" id="productMedia_' . ($i + 1) . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></div>';
+                                $table .= '<div class="MenuBoardMedia MenuBoardProductMedia" id="productMedia_' . $i  . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></div>';
 
                             } catch (NotFoundException $e) {
                                 $table .= '</div>';
@@ -653,11 +691,18 @@ class MenuBoard extends ModuleWidget
                             $table .= '</div>';
                             $productPerRowCount = 0;
                         }
+
+                        if ($this->getOption('productsPerPage') > 0 &&  $rowCount == $this->getOption('productsPerPage')) {
+                            $table .= '</div>';
+                            $rowCount = 0;
+                        }
+
+                        $rowCount++;
                         $productPerRowCount++;
-
                         $table .= '</div>';
-
                     }
+                    $table .= '</div>';
+
                     if (count($categoryIds) == 1) {
                         $table .= '</div>';
                     }
@@ -669,6 +714,7 @@ class MenuBoard extends ModuleWidget
             $table .= '</div>';
             return [
                 'html' => $table,
+                'pages' => $maxPages
             ];
         }
         catch (NotFoundException $e) {
@@ -748,7 +794,7 @@ class MenuBoard extends ModuleWidget
     /** @inheritdoc */
     public function getCacheDuration()
     {
-        return $this->getOption('updateInterval', 120) * 60;
+        return 1;
     }
 
     /** @inheritdoc */
