@@ -196,6 +196,10 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('maxRegionCount', $this->getSanitizer()->getInt('maxRegionCount'), $ownConfig, $config);
                 }
 
+                if ($this->getSanitizer()->hasParam('isRecordGeoLocationOnProofOfPlay')) {
+                    $displayProfile->setSetting('isRecordGeoLocationOnProofOfPlay', $this->getSanitizer()->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'windows':
@@ -333,6 +337,10 @@ trait DisplayProfileConfigFields
 
                 if ($this->getSanitizer()->hasParam('edgeBrowserWhitelist')) {
                     $displayProfile->setSetting('edgeBrowserWhitelist', $this->getSanitizer()->getString('edgeBrowserWhitelist'), $ownConfig, $config);
+                }
+
+                if ($this->getSanitizer()->hasParam('isRecordGeoLocationOnProofOfPlay')) {
+                    $displayProfile->setSetting('isRecordGeoLocationOnProofOfPlay', $this->getSanitizer()->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $ownConfig, $config);
                 }
 
                 break;

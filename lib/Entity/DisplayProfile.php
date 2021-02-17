@@ -558,7 +558,8 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'preventSleep', 'default' => 1, 'type' => 'checkbox'],
                 ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
                 ['name' => 'authServerWhitelist', 'default' => null, 'type' => 'string'],
-                ['name' => 'edgeBrowserWhitelist', 'default' => null, 'type' => 'string']
+                ['name' => 'edgeBrowserWhitelist', 'default' => null, 'type' => 'string'],
+                ['name' => 'isRecordGeoLocationOnProofOfPlay', 'default' => 0, 'type' => 'checkbox']
             ],
             'android' => [
                 ['name' => 'emailAddress', 'default' => null],
@@ -598,7 +599,8 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'installWithLoadedLinkLibraries', 'default' => 1, 'type' => 'checkbox'],
                 ['name' => 'forceHttps', 'default' => 1, 'type' => 'checkbox'],
                 ['name' => 'useMultipleVideoDecoders', 'default' => 'default', 'type' => 'string'],
-                ['name' => 'maxRegionCount', 'default' => 0]
+                ['name' => 'maxRegionCount', 'default' => 0],
+                ['name' => 'isRecordGeoLocationOnProofOfPlay', 'default' => 0, 'type' => 'checkbox']
             ],
             'linux' => [
                 ['name' => 'collectInterval', 'default' => 300],

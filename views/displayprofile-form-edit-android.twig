@@ -88,6 +88,10 @@
                     ] %}
                     {{ forms.dropdown("aggregationLevel", "single", title, displayProfile.getSetting("aggregationLevel"), options, "id", "value", helpText, "aggregation-level") }}
 
+                    {% set title = "Record geolocation on each Proof of Play?"|trans %}
+                    {% set helpText = "If the geolocation of the Display is known, enable to record that location against each proof of play record."|trans %}
+                    {{ forms.checkbox("isRecordGeoLocationOnProofOfPlay", title, displayProfile.getSetting("isRecordGeoLocationOnProofOfPlay"), helpText) }}
+
                     {% set title = "Player Version"|trans %}
                     {% set helpText = "Please ensure that the Player version you select here is suitable for all devices that use this display profile. You can override the version on the display record, but you must do that before making a change here"|trans %}
                     {% set attributes = [
