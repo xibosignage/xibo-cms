@@ -437,7 +437,7 @@
         }
 
         function playlistAddFormOpen() {
-            $("#playlistAddForm").submit(function(e) {
+            $("#playlistAddForm").off("submit").submit(function(e) {
                 e.preventDefault();
                 var form = $(this);
 

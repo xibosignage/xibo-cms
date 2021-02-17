@@ -188,8 +188,8 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('forceHttps', $this->getSanitizer()->getCheckbox('forceHttps'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('useMultipleVideoDecoders')) {
-                    $displayProfile->setSetting('useMultipleVideoDecoders', $this->getSanitizer()->getString('useMultipleVideoDecoders'), $ownConfig, $config);
+                if ($this->getSanitizer()->hasParam('isUseMultipleVideoDecoders')) {
+                    $displayProfile->setSetting('isUseMultipleVideoDecoders', $this->getSanitizer()->getString('isUseMultipleVideoDecoders'), $ownConfig, $config);
                 }
 
                 if ($this->getSanitizer()->hasParam('maxRegionCount')) {

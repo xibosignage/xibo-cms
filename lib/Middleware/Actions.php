@@ -54,9 +54,10 @@ class Actions extends Middleware
                     if (stripos($file, '.zip')) {
                         try {
                             /** @var \Xibo\Entity\Layout $layout */
-                            $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, $app->container->get('userFactory')->getSystemUser()->getId(), false, false, true, false, true, $app->container->get('\Xibo\Controller\Library')->setApp($app));
+                            $layout = $app->layoutFactory->createFromZip($folder . '/' . $file, null, $app->container->get('userFactory')->getSystemUser()->getId(), false, false, true, false, true, $app->container->get('\Xibo\Controller\Library')->setApp($app), null);
                             $layout->save([
-                                'audit' => false
+                                'audit' => false,
+                                'import' => true
                             ]);
                         } catch (\Exception $e) {
                             $app->logService->error('Unable to import layout: ' . $file . '. E = ' . $e->getMessage());
