@@ -245,8 +245,9 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('isRecordGeoLocationOnProofOfPlay')) {
-                    $displayProfile->setSetting('isRecordGeoLocationOnProofOfPlay', $this->getSanitizer()->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $ownConfig, $config);
+                if ($sanitizedParams->hasParam('isRecordGeoLocationOnProofOfPlay')) {
+                    $this->handleChangedSettings('isRecordGeoLocationOnProofOfPlay', ($ownConfig) ? $displayProfile->getSetting('isRecordGeoLocationOnProofOfPlay') : $display->getSetting('isRecordGeoLocationOnProofOfPlay'), $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $changedSettings);
+                    $displayProfile->setSetting('isRecordGeoLocationOnProofOfPlay', $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $ownConfig, $config);
                 }
 
                 break;
@@ -427,8 +428,9 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
                 }
 
-                if ($this->getSanitizer()->hasParam('isRecordGeoLocationOnProofOfPlay')) {
-                    $displayProfile->setSetting('isRecordGeoLocationOnProofOfPlay', $this->getSanitizer()->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $ownConfig, $config);
+                if ($sanitizedParams->hasParam('isRecordGeoLocationOnProofOfPlay')) {
+                    $this->handleChangedSettings('isRecordGeoLocationOnProofOfPlay', ($ownConfig) ? $displayProfile->getSetting('isRecordGeoLocationOnProofOfPlay') : $display->getSetting('isRecordGeoLocationOnProofOfPlay'), $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $changedSettings);
+                    $displayProfile->setSetting('isRecordGeoLocationOnProofOfPlay', $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $ownConfig, $config);
                 }
 
                 break;
