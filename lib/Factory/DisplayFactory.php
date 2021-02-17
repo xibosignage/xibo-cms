@@ -119,6 +119,10 @@ class DisplayFactory extends BaseFactory
      */
     public function getByLicence($licence)
     {
+        if (empty($licence)) {
+            throw new NotFoundException(__('Hardware key cannot be empty'));
+        }
+
         $displays = $this->query(null, ['disableUserCheck' => 1, 'license' => $licence]);
 
         if (count($displays) <= 0)
@@ -303,7 +307,7 @@ class DisplayFactory extends BaseFactory
         }
 
         // Filter by Licence?
-        if ($this->getSanitizer()->getString('license', $filterBy) != null) {
+        if ($this->getSanitizer()->getString('license', $filterBy) !== null) {
             $body .= ' AND display.license = :license ';
             $params['license'] = $this->getSanitizer()->getString('license', $filterBy);
         }

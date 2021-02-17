@@ -841,6 +841,11 @@ class Module extends Base
         if (!$this->getUser()->checkEditable($module->widget))
             throw new AccessDeniedException();
 
+        // Are we allowed to do this?
+        if ($module->getModuleType() === 'subplaylist') {
+            throw new InvalidArgumentException(__('Audio cannot be attached to a Sub-Playlist Widget. Please attach it to the Widgets inside the Playlist'), 'type');
+        }
+
         $audioAvailable = true;
         if ($module->widget->countAudio() > 0) {
             $audio = $this->mediaFactory->getById($module->widget->getAudioIds()[0]);
@@ -922,6 +927,11 @@ class Module extends Base
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
         if (!$playlist->isEditable())
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+
+        // Are we allowed to do this?
+        if ($widget->type === 'subplaylist') {
+            throw new InvalidArgumentException(__('Audio cannot be attached to a Sub-Playlist Widget. Please attach it to the Widgets inside the Playlist'), 'type');
+        }
 
         $widget->load();
 
