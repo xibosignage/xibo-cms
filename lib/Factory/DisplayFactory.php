@@ -126,7 +126,7 @@ class DisplayFactory extends BaseFactory
     public function getByLicence($licence)
     {
         if (empty($licence)) {
-            throw new NotFoundException('Hardware key cannot be empty');
+            throw new NotFoundException(__('Hardware key cannot be empty'));
         }
 
         $displays = $this->query(null, ['disableUserCheck' => 1, 'license' => $licence]);
