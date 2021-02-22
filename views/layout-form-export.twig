@@ -27,7 +27,7 @@
                 {{ forms.message(helpText) }}
 
                 {% if currentUser.isSuperAdmin() == false %}
-                    {% set exportMessageWarning %}{% trans "If you do not have permissions to all Media and DataSet items contained on this Layout the export will fail." %}{% endset %}
+                    {% set exportMessageWarning %}{% trans "If you do not have permission for the Layout contents, the export will fail." %}{% endset %}
                     {{ forms.message(exportMessageWarning, 'alert alert-info') }}
                 {% endif %}
 
