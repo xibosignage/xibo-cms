@@ -878,13 +878,20 @@ class Media implements \JsonSerializable
         // Resize image dimensions if threshold exceeds
         $this->assessDimensions();
 
+        // If we are saving module file that has ? in the basename, make sure we remove that here and update fileName in database
+        // we cannot do this on queue download, as we need full url as fileName to download it in processDownloads
+        if (strpos(basename($this->fileName), '?') && $this->mediaType == 'module') {
+            $this->fileName = substr(basename($this->fileName), 0, strpos(basename($this->fileName), '?'));
+        }
+
         // Update the MD5 and storedAs to suit
-        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, valid = 1 WHERE mediaId = :mediaId', [
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, originalFileName = :originalFileName, valid = 1 WHERE mediaId = :mediaId', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
             'expires' => $this->expires,
             'released' => $this->released,
+            'originalFileName' => basename($this->fileName),
             'mediaId' => $this->mediaId
         ]);
     }
