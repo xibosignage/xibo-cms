@@ -200,6 +200,7 @@ class Media implements \JsonSerializable
     // Private
     private $unassignTags = [];
     private $requestOptions = [];
+    private $datesToFormat = ['expires'];
     // New file revision
     public $isSaveRequired;
     public $isRemote;

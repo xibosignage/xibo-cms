@@ -644,7 +644,7 @@ class Layout implements \JsonSerializable
         } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
             $this->update($options);
 
-            if ($options['audit']) {
+            if ($options['audit'] && count($this->getChangedProperties()) > 0) {
                 $change = $this->getChangedProperties();
                 $change['campaignId'][] = $this->campaignId;
 

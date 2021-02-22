@@ -1213,7 +1213,7 @@ class Display extends Base
 
         // Get the display profile and use that to pull in any overrides
         // start with an empty config
-        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), []);
+        $display->overrideConfig = $this->editConfigFields($display->getDisplayProfile(), [], $display);
 
         // Workaround
         // in v3 these will have their own fields.
