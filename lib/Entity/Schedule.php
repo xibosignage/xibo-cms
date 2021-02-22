@@ -1510,7 +1510,7 @@ class Schedule implements \JsonSerializable
             }
 
             if (in_array($key, $this->datesToFormat)) {
-                $objectAsJson[$key] = Date::createFromTimestamp($value)->format('Y-m-d H:i:s');
+                $objectAsJson[$key] = $this->getDate()->getLocalDate($value);
             }
 
             if ($key === 'campaignId' && isset($this->campaignFactory)) {
@@ -1536,7 +1536,7 @@ class Schedule implements \JsonSerializable
 
             if (!is_array($value) && !is_object($value) && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
                 if (in_array($key, $this->datesToFormat)) {
-                    $changedProperties[$key] = Date::createFromTimestamp($this->getOriginalValue($key))->format('Y-m-d H:i:s') . ' > ' . Date::createFromTimestamp($value)->format('Y-m-d H:i:s');
+                    $changedProperties[$key] = $this->getDate()->getLocalDate($this->getOriginalValue($key)) . ' > ' . $this->getDate()->getLocalDate($value);
                 } else {
                     $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
 
