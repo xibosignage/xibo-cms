@@ -28,6 +28,7 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\GeneralException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
@@ -1922,7 +1923,7 @@ class Layout extends Base
 
         // Make sure we're not a draft
         if ($layout->isChild())
-            throw new InvalidArgumentException('Cannot manage tags on a Draft Layout', 'layoutId');
+            throw new InvalidArgumentException('Cannot export a Draft Layout', 'layoutId');
 
         // Save As?
         $saveAs = $this->getSanitizer()->getString('saveAs');
@@ -1935,7 +1936,7 @@ class Layout extends Base
         }
 
         $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $saveAs . '.zip';
-        $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($this->getSanitizer()->getCheckbox('includeData')== 1)]);
+        $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($this->getSanitizer()->getCheckbox('includeData') == 1), 'user' => $this->getUser()]);
 
         if (ini_get('zlib.output_compression')) {
             ini_set('zlib.output_compression', 'Off');

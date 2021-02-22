@@ -23,6 +23,7 @@ namespace Xibo\Entity;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -1401,6 +1402,9 @@ class Layout implements \JsonSerializable
             'includeData' => false
         ], $options);
 
+        /** @var User $user */
+        $user = $options['user'];
+
         // Load the complete layout
         $this->load();
 
@@ -1433,6 +1437,10 @@ class Layout implements \JsonSerializable
         $mappings = [];
 
         foreach ($this->mediaFactory->getByLayoutId($this->layoutId, 1, 1) as $media) {
+                if (!$user->checkViewable($media)) {
+                    throw new AccessDeniedException();
+                }
+
             /* @var Media $media */
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
 
@@ -1449,7 +1457,7 @@ class Layout implements \JsonSerializable
 
         // Add the background image
         if ($this->backgroundImageId != 0) {
-            $media = $this->mediaFactory->getById($this->backgroundImageId);
+            $media = $this->mediaFactory->getById($this->backgroundImageId, 0);
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
 
             $mappings[] = [
@@ -1520,7 +1528,7 @@ class Layout implements \JsonSerializable
                         continue;
 
                     // Export the structure for this dataSet
-                    $dataSet = $dataSetFactory->getById($dataSetId);
+                    $dataSet = $dataSetFactory->getById($dataSetId, 0);
                     $dataSet->load();
 
                     // Are we also looking to export the data?

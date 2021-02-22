@@ -26,6 +26,11 @@
                 {% set helpText %}{% trans %}You have selected {{ layoutName }} for export. A ZIP file will be downloaded which contains the layout, its widgets and media. It will also contain the structure for associated DataSets.{% endtrans %}{% endset %}
                 {{ forms.message(helpText) }}
 
+                {% if currentUser.isSuperAdmin() == false %}
+                    {% set exportMessageWarning %}{% trans "If you do not have permissions to all Media and DataSet items contained on this Layout the export will fail." %}{% endset %}
+                    {{ forms.message(exportMessageWarning, 'alert alert-info') }}
+                {% endif %}
+
                 {% set title %}{% trans "Include DataSet data?" %}{% endset %}
                 {% set helpText %}{% trans "Do you want to include the DataSet data?" %}{% endset %}
                 {{ forms.checkbox("includeData", title, 0, helpText) }}
