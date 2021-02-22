@@ -100,7 +100,7 @@ class AuditLogFactory extends BaseFactory
 
             // if we were supplied with both layout entity and entityId (layoutId), expand the results
             // we want to get all actions issued on this layout from the moment it was added
-            if (stripos('layout', $entity ) !== false) {
+            if (stripos($entity, 'layout') !== false) {
 
                 $sqlLayoutHistory = 'SELECT campaign.campaignId FROM layout INNER JOIN lkcampaignlayout on layout.layoutId = lkcampaignlayout.layoutId INNER JOIN campaign ON campaign.campaignId = lkcampaignlayout.campaignId WHERE campaign.isLayoutSpecific = 1 AND layout.layoutId = :layoutId';
                 $paramsLayoutHistory = ['layoutId' => $params['entityId']];

@@ -1058,7 +1058,7 @@ class Playlist implements \JsonSerializable
                             continue;
 
                         // Export the structure for this dataSet
-                        $dataSet = $dataSetFactory->getById($dataSetId);
+                        $dataSet = $dataSetFactory->getById($dataSetId, 0);
                         $dataSet->load();
 
                         // Are we also looking to export the data?

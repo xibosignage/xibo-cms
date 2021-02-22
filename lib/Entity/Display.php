@@ -678,7 +678,7 @@ class Display implements \JsonSerializable
             $this->edit();
         }
 
-        if ($options['audit'])
+        if ($options['audit'] && $this->getChangedProperties() != [])
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->getChangedProperties());
 
         // Trigger an update of all dynamic DisplayGroups

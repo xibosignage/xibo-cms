@@ -997,6 +997,9 @@ class Schedule extends Base
 
         // Ready to do the add
         $schedule->setDisplayFactory($this->displayFactory);
+        if ($schedule->campaignId != null) {
+            $schedule->setCampaignFactory($this->campaignFactory);
+        }
         $schedule->save();
 
         $this->getLog()->debug('Add Schedule Reminder');
@@ -1448,6 +1451,9 @@ class Schedule extends Base
 
         // Ready to do the add
         $schedule->setDisplayFactory($this->displayFactory);
+        if ($schedule->campaignId != null) {
+            $schedule->setCampaignFactory($this->campaignFactory);
+        }
         $schedule->save();
 
         // Get form reminders

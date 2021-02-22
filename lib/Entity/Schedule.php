@@ -266,6 +266,8 @@ class Schedule implements \JsonSerializable
      */
     private $scheduleEvents = [];
 
+    private $datesToFormat = ['toDt', 'fromDt'];
+
     /**
      * @var ConfigServiceInterface
      */
@@ -648,7 +650,7 @@ class Schedule implements \JsonSerializable
         }
 
         if ($options['audit'])
-            $this->audit($this->getId(), $auditMessage);
+            $this->audit($this->getId(), $auditMessage, null, true);
 
         // Drop the cache for this event
         $this->dropEventCache();
@@ -663,6 +665,9 @@ class Schedule implements \JsonSerializable
 
         // Notify display groups
         $notify = $this->displayGroups;
+
+        // Audit
+        $this->audit($this->getId(), 'Deleted', $this->toArray(true));
 
         // Delete display group assignments
         $this->displayGroups = [];
@@ -700,9 +705,6 @@ class Schedule implements \JsonSerializable
 
         // Drop the cache for this event
         $this->dropEventCache();
-
-        // Audit
-        $this->audit($this->getId(), 'Deleted', $this->toArray());
     }
 
     /**
@@ -1486,5 +1488,88 @@ class Schedule implements \JsonSerializable
         }
 
         return $title;
+    }
+
+    private function toArray($jsonEncodeArrays = false)
+    {
+        $objectAsJson = $this->jsonSerialize();
+
+        foreach ($objectAsJson as $key => $value) {
+            $displayGroups = [];
+            if (is_array($value) && $jsonEncodeArrays) {
+                if ($key === 'displayGroups') {
+                    foreach($value as $index => $displayGroup) {
+                        /** @var DisplayGroup $displayGroup */
+                        $displayGroups[$index] = $displayGroup->jsonSerialize(true);
+                    }
+
+                    $objectAsJson[$key] = json_encode($displayGroups);
+                } else {
+                    $objectAsJson[$key] = json_encode($value);
+                }
+            }
+
+            if (in_array($key, $this->datesToFormat)) {
+                $objectAsJson[$key] = $this->getDate()->getLocalDate($value);
+            }
+
+            if ($key === 'campaignId' && isset($this->campaignFactory)) {
+                $campaign = $this->campaignFactory->getById($value);
+                $objectAsJson['campaign'] = $campaign->campaign;
+            }
+        }
+
+        return $objectAsJson;
+    }
+
+    /**
+     * Get all changed properties for this entity
+     * @param bool $jsonEncodeArrays
+     * @return array
+     * @throws NotFoundException
+     */
+    public function getChangedProperties($jsonEncodeArrays = false)
+    {
+        $changedProperties = [];
+
+        foreach ($this->jsonSerialize() as $key => $value) {
+
+            if (!is_array($value) && !is_object($value) && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
+                if (in_array($key, $this->datesToFormat)) {
+                    $changedProperties[$key] = $this->getDate()->getLocalDate($this->getOriginalValue($key)) . ' > ' . $this->getDate()->getLocalDate($value);
+                } else {
+                    $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
+
+                    if ($key === 'campaignId' && isset($this->campaignFactory)) {
+                        $campaign = $this->campaignFactory->getById($value);
+                        $changedProperties['campaign'] = $this->getOriginalValue('campaign') . ' > ' . $campaign->campaign;
+                    }
+                }
+            }
+
+            if (is_array($value) && $jsonEncodeArrays && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
+                if ($key === 'displayGroups') {
+                    $displayGroups = [];
+                    $originalDisplayGroups = [];
+
+                    foreach($this->getOriginalValue($key) as $index => $displayGroup) {
+                        /** @var DisplayGroup $displayGroup */
+                        $originalDisplayGroups[$index] = $displayGroup->jsonSerialize(true);
+                    }
+
+                    foreach($value as $index => $displayGroup) {
+                        $displayGroups[$index] = $displayGroup->jsonSerialize(true);
+                    }
+
+                    $changedProperties[$key] = json_encode($originalDisplayGroups) . ' > ' . json_encode($displayGroups);
+
+                } else {
+                    $changedProperties[$key] = json_encode($this->getOriginalValue($key)) . ' > ' . json_encode($value);
+                }
+
+            }
+        }
+
+        return $changedProperties;
     }
 }
