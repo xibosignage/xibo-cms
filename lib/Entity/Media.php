@@ -548,6 +548,7 @@ class Media implements \JsonSerializable
 
             // Always set force to true as we always want to save new files
             $this->isSaveRequired = true;
+            $this->audit($this->mediaId, 'Added', ['mediaId' => $this->mediaId, 'name' => $this->name, 'mediaType' => $this->mediaType, 'fileName' => $this->fileName]);
         }
         else {
             $this->edit();
@@ -555,6 +556,7 @@ class Media implements \JsonSerializable
             // If the media file is invalid, then force an update (only applies to module files)
             $expires = $this->getOriginalValue('expires');
             $this->isSaveRequired = ($this->isSaveRequired || $this->valid == 0 || ($expires > 0 && $expires < time()));
+            $this->audit($this->mediaId, 'Updated', $this->getChangedProperties());
         }
 
         if ($options['deferred']) {
@@ -709,7 +711,7 @@ class Media implements \JsonSerializable
             }
         }
 
-        $this->audit($this->mediaId, 'Deleted');
+        $this->audit($this->mediaId, 'Deleted', ['mediaId' => $this->mediaId, 'name' => $this->name, 'mediaType' => $this->mediaType, 'fileName' => $this->fileName]);
     }
 
     /**

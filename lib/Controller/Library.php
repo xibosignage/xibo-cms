@@ -22,6 +22,7 @@ namespace Xibo\Controller;
 
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
+use Jenssegers\Date\Date;
 use Mimey\MimeTypes;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
@@ -1529,6 +1530,7 @@ class Library extends Base
             // If the media type is a module, then pretend its a generic file
             $this->getLog()->info('Removing Expired File %s', $entry->name);
             $entry->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+            $this->getLog()->audit('Media', $entry->mediaId, 'Removing Expired', ['mediaId' => $entry->mediaId, 'name' => $entry->name, 'expired' => Date::createFromTimestamp($entry->expires)->format('Y-m-d H:i:s')]);
             $entry->delete();
         }
     }
