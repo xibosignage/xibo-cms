@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 
+use Jenssegers\Date\Date;
 use Xibo\Helper\ObjectVars;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -170,8 +171,9 @@ trait EntityTrait
 
         foreach ($this->jsonSerialize() as $key => $value) {
             if (!is_array($value) && !is_object($value) && $this->propertyOriginallyExisted($key) && $this->hasPropertyChanged($key)) {
+
                 if ( isset($this->datesToFormat) && in_array($key, $this->datesToFormat)) {
-                    $changedProperties[$key] = $this->getDate()->getLocalDate($this->getOriginalValue($key)) . ' > ' . $this->getDate()->getLocalDate($value);
+                    $changedProperties[$key] = Date::createFromTimestamp($this->getOriginalValue($key))->format('Y-m-d H:i:s') . ' > ' . Date::createFromTimestamp($value)->format('Y-m-d H:i:s');
                 } else {
                     $changedProperties[$key] = $this->getOriginalValue($key) . ' > ' . $value;
                 }
@@ -217,7 +219,7 @@ trait EntityTrait
 
         foreach ($objectAsJson as $key => $value) {
             if (in_array($key, $this->datesToFormat)) {
-                $objectAsJson[$key] = $this->getDate()->getLocalDate($value);
+                $objectAsJson[$key] = Date::createFromTimestamp($value)->format('Y-m-d H:i:s');
             }
 
             if ($jsonEncodeArrays) {
