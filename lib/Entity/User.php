@@ -463,7 +463,7 @@ class User implements \JsonSerializable, UserEntityInterface
     /** @inheritDoc */
     public function getIdentifier()
     {
-        return $this->getLog();
+        return $this->userId;
     }
 
     /**
