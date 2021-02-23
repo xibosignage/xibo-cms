@@ -248,7 +248,14 @@ class Module extends Base
             }
 
             // Create a module object and return any buttons it may require
-            $moduleObject = $this->moduleFactory->create($module->type);
+            $moduleObject = $this->moduleFactory->create($module->type)
+                ->setUser($this->getUser())
+                ->setPreview(
+                    true,
+                    RouteContext::fromRequest($request)->getRouteParser(),
+                    0,
+                    0
+                );
 
             // Are there any buttons we need to provide as part of the module?
             foreach ($moduleObject->settingsButtons() as $button) {
@@ -1362,6 +1369,15 @@ class Module extends Base
             throw new ConfigurationException(__('Method does not exist'));
         }
 
+        $module
+            ->setUser($this->getUser())
+            ->setPreview(
+                true,
+                RouteContext::fromRequest($request)->getRouteParser(),
+                0,
+                0
+            );
+
         $formDetails = $module->$name();
 
         $this->getState()->template = $formDetails['template'];
@@ -1388,6 +1404,15 @@ class Module extends Base
         if (!method_exists($module, $name)) {
             throw new ConfigurationException(__('Method does not exist'));
         }
+
+        $module
+            ->setUser($this->getUser())
+            ->setPreview(
+                true,
+                RouteContext::fromRequest($request)->getRouteParser(),
+                0,
+                0
+            );
 
         // Call the form named
         $response = $module->$name($request, $response);
