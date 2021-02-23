@@ -897,13 +897,24 @@ class DataSetTicker extends ModuleWidget
     /** @inheritdoc */
     public function getCacheKey($displayId)
     {
-        if ($displayId === 0 || $this->getOption('sourceId', 1) == 2) {
+        $filter = ($this->getOption('useFilteringClause', 1) == 1) ? $this->GetOption('filter') : $filter = $this->getOption('filterClauses', '[]') ;
+
+        if ($displayId === 0 || $this->getOption('sourceId', 1) == 2 || strpos($filter, '[DisplayId]') !== FALSE || strpos($filter, '[DisplayGeoLocation]') !== FALSE) {
             // DataSets might use Display
             return $this->getWidgetId() . '_' . $displayId;
         } else {
             // Tickers are non-display specific
-            return $this->getWidgetId() . (($displayId === 0) ? '_0' : '');
+            return $this->getWidgetId();
         }
+    }
+
+    /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        $filter = ($this->getOption('useFilteringClause', 1) == 1) ? $this->GetOption('filter') : $filter = $this->getOption('filterClauses', '[]') ;
+
+        // If we we filter on the display id in the sql filter, we are display specific
+        return (strpos($filter, '[DisplayId]') !== FALSE || strpos($filter, '[DisplayGeoLocation]') !== FALSE);
     }
 
     /** @inheritdoc */
