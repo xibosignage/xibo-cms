@@ -27,7 +27,6 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
-use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetEditEvent;
@@ -1390,8 +1389,8 @@ class Module extends Base
             throw new ConfigurationException(__('Method does not exist'));
         }
 
-        $module->$name();
-        $this->setNoOutput(true);
+        // Call the form named
+        $response = $module->$name($request, $response);
         return $this->render($request, $response);
     }
 
