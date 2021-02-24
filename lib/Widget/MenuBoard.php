@@ -587,6 +587,7 @@ class MenuBoard extends ModuleWidget
                     // Get the category
                     $category = $this->menuBoardCategoryFactory->getById((int)$categoryId);
 
+                    // get category products, depending on the showUnavailable fetch all or only available products
                     if ($this->getOption('showUnavailable') == 0) {
                         $categoryProductsData = $category->getAvailableProducts();
                     } else {
@@ -617,10 +618,14 @@ class MenuBoard extends ModuleWidget
                         }
                     }
 
+                    // close MenuBoardCategoryContainer
                     $table .= '</div>';
                     $table .= '<div class="ProductsContainer">';
                     $productPerRowCount = 1;
 
+                    // if we should show specific number of products per page
+                    // then calculate the max number of pages for each category products,
+                    // this is then passed to jQuery cycle to calculate cycle timeout
                     if ($this->getOption('productsPerPage') > 0) {
                         $numberOfPages = ceil(count($categoryProductsData) / $this->getOption('productsPerPage'));
 
@@ -631,14 +636,17 @@ class MenuBoard extends ModuleWidget
 
                     foreach ($categoryProductsData as $categoryProduct) {
 
+                        // paging, if we have more than one page to show for this category products then wrap products html in a div
                         if ($this->getOption('productsPerPage') > 0 && $rowCount === 1 && count($categoryProductsData) > $this->getOption('productsPerPage')) {
                             $table .= '<div class="page">';
                         }
 
+                        // if we have more than one product to show in a row, then wrap required number of products in a div
                         if ($this->getOption('numOfRows') > 1 && $productPerRowCount == 1) {
                             $table .= '<div class="row" style="display: flex;">';
                         }
 
+                        // depending on configured options, we will want to assign different css classes to the MenuBoardProductContainer
                         if ($categoryProduct->availability === 0 && $this->getOption('showUnavailable') == 0) {
                             continue;
                         } else if ($categoryProduct->availability === 0 && $this->getOption('showUnavailable') == 1) {
@@ -649,9 +657,11 @@ class MenuBoard extends ModuleWidget
                             $table .= '<div class="MenuBoardProductContainer">';
                         }
 
+                        // Product name and price should always be visible.
                         $table .= '<div class="MenuBoardProduct MenuBoardProductName" id="productName_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $categoryProduct->name . '</span></div>';
                         $table .= '<div class="MenuBoardProduct MenuBoardProductPrice" id="productPrice_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $categoryProduct->price . '</span></div>';
 
+                        // Product options, description, allergy info and images visibility depends on the Widget configuration
                         if ($this->getOption('showProductOptions') == 1) {
                             foreach ($categoryProduct->getOptions() as $productOption) {
                                 $table .= '<div class="MenuBoardProduct MenuBoardProductOptions" id="productOptions_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $productOption->option . ' ' . $productOption->value . '</span></div>';
@@ -687,11 +697,13 @@ class MenuBoard extends ModuleWidget
                             }
                         }
 
+                        // if we should show more than one product in a row, see if reached the requested number of products per row yet, if yes close the corresponding div
                         if ($this->getOption('numOfRows') > 1 && $this->getOption('numOfRows') == $productPerRowCount) {
                             $table .= '</div>';
                             $productPerRowCount = 0;
                         }
 
+                        // if we have more than one page, then check how many products we already have, if it's equals to the productsPerPage then close the page div
                         if ($this->getOption('productsPerPage') > 0 &&  $rowCount == $this->getOption('productsPerPage')) {
                             $table .= '</div>';
                             $rowCount = 0;
@@ -699,18 +711,25 @@ class MenuBoard extends ModuleWidget
 
                         $rowCount++;
                         $productPerRowCount++;
+
+                        // close MenuBoardProductContainer
                         $table .= '</div>';
                     }
+                    // close ProductsContainer
                     $table .= '</div>';
 
+                    // if we have only one category to go through, close the MenuBoardContainer container
                     if (count($categoryIds) == 1) {
                         $table .= '</div>';
                     }
                 }
+                // with more than one category, close the row MenuBoardContainer here.
                 if (count($categoryIds) > 1) {
                     $table .= '</div>';
                 }
             }
+
+            // close the row div
             $table .= '</div>';
             return [
                 'html' => $table,
