@@ -1062,7 +1062,8 @@ class State implements Middleware
                     $c->get('view'),
                     $c,
                     $c->get('dataSetFactory'),
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('dayPartFactory')
                 );
             },
             '\Xibo\Controller\UserGroup' => function(ContainerInterface $c) {

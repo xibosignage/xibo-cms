@@ -27,6 +27,7 @@ use Respect\Validation\Validator as v;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
@@ -227,6 +228,18 @@ class User implements \JsonSerializable, UserEntityInterface
     public $playlists = [];
 
     /**
+     * @SWG\Property(description="An array of Display Groups owned by this User")
+     * @var DisplayGroup[]
+     */
+    public $displayGroups = [];
+
+    /**
+     * @SWG\Property(description="An array of Dayparts owned by this User")
+     * @var DayPart[]
+     */
+    public $dayParts = [];
+
+    /**
      * @SWG\Property(description="Does this Group receive system notifications.")
      * @var int
      */
@@ -354,6 +367,9 @@ class User implements \JsonSerializable, UserEntityInterface
     /** @var DataSetFactory */
     private $dataSetFactory;
 
+    /** @var DayPartFactory */
+    private $dayPartFactory;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
@@ -399,7 +415,7 @@ class User implements \JsonSerializable, UserEntityInterface
     }
 
     /**
-     * Set Child Object Depencendies
+     * Set Child Object Dependencies
      *  must be set before calling Load with all objects
      * @param CampaignFactory $campaignFactory
      * @param LayoutFactory $layoutFactory
@@ -410,10 +426,11 @@ class User implements \JsonSerializable, UserEntityInterface
      * @param WidgetFactory $widgetFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param PlaylistFactory $playlistFactory
-     * @param $dataSetFactory
+     * @param DataSetFactory $dataSetFactory
+     * @param DayPartFactory $dayPartFactory
      * @return $this
      */
-    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, $dataSetFactory)
+    public function setChildObjectDependencies($campaignFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $displayFactory, $displayGroupFactory, $widgetFactory, $playerVersionFactory, $playlistFactory, $dataSetFactory, $dayPartFactory)
     {
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
@@ -425,6 +442,7 @@ class User implements \JsonSerializable, UserEntityInterface
         $this->playerVersionFactory = $playerVersionFactory;
         $this->playlistFactory = $playlistFactory;
         $this->dataSetFactory = $dataSetFactory;
+        $this->dayPartFactory = $dayPartFactory;
         return $this;
     }
 
@@ -693,7 +711,7 @@ class User implements \JsonSerializable, UserEntityInterface
         $this->groups = $this->userGroupFactory->getByUserId($this->userId);
 
         if ($all) {
-            if ($this->campaignFactory == null || $this->layoutFactory == null || $this->mediaFactory == null || $this->scheduleFactory == null || $this->playlistFactory == null)
+            if ($this->campaignFactory == null || $this->layoutFactory == null || $this->mediaFactory == null || $this->scheduleFactory == null || $this->playlistFactory == null || $this->displayGroupFactory == null || $this->dayPartFactory == null)
                 throw new \RuntimeException('Cannot load user with all objects without first calling setChildObjectDependencies');
 
             $this->campaigns = $this->campaignFactory->getByOwnerId($this->userId);
@@ -701,6 +719,8 @@ class User implements \JsonSerializable, UserEntityInterface
             $this->media = $this->mediaFactory->getByOwnerId($this->userId);
             $this->events = $this->scheduleFactory->getByOwnerId($this->userId);
             $this->playlists = $this->playlistFactory->getByOwnerId($this->userId);
+            $this->displayGroups = $this->displayGroupFactory->getByOwnerId($this->userId, -1);
+            $this->dayParts = $this->dayPartFactory->getByOwnerId($this->userId);
         }
 
         $this->userOptions = $this->userOptionFactory->getByUserId($this->userId);
@@ -720,7 +740,7 @@ class User implements \JsonSerializable, UserEntityInterface
     {
         $this->load(true);
 
-        $count = count($this->campaigns) + count($this->layouts) + count($this->media) + count($this->events) + count($this->playlists);
+        $count = count($this->campaigns) + count($this->layouts) + count($this->media) + count($this->events) + count($this->playlists) + count($this->displayGroups) + count($this->dayParts);
         $this->getLog()->debug('Counted Children on %d, there are %d', $this->userId, $count);
 
         return $count;

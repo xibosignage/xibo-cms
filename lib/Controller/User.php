@@ -32,6 +32,7 @@ use Xibo\Entity\Permission;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\FolderFactory;
@@ -136,6 +137,9 @@ class User extends Base
     /** @var FolderFactory */
     private $folderFactory;
 
+    /** @var DayPartFactory */
+    private $dayPartFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -163,11 +167,12 @@ class User extends Base
      * @param ContainerInterface $container
      * @param DataSetFactory $dataSetFactory
      * @param FolderFactory $folderFactory
+     * @param DayPartFactory $dayPartFactory
      */
     public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userFactory,
                                 $userTypeFactory, $userGroupFactory, $permissionFactory,
                                 $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory,
-                                $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory, $folderFactory)
+                                $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory, $folderFactory, $dayPartFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -189,6 +194,7 @@ class User extends Base
         $this->container = $container;
         $this->dataSetFactory = $dataSetFactory;
         $this->folderFactory = $folderFactory;
+        $this->dayPartFactory = $dayPartFactory;
     }
 
     /**
@@ -1009,7 +1015,7 @@ class User extends Base
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $user->setChildAclDependencies($this->userGroupFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory, $this->dayPartFactory);
 
         if ($sanitizedParams->getCheckbox('deleteAllItems') != 1) {
 
