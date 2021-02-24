@@ -1,7 +1,7 @@
 <?php
-/*
- * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015 Spring Signage Ltd
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
  *
  * This file is part of Xibo.
  *
@@ -23,6 +23,7 @@ namespace Xibo\Entity;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
+use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\DuplicateEntityException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
@@ -643,7 +644,7 @@ class Layout implements \JsonSerializable
         } else if (($this->hash() != $this->hash && $options['saveLayout']) || $options['setBuildRequired']) {
             $this->update($options);
 
-            if ($options['audit']) {
+            if ($options['audit'] && count($this->getChangedProperties()) > 0) {
                 $change = $this->getChangedProperties();
                 $change['campaignId'][] = $this->campaignId;
 
@@ -687,6 +688,17 @@ class Layout implements \JsonSerializable
                 }
             }
 
+            // Remove unwanted ones
+            if (is_array($this->unassignTags)) {
+                foreach ($this->unassignTags as $tag) {
+                    /* @var Tag $tag */
+                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
+
+                    $tag->unassignLayout($this->layoutId);
+                    $tag->save();
+                }
+            }
+
             // Save the tags
             if (is_array($this->tags)) {
                 foreach ($this->tags as $tag) {
@@ -695,17 +707,6 @@ class Layout implements \JsonSerializable
                     $this->getLog()->debug('Assigning tag ' . $tag->tag);
 
                     $tag->assignLayout($this->layoutId);
-                    $tag->save();
-                }
-            }
-
-            // Remove unwanted ones
-            if (is_array($this->unassignTags)) {
-                foreach ($this->unassignTags as $tag) {
-                    /* @var Tag $tag */
-                    $this->getLog()->debug('Unassigning tag ' . $tag->tag);
-
-                    $tag->unassignLayout($this->layoutId);
                     $tag->save();
                 }
             }
@@ -1401,6 +1402,9 @@ class Layout implements \JsonSerializable
             'includeData' => false
         ], $options);
 
+        /** @var User $user */
+        $user = $options['user'];
+
         // Load the complete layout
         $this->load();
 
@@ -1433,6 +1437,10 @@ class Layout implements \JsonSerializable
         $mappings = [];
 
         foreach ($this->mediaFactory->getByLayoutId($this->layoutId, 1, 1) as $media) {
+                if (!$user->checkViewable($media)) {
+                    throw new AccessDeniedException();
+                }
+
             /* @var Media $media */
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
 
@@ -1449,7 +1457,7 @@ class Layout implements \JsonSerializable
 
         // Add the background image
         if ($this->backgroundImageId != 0) {
-            $media = $this->mediaFactory->getById($this->backgroundImageId);
+            $media = $this->mediaFactory->getById($this->backgroundImageId, 0);
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
 
             $mappings[] = [
@@ -1520,7 +1528,7 @@ class Layout implements \JsonSerializable
                         continue;
 
                     // Export the structure for this dataSet
-                    $dataSet = $dataSetFactory->getById($dataSetId);
+                    $dataSet = $dataSetFactory->getById($dataSetId, 0);
                     $dataSet->load();
 
                     // Are we also looking to export the data?

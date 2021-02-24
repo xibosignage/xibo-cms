@@ -118,6 +118,17 @@ class DayPartFactory extends BaseFactory
         return $dayParts;
     }
 
+
+    /**
+     * Get by OwnerId
+     * @param int $ownerId
+     * @return DayPart[]
+     */
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['userId' => $ownerId]);
+    }
+
     /**
      * @param array $sortOrder
      * @param array $filterBy
@@ -158,6 +169,11 @@ class DayPartFactory extends BaseFactory
         if ($this->getSanitizer()->getString('name', $filterBy) != null) {
             $terms = explode(',', $this->getSanitizer()->getString('name', $filterBy));
             $this->nameFilter('daypart', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName', $filterBy) == 1));
+        }
+
+        if ($this->getSanitizer()->getInt('userId', $filterBy) !== null) {
+            $body .= ' AND `daypart`.userId = :userId ';
+            $params['userId'] = $this->getSanitizer()->getInt('userId', $filterBy);
         }
 
         // Sorting?

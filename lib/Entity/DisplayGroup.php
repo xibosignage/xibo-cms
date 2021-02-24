@@ -130,6 +130,7 @@ class DisplayGroup implements \JsonSerializable
     private $permissions = [];
     private $events = [];
     private $unassignTags = [];
+    private $jsonInclude = ['displayGroupId', 'displayGroup'];
 
     // Track original assignments
     private $originalDisplayGroups = [];

@@ -28,6 +28,7 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\GeneralException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
@@ -1550,35 +1551,25 @@ class Layout extends Base
     public function copy($layoutId)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $originalLayout = $this->layoutFactory->getById($layoutId);
 
         // Check Permissions
-        if (!$this->getUser()->checkViewable($layout))
+        if (!$this->getUser()->checkViewable($originalLayout)) {
             throw new AccessDeniedException();
-
+        }
         // Make sure we're not a draft
-        if ($layout->isChild())
-            throw new InvalidArgumentException('Cannot copy a Draft Layout', 'layoutId');
+        if ($originalLayout->isChild()) {
+            throw new InvalidArgumentException(__('Cannot copy a Draft Layout'), 'layoutId');
+        }
 
         // Load the layout for Copy
-        $layout->load(['loadTags' => false]);
-        $originalLayout = $layout;
+        $originalLayout->load(['loadTags' => false]);
 
         // Clone
-        $layout = clone $layout;
-        $tags = '';
+        $layout = clone $originalLayout;
+        $tags = $this->tagFactory->getTagsWithValues($layout);
 
-        $arrayOfTags = array_filter(explode(',', $layout->tags));
-        $arrayOfTagValues = array_filter(explode(',', $layout->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
+        $this->getLog()->debug('Tag values from original layout: ' . $tags);
 
         $layout->layout = $this->getSanitizer()->getString('name');
         $layout->description = $this->getSanitizer()->getString('description');
@@ -1932,7 +1923,7 @@ class Layout extends Base
 
         // Make sure we're not a draft
         if ($layout->isChild())
-            throw new InvalidArgumentException('Cannot manage tags on a Draft Layout', 'layoutId');
+            throw new InvalidArgumentException('Cannot export a Draft Layout', 'layoutId');
 
         // Save As?
         $saveAs = $this->getSanitizer()->getString('saveAs');
@@ -1945,7 +1936,7 @@ class Layout extends Base
         }
 
         $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $saveAs . '.zip';
-        $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($this->getSanitizer()->getCheckbox('includeData')== 1)]);
+        $layout->toZip($this->dataSetFactory, $fileName, ['includeData' => ($this->getSanitizer()->getCheckbox('includeData') == 1), 'user' => $this->getUser()]);
 
         if (ini_get('zlib.output_compression')) {
             ini_set('zlib.output_compression', 'Off');

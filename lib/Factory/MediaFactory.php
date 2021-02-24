@@ -352,12 +352,13 @@ class MediaFactory extends BaseFactory
     /**
      * Get by Media Id
      * @param int $mediaId
+     * @param int $disableUserCheck
      * @return Media
      * @throws NotFoundException
      */
-    public function getById($mediaId)
+    public function getById($mediaId, $disableUserCheck = 1)
     {
-        $media = $this->query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId, 'allModules' => 1));
+        $media = $this->query(null, ['disableUserCheck' => $disableUserCheck, 'mediaId' => $mediaId, 'allModules' => 1]);
 
         if (count($media) <= 0)
             throw new NotFoundException(__('Cannot find media'));

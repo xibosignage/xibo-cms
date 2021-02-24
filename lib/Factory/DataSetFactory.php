@@ -118,12 +118,13 @@ class DataSetFactory extends BaseFactory
     /**
      * Get DataSets by ID
      * @param $dataSetId
+     * @param int $disableUserCheck
      * @return DataSet
      * @throws NotFoundException
      */
-    public function getById($dataSetId)
+    public function getById($dataSetId, $disableUserCheck = 1)
     {
-        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
+        $dataSets = $this->query(null, ['disableUserCheck' => $disableUserCheck, 'dataSetId' => $dataSetId]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
