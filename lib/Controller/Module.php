@@ -27,7 +27,6 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
-use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetEditEvent;
@@ -249,7 +248,14 @@ class Module extends Base
             }
 
             // Create a module object and return any buttons it may require
-            $moduleObject = $this->moduleFactory->create($module->type);
+            $moduleObject = $this->moduleFactory->create($module->type)
+                ->setUser($this->getUser())
+                ->setPreview(
+                    true,
+                    RouteContext::fromRequest($request)->getRouteParser(),
+                    0,
+                    0
+                );
 
             // Are there any buttons we need to provide as part of the module?
             foreach ($moduleObject->settingsButtons() as $button) {
@@ -1015,6 +1021,11 @@ class Module extends Base
             throw new AccessDeniedException();
         }
 
+        // Are we allowed to do this?
+        if ($module->getModuleType() === 'subplaylist') {
+            throw new InvalidArgumentException(__('Audio cannot be attached to a Sub-Playlist Widget. Please attach it to the Widgets inside the Playlist'), 'type');
+        }
+
         $audioAvailable = true;
         if ($module->widget->countAudio() > 0) {
             $audio = $this->mediaFactory->getById($module->widget->getAudioIds()[0]);
@@ -1107,6 +1118,11 @@ class Module extends Base
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
         if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        // Are we allowed to do this?
+        if ($widget->type === 'subplaylist') {
+            throw new InvalidArgumentException(__('Audio cannot be attached to a Sub-Playlist Widget. Please attach it to the Widgets inside the Playlist'), 'type');
         }
 
         $widget->load();
@@ -1353,6 +1369,15 @@ class Module extends Base
             throw new ConfigurationException(__('Method does not exist'));
         }
 
+        $module
+            ->setUser($this->getUser())
+            ->setPreview(
+                true,
+                RouteContext::fromRequest($request)->getRouteParser(),
+                0,
+                0
+            );
+
         $formDetails = $module->$name();
 
         $this->getState()->template = $formDetails['template'];
@@ -1380,8 +1405,17 @@ class Module extends Base
             throw new ConfigurationException(__('Method does not exist'));
         }
 
-        $module->$name();
-        $this->setNoOutput(true);
+        $module
+            ->setUser($this->getUser())
+            ->setPreview(
+                true,
+                RouteContext::fromRequest($request)->getRouteParser(),
+                0,
+                0
+            );
+
+        // Call the form named
+        $response = $module->$name($request, $response);
         return $this->render($request, $response);
     }
 

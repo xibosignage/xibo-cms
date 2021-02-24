@@ -57,6 +57,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
             // Guess the type
             $module = $controller->getModuleFactory()->getByExtension(strtolower(substr(strrchr($fileName, '.'), 1)));
             $module = $controller->getModuleFactory()->create($module->type);
+            $module->setUser($controller->getUser());
 
             $controller->getLog()->debug(sprintf('Module Type = %s, Name = %s', $module->getModuleType(), $module->getModuleName()));
 

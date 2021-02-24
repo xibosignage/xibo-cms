@@ -87,7 +87,7 @@ class Theme implements Middleware
         /* @var \Twig\Loader\FilesystemLoader $twig */
 
         // Append the module view paths
-        $twig->setPaths(array_merge($container->get('moduleFactory')->getViewPaths(), $twig->getPaths()));
+        $twig->setPaths(array_merge($twig->getPaths(), $container->get('moduleFactory')->getViewPaths()));
 
         // Does this theme provide an alternative view path?
         if ($container->get('configService')->getThemeConfig('view_path') != '') {

@@ -21,7 +21,6 @@
  */
 namespace Xibo\Controller;
 
-use Slim\Http\ServerRequest as Request;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
@@ -246,6 +245,11 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('isRecordGeoLocationOnProofOfPlay')) {
+                    $this->handleChangedSettings('isRecordGeoLocationOnProofOfPlay', ($ownConfig) ? $displayProfile->getSetting('isRecordGeoLocationOnProofOfPlay') : $display->getSetting('isRecordGeoLocationOnProofOfPlay'), $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $changedSettings);
+                    $displayProfile->setSetting('isRecordGeoLocationOnProofOfPlay', $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'windows':
@@ -422,6 +426,11 @@ trait DisplayProfileConfigFields
                 if ($sanitizedParams->hasParam('embeddedServerAllowWan')) {
                     $this->handleChangedSettings('embeddedServerAllowWan', ($ownConfig) ? $displayProfile->getSetting('embeddedServerAllowWan') : $display->getSetting('embeddedServerAllowWan'), $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $changedSettings);
                     $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
+                }
+
+                if ($sanitizedParams->hasParam('isRecordGeoLocationOnProofOfPlay')) {
+                    $this->handleChangedSettings('isRecordGeoLocationOnProofOfPlay', ($ownConfig) ? $displayProfile->getSetting('isRecordGeoLocationOnProofOfPlay') : $display->getSetting('isRecordGeoLocationOnProofOfPlay'), $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $changedSettings);
+                    $displayProfile->setSetting('isRecordGeoLocationOnProofOfPlay', $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $ownConfig, $config);
                 }
 
                 break;

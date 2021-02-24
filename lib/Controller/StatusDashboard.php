@@ -182,7 +182,7 @@ class StatusDashboard extends Base
             $sql .= '
                     ) grp
                 GROUP BY month
-                ORDER BY month_order
+                ORDER BY MIN(month_order)
             ';
 
             // Run the SQL

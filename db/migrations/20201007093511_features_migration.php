@@ -36,7 +36,7 @@ class FeaturesMigration extends AbstractMigration
             ->addColumn('features', 'string', [
                 'null' => true,
                 'default' => null,
-                'limit' => \Phinx\Db\Adapter\MysqlAdapter::TEXT_MEDIUM
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::TEXT_LONG
             ])
             ->save();
 
