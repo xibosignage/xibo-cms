@@ -1540,7 +1540,7 @@ function XiboFormRender(sourceObj, data) {
                         $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
                     }
 
-                    initJsTreeAjax($("#folder-tree-form-modal").find('#container-folder-form-tree'), dialog.find('.XiboForm').attr('id'), true, 600);
+                    initJsTreeAjax('#container-folder-form-tree', dialog.find('.XiboForm').attr('id'), true, 600);
                 }
 
                 // Do we have to call any functions due to this success?
