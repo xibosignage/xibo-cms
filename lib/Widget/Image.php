@@ -206,7 +206,8 @@ class Image extends ModuleWidget
         if (stripos($media->storedAs, '.') > -1) {
             $extension = explode('.', $media->storedAs)[1];
         } else if (stripos($media->fileName, '.')) {
-            $extension = explode('.', $media->fileName)[1];
+            $explode = explode('.', $media->fileName);
+            $extension = $explode[count($explode) - 1];
         } else {
             $extension = null;
         }
