@@ -769,6 +769,16 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Get this Layout's Campaign
+     * @return \Xibo\Entity\Campaign
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getCampaign()
+    {
+        return $this->campaignFactory->getById($this->campaignId);
+    }
+
+    /**
      * Save this Layout
      * @param array $options
      * @throws GeneralException
