@@ -1642,11 +1642,12 @@ class Soap
 
                     // Do we have it in cache?
                     if (!array_key_exists('w_' . $widgetId, $memoryCache)) {
-                        $memoryCache['w_' . $widgetId] = $this->widgetFactory->getWidgetForStat($widgetId);
+                        $memoryCache['w_' . $widgetId] = $this->widgetFactory->getMediaByWidgetId($widgetId);
                     }
+                    $mediaId = $memoryCache['w_' . $widgetId];
 
                     // If the mediaId is empty, then we can assume we're a stat for a region specific widget
-                    if ($memoryCache['w_' . $widgetId] === null) {
+                    if ($mediaId === null) {
                         $type = 'widget';
                     }
 
