@@ -1,5 +1,5 @@
 <div class="context-menu-overlay" oncontextmenu="return false">
-    <div class="context-menu context-menu-{{obj.type}}" >
+    <div class="context-menu context-menu-{{type}}">
         {{#if isSortable}}
             <div class="sort-controls-container">
                 <div class="context-menu-btn" data-title="{{trans.moveTopLeft}}" data-action="Move" data-action-type="topLeft" data-toggle="tooltip">
@@ -20,9 +20,11 @@
         <div class="main-button-container">
             {{#eq type "widget"}}
                 {{#if isEditable}}
-                    <div class="context-menu-btn" data-title="{{trans.editAudio}}" data-property="Audio" data-toggle="tooltip" data-placement="bottom">
-                        <i class="fa tool-icon-audio"></i>
-                    </div>
+                    {{#if canAttachAudio}}
+                        <div class="context-menu-btn" data-title="{{trans.editAudio}}" data-property="Audio" data-toggle="tooltip" data-placement="bottom">
+                            <i class="fa tool-icon-audio"></i>
+                        </div>
+                    {{/if}}
 
                     <div class="context-menu-btn" data-title="{{trans.editExpiry}}" data-property="Expiry" data-toggle="tooltip" data-placement="bottom">
                         <i class="fa tool-icon-expiry"></i>
