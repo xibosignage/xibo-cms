@@ -94,7 +94,7 @@ describe('Layout Designer (Empty)', function() {
             cy.wait('@reloadLayout');
 
             // Check if there are no regions in the timeline ( there was 1 by default )
-            cy.get('#layout-timeline [data-type="region"]').should('not.be.visible');
+            cy.get('#layout-timeline [data-type="region"]').should('not.exist');
         });
 
         it('should delete a region using the toolbar bin', () => {

@@ -198,7 +198,9 @@ class Image extends ModuleWidget
         if (stripos($media->storedAs, '.') > -1) {
             $extension = explode('.', $media->storedAs)[1];
         } else if (stripos($media->fileName, '.')) {
-            $extension = explode('.', $media->fileName)[1];
+            // make sure we take the last part of the fileName with . for consideration - to omit problems with . in the fileName before the extension
+            $explode = explode('.', $media->fileName);
+            $extension = $explode[count($explode) - 1];
         } else {
             $extension = null;
         }

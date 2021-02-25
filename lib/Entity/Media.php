@@ -200,6 +200,7 @@ class Media implements \JsonSerializable
     // Private
     private $unassignTags = [];
     private $requestOptions = [];
+    private $datesToFormat = ['expires'];
     // New file revision
     public $isSaveRequired;
     public $isRemote;
@@ -547,6 +548,7 @@ class Media implements \JsonSerializable
 
             // Always set force to true as we always want to save new files
             $this->isSaveRequired = true;
+            $this->audit($this->mediaId, 'Added', ['mediaId' => $this->mediaId, 'name' => $this->name, 'mediaType' => $this->mediaType, 'fileName' => $this->fileName]);
         }
         else {
             $this->edit();
@@ -554,6 +556,7 @@ class Media implements \JsonSerializable
             // If the media file is invalid, then force an update (only applies to module files)
             $expires = $this->getOriginalValue('expires');
             $this->isSaveRequired = ($this->isSaveRequired || $this->valid == 0 || ($expires > 0 && $expires < time()));
+            $this->audit($this->mediaId, 'Updated', $this->getChangedProperties());
         }
 
         if ($options['deferred']) {
@@ -708,7 +711,7 @@ class Media implements \JsonSerializable
             }
         }
 
-        $this->audit($this->mediaId, 'Deleted');
+        $this->audit($this->mediaId, 'Deleted', ['mediaId' => $this->mediaId, 'name' => $this->name, 'mediaType' => $this->mediaType, 'fileName' => $this->fileName]);
     }
 
     /**
@@ -875,13 +878,20 @@ class Media implements \JsonSerializable
         // Resize image dimensions if threshold exceeds
         $this->assessDimensions();
 
+        // If we are saving module file that has ? in the basename, make sure we remove that here and update fileName in database
+        // we cannot do this on queue download, as we need full url as fileName to download it in processDownloads
+        if (strpos(basename($this->fileName), '?') && $this->mediaType == 'module') {
+            $this->fileName = substr(basename($this->fileName), 0, strpos(basename($this->fileName), '?'));
+        }
+
         // Update the MD5 and storedAs to suit
-        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, valid = 1 WHERE mediaId = :mediaId', [
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, originalFileName = :originalFileName, valid = 1 WHERE mediaId = :mediaId', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
             'expires' => $this->expires,
             'released' => $this->released,
+            'originalFileName' => basename($this->fileName),
             'mediaId' => $this->mediaId
         ]);
     }

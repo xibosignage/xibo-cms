@@ -118,12 +118,13 @@ class DataSetFactory extends BaseFactory
     /**
      * Get DataSets by ID
      * @param $dataSetId
+     * @param int $disableUserCheck
      * @return DataSet
      * @throws NotFoundException
      */
-    public function getById($dataSetId)
+    public function getById($dataSetId, $disableUserCheck = 1)
     {
-        $dataSets = $this->query(null, ['disableUserCheck' => 1, 'dataSetId' => $dataSetId]);
+        $dataSets = $this->query(null, ['disableUserCheck' => $disableUserCheck, 'dataSetId' => $dataSetId]);
 
         if (count($dataSets) <= 0)
             throw new NotFoundException();
@@ -434,6 +435,9 @@ class DataSetFactory extends BaseFactory
                         // Request doesn't have any cache control of its own
                         // use the md5
                         $md5 = md5($request->getBody());
+
+                        // Rewind so we can use it again
+                        $request->getBody()->rewind();
 
                         if ($cacheControlKeyValue === $md5) {
                             $this->getLog()->debug('Skipping due to MD5');

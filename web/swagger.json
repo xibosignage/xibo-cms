@@ -11,7 +11,7 @@
             "name": "AGPLv3 or later",
             "url": "http://www.gnu.org/licenses/"
         },
-        "version": "2.2"
+        "version": "2.3"
     },
     "basePath": "/api",
     "schemes": [
@@ -6356,6 +6356,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "statDateLessThan",
+                        "in": "query",
+                        "description": "The statDate filter returns records that are less than a particular date",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "statId",
                         "in": "query",
                         "description": "The statId filter returns records that are greater than a particular statId",
@@ -8679,7 +8686,7 @@
                     {
                         "name": "template",
                         "in": "formData",
-                        "description": "Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 or with sourceId=2 ",
+                        "description": "Template for each item",
                         "required": false,
                         "type": "string"
                     },
@@ -13117,6 +13124,20 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/Playlist"
+                    }
+                },
+                "displayGroups": {
+                    "description": "An array of Display Groups owned by this User",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DisplayGroup"
+                    }
+                },
+                "dayParts": {
+                    "description": "An array of Dayparts owned by this User",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DayPart"
                     }
                 },
                 "homePage": {

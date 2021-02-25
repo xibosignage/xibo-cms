@@ -55,6 +55,10 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     // widget media
     this.mediaIds = data.mediaIds;
 
+    // check if audio can be attached to it
+    const typesThatCantHaveAudio = ['subplaylist'];
+    this.canAttachAudio = !typesThatCantHaveAudio.includes(this.subType);
+
     // Widget colouring
     if(playlistRegionColouring === 'Permissions Colouring') {
         this.widgetColouring = (data.isEditable) ? 'timelineMediaItemColouring_enabled' : 'timelineMediaItemColouring_disabled';

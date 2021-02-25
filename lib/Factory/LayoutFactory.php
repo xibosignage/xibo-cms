@@ -516,6 +516,15 @@ class LayoutFactory extends BaseFactory
             // Populate Playlists (XLF doesn't contain any playlists)
             $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
 
+            // Populate region options.
+            foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/options') as $regionOptionsNode) {
+                /* @var \DOMElement $regionOptionsNode */
+                foreach ($regionOptionsNode->childNodes as $regionOption) {
+                    /* @var \DOMElement $regionOption */
+                    $region->setOptionValue($regionOption->nodeName, $regionOption->textContent);
+                }
+            }
+
             // Get all widgets
             foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media') as $mediaNode) {
                 /* @var \DOMElement $mediaNode */
@@ -673,12 +682,13 @@ class LayoutFactory extends BaseFactory
      * @param null $layout
      * @param null $playlistJson
      * @param null $nestedPlaylistJson
+     * @param bool $importTags
      * @return array
+     * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      * @throws NotFoundException
-     * @throws \Xibo\Exception\DuplicateEntityException
      */
-    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson)
+    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $importTags = false)
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
@@ -714,7 +724,7 @@ class LayoutFactory extends BaseFactory
                 $newPlaylist->tags = [];
 
                 // Populate tags
-                if ($nestedPlaylist['tags'] !== null && count($nestedPlaylist['tags']) > 0) {
+                if ($nestedPlaylist['tags'] !== null && count($nestedPlaylist['tags']) > 0 && $importTags) {
                     foreach ($nestedPlaylist['tags'] as $tag) {
                         $newPlaylist->tags[] = $this->tagFactory->tagFromString(
                             $tag['tag'] . (!empty($tag['value']) ? '|' . $tag['value'] : '')
@@ -768,6 +778,10 @@ class LayoutFactory extends BaseFactory
 
             // Populate Playlists
             $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
+
+            foreach ($regionJson['regionOptions'] as $regionOption) {
+                $region->setOptionValue($regionOption['option'], $regionOption['value']);
+            }
 
             // Get all widgets
             foreach ($regionJson['regionPlaylist']['widgets'] as $mediaNode) {
@@ -872,7 +886,7 @@ class LayoutFactory extends BaseFactory
                         $newPlaylist->tags = [];
 
                         // Populate tags
-                        if ($playlistDetail['tags'] !== null && count($playlistDetail['tags']) > 0) {
+                        if ($playlistDetail['tags'] !== null && count($playlistDetail['tags']) > 0 && $importTags) {
                             foreach ($playlistDetail['tags'] as $tag) {
                                 $newPlaylist->tags[] = $this->tagFactory->tagFromString(
                                     $tag['tag'] . (!empty($tag['value']) ? '|' . $tag['value'] : '')
@@ -947,15 +961,17 @@ class LayoutFactory extends BaseFactory
 
         $this->getLog()->debug('Finished loading layout - there are %d regions.', count($layout->regions));
 
-        // Load any existing tags
-        if (!is_array($layout->tags))
-            $layout->tags = $this->tagFactory->tagsFromString($layout->tags);
+        if ($importTags) {
+            foreach ($layoutJson['layoutDefinitions']['tags'] as $tagNode) {
+                if ($tagNode == []) {
+                    continue;
+                }
 
-        foreach ($layoutJson['layoutDefinitions']['tags'] as $tagNode) {
-            if ($tagNode == [])
-                continue;
+                $layout->tags[] = $this->tagFactory->tagFromString(
+                    $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
+                );
 
-            $layout->tags[] = $this->tagFactory->tagFromString($tagNode['tag']);
+            }
         }
 
         // The parsed, finished layout
@@ -973,10 +989,11 @@ class LayoutFactory extends BaseFactory
      * @param bool $useExistingDataSets
      * @param bool $importDataSetData
      * @param \Xibo\Controller\Library $libraryController
+     * @param $tags
      * @return Layout
      * @throws XiboException
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, $tags)
     {
         $this->getLog()->debug('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName);
 
@@ -1007,7 +1024,7 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails);
+            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, $importTags);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
@@ -1068,6 +1085,12 @@ class LayoutFactory extends BaseFactory
 
         // Tag as imported
         $layout->tags[] = $this->tagFactory->tagFromString('imported');
+
+        // Tag from the upload form
+        $tagsFromForm = (($tags != '') ? $this->tagFactory->tagsFromString($tags) : []);
+        foreach ($tagsFromForm as $tagFromForm) {
+            $layout->tags[] = $tagFromForm;
+        }
 
         // Set the owner
         $layout->setOwner($userId, true);
@@ -1765,14 +1788,6 @@ class LayoutFactory extends BaseFactory
             $params['mediaLike'] = '%' . $this->getSanitizer()->getString('mediaLike', $filterBy) . '%';
         }
 
-        // LayoutHistoryID
-        if ($this->getSanitizer()->getInt('layoutHistoryId', $filterBy) !== null) {
-            $body .= '
-                INNER JOIN `layouthistory`
-                ON `layouthistory`.layoutId = `layout`.layoutId
-            ';
-        }
-
         $body .= " WHERE 1 = 1 ";
 
         // Logged in user view permissions
@@ -1862,7 +1877,11 @@ class LayoutFactory extends BaseFactory
         }
 
         if ($this->getSanitizer()->getInt('layoutHistoryId', $filterBy) !== null) {
-            $body .= " AND `layouthistory`.layoutId = :layoutHistoryId ";
+            $body .= ' AND `campaign`.campaignId IN (
+                SELECT MAX(campaignId) 
+                  FROM `layouthistory` 
+                 WHERE `layouthistory`.layoutId = :layoutHistoryId
+                ) ';
             $params['layoutHistoryId'] = $this->getSanitizer()->getInt('layoutHistoryId', 0, $filterBy);
         }
 

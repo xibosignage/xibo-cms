@@ -41,7 +41,7 @@ describe('Dashboard', function() {
 
         cy.visit('/statusdashboard').then(() => {
             cy.wait(500);
-            cy.get('.popover.tour').should('not.be.visible');
+            cy.get('.popover.tour').should('not.exist');
         });
     });
 });
