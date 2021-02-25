@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -40,7 +40,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  *  description="Xibo CMS API.
        Using HTTP formData requests.
        All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
- *  version="2.2",
+ *  version="2.3",
  *  termsOfService="http://xibo.org.uk/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",
