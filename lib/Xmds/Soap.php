@@ -1511,6 +1511,7 @@ class Soap
 
         $layoutIdsNotFound = [];
         $widgetIdsNotFound = [];
+        $memoryCache = [];
 
         foreach ($document->documentElement->childNodes as $node) {
             /* @var \DOMElement $node */
@@ -1551,6 +1552,11 @@ class Soap
             // if fromdt and to dt are same then ignore them
             if ($fromdt == $todt) {
                 $this->getLog()->debug('Ignoring a Stat record because the fromDt (' . $fromdt. ') and toDt (' . $todt. ') are the same');
+                continue;
+            }
+
+            if ($fromdt > $todt) {
+                $this->getLog()->debug('From date is greater than to date: ' . $fromdt . ', toDt: ' . $todt);
                 continue;
             }
 
@@ -1598,7 +1604,12 @@ class Soap
                         continue;
                     }
 
-                    $mediaId = $this->widgetFactory->getWidgetForStat($widgetId);
+                    // Do we have it in cache?
+                    if (!array_key_exists('w_' . $widgetId, $memoryCache)) {
+                        $memoryCache['w_' . $widgetId] = $this->widgetFactory->getWidgetForStat($widgetId);
+                    }
+
+                    $mediaId = $memoryCache['w_' . $widgetId];
 
                     // If the mediaId is empty, then we can assume we're a stat for a region specific widget
                     if ($mediaId === null) {
@@ -1620,12 +1631,8 @@ class Soap
             }
 
             $tag = $node->getAttribute('tag');
-            if ($tag == 'null')
+            if ($tag == 'null') {
                 $tag = null;
-
-            if ($fromdt > $todt) {
-                $this->getLog()->debug('From date is greater than to date: ' . $fromdt . ', toDt: ' . $todt);
-                continue;
             }
 
             // Adjust the date according to the display timezone
