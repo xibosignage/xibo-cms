@@ -274,7 +274,7 @@ class DataSetTicker extends ModuleWidget
      *  @SWG\Parameter(
      *      name="template",
      *      in="formData",
-     *      description="Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 or with sourceId=2 ",
+     *      description="Template for each item",
      *      type="string",
      *      required=false
      *   ),
@@ -897,13 +897,13 @@ class DataSetTicker extends ModuleWidget
     /** @inheritdoc */
     public function getCacheKey($displayId)
     {
-        if ($displayId === 0 || $this->getOption('sourceId', 1) == 2) {
-            // DataSets might use Display
-            return $this->getWidgetId() . '_' . $displayId;
-        } else {
-            // Tickers are non-display specific
-            return $this->getWidgetId() . (($displayId === 0) ? '_0' : '');
-        }
+        return $this->getWidgetId() . '_' . $displayId;
+    }
+
+    /** @inheritdoc */
+    public function isCacheDisplaySpecific()
+    {
+        return true;
     }
 
     /** @inheritdoc */
