@@ -352,6 +352,7 @@ function Region(parent, id, xml, options, preload) {
     self.oneMedia = false;
     self.oldMedia = undefined;
     self.curMedia = undefined;
+    self.totalMediaObjects = $(self.xml).find("media").length;
     
     self.finished = function() {
         self.complete = true;
@@ -434,6 +435,13 @@ function Region(parent, id, xml, options, preload) {
     self.run = function() {
         self.nextMedia();
     };
+
+    /* Build Region Options */
+    self.options = [];
+    $(self.xml).children('options').children().each(function() {
+        playLog(9, "debug", "Option " + this.nodeName.toLowerCase() + " -> " + $(this).text(), false);
+        self.options[this.nodeName.toLowerCase()] = $(this).text();
+    });
     
     self.sWidth = $(xml).attr("width") * self.layout.scaleFactor;
     self.sHeight = $(xml).attr("height") * self.layout.scaleFactor;
@@ -606,6 +614,11 @@ function media(parent, id, xml, options, preload) {
 
     var tmpUrl = options.getResourceUrl.replace(":regionId", self.region.id).replace(":id", self.id) + '?preview=true&raw=true&scale_override=' + self.region.layout.scaleFactor;
     
+    // Loop if media has loop, or if region has loop and a single media
+    var loop =
+        self.options['loop'] == '1' ||
+        (self.region.options['loop'] && self.region.totalMediaObjects == 1);
+
     if (self.render == "html" || self.mediaType == "ticker") {
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
@@ -642,7 +655,8 @@ function media(parent, id, xml, options, preload) {
     }
     else if (self.mediaType == "video") {
         preload.addFiles(tmpUrl);
-        self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + ' ' + ((self.options["loop"] == 1) ? 'loop' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
+        
+        self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + ' ' + (loop ? 'loop' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
         
         // Stretch video?
         if(self.options['scaletype'] == 'stretch') {
@@ -651,7 +665,8 @@ function media(parent, id, xml, options, preload) {
     }
      else if(self.mediaType == "audio") {
         preload.addFiles(tmpUrl);
-        media.append('<audio id="' + self.containerName + '-aud" preload="auto" ' + ((self.options["loop"] == 1) ? 'loop' : '') + ' ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Audio</audio>');
+        
+        media.append('<audio id="' + self.containerName + '-aud" preload="auto" ' + (loop ? 'loop' : '') + ' ' + ((self.options["mute"] == 1) ? 'muted' : '') + '><source src="' + tmpUrl + '">Unsupported Audio</audio>');
     }
     else if (self.mediaType == "flash") {
         var embedCode = '<OBJECT classid="clsid:D27CDB6E-AE6D-11cf-96B8-444553540000" codebase="http://download.macromedia.com/pub/shockwave/cabs/flash/swflash.cab#version=6,0,0,0" WIDTH="100%" HEIGHT="100%" id="Yourfilename" ALIGN="">';

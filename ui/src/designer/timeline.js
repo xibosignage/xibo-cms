@@ -613,8 +613,24 @@ Timeline.prototype.render = function(layout) {
     this.DOMObject.find('.designer-widget').droppable({
         greedy: true,
         accept: function(el) {
-            return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'widget') ||
-                ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
+            const allowDropToWidget =
+                $(this).hasClass("editable") &&
+                $(el).attr("drop-to") === "widget";
+
+            const allowAttachedAudioEdit =
+                $(el).attr("data-sub-type") != "audio" ||
+                ($(el).attr("data-sub-type") === "audio" &&
+                    $(this).data("widgetType") != "subplaylist");
+
+            const allowModifyPermissions =
+                $(this).hasClass("permissionsModifiable") &&
+                $(el).attr("drop-to") === "all" &&
+                $(el).data("subType") === "permissions";
+
+            return (
+                (allowDropToWidget && allowAttachedAudioEdit) ||
+                allowModifyPermissions
+            );
         },
         drop: function(event, ui) {
             lD.dropItemAdd(event.target, ui.draggable[0]);
