@@ -252,9 +252,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->delete('/campaign/{id}', ['\Xibo\Controller\Campaign','delete'])->setName('campaign.delete');
     $group->post('/campaign/{id}/copy', ['\Xibo\Controller\Campaign','copy'])->setName('campaign.copy');
     $group->put('/campaign/{id}/selectfolder', ['\Xibo\Controller\Campaign','selectFolder'])->setName('campaign.selectfolder');
-    // We use POST requests so that we can support multiple records
     $group->post('/campaign/layout/assign/{id}', ['\Xibo\Controller\Campaign','assignLayout'])->setName('campaign.assign.layout');
-    $group->post('/campaign/layout/unassign/{id}', ['\Xibo\Controller\Campaign','unassignLayout'])->setName('campaign.unassign.layout');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['campaign.modify']));
 
 /**
