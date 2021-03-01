@@ -121,7 +121,7 @@
     function showActionsGrid(source, sourceId) {
         // create the table only when we are on Action tab
         $('.nav-tabs a').on('shown.bs.tab', function(event) {
-            if ($(event.target).text() === 'Actions') {
+            if ($(event.target).hasClass('action-tab')) {
                 // Expose the button
                 $('.action-button-add').removeClass("d-none");
 
