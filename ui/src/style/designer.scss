@@ -1648,11 +1648,14 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     }
 
     #actions-drawer-empty-message {
+        position: relative;
         border: 2px dashed $drawer-fg-color;
         @include border-radius(6px);
         color: $drawer-fg-color;
         line-height: 75px;
-        margin: 4px;
+        margin: 0 4px;
+        top: 50%;
+        transform: translateY(-50%);
     }
 
     &.drawed {

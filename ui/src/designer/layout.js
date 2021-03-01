@@ -429,7 +429,7 @@ Layout.prototype.createDrawer = function(drawerData) {
     }
 
     // Dimensions
-    this.dimensions = {
+    newDrawer.dimensions = {
         width: drawerData.width,
         height: drawerData.height,
         top: drawerData.top,
