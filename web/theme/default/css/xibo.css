@@ -1119,8 +1119,13 @@ input.datePicker[readonly], input.dateTimePicker[readonly], input.dateMonthPicke
 .XiboCommand .intent-extra-element .extra-value {
     width: calc(50% - 40px);
 }
-.XiboCommand .invalid .form-control-inline, .XiboCommand .command-preview.invalid {
-    background-color: #fbe5e5;
+
+.XiboCommand .invalid .validated-element, .XiboCommand .invalid.validated-element, .XiboCommand .command-preview.invalid {
+    background-color: #fbe5e5 !important;
+}
+
+.XiboCommand .command-preview.invalid code {
+    color: #960000 !important;
 }
 
 .XiboCommand label.intent-extra-container-label {

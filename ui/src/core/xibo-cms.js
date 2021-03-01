@@ -528,7 +528,7 @@ function XiboInitialise(scope) {
         tagsWithValues($(this).closest("form").attr('id'));
     });
 
-    $(scope + " .XiboCommand").each(function() {
+    $(scope + ' .XiboCommand').each(function () {
         // Get main container
         var $mainContainer = $(this);
 
@@ -539,68 +539,338 @@ function XiboInitialise(scope) {
         $input.hide();
 
         var commandTypes = {
-            'freetext': translations.freeTextCommand,
-            'tpv_led': 'Philips Android',
-            'rs232': 'RS232',
-            'intent': 'Android Intent'
+            freetext: translations.freeTextCommand,
+            tpv_led: 'Philips Android',
+            rs232: 'RS232',
+            intent: 'Android Intent',
+            http: 'HTTP',
         };
 
-        // Scope functions
-        var changeTypeTemplate = function(type) {
+        // Load templates
+        var loadTemplates = function (type) {
             var initVal = $input.val();
-            var parsedVal = parseValue($input.val());
-            
+            var parsedVal = parseCommandValue($input.val());
             var $targetContainer = $mainContainer.find('.command-inputs');
 
             // Create template for the inputs
-            var inputTemplate = Handlebars.compile($('#command-input-' + type + '-template').html());
-            $targetContainer.html(inputTemplate({
-                value: parsedVal.value,
-                initVal: initVal,
-                unique: new Date().valueOf()
-            }));
+            var inputTemplate = Handlebars.compile(
+                $('#command-input-' + type + '-template').html()
+            );
+            $targetContainer.html(
+                inputTemplate({
+                    value: parsedVal.value,
+                    initVal: initVal,
+                    unique: new Date().valueOf(),
+                })
+            );
 
             // Extra templates for Android intent
-            if(type == 'intent') {
-                var inputExtraTemplate = Handlebars.compile($('#command-input-intent-extra-template').html());
-                if(parsedVal.value.extras != undefined){
-                    parsedVal.value.extras.forEach(function(el){
-                        $targetContainer.find('.intent-extra-container').append(inputExtraTemplate(el));
+            if (type == 'intent') {
+                var inputExtraTemplate = Handlebars.compile(
+                    $('#command-input-intent-extra-template').html()
+                );
+                if (parsedVal.value.extras != undefined) {
+                    parsedVal.value.extras.forEach(function (el) {
+                        $targetContainer
+                            .find('.intent-extra-container')
+                            .append(inputExtraTemplate(el));
                     });
                 }
 
                 // Add extra element
-                $targetContainer.on('click', '.intent-add-extra', function() {
+                $targetContainer.find('.intent-add-extra').on('click', function () {
                     $targetContainer.find('.intent-extra-container').append(inputExtraTemplate({}));
                     updateValue(type);
                 });
 
                 // Remove extra element
-                $targetContainer.on('click', '.intent-remove-extra', function() {
-                    $(this).parents('.intent-extra-element').remove();
-                    updateValue(type);
-                });
+                $targetContainer
+                    .off('click', '.intent-remove-extra')
+                    .on('click', '.intent-remove-extra', function () {
+                        $(this).parents('.intent-extra-element').remove();
+                        updateValue(type);
+                    });
+            }
+
+            // Header and body templates for HTTP intent
+            if (type == 'http') {
+                var inputKeyValueElementTemplate = Handlebars.compile(
+                    $('#command-input-http-key-value-template').html()
+                );
+                var sectionClasses = [
+                    '.query-builder-container',
+                    '.http-headers-container',
+                    '.http-data-container',
+                ];
+                var sectionValues = [
+                    parsedVal.value != undefined && parsedVal.value.query != undefined
+                        ? parsedVal.value.query
+                        : null,
+                    parsedVal.value != undefined &&
+                    parsedVal.value.requestOptions != undefined &&
+                    parsedVal.value.requestOptions.headers != undefined
+                        ? parsedVal.value.requestOptions.headers
+                        : null,
+                    parsedVal.value != undefined &&
+                    parsedVal.value.requestOptions != undefined &&
+                    parsedVal.value.requestOptions.body != undefined
+                        ? parsedVal.value.requestOptions.body
+                        : null,
+                ];
+
+                // Generate key value pairs in a container
+                var populateKeyValues = function ($container, values) {
+                    // Empty container
+                    $container.find('.http-key-value-container').empty();
+
+                    // Populate with the new values
+                    for (let i = 0; i < Object.keys(values).length; i++) {
+                        $container.find('.http-key-value-container').append(
+                            inputKeyValueElementTemplate({
+                                key: Object.keys(values)[i],
+                                value: Object.values(values)[i],
+                            })
+                        );
+                    }
+                };
+
+                // Update all the key-value/raw fields
+                var updateKeyValueRawFields = function (forceUpdateTextArea) {
+                    // Update text area even if the checkbox for raw is off
+                    forceUpdateTextArea =
+                        forceUpdateTextArea != undefined ? forceUpdateTextArea : false;
+
+                    var $parentContainer = $(this).parents('.request-section');
+
+                    // Get value from JSON string
+                    var parseJsonFromString = function (valueToParse) {
+                        var parsedValue;
+
+                        try {
+                            parsedValue = JSON.parse(valueToParse);
+                        } catch (error) {
+                            console.warn('Value not a JSON!');
+                        }
+
+                        return parsedValue;
+                    };
+
+                    // Create a JSON string from a key-value pair
+                    var createJSONStringFromKeyValue = function ($container) {
+                        var elementsObject = {};
+
+                        $container
+                            .find('.http-key-value-container .http-key-value-element')
+                            .each(function () {
+                                var $el = $(this);
+                                var elKey = $el.find('.http-key').val();
+                                var elValue = $el.find('.http-value').val();
+
+                                // Add to final command if all fields are correct
+                                if (![elKey, elValue].includes('')) {
+                                    elementsObject[elKey] = elValue;
+                                    $el.removeClass('invalid');
+                                } else {
+                                    $el.addClass('invalid');
+                                }
+                            });
+
+                        return JSON.stringify(elementsObject);
+                    };
+
+                    // 
+                    var decodeQueryString = function (valueToParse) {
+                        var parsedValue;
+
+                        try {
+                            parsedValue =
+                                '{"' +
+                                decodeURI(valueToParse.replace(/&/g, '","').replace(/=/g, '":"')) +
+                                '"}';
+                        } catch (error) {
+                            console.warn('Decode URI failed!');
+                        }
+
+                        return parsedValue;
+                    };
+
+                    // Create query string from a set of key values
+                    var createQueryStringFromKeyValues = function ($container) {
+                        var elementsObject = {};
+                        $container
+                            .find('.http-key-value-container .http-key-value-element')
+                            .each(function () {
+                                var $el = $(this);
+                                var elKey = $el.find('.http-key').val();
+                                var elValue = $el.find('.http-value').val();
+
+                                // Add to final command if all fields are correct
+                                if (![elKey, elValue].includes('')) {
+                                    elementsObject[elKey] = elValue;
+                                }
+                            });
+
+                        // Build body param string
+                        var paramsString = Object.keys(elementsObject)
+                            .map((key) => key + '=' + elementsObject[key])
+                            .join('&');
+
+                        return paramsString;
+                    };
+
+                    // Get current content type
+                    var contentType = $targetContainer.find('.http-contenttype').val();
+
+                    if ($(this).is(':checked') || forceUpdateTextArea) {
+                        // Create string from key value elements
+                        if (
+                            !$parentContainer.find('textarea').hasClass('http-data') ||
+                            contentType == 'application/json'
+                        ) {
+                            $parentContainer
+                                .find('textarea')
+                                .val(createJSONStringFromKeyValue($parentContainer));
+                        } else if (contentType == 'application/x-www-form-urlencoded') {
+                            $parentContainer
+                                .find('textarea')
+                                .val(createQueryStringFromKeyValues($parentContainer));
+                        }
+                    } else {
+                        // Update key value elements based on the textarea value
+                        var builtValue;
+
+                        if (
+                            !$parentContainer.find('textarea').hasClass('http-data') ||
+                            contentType == 'application/json'
+                        ) {
+                            // Parse JSON from textarea
+                            builtValue = parseJsonFromString(
+                                $parentContainer.find('textarea').val()
+                            );
+                        } else if (contentType == 'application/x-www-form-urlencoded') {
+                            builtValue = parseJsonFromString(
+                                decodeQueryString($parentContainer.find('textarea').val())
+                            );
+                        }
+
+                        // if value exists, populate key-value elements
+                        if (builtValue) {
+                            populateKeyValues($parentContainer, builtValue);
+                        }
+                    }
+                };
+
+                // Create key pair sections
+                for (let i = 0; i < sectionValues.length; i++) {
+                    var sectionValue = sectionValues[i];
+                    var $sectionContainer = $targetContainer.find(sectionClasses[i]);
+
+                    if (sectionValue != null) {
+                        populateKeyValues($sectionContainer, sectionValue);
+                    }
+
+                    // Handle Add extra element
+                    $sectionContainer.find('.http-key-value-add').on('click', function (el) {
+                        $(this)
+                            .parent()
+                            .find('.http-key-value-container')
+                            .append(inputKeyValueElementTemplate({}));
+                        updateValue(type);
+                    });
+
+                    // Handle Remove extra element
+                    $sectionContainer
+                        .off('click', '.http-key-value-remove')
+                        .on('click', '.http-key-value-remove', function (el) {
+                            $(this).parents('.http-key-value-element').remove();
+                            updateValue(type);
+                        });
+
+                    // Handle Raw checkbox input
+                    $sectionContainer
+                        .parent()
+                        .find('.form-check input[type="checkbox"]')
+                        .off('change')
+                        .on('change', function () {
+                            if (
+                                $(this).hasClass('show-raw-headers') ||
+                                $(this).hasClass('show-raw-data')
+                            ) {
+                                updateKeyValueRawFields.bind(this)();
+                            } else {
+                                updateValue(type);
+                            }
+
+                            // Toggle fields visibility
+                            var $parentContainer = $(this).parents('.request-section');
+                            $parentContainer
+                                .find($(this).data('toggleElement'))
+                                .toggleClass($(this).data('toggleClass'), $(this).is(':checked'));
+                            $parentContainer
+                                .find($(this).data('toggleElementReverse'))
+                                .toggleClass($(this).data('toggleClass'), !$(this).is(':checked'));
+                        });
+
+                    // Value change makes fields to be updated
+                    $sectionContainer
+                        .parent()
+                        .off('change', '.http-key-value-container .http-key-value-element input')
+                        .on(
+                            'change',
+                            '.http-key-value-container .http-key-value-element input',
+                            function () {
+                                updateKeyValueRawFields.bind(this)(true);
+                            }
+                        );
+
+                    // Call update when loading each section
+                    updateKeyValueRawFields.bind($sectionContainer)(true);
+                }
+
+                // Handle content type behaviour
+                $targetContainer
+                    .find('.http-contenttype')
+                    .off('change')
+                    .on('change', function () {
+                        var isPlainText = $(this).val() == 'text/plain';
+
+                        $targetContainer
+                            .find('.show-raw-data')
+                            .parent()
+                            .toggleClass('d-none', isPlainText);
+                        $targetContainer
+                            .find('.show-raw-data')
+                            .prop('checked', isPlainText)
+                            .trigger('change');
+
+                        // Update data raw field based on the contenttype
+                        if (!isPlainText) {
+                            updateKeyValueRawFields.bind($('.http-data-container'))(true);
+                        }
+                    });
             }
 
             // Bind input changes to the old input field
-            $targetContainer.change('input, select', function() {
-                updateValue(type);
-            });
+            $targetContainer
+                .off('change', 'input:not(.ignore-change), select, textarea')
+                .on('change', 'input:not(.ignore-change), select, textarea', function () {
+                    updateValue(type);
+                });
 
             updateValue(type);
         };
 
-        // Parse and set value to main input
-        var parseValue = function(value) {
+        // Parse command value and return object
+        var parseCommandValue = function (value) {
             var valueObj = {};
 
-            if(value == '' || value == undefined) {
+            if (value == '' || value == undefined) {
                 valueObj.type = 'freetext';
                 valueObj.value = '';
             } else {
                 var splitValue = value.split('|');
 
-                if(splitValue.length == 1) {
+                if (splitValue.length == 1) {
                     // free text
                     valueObj.type = 'freetext';
                     valueObj.value = value;
@@ -620,7 +890,7 @@ function XiboInitialise(scope) {
                                 //  "type": "<type|string,int,bool,intArray>",
                                 //  "value": <the value of the above type>
                                 //}
-                                extras: (splitValue.length > 3) ? JSON.parse(splitValue[3]) : []
+                                extras: splitValue.length > 3 ? JSON.parse(splitValue[3]) : [],
                             };
                             break;
                         case 'rs232':
@@ -633,20 +903,81 @@ function XiboInitialise(scope) {
                                 parity: connectionStringRaw[3],
                                 stopBits: connectionStringRaw[4],
                                 handshake: connectionStringRaw[5],
-                                hexSupport: connectionStringRaw[6]
+                                hexSupport: connectionStringRaw[6],
                             };
 
                             valueObj.value = {
                                 // <COM#>,<Baud Rate>,<Data Bits>,<Parity|None,Odd,Even,Mark,Space>,<StopBits|None,One,Two,OnePointFive>,<Handshake|None,XOnXOff,RequestToSend,RequestToSendXOnXOff>,<HexSupport|0,1,default 0>
                                 // <DeviceName>,<Baud Rate>,<Data Bits>,<Parity>,<StopBits>,<FlowControl>
                                 cs: connectionString,
-                                command: splitValue[2]
+                                command: splitValue[2],
                             };
                             break;
                         case 'tpv_led':
                             valueObj.type = 'tpv_led';
                             valueObj.value = splitValue[1];
-                            
+
+                            break;
+                        case 'http':
+                            var requestOptions = {};
+                            var contentType = splitValue[2];
+
+                            // try to parse JSON
+                            if (splitValue[3] != undefined) {
+                                try {
+                                    requestOptions = JSON.parse(splitValue[3]);
+                                } catch (error) {
+                                    console.warn('Skip JSON parse!');
+                                }
+                            }
+
+                            // parse headers
+                            if(requestOptions.headers != undefined) {
+                                try {
+                                    requestOptions.headers = JSON.parse(requestOptions.headers);
+                                } catch (error) {
+                                    console.warn('Skip headers JSON parse!');
+                                }
+                            }
+
+                            // parse body
+                            if (requestOptions.body != undefined) {
+                                try {
+                                    if (contentType) {
+                                        if (contentType == 'application/json') {
+                                            requestOptions.body = JSON.parse(requestOptions.body);
+                                        } else if (
+                                            contentType == 'application/x-www-form-urlencoded'
+                                        ) {
+                                            var bodyElements = decodeURI(requestOptions.body).split('&');
+                                            var newParsedElements = {}
+
+                                            bodyElements.forEach(element => {
+                                                var elementSplit = element.split('=');
+                                                if(elementSplit.length = 2) {
+                                                    newParsedElements[elementSplit[0]] = elementSplit[1];
+                                                }
+                                            });
+
+                                            requestOptions.body = newParsedElements;
+                                        }
+                                    }
+                                    
+                                } catch (error) {
+                                    console.warn('Skip body parse!');
+                                }
+                            }
+
+                            // http|url|<requestOptions>
+                            valueObj.type = 'http';
+                            valueObj.value = {
+                                // <url>
+                                url: splitValue[1],
+                                // <contentType|application/x-www-form-urlencoded|application/json|text/plain>
+                                contenttype: splitValue[2],
+                                // <requestOptions|{<method|GET,HEAD,POST,PUT,PATCH,DELETE,OPTIONS,TRACE,CONNECT>,<headers|{[key:value]}>,<body|based on content type>}>
+                                requestOptions: requestOptions,
+                            };
                             break;
                         default:
                             valueObj.type = 'freetext';
@@ -659,21 +990,151 @@ function XiboInitialise(scope) {
             return valueObj;
         };
 
-        var updateValue = function(type) {
+        // Build command value
+        var updateValue = function (type) {
             var builtString = '';
             var invalidValue = false;
             var $container = $mainContainer.find('.command-inputs');
 
-            // Reset invalid class
-            $container.removeClass('invalid');
-
-            //$input.val();
             switch (type) {
                 case 'tpv_led':
                     builtString = 'tpv_led|' + $container.find('.tpv-led-command').val();
                     break;
-                case 'rs232':
+                case 'http':
+                    // URL
+                    var url = $container.find('.http-url').val();
+                    var paramsObj = {};
 
+                    // Validate URL
+                    if (url == '') {
+                        invalidValue = true;
+                        $container.find('.http-url').addClass('invalid');
+                    } else {
+                        $container.find('.http-url').removeClass('invalid');
+                    }
+
+                    // Query builder
+                    if ($container.find('.show-query-builder').is(':checked')) {
+                        // Check if url has params
+                        if (url.split('?').length == 2) {
+                            var urlParams = url.split('?')[1];
+                            var params = [];
+
+                            try {
+                                params = decodeURI(urlParams).split('&');
+                            } catch (e) {
+                                console.warn('malformed URI:' + e);
+                            }
+
+                            // Update URL
+                            url = url.split('?')[0];
+
+                            // Add params to query builder
+                            for (let i = 0; i < params.length; i++) {
+                                var param = params[i].split('=');
+                                if (param.length != 2) {
+                                    continue;
+                                }
+
+                                paramsObj[param[0]] = param[1];
+                            }
+                        }
+
+                        // Grab all the key-value pairs
+                        $container
+                            .find(
+                                '.query-builder-container .http-key-value-container .http-key-value-element'
+                            )
+                            .each(function () {
+                                var $el = $(this);
+                                $el.removeClass('invalid');
+                                var paramName = $el.find('.http-key').val();
+                                var paramValue = $el.find('.http-value').val();
+
+                                // encode uri
+                                try {
+                                    paramName = encodeURI(paramName);
+                                    paramValue = encodeURI(paramValue);
+                                } catch (error) {
+                                    console.warn('malformed URI:' + e);
+                                    paramName = '';
+                                    paramValue = '';
+                                }
+
+                                // Add to final command if all fields are correct
+                                if (![paramName, paramValue].includes('')) {
+                                    paramsObj[paramName] = paramValue;
+                                    $el.removeClass('invalid');
+                                } else {
+                                    invalidValue = true;
+                                    $el.addClass('invalid');
+                                }
+                            });
+
+                        // Build param string
+                        var paramsString = Object.keys(paramsObj)
+                            .map((key) => key + '=' + paramsObj[key])
+                            .join('&');
+
+                        // Append to url
+                        url += paramsString != '' ? '?' + encodeURI(paramsString) : '';
+                    }
+
+                    // Build request options
+                    var requestOptions = {};
+
+                    // Method
+                    requestOptions.method = $container.find('.http-method').val();
+
+                    // contenttype
+                    var contentType = $container.find('.http-contenttype').val();
+
+                    // Custom Headers
+                    var headers = $container.find('.http-headers').val();
+
+                    // validate headers
+                    $container.find('.http-headers').parent().removeClass('invalid');
+                    try {
+                        JSON.parse(headers);
+                        requestOptions.headers = headers;
+                    } catch (e) {
+                        console.warn('Invalid headers: ' + e);
+                        invalidValue = true;
+                        $container.find('.http-headers').parent().addClass('invalid');
+                    }
+
+                    // body data
+                    var bodyData = $container.find('.http-data').val();
+
+                    // validate body data
+                    $container.find('.http-data').parent().removeClass('invalid');
+                    try {
+                        if (contentType == 'application/json') {
+                            JSON.parse(bodyData);
+                        } else if (contentType == 'application/x-www-form-urlencoded') {
+                            decodeURI(bodyData);
+                        }
+
+                        requestOptions.body = bodyData;
+                    } catch (e) {
+                        console.warn('Invalid body: ' + e);
+                        invalidValue = true;
+                        $container.find('.http-data').parent().addClass('invalid');
+                    }
+
+                    // Create final JSON string
+                    if (typeof requestOptions == 'object') {
+                        requestOptions = JSON.stringify(requestOptions);
+                    }
+
+                    // Build final string
+                    builtString = 'http|';
+                    builtString += url + '|';
+                    builtString += contentType + '|';
+                    builtString += requestOptions;
+
+                    break;
+                case 'rs232':
                     // Get values
                     var deviceNameVal = $container.find('.rs232-device-name').val();
                     var baudRateVal = $container.find('.rs232-baud-rate').val();
@@ -684,36 +1145,47 @@ function XiboInitialise(scope) {
                     var hexSupportVal = $container.find('.rs232-hex-support').val();
                     var commandVal = $container.find('.rs232-command').val();
 
-                    if([deviceNameVal, baudRateVal, dataBitsVal].includes('')) {
-                        $container.addClass('invalid');
+                    $container
+                        .find('.rs232-device-name')
+                        .toggleClass('invalid', deviceNameVal == '');
+                    $container.find('.rs232-baud-rate').toggleClass('invalid', baudRateVal == '');
+                    $container.find('.rs232-data-bits').toggleClass('invalid', dataBitsVal == '');
+
+                    if ([deviceNameVal, baudRateVal, dataBitsVal].includes('')) {
                         invalidValue = true;
                     }
 
                     builtString = 'rs232|';
-                    builtString += (deviceNameVal != '') ? (deviceNameVal + ',') : '';
-                    builtString += (baudRateVal != '') ? (baudRateVal + ',') : '';
-                    builtString += (dataBitsVal != '') ? (dataBitsVal + ',') : '';
-                    builtString += (parityVal != '') ? (parityVal + ',') : '';
-                    builtString += (stopBitsVal != '') ? (stopBitsVal + ',') : '';
-                    builtString += (handshakeVal != '') ? (handshakeVal + ',') : '';
+                    builtString += deviceNameVal != '' ? deviceNameVal + ',' : '';
+                    builtString += baudRateVal != '' ? baudRateVal + ',' : '';
+                    builtString += dataBitsVal != '' ? dataBitsVal + ',' : '';
+                    builtString += parityVal != '' ? parityVal + ',' : '';
+                    builtString += stopBitsVal != '' ? stopBitsVal + ',' : '';
+                    builtString += handshakeVal != '' ? handshakeVal + ',' : '';
                     builtString += hexSupportVal;
                     builtString += '|' + commandVal;
                     break;
                 case 'intent':
-                    builtString = 'intent|' + $container.find('.intent-type').val() + '|' + $container.find('.intent-name').val();
+                    builtString =
+                        'intent|' +
+                        $container.find('.intent-type').val() +
+                        '|' +
+                        $container.find('.intent-name').val();
 
                     var nameVal = $container.find('.intent-name').val();
 
-                    if(nameVal == '') {
-                        $container.addClass('invalid');
+                    if (nameVal == '') {
+                        $container.find('.intent-name').addClass('invalid');
                         invalidValue = true;
+                    } else {
+                        $container.find('.intent-name').removeClass('invalid');
                     }
 
                     // Extra values array
                     var extraValues = [];
 
                     // Get values from input fields
-                    $container.find('.intent-extra-element').each(function() {
+                    $container.find('.intent-extra-element').each(function () {
                         var $el = $(this);
                         $el.removeClass('invalid');
                         var extraName = $el.find('.extra-name').val();
@@ -721,33 +1193,36 @@ function XiboInitialise(scope) {
                         var extraValue = $el.find('.extra-value').val();
 
                         // Validate values
-                        if(extraType == 'intArray') {
+                        if (extraType == 'intArray') {
                             // Transform the value into an array
-                            extraValue = extraValue.replace(' ', '').split(',').map(function(x) {
-                                return (x != '') ? Number(x) : '';
-                            });
-                            
+                            extraValue = extraValue
+                                .replace(' ', '')
+                                .split(',')
+                                .map(function (x) {
+                                    return x != '' ? Number(x) : '';
+                                });
+
                             // Check if all the array elements are numbers ( and non empty )
                             for (var index = 0; index < extraValue.length; index++) {
                                 var element = extraValue[index];
-                                
-                                if(isNaN(element) || element == '') {
+
+                                if (isNaN(element) || element == '') {
                                     extraValue = '';
                                     break;
                                 }
                             }
-                        } else if(extraType == 'int' && extraValue != '') {
+                        } else if (extraType == 'int' && extraValue != '') {
                             extraValue = isNaN(Number(extraValue)) ? '' : Number(extraValue);
-                        } else if(extraType == 'bool' && extraValue != '') {
-                            extraValue = (extraValue == 'true');
+                        } else if (extraType == 'bool' && extraValue != '') {
+                            extraValue = extraValue == 'true';
                         }
 
                         // Add to final command if all fields are correct
-                        if(![extraName, extraType, extraValue].includes('')) {
+                        if (![extraName, extraType, extraValue].includes('')) {
                             extraValues.push({
                                 name: extraName,
                                 type: extraType,
-                                value: extraValue
+                                value: extraValue,
                             });
                         } else {
                             invalidValue = true;
@@ -756,7 +1231,7 @@ function XiboInitialise(scope) {
                     });
 
                     // Append extra values array in JSON format
-                    if(extraValues.length > 0) {
+                    if (extraValues.length > 0) {
                         builtString += '|' + JSON.stringify(extraValues);
                     }
 
@@ -766,38 +1241,49 @@ function XiboInitialise(scope) {
                     break;
             }
 
-            if(invalidValue) {
+            // Update command preview
+            if (invalidValue) {
                 $input.val('');
-                $mainContainer.find('.command-preview').html($mainContainer.find('.command-preview').data('invalidMessage')).addClass('invalid');
+                $mainContainer
+                    .find('.command-preview code')
+                    .text($mainContainer.find('.command-preview').data('invalidMessage'));
+                $mainContainer.find('.command-preview').addClass('invalid');
             } else {
                 $input.val(builtString);
-                $mainContainer.find('.command-preview').html(builtString).removeClass('invalid');
+                $mainContainer.find('.command-preview code').text(builtString);
+                $mainContainer.find('.command-preview').removeClass('invalid');
             }
         };
 
         // Get init command type
-        var initType = parseValue($input.val()).type;
+        var initType = parseCommandValue($input.val()).type;
 
         // Create basic type element
         var optionsTemplate = Handlebars.compile($('#command-input-main-template').html());
-        $input.before(optionsTemplate({
-            types: commandTypes,
-            type: initType,
-            unique: new Date().valueOf()
-        }));
+        $input.before(
+            optionsTemplate({
+                types: commandTypes,
+                type: initType,
+                unique: new Date().valueOf(),
+            })
+        );
 
         // Set template on first run
-        changeTypeTemplate(initType);
+        loadTemplates(initType);
 
         // Set template on command type change
-        $(this).find('.command-type').change(function () {
-            changeTypeTemplate($(this).val());
-        });
+        $(this)
+            .find('.command-type')
+            .change(function () {
+                loadTemplates($(this).val());
+            });
 
         // Link checkbox to input preview
-        $(this).find('.show-command-preview').change(function () {
-            $mainContainer.find('.command-preview').toggle($(this).is(':checked'));
-        });
+        $(this)
+            .find('.show-command-preview')
+            .change(function () {
+                $mainContainer.find('.command-preview').toggle($(this).is(':checked'));
+            });
 
         // Disable main input
         $input.attr('readonly', 'readonly');
