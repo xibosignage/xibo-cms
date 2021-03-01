@@ -294,6 +294,10 @@ class State implements Middleware
         // Handle additional Middleware
         if (isset($app->getContainer()->get('configService')->middleware) && is_array($app->getContainer()->get('configService')->middleware)) {
             foreach ($app->getContainer()->get('configService')->middleware as $object) {
+                // Decorate our middleware with the App if it has a method to do so
+                if (method_exists($object, 'setApp')) {
+                    $object->setApp($app);
+                }
                 $app->add($object);
             }
         }
