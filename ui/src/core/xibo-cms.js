@@ -1526,6 +1526,9 @@ function XiboFormRender(sourceObj, data) {
                     $('body').append(folderTreeModal(treeConfig));
 
                     $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                        // Fix for 2nd/overlay modal
+                        $('.modal:visible').length && $(document.body).addClass('modal-open');
+                        
                         $(this).data('bs.modal', null);
                     });
                 }
