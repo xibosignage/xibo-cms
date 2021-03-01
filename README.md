@@ -6,7 +6,8 @@ Copyright (C) 2006-2021 Xibo Signage Ltd and Contributors.
 
 #### Branches
 
-- develop: Work in progress toward 3.0
+- develop: Work in progress toward 3.1
+- release30: Release preparation for 3.0
 - master: Currently 2.3
 - release23: Bug fixes for 2.3
 - release22: Bug fixes for 2.2
