@@ -633,6 +633,26 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Is this Layout a Template?
+     * @return bool
+     */
+    public function isTemplate(): bool
+    {
+        // Tags might be an array (if we've called `load()` or a string if we've returned directly from the DB)
+        $tagsArray = is_array($this->tags)
+            ? $this->tags
+            : explode(',', $this->tags);
+
+        foreach ($tagsArray as $tag) {
+            if ($tag === 'template') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @return array
      */
     public function getStatusMessage()
