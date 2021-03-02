@@ -413,8 +413,25 @@ div.dt-buttons {
     text-align: center;
 }
 
+.upload-modal .modal-dialog {
+    max-width: 80% !important;
+}
+
+/* Bootstrap 4 fix for libraries that use fade+in ( fixes blueimp uploader ) */
+.upload-modal .fade.in {
+    opacity: 1
+}
+
 .template-upload span.preview {
     position: relative;
+}
+
+.template-upload div.input-group {
+    max-width: fit-content;
+}
+
+.template-upload p.size {
+    min-width: 100px;
 }
 
 /* WIZARD ASSISTANT  */
