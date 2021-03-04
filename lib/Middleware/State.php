@@ -175,7 +175,7 @@ class State implements Middleware
         });
 
         // Set some public routes
-        $request = $request->withAttribute('publicRoutes', [
+        $request = $request->withAttribute('publicRoutes', array_merge($request->getAttribute('publicRoutes'), [
             '/login',
             '/login/forgotten',
             '/clock',
@@ -189,7 +189,7 @@ class State implements Middleware
             '/tfa',
             '/error',
             '/notFound'
-        ]);
+        ]));
 
         // Setup the translations for gettext
         Translate::InitLocale($container->get('configService'));

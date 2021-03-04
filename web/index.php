@@ -89,8 +89,7 @@ $container->set('name', 'web');
 //
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
 //
-// Handle additional Middleware
-\Xibo\Middleware\State::setMiddleWare($app);
+
 
 $app->add(new RKA\Middleware\IpAddress(true, []));
 $app->add(new \Xibo\Middleware\Actions($app));
@@ -111,6 +110,8 @@ $app->add(TwigMiddleware::createFromContainer($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
 $app->addRoutingMiddleware();
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
 //
 // End Middleware
 //
