@@ -1377,7 +1377,7 @@ let formHelpers = function() {
                 html: '<i class="fas fa-copy"></i>',
                 type: 'button',
                 title: editorsTrans.copyToClipboard,
-                'data-container': '#properties-panel',
+                'data-container': '.properties-panel',
                 class: 'btn btn-sm copyTextAreaButton',
                 click: function() {
                     const $input = $(el);
@@ -1417,11 +1417,14 @@ let formHelpers = function() {
 
             // Handler for updating the tooltip message.
             $newButton.bind('copied', function(event, message) {
-                $(this).attr('title', message)
-                    .tooltip('fixTitle')
-                    .tooltip('show')
-                    .attr('title', editorsTrans.copyToClipboard)
-                    .tooltip('fixTitle');
+                const $self = $(this);
+                $self.tooltip('hide')
+                    .attr('data-original-title', message)
+                    .tooltip('show');
+
+                setTimeout(function() {
+                    $self.tooltip('hide').attr('data-original-title', editorsTrans.copyToClipboard);
+                }, 1000);
             });
             
             // Add button to the text area

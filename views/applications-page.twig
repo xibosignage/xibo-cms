@@ -67,6 +67,13 @@
 
 {% block javaScript %}
     <script type="text/javascript">
+    
+        {% autoescape "js" %}
+            var copyToClipboardTrans = "{{ "Copy to Clipboard"|trans }}";
+            var couldNotCopyTrans = "{{ "Could not copy"|trans }}";
+            var copiedTrans = "{{ "Copied!"|trans }}";
+        {% endautoescape %}
+
         var table = $("#applications").DataTable({ "language": dataTablesLanguage,
             serverSide: true,
             stateSave: true,
@@ -97,8 +104,6 @@
             // Initialize the tooltip.
             $('#copy-button').tooltip();
 
-
-
             $('#copy-button').bind('click', function() {
                 
               var input = $('#clientSecret');
@@ -111,12 +116,12 @@
               try {
                 var success = document.execCommand('copy');
                 if (success) {
-                  $('#copy-button').trigger('copied', ['Copied!']);
+                  $('#copy-button').trigger('copied', [copiedTrans]);
                 } else {
-                  $('#copy-button').trigger('copied', ['Could not copy']);
+                  $('#copy-button').trigger('copied', [couldNotCopyTrans]);
                 }
               } catch (err) {
-                $('#copy-button').trigger('copied', ['Could not copy']);
+                $('#copy-button').trigger('copied', [couldNotCopyTrans]);
               }
               
               // Unselect the input
@@ -125,13 +130,15 @@
 
             // Handler for updating the tooltip message.
             $('#copy-button').bind('copied', function(event, message) {
-              $(this).attr('title', message)
-                  .tooltip('fixTitle')
-                  .tooltip('show')
-                  .attr('title', "Copy to Clipboard")
-                  .tooltip('fixTitle');
+                const $self = $(this);
+                $(this).tooltip('hide')
+                    .attr('data-original-title', message)
+                    .tooltip('show');
+
+                setTimeout(function() {
+                    $self.tooltip('hide').attr('data-original-title', copyToClipboardTrans);
+                }, 1000);
             });
-            
         }
     </script>
 {% endblock %}
