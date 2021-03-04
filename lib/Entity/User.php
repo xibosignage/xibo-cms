@@ -711,8 +711,9 @@ class User implements \JsonSerializable, UserEntityInterface
         $this->groups = $this->userGroupFactory->getByUserId($this->userId);
 
         if ($all) {
-            if ($this->campaignFactory == null || $this->layoutFactory == null || $this->mediaFactory == null || $this->scheduleFactory == null || $this->playlistFactory == null || $this->displayGroupFactory == null || $this->dayPartFactory == null)
+            if ($this->campaignFactory == null || $this->layoutFactory == null || $this->mediaFactory == null || $this->scheduleFactory == null || $this->playlistFactory == null || $this->displayGroupFactory == null || $this->dayPartFactory == null) {
                 throw new \RuntimeException('Cannot load user with all objects without first calling setChildObjectDependencies');
+            }
 
             $this->campaigns = $this->campaignFactory->getByOwnerId($this->userId);
             $this->layouts = $this->layoutFactory->getByOwnerId($this->userId);

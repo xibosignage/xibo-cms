@@ -169,11 +169,34 @@ class User extends Base
      * @param FolderFactory $folderFactory
      * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userFactory,
-                                $userTypeFactory, $userGroupFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory,
-                                $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory, $folderFactory, $dayPartFactory)
-    {
+    public function __construct(
+        $log,
+        $sanitizerService,
+        $state,
+        $user,
+        $help,
+        $config,
+        $userFactory,
+        $userTypeFactory,
+        $userGroupFactory,
+        $permissionFactory,
+        $layoutFactory,
+        $applicationFactory,
+        $campaignFactory,
+        $mediaFactory,
+        $scheduleFactory,
+        $displayFactory,
+        $sessionFactory,
+        $displayGroupFactory,
+        $widgetFactory,
+        $playerVersionFactory,
+        $playlistFactory,
+        Twig $view,
+        ContainerInterface $container,
+        $dataSetFactory,
+        $folderFactory,
+        $dayPartFactory
+    ) {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->userFactory = $userFactory;
