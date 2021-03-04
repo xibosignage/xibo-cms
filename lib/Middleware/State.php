@@ -175,7 +175,7 @@ class State implements Middleware
         });
 
         // Set some public routes
-        $request = $request->withAttribute('publicRoutes', array_merge($request->getAttribute('publicRoutes'), [
+        $request = $request->withAttribute('publicRoutes', array_merge($request->getAttribute('publicRoutes', []), [
             '/login',
             '/login/forgotten',
             '/clock',
