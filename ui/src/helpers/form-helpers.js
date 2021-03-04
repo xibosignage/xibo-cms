@@ -601,10 +601,10 @@ let formHelpers = function() {
             if($(dialog).find('.text_editor_scale').is(':checked')) {
 
                 // Inner width and a padding for the scrollbar
-                let width = $(dialog).find('form').innerWidth() - 30;
+                let width = $(dialog).find('form').innerWidth() - 32 - ((iframeBorderWidth+iframeMargin)*2);
 
                 // Element side plus margin
-                let elementWidth = regionDimensions.width + (iframeMargin * 2);
+                let elementWidth = regionDimensions.width;
                 scale = width / elementWidth;
             }
 
