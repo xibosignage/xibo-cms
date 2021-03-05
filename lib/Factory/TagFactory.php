@@ -63,7 +63,7 @@ class TagFactory extends BaseFactory
     public function create($name)
     {
        $tag = $this->createEmpty();
-       $tag->tag = $name;
+       $tag->tag = trim($name);
 
        return $tag;
     }
