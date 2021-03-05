@@ -89,9 +89,6 @@ $container->set('name', 'web');
 //
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
 //
-// Handle additional Middleware
-\Xibo\Middleware\State::setMiddleWare($app);
-
 $app->add(new RKA\Middleware\IpAddress(true, []));
 $app->add(new \Xibo\Middleware\Actions($app));
 $app->add(new \Xibo\Middleware\Theme($app));
@@ -102,6 +99,9 @@ $authentication = ($container->get('configService')->authentication != null)
     ? $container->get('configService')->authentication
     : (new \Xibo\Middleware\WebAuthentication());
 $app->add($authentication->setDependencies($app)->addRoutes());
+
+// Handle additional Middleware
+\Xibo\Middleware\State::setMiddleWare($app);
 
 // TODO reconfigure this and enable
 //$app->add(new Xibo\Middleware\HttpCache());

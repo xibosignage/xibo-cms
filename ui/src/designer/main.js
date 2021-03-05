@@ -899,7 +899,7 @@ lD.showScheduleScreen = function() {
  * Layout save template screen
  */
 lD.showSaveTemplateScreen = function() {
-    lD.loadFormFromAPI('saveTemplate', lD.layout.layoutId);
+    lD.loadFormFromAPI('saveTemplate', lD.layout.layoutId, "initJsTreeAjax('#container-folder-form-tree', 'templateAddForm', true, 600);");
 };
 
 /**

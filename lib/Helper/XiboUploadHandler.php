@@ -171,7 +171,11 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         } else if (count($widget->getPrimaryMedia()) > 0 && $widget->getPrimaryMediaId() == $oldMedia->mediaId) {
                             // We're only interested in primary media at this point (no audio)
                             // Check whether this widget is of the same type as our incoming media item
-                            if ($widget->type != $module->getModuleType()) {
+                            // This needs to be applicable only to non region specific Widgets,
+                            // otherwise we would not be able to replace Media references in region specific Widgets.
+                            $moduleWidget = $controller->getModuleFactory()->createWithWidget($widget);
+
+                            if ($widget->type != $module->getModuleType() && $moduleWidget->getModule()->regionSpecific == 0) {
                                 // Are we supposed to switch, or should we prevent?
                                 if ($this->options['allowMediaTypeChange'] == 1) {
                                     $widget->type = $module->getModuleType();
@@ -187,6 +191,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             // calculate duration
                             $module->setWidget($widget);
                             $widget->calculateDuration($module);
+
+                            // replace mediaId references in applicable widgets
+                            $controller->getLayoutFactory()->handleWidgetMediaIdReferences($widget, $media->mediaId, $oldMedia->mediaId);
 
                             // Raise an event for this media item
                             $controller->getDispatcher()->dispatch(LibraryReplaceWidgetEvent::$NAME, new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia));
@@ -296,7 +303,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // Save
                 $media->save();
 
-                // Post process TODO I don't like this :/
+                // Post process
                 $playerVersionFactory = null;
                 if ($media->mediaType === 'playersoftware') {
                     $playerVersionFactory = $controller->getPlayerVersionFactory();

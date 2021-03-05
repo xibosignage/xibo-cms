@@ -412,6 +412,12 @@ class Layout extends Base
         // Save
         $layout->save();
 
+        if ($templateId != null && $template !== null) {
+            $layout->copyActions($layout, $template);
+            // set Layout original values to current values
+            $layout->setOriginals();
+        }
+
         foreach ($layout->regions as $region) {
             /* @var Region $region */
 
@@ -421,6 +427,13 @@ class Layout extends Base
 
                 // Make sure Playlist closure table from the published one are copied over
                 $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
+
+                // set Region original values to current values
+                $region->setOriginals();
+                foreach ($region->regionPlaylist->widgets as $widget) {
+                    // set Widget original values to current values
+                    $widget->setOriginals();
+                }
             }
             $campaign = $this->campaignFactory->getById($layout->campaignId);
 

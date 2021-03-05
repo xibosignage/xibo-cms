@@ -488,7 +488,7 @@ class UserGroupFactory extends BaseFactory
                 'layout.export' => [
                     'feature' => 'layout.export',
                     'group' => 'layout-design',
-                    'title' => __('Add "Export" function for all Layouts')
+                    'title' => __('Include the Export function for all editable Layouts to allow a User to export a Layout and its contents regardless of the share options that have been set')
                 ],
                 'campaign.view' => [
                     'feature' => 'campaign.view',
