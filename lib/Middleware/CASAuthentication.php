@@ -148,6 +148,6 @@ class CASAuthentication extends AuthenticationBase
     /** @inheritDoc */
     public function addToRequest(Request $request)
     {
-        return $request->withAttribute('excludedCsrfRoutes', ['/cas/login', '/cas/logout']);
+        return $request->withAttribute('excludedCsrfRoutes', array_merge($request->getAttribute('excludedCsrfRoutes', []), ['/cas/login', '/cas/logout']));
     }
 }

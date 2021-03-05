@@ -298,6 +298,12 @@ class State implements Middleware
                 if (method_exists($object, 'setApp')) {
                     $object->setApp($app);
                 }
+
+                // Add any new routes from custom middleware
+                if (method_exists($object, 'addRoutes')) {
+                    $object->addRoutes();
+                }
+
                 $app->add($object);
             }
         }
