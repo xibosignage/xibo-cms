@@ -418,7 +418,7 @@
             $.ajax({
                 type: form.attr("method"),
                 url: url,
-                data: {layoutId: [{layoutId: form.data().layoutId}]},
+                data: {layoutId: form.data().layoutId},
                 cache: false,
                 dataType:"json",
                 success: XiboSubmitResponse

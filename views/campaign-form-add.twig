@@ -78,7 +78,6 @@
                 {% endif %}
 
                 <div id="assignLayouts"></div>
-                <div id="unassignLayouts"></div>
             </form>
         </div>
     </div>
@@ -87,11 +86,7 @@
             <h4>{% trans %}Layouts on new campaign{% endtrans %}</h4>
             <div id="LayoutAssign" class="card p-3 mb-3 bg-light" data-url="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}">
                 <div>
-                    <ul id="LayoutAssignSortable">
-                        {% for item in layouts %}
-                        <li data-layout-id="{{ item.layoutId }}" data-display-order="{{ item.displayOrder }}" class="btn btn-sm btn-white {% if item.locked %}ui-state-disabled{% endif %}">{% if item.locked %}<span class="fa fa-lock"></span> {% endif %}{{ item.layout }} {% if not item.locked %}<span class="fa fa-minus"></span>{% endif %}</li>
-                        {% endfor %}
-                    </ul>
+                    <ul id="LayoutAssignSortable"></ul>
                 </div>
             </div>
 
