@@ -69,8 +69,18 @@ class MenuBoard extends Base
      * @param FolderFactory $folderFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $menuBoardFactory, $userFactory, $folderFactory, Twig $view)
-    {
+    public function __construct(
+        $log,
+        $sanitizerService,
+        $state,
+        $user,
+        $help,
+        $config,
+        $menuBoardFactory,
+        $userFactory,
+        $folderFactory,
+        Twig $view
+    ) {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->menuBoardFactory = $menuBoardFactory;
@@ -158,7 +168,8 @@ class MenuBoard extends Base
             'folderId' => $parsedParams->getInt('folderId')
         ];
 
-        $menuBoards = $this->menuBoardFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));
+        $menuBoards = $this->menuBoardFactory->query($this->gridRenderSort($parsedParams),
+            $this->gridRenderFilter($filter, $parsedParams));
 
         foreach ($menuBoards as $menuBoard) {
 
@@ -175,7 +186,7 @@ class MenuBoard extends Base
 
                 $menuBoard->buttons[] = [
                     'id' => 'menuBoard_button_viewcategories',
-                    'url' => $this->urlFor($request,'menuBoard.category.view', ['id' => $menuBoard->menuId]),
+                    'url' => $this->urlFor($request, 'menuBoard.category.view', ['id' => $menuBoard->menuId]),
                     'class' => 'XiboRedirectButton',
                     'text' => __('View Categories')
                 ];
@@ -190,11 +201,15 @@ class MenuBoard extends Base
                     // Select Folder
                     $menuBoard->buttons[] = [
                         'id' => 'menuBoard_button_selectfolder',
-                        'url' => $this->urlFor($request,'menuBoard.selectfolder.form', ['id' => $menuBoard->menuId]),
+                        'url' => $this->urlFor($request, 'menuBoard.selectfolder.form', ['id' => $menuBoard->menuId]),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'menuBoard.selectfolder', ['id' => $menuBoard->menuId])],
+                            [
+                                'name' => 'commit-url',
+                                'value' => $this->urlFor($request, 'menuBoard.selectfolder',
+                                    ['id' => $menuBoard->menuId])
+                            ],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'menuBoard_button_selectfolder'],
                             ['name' => 'text', 'value' => __('Move to Folder')],
@@ -214,17 +229,25 @@ class MenuBoard extends Base
                 // Share button
                 $menuBoard->buttons[] = [
                     'id' => 'menuBoard_button_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'MenuBoard', 'id' => $menuBoard->menuId]),
+                    'url' => $this->urlFor($request, 'user.permissions.form',
+                        ['entity' => 'MenuBoard', 'id' => $menuBoard->menuId]),
                     'text' => __('Share'),
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'MenuBoard', 'id' => $menuBoard->menuId])],
+                        [
+                            'name' => 'commit-url',
+                            'value' => $this->urlFor($request, 'user.permissions.multi',
+                                ['entity' => 'MenuBoard', 'id' => $menuBoard->menuId])
+                        ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'menuBoard_button_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $menuBoard->name],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'MenuBoard'])],
+                        [
+                            'name' => 'custom-handler-url',
+                            'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'MenuBoard'])
+                        ],
                         ['name' => 'content-id-name', 'value' => 'menuId']
                     ]
                 ];
@@ -344,7 +367,7 @@ class MenuBoard extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function editForm(Request $request, Response $response, $id) : Response
+    public function editForm(Request $request, Response $response, $id): Response
     {
         $menuBoard = $this->menuBoardFactory->getById($id);
 
@@ -410,7 +433,7 @@ class MenuBoard extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function edit(Request $request, Response $response, $id) : Response
+    public function edit(Request $request, Response $response, $id): Response
     {
         $menuBoard = $this->menuBoardFactory->getById($id);
 
@@ -452,7 +475,7 @@ class MenuBoard extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function deleteForm(Request $request, Response $response, $id) : Response
+    public function deleteForm(Request $request, Response $response, $id): Response
     {
         $menuBoard = $this->menuBoardFactory->getById($id);
 
@@ -497,7 +520,7 @@ class MenuBoard extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function delete(Request $request, Response $response, $id) : Response
+    public function delete(Request $request, Response $response, $id): Response
     {
         $menuBoard = $this->menuBoardFactory->getById($id);
 

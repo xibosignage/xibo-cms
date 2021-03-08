@@ -102,8 +102,16 @@ class MenuBoardCategoryFactory extends BaseFactory
      * @param int $mediaId
      * @return MenuBoardProduct
      */
-    public function createProduct($menuId, $menuCategoryId, $name, $price, $description, $allergyInfo, $availability, $mediaId)
-    {
+    public function createProduct(
+        $menuId,
+        $menuCategoryId,
+        $name,
+        $price,
+        $description,
+        $allergyInfo,
+        $availability,
+        $mediaId
+    ) {
         $menuBoardProduct = $this->createEmptyProduct();
         $menuBoardProduct->menuId = $menuId;
         $menuBoardProduct->menuCategoryId = $menuCategoryId;
@@ -129,7 +137,7 @@ class MenuBoardCategoryFactory extends BaseFactory
         $menuCategories = $this->query(null, ['disableUserCheck' => 1, 'menuCategoryId' => $menuCategoryId]);
 
         if (count($menuCategories) <= 0) {
-            $this->getLog()->debug('Menu Board Category not found with ID '  . $menuCategoryId);
+            $this->getLog()->debug('Menu Board Category not found with ID ' . $menuCategoryId);
             throw new NotFoundException(__('Menu Board Category not found'));
         }
 
@@ -148,7 +156,7 @@ class MenuBoardCategoryFactory extends BaseFactory
         $menuCategories = $this->query(null, ['disableUserCheck' => 1, 'menuId' => $menuId]);
 
         if (count($menuCategories) <= 0) {
-            $this->getLog()->debug('Menu Board Category not found for Menu Board ID '  . $menuId);
+            $this->getLog()->debug('Menu Board Category not found for Menu Board ID ' . $menuId);
             throw new NotFoundException(__('Menu Board Category not found'));
         }
 
@@ -167,7 +175,7 @@ class MenuBoardCategoryFactory extends BaseFactory
         $menuProducts = $this->getProductData(null, ['disableUserCheck' => 1, 'menuProductId' => $menuProductId]);
 
         if (count($menuProducts) <= 0) {
-            $this->getLog()->debug('Menu Board Product not found with ID '  . $menuProductId);
+            $this->getLog()->debug('Menu Board Product not found with ID ' . $menuProductId);
             throw new NotFoundException(__('Menu Board Product not found'));
         }
 
@@ -216,7 +224,8 @@ class MenuBoardCategoryFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('menu_category', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter('menu_category', 'name', $terms, $body, $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         // Sorting?
@@ -229,7 +238,8 @@ class MenuBoardCategoryFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'),
+                    0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -296,7 +306,8 @@ class MenuBoardCategoryFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('menu_product', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter('menu_product', 'name', $terms, $body, $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($sanitizedFilter->getInt('availability') !== null) {

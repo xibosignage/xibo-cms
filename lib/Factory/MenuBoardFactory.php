@@ -68,8 +68,18 @@ class MenuBoardFactory extends BaseFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
      * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $pool, $permissionFactory, $menuBoardCategoryFactory, $displayFactory)
-    {
+    public function __construct(
+        $store,
+        $log,
+        $sanitizerService,
+        $user,
+        $userFactory,
+        $config,
+        $pool,
+        $permissionFactory,
+        $menuBoardCategoryFactory,
+        $displayFactory
+    ) {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
@@ -128,7 +138,7 @@ class MenuBoardFactory extends BaseFactory
         $menuBoards = $this->query(null, ['disableUserCheck' => 1, 'menuId' => $menuId]);
 
         if (count($menuBoards) <= 0) {
-            $this->getLog()->debug('Menu Board not found with ID '  . $menuId);
+            $this->getLog()->debug('Menu Board not found with ID ' . $menuId);
             throw new NotFoundException(__('Menu Board not found'));
         }
 
@@ -145,7 +155,7 @@ class MenuBoardFactory extends BaseFactory
         $menuBoards = $this->query(null, ['disableUserCheck' => 1, 'menuCategoryId' => $menuCategoryId]);
 
         if (count($menuBoards) <= 0) {
-            $this->getLog()->debug('Menu Board not found with Menu Board Category ID '  . $menuCategoryId);
+            $this->getLog()->debug('Menu Board not found with Menu Board Category ID ' . $menuCategoryId);
             throw new NotFoundException(__('Menu Board not found'));
         }
 
@@ -201,7 +211,8 @@ class MenuBoardFactory extends BaseFactory
         }
 
         $body .= ' WHERE 1 = 1 ';
-        $this->viewPermissionSql('Xibo\Entity\MenuBoard', $body, $params, 'menu_board.menuId', 'menu_board.userId', $filterBy, '`menu_board`.permissionsFolderId');
+        $this->viewPermissionSql('Xibo\Entity\MenuBoard', $body, $params, 'menu_board.menuId', 'menu_board.userId',
+            $filterBy, '`menu_board`.permissionsFolderId');
 
         if ($sanitizedFilter->getInt('menuId') !== null) {
             $body .= ' AND `menu_board`.menuId = :menuId ';
@@ -215,7 +226,8 @@ class MenuBoardFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('menu_board', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter('menu_board', 'name', $terms, $body, $params,
+                ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($sanitizedFilter->getInt('folderId') !== null) {
@@ -238,7 +250,8 @@ class MenuBoardFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'),
+                    0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

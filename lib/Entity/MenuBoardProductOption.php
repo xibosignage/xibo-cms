@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\Entity;
+
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -83,8 +84,11 @@ class MenuBoardProductOption implements \JsonSerializable
 
     public function delete()
     {
-        $this->getStore()->update('DELETE FROM `menu_product_options` WHERE `menuProductId` = :menuProductId AND `option` = :option',[
-                'menuProductId' => $this->menuProductId, 'option' => $this->option]
+        $this->getStore()->update('DELETE FROM `menu_product_options` WHERE `menuProductId` = :menuProductId AND `option` = :option',
+            [
+                'menuProductId' => $this->menuProductId,
+                'option' => $this->option
+            ]
         );
     }
 }

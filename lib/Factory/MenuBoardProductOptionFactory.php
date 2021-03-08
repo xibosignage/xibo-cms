@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\Factory;
+
 use Xibo\Entity\MenuBoardProductOption;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\LogServiceInterface;

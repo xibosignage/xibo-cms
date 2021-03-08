@@ -158,8 +158,9 @@ class MenuBoard extends ModuleWidget
 
         foreach ($categories as $category) {
             /* @var MenuBoardCategory $category */
-            if (!in_array($category->menuCategoryId, $categoriesIds))
+            if (!in_array($category->menuCategoryId, $categoriesIds)) {
                 $categoriesNotSelected[] = $category;
+            }
         }
 
         return $categoriesNotSelected;
@@ -197,8 +198,9 @@ class MenuBoard extends ModuleWidget
         $notAssignedCategories = [];
 
         for ($i = 1; $i <= $numOfColumns; $i++) {
-            foreach(array_filter(explode(',', $this->getOption('categories_' . $i))) as $categoryId)
-            $categoriesInColumns[] = $categoryId;
+            foreach (array_filter(explode(',', $this->getOption('categories_' . $i))) as $categoryId) {
+                $categoriesInColumns[] = $categoryId;
+            }
         }
 
         foreach ($categories as $category) {
@@ -257,7 +259,7 @@ class MenuBoard extends ModuleWidget
 
         if ($step == 1 || !$this->hasMenu()) {
             return 'menuboard-designer-form-edit-step1';
-        } else if ($step == 2 || $this->getOption('categories') == '') {
+        } elseif ($step == 2 || $this->getOption('categories') == '') {
             return 'menuboard-designer-form-edit-step2';
         } else {
             return 'menuboard-designer-form-edit';
@@ -345,7 +347,7 @@ class MenuBoard extends ModuleWidget
                 throw new InvalidArgumentException(__('You do not have permission to use that Menu Board'), 'menuId');
             }
 
-        } else if ($step == 2) {
+        } elseif ($step == 2) {
             // Categories
             $categories = $sanitizedParams->getIntArray('menuBoardCategories', ['default' => []]);
 
@@ -389,7 +391,8 @@ class MenuBoard extends ModuleWidget
             $this->setOption('showMenuCategoryName', $sanitizedParams->getCheckbox('showMenuCategoryName'));
             $this->setOption('showProductOptions', $sanitizedParams->getCheckbox('showProductOptions'));
             $this->setOption('showProductDescription', $sanitizedParams->getCheckbox('showProductDescription'));
-            $this->setOption('showProductAllergyInformation', $sanitizedParams->getCheckbox('showProductAllergyInformation'));
+            $this->setOption('showProductAllergyInformation',
+                $sanitizedParams->getCheckbox('showProductAllergyInformation'));
             $this->setOption('showUnavailable', $sanitizedParams->getCheckbox('showUnavailable'));
 
             $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
@@ -415,7 +418,8 @@ class MenuBoard extends ModuleWidget
             }
 
             for ($i = 1; $i <= $this->getOption('numOfColumns'); $i++) {
-                $this->setOption('categories_' . $i, implode(',', $sanitizedParams->getIntArray('menuBoardCategories_' . $i, ['default' => []])));
+                $this->setOption('categories_' . $i,
+                    implode(',', $sanitizedParams->getIntArray('menuBoardCategories_' . $i, ['default' => []])));
             }
 
             // Validate
@@ -443,8 +447,7 @@ class MenuBoard extends ModuleWidget
             ->appendJavaScriptFile('xibo-interactive-control.min.js')
             ->appendJavaScript('xiboIC.lockAllInteractions()')
             ->appendFontCss()
-            ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
-        ;
+            ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)));
 
         // Get CSS from the original template or from the input field
         $styleSheet = '';
@@ -649,9 +652,10 @@ class MenuBoard extends ModuleWidget
                         // depending on configured options, we will want to assign different css classes to the MenuBoardProductContainer
                         if ($categoryProduct->availability === 0 && $this->getOption('showUnavailable') == 0) {
                             continue;
-                        } else if ($categoryProduct->availability === 0 && $this->getOption('showUnavailable') == 1) {
+                        } elseif ($categoryProduct->availability === 0 && $this->getOption('showUnavailable') == 1) {
                             $table .= '<div class="MenuBoardProductContainer product-unavailable">';
-                        } else if (in_array($categoryProduct->menuProductId, explode(',', $this->getOption('highlightProducts')))) {
+                        } elseif (in_array($categoryProduct->menuProductId,
+                            explode(',', $this->getOption('highlightProducts')))) {
                             $table .= '<div class="MenuBoardProductContainer product-highlight">';
                         } else {
                             $table .= '<div class="MenuBoardProductContainer">';
@@ -689,7 +693,7 @@ class MenuBoard extends ModuleWidget
                                     : '<img src="' . $file->storedAs . '" />';
 
 
-                                $table .= '<div class="MenuBoardMedia MenuBoardProductMedia" id="productMedia_' . $i  . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></div>';
+                                $table .= '<div class="MenuBoardMedia MenuBoardProductMedia" id="productMedia_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></div>';
 
                             } catch (NotFoundException $e) {
                                 $table .= '</div>';
@@ -704,7 +708,7 @@ class MenuBoard extends ModuleWidget
                         }
 
                         // if we have more than one page, then check how many products we already have, if it's equals to the productsPerPage then close the page div
-                        if ($this->getOption('productsPerPage') > 0 &&  $rowCount == $this->getOption('productsPerPage')) {
+                        if ($this->getOption('productsPerPage') > 0 && $rowCount == $this->getOption('productsPerPage')) {
                             $table .= '</div>';
                             $rowCount = 0;
                         }
@@ -735,9 +739,9 @@ class MenuBoard extends ModuleWidget
                 'html' => $table,
                 'pages' => $maxPages
             ];
-        }
-        catch (NotFoundException $e) {
-            $this->getLog()->info(sprintf('Request failed for MenuBoard id=%d. Widget=%d. Due to %s', $menuId, $this->getWidgetId(), $e->getMessage()));
+        } catch (NotFoundException $e) {
+            $this->getLog()->info(sprintf('Request failed for MenuBoard id=%d. Widget=%d. Due to %s', $menuId,
+                $this->getWidgetId(), $e->getMessage()));
             $this->getLog()->debug($e->getTraceAsString());
 
             return $this->noDataMessageOrDefault();
@@ -806,7 +810,7 @@ class MenuBoard extends ModuleWidget
     private function clearColumnCategories()
     {
         for ($i = 1; $i <= $this->getOption('numOfColumns', 1); $i++) {
-            $this->setOption('categories_'.$i, '');
+            $this->setOption('categories_' . $i, '');
         }
     }
 

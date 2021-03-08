@@ -69,8 +69,18 @@ class MenuBoardCategory extends Base
      * @param MediaFactory $mediaFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $menuBoardFactory, $menuBoardCategoryFactory, $mediaFactory, Twig $view)
-    {
+    public function __construct(
+        $log,
+        $sanitizerService,
+        $state,
+        $user,
+        $help,
+        $config,
+        $menuBoardFactory,
+        $menuBoardCategoryFactory,
+        $mediaFactory,
+        Twig $view
+    ) {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->menuBoardFactory = $menuBoardFactory;
@@ -156,7 +166,8 @@ class MenuBoardCategory extends Base
             'name' => $parsedParams->getString('name')
         ];
 
-        $menuBoardCategories = $this->menuBoardCategoryFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));
+        $menuBoardCategories = $this->menuBoardCategoryFactory->query($this->gridRenderSort($parsedParams),
+            $this->gridRenderFilter($filter, $parsedParams));
 
 
         foreach ($menuBoardCategories as $menuBoardCategory) {
@@ -168,7 +179,8 @@ class MenuBoardCategory extends Base
             $menuBoardCategory->thumbnail = '';
 
             if ($menuBoardCategory->mediaId != 0) {
-                $download = $this->urlFor($request,'library.download', ['id' => $menuBoardCategory->mediaId], ['preview' => 1]);
+                $download = $this->urlFor($request, 'library.download', ['id' => $menuBoardCategory->mediaId],
+                    ['preview' => 1]);
                 $menuBoardCategory->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
                 $menuBoardCategory->thumbnailUrl = $download . '&width=100&height=56&cache=1';
             }
@@ -181,14 +193,16 @@ class MenuBoardCategory extends Base
             ) {
                 $menuBoardCategory->buttons[] = [
                     'id' => 'menuBoardCategory_button_viewproducts',
-                    'url' => $this->urlFor($request,'menuBoard.product.view', ['id' => $menuBoardCategory->menuCategoryId]),
+                    'url' => $this->urlFor($request, 'menuBoard.product.view',
+                        ['id' => $menuBoardCategory->menuCategoryId]),
                     'class' => 'XiboRedirectButton',
                     'text' => __('View Products')
                 ];
 
                 $menuBoardCategory->buttons[] = [
                     'id' => 'menuBoardCategory_edit_button',
-                    'url' => $this->urlFor($request, 'menuBoard.category.edit.form', ['id' => $menuBoardCategory->menuCategoryId]),
+                    'url' => $this->urlFor($request, 'menuBoard.category.edit.form',
+                        ['id' => $menuBoardCategory->menuCategoryId]),
                     'text' => __('Edit')
                 ];
             }
@@ -200,7 +214,8 @@ class MenuBoardCategory extends Base
 
                 $menuBoardCategory->buttons[] = [
                     'id' => 'menuBoardCategory_delete_button',
-                    'url' => $this->urlFor($request, 'menuBoard.category.delete.form', ['id' => $menuBoardCategory->menuCategoryId]),
+                    'url' => $this->urlFor($request, 'menuBoard.category.delete.form',
+                        ['id' => $menuBoardCategory->menuCategoryId]),
                     'text' => __('Delete')
                 ];
             }
@@ -325,7 +340,7 @@ class MenuBoardCategory extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function editForm(Request $request, Response $response, $id) : Response
+    public function editForm(Request $request, Response $response, $id): Response
     {
         $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
 
@@ -387,7 +402,7 @@ class MenuBoardCategory extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function edit(Request $request, Response $response, $id) : Response
+    public function edit(Request $request, Response $response, $id): Response
     {
         $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
 
@@ -423,7 +438,7 @@ class MenuBoardCategory extends Base
      * @return Response
      * @throws GeneralException
      */
-    public function deleteForm(Request $request, Response $response, $id) : Response
+    public function deleteForm(Request $request, Response $response, $id): Response
     {
         $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
 
@@ -470,7 +485,7 @@ class MenuBoardCategory extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function delete(Request $request, Response $response, $id) : Response
+    public function delete(Request $request, Response $response, $id): Response
     {
         $menuBoard = $this->menuBoardFactory->getByMenuCategoryId($id);
 

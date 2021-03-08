@@ -21,6 +21,7 @@
  */
 
 namespace Xibo\Entity;
+
 use Respect\Validation\Validator as v;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Service\LogServiceInterface;
@@ -83,7 +84,8 @@ class MenuBoardCategory implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('MenuCategoryId %d MenuId %d, Name %s, Media %d', $this->menuCategoryId, $this->menuId, $this->name, $this->mediaId);
+        return sprintf('MenuCategoryId %d MenuId %d, Name %s, Media %d', $this->menuCategoryId, $this->menuId,
+            $this->name, $this->mediaId);
     }
 
     /**
@@ -143,7 +145,8 @@ class MenuBoardCategory implements \JsonSerializable
      */
     public function getAvailableProducts()
     {
-        return $this->menuCategoryFactory->getProductData(null, ['menuCategoryId' => $this->menuCategoryId, 'availability' => 1]);
+        return $this->menuCategoryFactory->getProductData(null,
+            ['menuCategoryId' => $this->menuCategoryId, 'availability' => 1]);
     }
 
     /**
@@ -173,20 +176,22 @@ class MenuBoardCategory implements \JsonSerializable
 
     private function add()
     {
-        $this->menuCategoryId = $this->getStore()->insert('INSERT INTO `menu_category` (name, menuId, mediaId) VALUES (:name, :menuId, :mediaId)', [
-            'name' => $this->name,
-            'mediaId' => $this->mediaId,
-            'menuId' => $this->menuId
-        ]);
+        $this->menuCategoryId = $this->getStore()->insert('INSERT INTO `menu_category` (name, menuId, mediaId) VALUES (:name, :menuId, :mediaId)',
+            [
+                'name' => $this->name,
+                'mediaId' => $this->mediaId,
+                'menuId' => $this->menuId
+            ]);
     }
 
     private function update()
     {
-        $this->getStore()->update('UPDATE `menu_category` SET name = :name, mediaId = :mediaId WHERE menuCategoryId = :menuCategoryId', [
-            'menuCategoryId' => $this->menuCategoryId,
-            'name' => $this->name,
-            'mediaId' => $this->mediaId
-        ]);
+        $this->getStore()->update('UPDATE `menu_category` SET name = :name, mediaId = :mediaId WHERE menuCategoryId = :menuCategoryId',
+            [
+                'menuCategoryId' => $this->menuCategoryId,
+                'name' => $this->name,
+                'mediaId' => $this->mediaId
+            ]);
     }
 
     /**
@@ -202,6 +207,7 @@ class MenuBoardCategory implements \JsonSerializable
             $product->delete();
         }
 
-        $this->getStore()->update('DELETE FROM `menu_category` WHERE menuCategoryId = :menuCategoryId', ['menuCategoryId' => $this->menuCategoryId]);
+        $this->getStore()->update('DELETE FROM `menu_category` WHERE menuCategoryId = :menuCategoryId',
+            ['menuCategoryId' => $this->menuCategoryId]);
     }
 }

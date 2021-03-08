@@ -76,8 +76,19 @@ class MenuBoardProduct extends Base
      * @param MediaFactory $mediaFactory
      * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $menuBoardFactory, $menuBoardCategoryFactory, $menuBoardProductOptionFactory, $mediaFactory, Twig $view)
-    {
+    public function __construct(
+        $log,
+        $sanitizerService,
+        $state,
+        $user,
+        $help,
+        $config,
+        $menuBoardFactory,
+        $menuBoardCategoryFactory,
+        $menuBoardProductOptionFactory,
+        $mediaFactory,
+        Twig $view
+    ) {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->menuBoardFactory = $menuBoardFactory;
@@ -168,7 +179,8 @@ class MenuBoardProduct extends Base
             'name' => $parsedParams->getString('name')
         ];
 
-        $menuBoardProducts = $this->menuBoardCategoryFactory->getProductData($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));
+        $menuBoardProducts = $this->menuBoardCategoryFactory->getProductData($this->gridRenderSort($parsedParams),
+            $this->gridRenderFilter($filter, $parsedParams));
 
         foreach ($menuBoardProducts as $menuBoardProduct) {
 
@@ -181,7 +193,8 @@ class MenuBoardProduct extends Base
             $menuBoardProduct->buttons = [];
 
             if ($menuBoardProduct->mediaId != 0) {
-                $download = $this->urlFor($request,'library.download', ['id' => $menuBoardProduct->mediaId], ['preview' => 1]);
+                $download = $this->urlFor($request, 'library.download', ['id' => $menuBoardProduct->mediaId],
+                    ['preview' => 1]);
                 $menuBoardProduct->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
                 $menuBoardProduct->thumbnailUrl = $download . '&width=100&height=56&cache=1';
             }
@@ -191,7 +204,8 @@ class MenuBoardProduct extends Base
             ) {
                 $menuBoardProduct->buttons[] = [
                     'id' => 'menuBoardProduct_edit_button',
-                    'url' => $this->urlFor($request, 'menuBoard.product.edit.form', ['id' => $menuBoardProduct->menuProductId]),
+                    'url' => $this->urlFor($request, 'menuBoard.product.edit.form',
+                        ['id' => $menuBoardProduct->menuProductId]),
                     'text' => __('Edit')
                 ];
             }
@@ -203,7 +217,8 @@ class MenuBoardProduct extends Base
 
                 $menuBoardProduct->buttons[] = [
                     'id' => 'menuBoardProduct_delete_button',
-                    'url' => $this->urlFor($request, 'menuBoard.product.delete.form', ['id' => $menuBoardProduct->menuProductId]),
+                    'url' => $this->urlFor($request, 'menuBoard.product.delete.form',
+                        ['id' => $menuBoardProduct->menuProductId]),
                     'text' => __('Delete')
                 ];
             }
@@ -231,7 +246,8 @@ class MenuBoardProduct extends Base
             'categories' => $categories
         ];
 
-        $menuBoardProducts = $this->menuBoardCategoryFactory->getProductData($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));
+        $menuBoardProducts = $this->menuBoardCategoryFactory->getProductData($this->gridRenderSort($parsedParams),
+            $this->gridRenderFilter($filter, $parsedParams));
 
         $this->getState()->template = 'grid';
         $this->getState()->recordsTotal = $this->menuBoardCategoryFactory->countLast();
@@ -332,14 +348,16 @@ class MenuBoardProduct extends Base
         $productOptions = $sanitizedParams->getArray('productOptions', ['default' => []]);
         $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
 
-        $menuBoardProduct = $this->menuBoardCategoryFactory->createProduct($menuBoard->menuId, $menuBoardCategory->menuCategoryId, $name, $price, $description, $allergyInfo, $availability, $mediaId);
+        $menuBoardProduct = $this->menuBoardCategoryFactory->createProduct($menuBoard->menuId,
+            $menuBoardCategory->menuCategoryId, $name, $price, $description, $allergyInfo, $availability, $mediaId);
         $menuBoardProduct->save();
 
         if ($productOptions !== [] && $productValues !== []) {
             $productDetails = array_combine($productOptions, $productValues);
 
             foreach ($productDetails as $option => $value) {
-                $productOption = $this->menuBoardProductOptionFactory->create($menuBoardProduct->menuProductId, $option, $value);
+                $productOption = $this->menuBoardProductOptionFactory->create($menuBoardProduct->menuProductId, $option,
+                    $value);
                 $productOption->save();
             }
         }
@@ -367,7 +385,7 @@ class MenuBoardProduct extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function editForm(Request $request, Response $response, $id) : Response
+    public function editForm(Request $request, Response $response, $id): Response
     {
         $menuBoardProduct = $this->menuBoardCategoryFactory->getByProductId($id);
         $menuBoard = $this->menuBoardFactory->getById($menuBoardProduct->menuId);
@@ -470,7 +488,7 @@ class MenuBoardProduct extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function edit(Request $request, Response $response, $id) : Response
+    public function edit(Request $request, Response $response, $id): Response
     {
         $menuBoardProduct = $this->menuBoardCategoryFactory->getByProductId($id);
         $menuBoard = $this->menuBoardFactory->getById($menuBoardProduct->menuId);
@@ -498,7 +516,8 @@ class MenuBoardProduct extends Base
             }
 
             foreach ($productDetails as $option => $value) {
-                $productOption = $this->menuBoardProductOptionFactory->create($menuBoardProduct->menuProductId, $option, $value);
+                $productOption = $this->menuBoardProductOptionFactory->create($menuBoardProduct->menuProductId, $option,
+                    $value);
                 $productOption->save();
             }
         } else {
@@ -529,7 +548,7 @@ class MenuBoardProduct extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    public function deleteForm(Request $request, Response $response, $id) : Response
+    public function deleteForm(Request $request, Response $response, $id): Response
     {
         $menuBoardProduct = $this->menuBoardCategoryFactory->getByProductId($id);
         $menuBoardCategory = $this->menuBoardCategoryFactory->getById($menuBoardProduct->menuCategoryId);
@@ -578,7 +597,7 @@ class MenuBoardProduct extends Base
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function delete(Request $request, Response $response, $id) : Response
+    public function delete(Request $request, Response $response, $id): Response
     {
         $menuBoardProduct = $this->menuBoardCategoryFactory->getByProductId($id);
         $menuBoard = $this->menuBoardFactory->getById($menuBoardProduct->menuId);
