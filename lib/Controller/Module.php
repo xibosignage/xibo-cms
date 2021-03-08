@@ -1670,4 +1670,89 @@ class Module extends Base
 
         return $this->render($request, $response);
     }
+
+    /**
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}/region",
+     *  operationId="WidgetAssignedRegionSet",
+     *  tags={"widget"},
+     *  summary="Set Widget Region",
+     *  description="Set the Region this Widget is intended for - only suitable for Drawer Widgets",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="Id of the Widget to set region on",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\Parameter(
+     *      name="targetRegionId",
+     *      in="formData",
+     *      description="The target regionId",
+     *      type="string",
+     *      required=true
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function widgetSetRegion(Request $request, Response $response, $id)
+    {
+        $widget = $this->widgetFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
+
+        if (!$this->getUser()->checkEditable($widget)) {
+            throw new AccessDeniedException();
+        }
+
+        // Test to see if we are on a Region Specific Playlist or a standalone
+        $playlist = $this->playlistFactory->getById($widget->playlistId);
+
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isRegionPlaylist() || !$playlist->isEditable()) {
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        // Make sure we are on a Drawer Widget
+        $region = $this->regionFactory->getById($playlist->regionId);
+        if ($region->isDrawer !== 1) {
+            throw new InvalidArgumentException(__('You can only set a target region on a Widget in the drawer.'), 'widgetId');
+        }
+
+        // Store the target regionId
+        $widget->load();
+        $widget->setOptionValue('targetRegionId', 'attrib', $sanitizedParams->getInt('targetRegionId'));
+
+        // Save
+        $widget->save([
+            'saveWidgetOptions' => true,
+            'saveWidgetAudio' => false,
+            'saveWidgetMedia' => false,
+            'notify' => true,
+            'notifyPlaylists' => true,
+            'notifyDisplays' => false,
+            'audit' => true
+        ]);
+
+        // Successful
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Edited Expiry')),
+            'id' => $widget->widgetId,
+            'data' => $widget
+        ]);
+
+        return $this->render($request, $response);
+    }
 }
