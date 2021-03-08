@@ -28,7 +28,6 @@ use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\OAuth2\Client\Entity\XiboLibrary;
 use Xibo\OAuth2\Client\Entity\XiboPlaylist;
-use Xibo\OAuth2\Client\Entity\XiboStats;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
 use Xibo\Tests\LocalWebTestCase;
@@ -119,7 +118,8 @@ class StatisticsMediaTest extends LocalWebTestCase
         $this->media2->deleteAssigned();
 
         // Delete stat records
-        self::$container->get('timeSeriesStore')->deleteStats(Carbon::now(), Carbon::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->get('timeSeriesStore')
+            ->deleteStats(Carbon::now(), Carbon::createFromFormat('Y-m-d H:i:s', '2018-02-12 00:00:00'));
     }
 
     /**
@@ -151,75 +151,45 @@ class StatisticsMediaTest extends LocalWebTestCase
         // M1 60 hours
         // M2 60 hours
 
-        // First insert - M1
+        // Insert all stats in one call to SubmitStats
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
                 '<stats>
                         <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-13 00:00:00" 
-                        type="'.$type.'" 
-                        scheduleid="0" 
-                        layoutid="'.$this->layout->layoutId.'" 
-                        mediaid="'.$this->widget->widgetId.'"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        // Second insert - M1
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
+                            todt="2018-02-13 00:00:00" 
+                            type="'.$type.'" 
+                            scheduleid="0" 
+                            layoutid="'.$this->layout->layoutId.'" 
+                            mediaid="'.$this->widget->widgetId.'"/>
                         <stat fromdt="2018-02-13 00:00:00"
-                        todt="2018-02-14 00:00:00"
-                        type="'.$type.'" 
-                        scheduleid="0"
-                        layoutid="'.$this->layout->layoutId.'"
-                        mediaid="'.$this->widget->widgetId.'"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        // Third insert - M1
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
+                            todt="2018-02-14 00:00:00"
+                            type="'.$type.'" 
+                            scheduleid="0"
+                            layoutid="'.$this->layout->layoutId.'"
+                            mediaid="'.$this->widget->widgetId.'"/>
                         <stat fromdt="2018-02-16 12:00:00"
-                        todt="2018-02-17 00:00:00"
-                        type="'.$type.'"
-                        scheduleid="0"
-                        layoutid="'.$this->layout->layoutId.'"
-                        mediaid="'.$this->widget->widgetId.'"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        // First insert - M2
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-                '<stats>
+                            todt="2018-02-17 00:00:00"
+                            type="'.$type.'"
+                            scheduleid="0"
+                            layoutid="'.$this->layout->layoutId.'"
+                            mediaid="'.$this->widget->widgetId.'"/>
                         <stat fromdt="2018-02-14 00:00:00"
-                        todt="2018-02-15 00:00:00"
-                        type="'.$type.'"
-                        scheduleid="0"
-                        layoutid="'.$this->layout->layoutId.'"
-                        mediaid="'.$this->widget2->widgetId.'"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        // Second insert - M2
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
+                            todt="2018-02-15 00:00:00"
+                            type="'.$type.'"
+                            scheduleid="0"
+                            layoutid="'.$this->layout->layoutId.'"
+                            mediaid="'.$this->widget2->widgetId.'"/>
                         <stat fromdt="2018-02-15 00:00:00"
-                        todt="2018-02-16 00:00:00"
-                        type="'.$type.'"
-                        scheduleid="0"
-                        layoutid="'.$this->layout->layoutId.'"
-                        mediaid="'.$this->widget2->widgetId.'"/>
-                    </stats>');
-        $this->assertSame(true, $response);
-
-        // Third insert - M2
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-            '<stats>
+                            todt="2018-02-16 00:00:00"
+                            type="'.$type.'"
+                            scheduleid="0"
+                            layoutid="'.$this->layout->layoutId.'"
+                            mediaid="'.$this->widget2->widgetId.'"/>
                         <stat fromdt="2018-02-16 00:00:00"
-                        todt="2018-02-16 12:00:00"
-                        type="'.$type.'"
-                        scheduleid="0"
-                        layoutid="'.$this->layout->layoutId.'"
-                        mediaid="'.$this->widget2->widgetId.'"/>
+                            todt="2018-02-16 12:00:00"
+                            type="'.$type.'"
+                            scheduleid="0"
+                            layoutid="'.$this->layout->layoutId.'"
+                            mediaid="'.$this->widget2->widgetId.'"/>
                     </stats>');
         $this->assertSame(true, $response);
 
@@ -237,14 +207,7 @@ class StatisticsMediaTest extends LocalWebTestCase
         $object = json_decode($response->getBody());
 
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $stats = (new XiboStats($this->getEntityProvider()))->get([
-            'fromDt' => '2018-02-12 00:00:00',
-            'toDt' => '2018-02-17 00:00:00',
-            'displayId' => $this->display->displayId,
-            'layoutId' => [$this->layout->layoutId],
-            'type' => $type
-        ]);
-        $this->assertNotEquals(0, count($stats));
-
+        $this->assertEquals(6, $object->data->recordsTotal);
+        $this->assertCount(6, $object->data->data);
     }
 }

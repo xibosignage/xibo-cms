@@ -137,7 +137,7 @@ class WidgetFactory extends BaseFactory
      * @return int|null
      * @throws NotFoundException
      */
-    public function getWidgetForStat($widgetId)
+    public function getMediaByWidgetId($widgetId)
     {
         // Try getting the widget directly
         $row = $this->getStore()->select('
