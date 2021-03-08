@@ -185,7 +185,6 @@ class MenuBoardProduct extends Base
         );
 
         foreach ($menuBoardProducts as $menuBoardProduct) {
-
             if ($this->isApi($request)) {
                 continue;
             }

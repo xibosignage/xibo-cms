@@ -84,7 +84,8 @@ class MenuBoardCategory implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('MenuCategoryId %d MenuId %d, Name %s, Media %d',
+        return sprintf(
+            'MenuCategoryId %d MenuId %d, Name %s, Media %d',
             $this->menuCategoryId,
             $this->menuId,
             $this->name,

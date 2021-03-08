@@ -56,7 +56,7 @@ class MenuBoardsMigration extends AbstractMigration
             ->addColumn('name', 'string', ['limit' => 50])
             ->addColumn('price', 'string')
             ->addColumn('description', 'string', ['limit' => 254, 'default' => null, 'null' => true])
-            ->addColumn('mediaId', 'integer',  ['default' => null, 'null' => true])
+            ->addColumn('mediaId', 'integer', ['default' => null, 'null' => true])
             ->addColumn('availability', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
             ->addColumn('allergyInfo', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->addForeignKey('menuId', 'menu_board', 'menuId')

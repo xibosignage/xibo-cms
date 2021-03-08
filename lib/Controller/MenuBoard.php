@@ -174,7 +174,6 @@ class MenuBoard extends Base
         );
 
         foreach ($menuBoards as $menuBoard) {
-
             if ($this->isApi($request)) {
                 continue;
             }
@@ -183,7 +182,6 @@ class MenuBoard extends Base
             $menuBoard->buttons = [];
 
             if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkEditable($menuBoard)) {
-
                 $menuBoard->buttons[] = [
                     'id' => 'menuBoard_button_viewcategories',
                     'url' => $this->urlFor($request, 'menuBoard.category.view', ['id' => $menuBoard->menuId]),
@@ -220,14 +218,12 @@ class MenuBoard extends Base
             }
 
             if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkPermissionsModifyable($menuBoard)) {
-
                 $menuBoard->buttons[] = ['divider' => true];
 
                 // Share button
                 $menuBoard->buttons[] = [
                     'id' => 'menuBoard_button_permissions',
-                    'url' => $this->urlFor($request, 'user.permissions.form',
-                        ['entity' => 'MenuBoard', 'id' => $menuBoard->menuId]),
+                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'MenuBoard', 'id' => $menuBoard->menuId]),
                     'text' => __('Share'),
                     'dataAttributes' => [
                         [

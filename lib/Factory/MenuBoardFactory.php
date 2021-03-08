@@ -21,7 +21,6 @@
  */
 namespace Xibo\Factory;
 
-
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\MenuBoard;
 use Xibo\Entity\User;

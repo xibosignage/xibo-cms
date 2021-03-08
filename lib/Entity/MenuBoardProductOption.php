@@ -71,21 +71,21 @@ class MenuBoardProductOption implements \JsonSerializable
     {
         $this->getLog()->debug('Saving ' . $this);
 
-        $this->getStore()->insert('
-            INSERT INTO `menu_product_options` (`menuProductId`, `option`, `value`)
-              VALUES (:menuProductId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2
-        ', [
+        $this->getStore()->insert(
+            'INSERT INTO `menu_product_options` (`menuProductId`, `option`, `value`) VALUES (:menuProductId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2',
+            [
             'menuProductId' => $this->menuProductId,
             'option' => $this->option,
             'value' => $this->value,
             'value2' => $this->value
-        ]
+            ]
         );
     }
 
     public function delete()
     {
-        $this->getStore()->update('DELETE FROM `menu_product_options` WHERE `menuProductId` = :menuProductId AND `option` = :option',
+        $this->getStore()->update(
+            'DELETE FROM `menu_product_options` WHERE `menuProductId` = :menuProductId AND `option` = :option',
             [
                 'menuProductId' => $this->menuProductId,
                 'option' => $this->option
