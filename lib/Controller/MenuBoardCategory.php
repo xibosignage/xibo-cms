@@ -97,7 +97,7 @@ class MenuBoardCategory extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function displayPage(Request $request, Response $response, $id)
+    public function displayPage(Request $request, Response $response, $id)
     {
         $menuBoard = $this->menuBoardFactory->getById($id);
 
@@ -166,8 +166,10 @@ class MenuBoardCategory extends Base
             'name' => $parsedParams->getString('name')
         ];
 
-        $menuBoardCategories = $this->menuBoardCategoryFactory->query($this->gridRenderSort($parsedParams),
-            $this->gridRenderFilter($filter, $parsedParams));
+        $menuBoardCategories = $this->menuBoardCategoryFactory->query(
+            $this->gridRenderSort($parsedParams),
+            $this->gridRenderFilter($filter, $parsedParams)
+        );
 
 
         foreach ($menuBoardCategories as $menuBoardCategory) {
@@ -188,34 +190,27 @@ class MenuBoardCategory extends Base
             $menuBoardCategory->includeProperty('buttons');
             $menuBoardCategory->buttons = [];
 
-            if ($this->getUser()->featureEnabled('menuboard.modify')
-                && $this->getUser()->checkEditable($menuBoard)
-            ) {
+            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkEditable($menuBoard)) {
                 $menuBoardCategory->buttons[] = [
                     'id' => 'menuBoardCategory_button_viewproducts',
-                    'url' => $this->urlFor($request, 'menuBoard.product.view',
-                        ['id' => $menuBoardCategory->menuCategoryId]),
+                    'url' => $this->urlFor($request, 'menuBoard.product.view', ['id' => $menuBoardCategory->menuCategoryId]),
                     'class' => 'XiboRedirectButton',
                     'text' => __('View Products')
                 ];
 
                 $menuBoardCategory->buttons[] = [
                     'id' => 'menuBoardCategory_edit_button',
-                    'url' => $this->urlFor($request, 'menuBoard.category.edit.form',
-                        ['id' => $menuBoardCategory->menuCategoryId]),
+                    'url' => $this->urlFor($request, 'menuBoard.category.edit.form', ['id' => $menuBoardCategory->menuCategoryId]),
                     'text' => __('Edit')
                 ];
             }
 
-            if ($this->getUser()->featureEnabled('menuboard.modify')
-                && $this->getUser()->checkDeleteable($menuBoard)
-            ) {
+            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkDeleteable($menuBoard)) {
                 $menuBoardCategory->buttons[] = ['divider' => true];
 
                 $menuBoardCategory->buttons[] = [
                     'id' => 'menuBoardCategory_delete_button',
-                    'url' => $this->urlFor($request, 'menuBoard.category.delete.form',
-                        ['id' => $menuBoardCategory->menuCategoryId]),
+                    'url' => $this->urlFor($request, 'menuBoard.category.delete.form', ['id' => $menuBoardCategory->menuCategoryId]),
                     'text' => __('Delete')
                 ];
             }

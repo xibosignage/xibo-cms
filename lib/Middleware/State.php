@@ -714,7 +714,7 @@ class State implements Middleware
                     $c->get('view')
                 );
             },
-            '\Xibo\Controller\MenuBoard' => function(ContainerInterface $c) {
+            '\Xibo\Controller\MenuBoard' => function (ContainerInterface $c) {
                 return new \Xibo\Controller\MenuBoard(
                     $c->get('logService'),
                     $c->get('sanitizerService'),
@@ -728,7 +728,7 @@ class State implements Middleware
                     $c->get('view')
                 );
             },
-            '\Xibo\Controller\MenuBoardCategory' => function(ContainerInterface $c) {
+            '\Xibo\Controller\MenuBoardCategory' => function (ContainerInterface $c) {
                 return new \Xibo\Controller\MenuBoardCategory(
                     $c->get('logService'),
                     $c->get('sanitizerService'),
@@ -742,7 +742,7 @@ class State implements Middleware
                     $c->get('view')
                 );
             },
-            '\Xibo\Controller\MenuBoardProduct' => function(ContainerInterface $c) {
+            '\Xibo\Controller\MenuBoardProduct' => function (ContainerInterface $c) {
                 return new \Xibo\Controller\MenuBoardProduct(
                     $c->get('logService'),
                     $c->get('sanitizerService'),
@@ -1364,7 +1364,7 @@ class State implements Middleware
                     $c->get('playlistFactory')
                 );
             },
-            'menuBoardCategoryFactory' => function(ContainerInterface $c) {
+            'menuBoardCategoryFactory' => function (ContainerInterface $c) {
                 return new \Xibo\Factory\MenuBoardCategoryFactory(
                     $c->get('store'),
                     $c->get('logService'),
@@ -1372,14 +1372,14 @@ class State implements Middleware
                     $c->get('menuBoardProductOptionFactory')
                 );
             },
-            'menuBoardProductOptionFactory' => function(ContainerInterface $c) {
+            'menuBoardProductOptionFactory' => function (ContainerInterface $c) {
                 return new \Xibo\Factory\MenuBoardProductOptionFactory(
                     $c->get('store'),
                     $c->get('logService'),
                     $c->get('sanitizerService')
                 );
             },
-            'menuBoardFactory' => function(ContainerInterface $c) {
+            'menuBoardFactory' => function (ContainerInterface $c) {
                 return new \Xibo\Factory\MenuBoardFactory(
                     $c->get('store'),
                     $c->get('logService'),

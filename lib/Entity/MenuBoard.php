@@ -307,7 +307,8 @@ class MenuBoard implements \JsonSerializable
 
     private function add()
     {
-        $this->menuId = $this->getStore()->insert('INSERT INTO `menu_board` (name, description, userId, modifiedDt, folderId, permissionsFolderId) VALUES (:name, :description, :userId, :modifiedDt, :folderId, :permissionsFolderId)',
+        $this->menuId = $this->getStore()->insert(
+            'INSERT INTO `menu_board` (name, description, userId, modifiedDt, folderId, permissionsFolderId) VALUES (:name, :description, :userId, :modifiedDt, :folderId, :permissionsFolderId)',
             [
                 'name' => $this->name,
                 'description' => $this->description,
@@ -315,12 +316,14 @@ class MenuBoard implements \JsonSerializable
                 'modifiedDt' => Carbon::now()->format('U'),
                 'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
                 'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
-            ]);
+            ]
+        );
     }
 
     private function update()
     {
-        $this->getStore()->update('UPDATE `menu_board` SET name = :name, description = :description, userId = :userId, modifiedDt = :modifiedDt, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE menuId = :menuId',
+        $this->getStore()->update(
+            'UPDATE `menu_board` SET name = :name, description = :description, userId = :userId, modifiedDt = :modifiedDt, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE menuId = :menuId',
             [
                 'menuId' => $this->menuId,
                 'name' => $this->name,
@@ -329,7 +332,8 @@ class MenuBoard implements \JsonSerializable
                 'modifiedDt' => Carbon::now()->format('U'),
                 'folderId' => $this->folderId,
                 'permissionsFolderId' => $this->permissionsFolderId
-            ]);
+            ]
+        );
     }
 
     /**

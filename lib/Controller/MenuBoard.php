@@ -96,7 +96,7 @@ class MenuBoard extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function displayPage(Request $request, Response $response)
+    public function displayPage(Request $request, Response $response)
     {
         // Call to render the template
         $this->getState()->template = 'menuboard-page';
@@ -168,8 +168,10 @@ class MenuBoard extends Base
             'folderId' => $parsedParams->getInt('folderId')
         ];
 
-        $menuBoards = $this->menuBoardFactory->query($this->gridRenderSort($parsedParams),
-            $this->gridRenderFilter($filter, $parsedParams));
+        $menuBoards = $this->menuBoardFactory->query(
+            $this->gridRenderSort($parsedParams),
+            $this->gridRenderFilter($filter, $parsedParams)
+        );
 
         foreach ($menuBoards as $menuBoard) {
 
@@ -180,9 +182,7 @@ class MenuBoard extends Base
             $menuBoard->includeProperty('buttons');
             $menuBoard->buttons = [];
 
-            if ($this->getUser()->featureEnabled('menuboard.modify')
-                && $this->getUser()->checkEditable($menuBoard)
-            ) {
+            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkEditable($menuBoard)) {
 
                 $menuBoard->buttons[] = [
                     'id' => 'menuBoard_button_viewcategories',
@@ -207,8 +207,7 @@ class MenuBoard extends Base
                         'dataAttributes' => [
                             [
                                 'name' => 'commit-url',
-                                'value' => $this->urlFor($request, 'menuBoard.selectfolder',
-                                    ['id' => $menuBoard->menuId])
+                                'value' => $this->urlFor($request, 'menuBoard.selectfolder', ['id' => $menuBoard->menuId])
                             ],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'menuBoard_button_selectfolder'],
@@ -220,9 +219,7 @@ class MenuBoard extends Base
                 }
             }
 
-            if ($this->getUser()->featureEnabled('menuboard.modify')
-                && $this->getUser()->checkPermissionsModifyable($menuBoard)
-            ) {
+            if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkPermissionsModifyable($menuBoard)) {
 
                 $menuBoard->buttons[] = ['divider' => true];
 
@@ -235,8 +232,7 @@ class MenuBoard extends Base
                     'dataAttributes' => [
                         [
                             'name' => 'commit-url',
-                            'value' => $this->urlFor($request, 'user.permissions.multi',
-                                ['entity' => 'MenuBoard', 'id' => $menuBoard->menuId])
+                            'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'MenuBoard', 'id' => $menuBoard->menuId])
                         ],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'menuBoard_button_permissions'],
@@ -636,5 +632,4 @@ class MenuBoard extends Base
 
         return $this->render($request, $response);
     }
-
 }

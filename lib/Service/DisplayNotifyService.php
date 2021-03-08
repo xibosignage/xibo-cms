@@ -929,7 +929,6 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
         ];
 
         foreach ($this->store->select($sql, $params) as $row) {
-
             // Don't process if the displayId is already in the collection (there is little point in running the
             // extra query)
             if (in_array($row['displayId'], $this->displayIds)) {
@@ -954,8 +953,9 @@ class DisplayNotifyService implements DisplayNotifyServiceInterface
 
             $this->displayIds[] = $row['displayId'];
 
-            if ($this->collectRequired)
+            if ($this->collectRequired) {
                 $this->displayIdsRequiringActions[] = $row['displayId'];
+            }
         }
 
         $this->keysProcessed[] = 'menuBoard_' . $menuId;

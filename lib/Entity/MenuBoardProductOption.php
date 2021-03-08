@@ -79,7 +79,8 @@ class MenuBoardProductOption implements \JsonSerializable
             'option' => $this->option,
             'value' => $this->value,
             'value2' => $this->value
-        ]);
+        ]
+        );
     }
 
     public function delete()

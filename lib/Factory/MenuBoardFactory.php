@@ -19,7 +19,6 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 namespace Xibo\Factory;
 
 
@@ -211,8 +210,7 @@ class MenuBoardFactory extends BaseFactory
         }
 
         $body .= ' WHERE 1 = 1 ';
-        $this->viewPermissionSql('Xibo\Entity\MenuBoard', $body, $params, 'menu_board.menuId', 'menu_board.userId',
-            $filterBy, '`menu_board`.permissionsFolderId');
+        $this->viewPermissionSql('Xibo\Entity\MenuBoard', $body, $params, 'menu_board.menuId', 'menu_board.userId', $filterBy, '`menu_board`.permissionsFolderId');
 
         if ($sanitizedFilter->getInt('menuId') !== null) {
             $body .= ' AND `menu_board`.menuId = :menuId ';
@@ -226,12 +224,11 @@ class MenuBoardFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('menu_board', 'name', $terms, $body, $params,
-                ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter('menu_board', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($sanitizedFilter->getInt('folderId') !== null) {
-            $body .= " AND `menu_board`.folderId = :folderId ";
+            $body .= ' AND `menu_board`.folderId = :folderId ';
             $params['folderId'] = $sanitizedFilter->getInt('folderId');
         }
 
@@ -250,8 +247,7 @@ class MenuBoardFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'),
-                    0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -269,6 +265,5 @@ class MenuBoardFactory extends BaseFactory
         }
 
         return $entries;
-
     }
 }

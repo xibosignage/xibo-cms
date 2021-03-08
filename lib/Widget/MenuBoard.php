@@ -325,7 +325,6 @@ class MenuBoard extends ModuleWidget
         $step = $sanitizedParams->getInt('step', ['default' => 3]);
 
         if ($step == 1) {
-
             // Read in the menuId, validate and store it
             $menuId = $sanitizedParams->getInt('menuId');
 
@@ -346,7 +345,6 @@ class MenuBoard extends ModuleWidget
             if (!$this->getUser()->checkViewable($this->menuBoardFactory->getById($this->getOption('menuId')))) {
                 throw new InvalidArgumentException(__('You do not have permission to use that Menu Board'), 'menuId');
             }
-
         } elseif ($step == 2) {
             // Categories
             $categories = $sanitizedParams->getIntArray('menuBoardCategories', ['default' => []]);
@@ -391,8 +389,7 @@ class MenuBoard extends ModuleWidget
             $this->setOption('showMenuCategoryName', $sanitizedParams->getCheckbox('showMenuCategoryName'));
             $this->setOption('showProductOptions', $sanitizedParams->getCheckbox('showProductOptions'));
             $this->setOption('showProductDescription', $sanitizedParams->getCheckbox('showProductDescription'));
-            $this->setOption('showProductAllergyInformation',
-                $sanitizedParams->getCheckbox('showProductAllergyInformation'));
+            $this->setOption('showProductAllergyInformation', $sanitizedParams->getCheckbox('showProductAllergyInformation'));
             $this->setOption('showUnavailable', $sanitizedParams->getCheckbox('showUnavailable'));
 
             $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
@@ -418,8 +415,7 @@ class MenuBoard extends ModuleWidget
             }
 
             for ($i = 1; $i <= $this->getOption('numOfColumns'); $i++) {
-                $this->setOption('categories_' . $i,
-                    implode(',', $sanitizedParams->getIntArray('menuBoardCategories_' . $i, ['default' => []])));
+                $this->setOption('categories_' . $i, implode(',', $sanitizedParams->getIntArray('menuBoardCategories_' . $i, ['default' => []])));
             }
 
             // Validate
@@ -453,7 +449,6 @@ class MenuBoard extends ModuleWidget
         $styleSheet = '';
         $templateOverrode = false;
         if ($this->getOption('overrideTemplate', 1) == 0) {
-
             $template = $this->getTemplateById($this->getOption('templateId'));
 
             if (isset($template)) {
@@ -572,7 +567,6 @@ class MenuBoard extends ModuleWidget
         $maxPages = 1;
 
         try {
-
             if ($this->getOption('showMenuBoardName') == 1 && $this->hasMenu()) {
                 $table .= '<h1 id="MenuBoardName" class="MenuBoardName">' . $menuBoard->name . '</h1>';
             }
@@ -611,8 +605,7 @@ class MenuBoard extends ModuleWidget
                             $this->assignMedia($file->mediaId);
 
                             $replace = ($this->isPreview())
-                                ? '<img src="' . $this->urlFor('library.download',
-                                    ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                                ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                 : '<img src="' . $file->storedAs . '" />';
 
                             $table .= '<p class="MenuBoardMedia MenuBoardCategoryMedia" id="category_media_' . $category->menuCategoryId . '">' . $replace . '</p>';
@@ -638,7 +631,6 @@ class MenuBoard extends ModuleWidget
                     }
 
                     foreach ($categoryProductsData as $categoryProduct) {
-
                         // paging, if we have more than one page to show for this category products then wrap products html in a div
                         if ($this->getOption('productsPerPage') > 0 && $rowCount === 1 && count($categoryProductsData) > $this->getOption('productsPerPage')) {
                             $table .= '<div class="page">';
@@ -654,8 +646,7 @@ class MenuBoard extends ModuleWidget
                             continue;
                         } elseif ($categoryProduct->availability === 0 && $this->getOption('showUnavailable') == 1) {
                             $table .= '<div class="MenuBoardProductContainer product-unavailable">';
-                        } elseif (in_array($categoryProduct->menuProductId,
-                            explode(',', $this->getOption('highlightProducts')))) {
+                        } elseif (in_array($categoryProduct->menuProductId, explode(',', $this->getOption('highlightProducts')))) {
                             $table .= '<div class="MenuBoardProductContainer product-highlight">';
                         } else {
                             $table .= '<div class="MenuBoardProductContainer">';
@@ -688,13 +679,11 @@ class MenuBoard extends ModuleWidget
                                 $this->assignMedia($file->mediaId);
 
                                 $replace = ($this->isPreview())
-                                    ? '<img src="' . $this->urlFor('library.download',
-                                        ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                                    ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                     : '<img src="' . $file->storedAs . '" />';
 
 
                                 $table .= '<div class="MenuBoardMedia MenuBoardProductMedia" id="productMedia_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></div>';
-
                             } catch (NotFoundException $e) {
                                 $table .= '</div>';
                                 continue;
@@ -740,8 +729,7 @@ class MenuBoard extends ModuleWidget
                 'pages' => $maxPages
             ];
         } catch (NotFoundException $e) {
-            $this->getLog()->info(sprintf('Request failed for MenuBoard id=%d. Widget=%d. Due to %s', $menuId,
-                $this->getWidgetId(), $e->getMessage()));
+            $this->getLog()->info(sprintf('Request failed for MenuBoard id=%d. Widget=%d. Due to %s', $menuId, $this->getWidgetId(), $e->getMessage()));
             $this->getLog()->debug($e->getTraceAsString());
 
             return $this->noDataMessageOrDefault();

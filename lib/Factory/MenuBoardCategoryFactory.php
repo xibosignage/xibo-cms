@@ -224,8 +224,7 @@ class MenuBoardCategoryFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('menu_category', 'name', $terms, $body, $params,
-                ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter('menu_category', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         // Sorting?
@@ -238,8 +237,7 @@ class MenuBoardCategoryFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'),
-                    0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -306,8 +304,7 @@ class MenuBoardCategoryFactory extends BaseFactory
 
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
-            $this->nameFilter('menu_product', 'name', $terms, $body, $params,
-                ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+            $this->nameFilter('menu_product', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
         if ($sanitizedFilter->getInt('availability') !== null) {

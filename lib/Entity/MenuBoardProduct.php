@@ -137,8 +137,7 @@ class MenuBoardProduct implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('MenuProductId %d, MenuCategoryId %d, MenuId %d, Name %s, Price %d, Media %d',
-            $this->menuProductId, $this->menuCategoryId, $this->menuId, $this->name, $this->price, $this->mediaId);
+        return sprintf('MenuProductId %d, MenuCategoryId %d, MenuId %d, Name %s, Price %d, Media %d', $this->menuProductId, $this->menuCategoryId, $this->menuId, $this->name, $this->price, $this->mediaId);
     }
 
     /**
@@ -170,7 +169,8 @@ class MenuBoardProduct implements \JsonSerializable
      */
     private function add()
     {
-        $this->menuProductId = $this->getStore()->insert('INSERT INTO `menu_product` (menuCategoryId, menuId, name, price, description, mediaId, availability, allergyInfo) VALUES (:menuCategoryId, :menuId, :name, :price, :description, :mediaId, :availability, :allergyInfo)',
+        $this->menuProductId = $this->getStore()->insert(
+            'INSERT INTO `menu_product` (menuCategoryId, menuId, name, price, description, mediaId, availability, allergyInfo) VALUES (:menuCategoryId, :menuId, :name, :price, :description, :mediaId, :availability, :allergyInfo)',
             [
                 'menuCategoryId' => $this->menuCategoryId,
                 'menuId' => $this->menuId,
@@ -180,7 +180,8 @@ class MenuBoardProduct implements \JsonSerializable
                 'mediaId' => $this->mediaId,
                 'availability' => $this->availability,
                 'allergyInfo' => $this->allergyInfo
-            ]);
+            ]
+        );
     }
 
     /**
@@ -188,7 +189,8 @@ class MenuBoardProduct implements \JsonSerializable
      */
     private function update()
     {
-        $this->getStore()->update('UPDATE `menu_product` SET name = :name, price = :price, description = :description, mediaId = :mediaId, availability = :availability, allergyInfo = :allergyInfo WHERE menuProductId = :menuProductId',
+        $this->getStore()->update(
+            'UPDATE `menu_product` SET name = :name, price = :price, description = :description, mediaId = :mediaId, availability = :availability, allergyInfo = :allergyInfo WHERE menuProductId = :menuProductId',
             [
                 'name' => $this->name,
                 'price' => $this->price,
@@ -197,7 +199,8 @@ class MenuBoardProduct implements \JsonSerializable
                 'availability' => $this->availability,
                 'allergyInfo' => $this->allergyInfo,
                 'menuProductId' => $this->menuProductId
-            ]);
+            ]
+        );
     }
 
     /**
@@ -206,8 +209,7 @@ class MenuBoardProduct implements \JsonSerializable
     public function delete()
     {
         $this->removeOptions();
-        $this->getStore()->update('DELETE FROM `menu_product` WHERE menuProductId = :menuProductId',
-            ['menuProductId' => $this->menuProductId]);
+        $this->getStore()->update('DELETE FROM `menu_product` WHERE menuProductId = :menuProductId', ['menuProductId' => $this->menuProductId]);
     }
 
     /**
@@ -222,8 +224,6 @@ class MenuBoardProduct implements \JsonSerializable
 
     public function removeOptions()
     {
-        $this->getStore()->update('DELETE FROM `menu_product_options` WHERE menuProductId = :menuProductId',
-            ['menuProductId' => $this->menuProductId]);
+        $this->getStore()->update('DELETE FROM `menu_product_options` WHERE menuProductId = :menuProductId', ['menuProductId' => $this->menuProductId]);
     }
-
 }

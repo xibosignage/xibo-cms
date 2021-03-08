@@ -685,7 +685,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']));
 
 // Menu Boards
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/menuboard/view', ['\Xibo\Controller\MenuBoard','displayPage'])->setName('menuBoard.view');
     $group->get('/menuboard/form/add', ['\Xibo\Controller\MenuBoard', 'addForm'])->setName('menuBoard.add.form');
     $group->get('/menuboard/form/{id}/edit', ['\Xibo\Controller\MenuBoard', 'editForm'])->setName('menuBoard.edit.form');
@@ -702,4 +702,3 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/menuboard/{id}/product/form/edit', ['\Xibo\Controller\MenuBoardProduct', 'editForm'])->setName('menuBoard.product.edit.form');
     $group->get('/menuboard/{id}/product/form/delete', ['\Xibo\Controller\MenuBoardProduct', 'deleteForm'])->setName('menuBoard.product.delete.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['menuBoard.view']));
-
