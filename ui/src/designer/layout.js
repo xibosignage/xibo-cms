@@ -421,6 +421,8 @@ Layout.prototype.createDrawer = function(drawerData) {
         // update duration
         newWidget.getDuration();
 
+        newWidget.targetRegionId = newWidget.getOptions().targetRegionId;
+
         // Add newWidget to the Region widget object
         newDrawer.widgets[newWidget.id] = newWidget;
 

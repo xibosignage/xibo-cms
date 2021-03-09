@@ -1748,7 +1748,7 @@ class Module extends Base
 
         // Successful
         $this->getState()->hydrate([
-            'message' => sprintf(__('Edited Expiry')),
+            'message' => sprintf(__('Target region set')),
             'id' => $widget->widgetId,
             'data' => $widget
         ]);

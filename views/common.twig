@@ -201,6 +201,10 @@
                 addActionForm: {
                     url: "{{ url_for("action.add.form", {source: 'widget', id:':id'}) }}",
                     type: 'GET'
+                },
+                setRegion: {
+                    url: "{{ url_for("module.widget.set.region", {id: ':id'}) }}",
+                    type: 'PUT'
                 }
             },
             library: {
@@ -328,7 +332,9 @@
             var propertiesPanelTrans = {
                 width: "{{ "Width" |trans }}",
                 height: "{{ "Height" |trans }}",
-                scale: "{{ "Scale"|trans }}"
+                scale: "{{ "Scale"|trans }}",
+                targetDrawer: "{{ "Target"|trans }}",
+                selectATarget: "{{ "Select a drawer!"|trans }}"
             };
 
             var toolbarTrans = {

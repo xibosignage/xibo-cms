@@ -1060,12 +1060,12 @@ let formHelpers = function() {
     this.setupFormDimensionControls = function(dialog, toggleFlag, instanceToDestroy) {
         if(toggleFlag) {
             // Display controls
-            $(dialog).find('.form-editor-controls').toggleClass('d-none', false);
+            $(dialog).find('.form-editor-controls-dimensions').toggleClass('d-none', false);
         } else {
             // Hide the controls if there are no CKEditor instances or the one that is left is marked to be destroyed
             if($.isEmptyObject(CKEDITOR.instances) || (Object.keys(CKEDITOR.instances).length === 1 && CKEDITOR.instances[instanceToDestroy] !== undefined)) {
                 // Hide controls
-                $(dialog).find('.form-editor-controls').toggleClass('d-none', true);
+                $(dialog).find('.form-editor-controls-dimensions').toggleClass('d-none', true);
             }
         }
     };

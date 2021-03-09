@@ -53,7 +53,12 @@
         $(dialog).find("#triggerType").on('change', function() {
             onTriggerChange(dialog);
         })
-        
+
+        onTargetRegionChange(dialog);
+        $(dialog).find("#targetId, #actionType").on('change', function() {
+            onTargetRegionChange(dialog);
+        })
+
         // On modal close, reload layout designer data
         $(dialog).on('hidden.bs.modal', reloadLayoutDesignerData);
     }
@@ -115,6 +120,42 @@
         } else {
             triggerCode.addClass('d-none');
             $('#triggerCode').val('');
+        }
+    }
+
+    function onTargetRegionChange(dialog) {
+        var actionType = $(dialog).find('#actionType').val();
+        var target = $(dialog).find("#target").val();
+        var targetRegion = $(dialog).find("#targetId").val();
+        
+        if (actionType === 'navWidget' && target == 'region' && targetRegion != '') {
+            // Filter widgets based on "targetRegion" region!');
+            $("#widgetId").find('option').each(function() {
+                let widgetId = $(this).val();
+
+                // If there is no widget if, skip this element
+                if(widgetId == '') {
+                    return true;
+                }
+
+                // Get layout designer element
+                let widget = lD.getElementByTypeAndId('widget', 'widget_' + lD.layout.drawer.regionId + '_' + widgetId, 'drawer');
+
+                if(widget == undefined) {
+                    return true;
+                }
+
+                if(widget.targetRegionId != targetRegion) {
+                    // Hide current widget
+                    $(this).hide();
+                } else {
+                    // Show current widget
+                    $(this).show();
+                }
+            });
+        } else {
+            // Do nothing or show all widgets
+            $(dialog).find("#widgetId").find('option').show();
         }
     }
 

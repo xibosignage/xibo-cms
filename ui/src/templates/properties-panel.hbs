@@ -4,7 +4,11 @@
         {{header}}
     </div>
 
-    {{>properties-panel-editor-controls trans=trans}}
+    {{#if isDrawerWidget}}
+        {{>properties-panel-editor-controls-target-region trans=trans}}
+    {{/if}}
+
+    {{>properties-panel-editor-controls-dimensions trans=trans}}
 
     <div class="form-container">
         {{{form}}}

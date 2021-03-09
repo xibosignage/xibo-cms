@@ -110,7 +110,6 @@ var config = {
             test: /\.js(\?.*)?$/i,
             sourceMap: true,
         }),
-        new CleanWebpackPlugin(['web/dist']),
         new CopyWebpackPlugin([
             // Copy directory contents to {output}/
             {

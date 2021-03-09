@@ -233,7 +233,7 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
     $group->put('/{id}/expiry', ['\Xibo\Controller\Module','widgetExpiry'])->setName('module.widget.expiry');
 
     // Drawer widgets Region
-    $group->put('/{id}/region', ['\Xibo\Controller\Module','widgetSetRegion'])->setName('module.widget.set.region');
+    $group->put('/{id}/target', ['\Xibo\Controller\Module','widgetSetRegion'])->setName('module.widget.set.region');
 })
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']))
     ->addMiddleware(new LayoutLock($app));
