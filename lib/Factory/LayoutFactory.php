@@ -545,6 +545,15 @@ class LayoutFactory extends BaseFactory
             // Populate Playlists (XLF doesn't contain any playlists)
             $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
 
+            // Populate region options.
+            foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/options') as $regionOptionsNode) {
+                /* @var \DOMElement $regionOptionsNode */
+                foreach ($regionOptionsNode->childNodes as $regionOption) {
+                    /* @var \DOMElement $regionOption */
+                    $region->setOptionValue($regionOption->nodeName, $regionOption->textContent);
+                }
+            }
+
             // Get all widgets
             foreach ($xpath->query('//region[@id="' . $region->tempId . '"]/media') as $mediaNode) {
                 /* @var \DOMElement $mediaNode */
@@ -825,6 +834,10 @@ class LayoutFactory extends BaseFactory
             foreach ($actions as $action) {
                 $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importRegion', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
                 $newAction->save(['validate' => false]);
+            }
+
+            foreach ($regionJson['regionOptions'] as $regionOption) {
+                $region->setOptionValue($regionOption['option'], $regionOption['value']);
             }
 
             // Get all widgets

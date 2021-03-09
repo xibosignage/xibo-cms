@@ -226,12 +226,13 @@ class DisplayGroupFactory extends BaseFactory
     /**
      * Get by OwnerId
      * @param int $ownerId
+     * @param int $isDisplaySpecific
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
-    public function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId, $isDisplaySpecific = 0)
     {
-        return $this->query(null, ['userId' => $ownerId, 'isDisplaySpecific' => 0]);
+        return $this->query(null, ['userId' => $ownerId, 'isDisplaySpecific' => $isDisplaySpecific]);
     }
 
     /**
