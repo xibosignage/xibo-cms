@@ -86,7 +86,7 @@
             <h4>{% trans %}Layouts on new campaign{% endtrans %}</h4>
             <div id="LayoutAssign" class="card p-3 mb-3 bg-light" data-url="{{ url_for("campaign.assign.layout", {id: campaign.campaignId}) }}">
                 <div>
-                    <ul id="LayoutAssignSortable"></ul>
+                    <ul id="LayoutAssignSortable" data-layouts="[]"></ul>
                 </div>
             </div>
 
