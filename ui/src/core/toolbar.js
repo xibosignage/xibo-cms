@@ -670,7 +670,13 @@ Toolbar.prototype.selectCard = function(card) {
             if(dropTo === 'all' && subType === 'permissions') {
                 $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
             } else {
-                $('[data-type="' + dropTo + '"].ui-droppable.editable').addClass('ui-droppable-active');
+                // Prevent adding audio to subplaylist
+                let selectorAppend = '';
+                if(subType == 'audio'){
+                    selectorAppend = ':not([data-widget-type="subplaylist"])';
+                }
+
+                $('[data-type="' + dropTo + '"].ui-droppable.editable' + selectorAppend).addClass('ui-droppable-active');
             }
         }
     }

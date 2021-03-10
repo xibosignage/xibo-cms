@@ -601,10 +601,10 @@ let formHelpers = function() {
             if($(dialog).find('.text_editor_scale').is(':checked')) {
 
                 // Inner width and a padding for the scrollbar
-                let width = $(dialog).find('form').innerWidth() - 30;
+                let width = $(dialog).find('form').innerWidth() - 32 - ((iframeBorderWidth+iframeMargin)*2);
 
                 // Element side plus margin
-                let elementWidth = regionDimensions.width + (iframeMargin * 2);
+                let elementWidth = regionDimensions.width;
                 scale = width / elementWidth;
             }
 
@@ -1060,12 +1060,12 @@ let formHelpers = function() {
     this.setupFormDimensionControls = function(dialog, toggleFlag, instanceToDestroy) {
         if(toggleFlag) {
             // Display controls
-            $(dialog).find('.form-editor-controls').toggleClass('d-none', false);
+            $(dialog).find('.form-editor-controls-dimensions').toggleClass('d-none', false);
         } else {
             // Hide the controls if there are no CKEditor instances or the one that is left is marked to be destroyed
             if($.isEmptyObject(CKEDITOR.instances) || (Object.keys(CKEDITOR.instances).length === 1 && CKEDITOR.instances[instanceToDestroy] !== undefined)) {
                 // Hide controls
-                $(dialog).find('.form-editor-controls').toggleClass('d-none', true);
+                $(dialog).find('.form-editor-controls-dimensions').toggleClass('d-none', true);
             }
         }
     };
@@ -1377,7 +1377,7 @@ let formHelpers = function() {
                 html: '<i class="fas fa-copy"></i>',
                 type: 'button',
                 title: editorsTrans.copyToClipboard,
-                'data-container': '#properties-panel',
+                'data-container': '.properties-panel',
                 class: 'btn btn-sm copyTextAreaButton',
                 click: function() {
                     const $input = $(el);
@@ -1417,11 +1417,14 @@ let formHelpers = function() {
 
             // Handler for updating the tooltip message.
             $newButton.bind('copied', function(event, message) {
-                $(this).attr('title', message)
-                    .tooltip('fixTitle')
-                    .tooltip('show')
-                    .attr('title', editorsTrans.copyToClipboard)
-                    .tooltip('fixTitle');
+                const $self = $(this);
+                $self.tooltip('hide')
+                    .attr('data-original-title', message)
+                    .tooltip('show');
+
+                setTimeout(function() {
+                    $self.tooltip('hide').attr('data-original-title', editorsTrans.copyToClipboard);
+                }, 1000);
             });
             
             // Add button to the text area

@@ -170,6 +170,8 @@
         // Callback for the media form
         // Fired when the media form opens
         function campaignAssignLayoutsFormOpen(dialog) {
+            // Layout element template
+            var layoutElementTemplate = Handlebars.compile($("#campaign-assign-layout").html());
 
             // Convert our filter form tags inputs into actual tag inputs
             $(dialog).find("#tags").tagsinput();
@@ -179,6 +181,33 @@
 
             // Assignment table
             var $layoutAssignments = $("#layoutAssignments");
+
+            var $layoutAssignSortable = $("#LayoutAssignSortable");
+
+            // Update all the layout element positions
+            var updateSortablePositions = function() {
+                var layoutElements = $layoutAssignSortable.find('li');
+
+                layoutElements.each(function(idx, el) {
+                    $(el).find('.layout-order').html(idx+1);
+                })
+            };
+
+            // Populate layouts
+            var layoutsArray = $layoutAssignSortable.data('layouts');
+            for (layoutIndex = 0; layoutIndex < layoutsArray.length; layoutIndex++) {
+                var layout = layoutsArray[layoutIndex];
+
+                // Append to our layouts list
+                var newItem = layoutElementTemplate({
+                    index: (layoutIndex + 1),
+                    layoutId: layout.layoutId,
+                    layoutName: layout.layout,
+                    locked: layout.locked
+                });
+
+                $(newItem).appendTo("#LayoutAssignSortable");
+            }
 
             // Layout DataTable
             var layoutTable = $layoutAssignments.DataTable({ "language": dataTablesLanguage,
@@ -246,47 +275,35 @@
                     var data = layoutTable.row($(this).closest("tr")).data();
 
                     // Append to our layouts list
-                    // Construct a new item for the assigned box
-                    var newItem = $("<li/>", {
-                        "text": data.layout,
-                        "data-layout-id": data.layoutId,
-                        "data-display-order": $("#LayoutAssign li").length,
-                        "class": "btn btn-sm btn-white"
-                    });
+                    var newItem = layoutElementTemplate({
+                        index: ($("#LayoutAssignSortable").find('li').length + 1),
+                        layoutId: data.layoutId,
+                        layoutName: data.layout,
+                        locked: false
+                    }); 
 
-                    newItem.appendTo("#LayoutAssignSortable");
-
-                    // Add a span to that new item
-                    $("<span/>", {
-                        "class": "fa fa-minus",
-                        click: function(){
-                            $(this).parent().remove();
-                        }
-                    }).appendTo(newItem);
+                    $(newItem).appendTo("#LayoutAssignSortable");
                 });
             });
             layoutTable.on('processing.dt', dataTableProcessing);
 
             // Make our little list sortable
-            var $layoutAssignSortable = $("#LayoutAssignSortable");
             $layoutAssignSortable.sortable({
-                items: "li:not(.ui-state-disabled)"
+                cancel: ".ui-state-disabled",
+                update: function( event, ui ) {
+                    updateSortablePositions();
+                }
             });
 
             // Bind to the existing items in the list
-            $layoutAssignSortable.find('li span').on("click", function () {
+            $layoutAssignSortable.on('click', '.layout-remove', function () {
                 $(this).parent().remove();
+                updateSortablePositions();
             });
 
             // Bind the filter form
             $(".layoutAssignFilterOptions").find("input, select").change(function() {
                 layoutTable.ajax.reload();
-            });
-            
-            // Get the original sortable positions
-            container.data().originalLayoutPositions = [];
-            $layoutAssignSortable.find("li").each(function(){
-                container.data().originalLayoutPositions.push($(this).data("layoutId"));
             });
         }
 
@@ -300,88 +317,36 @@
         }
         
         function layoutAssignSubmit($form) {
-            
-            // Collect our media
-            var container = $("#LayoutAssign");
-            
-            var originalLayoutPositions = container.data().originalLayoutPositions;
-            var originalPositionsLength = originalLayoutPositions.length;
-            
-            var finalLayoutPositions = [];
-            
             // Get the final sortable positions
-            finalLayoutPositions = [];
+            var finalLayoutPositions = [];
             $("#LayoutAssignSortable").find("li").each(function(){
                 finalLayoutPositions.push($(this).data("layoutId"));
             });
-            
-            // Build an array of id's to assign and an array to unassign
-            var assign = [];
-            var unassign = [];
-            
-            for (var i = 0; i < finalLayoutPositions.length; i++) {
-                var elem = finalLayoutPositions[i];
-                var finalPosition = i;
 
-                // Search for the element on the original layout
-                if (originalLayoutPositions.indexOf(elem) !== -1) {
-                    
-                    var originalPosition = originalLayoutPositions.indexOf(elem);
+            // Send flag to manage layouts
+            $('<input>').attr({
+                type: 'hidden',
+                name: 'manageLayouts'
+            }).val(1).appendTo($form);
 
-                    // If the original position is different from the final, make the swap
-                    if (originalPosition !== finalPosition) {
-                        // Remove from the original position
-                        unassign.push({layoutId: elem, displayOrder: originalPosition+1});
-                        
-                        // Assign to the new position
-                        assign.push({layoutId: elem, displayOrder: finalPosition+1});
-                    }
-                    
-                    // Clean picked element from the original list
-                    originalLayoutPositions[originalPosition] = -1;
-                } else {
-                    // We can't find this element, so we add it to the assign list.
-                    assign.push({layoutId: elem, displayOrder: finalPosition+1});
-                }
-            }
-            
-            // Remove all non processed elements
-            for (i = 0; i < originalLayoutPositions.length; i++) {
-                if (originalLayoutPositions[i] !== -1) {
-                    var elem = originalLayoutPositions[i];
-
-                    // Remove from the original position
-                    unassign.push({layoutId: elem, displayOrder: i+1});
-                }
-            }
-
-            // Append assigned layout values to the form as an input            
-            $form.find('#assignLayouts').empty();
-            for (i = 0; i < assign.length; i++) {
+            //Build the array of layouts
+            var layoutOrderArray = [];
+            for (i = 0; i < finalLayoutPositions.length; i++) {
                 $('<input>').attr({
                     type: 'hidden',
-                    name: 'layoutId[' + i + '][layoutId]'
-                }).val(assign[i].layoutId).appendTo($form.find('#assignLayouts'));
-
-                $('<input>').attr({
-                    type: 'hidden',
-                    name: 'layoutId[' + i + '][displayOrder]'
-                }).val(assign[i].displayOrder).appendTo($form.find('#assignLayouts'));
-            }
-
-            // Append unassigned layout values to the form as an input
-            $form.find('#unassignLayouts').empty();
-            for (i = 0; i < unassign.length; i++) {
-                $('<input>').attr({
-                    type: 'hidden',
-                    name: 'unassignLayoutId[' + i + '][layoutId]'
-                }).val(unassign[i].layoutId).appendTo($form.find('#unassignLayouts'));
-
-                $('<input>').attr({
-                    type: 'hidden',
-                    name: 'unassignLayoutIdy[' + i + '][displayOrder]'
-                }).val(unassign[i].displayOrder).appendTo($form.find('#unassignLayouts'));
+                    name: 'layoutIds[' + i + ']'
+                }).val(finalLayoutPositions[i]).appendTo($form.find('#assignLayouts'));
             }
         }
     </script>
+
+    {% verbatim %}
+        <script type="text/x-handlebars-template" id="campaign-assign-layout">
+            <li data-layout-id="{{ layoutId }}" class="btn btn-sm btn-white {{#if locked}}ui-state-disabled{{/if}}">
+                <div class="float-left text-left layout-order">{{index}}</div>
+                <div class="layout-name float-left" title="{{ layoutName }}">{{ layoutName }}</div>
+                <div class="layout-icon fa {{#if locked}}fa-lock{{else}}fa-minus layout-remove{{/if}}"></div>
+            </li>
+        </script>
+    {% endverbatim %}
 {% endblock %}

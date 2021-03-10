@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Entity\Permission;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
@@ -406,6 +405,14 @@ class Campaign extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="layoutIds",
+     *      in="formData",
+     *      description="An array of layoutIds to assign to this Campaign, in order.",
+     *      type="array",
+     *      @SWG\Items(type="integer"),
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -420,7 +427,6 @@ class Campaign extends Base
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
      * @throws ControllerNotImplemented
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -440,10 +446,21 @@ class Campaign extends Base
             $campaign->permissionsFolderId = 1;
         }
 
-        $campaign->save();
+        // Assign layouts?
+        foreach ($sanitizedParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
+            // Check permissions.
+            $layout = $this->layoutFactory->getById($layoutId);
 
-        // Assign layouts
-        $this->assignLayout($request, $response, $campaign->campaignId);
+            if (!$this->getUser()->checkViewable($layout)) {
+                throw new AccessDeniedException(__('You do not have permission to assign this Layout'));
+            }
+
+            // Assign.
+            $campaign->assignLayout($layout);
+        }
+
+        // All done, save.
+        $campaign->save();
 
         // Return
         $this->getState()->hydrate([
@@ -541,6 +558,21 @@ class Campaign extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="manageLayouts",
+     *      in="formData",
+     *      description="Flag indicating whether to manage layouts or not. Default to no.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="layoutIds",
+     *      in="formData",
+     *      description="An array of layoutIds to assign to this Campaign, in order.",
+     *      type="array",
+     *      @SWG\Items(type="integer"),
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -565,6 +597,31 @@ class Campaign extends Base
             $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
         }
 
+        // Assign layouts?
+        if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {
+            // Fully decorate our Campaign
+            $campaign->setChildObjectDependencies($this->layoutFactory);
+
+            // Remove all we've currently got assigned, keeping track of them for sharing check
+            $originalLayoutAssignments = array_map(function ($element) {
+                return $element->layoutId;
+            }, $campaign->getLayouts());
+
+            $campaign->unassignAllLayouts();
+
+            foreach ($parsedRequestParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
+                // Check permissions.
+                $layout = $this->layoutFactory->getById($layoutId);
+
+                if (!$this->getUser()->checkViewable($layout) && !in_array($layoutId, $originalLayoutAssignments)) {
+                    throw new AccessDeniedException(__('You are trying to assign a Layout that is not shared with you.'));
+                }
+
+                // Assign.
+                $campaign->assignLayout($layout);
+            }
+        }
+
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $campaign->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
             $campaign->save([
@@ -575,9 +632,6 @@ class Campaign extends Base
                 'saveTags' => false
             ]);
         }
-
-        // Assign layouts
-        $this->assignLayout($request, $response, $campaign->campaignId);
 
         // Return
         $this->getState()->hydrate([
@@ -713,21 +767,6 @@ class Campaign extends Base
     }
 
     /**
-     * Model to use for supplying key/value pairs to arrays
-     * @SWG\Definition(
-     *  definition="LayoutAssignmentArray",
-     *  @SWG\Property(
-     *      property="layoutId",
-     *      type="integer"
-     *  ),
-     *  @SWG\Property(
-     *      property="displayOrder",
-     *      type="integer"
-     *  )
-     * )
-     */
-
-    /**
      * Assigns a layout to a Campaign
      * @param Request $request
      * @param Response $response
@@ -743,8 +782,8 @@ class Campaign extends Base
      *  path="/campaign/layout/assign/{campaignId}",
      *  operationId="campaignAssignLayout",
      *  tags={"campaign"},
-     *  summary="Assign Layouts",
-     *  description="Assign Layouts to a Campaign",
+     *  summary="Assign Layout",
+     *  description="Assign a Layout to a Campaign. Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.",
      *  @SWG\Parameter(
      *      name="campaignId",
      *      in="path",
@@ -755,22 +794,9 @@ class Campaign extends Base
      *  @SWG\Parameter(
      *      name="layoutId",
      *      in="formData",
-     *      description="Array of Layout ID/Display Orders to Assign",
-     *      type="array",
-     *      required=true,
-     *      @SWG\Items(
-     *          ref="#/definitions/LayoutAssignmentArray"
-     *      )
-     *   ),
-     *  @SWG\Parameter(
-     *      name="unassignLayoutId",
-     *      in="formData",
-     *      description="Array of Layout ID/Display Orders to unassign",
-     *      type="array",
-     *      required=false,
-     *      @SWG\Items(
-     *          ref="#/definitions/LayoutAssignmentArray"
-     *      )
+     *      description="Layout ID to Assign: Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.",
+     *      type="integer",
+     *      required=true
      *   ),
      *  @SWG\Response(
      *      response=204,
@@ -795,144 +821,28 @@ class Campaign extends Base
 
         $campaign->setChildObjectDependencies($this->layoutFactory);
 
-        // Track whether we've made any changes.
-        $changesMade = false;
-
-        // Check our permissions to see each one
-        $layouts = $request->getParam('layoutId', null);
-        $layouts = is_array($layouts) ? $layouts : [];
-
-        $this->getLog()->debug(sprintf('There are %d Layouts to assign', count($layouts)));
-
-        foreach ($layouts as $object) {
-            $sanitizedObject = $this->getSanitizer($object);
-            $layout = $this->layoutFactory->getById($sanitizedObject->getInt('layoutId'));
-
-            // Check to see if this layout is already assigned
-            // if it is, then we have permission to move it around
-            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout))
-                throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
-
-            // Make sure we're not a draft
-            if ($layout->isChild())
-                throw new InvalidArgumentException(__('Cannot assign a Draft Layout to a Campaign'), 'layoutId');
-
-            // Make sure this layout is not a template - for API, in web ui templates are not available for assignment
-            $tags = $layout->tags;
-            $tagsArray = explode(',', $tags);
-
-            foreach ($tagsArray as $tag) {
-                if ($tag === 'template') {
-                    throw new InvalidArgumentException(__('Cannot assign a Template to a Campaign'), 'layoutId');
+        // Get the layout we want to add
+        $params = $this->getSanitizer($request->getParams());
+        $layout = $this->layoutFactory->getById(
+            $params->getInt('layoutId', [
+                'throw' => function () {
+                    throw new InvalidArgumentException(__('Please select a Layout to assign.'), 'layoutId');
                 }
-            }
+            ])
+        );
 
-            // Set the Display Order
-            $layout->displayOrder = $sanitizedObject->getInt('displayOrder');
-
-            // Assign it
-            $campaign->assignLayout($layout);
-
-            $changesMade = true;
+        if (!$this->getUser()->checkViewable($layout)) {
+            throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
         }
 
-        // Run through the layouts to unassign
-        $layouts = $request->getParam('unassignLayoutId', null);
-        $layouts = is_array($layouts) ? $layouts : [];
-        
-        $this->getLog()->debug(sprintf('There are %d Layouts to unassign', count($layouts)));
-        
-        foreach ($layouts as $object) {
-            $sanitizedObject = $this->getSanitizer($object);
-            $layout = $this->layoutFactory->getById($sanitizedObject->getInt('layoutId'));
-
-            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout)) {
-                throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
-            }
-
-            // Set the Display Order
-            $layout->displayOrder = $sanitizedObject->getInt('displayOrder');
-
-            // Unassign it
-            $campaign->unassignLayout($layout);
-
-            $changesMade = true;
-        }
-
-        // Save the campaign
-        if ($changesMade) {
-            $campaign->save(['validate' => false, 'saveTags' => false]);
-        }
+        // Assign to the campaign
+        $campaign->assignLayout($layout);
+        $campaign->save(['validate' => false, 'saveTags' => false]);
 
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Assigned Layouts to %s'), $campaign->campaign)
-        ]);
-
-        return $this->render($request, $response);
-    }
-
-    /**
-     * Unassign a layout to a Campaign
-     * @param Request $request
-     * @param Response $response
-     * @param $id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws ControllerNotImplemented
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     */
-    public function unassignLayout(Request $request, Response $response, $id)
-    {
-        $campaign = $this->campaignFactory->getById($id);
-
-        if (!$this->getUser()->checkEditable($campaign)) {
-            throw new AccessDeniedException();
-        }
-
-        // Make sure this is a non-layout specific campaign
-        if ($campaign->isLayoutSpecific == 1) {
-            throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'),
-                'campaignId');
-        }
-
-        $campaign->setChildObjectDependencies($this->layoutFactory);
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        $layouts = $sanitizedParams->getIntArray('layoutId');
-
-        if (count($layouts) <= 0) {
-            throw new InvalidArgumentException(__('Layouts not provided'), 'layoutId');
-        }
-
-        // Check our permissions to see each one
-        $layouts = $request->getParam('layoutId', null);
-        $layouts = is_array($layouts) ? $layouts : [];
-        foreach ($layouts as $object) {
-            $sanitizedObject = $this->getSanitizer($object);
-            $layout = $this->layoutFactory->getById($sanitizedObject->getInt('layoutId'));
-
-            if (!$this->getUser()->checkViewable($layout) && !$campaign->isLayoutAssigned($layout)) {
-                throw new AccessDeniedException(__('You do not have permission to assign the provided Layout'));
-            }
-
-            // Set the Display Order
-            $layout->displayOrder = $sanitizedParams->getInt('displayOrder', $object);
-
-            // Unassign it
-            $campaign->unassignLayout($layout);
-        }
-
-        $campaign->save(['validate' => false]);
-
-        // Return
-        $this->getState()->hydrate([
-            'httpStatus' => 204,
-            'message' => sprintf(__('Unassigned Layouts from %s'), $campaign->campaign)
         ]);
 
         return $this->render($request, $response);

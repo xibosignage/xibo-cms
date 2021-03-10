@@ -8,7 +8,7 @@ $fa-font-path: "~font-awesome/fonts";
 // CSS
 /* Form Editor Controls */
 .form-editor-controls {
-    padding: 5px 10px;
+    padding: 6px;
     background: $form-editor-controls-bg-color;
     color: $form-editor-controls-fg-color;
 }
@@ -25,11 +25,17 @@ $fa-font-path: "~font-awesome/fonts";
     margin: 0 6px;
 }
 
+.form-editor-controls select {
+    padding: 4px;
+    height: 28px;
+}
+
 /* Tab System */
 .form-container .nav>li>a {
     color: $properties-panel-nav-fg-color;
     background-color: lighten($properties-panel-nav-fg-color, 30%);
-    @include border-radius(4px);
+    @include border-radius(0);
+    border: 1px solid $properties-panel-nav-active-bg-color !important;
     padding: 5px 7px;
 }
 
@@ -38,8 +44,8 @@ $fa-font-path: "~font-awesome/fonts";
     background-color: $properties-panel-nav-active-fg-color !important;
 }
 
-.form-container .nav>li.active>a,
-.form-container .nav>li.active>a:hover {
+.form-container .nav>li>a.active,
+.form-container .nav>li>a.active:hover {
     background-color: $properties-panel-nav-active-bg-color !important;
     color: $properties-panel-nav-active-fg-color;
 }
