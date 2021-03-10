@@ -64,6 +64,10 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     z-index:  3200;
 }
 
+.inner-modal {
+    z-index: 3101;
+}
+
 .playlist-widget-preview {
     z-index: $playlist-editor-z-index-background;
 

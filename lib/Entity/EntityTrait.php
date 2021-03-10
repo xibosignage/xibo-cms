@@ -170,7 +170,7 @@ trait EntityTrait
      * @param bool $jsonEncodeArrays
      * @return array
      */
-    public function getChangedProperties($jsonEncodeArrays = false, $datesToFormat = [])
+    public function getChangedProperties($jsonEncodeArrays = false)
     {
         $changedProperties = [];
 

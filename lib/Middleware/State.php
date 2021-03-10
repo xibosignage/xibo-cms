@@ -175,7 +175,7 @@ class State implements Middleware
         });
 
         // Set some public routes
-        $request = $request->withAttribute('publicRoutes', [
+        $request = $request->withAttribute('publicRoutes', array_merge($request->getAttribute('publicRoutes', []), [
             '/login',
             '/login/forgotten',
             '/clock',
@@ -189,7 +189,7 @@ class State implements Middleware
             '/tfa',
             '/error',
             '/notFound'
-        ]);
+        ]));
 
         // Setup the translations for gettext
         Translate::InitLocale($container->get('configService'));
@@ -298,6 +298,12 @@ class State implements Middleware
                 if (method_exists($object, 'setApp')) {
                     $object->setApp($app);
                 }
+
+                // Add any new routes from custom middleware
+                if (method_exists($object, 'addRoutes')) {
+                    $object->addRoutes();
+                }
+
                 $app->add($object);
             }
         }
@@ -1066,7 +1072,8 @@ class State implements Middleware
                     $c->get('view'),
                     $c,
                     $c->get('dataSetFactory'),
-                    $c->get('folderFactory')
+                    $c->get('folderFactory'),
+                    $c->get('dayPartFactory')
                 );
             },
             '\Xibo\Controller\UserGroup' => function(ContainerInterface $c) {

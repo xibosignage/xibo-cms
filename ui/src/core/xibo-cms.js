@@ -1516,23 +1516,6 @@ function XiboFormRender(sourceObj, data) {
                     $('#folder-tree-form-modal').remove();
                 }
 
-                // if there is no modal appended to body and we are on a form that needs this modal, then append it
-                if ($('#folder-tree-form-modal').length === 0 && $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').length && $('#select-folder-button').length) {
-                    // compile tree folder modal and append it to Form
-                    var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-                    var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
-
-                    // append to body, instead of the form as it was before to make it more bootstrap friendly
-                    $('body').append(folderTreeModal(treeConfig));
-
-                    $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
-                        // Fix for 2nd/overlay modal
-                        $('.modal:visible').length && $(document.body).addClass('modal-open');
-                        
-                        $(this).data('bs.modal', null);
-                    });
-                }
-
                 // Call Xibo Init for this form
                 XiboInitialise("#"+dialog.attr("id"));
 
@@ -1543,7 +1526,7 @@ function XiboFormRender(sourceObj, data) {
                         $('#' + dialog.find('.XiboForm').attr('id') + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
                     }
 
-                    initJsTreeAjax($("#folder-tree-form-modal").find('#container-folder-form-tree'), dialog.find('.XiboForm').attr('id'), true, 600);
+                    initJsTreeAjax('#container-folder-form-tree', dialog.find('.XiboForm').attr('id'), true, 600);
                 }
 
                 // Do we have to call any functions due to this success?
@@ -2877,21 +2860,38 @@ function destroyDatePicker($element) {
     $element.parent().find('.date-open-button').off('click');
 }
 
-function initJsTreeAjax(container, table, isForm, ttl)
+function initJsTreeAjax(container, id, isForm, ttl)
 {
     // Default values
     isForm = (typeof isForm == 'undefined') ? false : isForm;
     ttl = (typeof ttl == 'undefined') ? false : ttl;
     
+
+    // if there is no modal appended to body and we are on a form that needs this modal, then append it
+    if ($('#folder-tree-form-modal').length === 0 && $('#' + id + ' #folderId').length && $('#select-folder-button').length) {
+        // compile tree folder modal and append it to Form
+        var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+        var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+
+        // append to body, instead of the form as it was before to make it more bootstrap friendly
+        $('body').append(folderTreeModal(treeConfig));
+
+        $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+            // Fix for 2nd/overlay modal
+            $('.modal:visible').length && $(document.body).addClass('modal-open');
+            $(this).data('bs.modal', null);
+        });
+    }
+
     var state = {};
     if ($(container).length) {
 
         // difference here is, that for grid trees we don't set ttl at all
         // add/edit forms have short ttl, multi select will be cached for couple of minutes
         if (isForm) {
-            state = {"key" : table + "_folder_tree", "ttl": ttl};
+            state = {"key" : id + "_folder_tree", "ttl": ttl};
         } else {
-            state = {"key" : table + "_folder_tree"}
+            state = {"key" : id + "_folder_tree"}
         }
 
         $(container).jstree({
@@ -2988,7 +2988,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
             // if we are on the form, we need to select tree node (currentWorkingFolder)
             // this is set/passed to twigs on render time
             if (isForm) {
-                var folderIdInputSelector = '#'+table+' #folderId';
+                var folderIdInputSelector = '#'+id+' #folderId';
 
                 // for upload forms
                 if ($(folderIdInputSelector).length === 0) {
@@ -3090,7 +3090,7 @@ function initJsTreeAjax(container, table, isForm, ttl)
 
         $(container).on("changed.jstree", function (e, data) {
             var selectedFolderId = data.selected[0];
-            var folderIdInputSelector = (isForm) ? '#'+table+' #folderId' : '#folderId';
+            var folderIdInputSelector = (isForm) ? '#'+id+' #folderId' : '#folderId';
             var node = $(container).jstree("get_selected", true);
 
             // for upload and multi select forms.
