@@ -1026,7 +1026,7 @@ class Soap
                         $layout->setAttribute("priority", $is_priority);
                         $layout->setAttribute("syncEvent", $syncKey);
                         $layout->setAttribute("shareOfVoice", $row['shareOfVoice'] ?? 0);
-                        $layout->setAttribute("duration", $row['duration'] ?? 0);
+                        $layout->setAttribute('duration', $row['duration'] ?? 0);
                         $layout->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
                         $layout->setAttribute("geoLocation", $row['geoLocation'] ?? null);
 
@@ -1083,7 +1083,7 @@ class Soap
                         $overlay->setAttribute("todt", $toDt);
                         $overlay->setAttribute("scheduleid", $scheduleId);
                         $overlay->setAttribute("priority", $is_priority);
-                        $overlay->setAttribute("duration", $row['duration'] ?? 0);
+                        $overlay->setAttribute('duration', $row['duration'] ?? 0);
                         $overlay->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
                         $overlay->setAttribute("geoLocation", $row['geoLocation'] ?? null);
 

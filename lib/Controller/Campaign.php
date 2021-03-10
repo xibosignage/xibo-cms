@@ -603,7 +603,7 @@ class Campaign extends Base
             $campaign->setChildObjectDependencies($this->layoutFactory);
 
             // Remove all we've currently got assigned, keeping track of them for sharing check
-            $originalLayoutAssignments = array_map(function($element) {
+            $originalLayoutAssignments = array_map(function ($element) {
                 return $element->layoutId;
             }, $campaign->getLayouts());
 
@@ -825,7 +825,7 @@ class Campaign extends Base
         $params = $this->getSanitizer($request->getParams());
         $layout = $this->layoutFactory->getById(
             $params->getInt('layoutId', [
-                'throw' => function() {
+                'throw' => function () {
                     throw new InvalidArgumentException(__('Please select a Layout to assign.'), 'layoutId');
                 }
             ])
