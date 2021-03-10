@@ -54,9 +54,9 @@
             onTriggerChange(dialog);
         })
 
-        onTargetRegionChange(dialog);
-        $(dialog).find("#targetId, #actionType").on('change', function() {
-            onTargetRegionChange(dialog);
+        onTargetWidgetChange(dialog);
+        $(dialog).find("#widgetId, #actionType, #target").on('change', function() {
+            onTargetWidgetChange(dialog);
         })
 
         // On modal close, reload layout designer data
@@ -74,6 +74,9 @@
 
         if (target === 'region') {
             targetId.removeClass("d-none");
+            targetId.find('select').removeAttr('disabled');
+            targetId.find('input[type="hidden"').remove();
+            
         } else {
             $('#targetId').val('');
             targetId.addClass("d-none");
@@ -123,39 +126,51 @@
         }
     }
 
-    function onTargetRegionChange(dialog) {
+    function onTargetWidgetChange(dialog) {
         var actionType = $(dialog).find('#actionType').val();
         var target = $(dialog).find("#target").val();
-        var targetRegion = $(dialog).find("#targetId").val();
+        var widgetId = $(dialog).find("#widgetId").val();
+        var $targetId = $(dialog).find('#targetId');
+        var $targetIdContainer = $(dialog).find('#targetId');
+
+        // Remove warning card
+        $(dialog).find('.nav-control-widget .card.text-danger').remove();
         
-        if (actionType === 'navWidget' && target == 'region' && targetRegion != '') {
-            // Filter widgets based on "targetRegion" region!');
-            $("#widgetId").find('option').each(function() {
-                let widgetId = $(this).val();
+        if (actionType === 'navWidget' && target == 'region' && widgetId != undefined) {
+            // Set target value to empty
+            $targetId.val('');
 
-                // If there is no widget if, skip this element
-                if(widgetId == '') {
-                    return true;
-                }
+            // Disable target region ( since we are setting it programmatically )
+            $targetId.attr('disabled', 'disabled');
+            
+            // Remove previous temporary element if exists
+            $targetIdContainer.find('input[type="hidden"').remove();
 
-                // Get layout designer element
-                let widget = lD.getElementByTypeAndId('widget', 'widget_' + lD.layout.drawer.regionId + '_' + widgetId, 'drawer');
+            if(widgetId == '') {
+                return true;
+            }
 
-                if(widget == undefined) {
-                    return true;
-                }
+            // Get layout designer element
+            var widget = lD.getElementByTypeAndId('widget', 'widget_' + lD.layout.drawer.regionId + '_' + widgetId, 'drawer');
+            var widgetTargetRegion = widget.targetRegionId;
 
-                if(widget.targetRegionId != targetRegion) {
-                    // Hide current widget
-                    $(this).hide();
+            if(widgetTargetRegion == undefined) {
+                // Show warning to select a target region in the drawer
+                $(dialog).find('.nav-control-widget').append($('<div class="card bg-light p-2 text-danger offset-sm-2 col-sm-10 text-center form-error">{{ "Select a target region for this widget in the layout designer drawer!"|trans }}</div>'));
+            } else {
+                if($targetId.find('option[value="' + widgetTargetRegion + '"]').length > 0) {
+                    // Change the target value to the target region for the selected widget
+                    $targetId.val(widgetTargetRegion);
                 } else {
-                    // Show current widget
-                    $(this).show();
+                    console.error('{{ "Something went wrong: target region is not available in the current layout"|trans }}');
                 }
-            });
+            }
+
+            // Create a temporary input to submit the disabled select value
+            $targetIdContainer.append('<input type="hidden" name="' + $targetId.attr('name')  + '" value="' + $targetId.val() + '" />');
         } else {
-            // Do nothing or show all widgets
-            $(dialog).find("#widgetId").find('option').show();
+            // Call onTargetChange again to check if we need to reshow the region target
+            onTargetChange(dialog);
         }
     }
 
