@@ -25,18 +25,15 @@ class FixDuplicateTagsMigration extends AbstractMigration
                 $tagIds[] = $row['tagId'];
             }
 
-            // convert the array to comma separated string which we can use in a sql statement
-            $tagIds = "'" .implode("','", $tagIds  ) . "'";
-
             // remove links to the tags we want to remove from lktag tables
-            $this->execute("DELETE FROM `lktagcampaign` WHERE tagId IN ($tagIds)");
-            $this->execute("DELETE FROM `lktagdisplaygroup` WHERE tagId IN ($tagIds)");
-            $this->execute("DELETE FROM `lktaglayout` WHERE tagId IN ($tagIds)");
-            $this->execute("DELETE FROM `lktagmedia` WHERE tagId IN ($tagIds)");
-            $this->execute("DELETE FROM `lktagplaylist` WHERE tagId IN ($tagIds)");
+            $this->execute('DELETE FROM `lktagcampaign` WHERE tagId IN (' . implode(',', $tagIds) .')');
+            $this->execute('DELETE FROM `lktagdisplaygroup` WHERE tagId IN (' . implode(',', $tagIds) .')');
+            $this->execute('DELETE FROM `lktaglayout` WHERE tagId IN (' . implode(',', $tagIds) .')');
+            $this->execute('DELETE FROM `lktagmedia` WHERE tagId IN (' . implode(',', $tagIds) .')');
+            $this->execute('DELETE FROM `lktagplaylist` WHERE tagId IN (' . implode(',', $tagIds) .')');
 
             // finally remove the tag itself from tag table
-            $this->execute("DELETE FROM `tag` WHERE tagId IN ($tagIds)");
+            $this->execute('DELETE FROM `tag` WHERE tagId IN (' . implode(',', $tagIds) .')');
         }
     }
 }
