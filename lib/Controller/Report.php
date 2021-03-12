@@ -816,7 +816,7 @@ class Report extends Base
         ], $sanitizedQueryParams));
 
         foreach ($savedReports as $savedReport) {
-            if (!$this->isApi($request)) {
+            if ($this->isApi($request)) {
                 continue;
             }
 

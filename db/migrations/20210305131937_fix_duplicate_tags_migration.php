@@ -32,12 +32,14 @@ class FixDuplicateTagsMigration extends AbstractMigration
                 $tagsToRemove[] = $row['tagId'];
             }
 
-            // remove links to the tags we want to remove from lktag tables
-            $this->execute('DELETE FROM `lktagcampaign` WHERE tagId IN (' . implode(',', $tagLinksToRemove) .')');
-            $this->execute('DELETE FROM `lktagdisplaygroup` WHERE tagId IN (' . implode(',', $tagLinksToRemove) .')');
-            $this->execute('DELETE FROM `lktaglayout` WHERE tagId IN (' . implode(',', $tagLinksToRemove) .')');
-            $this->execute('DELETE FROM `lktagmedia` WHERE tagId IN (' . implode(',', $tagLinksToRemove) .')');
-            $this->execute('DELETE FROM `lktagplaylist` WHERE tagId IN (' . implode(',', $tagLinksToRemove) .')');
+            if (count($tagLinksToRemove) > 0) {
+                // remove links to the tags we want to remove from lktag tables
+                $this->execute('DELETE FROM `lktagcampaign` WHERE tagId IN (' . implode(',', $tagLinksToRemove) .')');
+                $this->execute('DELETE FROM `lktagdisplaygroup` WHERE tagId IN (' . implode(',', $tagLinksToRemove) .')');
+                $this->execute('DELETE FROM `lktaglayout` WHERE tagId IN (' . implode(',', $tagLinksToRemove) .')');
+                $this->execute('DELETE FROM `lktagmedia` WHERE tagId IN (' . implode(',', $tagLinksToRemove) .')');
+                $this->execute('DELETE FROM `lktagplaylist` WHERE tagId IN (' . implode(',', $tagLinksToRemove) .')');
+            }
 
             // for duplicate tags, find the original (lowest id) and update lktag tables with it
             foreach ($tagLinksToUpdate as $tagId => $tag) {
