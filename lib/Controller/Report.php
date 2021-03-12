@@ -350,7 +350,7 @@ class Report extends Base
         $reportName = $request->getParam('reportName', null);
         $fromDt = $sanitizedParams->getDate('fromDt', ['default' => 0]);
         $toDt = $sanitizedParams->getDate('toDt', ['default' => 0]);
-        $today = Carbon::now()->startOfDay();
+        $today = Carbon::now()->startOfDay()->format('U');
 
         // from and todt should be greater than today
         if (!empty($fromDt)) {
@@ -423,7 +423,7 @@ class Report extends Base
         $reportName = $request->getParam('reportName', null);
         $fromDt = $sanitizedParams->getDate('fromDt', ['default' => 0]);
         $toDt = $sanitizedParams->getDate('toDt', ['default' => 0]);
-        $today = Carbon::now()->startOfDay();
+        $today = Carbon::now()->startOfDay()->format('U');
 
         // from and todt should be greater than today
         if (!empty($fromDt)) {
