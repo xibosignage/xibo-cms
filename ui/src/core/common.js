@@ -34,6 +34,9 @@ module.exports = {
         container.tooltip('dispose').tooltip({
             selector: (enableTooltips) ? '[data-toggle="tooltip"]' : '[data-toggle="tooltip"].tooltip-always-on'
         });
+
+        // Remove rogue/detached tooltips
+        container.find('.tooltip').remove();
     },
 
     /**
