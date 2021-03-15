@@ -71,7 +71,7 @@ class Countdown extends ModuleWidget
             $module->regionSpecific = 1;
             $module->renderAs = 'html';
             $module->schemaVersion = $this->codeSchemaVersion;
-            $module->defaultDuration = 5;
+            $module->defaultDuration = 60;
             $module->settings = [];
             $module->installName = 'countdown';
 
@@ -89,6 +89,7 @@ class Countdown extends ModuleWidget
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-countdown-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-layout-scaler.js')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
     }
 
     /**
