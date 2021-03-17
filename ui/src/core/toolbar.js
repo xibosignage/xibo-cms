@@ -460,6 +460,9 @@ Toolbar.prototype.render = function() {
 
                     // Mark content as selected
                     $(this).parent('.toolbar-pane-content').addClass('selected');
+                    
+                    // Reload tooltips to avoid floating detached elements
+                    app.common.reloadTooltips(app.editorContainer);
                 },
                 stop: function() {
 
@@ -471,6 +474,9 @@ Toolbar.prototype.render = function() {
 
                     // Mark content as unselected
                     $(this).parent('.toolbar-pane-content').removeClass('selected');
+                    
+                    // Reload tooltips to avoid floating detached elements
+                    app.common.reloadTooltips(app.editorContainer);
                 }
             });
         });

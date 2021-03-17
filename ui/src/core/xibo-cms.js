@@ -504,7 +504,7 @@ function dataTableDraw(e, settings) {
 
         // Bind a click event to our table
         if (target.data().initialised == undefined) {
-            target.find("tbody").on("click", "tr", function () {
+            target.find("tbody").off("click", "tr").on("click", "tr", function () {
                 $(this).toggleClass("selected");
                 target.data().initialised = true;
             });
