@@ -274,7 +274,7 @@ function Layout(id, options, preload, layoutPreview) {
         self.allExpired = true;
         
         for (var i = 0; i < self.regionObjects.length; i++) {
-            playLog(4, "debug", "Region " + self.regionObjects[i].id + ": " + self.regionObjects[i].complete, false);
+            playLog(4, "debug", "Region " + self.regionObjects[i].id + " expired? " + self.regionObjects[i].complete, false);
             if (! self.regionObjects[i].complete) {
                 self.allExpired = false;
             }
@@ -366,9 +366,11 @@ function Region(parent, id, xml, options, preload) {
     };
     
     self.end = function() {
+        playLog(8, "debug", "Region " + self.id + " has ended!");
         self.ending = true;
         /* The Layout has finished running */
         /* Do any region exit transition then clean up */
+
         self.exitTransition();
     };
     
@@ -379,11 +381,23 @@ function Region(parent, id, xml, options, preload) {
     
     self.transitionNodes = function(oldMedia, newMedia) {
         /* TODO: Actually support the transition */
-        
-        if (oldMedia == newMedia) {
+
+        var loop =
+            newMedia.options['loop'] == '1' ||
+            (newMedia.region.options['loop'] == '1' && newMedia.region.totalMediaObjects == 1);
+
+        if (oldMedia) {
+            oldMedia.pause();
+        }
+
+        if (oldMedia == newMedia && !loop) {
             return;
         }
-        
+
+        if(loop && oldMedia == newMedia) {
+            oldMedia.reset();
+        }
+
         if (oldMedia) {
             oldMedia.stop();
         }
@@ -546,30 +560,48 @@ function media(parent, id, xml, options, preload) {
             setTimeout(self.region.nextMedia, self.duration * 1000);
         }
     };
+
+    self.reset = function() {
+        playLog(5, "debug", "Reset media " + self.id);
+
+        // Reset video
+        if(self.mediaType == "video") {
+            $("#" + self.containerName + "-vid").get(0).currentTime = 0;
+        }
+
+        // Reset audio
+        if(self.mediaType == "audio") {
+            $("#" + self.containerName + "-aud").get(0).currentTime = 0;
+        }
+
+        // Reset attached audio
+        if(self.attachedAudio) {
+            $("#" + self.containerName + "-attached-aud").get(0).currentTime = 0;
+        }
+    };
+
+    self.pause = function() {
+        // Stop video
+        if(self.mediaType == "video") {
+            $("#" + self.containerName + "-vid").get(0).pause();
+        }
+
+        // Stop audio
+        if(self.mediaType == "audio") {
+            $("#" + self.containerName + "-aud").get(0).pause();
+        }
+
+        // Stop attached audio
+        if(self.attachedAudio) {
+            $("#" + self.containerName + "-attached-aud").get(0).pause();
+        }
+    };
     
     self.stop = function() {
         playLog(5, "debug", "Stop media " + self.id);
 
         // Hide container
         $("#" + self.containerName).css("display", "none");
-
-        // Stop video
-        if(self.mediaType == "video") {
-            $("#" + self.containerName + "-vid").get(0).pause();
-            $("#" + self.containerName + "-vid").get(0).currentTime = 0;
-        }
-
-        // Stop audio
-        if(self.mediaType == "audio") {
-            $("#" + self.containerName + "-aud").get(0).pause();
-            $("#" + self.containerName + "-aud").get(0).currentTime = 0;
-        }
-
-        // Stop attached audio
-        if(self.attachedAudio) {
-            $("#" + self.containerName + "-attached-aud").get(0).pause();
-            $("#" + self.containerName + "-attached-aud").get(0).currentTime = 0;
-        }
     };
     
     /* Build Media Options */
@@ -617,7 +649,7 @@ function media(parent, id, xml, options, preload) {
     // Loop if media has loop, or if region has loop and a single media
     var loop =
         self.options['loop'] == '1' ||
-        (self.region.options['loop'] && self.region.totalMediaObjects == 1);
+        (self.region.options['loop'] == '1' && self.region.totalMediaObjects == 1);
 
     if (self.render == "html" || self.mediaType == "ticker") {
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
