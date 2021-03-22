@@ -529,7 +529,9 @@ class Library extends Base
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'assignable' => $this->getSanitizer()->getInt('assignable'),
             'notPlayerSoftware' => 1,
-            'notSavedReport' => 1
+            'notSavedReport' => 1,
+            'layoutId' => $this->getSanitizer()->getInt('layoutId'),
+            'includeLayoutBackgroundImage' => ($this->getSanitizer()->getInt('layoutId') != null) ? 1 : 0
         ]));
 
         // Add some additional row content

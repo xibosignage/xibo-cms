@@ -243,7 +243,8 @@ class Playlist extends Base
             'playlistId' => $this->getSanitizer()->getInt('playlistId'),
             'ownerUserGroupId' => $this->getSanitizer()->getInt('ownerUserGroupId'),
             'mediaLike' => $this->getSanitizer()->getString('mediaLike'),
-            'regionSpecific' => $this->getSanitizer()->getInt('regionSpecific', 0)
+            'regionSpecific' => $this->getSanitizer()->getInt('regionSpecific', 0),
+            'layoutId' => $this->getSanitizer()->getInt('layoutId')
         ]));
 
         foreach ($playlists as $playlist) {
