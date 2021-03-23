@@ -195,31 +195,31 @@ class CampaignFactory extends BaseFactory
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy);
 
-        if ($this->getSanitizer()->getString('isLayoutSpecific', 0, $filterBy) != -1) {
+        if ($this->getSanitizer()->getInt('isLayoutSpecific', 0, $filterBy) != -1) {
             // Exclude layout specific campaigns
             $body .= " AND `campaign`.isLayoutSpecific = :isLayoutSpecific ";
             $params['isLayoutSpecific'] = $this->getSanitizer()->getString('isLayoutSpecific', 0, $filterBy);
         }
 
-        if ($this->getSanitizer()->getString('campaignId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('campaignId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $body .= " AND `campaign`.campaignId = :campaignId ";
             $params['campaignId'] = $this->getSanitizer()->getString('campaignId', 0, $filterBy);
         }
 
-        if ($this->getSanitizer()->getString('ownerId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('ownerId', 0, $filterBy) != 0) {
             // Join Campaign back onto it again
             $body .= " AND `campaign`.userId = :ownerId ";
             $params['ownerId'] = $this->getSanitizer()->getString('ownerId', 0, $filterBy);
         }
 
-        if ($this->getSanitizer()->getString('layoutId', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('layoutId', 0, $filterBy) != 0) {
             // Filter by Layout
             $body .= " AND `lkcampaignlayout`.layoutId = :layoutId ";
             $params['layoutId'] = $this->getSanitizer()->getString('layoutId', 0, $filterBy);
         }
         
-        if ($this->getSanitizer()->getString('hasLayouts', 0, $filterBy) != 0) {
+        if ($this->getSanitizer()->getInt('hasLayouts', 0, $filterBy) != 0) {
 
             $body .= " AND (
                 SELECT COUNT(*)
@@ -227,7 +227,7 @@ class CampaignFactory extends BaseFactory
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
                 )";
     
-            $body .= ($this->getSanitizer()->getString('hasLayouts', 0, $filterBy) == 1) ? " = 0 " : " > 0";
+            $body .= ($this->getSanitizer()->getInt('hasLayouts', 0, $filterBy) == 1) ? " = 0 " : " > 0";
         }
 
         // Tags

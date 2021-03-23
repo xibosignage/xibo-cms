@@ -720,6 +720,11 @@ class MediaFactory extends BaseFactory
             $body .= '    )
                 AND media.type <> \'module\'
             ';
+
+            if ($this->getSanitizer()->getInt('includeLayoutBackgroundImage', $filterBy) === 1) {
+                $body .= ' OR media.mediaId IN ( SELECT `layout`.backgroundImageId FROM `layout` WHERE `layout`.layoutId = :layoutId ) ';
+            }
+
             $params['layoutId'] = $this->getSanitizer()->getInt('layoutId', $filterBy);
         }
 
