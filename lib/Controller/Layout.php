@@ -1305,7 +1305,7 @@ class Layout extends Base
                     'id' => 'layout_button_media_jump',
                     'linkType' => '_self', 'external' => true,
                     'url' => $this->urlFor('library.view') .'?layoutId=' . $layout->layoutId,
-                    'text' => __('Jump to Medias included on this Layout')
+                    'text' => __('Jump to Media included on this Layout')
                 ];
             }
 
