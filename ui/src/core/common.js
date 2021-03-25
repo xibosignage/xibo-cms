@@ -32,6 +32,7 @@ module.exports = {
         let enableTooltips = (forcedOption != null) ? forcedOption : this.displayTooltips;
 
         container.tooltip('dispose').tooltip({
+            boundary: 'viewport',
             selector: (enableTooltips) ? '[data-toggle="tooltip"]' : '[data-toggle="tooltip"].tooltip-always-on'
         });
 

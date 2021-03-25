@@ -837,7 +837,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 /* Viewer inline editor */
 #layout-editor #inline-editor {
     height: inherit;
-    @include box-shadow(inset $viewer-inline-editor-shadow 0px 0px 10px 0px);
 }
 
 /* Inline Editor Overlay */
