@@ -82,6 +82,9 @@
                                     {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
                                     {{ inline.hidden("folderId") }}
+
+                                    {% set title %}{% trans "Layout ID" %}{% endset %}
+                                    {{ inline.number("layoutId", title, layoutId) }}
                                 </div>
                                 <div class="tab-pane" id="advanced-filter">
 

@@ -1892,7 +1892,7 @@ class LayoutFactory extends BaseFactory
             $sql = 'SELECT display.displayId FROM display INNER JOIN lkdisplaydg ON lkdisplaydg.displayId = display.displayId INNER JOIN displaygroup ON displaygroup.displayGroupId = lkdisplaydg.displayGroupId WHERE displaygroup.displayGroupId = :displayGroupId AND displaygroup.isDisplaySpecific = 1';
 
             foreach ($this->getStore()->select($sql, ['displayGroupId' => $parsedFilter->getInt('activeDisplayGroupId')]) as $row) {
-                $displayId = $row['displayId'];
+                $displayId = $this->getSanitizer($row)->getInt('displayId');
             }
 
             // if we have displayId, get all displayGroups to which the display is a member of
@@ -1900,7 +1900,7 @@ class LayoutFactory extends BaseFactory
                 $sql = 'SELECT displayGroupId FROM lkdisplaydg WHERE displayId = :displayId';
 
                 foreach ($this->getStore()->select($sql, ['displayId' => $displayId]) as $row) {
-                    $displayGroupIds[] = $parsedFilter->getInt($row['displayGroupId']);
+                    $displayGroupIds[] = $this->getSanitizer($row)->getInt('displayGroupId');
                 }
             }
 

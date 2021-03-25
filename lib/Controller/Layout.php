@@ -1507,6 +1507,35 @@ class Layout extends Base
 
             $layout->buttons[] = ['divider' => true];
 
+            if ($this->getUser()->featureEnabled('playlist.view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_playlist_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor($request,'playlist.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Playlists included on this Layout')
+                ];
+            }
+
+            if ($this->getUser()->featureEnabled('campaign.view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_campaign_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor($request,'campaign.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Campaigns containing this Layout')
+                ];
+            }
+
+            if ($this->getUser()->featureEnabled('library.view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_media_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor($request,'library.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Media included on this Layout')
+                ];
+            }
+
+            $layout->buttons[] = ['divider' => true];
+
             // Only proceed if we have edit permissions
             if ($this->getUser()->featureEnabled('layout.modify')
                 && $this->getUser()->checkEditable($layout)

@@ -214,7 +214,8 @@ class Campaign extends Base
             'isLayoutSpecific' => $parsedParams->getInt('isLayoutSpecific'),
             'retired' => $parsedParams->getInt('retired'),
             'folderId' => $parsedParams->getInt('folderId'),
-            'totalDuration' => $parsedParams->getInt('totalDuration', ['default' => 1])
+            'totalDuration' => $parsedParams->getInt('totalDuration', ['default' => 1]),
+            'layoutId' => $parsedParams->getInt('layoutId')
         ];
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];
