@@ -2043,11 +2043,6 @@ class Layout implements \JsonSerializable
         // Get my parent for later
         $parent = $this->layoutFactory->loadById($this->parentId);
 
-        $this->getStore()->isolated('UPDATE `layout` SET status = 5 WHERE layoutId = :layoutId', [
-            'layoutId' => $this->layoutId
-        ]);
-        $this->getStore()->commitIfNecessary('isolated');
-
         // I am the draft, so I clear my parentId, and set the parentId of my parent, to myself (swapping us)
         // Make me the parent.
         $this->getStore()->update('UPDATE `layout` SET parentId = NULL WHERE layoutId = :layoutId', [
@@ -2135,7 +2130,7 @@ class Layout implements \JsonSerializable
 
         // Nullify my parentId (I no longer have a parent)
         $this->parentId = null;
-
+        $this->status = 5;
         // Add a layout history
         $this->addLayoutHistory();
 
