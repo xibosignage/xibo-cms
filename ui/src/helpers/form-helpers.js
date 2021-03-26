@@ -550,10 +550,17 @@ let formHelpers = function() {
         } else if(this.namespace.mainRegion != undefined) {
             region = this.namespace.mainRegion;
         } else if(this.namespace.selectedObject.type == 'widget') {
-            if(this.namespace.selectedObject.drawerWidget) {
-                region = this.namespace.getElementByTypeAndId('drawer');
+            const widget = this.namespace.selectedObject;
+            if(widget.drawerWidget) {
+
+                // Use target region to be used as scale 
+                if(widget.targetRegionId != undefined && this.namespace.layout.regions['region_' + widget.targetRegionId] != undefined) {
+                    region = this.namespace.layout.regions['region_' + widget.targetRegionId];
+                } else {
+                    region = this.namespace.getElementByTypeAndId('drawer');
+                }
             } else {
-                region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.regionId);
+                region = this.namespace.getElementByTypeAndId('region', widget.regionId);
             }
         } else if(this.namespace.selectedObject.type == 'region') {
             region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.id);
@@ -629,12 +636,18 @@ let formHelpers = function() {
                 if(!inlineHideBGColour) {
                     $(".cke_textarea_inline").css('background', backgroundColor);
                 }
+
+                // Calculate inner shadow ( based on scale )
+                let innerShadowWidth = (iframeBorderWidth / scale) + 'px';
                 
                 $(".cke_textarea_inline").css('transform', 'scale(' + scale + ')');
                 $(".cke_textarea_inline").css('transform-origin', '0 0');
                 $(".cke_textarea_inline").css('word-wrap', 'inherit');
                 $(".cke_textarea_inline").css('overflow', 'hidden');
                 $(".cke_textarea_inline").css('line-height', 'normal');
+                $(".cke_textarea_inline").css('-moz-box-shadow', 'inset 0 0 ' + innerShadowWidth + ' ' + innerShadowWidth  + ' red');
+                $(".cke_textarea_inline").css('-webkit-box-shadow', 'inset 0 0 ' + innerShadowWidth + ' ' + innerShadowWidth  + ' red');
+                $(".cke_textarea_inline").css('box-shadow', 'inset 0 0 ' + innerShadowWidth + ' ' + innerShadowWidth  + ' red');
                 $(".cke_textarea_inline p").css('margin', '0 0 16px');
                 $(".cke_textarea_inline").show();
             } else {
