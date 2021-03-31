@@ -783,7 +783,11 @@ class Soap
             $this->getLog()->debug('Removing ' . count($rfIds) . ' from requiredfiles');
 
             try {
-                $this->getStore()->updateWithDeadlockLoop('DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')', $rfIds);
+                // Execute this on the default connection
+                $this->getStore()->updateWithDeadlockLoop('DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')',
+                    $rfIds,
+                    'default'
+                );
             } catch (DeadlockException $deadlockException) {
                 $this->getLog()->error('Deadlock when deleting required files - ignoring and continuing with request');
             }
