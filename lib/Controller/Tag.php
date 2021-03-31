@@ -217,7 +217,8 @@ class Tag extends Base
             'useRegexForName' => $sanitizedQueryParams->getCheckbox('useRegexForName'),
             'isSystem' => $sanitizedQueryParams->getCheckbox('isSystem'),
             'isRequired' => $sanitizedQueryParams->getCheckbox('isRequired'),
-            'haveOptions' => $sanitizedQueryParams->getCheckbox('haveOptions')
+            'haveOptions' => $sanitizedQueryParams->getCheckbox('haveOptions'),
+            'allTags' => $sanitizedQueryParams->getInt('allTags')
         ];
 
         $tags = $this->tagFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
