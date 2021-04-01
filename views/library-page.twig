@@ -94,6 +94,9 @@
                             {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
 
                             {{ inline.hidden("folderId") }}
+
+                            {% set title %}{% trans "Layout ID" %}{% endset %}
+                            {{ inline.number("layoutId", title, layoutId) }}
                         </form>
                     </div>
                 </div>

@@ -794,6 +794,16 @@ class Display extends Base
             if ($this->getUser()->featureEnabled('displays.modify')
                 && $this->getUser()->checkEditable($display)
             ) {
+                if ($this->getUser()->featureEnabled('layout.view')) {
+                    $display->buttons[] = [
+                        'id' => 'display_button_layouts_jump',
+                        'linkType' => '_self',
+                        'external' => true,
+                        'url' => $this->urlFor($request, 'layout.view') . '?activeDisplayGroupId=' . $display->displayGroupId,
+                        'text' => __('Jump to Scheduled Layouts')
+                    ];
+                }
+
                 // File Associations
                 $display->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',

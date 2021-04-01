@@ -69,6 +69,9 @@
                             {{ inline.dropdown("hasLayouts", "single", title, 0, values, "id", "value") }}
 
                             {{ inline.hidden("folderId") }}
+
+                            {% set title %}{% trans "Layout ID" %}{% endset %}
+                            {{ inline.number("layoutId", title, layoutId) }}
                         </form>
                     </div>
                 </div>
@@ -115,57 +118,60 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        {% if not currentUser.featureEnabled("folder.view") %}
-        disableFolders();
-        {% endif %}
-
+        var table;
         // Configure the DataTable
-        var table = $("#campaigns").DataTable({ "language": dataTablesLanguage,
-            serverSide: true,
-            stateSave: true,
-            stateDuration: 0,
-            responsive: true,
-            stateLoadCallback: dataTableStateLoadCallback,
-            stateSaveCallback: dataTableStateSaveCallback,
-            "filter": false,
-            searchDelay: 3000,
-            "order": [[ 0, "asc"]],
-            ajax: {
-                url: "{{ url_for("campaign.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#campaigns").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
-            },
-            "columns": [
-                {
-                    "data": "campaign" ,
-                    responsivePriority: 2,
-                    "render": dataTableSpacingPreformatted
-                },
-                { "data": "numberLayouts", responsivePriority: 2 },
-                {% if currentUser.featureEnabled("tag.tagging") %} {
-                    "sortable": false,
-                    responsivePriority: 2,
-                    "data": dataTableCreateTags
-                },{% endif %}
-                {
-                    "data": "totalDuration",
-                    responsivePriority: 2,
-                    "render": dataTableTimeFromSeconds
-                },
-                {
-                    "orderable": false,
-                    responsivePriority: 1,
-                    "data": dataTableButtonsColumn
-                }
-            ]
-        });
+        $(document).ready(function() {
+            {% if not currentUser.featureEnabled("folder.view") %}
+            disableFolders();
+            {% endif %}
 
-        // Data Table events
-        table.on('draw', dataTableDraw);
-        table.on('draw', { form: $("#campaigns").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
-        table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#campaigns_wrapper').find('.col-md-6').eq(1));
+            table = $("#campaigns").DataTable({ "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
+                responsive: true,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
+                "filter": false,
+                searchDelay: 3000,
+                "order": [[ 0, "asc"]],
+                ajax: {
+                    url: "{{ url_for("campaign.search") }}",
+                    "data": function(d) {
+                        $.extend(d, $("#campaigns").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {
+                        "data": "campaign" ,
+                        responsivePriority: 2,
+                        "render": dataTableSpacingPreformatted
+                    },
+                    { "data": "numberLayouts", responsivePriority: 2 },
+                    {% if currentUser.featureEnabled("tag.tagging") %} {
+                        "sortable": false,
+                        responsivePriority: 2,
+                        "data": dataTableCreateTags
+                    },{% endif %}
+                    {
+                        "data": "totalDuration",
+                        responsivePriority: 2,
+                        "render": dataTableTimeFromSeconds
+                    },
+                    {
+                        "orderable": false,
+                        responsivePriority: 1,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            // Data Table events
+            table.on('draw', dataTableDraw);
+            table.on('draw', { form: $("#campaigns").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#campaigns_wrapper').find('.col-md-6').eq(1));
+        });
 
         // Callback for the media form
         // Fired when the media form opens
