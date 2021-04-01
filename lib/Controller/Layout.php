@@ -1511,7 +1511,7 @@ class Layout extends Base
                 $layout->buttons[] = [
                     'id' => 'layout_button_playlist_jump',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request,'playlist.view') .'?layoutId=' . $layout->layoutId,
+                    'url' => $this->urlFor($request, 'playlist.view') .'?layoutId=' . $layout->layoutId,
                     'text' => __('Jump to Playlists included on this Layout')
                 ];
             }
@@ -1520,7 +1520,7 @@ class Layout extends Base
                 $layout->buttons[] = [
                     'id' => 'layout_button_campaign_jump',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request,'campaign.view') .'?layoutId=' . $layout->layoutId,
+                    'url' => $this->urlFor($request, 'campaign.view') .'?layoutId=' . $layout->layoutId,
                     'text' => __('Jump to Campaigns containing this Layout')
                 ];
             }
@@ -1529,7 +1529,7 @@ class Layout extends Base
                 $layout->buttons[] = [
                     'id' => 'layout_button_media_jump',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request,'library.view') .'?layoutId=' . $layout->layoutId,
+                    'url' => $this->urlFor($request, 'library.view') .'?layoutId=' . $layout->layoutId,
                     'text' => __('Jump to Media included on this Layout')
                 ];
             }

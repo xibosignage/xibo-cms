@@ -299,7 +299,6 @@ class PlaylistFactory extends BaseFactory
         }
 
         if ($parsedFilter->getInt('layoutId', $filterBy) !== null) {
-
             $body .= '
                 AND playlist.playlistId IN (
                        SELECT lkplaylistplaylist.childId

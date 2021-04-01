@@ -383,8 +383,8 @@ class TagFactory extends BaseFactory
         }
 
         //isSystem filter, by default hide tags with isSystem flag
-        if ($sanitizedFilter->getCheckbox('isSystem') !== null && $sanitizedFilter->getInt('allTags') !== 1) {
-            $body .= " AND `tag`.isSystem = :isSystem ";
+        if ($sanitizedFilter->getInt('allTags') !== 1) {
+            $body .= ' AND `tag`.isSystem = :isSystem ';
             $params['isSystem'] = $sanitizedFilter->getCheckbox('isSystem');
         }
 
