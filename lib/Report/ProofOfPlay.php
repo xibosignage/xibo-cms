@@ -576,8 +576,12 @@ class ProofOfPlay implements ReportInterface
           SELECT stat.type,
               display.Display,
               IFNULL(layout.Layout, 
-              (SELECT `layout` FROM `layout` WHERE layoutId = (SELECT  MAX(layoutId) FROM  layouthistory  WHERE
-                            campaignId = stat.campaignId))) AS Layout,
+                  (SELECT MAX(`layout`) AS layout 
+                     FROM `layout` 
+                        INNER JOIN `layouthistory`
+                        ON `layout`.layoutId = `layouthistory`.layoutId
+                    WHERE `layouthistory`.campaignId = `stat`.campaignId)
+              ) AS Layout,
               IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) AS Media,
               SUM(stat.count) AS NumberPlays,
               SUM(stat.duration) AS Duration,
@@ -806,8 +810,21 @@ class ProofOfPlay implements ReportInterface
             $body .= ' AND `media`.mediaId IN (' . trim($mediaSql, ',') . ')';
         }
 
-        $body .= 'GROUP BY stat.type, stat.tag, display.Display, stat.displayId, stat.campaignId, IFNULL(stat.mediaId, stat.widgetId), 
-        IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)) ';
+        $body .= '
+            GROUP BY stat.type, 
+                stat.tag, 
+                display.Display, 
+                stat.displayId, 
+                stat.campaignId,
+                layout.layout, 
+                IFNULL(stat.mediaId, stat.widgetId), 
+                IFNULL(`media`.name, IFNULL(`widgetoption`.value, `widget`.type)),
+                stat.tag,
+                stat.layoutId,
+                stat.mediaId,
+                stat.widgetId,
+                stat.displayId 
+        ';
 
         $order = '';
         if ($columns != null)
