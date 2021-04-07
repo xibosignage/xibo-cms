@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,7 +20,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
-
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
 
@@ -198,7 +197,7 @@
                         { id: 6, name: saturday },
                         { id: 7, name: sunday },
                         ] %}
-                        {{ forms.dropdown("recurrenceRepeatsOn[]", "dropdownmulti", "", event.recurrenceRepeatsOn, options, "id", "name", helpText, "repeat-weekly-control-group") }}
+                        {{ forms.dropdown("recurrenceRepeatsOn[]", "dropdownmulti", "", "", options, "id", "name", helpText, "repeat-weekly-control-group") }}
 
                         {% set helpText %}{% trans "Should this Event Repeat by Day of the month (eg. Monthly on Day 21) or by a Weekday in the month (eg. Monthly on the third Thursday)." %}{% endset %}
                         {% set attributes = [
