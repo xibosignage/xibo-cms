@@ -107,11 +107,17 @@ function XiboInitialise(scope) {
             try {
                 formValues = JSON.parse(localStorage.getItem(gridName));
 
-                if (formValues == null)
-                    formValues = [];
+                if (formValues == null) {
+                    localStorage.setItem(gridName, JSON.stringify(form.serializeArray()));
+                    formValues = JSON.parse(localStorage.getItem(gridName));
+                }
             } catch (e) {
                 formValues = [];
             }
+
+            const url = new URL(window.location.href);
+            var params = new URLSearchParams(url.search.slice(1));
+
 
             $.each(formValues, function(key, element) {
                 // Does this field exist in the form
@@ -119,7 +125,9 @@ function XiboInitialise(scope) {
                 try {
                     var field = form.find("input[name=" + fieldName + "], select[name=" + fieldName + "]");
 
-                    if (field.length > 0) {
+                    if (params.get(fieldName) !== null) {
+                        field.val(params.get(fieldName))
+                    } else if (field.length > 0) {
                         field.val(element.value);
                     }
                 } catch (e) {

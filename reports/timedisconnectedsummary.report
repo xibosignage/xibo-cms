@@ -1,6 +1,6 @@
 {
   "name": "timedisconnectedsummary",
-  "description": "Time Disconnected Summary",
+  "description": "Time Connected Summary",
   "class": "\\Xibo\\Report\\TimeDisconnectedSummary",
   "type": "Report",
   "output_type": "both",

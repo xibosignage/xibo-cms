@@ -213,16 +213,14 @@ class Campaign extends Base
             'hasLayouts' => $parsedParams->getInt('hasLayouts'),
             'isLayoutSpecific' => $parsedParams->getInt('isLayoutSpecific'),
             'retired' => $parsedParams->getInt('retired'),
-            'folderId' => $parsedParams->getInt('folderId')
-        ];
-
-        $options = [
+            'folderId' => $parsedParams->getInt('folderId'),
             'totalDuration' => $parsedParams->getInt('totalDuration', ['default' => 1]),
+            'layoutId' => $parsedParams->getInt('layoutId')
         ];
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];
 
-        $campaigns = $this->campaignFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams), $options);
+        $campaigns = $this->campaignFactory->query($this->gridRenderSort($parsedParams), $this->gridRenderFilter($filter, $parsedParams));
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */

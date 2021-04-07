@@ -598,7 +598,9 @@ class Library extends Base
             'assignable' => $parsedQueryParams->getInt('assignable'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'notPlayerSoftware' => 1,
-            'notSavedReport' => 1
+            'notSavedReport' => 1,
+            'layoutId' => $parsedQueryParams->getInt('layoutId'),
+            'includeLayoutBackgroundImage' => ($parsedQueryParams->getInt('layoutId') != null) ? 1 : 0
         ], $parsedQueryParams));
 
         // Add some additional row content

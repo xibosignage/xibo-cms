@@ -603,6 +603,7 @@ class LayoutTest extends LocalWebTestCase
 
         # Edit region
         $response = $this->sendRequest('PUT','/region/' . $region->regionId, [
+            'name' => $layout->layout . ' edited',
             'width' => 700,
             'height' => 500,
             'top' => 400,

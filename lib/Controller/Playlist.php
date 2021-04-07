@@ -288,7 +288,8 @@ class Playlist extends Base
             'ownerUserGroupId' => $sanitizedParams->getInt('ownerUserGroupId'),
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
             'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
-            'folderId' => $sanitizedParams->getInt('folderId')
+            'folderId' => $sanitizedParams->getInt('folderId'),
+            'layoutId' => $sanitizedParams->getInt('layoutId')
         ], $sanitizedParams));
 
         foreach ($playlists as $playlist) {
