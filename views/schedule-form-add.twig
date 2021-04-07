@@ -208,14 +208,16 @@
 
                         {% set title %}{% trans "Every" %}{% endset %}
                         {% set helpText %}{% trans "Include a number to determine the Repeat frequency required for this Event." %}{% endset %}
-                        <div class="form-group repeat-control-group">
+                        <div class="form-group row repeat-control-group">
                             <label class="col-sm-2 control-label" for="recurrenceDetail">{{ title }}</label>
                             <div class="col-sm-10">
                                 <div class="input-group">
                                     <input class="form-control" name="recurrenceDetail" type="number" id="recurrenceDetail" value="{{ event.recurrenceDetail }}" />
-                                    <div class="input-group-addon"></div>
+                                    <div class="input-group-append">
+                                        <span class="input-group-text input-group-addon"></span>
+                                    </div>
                                 </div>
-                                <span class="help-block">{{ helpText }}</span>
+                                <span class="form-text text-muted">{{ helpText }}</span>
                             </div>
                         </div>
 
