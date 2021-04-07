@@ -463,14 +463,22 @@ class ProofOfPlay implements ReportInterface
             case '':
             default:
                 // Expect dates to be provided.
-                $fromDt = $this->getSanitizer()->getDate('statsFromDt', $this->getDate()->parse()->addDay(-1));
+                $fromDt = $this->getSanitizer()->getDate('statsFromDt', $filterCriteria);
                 $fromDt->startOfDay();
 
-                $toDt = $this->getSanitizer()->getDate('statsToDt', $this->getDate()->parse());
+                $toDt = $this->getSanitizer()->getDate('statsToDt', $filterCriteria);
                 $toDt->startOfDay();
 
-                $fromDtTime = $this->getSanitizer()->getString('statsFromDtTime');
-                $toDtTime = $this->getSanitizer()->getString('statsToDtTime');
+                if (empty($fromDt)) {
+                    $fromDt = $this->getDate()->parse()->addDay(-1);
+                }
+
+                if (empty($toDt)) {
+                    $toDt = $this->getDate()->parse();
+                }
+
+                $fromDtTime = $this->getSanitizer()->getString('statsFromDtTime', $filterCriteria);
+                $toDtTime = $this->getSanitizer()->getString('statsToDtTime', $filterCriteria);
 
                 if ($fromDtTime !== null && $toDtTime !== null) {
 

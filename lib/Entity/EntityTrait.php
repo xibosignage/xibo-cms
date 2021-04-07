@@ -218,7 +218,7 @@ trait EntityTrait
         $objectAsJson = $this->jsonSerialize();
 
         foreach ($objectAsJson as $key => $value) {
-            if (in_array($key, $this->datesToFormat)) {
+            if ( isset($this->datesToFormat)  && in_array($key, $this->datesToFormat)) {
                 $objectAsJson[$key] = Date::createFromTimestamp($value)->format('Y-m-d H:i:s');
             }
 
