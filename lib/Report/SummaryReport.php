@@ -576,7 +576,7 @@ class SummaryReport implements ReportInterface
             // Close out our containing view and group things together
             $select .= '
                 ) periodsWithStats 
-            GROUP BY periodsWithStats.id
+            GROUP BY periodsWithStats.id, start, end
             ORDER BY periodsWithStats.id
             ';
 

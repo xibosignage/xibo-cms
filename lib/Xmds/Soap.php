@@ -783,7 +783,11 @@ class Soap
             $this->getLog()->debug('Removing ' . count($rfIds) . ' from requiredfiles');
 
             try {
-                $this->getStore()->updateWithDeadlockLoop('DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')', $rfIds);
+                // Execute this on the default connection
+                $this->getStore()->updateWithDeadlockLoop('DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')',
+                    $rfIds,
+                    'default'
+                );
             } catch (DeadlockException $deadlockException) {
                 $this->getLog()->error('Deadlock when deleting required files - ignoring and continuing with request');
             }
@@ -1009,6 +1013,7 @@ class Soap
                         $layout->setAttribute("priority", $is_priority);
                         $layout->setAttribute("syncEvent", $syncKey);
                         $layout->setAttribute("shareOfVoice", $row['shareOfVoice'] ?? 0);
+                        $layout->setAttribute("duration", $row['duration'] ?? 0);
                         $layout->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
                         $layout->setAttribute("geoLocation", $row['geoLocation'] ?? null);
 
@@ -1065,6 +1070,7 @@ class Soap
                         $overlay->setAttribute("todt", $toDt);
                         $overlay->setAttribute("scheduleid", $scheduleId);
                         $overlay->setAttribute("priority", $is_priority);
+                        $overlay->setAttribute("duration", $row['duration'] ?? 0);
                         $overlay->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
                         $overlay->setAttribute("geoLocation", $row['geoLocation'] ?? null);
 
