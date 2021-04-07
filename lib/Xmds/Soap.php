@@ -799,7 +799,8 @@ class Soap
 
             try {
                 // Execute this on the default connection
-                $this->getStore()->updateWithDeadlockLoop('DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')',
+                $this->getStore()->updateWithDeadlockLoop(
+                    'DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')',
                     $rfIds,
                     'default'
                 );
