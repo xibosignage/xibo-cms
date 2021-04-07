@@ -617,7 +617,7 @@ class DistributionReport implements ReportInterface
             // Close out our containing view and group things together
             $select .= '
                 ) periodsWithStats 
-            GROUP BY periodsWithStats.id, periodsWithStats.label
+            GROUP BY periodsWithStats.id, periodsWithStats.label, start, end
             ORDER BY periodsWithStats.id
             ';
 

@@ -743,7 +743,7 @@ class Settings extends Base
         }
 
         if ($changedSettings != []) {
-            $this->getLog()->audit('Settings', '', 'Updated', $changedSettings);
+            $this->getLog()->audit('Settings', 0, 'Updated', $changedSettings);
         }
 
         // Return

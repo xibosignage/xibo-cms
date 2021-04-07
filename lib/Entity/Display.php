@@ -879,7 +879,7 @@ class Display implements \JsonSerializable
         ', [
             'display' => $this->display,
             'defaultLayoutId' => $this->defaultLayoutId,
-            'incSchedule' => $this->incSchedule,
+            'incSchedule' => ($this->incSchedule == null) ? 0 : $this->incSchedule,
             'license' => $this->license,
             'licensed' => $this->licensed,
             'auditingUntil' => ($this->auditingUntil == null) ? 0 : $this->auditingUntil,

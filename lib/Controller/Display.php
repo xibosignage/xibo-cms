@@ -1332,7 +1332,7 @@ class Display extends Base
         $display->longitude = $sanitizedParams->getDouble('longitude');
         $display->timeZone = $sanitizedParams->getString('timeZone');
         $display->displayProfileId = $sanitizedParams->getInt('displayProfileId');
-        $display->bandwidthLimit = $sanitizedParams->getInt('bandwidthLimit');
+        $display->bandwidthLimit = $sanitizedParams->getInt('bandwidthLimit', ['default' => 0]);
         $display->teamViewerSerial = $sanitizedParams->getString('teamViewerSerial');
         $display->webkeySerial = $sanitizedParams->getString('webkeySerial');
         $display->folderId = $sanitizedParams->getInt('folderId', ['default' => $display->folderId]);
