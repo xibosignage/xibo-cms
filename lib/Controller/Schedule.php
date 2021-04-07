@@ -1007,7 +1007,7 @@ class Schedule extends Base
         $schedule->recurrenceDetail = $sanitizedParams->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $sanitizedParams->getIntArray('recurrenceRepeatsOn');
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
-        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn');
+        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn', ['default' => 0]);
 
         foreach ($sanitizedParams->getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
@@ -1492,7 +1492,7 @@ class Schedule extends Base
         $schedule->recurrenceDetail = $sanitizedParams->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $sanitizedParams->getIntArray('recurrenceRepeatsOn');
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
-        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn');
+        $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn', ['default' => 0]);
         $schedule->displayGroups = [];
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice') : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');

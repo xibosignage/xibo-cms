@@ -2181,8 +2181,8 @@ class Layout implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Layout' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration, autoApplyTransitions, code)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, :schemaVersion, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, :autoApplyTransitions, :code)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, retired, duration, autoApplyTransitions, code)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, :schemaVersion, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, 0, :autoApplyTransitions, :code)';
 
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
@@ -2296,9 +2296,9 @@ class Layout implements \JsonSerializable
             'layoutid' => $this->layoutId,
             'layout' => $this->layout,
             'description' => $this->description,
-            'duration' => $this->duration,
+            'duration' => ($this->duration == null) ? 0 : $this->duration,
             'modifieddt' => $time,
-            'retired' => $this->retired,
+            'retired' => ($this->retired == null) ? 0 : $this->retired,
             'width' => $this->width,
             'height' => $this->height,
             'backgroundImageId' => ($this->backgroundImageId == null) ? null : $this->backgroundImageId,
@@ -2307,7 +2307,7 @@ class Layout implements \JsonSerializable
             'status' => $this->status,
             'publishedStatusId' => $this->publishedStatusId,
             'userId' => $this->ownerId,
-            'schemaVersion' => $this->schemaVersion,
+            'schemaVersion' => ($this->schemaVersion == null) ? Environment::$XLF_VERSION : $this->schemaVersion,
             'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage),
             'enableStat' => $this->enableStat,
             'autoApplyTransitions' => $this->autoApplyTransitions,

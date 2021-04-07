@@ -2163,12 +2163,41 @@ function XiboFormSubmit(form, e, callBack) {
         $("#" + editor).val(data);
     }
 
+    // Replace all checkboxes with hidden input fields
+    $form.find('input[type="checkbox"]').each(function () {
+        // Get checkbox values
+        let value = $(this).is(':checked') ? 'on' : 'off';
+        let id = $(this).attr('id');
+
+        // Create hidden input
+        $('<input type="hidden" class="temp-input">')
+            .attr('id', id)
+            .attr('name', id)
+            .val(value)
+            .appendTo($(this).parent());
+
+        // Disable checkbox so it won't be submitted
+        $(this).attr('disabled', true);
+    });
+
     $.ajax({
         type:$form.attr("method"),
         url:url,
         cache:false,
         dataType:"json",
         data:$form.serialize(),
+        beforeSend: function (xhr, settings) {
+            // Re-enable checkboxes
+            $form.find('input[type="checkbox"]').each(function () {
+                // Enable checkbox
+                $(this).attr('disabled', false);
+            });
+
+            // Remove temp input fields
+            $form.find('input.temp-input').each(function () {
+                $(this).remove();
+            });
+        },
         success: function(xhr, textStatus, error) {
             
             XiboSubmitResponse(xhr, form);

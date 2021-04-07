@@ -133,7 +133,17 @@
                     {"data": "logDate", "render": dataTableDateFromUnix, responsivePriority: 2},
                     {"data": "userName", responsivePriority: 2},
                     {"data": "entity", responsivePriority: 2},
-                    {"data": "entityId", responsivePriority: 2},
+                    {
+                        "name": "entityId",
+                        responsivePriority: 2,
+                        "data" : function (data) {
+                            if (data.entityId === 0) {
+                                return ''
+                            }
+
+                            return data.entityId;
+                        }
+                    },
                     {"data": "message", responsivePriority: 1},
                     {
                         "data": function (data, type, row, meta) {
