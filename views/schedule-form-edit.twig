@@ -227,9 +227,18 @@
                         ] %}
                         {{ forms.dropdown("recurrenceMonthlyRepeatsOn", "single", "", event.recurrenceMonthlyRepeatsOn, [{id: event.recurrenceMonthlyRepeatsOn, name: ""}], "id", "name", helpText, "repeat-monthly-control-group", "", "", "", attributes) }}
 
-                        {% set title %}{% trans "Repeat every" %}{% endset %}
+                        {% set title %}{% trans "Every" %}{% endset %}
                         {% set helpText %}{% trans "Include a number to determine the Repeat frequency required for this Event." %}{% endset %}
-                        {{ forms.number("recurrenceDetail", title, event.recurrenceDetail, helpText, "repeat-control-group") }}
+                        <div class="form-group repeat-control-group">
+                            <label class="col-sm-2 control-label" for="recurrenceDetail">{{ title }}</label>
+                            <div class="col-sm-10">
+                                <div class="input-group">
+                                    <input class="form-control" name="recurrenceDetail" type="number" id="recurrenceDetail" value="{{ event.recurrenceDetail }}" />
+                                    <div class="input-group-addon"></div>
+                                </div>
+                                <span class="help-block">{{ helpText }}</span>
+                            </div>
+                        </div>
 
                         {% set title %}{% trans "Until" %}{% endset %}
                         {% set helpText %}{% trans "Provide a date and time to end the Repeat for this Event. Leave empty to Repeat indefinitely." %}{% endset %}
