@@ -69,6 +69,9 @@
                             {% set title %}{% trans "Retired" %}{% endset %}
                             {% set values = [{id: 1, value: "Yes"}, {id: 0, value: "No"}] %}
                             {{ inline.dropdown("retired", "single", title, 0, values, "id", "value") }}
+
+                            {% set title %}{% trans "Layout ID" %}{% endset %}
+                            {{ inline.number("layoutId", title, layoutId) }}
                         </form>
                     </div>
                 </div>

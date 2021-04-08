@@ -1282,6 +1282,35 @@ class Layout extends Base
 
             $layout->buttons[] = ['divider' => true];
 
+            if ($this->getUser()->routeViewable('/playlist/view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_playlist_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor('playlist.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Playlists included on this Layout')
+                ];
+            }
+
+            if ($this->getUser()->routeViewable('/campaign/view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_campaign_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor('campaign.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Campaigns containing this Layout')
+                ];
+            }
+
+            if ($this->getUser()->routeViewable('/library/view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_media_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor('library.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Media included on this Layout')
+                ];
+            }
+
+            $layout->buttons[] = ['divider' => true];
+
             // Only proceed if we have edit permissions
             if ($this->getUser()->checkEditable($layout)) {
 

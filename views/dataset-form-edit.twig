@@ -121,6 +121,10 @@
                         {% set title %}{% trans "Password" %}{% endset %}
                         {% set helpText %}{% trans "Corresponding Password" %}{% endset %}
                         {{ forms.input("password", title, dataSet.password, helpText, "auth-field-password", "") }}
+
+                        {% set title %}{% trans "Custom Headers" %}{% endset %}
+                        {% set helpText %}{% trans "Comma separated string of custom HTTP headers in headerName:headerValue format" %}{% endset %}
+                        {{ forms.input("customHeaders", title, dataSet.customHeaders, helpText) }}
                     </div>
 
                     <div class="tab-pane" id="data">

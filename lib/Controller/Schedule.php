@@ -944,7 +944,7 @@ class Schedule extends Base
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
-        $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn');
+        $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn', 0);
 
         foreach ($this->getSanitizer()->getIntArray('displayGroupIds') as $displayGroupId) {
             $schedule->assignDisplayGroup($this->displayGroupFactory->getById($displayGroupId));
@@ -1373,7 +1373,7 @@ class Schedule extends Base
         $schedule->recurrenceDetail = $this->getSanitizer()->getInt('recurrenceDetail');
         $recurrenceRepeatsOn = $this->getSanitizer()->getIntArray('recurrenceRepeatsOn');
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
-        $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn');
+        $schedule->recurrenceMonthlyRepeatsOn = $this->getSanitizer()->getInt('recurrenceMonthlyRepeatsOn', 0);
         $schedule->displayGroups = [];
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $this->getSanitizer()->getInt('shareOfVoice') : null;
         $schedule->isGeoAware = $this->getSanitizer()->getCheckbox('isGeoAware');

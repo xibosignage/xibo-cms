@@ -124,10 +124,11 @@ class SavedReport implements \JsonSerializable
     private function add()
     {
         $this->savedReportId = $this->getStore()->insert('
-            INSERT INTO `saved_report` (`saveAs`, `reportScheduleId`, `mediaId`, `generatedOn`, `userId`)
-              VALUES (:saveAs, :reportScheduleId, :mediaId, :generatedOn, :userId)
+            INSERT INTO `saved_report` (`saveAs`, `reportName`, `reportScheduleId`, `mediaId`, `generatedOn`, `userId`)
+              VALUES (:saveAs, :reportName, :reportScheduleId, :mediaId, :generatedOn, :userId)
         ', [
             'saveAs' => $this->saveAs,
+            'reportName' => '',
             'reportScheduleId' => $this->reportScheduleId,
             'mediaId' => $this->mediaId,
             'generatedOn' => $this->generatedOn,
@@ -143,6 +144,7 @@ class SavedReport implements \JsonSerializable
         $sql = '
           UPDATE `saved_report`
             SET `saveAs` = :saveAs,
+                `reportName` = :reportName,
                 `reportScheduleId` = :reportScheduleId,
                 `mediaId` = :mediaId,
                 `generatedOn` = :generatedOn,
@@ -152,6 +154,7 @@ class SavedReport implements \JsonSerializable
 
         $params = [
             'saveAs' => $this->saveAs,
+            'reportName' => '',
             'reportScheduleId' => $this->reportScheduleId,
             'mediaId' => $this->mediaId,
             'generatedOn' => $this->generatedOn,
@@ -180,7 +183,7 @@ class SavedReport implements \JsonSerializable
         // Update last saved report in report schedule
         $this->getLog()->debug('Update last saved report in report schedule');
         $this->getStore()->update('
-        UPDATE `reportschedule` SET lastSavedReportId = ( SELECT MAX(`savedReportId`) FROM `saved_report` WHERE `reportScheduleId`= :reportScheduleId) 
+        UPDATE `reportschedule` SET lastSavedReportId = ( SELECT IFNULL(MAX(`savedReportId`), 0) FROM `saved_report` WHERE `reportScheduleId`= :reportScheduleId) 
         WHERE `reportScheduleId` = :reportScheduleId',
             [
             'reportScheduleId' => $this->reportScheduleId

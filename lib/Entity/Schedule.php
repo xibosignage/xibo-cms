@@ -21,6 +21,7 @@
  */
 namespace Xibo\Entity;
 
+use Carbon\Carbon;
 use Jenssegers\Date\Date;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
@@ -1102,25 +1103,45 @@ class Schedule implements \JsonSerializable
                     break;
 
                 case 'Month':
+                    // We use the difference to set the end date
+                    $difference = $end->diffInSeconds($start);
+
                     // Are we repeating on the day of the month, or the day of the week
                     if ($this->recurrenceMonthlyRepeatsOn == 1) {
                         // Week day repeat
-                        $difference = $end->diffInSeconds($start);
-
                         // Work out the position in the month of this day and the ordinal
-                        $ordinals = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'];
+                        $ordinals = ['first', 'second', 'third', 'fourth', 'last'];
                         $ordinal = $ordinals[ceil($originalStart->day / 7) - 1];
-                        $start->month($start->month + $this->recurrenceDetail)->modify($ordinal . ' ' . $originalStart->format('l') . ' of ' . $start->format('F Y'))->setTimeFrom($originalStart);
 
-                        $this->getLog()->debug('Setting start to: ' . $ordinal . ' ' . $start->format('l') . ' of ' . $start->format('F Y'));
+                        // We rely on english modify strings
+                        $englishOriginalStart = new Carbon($originalStart->format('Y-m-d H:i:s.u'), $originalStart->getTimezone());
+                        $englishStart = new Carbon($start->format('Y-m-d H:i:s.u'), $start->getTimezone());
 
-                        // Base the end on the start + difference
-                        $end = $start->copy()->addSeconds($difference);
+                        $englishStart->addDays(28 * $this->recurrenceDetail)
+                            ->modify($ordinal . ' ' . $englishOriginalStart->format('l') . ' of ' . $englishStart->format('F Y'))
+                            ->setTimeFrom($englishOriginalStart);
+
+                        $start = Date::instance($englishStart);
+
+                        $this->getLog()->debug('Monthly repeats every ' . $this->recurrenceDetail . ' months on '
+                            . $ordinal . ' ' . $start->format('l') . ' of ' . $start->format('F Y'));
                     } else {
                         // Day repeat
-                        $start->month($start->month + $this->recurrenceDetail);
-                        $end->month($end->month + $this->recurrenceDetail);
+                        $start = $start->copy()->addDays(28 * $this->recurrenceDetail);
+                        if ($originalStart->day > intval($start->format('t'))) {
+                            // The next month has fewer days than the current month
+                            $start->endOfMonth()->setTimeFrom($originalStart);
+                        } else {
+                            $start->day($originalStart->day);
+                        }
+
+                        $this->getLog()->debug('Monthly repeats every ' . $this->recurrenceDetail . ' months on '
+                            . ' on a specific day ' . $originalStart->day . ' days this month ' . $start->format('t')
+                            . ' set to ' . $start->format('Y-m-d'));
                     }
+
+                    // Base the end on the start + difference
+                    $end = $start->copy()->addSeconds($difference);
                     break;
 
                 case 'Year':

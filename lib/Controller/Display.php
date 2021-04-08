@@ -505,7 +505,6 @@ class Display extends Base
             'tags' => $this->getSanitizer()->getString('tags'),
             'exactTags' => $this->getSanitizer()->getCheckbox('exactTags'),
             'showTags' => true,
-            'useRegexForName' => $this->getSanitizer()->getCheckbox('useRegexForName'),
             'clientAddress' => $this->getSanitizer()->getString('clientAddress'),
             'mediaInventoryStatus' => $this->getSanitizer()->getInt('mediaInventoryStatus'),
             'loggedIn' => $this->getSanitizer()->getInt('loggedIn'),
@@ -733,6 +732,16 @@ class Display extends Base
             }
 
             if ($this->getUser()->checkEditable($display)) {
+
+                if ($this->getUser()->routeViewable('/layout/view')) {
+                    $display->buttons[] = [
+                        'id' => 'display_button_layouts_jump',
+                        'linkType' => '_self',
+                        'external' => true,
+                        'url' => $this->urlFor('layout.view') . '?activeDisplayGroupId=' . $display->displayGroupId,
+                        'text' => __('Jump to Scheduled Layouts')
+                    ];
+                }
 
                 // File Associations
                 $display->buttons[] = array(
@@ -1196,7 +1205,7 @@ class Display extends Base
         $display->defaultLayoutId = $this->getSanitizer()->getInt('defaultLayoutId');
         $display->licensed = $this->getSanitizer()->getInt('licensed');
         $display->license = $this->getSanitizer()->getString('license');
-        $display->incSchedule = $this->getSanitizer()->getInt('incSchedule');
+        $display->incSchedule = $this->getSanitizer()->getInt('incSchedule', 0);
         $display->emailAlert = $this->getSanitizer()->getInt('emailAlert');
         $display->alertTimeout = $this->getSanitizer()->getCheckbox('alertTimeout');
         $display->wakeOnLanEnabled = $this->getSanitizer()->getCheckbox('wakeOnLanEnabled');
@@ -1208,7 +1217,7 @@ class Display extends Base
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->timeZone = $this->getSanitizer()->getString('timeZone');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
-        $display->bandwidthLimit = $this->getSanitizer()->getInt('bandwidthLimit');
+        $display->bandwidthLimit = $this->getSanitizer()->getInt('bandwidthLimit', 0);
 
 
         // Get the display profile and use that to pull in any overrides

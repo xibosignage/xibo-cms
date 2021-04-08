@@ -137,17 +137,17 @@ abstract class AlphaVantageBase extends ModuleWidget
     }
 
     /**
-     * @param $base
-     * @param $pairs
+     * @param $fromCurrency
+     * @param $toCurrency
      * @return mixed
      * @throws XiboException
      */
-    protected function getPriorDay($base, $pairs)
+    protected function getPriorDay($fromCurrency, $toCurrency)
     {
         $yesterday = Date::yesterday()->format('Y-m-d');
 
         try {
-            $cache = $this->getPool()->getItem($this->makeCacheKey(md5($base . $yesterday)));
+            $cache = $this->getPool()->getItem($this->makeCacheKey(md5($fromCurrency . $toCurrency . $yesterday)));
             $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
 
             $data = $cache->get();
@@ -160,15 +160,16 @@ abstract class AlphaVantageBase extends ModuleWidget
 
                 // Use a web request
                 $client = new Client();
-
-
-                $request = $client->request('GET', 'https://api.exchangeratesapi.io/' . $yesterday, $this->getConfig()->getGuzzleProxy([
+                $request = $client->request('GET', 'https://www.alphavantage.co/query', $this->getConfig()->getGuzzleProxy([
                     'query' => [
-                        'base' => $base
+                        'function' => 'FX_DAILY',
+                        'from_symbol' => $fromCurrency,
+                        'to_symbol' => $toCurrency,
+                        'apikey' => $this->getApiKey()
                     ]
                 ]));
 
-                $data = json_decode($request->getBody(), true)['rates'];
+                $data = json_decode($request->getBody(), true);
 
                 // Cache this and expire tomorrow (results are valid for the entire day regardless of settings)
                 $cache->set($data);
@@ -179,13 +180,7 @@ abstract class AlphaVantageBase extends ModuleWidget
                 $this->getLog()->debug('getPriorDay is served from the cache.');
             }
 
-            $return = [];
-
-            foreach ($pairs as $pair) {
-                $return[$pair] = isset($data[$pair]) ? $data[$pair] : null;
-            }
-
-            return $return;
+            return $data;
 
         } catch (GuzzleException $guzzleException) {
             throw new XiboException('Guzzle exception getting currency exchange rate. E = ' . $guzzleException->getMessage(), $guzzleException->getCode(), $guzzleException);
