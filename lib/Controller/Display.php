@@ -1205,7 +1205,7 @@ class Display extends Base
         $display->defaultLayoutId = $this->getSanitizer()->getInt('defaultLayoutId');
         $display->licensed = $this->getSanitizer()->getInt('licensed');
         $display->license = $this->getSanitizer()->getString('license');
-        $display->incSchedule = $this->getSanitizer()->getInt('incSchedule');
+        $display->incSchedule = $this->getSanitizer()->getInt('incSchedule', 0);
         $display->emailAlert = $this->getSanitizer()->getInt('emailAlert');
         $display->alertTimeout = $this->getSanitizer()->getCheckbox('alertTimeout');
         $display->wakeOnLanEnabled = $this->getSanitizer()->getCheckbox('wakeOnLanEnabled');
@@ -1217,7 +1217,7 @@ class Display extends Base
         $display->longitude = $this->getSanitizer()->getDouble('longitude');
         $display->timeZone = $this->getSanitizer()->getString('timeZone');
         $display->displayProfileId = $this->getSanitizer()->getInt('displayProfileId');
-        $display->bandwidthLimit = $this->getSanitizer()->getInt('bandwidthLimit');
+        $display->bandwidthLimit = $this->getSanitizer()->getInt('bandwidthLimit', 0);
 
 
         // Get the display profile and use that to pull in any overrides

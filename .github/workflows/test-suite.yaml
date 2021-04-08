@@ -13,7 +13,7 @@ jobs:
           fetch-depth: 1
       - name: Pull
         run: |
-          docker pull mysql:5.6
+          docker pull mysql:5.7
           docker pull xibosignage/xibo-xmr:latest
           docker pull xibosignage/xibo-cms:develop
           docker pull xibosignage/xibo-cms:cypress
@@ -22,7 +22,7 @@ jobs:
           docker build . -f Dockerfile.ci -t cms-web
       - name: Run
         run: |
-          docker run --name cms-db -e MYSQL_RANDOM_ROOT_PASSWORD=yes -e MYSQL_DATABASE=cms -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -d mysql:5.6
+          docker run --name cms-db -e MYSQL_RANDOM_ROOT_PASSWORD=yes -e MYSQL_DATABASE=cms -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -d mysql:5.7
           docker run --name cms-xmr -d xibosignage/xibo-xmr:latest
           docker run --name cms-web -e MYSQL_USER=cms -e MYSQL_PASSWORD=jenkins -e XIBO_DEV_MODE=true -e XMR_HOST=cms-xmr --link cms-db:db --link cms-xmr:50001 -d cms-web
       - name: Wait for CMS

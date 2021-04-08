@@ -587,6 +587,7 @@ class LayoutTest extends LocalWebTestCase
 
         # Edit region
         $this->client->put('/region/' . $region->regionId, [
+            'name' => $layout->layout . ' edited',
             'width' => 700,
             'height' => 500,
             'top' => 400,
@@ -620,6 +621,7 @@ class LayoutTest extends LocalWebTestCase
         $region = (new XiboRegion($this->getEntityProvider()))->create($layout->layoutId, 200,300,75,125);
         # Edit region
         $this->client->put('/region/' . $region->regionId, [
+            'name' => $layout->layout . ' edited',
             'width' => 700,
             'height' => 500,
             'top' => 400,
