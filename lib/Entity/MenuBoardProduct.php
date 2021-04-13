@@ -87,6 +87,12 @@ class MenuBoardProduct implements \JsonSerializable
     public $mediaId;
 
     /**
+     * @SWG\Property(description="The Menu Board Product array of options")
+     * @var array
+     */
+    public $productOptions;
+
+    /**
      * @var MenuBoardProductOptionFactory
      */
     private $menuBoardProductOptionFactory;
@@ -130,6 +136,10 @@ class MenuBoardProduct implements \JsonSerializable
         if (!v::stringType()->notEmpty()->validate($this->name)) {
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
         }
+
+        if (!v::stringType()->notEmpty()->validate($this->price)) {
+            throw new InvalidArgumentException(__('Price cannot be empty'), 'price');
+        }
     }
 
     /**
@@ -137,7 +147,7 @@ class MenuBoardProduct implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('MenuProductId %d, MenuCategoryId %d, MenuId %d, Name %s, Price %d, Media %d', $this->menuProductId, $this->menuCategoryId, $this->menuId, $this->name, $this->price, $this->mediaId);
+        return sprintf('MenuProductId %d, MenuCategoryId %d, MenuId %d, Name %s, Price %s, Media %d', $this->menuProductId, $this->menuCategoryId, $this->menuId, $this->name, $this->price, $this->mediaId);
     }
 
     /**

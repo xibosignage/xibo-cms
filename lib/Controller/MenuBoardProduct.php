@@ -213,7 +213,16 @@ class MenuBoardProduct extends Base
                 $menuBoardProduct->buttons[] = [
                     'id' => 'menuBoardProduct_delete_button',
                     'url' => $this->urlFor($request, 'menuBoard.product.delete.form', ['id' => $menuBoardProduct->menuProductId]),
-                    'text' => __('Delete')
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'menuBoard.product.delete', ['id' => $menuBoardProduct->menuProductId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'menuBoardProduct_delete_button'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $menuBoardProduct->name]
+                    ]
                 ];
             }
         }
@@ -355,7 +364,7 @@ class MenuBoardProduct extends Base
         );
         $menuBoardProduct->save();
 
-        if ($productOptions !== [] && $productValues !== []) {
+        if (!empty(array_filter($productOptions)) && !empty(array_filter($productValues))) {
             $productDetails = array_combine($productOptions, $productValues);
 
             foreach ($productDetails as $option => $value) {
@@ -367,7 +376,7 @@ class MenuBoardProduct extends Base
                 $productOption->save();
             }
         }
-
+        $menuBoardProduct->productOptions = $menuBoardProduct->getOptions();
         $menuBoard->save();
 
         // Return
@@ -375,7 +384,7 @@ class MenuBoardProduct extends Base
             'message' => __('Added Menu Board Product'),
             'httpStatus' => 201,
             'id' => $menuBoardProduct->menuProductId,
-            'data' => $menuBoardProduct,
+            'data' => $menuBoardProduct
         ]);
 
         return $this->render($request, $response);
@@ -514,7 +523,7 @@ class MenuBoardProduct extends Base
         $productOptions = $sanitizedParams->getArray('productOptions', ['default' => []]);
         $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
 
-        if ($productOptions !== [] && $productValues !== []) {
+        if (!empty(array_filter($productOptions)) && !empty(array_filter($productValues))) {
             $productDetails = array_combine($productOptions, $productValues);
 
             if (count($menuBoardProduct->getOptions()) > count($productDetails)) {
@@ -532,7 +541,7 @@ class MenuBoardProduct extends Base
         } else {
             $menuBoardProduct->removeOptions();
         }
-
+        $menuBoardProduct->productOptions = $menuBoardProduct->getOptions();
         $menuBoardProduct->save();
         $menuBoard->save();
 

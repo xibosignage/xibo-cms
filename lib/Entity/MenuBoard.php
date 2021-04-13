@@ -163,7 +163,7 @@ class MenuBoard implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('MenuId %d, Name %s, Description %d', $this->menuId, $this->name, $this->description);
+        return sprintf('MenuId %d, Name %s, Description %s', $this->menuId, $this->name, $this->description);
     }
 
     /**

@@ -22,8 +22,10 @@
 
 namespace Xibo\Entity;
 
+use Respect\Validation\Validator as v;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 class MenuBoardProductOption implements \JsonSerializable
 {
@@ -67,9 +69,35 @@ class MenuBoardProductOption implements \JsonSerializable
         return sprintf('ProductOption %s with value %s', $this->option, $this->value);
     }
 
-    public function save()
+    /**
+     * @throws InvalidArgumentException
+     */
+    public function validate()
     {
+        if (!v::stringType()->notEmpty()->validate($this->option) && v::stringType()->notEmpty()->validate($this->value)) {
+            throw new InvalidArgumentException(__('Each value needs a corresponding option'), 'option');
+        }
+
+        if (!v::stringType()->notEmpty()->validate($this->value) && v::stringType()->notEmpty()->validate($this->option)) {
+            throw new InvalidArgumentException(__('Each option needs a corresponding value'), 'value');
+        }
+    }
+
+    /**
+     * @param array $options
+     * @throws InvalidArgumentException
+     */
+    public function save($options = [])
+    {
+        $options = array_merge([
+            'validate' => true,
+        ], $options);
+
         $this->getLog()->debug('Saving ' . $this);
+
+        if ($options['validate']) {
+            $this->validate();
+        }
 
         $this->getStore()->insert(
             'INSERT INTO `menu_product_options` (`menuProductId`, `option`, `value`) VALUES (:menuProductId, :option, :value) ON DUPLICATE KEY UPDATE `value` = :value2',

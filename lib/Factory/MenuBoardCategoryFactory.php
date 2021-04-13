@@ -157,7 +157,6 @@ class MenuBoardCategoryFactory extends BaseFactory
 
         if (count($menuCategories) <= 0) {
             $this->getLog()->debug('Menu Board Category not found for Menu Board ID ' . $menuId);
-            throw new NotFoundException(__('Menu Board Category not found'));
         }
 
         return $menuCategories;
@@ -170,7 +169,7 @@ class MenuBoardCategoryFactory extends BaseFactory
      */
     public function getByProductId(int $menuProductId)
     {
-        $this->getLog()->debug('MenuBoardCategoryFactory getById ' . $menuProductId);
+        $this->getLog()->debug('MenuBoardCategoryFactory getByProductId ' . $menuProductId);
 
         $menuProducts = $this->getProductData(null, ['disableUserCheck' => 1, 'menuProductId' => $menuProductId]);
 
