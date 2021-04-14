@@ -24,6 +24,7 @@ namespace Xibo\Storage;
 
 use Carbon\Carbon;
 use MongoDB\BSON\ObjectId;
+use MongoDB\BSON\Regex;
 use MongoDB\BSON\UTCDateTime;
 use MongoDB\Client;
 use Xibo\Factory\CampaignFactory;
@@ -388,7 +389,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
     }
 
-    /** @inheritdoc
+    /**
+     * @inheritdoc
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function addStatFinalize()
@@ -450,15 +452,14 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
     /**
      * @inheritdoc
-     * @throws \Xibo\Exception\GeneralException|\Xibo\Exception\InvalidArgumentException
      */
     public function getStats($filterBy = [])
     {
         // do we consider that the fromDt and toDt will always be provided?
-        $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
-        $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
-        $statDate = isset($filterBy['statDate']) ? $filterBy['statDate'] : null;
-        $statDateLessThan = isset($filterBy['statDateLessThan']) ? $filterBy['statDateLessThan'] : null;
+        $fromDt = $filterBy['fromDt'] ?? null;
+        $toDt = $filterBy['toDt'] ?? null;
+        $statDate = $filterBy['statDate'] ?? null;
+        $statDateLessThan = $filterBy['statDateLessThan'] ?? null;
 
         // In the case of user switches from mysql to mongo - laststatId were saved as integer
         if (isset($filterBy['statId'])) {
@@ -472,16 +473,16 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $statId = null;
         }
 
-        $type = isset($filterBy['type']) ? $filterBy['type'] : null;
-        $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
-        $layoutIds = isset($filterBy['layoutIds']) ? $filterBy['layoutIds'] : [];
-        $mediaIds = isset($filterBy['mediaIds']) ? $filterBy['mediaIds'] : [];
-        $campaignId = isset($filterBy['campaignId']) ? $filterBy['campaignId'] : null;
-        $eventTag = isset($filterBy['eventTag']) ? $filterBy['eventTag'] : null;
+        $type = $filterBy['type'] ?? null;
+        $displayIds = $filterBy['displayIds'] ?? [];
+        $layoutIds = $filterBy['layoutIds'] ?? [];
+        $mediaIds = $filterBy['mediaIds'] ?? [];
+        $campaignId = $filterBy['campaignId'] ?? null;
+        $eventTag = $filterBy['eventTag'] ?? null;
 
         // Limit
-        $start = isset($filterBy['start']) ? $filterBy['start'] : null;
-        $length = isset($filterBy['length']) ? $filterBy['length'] : null;
+        $start = $filterBy['start'] ?? null;
+        $length = $filterBy['length'] ?? null;
 
         // Match query
         $match = [];
@@ -545,7 +546,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         // Type Filter
         if ($type != null) {
-            $match['$match']['type'] = $type;
+            $match['$match']['type'] = new Regex($type, 'i');
         }
 
         // Event Tag Filter
@@ -678,9 +679,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
     public function getExportStatsCount($filterBy = [])
     {
         // do we consider that the fromDt and toDt will always be provided?
-        $fromDt = isset($filterBy['fromDt']) ? $filterBy['fromDt'] : null;
-        $toDt = isset($filterBy['toDt']) ? $filterBy['toDt'] : null;
-        $displayIds = isset($filterBy['displayIds']) ? $filterBy['displayIds'] : [];
+        $fromDt = $filterBy['fromDt'] ?? null;
+        $toDt = $filterBy['toDt'] ?? null;
+        $displayIds = $filterBy['displayIds'] ?? [];
 
         // Match query
         $match = [];
