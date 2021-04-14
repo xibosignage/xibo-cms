@@ -58,13 +58,14 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
     /** @inheritdoc */
     public function getArray()
     {
+        $this->object->setTypeMap(['root' => 'array']);
         return $this->object->toArray();
     }
 
     /** @inheritDoc */
     public function getIdFromRow($row)
     {
-        return $row['id'];
+        return (string)$row['id'];
     }
 
     /** @inheritDoc */
