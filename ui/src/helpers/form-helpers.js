@@ -551,10 +551,17 @@ let formHelpers = function() {
         } else if(this.namespace.mainRegion != undefined) {
             region = this.namespace.mainRegion;
         } else if(this.namespace.selectedObject.type == 'widget') {
-            if(this.namespace.selectedObject.drawerWidget) {
-                region = this.namespace.getElementByTypeAndId('drawer');
+            const widget = this.namespace.selectedObject;
+            if(widget.drawerWidget) {
+
+                // Use target region to be used as scale 
+                if(widget.targetRegionId != undefined && this.namespace.layout.regions['region_' + widget.targetRegionId] != undefined) {
+                    region = this.namespace.layout.regions['region_' + widget.targetRegionId];
+                } else {
+                    region = this.namespace.getElementByTypeAndId('drawer');
+                }
             } else {
-                region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.regionId);
+                region = this.namespace.getElementByTypeAndId('region', widget.regionId);
             }
         } else if(this.namespace.selectedObject.type == 'region') {
             region = this.namespace.getElementByTypeAndId('region', this.namespace.selectedObject.id);
@@ -602,10 +609,10 @@ let formHelpers = function() {
             if($(dialog).find('.text_editor_scale').is(':checked')) {
 
                 // Inner width and a padding for the scrollbar
-                let width = $(dialog).find('form').innerWidth() - 30;
+                let width = $(dialog).find('form').innerWidth() - 32 - ((iframeBorderWidth+iframeMargin)*2);
 
                 // Element side plus margin
-                let elementWidth = regionDimensions.width + (iframeMargin * 2);
+                let elementWidth = regionDimensions.width;
                 scale = width / elementWidth;
             }
 
@@ -630,12 +637,18 @@ let formHelpers = function() {
                 if(!inlineHideBGColour) {
                     $(".cke_textarea_inline").css('background', backgroundColor);
                 }
+
+                // Calculate inner shadow ( based on scale )
+                let innerShadowWidth = (iframeBorderWidth / scale) + 'px';
                 
                 $(".cke_textarea_inline").css('transform', 'scale(' + scale + ')');
                 $(".cke_textarea_inline").css('transform-origin', '0 0');
                 $(".cke_textarea_inline").css('word-wrap', 'inherit');
                 $(".cke_textarea_inline").css('overflow', 'hidden');
                 $(".cke_textarea_inline").css('line-height', 'normal');
+                $(".cke_textarea_inline").css('-moz-box-shadow', 'inset 0 0 ' + innerShadowWidth + ' ' + innerShadowWidth  + ' red');
+                $(".cke_textarea_inline").css('-webkit-box-shadow', 'inset 0 0 ' + innerShadowWidth + ' ' + innerShadowWidth  + ' red');
+                $(".cke_textarea_inline").css('box-shadow', 'inset 0 0 ' + innerShadowWidth + ' ' + innerShadowWidth  + ' red');
                 $(".cke_textarea_inline p").css('margin', '0 0 16px');
                 $(".cke_textarea_inline").show();
             } else {
@@ -1061,12 +1074,12 @@ let formHelpers = function() {
     this.setupFormDimensionControls = function(dialog, toggleFlag, instanceToDestroy) {
         if(toggleFlag) {
             // Display controls
-            $(dialog).find('.form-editor-controls').toggleClass('d-none', false);
+            $(dialog).find('.form-editor-controls-dimensions').toggleClass('d-none', false);
         } else {
             // Hide the controls if there are no CKEditor instances or the one that is left is marked to be destroyed
             if($.isEmptyObject(CKEDITOR.instances) || (Object.keys(CKEDITOR.instances).length === 1 && CKEDITOR.instances[instanceToDestroy] !== undefined)) {
                 // Hide controls
-                $(dialog).find('.form-editor-controls').toggleClass('d-none', true);
+                $(dialog).find('.form-editor-controls-dimensions').toggleClass('d-none', true);
             }
         }
     };
@@ -1378,7 +1391,7 @@ let formHelpers = function() {
                 html: '<i class="fas fa-copy"></i>',
                 type: 'button',
                 title: editorsTrans.copyToClipboard,
-                'data-container': '#properties-panel',
+                'data-container': '.properties-panel',
                 class: 'btn btn-sm copyTextAreaButton',
                 click: function() {
                     const $input = $(el);
@@ -1418,11 +1431,14 @@ let formHelpers = function() {
 
             // Handler for updating the tooltip message.
             $newButton.bind('copied', function(event, message) {
-                $(this).attr('title', message)
-                    .tooltip('fixTitle')
-                    .tooltip('show')
-                    .attr('title', editorsTrans.copyToClipboard)
-                    .tooltip('fixTitle');
+                const $self = $(this);
+                $self.tooltip('hide')
+                    .attr('data-original-title', message)
+                    .tooltip('show');
+
+                setTimeout(function() {
+                    $self.tooltip('hide').attr('data-original-title', editorsTrans.copyToClipboard);
+                }, 1000);
             });
             
             // Add button to the text area

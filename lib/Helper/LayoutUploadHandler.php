@@ -65,6 +65,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $importTags = isset($_REQUEST['importTags']) ? $_REQUEST['importTags'][$index] : 0;
             $useExistingDataSets = isset($_REQUEST['useExistingDataSets']) ? $_REQUEST['useExistingDataSets'][$index] : 0;
             $importDataSetData = isset($_REQUEST['importDataSetData']) ? $_REQUEST['importDataSetData'][$index] : 0;
+            $folderId = isset($_REQUEST['folderId']) ? $_REQUEST['folderId'] : 1;
 
             /* @var Layout $layout */
             $layout = $controller->getLayoutFactory()->createFromZip(
@@ -80,6 +81,9 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $tags,
                 $this->options['routeParser']
             );
+
+            // set folderId, permissionFolderId is handled on Layout specific Campaign record.
+            $layout->folderId = $folderId;
 
             $layout->save(['saveActions' => false, 'import' => $importTags]);
             $layout->managePlaylistClosureTable($layout);

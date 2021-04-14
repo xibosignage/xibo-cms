@@ -62,10 +62,10 @@ class TagFactory extends BaseFactory
      */
     public function create($name)
     {
-       $tag = $this->createEmpty();
-       $tag->tag = $name;
+        $tag = $this->createEmpty();
+        $tag->tag = trim($name);
 
-       return $tag;
+        return $tag;
     }
 
     /**
@@ -383,10 +383,9 @@ class TagFactory extends BaseFactory
         }
 
         //isSystem filter, by default hide tags with isSystem flag
-        if ($sanitizedFilter->getCheckbox('isSystem') === 1) {
-            $body .= " AND `tag`.isSystem = 1 ";
-        } else {
-            $body .= " AND `tag`.isSystem = 0 ";
+        if ($sanitizedFilter->getInt('allTags') !== 1) {
+            $body .= ' AND `tag`.isSystem = :isSystem ';
+            $params['isSystem'] = $sanitizedFilter->getCheckbox('isSystem');
         }
 
         // isRequired filter, by default hide tags with isSystem flag

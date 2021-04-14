@@ -298,6 +298,20 @@ class PlaylistFactory extends BaseFactory
                 $body .= ' AND `playlist`.regionId IS NULL ';
         }
 
+        if ($parsedFilter->getInt('layoutId', $filterBy) !== null) {
+            $body .= '
+                AND playlist.playlistId IN (
+                       SELECT lkplaylistplaylist.childId
+                        FROM region
+                        INNER JOIN playlist
+                            ON playlist.regionId = region.regionId
+                        INNER JOIN lkplaylistplaylist
+                            ON lkplaylistplaylist.parentId = playlist.playlistId
+                        WHERE region.layoutId = :layoutId
+                )';
+            $params['layoutId'] = $parsedFilter->getInt('layoutId', $filterBy);
+        }
+
         // Logged in user view permissions
         $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy, '`playlist`.permissionsFolderId');
 

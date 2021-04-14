@@ -205,6 +205,40 @@ span.layout_assign_list_select {
 
 ul#LayoutAssignSortable {
     display: inline-block;
+    font-size: 0;
+    margin: 0;
+    padding: 0;
+    width: 100%;
+}
+
+ul#LayoutAssignSortable > li {
+    padding: 4px 6px;
+    margin: 2px;
+    border: 1px solid #8080ff;
+    background-color: #E5F0FF;
+    width: calc(20% - 4px);
+}
+
+ul#LayoutAssignSortable > li.ui-state-disabled {
+    background-color: #d4d4d4;
+}
+
+ul#LayoutAssignSortable > li > .layout-order {
+    width: 24px;
+    font-weight: bold;
+    color: #30426a;
+}
+
+ul#LayoutAssignSortable > li > .layout-name {
+    width: calc(100% - 34px);
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    text-align: left;
+}
+
+ul#LayoutAssignSortable > li > .layout-icon {
+    width: 10px;
 }
 
 #LayoutAssign {
@@ -213,16 +247,6 @@ ul#LayoutAssignSortable {
 
 .layoutAssignFilterOptions {
     padding: 10px;
-}
-
-#LayoutAssignSortable .li-sortable {
-    padding: 5px;
-    margin: 5px;
-    border: 1px solid #8080ff;
-    background-color: #E5F0FF;
-    cursor: pointer;
-    float: left;
-    list-style: none;
 }
 
 #xibo-loading-gif {
@@ -413,8 +437,25 @@ div.dt-buttons {
     text-align: center;
 }
 
+.upload-modal .modal-dialog {
+    max-width: 80% !important;
+}
+
+/* Bootstrap 4 fix for libraries that use fade+in ( fixes blueimp uploader ) */
+.upload-modal .fade.in {
+    opacity: 1
+}
+
 .template-upload span.preview {
     position: relative;
+}
+
+.template-upload div.input-group {
+    max-width: fit-content;
+}
+
+.template-upload p.size {
+    min-width: 100px;
 }
 
 /* WIZARD ASSISTANT  */

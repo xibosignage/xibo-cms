@@ -398,8 +398,17 @@ class ModuleFactory extends BaseFactory
         $module = $this->create($widget->type);
         $module->setWidget($widget);
 
-        if ($region != null)
-            $module->setRegion($region);
+        if ($region != null) {
+            // Are we loading a widget from the drawer?
+            $targetRegionId = $widget->getOptionValue('targetRegionId', 0);
+            if ($targetRegionId !== 0) {
+                // Lookup the targetRegionId and use that
+                $module->setRegion($this->regionFactory->getById($targetRegionId));
+            } else {
+                // Use the source region
+                $module->setRegion($region);
+            }
+        }
 
         return $module;
     }

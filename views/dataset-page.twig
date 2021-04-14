@@ -115,188 +115,193 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        {% if not currentUser.featureEnabled("folder.view") %}
-        disableFolders();
-        {% endif %}
+        var table;
+        $(document).ready(function() {
+            {% if not currentUser.featureEnabled("folder.view") %}
+            disableFolders();
+            {% endif %}
 
-        var table = $("#datasets").DataTable({
-            "language": dataTablesLanguage,
-            serverSide: true,
-            stateSave: true,
-            stateDuration: 0,
-            responsive: true,
-            stateLoadCallback: dataTableStateLoadCallback,
-            stateSaveCallback: dataTableStateSaveCallback,
-            filter: false,
-            searchDelay: 3000,
-            "order": [[ 0, "asc"]],
-            ajax: {
-                "url": "{{ url_for("dataSet.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
-            },
-            "columns": [
-                { "data": "dataSetId", responsivePriority: 2 },
-                { "data": "dataSet", "render": dataTableSpacingPreformatted, responsivePriority: 2 },
-                { "data": "description", responsivePriority: 4 },
-                { "data": "code", responsivePriority: 3 },
-                {
-                    "data": "isRemote",
-                    responsivePriority: 3,
-                    "render": dataTableTickCrossColumn
-                },
-                { "data": "owner", responsivePriority: 3 },
-                {
-                    "data": "groupsWithPermissions",
-                    responsivePriority: 3,
-                    "render": dataTableCreatePermissions
-                },
-                {
-                    "data": "lastSync",
-                    responsivePriority: 4,
-                    "render": dataTableDateFromUnix
-                },
-                {
-                    "orderable": false,
-                    responsivePriority: 1,
-                    "data": dataTableButtonsColumn
-                }
-            ]
-        });
-
-        table.on('draw', function(e, settings) {
-            dataTableDraw(e, settings);
-
-            // Upload form
-            $(".dataSetImportForm").click(function() {
-
-                var template = Handlebars.compile($("#template-dataset-upload").html());
-                var data = table.row($(this).closest("tr")).data();
-                var columns = [];
-                var i = 1;
-
-                $.each(data.columns, function (index, element) {
-                    if (element.dataSetColumnTypeId === 1) {
-                        element.index = i;
-                        columns.push(element);
-                        i++;
+            table = $("#datasets").DataTable({
+                "language": dataTablesLanguage,
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
+                responsive: true,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[ 0, "asc"]],
+                ajax: {
+                    "url": "{{ url_for("dataSet.search") }}",
+                    "data": function(d) {
+                        $.extend(d, $("#datasets").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
-                });
+                },
+                "columns": [
+                    { "data": "dataSetId", responsivePriority: 2 },
+                    { "data": "dataSet", "render": dataTableSpacingPreformatted, responsivePriority: 2 },
+                    { "data": "description", responsivePriority: 4 },
+                    { "data": "code", responsivePriority: 3 },
+                    {
+                        "data": "isRemote",
+                        responsivePriority: 3,
+                        "render": dataTableTickCrossColumn
+                    },
+                    { "data": "owner", responsivePriority: 3 },
+                    {
+                        "data": "groupsWithPermissions",
+                        responsivePriority: 3,
+                        "render": dataTableCreatePermissions
+                    },
+                    {
+                        "data": "lastSync",
+                        responsivePriority: 4,
+                        "render": dataTableDateFromUnix
+                    },
+                    {
+                        "orderable": false,
+                        responsivePriority: 1,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
 
-                // Handle bars and open a dialog
-                bootbox.dialog({
-                    message: template({
-                        trans: {
-                            addFiles: "{% trans "Add CSV Files" %}",
-                            startUpload: "{% trans "Start upload" %}",
-                            cancelUpload: "{% trans "Cancel upload" %}",
-                            processing: "{% trans "Processing..." %}"
-                        },
-                        upload: {
-                            maxSize: {{ libraryUpload.maxSize }},
-                            maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
-                            validExt: "{{ libraryUpload.validExt }}",
-                            utf8Message: "{% trans "If the CSV file contains non-ASCII characters please ensure the file is UTF-8 encoded" %}"
-                        },
-                        columns: columns
-                    }),
-                    title: "{% trans "CSV Import" %}",
-                    size: 'large',
-                    buttons: {
-                        main: {
-                            label: "{% trans "Done" %}",
-                            className: "btn-primary btn-bb-main",
-                            callback: function() {
-                                table.ajax.reload();
-                                XiboDialogClose();
-                            }
-                        },
-                        help: {
-                            label: "{% trans "Help" %}",
-                            className: "default btn-bb-help",
-                            callback: function() {
-                                XiboHelpRender("{{ helpService.link("dataset") }}#Importing_from_CSV_file");
-                            }
+            table.on('draw', function(e, settings) {
+                dataTableDraw(e, settings);
+
+                // Upload form
+                $(".dataSetImportForm").click(function(e) {
+                    e.preventDefault();
+
+                    var template = Handlebars.compile($("#template-dataset-upload").html());
+                    var data = table.row($(this).closest("tr")).data();
+                    var columns = [];
+                    var i = 1;
+
+                    $.each(data.columns, function (index, element) {
+                        if (element.dataSetColumnTypeId === 1) {
+                            element.index = i;
+                            columns.push(element);
+                            i++;
                         }
-                    }
-                }).on('shown.bs.modal', function() {
-                    // Configure the upload form
-                    var url = "{{ url_for("dataSet.import", {id: ':id'}) }}".replace(":id", data.dataSetId);
-                    var form = $(this).find("form");
-                    var refreshSessionInterval;
-
-                    // Initialize the jQuery File Upload widget:
-                    form.fileupload({
-                        url: url,
-                        disableImageResize: true
                     });
 
-                    // Upload server status check for browsers with CORS support:
-                    if ($.support.cors) {
-                        $.ajax({
+                    // Handle bars and open a dialog
+                    bootbox.dialog({
+                        message: template({
+                            trans: {
+                                addFiles: "{% trans "Add CSV Files" %}",
+                                startUpload: "{% trans "Start upload" %}",
+                                cancelUpload: "{% trans "Cancel upload" %}",
+                                processing: "{% trans "Processing..." %}"
+                            },
+                            upload: {
+                                maxSize: {{ libraryUpload.maxSize }},
+                                maxSizeMessage: "{{ libraryUpload.maxSizeMessage  }}",
+                                validExt: "{{ libraryUpload.validExt }}",
+                                utf8Message: "{% trans "If the CSV file contains non-ASCII characters please ensure the file is UTF-8 encoded" %}"
+                            },
+                            columns: columns
+                        }),
+                        title: "{% trans "CSV Import" %}",
+                        size: 'large',
+                        buttons: {
+                            main: {
+                                label: "{% trans "Done" %}",
+                                className: "btn-primary btn-bb-main",
+                                callback: function() {
+                                    table.ajax.reload();
+                                    XiboDialogClose();
+                                }
+                            },
+                            help: {
+                                label: "{% trans "Help" %}",
+                                className: "default btn-bb-help",
+                                callback: function() {
+                                    XiboHelpRender("{{ helpService.link("dataset") }}#Importing_from_CSV_file");
+                                }
+                            }
+                        }
+                    }).on('shown.bs.modal', function() {
+                        // Configure the upload form
+                        var url = "{{ url_for("dataSet.import", {id: ':id'}) }}".replace(":id", data.dataSetId);
+                        var form = $(this).find("form");
+                        var refreshSessionInterval;
+
+                        // Initialize the jQuery File Upload widget:
+                        form.fileupload({
                             url: url,
-                            type: 'HEAD'
-                        }).fail(function () {
-                            $('<span class="alert alert-error"/>')
+                            disableImageResize: true
+                        });
+
+                        // Upload server status check for browsers with CORS support:
+                        if ($.support.cors) {
+                            $.ajax({
+                                url: url,
+                                type: 'HEAD'
+                            }).fail(function () {
+                                $('<span class="alert alert-error"/>')
                                     .text('Upload server currently unavailable - ' + new Date())
                                     .appendTo(form);
-                        });
-                    }
+                            });
+                        }
 
-                    // Enable iframe cross-domain access via redirect option:
-                    form.fileupload(
+                        // Enable iframe cross-domain access via redirect option:
+                        form.fileupload(
                             'option',
                             'redirect',
                             window.location.href.replace(
-                                    /\/[^\/]*$/,
-                                    '/cors/result.html?%s'
+                                /\/[^\/]*$/,
+                                '/cors/result.html?%s'
                             )
-                    );
+                        );
 
-                    form.bind('fileuploadsubmit', function (e, data) {
-                        var inputs = data.context.find(':input');
-                        if (inputs.filter('[required][value=""]').first().focus().length) {
-                            return false;
-                        }
-                        data.formData = inputs.serializeArray().concat(form.serializeArray());
+                        form.bind('fileuploadsubmit', function (e, data) {
+                            var inputs = data.context.find(':input');
+                            if (inputs.filter('[required][value=""]').first().focus().length) {
+                                return false;
+                            }
+                            data.formData = inputs.serializeArray().concat(form.serializeArray());
 
-                        inputs.filter("input").prop("disabled", true);
-                    }).bind('fileuploadstart', function (e, data) {
+                            inputs.filter("input").prop("disabled", true);
+                        }).bind('fileuploadstart', function (e, data) {
 
-                        // Show progress data
-                        form.find('.fileupload-progress .progress-extended').show();
-                        form.find('.fileupload-progress .progress-end').hide();
-                        
-                        if (form.fileupload("active") <= 0)
-                            refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
-                        
-                        return true;
-                    }).bind('fileuploaddone', function (e, data) {
-                        if (refreshSessionInterval != null && form.fileupload("active") <= 0)
-                            clearInterval(refreshSessionInterval);
-                    }).bind('fileuploadprogressall', function (e, data) {
-                        // Hide progress data and show processing
-                        if(data.total > 0 && data.loaded == data.total) {
-                            form.find('.fileupload-progress .progress-extended').hide();
-                            form.find('.fileupload-progress .progress-end').show();
-                        }
-                    }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
-                        // Get uploaded and downloaded files and toggle Done button
-                        var filesToUploadCount = form.find('tr.template-upload').length;
-                        var $button = form.parents('.modal:first').find('button.btn-bb-main');
+                            // Show progress data
+                            form.find('.fileupload-progress .progress-extended').show();
+                            form.find('.fileupload-progress .progress-end').hide();
 
-                        if(filesToUploadCount == 0) {
-                            $button.removeAttr('disabled');
-                        } else {
-                            $button.attr('disabled', 'disabled');
-                        }
+                            if (form.fileupload("active") <= 0)
+                                refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
+
+                            return true;
+                        }).bind('fileuploaddone', function (e, data) {
+                            if (refreshSessionInterval != null && form.fileupload("active") <= 0)
+                                clearInterval(refreshSessionInterval);
+                        }).bind('fileuploadprogressall', function (e, data) {
+                            // Hide progress data and show processing
+                            if(data.total > 0 && data.loaded == data.total) {
+                                form.find('.fileupload-progress .progress-extended').hide();
+                                form.find('.fileupload-progress .progress-end').show();
+                            }
+                        }).bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
+                            // Get uploaded and downloaded files and toggle Done button
+                            var filesToUploadCount = form.find('tr.template-upload').length;
+                            var $button = form.parents('.modal:first').find('button.btn-bb-main');
+
+                            if(filesToUploadCount == 0) {
+                                $button.removeAttr('disabled');
+                            } else {
+                                $button.attr('disabled', 'disabled');
+                            }
+                        });
                     });
                 });
             });
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#datasets_wrapper').find('.col-md-6').eq(1));
         });
-        table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#datasets_wrapper').find('.col-md-6').eq(1));
+
 
         function dataSetFormOpen(dialog) {
             // Bind the test button

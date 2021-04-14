@@ -885,6 +885,7 @@ class InstallMigration extends AbstractMigration
                 ['tag' => 'template'],
                 ['tag' => 'background'],
                 ['tag' => 'thumbnail'],
+                ['tag' => 'imported'],
             ])
             ->save();
 

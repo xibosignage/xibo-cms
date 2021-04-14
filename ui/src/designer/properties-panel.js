@@ -82,10 +82,56 @@ PropertiesPanel.prototype.save = function(element) {
                 app.timeline.resetZoom();
             }
 
-            toastr.success(res.message);
+            const resultMessage = res.message;
 
-            const mainObject = app.getElementByTypeAndId(app.mainObjectType, app.mainObjectId);
-            app.reloadData(mainObject);
+            const reloadData = function() {
+                toastr.success(resultMessage);
+
+                const mainObject = app.getElementByTypeAndId(app.mainObjectType, app.mainObjectId);
+                app.reloadData(mainObject);
+            };
+
+            // Check if its a drawer widget and if we need to save the target region id
+            const $drawerWidgetTargetRegion = this.DOMObject.find('#drawerWidgetTargetRegion');
+            if($drawerWidgetTargetRegion.length > 0 && $drawerWidgetTargetRegion.val() != '') {
+                const valueToSave = $drawerWidgetTargetRegion.val();
+
+                let requestPath = urlsForApi[element.type].setRegion.url;
+                requestPath = requestPath.replace(':id', element[element.type + 'Id']);
+
+                $.ajax({
+                    url: requestPath,
+                    type: urlsForApi[element.type].setRegion.type,
+                    data: {
+                        targetRegionId: valueToSave
+                    }
+                }).done(function(res) {
+                    if(res.success) {
+                        toastr.success(res.message);
+                        reloadData();
+                    } else {
+                        // Login Form needed?
+                        if(res.login) {
+                            window.location.href = window.location.href;
+                            location.reload(false);
+                        } else {
+                            toastr.error(errorMessagesTrans.formLoadFailed);
+            
+                            // Just an error we dont know about
+                            if(res.message == undefined) {
+                                console.error(res);
+                            } else {
+                                console.error(res.message);
+                            }
+                        }
+                    }
+                }).catch(function(jqXHR, textStatus, errorThrown) {
+                    console.error(jqXHR, textStatus, errorThrown);
+                    toastr.error(errorMessagesTrans.formLoadFailed);
+                });
+            } else {
+                reloadData();
+            }
         }).catch((error) => { // Fail/error
 
             app.common.hideLoadingScreen();
@@ -202,7 +248,8 @@ PropertiesPanel.prototype.render = function(element, step) {
             style: element.type,
             form: htmlTemplate(element),
             buttons: buttons,
-            trans: propertiesPanelTrans
+            trans: propertiesPanelTrans,
+            isDrawerWidget: element.drawerWidget || false
         });
 
         // Append layout html to the main div
@@ -216,7 +263,7 @@ PropertiesPanel.prototype.render = function(element, step) {
             // append new tab
             let tabName = actionsTranslations.tableHeaders.name;
             const tabList = self.DOMObject.find('.nav-tabs');
-            let tabHtml = '<li class="nav-item"><a class="nav-link" href="#actionTab" role="tab" data-toggle="tab"><span id="actionTabName"></span></a></li>';
+            let tabHtml = '<li class="nav-item"><a class="nav-link action-tab" href="#actionTab" role="tab" data-toggle="tab"><span id="actionTabName"></span></a></li>';
             $(tabHtml).appendTo(tabList);
             $('#actionTabName').text(tabName);
 
@@ -318,6 +365,22 @@ PropertiesPanel.prototype.render = function(element, step) {
             self.openTabOnRender = '';
         }
 
+        // Populate the drawer select if exists
+        if($('.form-editor-controls-target-region').length > 0) {
+            const $selectOptionContainer = self.DOMObject.find('.form-editor-controls-target-region #drawerWidgetTargetRegion');
+
+            // Clear container
+            $selectOptionContainer.find('option:not(.default-option)').remove();
+            const elementTargetRegion = element.targetRegionId || '';
+            for(regionID in lD.layout.regions) {
+                const region = lD.layout.regions[regionID];
+                let $newOption = $('<option value="' + region.regionId + '">' + region.name + '</option>');
+                if(elementTargetRegion == region.regionId) {
+                    $newOption.attr('selected', 'selected');
+                }
+                $newOption.appendTo($selectOptionContainer);
+            }
+        }
     }).fail(function(data) {
 
         // Clear request var after response

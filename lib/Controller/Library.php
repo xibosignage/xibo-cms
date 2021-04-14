@@ -584,7 +584,9 @@ class Library extends Base
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'notPlayerSoftware' => 1,
             'notSavedReport' => 1,
-            'onlyMenuBoardAllowed' => $parsedQueryParams->getInt('onlyMenuBoardAllowed')
+            'onlyMenuBoardAllowed' => $parsedQueryParams->getInt('onlyMenuBoardAllowed'),
+            'layoutId' => $parsedQueryParams->getInt('layoutId'),
+            'includeLayoutBackgroundImage' => ($parsedQueryParams->getInt('layoutId') != null) ? 1 : 0
         ], $parsedQueryParams));
 
         // Add some additional row content

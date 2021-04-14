@@ -80,7 +80,7 @@
                         {% set title %}{% trans "Scale type" %}{% endset %}
                         {% set helpText %}
                             {% trans "How should this video be scaled?" %}
-                            {% trans "Please note that video scaling is only supported by Android, webOS and Tizen players at the current time." %}
+                            {{ forms.playerCompat("", "N/A", "", "", "v2 R253+") }}
                         {% endset %}
                         {% set aspect %}{% trans "Aspect" %}{% endset %}
                         {% set stretch %}{% trans "Stretch" %}{% endset %}
