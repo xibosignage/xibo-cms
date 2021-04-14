@@ -33,11 +33,12 @@ use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
+use Xibo\Event\MediaDeleteEvent;
 use Xibo\Factory\DataSetFactory;
-use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\FolderFactory;
@@ -150,9 +151,6 @@ class Library extends Base
     /** @var ScheduleFactory  */
     private $scheduleFactory;
 
-    /** @var  DayPartFactory */
-    private $dayPartFactory;
-
     /** @var HttpCacheProvider */
     private $cacheProvider;
 
@@ -169,7 +167,6 @@ class Library extends Base
      * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
-     * @param EventDispatcherInterface $dispatcher
      * @param UserFactory $userFactory
      * @param ModuleFactory $moduleFactory
      * @param TagFactory $tagFactory
@@ -184,13 +181,12 @@ class Library extends Base
      * @param DataSetFactory $dataSetFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param DayPartFactory $dayPartFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
      * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $dispatcher, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider, $folderFactory)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider, $folderFactory)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
@@ -199,7 +195,6 @@ class Library extends Base
         $this->mediaFactory = $mediaFactory;
         $this->widgetFactory = $widgetFactory;
         $this->pool = $pool;
-        $this->dispatcher = $dispatcher;
         $this->userFactory = $userFactory;
         $this->tagFactory = $tagFactory;
         $this->permissionFactory = $permissionFactory;
@@ -211,19 +206,9 @@ class Library extends Base
         $this->dataSetFactory = $dataSetFactory;
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
-        $this->dayPartFactory = $dayPartFactory;
         $this->playerVersionFactory = $playerVersionFactory;
         $this->cacheProvider = $cacheProvider;
         $this->folderFactory = $folderFactory;
-    }
-
-    /**
-     * Get Dispatcher
-     * @return EventDispatcherInterface
-     */
-    public function getDispatcher()
-    {
-        return $this->dispatcher;
     }
 
     /**
@@ -883,6 +868,8 @@ class Library extends Base
         if ($media->isUsed() && $this->getSanitizer($request->getParams())->getCheckbox('forceDelete') == 0) {
             throw new InvalidArgumentException(__('This library item is in use.'));
         }
+
+        $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
 
         // Delete
         $media->delete();

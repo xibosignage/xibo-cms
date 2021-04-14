@@ -27,6 +27,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
@@ -102,6 +103,9 @@ class Base
 
     /** @var Twig */
     private $view;
+
+    /** @var EventDispatcher */
+    private $dispatcher;
 
     /**
      * Set common dependencies.
@@ -187,6 +191,28 @@ class Base
     public function getView()
     {
         return $this->view;
+    }
+
+    /**
+     * @return EventDispatcher
+     */
+    public function getDispatcher(): EventDispatcher
+    {
+        if ($this->dispatcher === null) {
+            $this->dispatcher = new EventDispatcher();
+        }
+
+        return $this->dispatcher;
+    }
+
+    /**
+     * @param EventDispatcher $dispatcher
+     * @return EventDispatcher
+     */
+    public function useDispatcher(EventDispatcher $dispatcher): EventDispatcher
+    {
+        $this->dispatcher = $dispatcher;
+        return $this->dispatcher;
     }
 
     /**

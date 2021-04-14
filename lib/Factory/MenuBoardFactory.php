@@ -26,6 +26,8 @@ use Xibo\Entity\MenuBoard;
 use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DisplayNotifyService;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -50,8 +52,8 @@ class MenuBoardFactory extends BaseFactory
 
     private $sanitizerService;
 
-    /** @var DisplayFactory */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /**
      * Construct a factory
@@ -64,7 +66,7 @@ class MenuBoardFactory extends BaseFactory
      * @param PoolInterface $pool
      * @param PermissionFactory $permissionFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      */
     public function __construct(
         $store,
@@ -76,7 +78,7 @@ class MenuBoardFactory extends BaseFactory
         $pool,
         $permissionFactory,
         $menuBoardCategoryFactory,
-        $displayFactory
+        $displayNotifyService
     ) {
         $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
@@ -85,7 +87,7 @@ class MenuBoardFactory extends BaseFactory
 
         $this->permissionFactory = $permissionFactory;
         $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
     }
 
     /**
@@ -102,7 +104,7 @@ class MenuBoardFactory extends BaseFactory
             $this->config,
             $this->permissionFactory,
             $this->menuBoardCategoryFactory,
-            $this->displayFactory
+            $this->displayNotifyService
         );
     }
 

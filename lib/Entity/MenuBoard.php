@@ -25,11 +25,11 @@ namespace Xibo\Entity;
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -109,8 +109,8 @@ class MenuBoard implements \JsonSerializable
     /** @var MenuBoardCategoryFactory */
     private $menuBoardCategoryFactory;
 
-    /** @var DisplayFactory */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     private $datesToFormat = ['modifiedDt'];
 
@@ -123,7 +123,7 @@ class MenuBoard implements \JsonSerializable
      * @param ConfigServiceInterface $config
      * @param PermissionFactory $permissionFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      */
     public function __construct(
         $store,
@@ -133,7 +133,7 @@ class MenuBoard implements \JsonSerializable
         $config,
         $permissionFactory,
         $menuBoardCategoryFactory,
-        $displayFactory
+        $displayNotifyService
     ) {
         $this->setCommonDependencies($store, $log);
         $this->sanitizerService = $sanitizerService;
@@ -141,7 +141,7 @@ class MenuBoard implements \JsonSerializable
         $this->pool = $pool;
         $this->permissionFactory = $permissionFactory;
         $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
     }
 
     /**
@@ -296,13 +296,22 @@ class MenuBoard implements \JsonSerializable
     }
 
     /**
+     * Get the Display Notify Service
+     * @return DisplayNotifyServiceInterface
+     */
+    public function getDisplayNotifyService(): DisplayNotifyServiceInterface
+    {
+        return $this->displayNotifyService->init();
+    }
+
+    /**
      * Notify displays of this campaign change
      */
     public function notify()
     {
         $this->getLog()->debug('MenuBoard ' . $this->menuId . ' wants to notify');
 
-        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByMenuBoardId($this->menuId);
+        $this->getDisplayNotifyService()->collectNow()->notifyByMenuBoardId($this->menuId);
     }
 
     private function add()

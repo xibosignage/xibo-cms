@@ -141,9 +141,6 @@ class ContainerFactory
             'state' => function() {
                 return new ApplicationState();
             },
-            'dispatcher' => function() {
-                return new EventDispatcher();
-            },
             'moduleService' => function(ContainerInterface $c) {
                 return new ModuleService(
                     $c->get('store'),
@@ -214,6 +211,7 @@ class ContainerFactory
 
         $containerBuilder->addDefinitions(State::registerControllersWithDi());
         $containerBuilder->addDefinitions(State::registerFactoriesWithDi());
+        $containerBuilder->addDefinitions(State::registerDispatcherWithDi());
 
         // Should we compile the container?
         /*if (!Environment::isDevMode()) {

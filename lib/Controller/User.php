@@ -29,6 +29,7 @@ use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\Permission;
+use Xibo\Event\UserDeleteEvent;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -1029,6 +1030,7 @@ class User extends Base
             }
         }
 
+        $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user));
         // Delete the user
         $user->delete();
 

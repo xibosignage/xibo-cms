@@ -226,6 +226,11 @@ class MenuBoardCategoryFactory extends BaseFactory
             $this->nameFilter('menu_category', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
 
+        if ($sanitizedFilter->getInt('mediaId') !== null) {
+            $body .= ' AND `menu_category`.mediaId = :mediaId ';
+            $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
+        }
+
         // Sorting?
         $order = '';
 
@@ -314,6 +319,11 @@ class MenuBoardCategoryFactory extends BaseFactory
         if ($sanitizedFilter->getString('categories') != null) {
             $categories = implode('","', array_map('intval', explode(',', $sanitizedFilter->getString('categories'))));
             $body .= ' AND `menu_product`.menuCategoryId IN ("' . $categories . '") ';
+        }
+
+        if ($sanitizedFilter->getInt('mediaId') !== null) {
+            $body .= ' AND `menu_product`.mediaId = :mediaId ';
+            $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
         }
 
         // Sorting?

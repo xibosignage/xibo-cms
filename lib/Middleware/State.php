@@ -32,11 +32,16 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
+use Xibo\Event\MediaDeleteEvent;
+use Xibo\Event\UserDeleteEvent;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
+use Xibo\Listener\OnMediaDelete;
+use Xibo\Listener\OnUserDelete;
 use Xibo\Service\ReportService;
 use Xibo\Support\Exception\InstanceSuspendedException;
 use Xibo\Support\Exception\UpgradePendingException;
@@ -615,7 +620,7 @@ class State implements Middleware
                 );
             },
             '\Xibo\Controller\Library' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Library(
+                $controller = new \Xibo\Controller\Library(
                     $c->get('logService'),
                     $c->get('sanitizerService'),
                     $c->get('state'),
@@ -624,7 +629,6 @@ class State implements Middleware
                     $c->get('configService'),
                     $c->get('store'),
                     $c->get('pool'),
-                    $c->get('dispatcher'),
                     $c->get('userFactory'),
                     $c->get('moduleFactory'),
                     $c->get('tagFactory'),
@@ -639,12 +643,13 @@ class State implements Middleware
                     $c->get('dataSetFactory'),
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
-                    $c->get('dayPartFactory'),
                     $c->get('playerVersionFactory'),
                     $c->get('view'),
                     $c->get('httpCache'),
                     $c->get('folderFactory')
                 );
+                $controller->useDispatcher($c->get('dispatcher'));
+                return $controller;
             },
             '\Xibo\Controller\Logging' => function(ContainerInterface $c) {
                 return new \Xibo\Controller\Logging(
@@ -1085,7 +1090,7 @@ class State implements Middleware
                 );
             },
             '\Xibo\Controller\User' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\User(
+                $controller = new \Xibo\Controller\User(
                     $c->get('logService'),
                     $c->get('sanitizerService'),
                     $c->get('state'),
@@ -1112,6 +1117,8 @@ class State implements Middleware
                     $c->get('dataSetFactory'),
                     $c->get('folderFactory')
                 );
+                $controller->useDispatcher($c->get('dispatcher'));
+                return $controller;
             },
             '\Xibo\Controller\UserGroup' => function(ContainerInterface $c) {
                 return new \Xibo\Controller\UserGroup(
@@ -1390,7 +1397,7 @@ class State implements Middleware
                     $c->get('pool'),
                     $c->get('permissionFactory'),
                     $c->get('menuBoardCategoryFactory'),
-                    $c->get('displayFactory')
+                    $c->get('displayNotifyService'),
                 );
             },
             'moduleFactory' => function(ContainerInterface $c) {
@@ -1653,6 +1660,25 @@ class State implements Middleware
                     $c->get('logService'),
                     $c->get('sanitizerService')
                 );
+            },
+        ];
+    }
+
+    public static function registerDispatcherWithDi()
+    {
+        return [
+            'dispatcher' => function(ContainerInterface $c) {
+                $dispatcher = new EventDispatcher();
+
+                $dispatcher->addListener(MediaDeleteEvent::$NAME, (new OnMediaDelete(
+                    $c->get('menuBoardCategoryFactory'),
+                ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete(
+                    $c->get('menuBoardFactory'),
+                ))->useLogger($c->get('logger')));
+
+                return $dispatcher;
             },
         ];
     }
