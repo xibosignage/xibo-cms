@@ -181,8 +181,11 @@
     </script>
 
     <script type="text/x-handlebars-template" id="command-input-main-template">
-        <input type="checkbox" class="show-command-preview pull-right" id="showCommandPreview{{ unique }}" name="showCommandPreview{{ unique }}" title="{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}">
-        <label for="showCommandPreview{{ unique }}" class="pull-right show-command-preview-label">{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}</label>
+
+        <div class="form-check pull-right">
+            <input type="checkbox" class="show-command-preview form-check-input" id="showCommandPreview{{ unique }}" name="showCommandPreview{{ unique }}" title="{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}">
+            <label for="showCommandPreview{{ unique }}" class="show-command-preview-label form-check-label">{% endverbatim %}{% trans "Show command preview!" %}{% verbatim %}</label>
+        </div>
 
         <select class="command-type form-control form-control-inline">
             {{#each types}}
@@ -191,11 +194,9 @@
         </select>
         <div class="command-inputs panel panel-default"></div>
 
-        <pre class="command-preview" data-invalid-message="{% endverbatim %}{% trans 'Invalid command!' %}{% verbatim %}">
-            <code>
-            <!-- your code here -->
-            </code>
-        </pre>
+        <div disabled="disabled" class="command-preview bg-primary p-2 w-100" data-invalid-message="{% endverbatim %}{% trans 'Invalid command!' %}{% verbatim %}">
+          <code class="text-white"></code>
+        </div>
     </script>
 
     <script type="text/x-handlebars-template" id="command-input-freetext-template">
@@ -213,10 +214,10 @@
     </script>
 
     <script type="text/x-handlebars-template" id="command-input-rs232-template">
-        <div class="form-group-command form-group-rs232">
-            <input class="form-control form-control-inline rs232-text-input rs232-device-name" placeholder="{% endverbatim %}{% trans "Device Name/COM" %}{% verbatim %}" value="{{ value.cs.deviceName }}">
-            <input class="form-control form-control-inline rs232-text-input rs232-baud-rate" placeholder="{% endverbatim %}{% trans "Baud Rate" %}{% verbatim %}" value="{{ value.cs.baudRate }}">
-            <input class="form-control form-control-inline rs232-text-input rs232-data-bits" placeholder="{% endverbatim %}{% trans "Data Bits" %}{% verbatim %}" value="{{ value.cs.dataBits }}">
+        <div class="form-group-command form-group-device form-group-rs232">
+            <input class="form-control form-control-inline validated-element rs232-text-input rs232-device-name" placeholder="{% endverbatim %}{% trans "Device Name/COM" %}{% verbatim %}" value="{{ value.cs.deviceName }}">
+            <input class="form-control form-control-inline validated-element rs232-text-input rs232-baud-rate" placeholder="{% endverbatim %}{% trans "Baud Rate" %}{% verbatim %}" value="{{ value.cs.baudRate }}">
+            <input class="form-control form-control-inline validated-element rs232-text-input rs232-data-bits" placeholder="{% endverbatim %}{% trans "Data Bits" %}{% verbatim %}" value="{{ value.cs.dataBits }}">
         </div>
         <div class="form-group-command form-group-rs232">
             <div class="col-12 col-sm-6">
@@ -274,7 +275,7 @@
             </select>
         </div>
 
-        <input name="intentName{{ unique }}" id="intentName{{ unique }}" class="intent-name form-control form-control-inline" placeholder="{% endverbatim %}{% trans "Intent" %}{% verbatim %}" value="{{ value.name }}">
+        <input name="intentName{{ unique }}" id="intentName{{ unique }}" class="intent-name form-control validated-element form-control-inline" placeholder="{% endverbatim %}{% trans "Intent" %}{% verbatim %}" value="{{ value.name }}">
 
         <div class="form-group-command">
             <label for="intentExtraContainer{{ unique }}" class="intent-extra-container-label">{% endverbatim %}{% trans "Extra:" %}{% verbatim %}</label>
@@ -288,15 +289,106 @@
 
     <script type="text/x-handlebars-template" id="command-input-intent-extra-template">
         <div class="intent-extra-element">
-            <input class="form-control form-control-inline extra-name" placeholder="{% endverbatim %}{% trans "Name" %}{% verbatim %}" value="{{ name }}">
+            <input class="form-control form-control-inline validated-element extra-name" placeholder="{% endverbatim %}{% trans "Name" %}{% verbatim %}" value="{{ name }}">
             <select class="form-control form-control-inline extra-type">
                 <option value="string" {{#eq type "string"}}selected="selected"{{/eq}}>string</option>
                 <option value="int" {{#eq type "int"}}selected="selected"{{/eq}}>int</option>
                 <option value="bool" {{#eq type "bool"}}selected="selected"{{/eq}}>bool</option>
                 <option value="intArray" {{#eq type "intArray"}}selected="selected"{{/eq}}>intArray</option
             </select>
-            <input class="form-control form-control-inline extra-value" placeholder="{% endverbatim %}{% trans "Value" %}{% verbatim %}" value="{{ value }}">
+            <input class="form-control form-control-inline validated-element extra-value" placeholder="{% endverbatim %}{% trans "Value" %}{% verbatim %}" value="{{ value }}">
             <button type="button" class="btn btn-sm btn-warning pull-right intent-remove-extra"><i class="fa fa-minus fa-plus"></i></button>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-http-template">
+        {{! URL }}
+        <label for="httpURL{{ unique }}" class="http-url-label form-check-label">{% endverbatim %}{% trans "URL" %}{% verbatim %}</label>
+        <input name="httpURL{{ unique }}" id="httpURL{{ unique }}" class="http-url w-100 validated-element form-control form-control-inline" placeholder="{% endverbatim %}{% trans "URL" %}{% verbatim %}" value="{{ value.url }}">
+
+        {{! Query params }}
+        <div class="request-params request-section mt-2">
+            <div class="form-check w-100">
+                <input type="checkbox" data-toggle-element=".query-builder-container"  data-toggle-class="d-inline-block" class="show-query-builder ignore-change form-check-input" id="queryParamsBuilder{{ unique }}" name="queryParamsBuilder{{ unique }}" title="{% endverbatim %}{% trans "Query params builder" %}{% verbatim %}" checked>
+                <label for="queryParamsBuilder{{ unique }}" class="show-query-builder-label form-check-label">{% endverbatim %}{% trans "Query builder" %}{% verbatim %}</label>
+            </div>
+            <div class="form-group-command query-builder-container w-100 bg-white p-2 d-none d-inline-block">
+                <label for="queryBuilderContainer{{ unique }}" class="http-key-value-container-label">{% endverbatim %}{% trans "Query params:" %}{% verbatim %}</label>
+                <button class="http-key-value-add btn btn-info btn-sm pull-right" type="button">
+                    <i class="fa fa-plus"></i>
+                </button>
+
+                <div id="queryBuilderContainer{{ unique }}" class="http-key-value-container"></div>
+            </div>
+        </div>
+
+        {{! Method }}
+        <div class="form-group-command mt-2">
+            <label for="httpMethod{{ unique }}">{% endverbatim %}{% trans "Request method:" %}{% verbatim %}</label>
+            <select name="httpMethod{{ unique }}" id="httpMethod{{ unique }}" class="http-method pl-1 form-control form-control-inline">
+                <option value="GET" {{#eq value.method "GET"}}selected="selected"{{/eq}}>GET</option>
+                <option value="POST" {{#eq value.method "POST"}}selected="selected"{{/eq}}>POST</option>
+                <option value="PUT" {{#eq value.method "PUT"}}selected="selected"{{/eq}}>PUT</option>
+                <option value="DELETE" {{#eq value.method "DELETE"}}selected="selected"{{/eq}}>DELETE</option>
+                <option value="CONNECT" {{#eq value.method "CONNECT"}}selected="selected"{{/eq}}>CONNECT</option>
+                <option value="HEAD" {{#eq value.method "HEAD"}}selected="selected"{{/eq}}>HEAD</option>
+                <option value="OPTIONS" {{#eq value.method "OPTIONS"}}selected="selected"{{/eq}}>OPTIONS</option>
+                <option value="PATCH" {{#eq value.method "PATCH"}}selected="selected"{{/eq}}>PATCH</option>
+                <option value="TRACE" {{#eq value.method "TRACE"}}selected="selected"{{/eq}}>TRACE</option>
+            </select>
+        </div>
+
+        {{! Headers }}
+        <div class="request-headers request-section mt-2">
+          <div class="form-check w-100">
+              <input type="checkbox" data-toggle-element=".http-headers" data-toggle-element-reverse=".http-headers-container" data-toggle-class="d-inline-block" class="show-raw-headers ignore-change form-check-input" id="showRawHeaders{{ unique }}" name="showRawHeaders{{ unique }}" title="{% endverbatim %}{% trans "Show raw headers" %}{% verbatim %}">
+              <label for="showRawHeaders{{ unique }}" class="show-raw-headers-label form-check-label">{% endverbatim %}{% trans "Show raw headers" %}{% verbatim %}</label>
+          </div>
+          <textarea name="httpHeaders{{ unique }}" id="httpHeaders{{ unique }}" class="http-headers w-100 d-none form-control validated-element form-control-inline" placeholder="{% endverbatim %}{% trans "Headers" %}{% verbatim %}"></textarea>
+          <div class="form-group-command http-headers-container w-100 bg-white p-2 d-none d-inline-block">
+              <label for="httpHeadersContainer{{ unique }}" class="http-key-value-container-label">{% endverbatim %}{% trans "Headers" %}{% verbatim %}</label>
+              <button class="http-key-value-add btn btn-info btn-sm pull-right" type="button">
+                  <i class="fa fa-plus"></i>
+              </button>
+
+              <div id="httpHeadersContainer{{ unique }}" class="http-key-value-container"></div>
+          </div>
+        </div>
+
+        {{! Body }}
+        <div class="request-body request-section mt-2">
+            {{! Content type }}
+            <div class="form-group-command">
+                <label for="httpContentType{{ unique }}" class="pl-1">{% endverbatim %}{% trans "Content Type:" %}{% verbatim %}</label>
+                <select name="httpContentType{{ unique }}" id="httpContentType{{ unique }}" class="http-contenttype form-control form-control-inline">
+                    <option value="application/x-www-form-urlencoded" {{#eq value.contenttype "application/x-www-form-urlencoded"}}selected="selected"{{/eq}}>urlencoded</option>
+                    <option value="application/json" {{#eq value.contenttype "application/json"}}selected="selected"{{/eq}}>json</option>
+                    <option value="text/plain" {{#eq value.contenttype "text/plain"}}selected="selected"{{/eq}}>textplain</option>
+                </select>
+            </div>
+
+            {{! Body data }}
+            <div class="form-check w-100 mt-2">
+                <input type="checkbox" data-toggle-element=".http-data" data-toggle-element-reverse=".http-data-container" data-toggle-class="d-inline-block" class="show-raw-data ignore-change form-check-input" id="showRawData{{ unique }}" name="showRawData{{ unique }}" title="{% endverbatim %}{% trans "Show raw body data" %}{% verbatim %}">
+                <label for="showRawData{{ unique }}" class="show-raw-data-label form-check-label">{% endverbatim %}{% trans "Show raw data" %}{% verbatim %}</label>
+            </div>
+            <textarea name="httpData{{ unique }}" id="httpData{{ unique }}" class="http-data w-100 validated-element d-none form-control form-control-inline" placeholder="{% endverbatim %}{% trans "Body data" %}{% verbatim %}"></textarea>
+            <div class="form-group-command http-data-container w-100 bg-white p-2 d-none d-inline-block">
+                <label for="httpDataContainer{{ unique }}" class="http-key-value-container-label">{% endverbatim %}{% trans "Body data" %}{% verbatim %}</label>
+                <button class="http-key-value-add btn btn-info btn-sm pull-right" type="button">
+                    <i class="fa fa-plus"></i>
+                </button>
+
+                <div id="httpDataContainer{{ unique }}" class="http-key-value-container"></div>
+            </div>
+        </div>
+    </script>
+
+    <script type="text/x-handlebars-template" id="command-input-http-key-value-template">
+        <div class="http-key-value-element mt-1">
+            <input class="form-control validated-element form-control-inline http-key" placeholder="{% endverbatim %}{% trans "Key" %}{% verbatim %}" value="{{ key }}">
+            <input class="form-control validated-element form-control-inline http-value" placeholder="{% endverbatim %}{% trans "Value" %}{% verbatim %}" value="{{ value }}">
+            <button type="button" class="btn btn-sm btn-warning pull-right http-key-value-remove"><i class="fa fa-minus fa-plus"></i></button>
         </div>
     </script>
     {% endverbatim %}
