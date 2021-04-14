@@ -792,7 +792,7 @@ class Stats extends Base
                 : null;
             $fromDt = $resultSet->getDateFromValue($row['start'])->format(DateFormatHelper::getSystemFormat());
             $toDt = $resultSet->getDateFromValue($row['end'])->format(DateFormatHelper::getSystemFormat());
-            $engagements = $resultSet->getEngagementsFromRow($row);
+            $engagements = $resultSet->getEngagementsFromRow($row, false);
             $layout = $sanitizedRow->getString('layout', ['default' => __('Not Found')]);
             $display = $sanitizedRow->getString('display', ['default' => __('Not Found')]);
             $media = $sanitizedRow->getString('media', ['default' => '']);
