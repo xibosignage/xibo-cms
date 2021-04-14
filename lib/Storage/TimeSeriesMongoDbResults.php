@@ -65,7 +65,7 @@ class TimeSeriesMongoDbResults implements TimeSeriesResultsInterface
     /** @inheritDoc */
     public function getIdFromRow($row)
     {
-        return (string)$row['id'];
+        return $row['id'];
     }
 
     /** @inheritDoc */
