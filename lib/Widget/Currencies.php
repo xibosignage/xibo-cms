@@ -79,7 +79,7 @@ class Currencies extends AlphaVantageBase
     {
         // Extends parent's method
         parent::installFiles();
-        
+
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-finance-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
     }
@@ -411,21 +411,6 @@ class Currencies extends AlphaVantageBase
         $percentageChangeRequested = stripos($itemTemplate, '[ChangePercentage]') > -1;
 
         $data = [];
-        $priorDay = [];
-
-        // Do we need to get the data for percentage change?
-        if ($percentageChangeRequested && !$reverseConversion) {
-            try {
-                // Get the prior day
-                $priorDay = $this->getPriorDay($base, $items);
-
-                $this->getLog()->debug('Percentage change requested, prior day is ' . var_export($priorDay, true));
-
-            } catch (GeneralException $requestException) {
-                $this->getLog()->error('Problem getting percentage change currency information. E = ' . $requestException->getMessage());
-                $this->getLog()->debug($requestException->getTraceAsString());
-            }
-        }
 
         // Each item we want is a call to the results API
         try {
@@ -436,12 +421,6 @@ class Currencies extends AlphaVantageBase
                 // Do we need to reverse the from/to currency for this comparison?
                 if ($reverseConversion) {
                     $result = $this->getCurrencyExchangeRate($currency, $base);
-
-                    // We need to get the prior day for this pair only (reversed)
-                    $priorDay = $this->getPriorDay($currency, $base);
-
-                    $this->getLog()->debug('Percentage change requested, prior day is ' . var_export($priorDay, true));
-
                 } else {
                     $result = $this->getCurrencyExchangeRate($base, $currency);
                 }
@@ -466,8 +445,20 @@ class Currencies extends AlphaVantageBase
                 $parsedResult['Currency'] = $parsedResult['FromCurrency'] . '/' . $parsedResult['ToCurrency'];
 
                 // work out the change when compared to the previous day
-                if ($percentageChangeRequested && isset($priorDay[$parsedResult['ToName']]) && is_numeric($priorDay[$parsedResult['ToName']])) {
-                    $parsedResult['YesterdayTradePriceOnly'] = $priorDay[$parsedResult['ToName']];
+                if ($percentageChangeRequested) {
+                    // We need to get the prior day for this pair only (reversed)
+                    $priorDay = $reverseConversion
+                        ? $this->getPriorDay($currency, $base)
+                        : $this->getPriorDay($base, $currency);
+
+                    $this->getLog()->debug('Percentage change requested, prior day is '
+                        . var_export($priorDay['Time Series FX (Daily)'], true));
+
+                    $priorDay = count($priorDay['Time Series FX (Daily)']) < 2
+                        ? ['1. open' => 1]
+                        : array_values($priorDay['Time Series FX (Daily)'])[1];
+
+                    $parsedResult['YesterdayTradePriceOnly'] = $priorDay['1. open'];
                     $parsedResult['Change'] = $parsedResult['RawLastTradePriceOnly'] - $parsedResult['YesterdayTradePriceOnly'];
                 } else {
                     $parsedResult['YesterdayTradePriceOnly'] = 0;
@@ -522,7 +513,7 @@ class Currencies extends AlphaVantageBase
         foreach ($matches[0] as $sub) {
             $replace = str_replace('[', '', str_replace(']', '', $sub));
             $replacement = 'NULL';
-            
+
             // Match that in the array
             if (isset($data[$replace])) {
                 // If the tag exists on the data variables use that var
@@ -851,7 +842,7 @@ class Currencies extends AlphaVantageBase
         // Run based only if the element is visible or not
         $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboFinanceRender(options, items, body); }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
-        
+
         $javaScriptContent .= '   }); ';
         $javaScriptContent .= $javaScript;
         $javaScriptContent .= '</script>';

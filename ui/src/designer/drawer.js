@@ -125,9 +125,21 @@ Drawer.prototype.render = function() {
     self.DOMObject.html(loadingTemplate());
     self.DOMObject.find('#actions-drawer-content').html(loadingTemplate());
 
-    let widgetArray = $.map(lD.layout.drawer.widgets, function(value, index) {
-        return [value];
-    });
+    let widgetArray = $.map(lD.layout.drawer.widgets, 
+        function(value, index) {
+            // Validate drawer widget based on isValid and target region
+            if(value.isValid == 0 || value.targetRegionId == undefined) {
+                value.isDrawerValid = false;
+            } else {
+                value.isDrawerValid = true;
+                
+                // Set region name
+                value.targetRegionName = app.getElementByTypeAndId('region', 'region_' + value.targetRegionId).name;
+            }
+
+            return [value];
+        }
+    );
 
     // Sort and filter the widgets
     widgetArray.sort(function(a, b) {
@@ -247,9 +259,6 @@ Drawer.prototype.render = function() {
             // Prevent browser menu to open
             return false;
         });
-
-        // Custom dimensions
-        this.DOMObject.find('#drawer-custom-dimensions').off('change', 'input').on('change', 'input', _.debounce(self.saveDimensions.bind(self), 500));
     }
 };
 

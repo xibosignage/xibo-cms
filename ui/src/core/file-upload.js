@@ -31,7 +31,7 @@ function openUploadForm(options) {
         templateId: "template-file-upload",
         multi: true,
         videoImageCovers: true,
-        className: null,
+        className: "upload-modal",
         animateDialog: true,
         formOpenedEvent: null,
         layoutImport: false
@@ -195,6 +195,9 @@ function openUploadForm(options) {
                 }));
 
                 $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                    // Fix for 2nd/overlay modal
+                    $('.modal:visible').length && $(document.body).addClass('modal-open');
+                    
                     $(this).data('bs.modal', null);
                 });
             }
@@ -239,7 +242,7 @@ function handleVideoCoverImage(e, data) {
 
                     //show help text describing this feature.
                     var helpText = translations.videoImageCoverHelpText;
-                    $('.template-upload').find('video').closest("tr").find("td.title")[0].append(helpText);
+                    $('.template-upload').find('video').closest("tr").find("td span.info")[0].append(helpText);
 
                     getVideoImage(video, 2);
                     video.addEventListener('seeked, pause', seekImage);

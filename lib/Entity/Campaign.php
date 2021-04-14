@@ -31,7 +31,6 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -471,19 +470,47 @@ class Campaign implements \JsonSerializable
     }
 
     /**
+     * @return \Xibo\Entity\Layout[]
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getLayouts(): array
+    {
+        $this->load();
+        return $this->layouts;
+    }
+
+    /**
      * Assign Layout
      * @param Layout $layout
      * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function assignLayout($layout)
     {
+        // Validate if we're a full campaign
+        if ($this->isLayoutSpecific === 0) {
+            // Make sure we're not a draft
+            if ($layout->isChild()) {
+                throw new InvalidArgumentException(__('Cannot assign a Draft Layout to a Campaign'), 'layoutId');
+            }
+
+            // Make sure this layout is not a template - for API, in web ui templates are not available for assignment
+            if ($layout->isTemplate()) {
+                throw new InvalidArgumentException(__('Cannot assign a Template to a Campaign'), 'layoutId');
+            }
+        }
+
         $this->load();
 
-        $layout->displayOrder = ($layout->displayOrder == null || $layout->displayOrder == 0) ? count($this->layouts) + 1 : $layout->displayOrder;
+        $layout->displayOrder = ($layout->displayOrder == null || $layout->displayOrder == 0)
+            ? count($this->layouts) + 1
+            : $layout->displayOrder;
 
         $found = false;
         foreach ($this->layouts as $existingLayout) {
-            if ($existingLayout->getId() === $layout->getId() && $existingLayout->displayOrder === $layout->displayOrder && $this->isLayoutSpecific !== 1) {
+            if ($existingLayout->getId() === $layout->getId()
+                    && $existingLayout->displayOrder === $layout->displayOrder
+                    && $this->isLayoutSpecific !== 1) {
                 $found = true;
                 break;
             }
@@ -493,6 +520,7 @@ class Campaign implements \JsonSerializable
             $this->getLog()->debug('Layout assignment doesnt exist, adding it. ' . $layout . ', display order ' . $layout->displayOrder);
             $this->layoutAssignmentsChanged = true;
             $this->layouts[] = $layout;
+            $this->numberLayouts++;
         }
     }
 
@@ -551,32 +579,26 @@ class Campaign implements \JsonSerializable
         $countAfter = count($this->layouts);
         $this->getLog()->debug('Count after unassign ' . $countAfter);
 
-        if ($countBefore !== $countAfter)
+        if ($countBefore !== $countAfter) {
             $this->layoutAssignmentsChanged = true;
+            $this->numberLayouts = $countAfter;
+        }
     }
 
     /**
-     * Is the provided layout already assigned to this campaign
-     * @param Layout $checkLayout
-     * @return bool
-     * @throws GeneralException
+     * @return $this
      */
-    public function isLayoutAssigned($checkLayout)
+    public function unassignAllLayouts()
     {
-        $assigned = false;
-
-        $this->load();
-
-        foreach ($this->layouts as $layout) {
-            if ($layout->layoutId === $checkLayout->layoutId) {
-                $assigned = true;
-                break;
-            }
-        }
-
-        return $assigned;
+        $this->layoutAssignmentsChanged = true;
+        $this->numberLayouts = 0;
+        $this->layouts = [];
+        return $this;
     }
 
+    /**
+     * Add
+     */
     private function add()
     {
         $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId, folderId, permissionsFolderId) VALUES (:campaign, :isLayoutSpecific, :userId, :folderId, :permissionsFolderId)', array(
@@ -588,6 +610,9 @@ class Campaign implements \JsonSerializable
         ));
     }
 
+    /**
+     * Update
+     */
     private function update()
     {
         $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE CampaignID = :campaignId', [
@@ -639,14 +664,13 @@ class Campaign implements \JsonSerializable
         // Update the layouts, in order to have display order 1 to n
         $i = 0;
         $sql = 'INSERT INTO `lkcampaignlayout` (CampaignID, LayoutID, DisplayOrder) VALUES ';
-        $params = [];
+        $params = ['campaignId' => $this->campaignId];
 
         foreach ($this->layouts as $layout) {
             $i++;
             $layout->displayOrder = $i;
 
-            $sql .= '(:campaignId_' . $i . ', :layoutId_' . $i . ', :displayOrder_' . $i . '),';
-            $params['campaignId_' . $i] = $this->campaignId;
+            $sql .= '(:campaignId, :layoutId_' . $i . ', :displayOrder_' . $i . '),';
             $params['layoutId_' . $i] = $layout->layoutId;
             $params['displayOrder_' . $i] = $layout->displayOrder;
         }

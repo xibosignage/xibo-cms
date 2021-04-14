@@ -46,7 +46,7 @@ Playlist.prototype.createDataStructure = function(data) {
         );
 
         if(newWidget.subType == 'image') {
-            newWidget.previewTemplate = '<div class="tooltip playlist-widget-preview" role="tooltip"><div class="tooltip-arrow"></div><div class="tooltip-inner-image"><img src=' + imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]) + '></div></div>';
+            newWidget.previewTemplate = '<div class="tooltip playlist-widget-preview" role="tooltip"><div class="arrow"></div><div class="tooltip-inner-image"><img src=' + imageDownloadUrl.replace(':id', widgets[widget].mediaIds[0]) + '></div></div>';
         }
 
 

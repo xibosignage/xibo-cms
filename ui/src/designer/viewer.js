@@ -177,18 +177,29 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
 
     // Get target element( get region if element is a Widget type )
     let targetElement = element;
+    let targetElementToScale = element;
     
     if(element.type === 'widget') {
-        targetElement = (element.drawerWidget) ? lD.layout.drawer : lD.layout.regions[element.regionId];
+        if(element.drawerWidget) {
+            // Use drawer as target to render ( and to scale by default )
+            targetElement = targetElementToScale = lD.layout.drawer;
+
+            // Use target region to be used as scale 
+            if(element.targetRegionId != undefined && lD.layout.regions['region_' + element.targetRegionId] != undefined) {
+                targetElementToScale = lD.layout.regions['region_' + element.targetRegionId];
+            }
+        } else {
+            targetElement = targetElementToScale = lD.layout.regions[element.regionId];
+        }
     }
 
     // Stop rendering if the element is invalid
-    if(targetElement == undefined) {
+    if(targetElement == undefined || targetElementToScale == undefined) {
         return;
     }
 
     // Apply scaling
-    let containerElementDimensions = this.scaleElement(targetElement, container);
+    let containerElementDimensions = this.scaleElement(targetElementToScale, container);
 
     // Get element to render index
     const elementIndex = (element.type === 'widget') ? element.index : widgetIndex;

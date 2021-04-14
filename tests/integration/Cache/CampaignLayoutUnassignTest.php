@@ -82,7 +82,9 @@ class CampaignLayoutUnassignTest extends LocalWebTestCase
         $this->campaign = (new XiboCampaign($this->getEntityProvider()))->create(Random::generateString());
 
         // Assign the Layout to the Campaign
-        $this->campaign->assignLayout([$this->layout->layoutId], [1]);
+        $this->getEntityProvider()->post('/campaign/layout/assign/' . $this->campaign->campaignId, [
+            'layoutId' => $this->layout->layoutId
+        ]);
 
         // Create a Display
         $this->display = $this->createDisplay();
@@ -137,14 +139,11 @@ class CampaignLayoutUnassignTest extends LocalWebTestCase
         // Make sure our Display is already DONE
         $this->assertTrue($this->displayStatusEquals($this->display, Display::$STATUS_DONE), 'Display Status isnt as expected');
 
-        // Add the Layout we have prepared to the existing Campaign
-        $this->sendRequest('POST','/campaign/layout/unassign/' . $this->campaign->campaignId, [
-            'layoutId' => [
-                [
-                    'layoutId' => $this->layout->layoutId,
-                    'displayOrder' => 1
-                ]
-            ]
+        // Unassign requires edit
+        $this->sendRequest('PUT', '/campaign/' . $this->campaign->campaignId, [
+            'name' => $this->campaign->campaign,
+            'manageLayouts' => 1,
+            'layoutIds' => [] // empty list
         ]);
 
         // Validate the display status afterwards

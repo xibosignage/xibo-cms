@@ -21,7 +21,6 @@
  */
 
 namespace Xibo\Tests\Integration;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboCampaign;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
@@ -213,120 +212,5 @@ class CampaignTest extends LocalWebTestCase
         $this->assertTrue($flag, 'Campaign ID ' . $camp1->campaignId . ' was not found after deleting a different campaign');
         # Cleanup
         $camp1->delete();
-    }
-
-    /**
-     * Assign Layout
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function testAssignLayout()
-    {
-        // Make a campaign with a known name
-        $name = Random::generateString(8, 'phpunit');
-
-        /* @var XiboCampaign $campaign */
-        $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
-
-        // Get a layout for the test
-        $layout = (new XiboLayout($this->getEntityProvider()))->create(
-            Random::generateString(8, 'phpunit'),
-            'phpunit description',
-            '',
-            $this->getResolutionId('landscape')
-        );
-
-        // Call assign on the default layout
-        $response = $this->sendRequest('POST', '/campaign/layout/assign/' . $campaign->campaignId, [
-            'layoutId' => [
-                [
-                    'layoutId' => $layout->layoutId,
-                    'displayOrder' => 1
-                ]
-            ]
-        ]);
-
-        $this->assertSame(200, $response->getStatusCode(), '/campaign/layout/assign/' . $campaign->campaignId . '. Body: ' . $response->getBody());
-        # Get this campaign and check it has 1 layout assigned
-        $campaignCheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
-        $this->assertSame($campaign->campaignId, $campaignCheck->campaignId, $response->getBody());
-        $this->assertSame(1, $campaignCheck->numberLayouts, $response->getBody());
-        # Delete layout as we no longer need it
-        $campaign->delete();
-        $layout->delete();
-    }
-    /**
-     * Unassign Layout
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function testUnassignLayout()
-    {
-        // Make a campaign with a known name
-        $name = Random::generateString(8, 'phpunit');
-        /* @var XiboCampaign $campaign */
-        $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
-
-        // Get a layout for the test
-        $layout = (new XiboLayout($this->getEntityProvider()))->create(
-            Random::generateString(8, 'phpunit'),
-            'phpunit description',
-            '',
-            $this->getResolutionId('landscape')
-        );
-
-        // Assign layout to campaign
-        $campaign->assignLayout([$layout->layoutId], [1]);
-        # Call unassign on the created layout
-        $response = $this->sendRequest('POST', '/campaign/layout/unassign/' . $campaign->campaignId, [
-            'layoutId' => [
-                [
-                    'layoutId' => $layout->layoutId,
-                    'displayOrder' => 1
-                ]
-            ]
-        ]);
-
-        $this->assertSame(200, $response->getStatusCode(), $response->getBody());
-        # Get this campaign and check it has 0 layouts assigned
-        $campaignCheck2 = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
-        $this->assertSame($campaign->campaignId, $campaignCheck2->campaignId,$response->getBody());
-        $this->assertSame(0, $campaignCheck2->numberLayouts, $response->getBody());
-        # Delete layout as we no longer need it
-        $campaign->delete();
-        $layout->delete();
-    }
-
-    /**
-     * Assign Layout to layout specific campaignId - expect failure
-     * @throws \Exception
-     */
-    public function testAssignLayoutFailure()
-    {
-        // Get a layout for the test
-        $layout = (new XiboLayout($this->getEntityProvider()))->create(
-            Random::generateString(8, 'phpunit'),
-            'phpunit description',
-            '',
-            $this->getResolutionId('landscape')
-        );
-
-        // Call assign on the layout specific campaignId
-        $request = $this->createRequest('POST', '/campaign/layout/assign/' . $layout->campaignId);
-        $request = $request->withParsedBody([
-            'layoutId' => [
-                [
-                    'layoutId' => $layout->layoutId,
-                    'displayOrder' => 1
-                ]
-            ]
-        ]);
-
-        try {
-            $this->app->handle($request);
-        } catch (InvalidArgumentException $exception) {
-            $this->assertSame(422, $exception->getCode(), 'Expecting failure, received ' . $exception->getMessage());
-        }
-
-
-        $layout->delete();
     }
 }

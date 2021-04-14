@@ -170,7 +170,7 @@ trait EntityTrait
      * @param bool $jsonEncodeArrays
      * @return array
      */
-    public function getChangedProperties($jsonEncodeArrays = false, $datesToFormat = [])
+    public function getChangedProperties($jsonEncodeArrays = false)
     {
         $changedProperties = [];
 
@@ -222,17 +222,17 @@ trait EntityTrait
     {
         $objectAsJson = $this->jsonSerialize();
 
-            foreach ($objectAsJson as $key => $value) {
-                if (in_array($key, $this->datesToFormat)) {
-                    $objectAsJson[$key] = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
-                }
+        foreach ($objectAsJson as $key => $value) {
+            if (isset($this->datesToFormat) && in_array($key, $this->datesToFormat)) {
+                $objectAsJson[$key] = Carbon::createFromTimestamp($value)->format(DateFormatHelper::getSystemFormat());
+            }
 
-                if ($jsonEncodeArrays) {
-                    if (is_array($value)) {
-                        $objectAsJson[$key] = json_encode($value);
-                    }
+            if ($jsonEncodeArrays) {
+                if (is_array($value)) {
+                    $objectAsJson[$key] = json_encode($value);
                 }
             }
+        }
 
         return $objectAsJson;
     }

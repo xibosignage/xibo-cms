@@ -441,11 +441,13 @@ class LayoutTest extends LocalWebTestCase
         $layout = (new XiboLayout($this->getEntityProvider()))->create('phpunit layout assigned', 'phpunit layout', '', $this->getResolutionId('landscape'));
         // Make a campaign with a known name
         $name = Random::generateString(8, 'phpunit');
-        /* @var XiboCampaign $campaign */
         $campaign = (new XiboCampaign($this->getEntityProvider()))->create($name);
 
         // Assign layout to campaign
-        $campaign->assignLayout([$layout->layoutId], [1]);
+        $this->getEntityProvider()->post('/campaign/layout/assign/' . $campaign->campaignId, [
+            'layoutId' => $layout->layoutId
+        ]);
+
         # Check if it's assigned 
         $campaignCheck = (new XiboCampaign($this->getEntityProvider()))->getById($campaign->campaignId);
         $this->assertSame(1, $campaignCheck->numberLayouts);
@@ -601,6 +603,7 @@ class LayoutTest extends LocalWebTestCase
 
         # Edit region
         $response = $this->sendRequest('PUT','/region/' . $region->regionId, [
+            'name' => $layout->layout . ' edited',
             'width' => 700,
             'height' => 500,
             'top' => 400,

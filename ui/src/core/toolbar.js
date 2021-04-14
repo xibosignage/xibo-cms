@@ -460,6 +460,9 @@ Toolbar.prototype.render = function() {
 
                     // Mark content as selected
                     $(this).parent('.toolbar-pane-content').addClass('selected');
+                    
+                    // Reload tooltips to avoid floating detached elements
+                    app.common.reloadTooltips(app.editorContainer);
                 },
                 stop: function() {
 
@@ -471,6 +474,9 @@ Toolbar.prototype.render = function() {
 
                     // Mark content as unselected
                     $(this).parent('.toolbar-pane-content').removeClass('selected');
+                    
+                    // Reload tooltips to avoid floating detached elements
+                    app.common.reloadTooltips(app.editorContainer);
                 }
             });
         });
@@ -670,7 +676,13 @@ Toolbar.prototype.selectCard = function(card) {
             if(dropTo === 'all' && subType === 'permissions') {
                 $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
             } else {
-                $('[data-type="' + dropTo + '"].ui-droppable.editable').addClass('ui-droppable-active');
+                // Prevent adding audio to subplaylist
+                let selectorAppend = '';
+                if(subType == 'audio'){
+                    selectorAppend = ':not([data-widget-type="subplaylist"])';
+                }
+
+                $('[data-type="' + dropTo + '"].ui-droppable.editable' + selectorAppend).addClass('ui-droppable-active');
             }
         }
     }

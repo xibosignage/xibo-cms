@@ -1067,25 +1067,38 @@ class Schedule implements \JsonSerializable
                     break;
 
                 case 'Month':
+                    // We use the difference to set the end date
+                    $difference = $end->diffInSeconds($start);
+
                     // Are we repeating on the day of the month, or the day of the week
                     if ($this->recurrenceMonthlyRepeatsOn == 1) {
                         // Week day repeat
-                        $difference = $end->diffInSeconds($start);
-
                         // Work out the position in the month of this day and the ordinal
-                        $ordinals = ['first', 'second', 'third', 'fourth', 'fifth', 'sixth', 'seventh'];
+                        $ordinals = ['first', 'second', 'third', 'fourth', 'last'];
                         $ordinal = $ordinals[ceil($originalStart->day / 7) - 1];
-                        $start->month($start->month + $this->recurrenceDetail)->modify($ordinal . ' ' . $originalStart->format('l') . ' of ' . $start->format('F Y'))->setTimeFrom($originalStart);
+                        $start->addDays(28 * $this->recurrenceDetail)
+                            ->modify($ordinal . ' ' . $originalStart->format('l') . ' of ' . $start->format('F Y'));
+                        $start->setTimeFrom($originalStart);
 
-                        $this->getLog()->debug('Setting start to: ' . $ordinal . ' ' . $start->format('l') . ' of ' . $start->format('F Y'));
-
-                        // Base the end on the start + difference
-                        $end = $start->copy()->addSeconds($difference);
+                        $this->getLog()->debug('Monthly repeats every ' . $this->recurrenceDetail . ' months on '
+                            . $ordinal . ' ' . $start->format('l') . ' of ' . $start->format('F Y'));
                     } else {
                         // Day repeat
-                        $start->month($start->month + $this->recurrenceDetail);
-                        $end->month($end->month + $this->recurrenceDetail);
+                        $start = $start->copy()->addDays(28 * $this->recurrenceDetail);
+                        if ($originalStart->day > intval($start->format('t'))) {
+                            // The next month has fewer days than the current month
+                            $start->endOfMonth()->setTimeFrom($originalStart);
+                        } else {
+                            $start->day($originalStart->day);
+                        }
+
+                        $this->getLog()->debug('Monthly repeats every ' . $this->recurrenceDetail . ' months on '
+                            . ' on a specific day ' . $originalStart->day . ' days this month ' . $start->format('t')
+                            . ' set to ' . $start->format('Y-m-d'));
                     }
+
+                    // Base the end on the start + difference
+                    $end = $start->copy()->addSeconds($difference);
                     break;
 
                 case 'Year':

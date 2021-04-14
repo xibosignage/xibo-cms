@@ -1,4 +1,4 @@
-<div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-parent-type="drawer" data-widget-region="{{ regionId }}" class="designer-widget drawer-widget {{#eq isValid 0}}invalid-widget{{/eq}} selectable {{selectedFlag}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}} {{#if isDeletable}}deletable{{/if}}">
+<div id="{{ id }}" data-type="widget" data-widget-id="{{ widgetId }}" data-widget-type="{{ subType }}" data-parent-type="drawer" data-widget-region="{{ regionId }}" class="designer-widget drawer-widget {{#unless isDrawerValid }}invalid-widget{{/unless}} selectable {{selectedFlag}} {{#if isEditable}}editable{{/if}} {{#if isPermissionsModifiable}}permissionsModifiable{{/if}} {{#if isDeletable}}deletable{{/if}}">
     <div class="widgetLabel timelineMediaItemColouringDefault timelineMediaItemColouring_{{ subType }} {{ widgetColouring }}">
         <div class="widgetSubType">
             <i class="fa module-icon-{{subType}}" data-toggle="tooltip" data-placement="left" data-container="#actions-drawer" data-title="{{moduleName}}"></i>
@@ -22,7 +22,7 @@
         {{/if}}
 
         {{#gt expireStatus 0}}
-            <i class="fa {{expireStatusIcon}} editProperty" 
+            <i class="fa {{expireStatusIcon}} editProperty tooltip-always-on" 
             data-toggle="tooltip" 
             data-placement="right" 
             data-container="#actions-drawer" 
@@ -34,5 +34,14 @@
         {{#each transitions}}
             <i class="fa fa-sign-{{@key}} editProperty" data-property="Transition" data-property-type="{{@key}}"></i>
         {{/each}}
+    </div>
+
+    <div class="targetInfo {{#unless targetRegionId}}no-target{{/unless}}">
+        <i class="fa fa-bullseye float-right"></i>
+        {{#if targetRegionId}}
+            <span class="info-text float-right mr-2">{{ targetRegionName }}</span>
+        {{else}}
+            <span class="info-text float-right mr-2" title="{{ trans.noTargetRegionHelp }}">{{ trans.noTargetRegion }}</span>
+        {{/if}}
     </div>
 </div>
