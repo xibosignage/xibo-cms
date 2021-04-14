@@ -9,20 +9,10 @@
             {{/if}}
         </div>
     {{else}}
-        <div class="actions-drawer-controls row">
-            <div class="col-5 mr-auto text-left" id="actions-drawer-search-bar">
+        <div class="actions-drawer-controls">
+            <div id="actions-drawer-search-bar">
                 <i class="fa fa-search"></i>
-                <input class="w-75" id="inputSearch" name="inputSearch" value="{{ searchQuery }}" type="text" autoComplete="off" placeholder="{{ trans.search }}">
-            </div>
-
-            <div class="col-auto ml-auto form-inline" id="drawer-custom-dimensions">
-                <div class="dimensions-label">{{ trans.dimensionsLabel }}</div>
-                <div class="form-group">
-                    <input type="number" class="form-control text_editor_width" id="drawerRegionWidth" value="{{ drawer.dimensions.width }}" placeholder="{{ trans.width }}" title="{{ trans.width }}">
-                </div>
-                <div class="form-group">
-                    <input type="number" class="form-control text_editor_height" id="drawerRegionHeight" value="{{ drawer.dimensions.height }}" placeholder="{{ trans.height }}" title="{{ trans.height }}">
-                </div>
+                <input id="inputSearch" name="inputSearch" value="{{ searchQuery }}" type="text" autoComplete="off" placeholder="{{ trans.search }}">
             </div>
         </div>
 

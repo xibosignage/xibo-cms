@@ -111,7 +111,7 @@
                                  data-button-type="add"
                                  data-widget-id=""
                                  data-playlist-id="{{ playlist.playlistId }}"
-                                 data-widget-preview="{{ url_for("library.download") }}?preview=1"
+                                 data-widget-preview="{{ url_for("library.download", {id:':id'}) }}?preview=1"
                                  data-widget-del="{{ url_for("playlist.module.widget.delete.form", {id:':id'}) }}"
                                  data-feature-enabled="{{ currentUser.featureEnabled("playlist.modify")  }}">
                                 {% if loop.first %}

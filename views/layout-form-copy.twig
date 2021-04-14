@@ -45,6 +45,12 @@
             <form id="layoutCopyForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("layout.copy", {id: layout.layoutId}) }}")>
                 <div class="tab-content">
                     <div class="tab-pane active" id="general">
+                        {% if layout.publishedStatusId == 2 %}
+                            {% set warning %} {% trans "Copying this Layout will create an exact copy of the last time this Layout was Published.
+                             Any changes made to this Layout while it has been a Draft will not be copied. Publish the Layout before making a copy if the Draft changes should be included in the copy." %} {% endset %}
+                            {{ forms.message(warning, 'alert alert-info') }}
+                        {% endif %}
+
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "The Name for the copy (1 - 50 characters)" %}{% endset %}
                         {% set layoutName %}{{ layout.layout }} 2{% endset %}

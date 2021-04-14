@@ -32,6 +32,7 @@ use Xibo\Entity\Permission;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\FolderFactory;
@@ -136,6 +137,9 @@ class User extends Base
     /** @var FolderFactory */
     private $folderFactory;
 
+    /** @var DayPartFactory */
+    private $dayPartFactory;
+
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -163,12 +167,36 @@ class User extends Base
      * @param ContainerInterface $container
      * @param DataSetFactory $dataSetFactory
      * @param FolderFactory $folderFactory
+     * @param DayPartFactory $dayPartFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $userFactory,
-                                $userTypeFactory, $userGroupFactory, $permissionFactory,
-                                $layoutFactory, $applicationFactory, $campaignFactory, $mediaFactory, $scheduleFactory, $displayFactory, $sessionFactory, $displayGroupFactory,
-                                $widgetFactory, $playerVersionFactory, $playlistFactory, Twig $view, ContainerInterface $container, $dataSetFactory, $folderFactory)
-    {
+    public function __construct(
+        $log,
+        $sanitizerService,
+        $state,
+        $user,
+        $help,
+        $config,
+        $userFactory,
+        $userTypeFactory,
+        $userGroupFactory,
+        $permissionFactory,
+        $layoutFactory,
+        $applicationFactory,
+        $campaignFactory,
+        $mediaFactory,
+        $scheduleFactory,
+        $displayFactory,
+        $sessionFactory,
+        $displayGroupFactory,
+        $widgetFactory,
+        $playerVersionFactory,
+        $playlistFactory,
+        Twig $view,
+        ContainerInterface $container,
+        $dataSetFactory,
+        $folderFactory,
+        $dayPartFactory
+    ) {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->userFactory = $userFactory;
@@ -189,6 +217,7 @@ class User extends Base
         $this->container = $container;
         $this->dataSetFactory = $dataSetFactory;
         $this->folderFactory = $folderFactory;
+        $this->dayPartFactory = $dayPartFactory;
     }
 
     /**
@@ -1009,7 +1038,7 @@ class User extends Base
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $user->setChildAclDependencies($this->userGroupFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory);
+        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory, $this->dayPartFactory);
 
         if ($sanitizedParams->getCheckbox('deleteAllItems') != 1) {
 
@@ -1290,13 +1319,18 @@ class User extends Base
         if ($user->hasPropertyChanged('twoFactorTypeId')
             || ($user->hasPropertyChanged('email') && $user->twoFactorTypeId === 1)
             || ($user->hasPropertyChanged('email') && $user->getOriginalValue('twoFactorTypeId') === 1)
+            || $newPassword != null
         ) {
-            $user->checkPassword($oldPassword);
+            try {
+                $user->checkPassword($oldPassword);
+            } catch (AccessDeniedException $exception) {
+                throw new InvalidArgumentException(__('Please enter your password'), 'password');
+            }
         }
 
         // check if we have a new password provided, if so check if it was correctly entered
         if ($newPassword != $retypeNewPassword) {
-            throw new InvalidArgumentException(__('Passwords do not match'), 'password');
+            throw new InvalidArgumentException(__('Passwords do not match'), 'newPassword');
         }
 
         // check if we have saved secret, for google auth that is done on jQuery side

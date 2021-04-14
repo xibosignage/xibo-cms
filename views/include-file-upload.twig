@@ -20,7 +20,7 @@
 {# Upload dialog - template-file-upload #}
 {% verbatim %}
 <script type="text/x-handlebars-template" id="template-file-upload">
-    <form method="post" enctype="multipart/form-data">
+    <form method="post" enctype="multipart/form-data" class="overflow-auto">
         {{#if playlistId}}
             <input type="hidden" name="playlistId" value="{{ playlistId }}" />
         {{/if}}
@@ -212,7 +212,7 @@
         </div>
         {{/if}}
         <!-- The table listing the files available for upload/download -->
-        <table role="presentation" class="table table-striped"><tbody class="files"></tbody></table>
+        <table role="presentation" class="table table-striped table-sm"><tbody class="files"></tbody></table>
     </form>
 </script>
 {% endverbatim %}
@@ -259,17 +259,27 @@
         <td>
             <span class="preview"></span>
         </td>
-        <td class="title" title="Name">
-            <label class="control-label" title="Optional media name" for="name">Name</label>
-            <label for="name[]"><input name="name[]" type="text" id="name" value="" /></label>
-            <div><span class="error"></span></div>
-        </td>
-        <td class="title" title="Tags">
-            {% endverbatim %}{% if currentUser.featureEnabled("tag.tagging") %}
-            <label class="control-label" title="A comma separated list of tags to assign to this Media" for="tags">Tags</label>
-            <label for="tags[]"><input name="tags[]" type="text" id="tags" value="" /></label>
-            <div><span class="error"></span></div>
-            {% endif %}{% verbatim %}
+        <td class="row">
+            <div class="title col-12 mb-2 col-xl-6" title="Name">
+                <label class="control-label" title="Optional media name" for="name[]">Name</label>
+                <div class="input-group">
+                    <input name="name[]" type="text" id="name" value="" />
+                </div>
+            </div>
+            <div class="title col-12 mb-2 col-xl-6" title="Tags">
+                {% endverbatim %}{% if currentUser.featureEnabled("tag.tagging") %}
+                    <label class="control-label" title="A comma separated list of tags to assign to this Media" for="tags">Tags</label>
+                    <div class="input-group">
+                        <input name="tags[]" type="text" id="tags" value="" />
+                    </div>
+                {% endif %}{% verbatim %}
+            </div>
+            <div class="col-12 mb-2">
+                <span class="info"></span>
+            </div>
+            <div class="col-12 mb-2">
+                <span class="error"></span>
+            </div>
         </td>
         <td>
             <p class="size">{%=o.formatFileSize(file.size)%}</p>
@@ -280,17 +290,19 @@
                 </div>
             </div>
         </td>
-        <td class="btn-group">
-            {% if (!i && !o.options.autoUpload) { %}
-                <button class="btn btn-primary start" disabled>
-                    <i class="fa fa-upload"></i>
-                </button>
-            {% } %}
-            {% if (!i) { %}
-                <button class="btn btn-warning cancel">
-                    <i class="fa fa-ban"></i>
-                </button>
-            {% } %}
+        <td>
+            <div class="btn-group">
+                {% if (!i && !o.options.autoUpload) { %}
+                    <button class="btn btn-primary start" disabled>
+                        <i class="fa fa-upload"></i>
+                    </button>
+                {% } %}
+                {% if (!i) { %}
+                    <button class="btn btn-warning cancel">
+                        <i class="fa fa-ban"></i>
+                    </button>
+                {% } %}
+            </div>
         </td>
     </tr>
 {% } %}
@@ -302,7 +314,7 @@
 <script id="template-download" type="text/x-tmpl">
 {% for (var i=0, file; file=o.files[i]; i++) { %}
     <tr class="template-download">
-       <td>
+       <td colspan="2">
             <p class="name" id="{%=file.storedas%}" status="{% if (file.error) { %}error{% } %}">
                 {%=file.name%}
             </p>
@@ -310,7 +322,7 @@
                 <div><span class="label label-danger">{%=file.error%}</span></div>
             {% } %}
         </td>
-        <td>
+        <td colspan="2">
             <span class="size">{%=o.formatFileSize(file.size)%}</span>
         </td>
     </tr>

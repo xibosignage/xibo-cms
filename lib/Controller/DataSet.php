@@ -242,7 +242,6 @@ class DataSet extends Base
                         $dataSet->buttons[] = array(
                             'id' => 'dataset_button_import',
                             'class' => 'dataSetImportForm',
-                            'url' => $this->urlFor($request,'dataSet.import.form', ['id' => $dataSet->dataSetId]),
                             'text' => __('Import CSV')
                         );
                     }

@@ -304,6 +304,7 @@
 
         $("#layoutUploadForm").click(function(e) {
             e.preventDefault();
+            var currentWorkingFolderId = $('#folderId').val();
 
             // Open the upload dialog with our options.
             openUploadForm({
@@ -332,14 +333,19 @@
                         replaceExistingMediaMessage: "{% trans "Replace Existing Media?" %}",
                         importTagsMessage: "{% trans "Import Tags?" %}",
                         useExistingDataSetsMessage: "{% trans "Use existing DataSets matched by name?" %}",
-                        dataSetDataMessage: "{% trans "Import DataSet Data?" %}"
+                        dataSetDataMessage: "{% trans "Import DataSet Data?" %}",
+                        selectFolder: "{% trans "Select Folder" %}",
+                        selectFolderTitle: "{% trans "Change Current Folder location" %}",
+                        selectedFolder: "{% trans "Current Folder" %}:",
+                        selectedFolderTitle: "{% trans "Upload files to this Folder" %}"
                     },
                     upload: {
                         maxSize: {{ libraryUpload.maxSize }},
                         maxSizeMessage: "{{ libraryUpload.maxSizeMessage }}",
                         validExt: "zip"
                     },
-                    folderSelector: false
+                    currentWorkingFolderId: currentWorkingFolderId,
+                    folderSelector: true
                 },
                 formOpenedEvent: function () {
                     // Configure the active behaviour of the checkboxes
@@ -362,6 +368,9 @@
                 $("body").append(folderTreeModal(treeConfig));
 
                 $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
+                    // Fix for 2nd/overlay modal
+                    $('.modal:visible').length && $(document.body).addClass('modal-open');
+                    
                     $(this).data('bs.modal', null);
                 });
             }
@@ -415,7 +424,7 @@
             $.ajax({
                 type: form.attr("method"),
                 url: url,
-                data: {layoutId: [{layoutId: form.data().layoutId}]},
+                data: {layoutId: form.data().layoutId},
                 cache: false,
                 dataType:"json",
                 success: XiboSubmitResponse

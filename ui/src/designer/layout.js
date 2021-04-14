@@ -421,6 +421,11 @@ Layout.prototype.createDrawer = function(drawerData) {
         // update duration
         newWidget.getDuration();
 
+        // We need to validate if the target region still exists in the layout
+        if(this.regions['region_' + newWidget.getOptions().targetRegionId]) {
+            newWidget.targetRegionId = newWidget.getOptions().targetRegionId;
+        }
+
         // Add newWidget to the Region widget object
         newDrawer.widgets[newWidget.id] = newWidget;
 
@@ -429,7 +434,7 @@ Layout.prototype.createDrawer = function(drawerData) {
     }
 
     // Dimensions
-    this.dimensions = {
+    newDrawer.dimensions = {
         width: drawerData.width,
         height: drawerData.height,
         top: drawerData.top,

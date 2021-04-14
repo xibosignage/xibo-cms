@@ -159,7 +159,7 @@ class CampaignFactory extends BaseFactory
      * @return array[Campaign]
      * @throws NotFoundException
      */
-    public function query($sortOrder = null, $filterBy = [], $options = [])
+    public function query($sortOrder = null, $filterBy = [])
     {
         $sanitizedFilter = $this->getSanitizer($filterBy);
 

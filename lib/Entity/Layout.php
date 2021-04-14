@@ -633,6 +633,26 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Is this Layout a Template?
+     * @return bool
+     */
+    public function isTemplate(): bool
+    {
+        // Tags might be an array (if we've called `load()` or a string if we've returned directly from the DB)
+        $tagsArray = is_array($this->tags)
+            ? $this->tags
+            : explode(',', $this->tags);
+
+        foreach ($tagsArray as $tag) {
+            if ($tag === 'template') {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * @return array
      */
     public function getStatusMessage()
@@ -2023,11 +2043,6 @@ class Layout implements \JsonSerializable
         // Get my parent for later
         $parent = $this->layoutFactory->loadById($this->parentId);
 
-        $this->getStore()->isolated('UPDATE `layout` SET status = 5 WHERE layoutId = :layoutId', [
-            'layoutId' => $this->layoutId
-        ]);
-        $this->getStore()->commitIfNecessary('isolated');
-
         // I am the draft, so I clear my parentId, and set the parentId of my parent, to myself (swapping us)
         // Make me the parent.
         $this->getStore()->update('UPDATE `layout` SET parentId = NULL WHERE layoutId = :layoutId', [
@@ -2115,7 +2130,7 @@ class Layout implements \JsonSerializable
 
         // Nullify my parentId (I no longer have a parent)
         $this->parentId = null;
-
+        $this->status = 5;
         // Add a layout history
         $this->addLayoutHistory();
 
@@ -2166,8 +2181,8 @@ class Layout implements \JsonSerializable
     {
         $this->getLog()->debug('Adding Layout' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, duration, autoApplyTransitions, code)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, :schemaVersion, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, :autoApplyTransitions, :code)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, retired, duration, autoApplyTransitions, code)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, :schemaVersion, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, 0, :autoApplyTransitions, :code)';
 
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
@@ -2281,9 +2296,9 @@ class Layout implements \JsonSerializable
             'layoutid' => $this->layoutId,
             'layout' => $this->layout,
             'description' => $this->description,
-            'duration' => $this->duration,
+            'duration' => ($this->duration == null) ? 0 : $this->duration,
             'modifieddt' => $time,
-            'retired' => $this->retired,
+            'retired' => ($this->retired == null) ? 0 : $this->retired,
             'width' => $this->width,
             'height' => $this->height,
             'backgroundImageId' => ($this->backgroundImageId == null) ? null : $this->backgroundImageId,
@@ -2292,7 +2307,7 @@ class Layout implements \JsonSerializable
             'status' => $this->status,
             'publishedStatusId' => $this->publishedStatusId,
             'userId' => $this->ownerId,
-            'schemaVersion' => $this->schemaVersion,
+            'schemaVersion' => ($this->schemaVersion == null) ? Environment::$XLF_VERSION : $this->schemaVersion,
             'statusMessage' => (empty($this->statusMessage)) ? null : json_encode($this->statusMessage),
             'enableStat' => $this->enableStat,
             'autoApplyTransitions' => $this->autoApplyTransitions,

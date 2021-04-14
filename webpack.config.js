@@ -1,5 +1,4 @@
 const path = require('path');
-const UglifyJSPlugin = require('uglifyjs-webpack-plugin');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 
@@ -64,7 +63,7 @@ var config = {
                 use: [{
                     loader: 'file-loader',
                     options: {
-                        name: '[name].[ext]'
+                        name: '[name].[hash].[ext]'
                     }
                 }]
             },
@@ -105,35 +104,29 @@ var config = {
         ]
     },
     plugins: [
-        new UglifyJSPlugin({
-            sourceMap: true
-        }),
         new CleanWebpackPlugin(['web/dist']),
-        new CopyWebpackPlugin([
-            // Copy directory contents to {output}/
-            {
-                from: 'ui/src/core',
-                to: 'core'
-            },
-            {
-                from: 'ui/src/preview',
-                to: 'preview'
-            },
-            {
-                from: 'ui/src/assets',
-                to: 'assets'
-            },
-            {
-                from: 'ui/src/vendor',
-                to: 'vendor'
-            }
-        ], {
-                // By default, we only copy modified files during
-                // a watch or webpack-dev-server build. Setting this
-                // to `true` copies all files.
-                copyUnmodified: true
-            })
-    ]
+        new CopyWebpackPlugin({
+            patterns: [
+                // Copy directory contents to {output}/
+                {
+                    from: 'ui/src/core',
+                    to: 'core'
+                },
+                {
+                    from: 'ui/src/preview',
+                    to: 'preview'
+                },
+                {
+                    from: 'ui/src/assets',
+                    to: 'assets'
+                },
+                {
+                    from: 'ui/src/vendor',
+                    to: 'vendor'
+                }
+            ]
+        })
+    ],
 };
 
 module.exports = (env, argv) => {
@@ -143,7 +136,7 @@ module.exports = (env, argv) => {
     }
 
     if(argv.mode === 'production') {
-        config.devtool = '';
+        config.devtool = false;
     }
 
     return config;

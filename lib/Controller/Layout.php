@@ -412,6 +412,12 @@ class Layout extends Base
         // Save
         $layout->save();
 
+        if ($templateId != null && $template !== null) {
+            $layout->copyActions($layout, $template);
+            // set Layout original values to current values
+            $layout->setOriginals();
+        }
+
         foreach ($layout->regions as $region) {
             /* @var Region $region */
 
@@ -421,6 +427,13 @@ class Layout extends Base
 
                 // Make sure Playlist closure table from the published one are copied over
                 $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
+
+                // set Region original values to current values
+                $region->setOriginals();
+                foreach ($region->regionPlaylist->widgets as $widget) {
+                    // set Widget original values to current values
+                    $widget->setOriginals();
+                }
             }
             $campaign = $this->campaignFactory->getById($layout->campaignId);
 
@@ -1490,6 +1503,35 @@ class Layout extends Base
                     'url' => $this->urlFor($request,'layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
                     'text' => __('Assign to Campaign')
                 );
+            }
+
+            $layout->buttons[] = ['divider' => true];
+
+            if ($this->getUser()->featureEnabled('playlist.view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_playlist_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor($request, 'playlist.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Playlists included on this Layout')
+                ];
+            }
+
+            if ($this->getUser()->featureEnabled('campaign.view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_campaign_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor($request, 'campaign.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Campaigns containing this Layout')
+                ];
+            }
+
+            if ($this->getUser()->featureEnabled('library.view')) {
+                $layout->buttons[] = [
+                    'id' => 'layout_button_media_jump',
+                    'linkType' => '_self', 'external' => true,
+                    'url' => $this->urlFor($request, 'library.view') .'?layoutId=' . $layout->layoutId,
+                    'text' => __('Jump to Media included on this Layout')
+                ];
             }
 
             $layout->buttons[] = ['divider' => true];

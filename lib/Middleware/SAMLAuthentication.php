@@ -359,6 +359,6 @@ class SAMLAuthentication extends AuthenticationBase
     /** @inheritDoc */
     public function addToRequest(Request $request)
     {
-        return $request->withAttribute('excludedCsrfRoutes', ['/saml/acs']);
+        return $request->withAttribute('excludedCsrfRoutes', array_merge($request->getAttribute('excludedCsrfRoutes', []), ['/saml/acs']));
     }
 }

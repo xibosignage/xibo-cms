@@ -244,10 +244,14 @@ jQuery.fn.extend({
             if (marquee) {
                 // Which marquee to use?
                 var nua = navigator.userAgent;
+                /* The intention was to allow Chrome based android to benefit from the new marquee
+                   unfortunately though, it doesn't appear to work.
+                   Maybe this is due to Chrome verison? Android tends to have quite an old version.
                 var is_android = ((nua.indexOf('Mozilla/5.0') > -1
-                    && nua.indexOf('Android ') > -1
+                    && nua.indexOf('Android') > -1
                     && nua.indexOf('AppleWebKit') > -1)
-                    && !(nua.indexOf('Chrome') > -1));
+                    && !(nua.indexOf('Chrome') > -1));*/
+                var is_android = nua.indexOf('Android') > -1;
 
                 // Create a DIV to scroll, and put this inside the body
                 var scroller = $("<div/>")

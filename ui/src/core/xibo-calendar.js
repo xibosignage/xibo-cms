@@ -616,7 +616,9 @@ var setupScheduleForm = function(dialog) {
     // Handle the repeating monthly selector
     // Run when the tab changes
     $('a[data-toggle="tab"]', dialog).on('shown.bs.tab', function (e) {
-        var nth = function(n) {return n+["st","nd","rd"][((n+90)%100-10)%10-1]||"th"};
+        var nth = function(n) {
+          return n + (["st","nd","rd"][((n+90)%100-10)%10-1] || "th")
+        };
         var $fromDt = $(dialog).find("input[name=fromDt]");
         var fromDt = ($fromDt.val() === null || $fromDt.val() === "") ? moment() : moment($fromDt.val());
         var $recurrenceMonthlyRepeatsOn = $(dialog).find("select[name=recurrenceMonthlyRepeatsOn]");
@@ -774,7 +776,6 @@ var beforeSubmitScheduleForm = function(form) {
  * @param el jQuery element
  */
 var processScheduleFormElements = function(el) {
-    
     var fieldVal = el.val();
     
     switch (el.attr('id')) {
@@ -788,6 +789,7 @@ var processScheduleFormElements = function(el) {
             $(".repeat-control-group").css('display', repeatControlGroupDisplay);
             $(".repeat-weekly-control-group").css('display', repeatControlGroupWeekDisplay);
             $(".repeat-monthly-control-group").css('display', repeatControlGroupMonthDisplay);
+            $('#recurrenceDetail').parent().find('.input-group-addon').html(el.val());
 
             break;
         
