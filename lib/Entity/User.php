@@ -824,6 +824,12 @@ class User implements \JsonSerializable, UserEntityInterface
             'oldUserId' => $this->userId
         ]);
 
+        // Reassign Menu Boards
+        $this->getStore()->update('UPDATE `menu_board` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
         // Delete oAuth Clients - security concern
         $this->getStore()->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $this->userId]);
 

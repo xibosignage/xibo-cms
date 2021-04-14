@@ -353,5 +353,10 @@ class Folder
             'permissionsFolderId' => $permissionFolderId,
             'folderId' => $folderId
         ]);
+
+        $this->getStore()->update('UPDATE `menuboard` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+            'permissionsFolderId' => $permissionFolderId,
+            'folderId' => $folderId
+        ]);
     }
 }
