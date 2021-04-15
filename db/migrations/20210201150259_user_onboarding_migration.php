@@ -35,7 +35,7 @@ class UserOnboardingMigration extends AbstractMigration
         // If we only have the preset user groups, add some more.
         $countGroups = $this->fetchRow('SELECT COUNT(*) AS cnt FROM `group` WHERE isUserSpecific = 0 AND isEveryone = 0');
 
-        if ($countGroups['cnt'] <= 2) {
+        if ($countGroups['cnt'] <= 3) {
             // These can't be translated out the box as we don't know language on install?
             $this->table('group')
                 ->insert([
