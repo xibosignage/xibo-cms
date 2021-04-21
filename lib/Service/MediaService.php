@@ -23,6 +23,7 @@
 namespace Xibo\Service;
 
 
+use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Xibo\Entity\User;
@@ -260,6 +261,32 @@ class MediaService implements MediaServiceInterface
         // Check that we are now writable - if not then error
         if (!is_writable($libraryFolder)) {
             throw new ConfigurationException(__('Library not writable'));
+        }
+    }
+
+    /** @inheritDoc */
+    public function removeTempFiles()
+    {
+        $libraryTemp = $this->configService->getSetting('LIBRARY_LOCATION') . 'temp';
+
+        if (!is_dir($libraryTemp)) {
+            return;
+        }
+
+        // Dump the files in the temp folder
+        foreach (scandir($libraryTemp) as $item) {
+            if ($item == '.' || $item == '..')
+                continue;
+
+            // Has this file been written to recently?
+            if (filemtime($libraryTemp . DIRECTORY_SEPARATOR . $item) > Carbon::now()->subSeconds(86400)->format('U')) {
+                $this->log->debug('Skipping active file: ' . $item);
+                continue;
+            }
+
+            $this->log->debug('Deleting temp file: ' . $item);
+
+            unlink($libraryTemp . DIRECTORY_SEPARATOR . $item);
         }
     }
 }

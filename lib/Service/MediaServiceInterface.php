@@ -88,4 +88,9 @@ interface MediaServiceInterface
      * @throws ConfigurationException
      */
     public static function ensureLibraryExists($libraryFolder);
+
+    /**
+     * Remove temporary files
+     */
+    public function removeTempFiles();
 }
