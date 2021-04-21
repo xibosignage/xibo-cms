@@ -23,11 +23,13 @@
 
 namespace Xibo\XTR;
 use Carbon\Carbon;
-use Xibo\Controller\Library;
+use Xibo\Controller\Module;
+use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\GeneralException;
 
 /**
@@ -44,15 +46,23 @@ class MaintenanceDailyTask implements TaskInterface
     /** @var UserFactory */
     private $userFactory;
 
-    /** @var Library */
-    private $libraryController;
+    /** @var Module */
+    private $moduleController;
+
+    /** @var MediaServiceInterface */
+    private $mediaService;
+
+    /** @var DataSetFactory */
+    private $dataSetFactory;
 
     /** @inheritdoc */
     public function setFactories($container)
     {
-        $this->libraryController = $container->get('\Xibo\Controller\Library');
+        $this->moduleController = $container->get('\Xibo\Controller\Module');
         $this->layoutFactory = $container->get('layoutFactory');
         $this->userFactory = $container->get('userFactory');
+        $this->dataSetFactory = $container->get('dataSetFactory');
+        $this->mediaService = $container->get('mediaService');
         return $this;
     }
 
@@ -132,9 +142,10 @@ class MaintenanceDailyTask implements TaskInterface
                         true,
                         false,
                         true,
-                        $this->libraryController,
+                        $this->dataSetFactory,
                         null,
-                        null
+                        null,
+                        $this->mediaService
                     );
 
                     $layout->save([
@@ -157,6 +168,6 @@ class MaintenanceDailyTask implements TaskInterface
      */
     private function installModuleFiles()
     {
-        $this->libraryController->installAllModuleFiles();
+        $this->moduleController->installAllModuleFiles();
     }
 }
