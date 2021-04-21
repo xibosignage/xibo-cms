@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,33 +23,27 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use Parsedown;
-use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
-use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Item;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
-use Xibo\Factory\ActionFactory;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ResolutionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\LayoutUploadHandler;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\SendFile;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
+use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -89,11 +83,6 @@ class Layout extends Base
     private $moduleFactory;
 
     /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
      * @var UserGroupFactory
      */
     private $userGroupFactory;
@@ -117,58 +106,41 @@ class Layout extends Base
     /** @var  DisplayGroupFactory */
     private $displayGroupFactory;
 
-    /** @var  ActionFactory */
-    private $actionFactory;
-
-    /** @var ContainerInterface */
-    private $container;
-
     /** @var PoolInterface */
     private $pool;
 
+    /** @var MediaServiceInterface */
+    private $mediaService;
+
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param Session $session
      * @param UserFactory $userFactory
      * @param ResolutionFactory $resolutionFactory
      * @param LayoutFactory $layoutFactory
      * @param ModuleFactory $moduleFactory
-     * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
      * @param TagFactory $tagFactory
      * @param MediaFactory $mediaFactory
      * @param DataSetFactory $dataSetFactory
      * @param CampaignFactory $campaignFactory
      * @param $displayGroupFactory
-     * @param Twig $view
-     * @param ContainerInterface $container
-     * @param ActionFactory $actionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $permissionFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, Twig $view, ContainerInterface $container, $actionFactory, $pool)
+    public function __construct($session, $userFactory, $resolutionFactory, $layoutFactory, $moduleFactory, $userGroupFactory, $tagFactory, $mediaFactory, $dataSetFactory, $campaignFactory, $displayGroupFactory, $pool, MediaServiceInterface $mediaService)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->session = $session;
         $this->userFactory = $userFactory;
         $this->resolutionFactory = $resolutionFactory;
         $this->layoutFactory = $layoutFactory;
         $this->moduleFactory = $moduleFactory;
-        $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->tagFactory = $tagFactory;
         $this->mediaFactory = $mediaFactory;
         $this->dataSetFactory = $dataSetFactory;
         $this->campaignFactory = $campaignFactory;
         $this->displayGroupFactory = $displayGroupFactory;
-        $this->actionFactory = $actionFactory;
-        $this->container = $container;
         $this->pool = $pool;
+        $this->mediaService = $mediaService;
     }
 
     /**
@@ -2332,27 +2304,26 @@ class Layout extends Base
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
-        Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+        $this->mediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         // Make sure there is room in the library
-        /** @var Library $libraryController */
-        $libraryController = $this->container->get('\Xibo\Controller\Library');
         $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
 
-        $options = array(
+        $options = [
             'userId' => $this->getUser()->userId,
             'controller' => $this,
-            'libraryController' => $libraryController,
+            'dataSetFactory' => $this->getDataSetFactory(),
             'upload_dir' => $libraryFolder . 'temp/',
             'download_via_php' => true,
             'script_url' => $this->urlFor($request,'layout.import'),
             'upload_url' => $this->urlFor($request,'layout.import'),
-            'image_versions' => array(),
+            'image_versions' => [],
             'accept_file_types' => '/\.zip$/i',
             'libraryLimit' => $libraryLimit,
-            'libraryQuotaFull' => ($libraryLimit > 0 && $libraryController->libraryUsage() > $libraryLimit),
-            'routeParser' => RouteContext::fromRequest($request)->getRouteParser()
-        );
+            'libraryQuotaFull' => ($libraryLimit > 0 && $this->mediaService->libraryUsage() > $libraryLimit),
+            'routeParser' => RouteContext::fromRequest($request)->getRouteParser(),
+            'mediaService' => $this->mediaService
+        ];
 
         $this->setNoOutput(true);
 
@@ -2776,7 +2747,7 @@ class Layout extends Base
         }
 
         /** @var Item $lock */
-        $lock = $this->container->get('pool')->getItem('locks/layout/' . $id);
+        $lock = $this->pool->getItem('locks/layout/' . $id);
         $lock->set([]);
         $lock->save();
 
