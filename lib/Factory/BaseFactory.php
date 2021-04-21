@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,6 +26,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
+use Xibo\Service\BaseDependenciesService;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -67,19 +68,13 @@ class BaseFactory
     private $userFactory;
 
     /**
-     * Set common dependencies.
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @return $this
+     * @var BaseDependenciesService
      */
-    protected function setCommonDependencies($store, $log, $sanitizerService)
-    {
-        $this->store = $store;
-        $this->log = $log;
-        $this->sanitizerService = $sanitizerService;
+    private $baseDependenciesService;
 
-        return $this;
+    public function useBaseDependenciesService(BaseDependenciesService $baseDependenciesService)
+    {
+        $this->baseDependenciesService = $baseDependenciesService;
     }
 
     /**
@@ -101,7 +96,7 @@ class BaseFactory
      */
     protected function getStore()
     {
-        return $this->store;
+        return $this->baseDependenciesService->getStore();
     }
 
     /**
@@ -110,7 +105,15 @@ class BaseFactory
      */
     protected function getLog()
     {
-        return $this->log;
+        return $this->baseDependenciesService->getLogger();
+    }
+
+    /**
+     * @return SanitizerService
+     */
+    protected function getSanitizerService()
+    {
+        return $this->baseDependenciesService->getSanitizer();
     }
 
     /**
@@ -120,7 +123,7 @@ class BaseFactory
      */
     protected function getSanitizer($array)
     {
-        return $this->sanitizerService->getSanitizer($array);
+        return $this->getSanitizerService()->getSanitizer($array);
     }
 
     /**

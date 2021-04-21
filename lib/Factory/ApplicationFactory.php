@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 use League\OAuth2\Server\Repositories\ClientRepositoryInterface;
 use Xibo\Entity\Application;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -46,23 +43,20 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
-     * @param $applicationScopeFactory
+     * @param ApplicationScopeFactory $applicationScopeFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $applicationRedirectUriFactory, $applicationScopeFactory)
+    public function __construct($user, $applicationRedirectUriFactory, $applicationScopeFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, null);
 
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
 
-        if ($this->applicationRedirectUriFactory == null)
+        if ($this->applicationRedirectUriFactory == null) {
             throw new \RuntimeException('Missing dependency: ApplicationRedirectUriFactory');
+        }
     }
 
     /**
@@ -81,11 +75,13 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
      */
     public function createEmpty()
     {
-        if ($this->applicationRedirectUriFactory == null)
+        if ($this->applicationRedirectUriFactory == null) {
             throw new \RuntimeException('Missing dependency: ApplicationRedirectUriFactory');
+        }
 
-        if ($this->applicationScopeFactory == null)
+        if ($this->applicationScopeFactory == null) {
             throw new \RuntimeException('Missing dependency: ApplicationScopeFactory');
+        }
 
         return new Application($this->getStore(), $this->getLog(), $this->applicationRedirectUriFactory, $this->applicationScopeFactory);
     }
@@ -100,8 +96,9 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
     {
         $client = $this->query(null, ['clientId' => $clientId]);
 
-        if (count($client) <= 0)
+        if (count($client) <= 0) {
             throw new NotFoundException();
+        }
 
         return $client[0];
     }
@@ -116,15 +113,16 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
     {
         $client = $this->query(null, ['name' => $name]);
 
-        if (count($client) <= 0)
+        if (count($client) <= 0) {
             throw new NotFoundException();
+        }
 
         return $client[0];
     }
 
     /**
      * @param int $userId
-     * @return array
+     * @return Application[]
      */
     public function getByUserId($userId)
     {
@@ -134,7 +132,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
     /**
      * @param null $sortOrder
      * @param array $filterBy
-     * @return array
+     * @return Application[]
      */
     public function query($sortOrder = null, $filterBy = [])
     {

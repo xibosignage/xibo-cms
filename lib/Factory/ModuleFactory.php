@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,17 +25,14 @@ namespace Xibo\Factory;
 
 
 use Illuminate\Support\Str;
-use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\Module;
 use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
+use Xibo\Helper\HttpCacheProvider;
 use Xibo\Service\ModuleServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
@@ -114,14 +111,11 @@ class ModuleFactory extends BaseFactory
     /** @var Twig */
     protected $view;
 
-    /** @var ContainerInterface */
-    protected $container;
+    /** @var HttpCacheProvider */
+    private $cacheProvider;
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ModuleServiceInterface $moduleService
@@ -140,11 +134,29 @@ class ModuleFactory extends BaseFactory
      * @param MenuBoardFactory $menuBoardFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
      * @param Twig $view
-     * @param ContainerInterface $container
+     * @param HttpCacheProvider $cacheProvider
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, ContainerInterface $container)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
+    public function __construct(
+        $user,
+        $userFactory,
+        $moduleService,
+        $widgetFactory,
+        $regionFactory,
+        $playlistFactory,
+        $mediaFactory,
+        $dataSetFactory,
+        $dataSetColumnFactory,
+        $transitionFactory,
+        $displayFactory,
+        $commandFactory,
+        $scheduleFactory,
+        $permissionFactory,
+        $userGroupFactory,
+        $menuBoardFactory,
+        $menuBoardCategoryFactory,
+        $view,
+        HttpCacheProvider $cacheProvider
+    ) {
         $this->setAclDependencies($user, $userFactory);
 
         $this->moduleService = $moduleService;
@@ -163,7 +175,7 @@ class ModuleFactory extends BaseFactory
         $this->menuBoardFactory = $menuBoardFactory;
         $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
         $this->view = $view;
-        $this->container = $container;
+        $this->cacheProvider = $cacheProvider;
     }
 
     /**
@@ -184,7 +196,7 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(['enabled DESC'], array('type' => $type));
 
-        $this->getLog()->debug('Creating %s out of possible %s', $type, json_encode(array_map(function($element) { return $element->class; }, $modules)));
+        $this->getLog()->debug(sprintf('Creating %s out of possible %s', $type, json_encode(array_map(function($element) { return $element->class; }, $modules))));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
@@ -206,7 +218,7 @@ class ModuleFactory extends BaseFactory
             $this->menuBoardFactory,
             $this->menuBoardCategoryFactory,
             $this->view,
-            $this->container
+            $this->cacheProvider
         );
     }
 
@@ -220,7 +232,7 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(['enabled DESC'], array('class' => $class));
 
-        $this->getLog()->debug('Creating %s out of possible %s', $class, json_encode(array_map(function($element) { return $element->class; }, $modules)));
+        $this->getLog()->debug(sprintf('Creating %s out of possible %s', $class, json_encode(array_map(function($element) { return $element->class; }, $modules))));
 
         if (count($modules) <= 0)
             throw new NotFoundException(sprintf(__('Unknown class %s'), $class));
@@ -242,7 +254,7 @@ class ModuleFactory extends BaseFactory
             $this->menuBoardFactory,
             $this->menuBoardCategoryFactory,
             $this->view,
-            $this->container
+            $this->cacheProvider
         );
     }
 
@@ -270,7 +282,7 @@ class ModuleFactory extends BaseFactory
             $this->menuBoardFactory,
             $this->menuBoardCategoryFactory,
             $this->view,
-            $this->container
+            $this->cacheProvider
         );
     }
 
@@ -298,7 +310,7 @@ class ModuleFactory extends BaseFactory
             $this->menuBoardFactory,
             $this->menuBoardCategoryFactory,
             $this->view,
-            $this->container
+            $this->cacheProvider
         );
     }
 
@@ -338,7 +350,7 @@ class ModuleFactory extends BaseFactory
             $this->menuBoardFactory,
             $this->menuBoardCategoryFactory,
             $this->view,
-            $this->container
+            $this->cacheProvider
         );
         $object->setWidget($widget);
 

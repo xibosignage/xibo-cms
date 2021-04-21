@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,7 +25,6 @@ namespace Xibo\Factory;
 
 
 use Carbon\Carbon;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
 use Xibo\Entity\Layout;
@@ -33,10 +32,8 @@ use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
+use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -52,9 +49,6 @@ class LayoutFactory extends BaseFactory
      * @var ConfigServiceInterface
      */
     private $config;
-
-    /** @var  EventDispatcherInterface */
-    private $dispatcher;
 
     /**
      * @var PermissionFactory
@@ -115,13 +109,9 @@ class LayoutFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
-     * @param EventDispatcherInterface $dispatcher
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
      * @param TagFactory $tagFactory
@@ -134,15 +124,28 @@ class LayoutFactory extends BaseFactory
      * @param PlaylistFactory $playlistFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param ActionFactory $actionFactory
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $config, $dispatcher, $permissionFactory,
-                                $regionFactory, $tagFactory, $campaignFactory, $mediaFactory, $moduleFactory, $resolutionFactory,
-                                $widgetFactory, $widgetOptionFactory, $playlistFactory, $widgetAudioFactory, $actionFactory, $folderFactory)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
+    public function __construct(
+        $user,
+        $userFactory,
+        $config,
+        $permissionFactory,
+        $regionFactory,
+        $tagFactory,
+        $campaignFactory,
+        $mediaFactory,
+        $moduleFactory,
+        $resolutionFactory,
+        $widgetFactory,
+        $widgetOptionFactory,
+        $playlistFactory,
+        $widgetAudioFactory,
+        $actionFactory,
+        $folderFactory
+    ) {
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
-        $this->dispatcher = $dispatcher;
         $this->permissionFactory = $permissionFactory;
         $this->regionFactory = $regionFactory;
         $this->tagFactory = $tagFactory;
@@ -168,7 +171,6 @@ class LayoutFactory extends BaseFactory
             $this->getStore(),
             $this->getLog(),
             $this->config,
-            $this->dispatcher,
             $this->permissionFactory,
             $this->regionFactory,
             $this->tagFactory,
@@ -1046,9 +1048,10 @@ class LayoutFactory extends BaseFactory
      * @param int $importTags
      * @param bool $useExistingDataSets
      * @param bool $importDataSetData
-     * @param \Xibo\Controller\Library $libraryController
+     * @param DataSetFactory $dataSetFactory
      * @param string $tags
      * @param \Slim\Interfaces\RouteParserInterface $routeParser $routeParser
+     * @param MediaServiceInterface $mediaService
      * @return Layout
      * @throws DuplicateEntityException
      * @throws GeneralException
@@ -1056,7 +1059,7 @@ class LayoutFactory extends BaseFactory
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ConfigurationException
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, $tags, $routeParser)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $dataSetFactory, $tags, $routeParser, MediaServiceInterface $mediaService)
     {
         $this->getLog()->debug(sprintf('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName));
 
@@ -1317,11 +1320,11 @@ class LayoutFactory extends BaseFactory
                     /* @var Widget $widget */
                     $audioIds = $widget->getAudioIds();
 
-                    $this->getLog()->debug('Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId [%d] and storedAs [%s]. Media assigned to widget %s.', $oldMediaId, $newMediaId, $media->storedAs, json_encode($widget->mediaIds));
+                    $this->getLog()->debug(sprintf('Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId [%d] and storedAs [%s]. Media assigned to widget %s.', $oldMediaId, $newMediaId, $media->storedAs, json_encode($widget->mediaIds)));
 
                     if (in_array($oldMediaId, $widget->mediaIds)) {
 
-                        $this->getLog()->debug('Removing %d and replacing with %d', $oldMediaId, $newMediaId);
+                        $this->getLog()->debug(sprintf('Removing %d and replacing with %d', $oldMediaId, $newMediaId));
 
                         // Are we an audio record?
                         if (in_array($oldMediaId, $audioIds)) {
@@ -1363,7 +1366,7 @@ class LayoutFactory extends BaseFactory
 
                         if (in_array($oldMediaId, $widget->mediaIds)) {
 
-                            $this->getLog()->debug('Playlist import Removing %d and replacing with %d', $oldMediaId, $newMediaId);
+                            $this->getLog()->debug(sprintf('Playlist import Removing %d and replacing with %d', $oldMediaId, $newMediaId));
 
                             // Are we an audio record?
                             if (in_array($oldMediaId, $audioIds)) {
@@ -1421,7 +1424,7 @@ class LayoutFactory extends BaseFactory
 
             foreach ($dataSets as $item) {
                 // Hydrate a new dataset object with this json object
-                $dataSet = $libraryController->getDataSetFactory()->createEmpty()->hydrate($item);
+                $dataSet = $dataSetFactory->createEmpty()->hydrate($item);
                 $dataSet->columns = [];
                 $dataSetId = $dataSet->dataSetId;
 
@@ -1430,8 +1433,8 @@ class LayoutFactory extends BaseFactory
                 
                 // Hydrate the columns
                 foreach ($item['columns'] as $columnItem) {
-                    $this->getLog()->debug('Assigning column: %s', json_encode($columnItem));
-                    $dataSet->assignColumn($libraryController->getDataSetFactory()->getDataSetColumnFactory()->createEmpty()->hydrate($columnItem));
+                    $this->getLog()->debug(sprintf('Assigning column: %s', json_encode($columnItem)));
+                    $dataSet->assignColumn($dataSetFactory->getDataSetColumnFactory()->createEmpty()->hydrate($columnItem));
                 }
 
                 /** @var DataSet $existingDataSet */
@@ -1443,9 +1446,9 @@ class LayoutFactory extends BaseFactory
                     if ($dataSet->code != '') {
                         try {
                             // try and get by code
-                            $existingDataSet = $libraryController->getDataSetFactory()->getByCode($dataSet->code);
+                            $existingDataSet = $dataSetFactory->getByCode($dataSet->code);
                         } catch (NotFoundException $e) {
-                            $this->getLog()->debug('Existing dataset not found with code %s', $dataSet->code);
+                            $this->getLog()->debug(sprintf('Existing dataset not found with code %s', $dataSet->code));
 
                         }
                     }
@@ -1453,16 +1456,16 @@ class LayoutFactory extends BaseFactory
                     if ($existingDataSet === null) {
                         // try by name
                         try {
-                            $existingDataSet = $libraryController->getDataSetFactory()->getByName($dataSet->dataSet);
+                            $existingDataSet = $dataSetFactory->getByName($dataSet->dataSet);
                         } catch (NotFoundException $e) {
-                            $this->getLog()->debug('Existing dataset not found with name %s', $dataSet->code);
+                            $this->getLog()->debug(sprintf('Existing dataset not found with name %s', $dataSet->code));
                         }
                     }
                 }
 
                 if ($existingDataSet === null) {
 
-                    $this->getLog()->debug('Matching DataSet not found, will need to add one. useExistingDataSets = %s', $useExistingDataSets);
+                    $this->getLog()->debug(sprintf('Matching DataSet not found, will need to add one. useExistingDataSets = %s', $useExistingDataSets));
 
                     // We want to add the dataset we have as a new dataset.
                     // we will need to make sure we clear the ID's and save it
@@ -1474,7 +1477,7 @@ class LayoutFactory extends BaseFactory
                     if ($importDataSetData) {
 
                         // Import the data here
-                        $this->getLog()->debug('Importing data into new DataSet %d', $existingDataSet->dataSetId);
+                        $this->getLog()->debug(sprintf('Importing data into new DataSet %d', $existingDataSet->dataSetId));
 
                         foreach ($item['data'] as $itemData) {
                             if (isset($itemData['id']))
@@ -1493,7 +1496,7 @@ class LayoutFactory extends BaseFactory
 
                     // Validate that the columns are the same
                     if (count($dataSet->columns) != count($existingDataSet->columns)) {
-                        $this->getLog()->debug('Columns for Imported DataSet = %s', json_encode($dataSet->columns));
+                        $this->getLog()->debug(sprintf('Columns for Imported DataSet = %s', json_encode($dataSet->columns)));
                         throw new InvalidArgumentException(sprintf(__('DataSets have different number of columns imported = %d, existing = %d'), count($dataSet->columns), count($existingDataSet->columns)));
                     }
 
@@ -1540,7 +1543,7 @@ class LayoutFactory extends BaseFactory
                                 // Get the columns option
                                 $columns = explode(',', $widget->getOptionValue('columns', ''));
 
-                                $this->getLog()->debug('Looking to replace columns from %s', json_encode($columns));
+                                $this->getLog()->debug(sprintf('Looking to replace columns from %s', json_encode($columns)));
 
                                 foreach ($existingDataSet->columns as $column) {
                                     foreach ($columns as $index => $col) {
@@ -1554,13 +1557,13 @@ class LayoutFactory extends BaseFactory
 
                                 $widget->setOptionValue('columns', 'attrib', $columns);
 
-                                $this->getLog()->debug('Replaced columns with %s', $columns);
+                                $this->getLog()->debug(sprintf('Replaced columns with %s', $columns));
 
                             } else if ($widget->type == 'datasetticker') {
                                 // Get the template option
                                 $template = $widget->getOptionValue('template', '');
 
-                                $this->getLog()->debug('Looking to replace columns from %s', $template);
+                                $this->getLog()->debug(sprintf('Looking to replace columns from %s', $template));
 
                                 foreach ($existingDataSet->columns as $column) {
                                     // We replace with the |%d] so that we dont experience double replacements
@@ -1569,12 +1572,12 @@ class LayoutFactory extends BaseFactory
 
                                 $widget->setOptionValue('template', 'cdata', $template);
 
-                                $this->getLog()->debug('Replaced columns with %s', $template);
+                                $this->getLog()->debug(sprintf('Replaced columns with %s', $template));
                             } else if ($widget->type == 'chart') {
                                 // get the config for the chart widget
                                 $oldConfig = json_decode($widget->getOptionValue('config', '[]'), true);
                                 $newConfig = [];
-                                $this->getLog()->debug('Looking to replace config from %s', json_encode($oldConfig));
+                                $this->getLog()->debug(sprintf('Looking to replace config from %s', json_encode($oldConfig)));
 
                                 // go through the chart config and our dataSet
                                 foreach ($oldConfig as $config) {
@@ -1592,7 +1595,7 @@ class LayoutFactory extends BaseFactory
                                     }
                                 }
 
-                                $this->getLog()->debug('Replaced config with %s', json_encode($newConfig));
+                                $this->getLog()->debug(sprintf('Replaced config with %s', json_encode($newConfig)));
 
                                 // json encode our newConfig and set it as config attribute in the imported chart widget.
                                 $widget->setOptionValue('config', 'attrib', json_encode($newConfig));
@@ -1625,7 +1628,7 @@ class LayoutFactory extends BaseFactory
 
         if ($fontsAdded && $routeParser != null) {
             $this->getLog()->debug('Fonts have been added');
-            $libraryController->installFonts($routeParser);
+            $mediaService->setUser($this->getUser())->installFonts($routeParser);
         }
 
         return $layout;

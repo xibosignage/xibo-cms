@@ -24,12 +24,8 @@ namespace Xibo\Factory;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\MenuBoard;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\DisplayNotifyService;
 use Xibo\Service\DisplayNotifyServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 class MenuBoardFactory extends BaseFactory
@@ -50,16 +46,11 @@ class MenuBoardFactory extends BaseFactory
      */
     private $menuBoardCategoryFactory;
 
-    private $sanitizerService;
-
     /** @var DisplayNotifyServiceInterface */
     private $displayNotifyService;
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ConfigServiceInterface $config
@@ -69,9 +60,6 @@ class MenuBoardFactory extends BaseFactory
      * @param DisplayNotifyServiceInterface $displayNotifyService
      */
     public function __construct(
-        $store,
-        $log,
-        $sanitizerService,
         $user,
         $userFactory,
         $config,
@@ -80,7 +68,6 @@ class MenuBoardFactory extends BaseFactory
         $menuBoardCategoryFactory,
         $displayNotifyService
     ) {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
         $this->pool = $pool;
@@ -99,7 +86,7 @@ class MenuBoardFactory extends BaseFactory
         return new MenuBoard(
             $this->getStore(),
             $this->getLog(),
-            $this->sanitizerService,
+            $this->getSanitizerService(),
             $this->pool,
             $this->config,
             $this->permissionFactory,
@@ -143,6 +130,17 @@ class MenuBoardFactory extends BaseFactory
         }
 
         return $menuBoards[0];
+    }
+
+
+    /**
+     * @param int $userId
+     * @return MenuBoard[]
+     * @throws NotFoundException
+     */
+    public function getByOwnerId(int $userId): array
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $userId]);
     }
 
     /**

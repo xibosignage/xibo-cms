@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,9 +24,6 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\AuditLog;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class AuditLogFactory
@@ -34,17 +31,6 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class AuditLogFactory extends BaseFactory
 {
-    /**
-     * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     */
-    public function __construct($store, $log, $sanitizerService)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-    }
-
     /**
      * @return AuditLog
      */

@@ -23,23 +23,9 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\MenuBoardProductOption;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 
 class MenuBoardProductOptionFactory extends BaseFactory
 {
-    /**
-     * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     */
-    public function __construct($store, $log, $sanitizerService)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-    }
-
     /**
      * Create Empty
      * @return MenuBoardProductOption

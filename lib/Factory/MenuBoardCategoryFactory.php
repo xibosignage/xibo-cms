@@ -24,9 +24,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\MenuBoardCategory;
 use Xibo\Entity\MenuBoardProduct;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 class MenuBoardCategoryFactory extends BaseFactory
@@ -36,14 +33,10 @@ class MenuBoardCategoryFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param MenuBoardProductOptionFactory $menuBoardProductOptionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $menuBoardProductOptionFactory)
+    public function __construct($menuBoardProductOptionFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->menuBoardProductOptionFactory = $menuBoardProductOptionFactory;
     }
 
