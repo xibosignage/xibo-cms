@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -54,42 +54,28 @@ class Login extends Base
     /** @var Session */
     private $session;
 
-    /** @var StorageServiceInterface  */
-    private $store;
-
     /** @var UserFactory */
     private $userFactory;
 
     /** @var \Stash\Interfaces\PoolInterface */
     private $pool;
 
-    /** @var ContainerInterface */
-    private $container;
+    /** @var \Slim\Flash\Messages() */
+    private $flash;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param Session $session
      * @param UserFactory $userFactory
      * @param \Stash\Interfaces\PoolInterface $pool
-     * @param StorageServiceInterface $store
-     * @param Twig $view
-     * @param ContainerInterface $container
+     * @param \Slim\Flash\Messages() $flash
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $userFactory, $pool, $store, $view, ContainerInterface $container)
+    public function __construct($session, $userFactory, $pool, $flash)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->session = $session;
         $this->userFactory = $userFactory;
         $this->pool = $pool;
-        $this->store = $store;
-        $this->container = $container;
+        $this->flash = $flash;
     }
 
     /**
@@ -99,7 +85,7 @@ class Login extends Base
      */
     protected function getFlash()
     {
-        return $this->container->get('flash');
+        return $this->flash;
     }
 
     /**
@@ -472,7 +458,7 @@ class Login extends Base
      */
     private function generateEmailBody($subject, $body)
     {
-        return $this->renderTemplateToString('email-template.twig', [
+        return $this->renderTemplateToString('email-template', [
             'config' => $this->getConfig(),
             'subject' => $subject, 'body' => $body
         ]);
