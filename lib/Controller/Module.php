@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,11 +22,9 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
-use Slim\Views\Twig;
 use Xibo\Entity\Widget;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetEditEvent;
@@ -38,7 +36,6 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\MenuBoardFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -47,9 +44,6 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
@@ -129,20 +123,8 @@ class Module extends Base
     /** @var MenuBoardFactory */
     private $menuBoardFactory;
 
-    /** @var PlayerVersionFactory  */
-    private $playerVersionFactory;
-
-    /** @var ContainerInterface */
-    private $container;
-
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param ModuleFactory $moduleFactory
      * @param PlaylistFactory $playlistFactory
@@ -159,13 +141,25 @@ class Module extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param DataSetFactory $dataSetFactory
      * @param MenuBoardFactory $menuBoardFactory
-     * @param Twig $view
-     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $moduleFactory, $playlistFactory, $mediaFactory, $permissionFactory, $userGroupFactory, $widgetFactory, $transitionFactory, $regionFactory, $layoutFactory, $displayGroupFactory, $widgetAudioFactory, $displayFactory, $scheduleFactory, $dataSetFactory, $menuBoardFactory, Twig $view, ContainerInterface $container)
-    {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
+    public function __construct(
+        $store,
+        $moduleFactory,
+        $playlistFactory,
+        $mediaFactory,
+        $permissionFactory,
+        $userGroupFactory,
+        $widgetFactory,
+        $transitionFactory,
+        $regionFactory,
+        $layoutFactory,
+        $displayGroupFactory,
+        $widgetAudioFactory,
+        $displayFactory,
+        $scheduleFactory,
+        $dataSetFactory,
+        $menuBoardFactory
+    ) {
         $this->store = $store;
         $this->moduleFactory = $moduleFactory;
         $this->playlistFactory = $playlistFactory;
@@ -182,7 +176,6 @@ class Module extends Base
         $this->scheduleFactory = $scheduleFactory;
         $this->dataSetFactory = $dataSetFactory;
         $this->menuBoardFactory = $menuBoardFactory;
-        $this->container = $container;
     }
 
     /**
@@ -330,14 +323,20 @@ class Module extends Base
 
         $sanitizedPrams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->userTypeId == 1)
+        if (!$this->getUser()->userTypeId == 1) {
             throw new AccessDeniedException();
+        }
 
         $module = $this->moduleFactory->createById($id);
         $module->getModule()->defaultDuration = $sanitizedPrams->getInt('defaultDuration');
         $module->getModule()->validExtensions = $sanitizedPrams->getString('validExtensions');
         $module->getModule()->enabled = $sanitizedPrams->getCheckbox('enabled');
         $module->getModule()->previewEnabled = $sanitizedPrams->getCheckbox('previewEnabled');
+
+        // for Font Module set the User, needed for installing fonts in MediaService
+        if ($module->getModuleType() === 'font') {
+            $module->setUser($this->getUser());
+        }
 
         // Install Files for this module
         $module->installFiles();
@@ -391,8 +390,7 @@ class Module extends Base
         $this->store->update('UPDATE `media` SET valid = 0 WHERE moduleSystemFile = 1', []);
 
         // Install all files
-        /** @var Library $library */
-        $this->container->get('\Xibo\Controller\Library')->installAllModuleFiles();
+        $this->installAllModuleFiles();
 
         // Successful
         $this->getState()->hydrate([
@@ -400,6 +398,31 @@ class Module extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Installs all files related to the enabled modules
+     * @throws NotFoundException
+     * @throws GeneralException
+     */
+    public function installAllModuleFiles()
+    {
+        $this->getLog()->info('Installing all module files');
+
+        // Do this for all enabled modules
+        foreach ($this->moduleFactory->getEnabled() as $module) {
+            /* @var \Xibo\Entity\Module $module */
+
+            // Install Files for this module
+            $moduleObject = $this->moduleFactory->create($module->type);
+            $moduleObject->installFiles();
+        }
+
+        // Dump the cache on all displays
+        foreach ($this->displayFactory->query() as $display) {
+            /** @var \Xibo\Entity\Display $display */
+            $display->notify();
+        }
     }
 
     /**
@@ -834,7 +857,7 @@ class Module extends Base
                     throw new AccessDeniedException();
                 }
 
-                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
                 $media->delete();
             }
         }
