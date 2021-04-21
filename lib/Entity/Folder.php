@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -354,7 +354,7 @@ class Folder
             'folderId' => $folderId
         ]);
 
-        $this->getStore()->update('UPDATE `menuboard` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
+        $this->getStore()->update('UPDATE `menu_board` SET permissionsFolderId = :permissionsFolderId WHERE folderId = :folderId',[
             'permissionsFolderId' => $permissionFolderId,
             'folderId' => $folderId
         ]);
