@@ -34,12 +34,14 @@ use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
+use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
+use Xibo\Listener\OnLayoutOwnerChange;
 use Xibo\Listener\OnMediaDelete;
 use Xibo\Listener\OnUserDelete;
 use Xibo\Service\ReportService;
@@ -321,177 +323,119 @@ class State implements Middleware
     {
         return [
             '\Xibo\Controller\Action' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Action(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Action(
                     $c->get('actionFactory'),
                     $c->get('layoutFactory'),
                     $c->get('regionFactory'),
                     $c->get('widgetFactory'),
-                    $c->get('moduleFactory'),
-                    $c->get('view')
+                    $c->get('moduleFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Applications' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Applications(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller =  new \Xibo\Controller\Applications(
                     $c->get('session'),
-                    $c->get('store'),
                     $c->get('applicationFactory'),
                     $c->get('applicationRedirectUriFactory'),
                     $c->get('applicationScopeFactory'),
-                    $c->get('userFactory'),
-                    $c->get('view'),
-                    $c
+                    $c->get('userFactory')
                 );
+
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\AuditLog' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\AuditLog(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
-                    $c->get('auditLogFactory'),
-                    $c->get('view')
+                $controller = new \Xibo\Controller\AuditLog(
+                    $c->get('auditLogFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Campaign' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Campaign(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Campaign(
                     $c->get('campaignFactory'),
                     $c->get('layoutFactory'),
                     $c->get('permissionFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('tagFactory'),
-                    $c->get('view'),
                     $c->get('folderFactory')
                 );
+
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Clock' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Clock(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Clock(
                     $c->get('session')
                 );
+
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Command' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Command(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Command(
                     $c->get('commandFactory'),
-                    $c->get('displayProfileFactory'),
-                    $c->get('view')
+                    $c->get('displayProfileFactory')
                 );
+
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\DataSet' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\DataSet(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\DataSet(
                     $c->get('dataSetFactory'),
                     $c->get('dataSetColumnFactory'),
-                    $c->get('view'),
                     $c->get('userFactory'),
                     $c->get('folderFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\DataSetColumn' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\DataSetColumn(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\DataSetColumn(
                     $c->get('dataSetFactory'),
                     $c->get('dataSetColumnFactory'),
                     $c->get('dataSetColumnTypeFactory'),
                     $c->get('dataTypeFactory'),
-                    $c->get('pool'),
-                    $c->get('view')
+                    $c->get('pool')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\DataSetData' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\DataSetData(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\DataSetData(
                     $c->get('dataSetFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('view')
+                    $c->get('mediaFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\DataSetRss' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\DataSetRss(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\DataSetRss(
                     $c->get('dataSetRssFactory'),
                     $c->get('dataSetFactory'),
                     $c->get('dataSetColumnFactory'),
                     $c->get('pool'),
-                    $c->get('store'),
-                    $c->get('view')
+                    $c->get('store')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\DayPart' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\DayPart(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller =  new \Xibo\Controller\DayPart(
                     $c->get('dayPartFactory'),
                     $c->get('displayGroupFactory'),
-                    $c->get('displayFactory'),
+                    $c->get('displayNotifyService'),
                     $c->get('layoutFactory'),
                     $c->get('mediaFactory'),
-                    $c->get('scheduleFactory'),
-                    $c->get('view')
+                    $c->get('scheduleFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Display' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Display(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Display(
                     $c->get('store'),
                     $c->get('pool'),
                     $c->get('playerActionService'),
@@ -508,18 +452,13 @@ class State implements Middleware
                     $c->get('notificationFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('playerVersionFactory'),
-                    $c->get('dayPartFactory'),
-                    $c->get('view')
+                    $c->get('dayPartFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\DisplayGroup' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\DisplayGroup(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller =  new \Xibo\Controller\DisplayGroup(
                     $c->get('playerActionService'),
                     $c->get('displayFactory'),
                     $c->get('displayGroupFactory'),
@@ -530,109 +469,71 @@ class State implements Middleware
                     $c->get('scheduleFactory'),
                     $c->get('tagFactory'),
                     $c->get('campaignFactory'),
-                    $c->get('view'),
                     $c->get('folderFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\DisplayProfile' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\DisplayProfile(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\DisplayProfile(
                     $c->get('pool'),
                     $c->get('displayProfileFactory'),
                     $c->get('commandFactory'),
                     $c->get('playerVersionFactory'),
-                    $c->get('dayPartFactory'),
-                    $c->get('view')
+                    $c->get('dayPartFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Fault' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Fault(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Fault(
                     $c->get('store'),
                     $c->get('logFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('view')
+                    $c->get('displayFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Folder' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Folder(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
-                    $c->get('folderFactory'),
-                    $c->get('permissionFactory')
+                $controller = new \Xibo\Controller\Folder(
+                    $c->get('folderFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Help' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Help(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
-                    $c->get('helpFactory'),
-                    $c->get('view')
+                $controller = new \Xibo\Controller\Help(
+                    $c->get('helpFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\IconDashboard' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\IconDashboard(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
-                    $c->get('view')
-                );
+                $controller =  new \Xibo\Controller\IconDashboard();
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Layout' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Layout(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Layout(
                     $c->get('session'),
                     $c->get('userFactory'),
                     $c->get('resolutionFactory'),
                     $c->get('layoutFactory'),
                     $c->get('moduleFactory'),
-                    $c->get('permissionFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('tagFactory'),
                     $c->get('mediaFactory'),
                     $c->get('dataSetFactory'),
                     $c->get('campaignFactory'),
                     $c->get('displayGroupFactory'),
-                    $c->get('view'),
-                    $c,
-                    $c->get('actionFactory'),
-                    $c->get('pool')
+                    $c->get('pool'),
+                    $c->get('mediaService')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Library' => function(ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Library(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
                     $c->get('store'),
                     $c->get('pool'),
                     $c->get('userFactory'),
@@ -650,52 +551,34 @@ class State implements Middleware
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('playerVersionFactory'),
-                    $c->get('view'),
                     $c->get('httpCache'),
                     $c->get('folderFactory')
                 );
                 $controller->useDispatcher($c->get('dispatcher'));
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
             '\Xibo\Controller\Logging' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Logging(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Logging(
                     $c->get('store'),
                     $c->get('logFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('userFactory'),
-                    $c->get('view')
+                    $c->get('userFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Login' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Login(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller =  new \Xibo\Controller\Login(
                     $c->get('session'),
                     $c->get('userFactory'),
                     $c->get('pool'),
-                    $c->get('store'),
-                    $c->get('view'),
-                    $c
+                    $c->get('flash')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Maintenance' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Maintenance(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Maintenance(
                     $c->get('store'),
                     $c->get('taskFactory'),
                     $c->get('mediaFactory'),
@@ -705,94 +588,63 @@ class State implements Middleware
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('playerVersionFactory'),
-                    $c->get('view'),
                     $c
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\MediaManager' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\MediaManager(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\MediaManager(
                     $c->get('moduleFactory'),
                     $c->get('layoutFactory'),
                     $c->get('regionFactory'),
-                    $c->get('playlistFactory'),
-                    $c->get('widgetFactory'),
-                    $c->get('view')
+                    $c->get('widgetFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\MenuBoard' => function (ContainerInterface $c) {
-                return new \Xibo\Controller\MenuBoard(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\MenuBoard(
                     $c->get('menuBoardFactory'),
                     $c->get('userFactory'),
-                    $c->get('folderFactory'),
-                    $c->get('view')
+                    $c->get('folderFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\MenuBoardCategory' => function (ContainerInterface $c) {
-                return new \Xibo\Controller\MenuBoardCategory(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\MenuBoardCategory(
                     $c->get('menuBoardFactory'),
                     $c->get('menuBoardCategoryFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('view')
+                    $c->get('mediaFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\MenuBoardProduct' => function (ContainerInterface $c) {
-                return new \Xibo\Controller\MenuBoardProduct(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\MenuBoardProduct(
                     $c->get('menuBoardFactory'),
                     $c->get('menuBoardCategoryFactory'),
                     $c->get('menuBoardProductOptionFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('view')
+                    $c->get('mediaFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\PlaylistDashboard' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\PlaylistDashboard(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\PlaylistDashboard(
                     $c->get('playlistFactory'),
                     $c->get('moduleFactory'),
                     $c->get('widgetFactory'),
                     $c->get('layoutFactory'),
                     $c->get('displayGroupFactory'),
-                    $c->get('view'),
                     $c
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Module' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Module(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Module(
                     $c->get('store'),
                     $c->get('moduleFactory'),
                     $c->get('playlistFactory'),
@@ -808,35 +660,24 @@ class State implements Middleware
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('dataSetFactory'),
-                    $c->get('menuBoardFactory'),
-                    $c->get('view'),
-                    $c
+                    $c->get('menuBoardFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Notification' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Notification(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Notification(
                     $c->get('notificationFactory'),
                     $c->get('userNotificationFactory'),
                     $c->get('displayGroupFactory'),
                     $c->get('userGroupFactory'),
-                    $c->get('displayNotifyService'),
-                    $c->get('view')
+                    $c->get('displayNotifyService')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\PlayerSoftware' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\PlayerSoftware(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\PlayerSoftware(
                     $c->get('pool'),
                     $c->get('mediaFactory'),
                     $c->get('playerVersionFactory'),
@@ -846,217 +687,135 @@ class State implements Middleware
                     $c->get('widgetFactory'),
                     $c->get('displayGroupFactory'),
                     $c->get('displayFactory'),
-                    $c->get('scheduleFactory'),
-                    $c->get('view')
+                    $c->get('scheduleFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Playlist' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Playlist(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Playlist(
                     $c->get('playlistFactory'),
-                    $c->get('regionFactory'),
                     $c->get('mediaFactory'),
-                    $c->get('permissionFactory'),
-                    $c->get('transitionFactory'),
                     $c->get('widgetFactory'),
                     $c->get('moduleFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('userFactory'),
                     $c->get('tagFactory'),
-                    $c->get('view'),
                     $c->get('layoutFactory'),
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('folderFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Preview' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Preview(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
-                    $c->get('layoutFactory'),
-                    $c->get('view')
+                $controller = new \Xibo\Controller\Preview(
+                    $c->get('layoutFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Region' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Region(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
-                    $c->get('session'),
+                $controller = new \Xibo\Controller\Region(
                     $c->get('regionFactory'),
                     $c->get('widgetFactory'),
-                    $c->get('permissionFactory'),
                     $c->get('transitionFactory'),
                     $c->get('moduleFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('userGroupFactory'),
-                    $c->get('view'),
-                    $c->get('actionFactory')
+                    $c->get('layoutFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Report' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Report(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Report(
                     $c->get('store'),
                     $c->get('timeSeriesStore'),
                     $c->get('reportService'),
                     $c->get('reportScheduleFactory'),
                     $c->get('savedReportFactory'),
                     $c->get('mediaFactory'),
-                    $c->get('userFactory'),
-                    $c->get('view')
+                    $c->get('userFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Resolution' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Resolution(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
-                    $c->get('resolutionFactory'),
-                    $c->get('view')
+                $controller = new \Xibo\Controller\Resolution(
+                    $c->get('resolutionFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Schedule' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Schedule(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Schedule(
                     $c->get('session'),
-                    $c->get('pool'),
                     $c->get('scheduleFactory'),
                     $c->get('displayGroupFactory'),
                     $c->get('campaignFactory'),
                     $c->get('commandFactory'),
                     $c->get('displayFactory'),
                     $c->get('layoutFactory'),
-                    $c->get('mediaFactory'),
                     $c->get('dayPartFactory'),
                     $c->get('scheduleReminderFactory'),
-                    $c->get('scheduleExclusionFactory'),
-                    $c->get('view')
+                    $c->get('scheduleExclusionFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Sessions' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Sessions(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Sessions(
                     $c->get('store'),
-                    $c->get('sessionFactory'),
-                    $c->get('view')
+                    $c->get('sessionFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Settings' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Settings(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Settings(
                     $c->get('layoutFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('transitionFactory'),
-                    $c->get('userFactory'),
-                    $c->get('view')
+                    $c->get('userFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Stats' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Stats(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Stats(
                     $c->get('store'),
                     $c->get('timeSeriesStore'),
                     $c->get('reportService'),
-                    $c->get('displayFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('userFactory'),
-                    $c->get('userGroupFactory'),
-                    $c->get('displayGroupFactory'),
-                    $c->get('view')
+                    $c->get('displayFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\StatusDashboard' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\StatusDashboard(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\StatusDashboard(
                     $c->get('store'),
                     $c->get('pool'),
                     $c->get('userFactory'),
                     $c->get('displayFactory'),
                     $c->get('displayGroupFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('view')
+                    $c->get('mediaFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Task' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Task(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Task(
                     $c->get('store'),
                     $c->get('timeSeriesStore'),
                     $c->get('pool'),
                     $c->get('taskFactory'),
-                    $c->get('userFactory'),
-                    $c->get('userGroupFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('notificationFactory'),
-                    $c->get('userNotificationFactory'),
-                    $c->get('view'),
                     $c
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Tag' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Tag(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
-                    $c->get('store'),
+                $controller = new \Xibo\Controller\Tag(
                     $c->get('displayGroupFactory'),
                     $c->get('layoutFactory'),
                     $c->get('tagFactory'),
@@ -1065,81 +824,50 @@ class State implements Middleware
                     $c->get('mediaFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('campaignFactory'),
-                    $c->get('playlistFactory'),
-                    $c->get('view')
+                    $c->get('playlistFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Template' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Template(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\Template(
                     $c->get('layoutFactory'),
                     $c->get('tagFactory'),
-                    $c->get('view'),
                     $c->get('resolutionFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\Transition' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\Transition(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
-                    $c->get('transitionFactory'),
-                    $c->get('view')
+                $controller = new \Xibo\Controller\Transition(
+                    $c->get('transitionFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
             '\Xibo\Controller\User' => function(ContainerInterface $c) {
                 $controller = new \Xibo\Controller\User(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
                     $c->get('userFactory'),
                     $c->get('userTypeFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('permissionFactory'),
-                    $c->get('layoutFactory'),
                     $c->get('applicationFactory'),
-                    $c->get('campaignFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('scheduleFactory'),
-                    $c->get('displayFactory'),
                     $c->get('sessionFactory'),
-                    $c->get('displayGroupFactory'),
-                    $c->get('widgetFactory'),
-                    $c->get('playerVersionFactory'),
-                    $c->get('playlistFactory'),
-                    $c->get('view'),
-                    $c,
-                    $c->get('dataSetFactory'),
-                    $c->get('folderFactory'),
-                    $c->get('dayPartFactory')
+                    $c->get('permissionService'),
+                    $c->get('mediaService')
                 );
                 $controller->useDispatcher($c->get('dispatcher'));
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
             '\Xibo\Controller\UserGroup' => function(ContainerInterface $c) {
-                return new \Xibo\Controller\UserGroup(
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
-                    $c->get('state'),
-                    $c->get('user'),
-                    $c->get('helpService'),
-                    $c->get('configService'),
+                $controller = new \Xibo\Controller\UserGroup(
                     $c->get('userGroupFactory'),
                     $c->get('permissionFactory'),
-                    $c->get('userFactory'),
-                    $c->get('view')
+                    $c->get('userFactory')
                 );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
             },
         ];
     }
@@ -1151,135 +879,111 @@ class State implements Middleware
     {
         return [
             'actionFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\ActionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\ActionFactory(
                     $c->get('user'),
                     $c->get('userFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'applicationFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\ApplicationFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\ApplicationFactory(
                     $c->get('user'),
                     $c->get('applicationRedirectUriFactory'),
                     $c->get('applicationScopeFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'applicationRedirectUriFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\ApplicationRedirectUriFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\ApplicationRedirectUriFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'applicationScopeFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\ApplicationScopeFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\ApplicationScopeFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'auditLogFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\AuditLogFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\AuditLogFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'bandwidthFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\BandwidthFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\BandwidthFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'campaignFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\CampaignFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\CampaignFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('permissionFactory'),
                     $c->get('scheduleFactory'),
-                    $c->get('displayFactory'),
+                    $c->get('displayNotifyService'),
                     $c->get('tagFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'commandFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\CommandFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\CommandFactory(
                     $c->get('user'),
-                    $c->get('userFactory'),
-                    $c->get('permissionFactory')
+                    $c->get('userFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'dataSetColumnFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\DataSetColumnFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\DataSetColumnFactory(
                     $c->get('dataTypeFactory'),
                     $c->get('dataSetColumnTypeFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'dataSetColumnTypeFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\DataSetColumnTypeFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\DataSetColumnTypeFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'dataSetFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\DataSetFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\DataSetFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('configService'),
                     $c->get('pool'),
                     $c->get('dataSetColumnFactory'),
                     $c->get('permissionFactory'),
-                    $c->get('displayFactory')
+                    $c->get('displayNotifyService')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'dataSetRssFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\DataSetRssFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\DataSetRssFactory(
                     $c->get('user'),
                     $c->get('userFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'dataTypeFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\DataTypeFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\DataTypeFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'dayPartFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\DayPartFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\DayPartFactory(
                     $c->get('user'),
                     $c->get('userFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'displayFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\DisplayFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\DisplayFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('displayNotifyService'),
@@ -1288,61 +992,51 @@ class State implements Middleware
                     $c->get('displayProfileFactory'),
                     $c->get('folderFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'displayEventFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\DisplayEventFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\DisplayEventFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'displayGroupFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\DisplayGroupFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\DisplayGroupFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('permissionFactory'),
                     $c->get('tagFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'displayProfileFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\DisplayProfileFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\DisplayProfileFactory(
                     $c->get('configService'),
-                    $c->get('dispatcher'),
                     $c->get('commandFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'folderFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\FolderFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\FolderFactory(
                     $c->get('permissionFactory'),
                     $c->get('user'),
                     $c->get('userFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'helpFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\HelpFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\HelpFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'layoutFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\LayoutFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\LayoutFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('configService'),
-                    $c->get('dispatcher'),
                     $c->get('permissionFactory'),
                     $c->get('regionFactory'),
                     $c->get('tagFactory'),
@@ -1357,19 +1051,16 @@ class State implements Middleware
                     $c->get('actionFactory'),
                     $c->get('folderFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'logFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\LogFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\LogFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'mediaFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\MediaFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\MediaFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('configService'),
@@ -1377,41 +1068,36 @@ class State implements Middleware
                     $c->get('tagFactory'),
                     $c->get('playlistFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'menuBoardCategoryFactory' => function (ContainerInterface $c) {
-                return new \Xibo\Factory\MenuBoardCategoryFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\MenuBoardCategoryFactory(
                     $c->get('menuBoardProductOptionFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'menuBoardProductOptionFactory' => function (ContainerInterface $c) {
-                return new \Xibo\Factory\MenuBoardProductOptionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\MenuBoardProductOptionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'menuBoardFactory' => function (ContainerInterface $c) {
-                return new \Xibo\Factory\MenuBoardFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\MenuBoardFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('configService'),
                     $c->get('pool'),
                     $c->get('permissionFactory'),
                     $c->get('menuBoardCategoryFactory'),
-                    $c->get('displayNotifyService'),
+                    $c->get('displayNotifyService')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'moduleFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\ModuleFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\ModuleFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('moduleService'),
@@ -1430,111 +1116,94 @@ class State implements Middleware
                     $c->get('menuBoardFactory'),
                     $c->get('menuBoardCategoryFactory'),
                     $c->get('view'),
-                    $c
+                    $c->get('httpCache')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'notificationFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\NotificationFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\NotificationFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('userGroupFactory'),
                     $c->get('displayGroupFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'permissionFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\PermissionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\PermissionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'playerVersionFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\PlayerVersionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\PlayerVersionFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('configService'),
                     $c->get('mediaFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'playlistFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\PlaylistFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
+                $repository = new \Xibo\Factory\PlaylistFactory(
                     $c->get('configService'),
-                    $c->get('sanitizerService'),
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('permissionFactory'),
                     $c->get('widgetFactory'),
                     $c->get('tagFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'regionFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\RegionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\RegionFactory(
                     $c->get('permissionFactory'),
                     $c->get('regionOptionFactory'),
                     $c->get('playlistFactory'),
                     $c->get('actionFactory'),
                     $c->get('campaignFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'regionOptionFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\RegionOptionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\RegionOptionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'requiredFileFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\RequiredFileFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\RequiredFileFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'reportScheduleFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\ReportScheduleFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\ReportScheduleFactory(
                     $c->get('user'),
-                    $c->get('userFactory'),
-                    $c->get('configService'),
-                    $c->get('pool')
+                    $c->get('userFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'resolutionFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\ResolutionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\ResolutionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'savedReportFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\SavedReportFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\SavedReportFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('configService'),
                     $c->get('mediaFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'scheduleFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\ScheduleFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\ScheduleFactory(
                     $c->get('configService'),
                     $c->get('pool'),
                     $c->get('displayGroupFactory'),
@@ -1543,130 +1212,107 @@ class State implements Middleware
                     $c->get('scheduleReminderFactory'),
                     $c->get('scheduleExclusionFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'scheduleReminderFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\ScheduleReminderFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\ScheduleReminderFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('configService')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'scheduleExclusionFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\ScheduleExclusionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\ScheduleExclusionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'sessionFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\SessionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\SessionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'tagFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\TagFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\TagFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'taskFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\TaskFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\TaskFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'transitionFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\TransitionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\TransitionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'userFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\UserFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\UserFactory(
                     $c->get('configService'),
                     $c->get('permissionFactory'),
                     $c->get('userOptionFactory'),
                     $c->get('applicationScopeFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'userGroupFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\UserGroupFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\UserGroupFactory(
                     $c->get('user'),
                     $c->get('userFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'userNotificationFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\UserNotificationFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\UserNotificationFactory(
                     $c->get('user'),
                     $c->get('userFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'userOptionFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\UserOptionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\UserOptionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'userTypeFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\UserTypeFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\UserTypeFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'widgetFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\WidgetFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService'),
+                $repository = new \Xibo\Factory\WidgetFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
                     $c->get('widgetOptionFactory'),
                     $c->get('widgetMediaFactory'),
                     $c->get('widgetAudioFactory'),
                     $c->get('permissionFactory'),
-                    $c->get('displayFactory'),
+                    $c->get('displayNotifyService'),
                     $c->get('actionFactory')
                 );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'widgetMediaFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\WidgetMediaFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\WidgetMediaFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'widgetAudioFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\WidgetAudioFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\WidgetAudioFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
             'widgetOptionFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\WidgetOptionFactory(
-                    $c->get('store'),
-                    $c->get('logService'),
-                    $c->get('sanitizerService')
-                );
+                $repository = new \Xibo\Factory\WidgetOptionFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
             },
         ];
     }
@@ -1678,12 +1324,28 @@ class State implements Middleware
                 $dispatcher = new EventDispatcher();
 
                 $dispatcher->addListener(MediaDeleteEvent::$NAME, (new OnMediaDelete(
-                    $c->get('menuBoardCategoryFactory'),
+                    $c->get('menuBoardCategoryFactory')
                 ))->useLogger($c->get('logger')));
 
                 $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete(
-                    $c->get('menuBoardFactory'),
+                    $c->get('store'),
+                    $c->get('campaignFactory'),
+                    $c->get('layoutFactory'),
+                    $c->get('mediaFactory'),
+                    $c->get('scheduleFactory'),
+                    $c->get('displayFactory'),
+                    $c->get('displayGroupFactory'),
+                    $c->get('widgetFactory'),
+                    $c->get('playerVersionFactory'),
+                    $c->get('playlistFactory'),
+                    $c->get('dataSetFactory'),
+                    $c->get('dayPartFactory'),
+                    $c->get('menuBoardFactory')
                 ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(LayoutOwnerChangeEvent::$NAME, new OnLayoutOwnerChange(
+                    $c->get('layoutFactory')
+                ));
 
                 return $dispatcher;
             },
