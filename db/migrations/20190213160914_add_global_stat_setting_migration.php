@@ -42,7 +42,7 @@ class AddGlobalStatSettingMigration extends AbstractMigration
                 ->insert([
                     [
                         'setting' => 'LAYOUT_STATS_ENABLED_DEFAULT',
-                        'value' => '0',
+                        'value' => 0,
                         'userSee' => 1,
                         'userChange' => 1
                     ]
@@ -53,7 +53,7 @@ class AddGlobalStatSettingMigration extends AbstractMigration
                 ->insert([
                     [
                         'setting' => 'LAYOUT_STATS_ENABLED_DEFAULT',
-                        'value' => '1',
+                        'value' => 1,
                         'userSee' => 1,
                         'userChange' => 1
                     ]
