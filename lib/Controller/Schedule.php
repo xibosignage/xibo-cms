@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,8 +25,6 @@ use Carbon\Carbon;
 use Illuminate\Support\Str;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
-use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ScheduleReminder;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
@@ -34,15 +32,11 @@ use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\ScheduleReminderFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -59,9 +53,6 @@ class Schedule extends Base
      * @var Session
      */
     private $session;
-
-    /** @var  PoolInterface */
-    private $pool;
 
     /**
      * @var ScheduleFactory
@@ -99,48 +90,32 @@ class Schedule extends Base
     /** @var  LayoutFactory */
     private $layoutFactory;
 
-    /** @var  MediaFactory */
-    private $mediaFactory;
-
     /** @var  DayPartFactory */
     private $dayPartFactory;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param Session $session
-     * @param PoolInterface $pool
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param CampaignFactory $campaignFactory
      * @param CommandFactory $commandFactory
      * @param DisplayFactory $displayFactory
      * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
      * @param DayPartFactory $dayPartFactory
      * @param ScheduleReminderFactory $scheduleReminderFactory
      * @param ScheduleExclusionFactory $scheduleExclusionFactory
-     * @param Twig $view
      */
 
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $pool, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $mediaFactory, $dayPartFactory, $scheduleReminderFactory, $scheduleExclusionFactory, Twig $view)
+    public function __construct($session, $scheduleFactory, $displayGroupFactory, $campaignFactory, $commandFactory, $displayFactory, $layoutFactory, $dayPartFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->session = $session;
-        $this->pool = $pool;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayGroupFactory = $displayGroupFactory;
         $this->campaignFactory = $campaignFactory;
         $this->commandFactory = $commandFactory;
         $this->displayFactory = $displayFactory;
         $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
         $this->dayPartFactory = $dayPartFactory;
         $this->scheduleReminderFactory = $scheduleReminderFactory;
         $this->scheduleExclusionFactory = $scheduleExclusionFactory;
@@ -1070,7 +1045,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setDisplayFactory($this->displayFactory);
+        $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
         if ($schedule->campaignId != null) {
             $schedule->setCampaignFactory($this->campaignFactory);
         }
@@ -1575,7 +1550,7 @@ class Schedule extends Base
         }
 
         // Ready to do the add
-        $schedule->setDisplayFactory($this->displayFactory);
+        $schedule->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService());
         if ($schedule->campaignId != null) {
             $schedule->setCampaignFactory($this->campaignFactory);
         }
@@ -1764,7 +1739,7 @@ class Schedule extends Base
         }
 
         $schedule
-            ->setDisplayFactory($this->displayFactory)
+            ->setDisplayNotifyService($this->displayFactory->getDisplayNotifyService())
             ->delete();
 
         // Return

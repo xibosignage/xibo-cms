@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,16 +23,12 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\DayPartFactory;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 
 /**
@@ -47,8 +43,8 @@ class DayPart extends Base
     /** @var DisplayGroupFactory */
     private $displayGroupFactory;
 
-    /** @var  DisplayFactory */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /** @var  LayoutFactory */
     private $layoutFactory;
@@ -61,27 +57,18 @@ class DayPart extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param DayPartFactory $dayPartFactory
      * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dayPartFactory, $displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, Twig $view)
+    public function __construct($dayPartFactory, $displayGroupFactory, $displayNotifyService, $layoutFactory, $mediaFactory, $scheduleFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->dayPartFactory = $dayPartFactory;
         $this->displayGroupFactory = $displayGroupFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
@@ -508,7 +495,7 @@ class DayPart extends Base
     public function edit(Request $request, Response $response, $id)
     {
         $dayPart = $this->dayPartFactory->getById($id)
-            ->setChildObjectDependencies($this->displayGroupFactory, $this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
+            ->setChildObjectDependencies($this->displayGroupFactory, $this->displayNotifyService, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
             ->load();
 
         if (!$this->getUser()->checkEditable($dayPart)) {

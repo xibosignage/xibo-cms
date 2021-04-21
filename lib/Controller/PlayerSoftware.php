@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,7 +24,6 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\PlayerVersion;
 use Xibo\Factory\DisplayFactory;
@@ -36,9 +35,6 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -82,13 +78,6 @@ class PlayerSoftware extends Base
 
     /**
      * Notification constructor.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
-     * @param \Stash\Interfaces\PoolInterface $pool
      * @param MediaFactory $mediaFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param DisplayProfileFactory $displayProfileFactory
@@ -98,12 +87,9 @@ class PlayerSoftware extends Base
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $pool, $mediaFactory, $playerVersionFactory, $displayProfileFactory, $moduleFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, Twig $view)
+    public function __construct($pool, $mediaFactory, $playerVersionFactory, $displayProfileFactory, $moduleFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->pool = $pool;
         $this->mediaFactory = $mediaFactory;
         $this->playerVersionFactory = $playerVersionFactory;
@@ -317,7 +303,7 @@ class PlayerSoftware extends Base
 
         // Delete
         $version->delete();
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
         $media->delete();
 
         // Return

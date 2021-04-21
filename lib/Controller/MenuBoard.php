@@ -24,16 +24,9 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
-use Xibo\Entity\User;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\MenuBoardFactory;
 use Xibo\Factory\UserFactory;
-use Xibo\Helper\ApplicationState;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\HelpServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -58,31 +51,15 @@ class MenuBoard extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param ApplicationState $state
-     * @param User $user
-     * @param HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param MenuBoardFactory $menuBoardFactory
      * @param UserFactory $userFactory
      * @param FolderFactory $folderFactory
-     * @param Twig $view
      */
     public function __construct(
-        $log,
-        $sanitizerService,
-        $state,
-        $user,
-        $help,
-        $config,
         $menuBoardFactory,
         $userFactory,
-        $folderFactory,
-        Twig $view
+        $folderFactory
     ) {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->menuBoardFactory = $menuBoardFactory;
         $this->userFactory = $userFactory;
         $this->folderFactory = $folderFactory;

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,7 +26,6 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Entity\UserGroup;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\NotificationFactory;
@@ -34,11 +33,8 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\AttachmentUploadHandler;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\SendFile;
-use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DisplayNotifyService;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 
@@ -65,23 +61,14 @@ class Notification extends Base
 
     /**
      * Notification constructor.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param NotificationFactory $notificationFactory
      * @param UserNotificationFactory $userNotificationFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayNotifyService $displayNotifyService
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory, $displayNotifyService, Twig $view)
+    public function __construct($notificationFactory, $userNotificationFactory, $displayGroupFactory, $userGroupFactory, $displayNotifyService)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->notificationFactory = $notificationFactory;
         $this->userNotificationFactory = $userNotificationFactory;
         $this->displayGroupFactory = $displayGroupFactory;
