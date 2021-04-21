@@ -1,16 +1,29 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2016 Spring Signage Ltd
- * (ModuleServiceInterface.php)
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
 
 namespace Xibo\Service;
 
 
-use Psr\Container\ContainerInterface;
-use Slim\App;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -28,6 +41,7 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Widget\ModuleWidget;
@@ -45,9 +59,8 @@ interface ModuleServiceInterface
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
      * @param SanitizerService $sanitizer
-     * @param EventDispatcherInterface $dispatcher
      */
-    public function __construct($store, $pool, $log, $config, $sanitizer, $dispatcher);
+    public function __construct($store, $pool, $log, $config, $sanitizer);
 
     /**
      * @param Module $module
@@ -65,10 +78,10 @@ interface ModuleServiceInterface
      * @param MenuBoardFactory $menuBoardFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
      * @param Twig $view
-     * @param ContainerInterface $container
+     * @param HttpCacheProvider $cacheProvider
      * @return ModuleWidget
      */
-    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, ContainerInterface $container);
+    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, HttpCacheProvider $cacheProvider);
 
     /**
      * @param string $className
@@ -86,8 +99,8 @@ interface ModuleServiceInterface
      * @param MenuBoardFactory $menuBoardFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
      * @param Twig $view
-     * @param ContainerInterface $container
+     * @param HttpCacheProvider $cacheProvider
      * @return ModuleWidget
      */
-    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, ContainerInterface $container);
+    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, HttpCacheProvider $cacheProvider);
 }

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,7 +25,6 @@ namespace Xibo\Service;
 
 
 use Stash\Interfaces\PoolInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -62,28 +61,24 @@ class ModuleService implements ModuleServiceInterface
      */
     private $sanitizerService;
 
-    /** @var  EventDispatcherInterface */
-    private $dispatcher;
-
     /**
      * @inheritdoc
      */
-    public function __construct($store, $pool, $log, $config, $sanitizer, $dispatcher)
+    public function __construct($store, $pool, $log, $config, $sanitizer)
     {
         $this->store = $store;
         $this->pool = $pool;
         $this->logService = $log;
         $this->configService = $config;
         $this->sanitizerService = $sanitizer;
-        $this->dispatcher = $dispatcher;
     }
 
     /**
      * @inheritdoc
      */
-    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, $container)
+    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, $cacheProvider)
     {
-        $object = $this->getByClass($module->class, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, $container);
+        $object = $this->getByClass($module->class, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, $cacheProvider);
 
         $object->setModule($module);
 
@@ -93,7 +88,7 @@ class ModuleService implements ModuleServiceInterface
     /**
      * @inheritdoc
      */
-    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, $container)
+    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, $cacheProvider)
     {
         if (!\class_exists($className)) {
             throw new NotFoundException(__('Class %s not found', $className));
@@ -106,7 +101,6 @@ class ModuleService implements ModuleServiceInterface
             $this->logService,
             $this->configService,
             $this->sanitizerService,
-            $this->dispatcher,
             $moduleFactory,
             $mediaFactory,
             $dataSetFactory,
@@ -121,7 +115,7 @@ class ModuleService implements ModuleServiceInterface
             $menuBoardFactory,
             $menuBoardCategoryFactory,
             $view,
-            $container
+            $cacheProvider
         );
 
         return $object;

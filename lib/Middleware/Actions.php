@@ -73,7 +73,7 @@ class Actions implements Middleware
                         /** @var \Xibo\Entity\Layout $layout */
                         $layout = $container->get('layoutFactory')->createFromZip($folder . '/' . $file, null,
                             $container->get('userFactory')->getSystemUser()->getId(), false, false, true, false,
-                            true, $container->get('\Xibo\Controller\Library'), null, $routeContext->getRouteParser());
+                            true, $container->get('dataSetFactory'), null, $routeContext->getRouteParser(), $container->get('mediaService'));
                         $layout->save([
                             'audit' => false,
                             'import' => true
@@ -89,7 +89,7 @@ class Actions implements Middleware
             $container->get('configService')->changeSetting('DEFAULTS_IMPORTED', 1);
 
             // Install files
-            $container->get('\Xibo\Controller\Library')->installAllModuleFiles();
+            $container->get('\Xibo\Controller\Module')->installAllModuleFiles();
         }
 
         // Do not proceed unless we have completed an upgrade
