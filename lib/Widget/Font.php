@@ -23,6 +23,7 @@ namespace Xibo\Widget;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
+use Xibo\Service\MediaService;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -87,7 +88,8 @@ class Font extends ModuleWidget
     public function settings(Request $request, Response $response): Response
     {
         if ($this->getSanitizer($request->getParams())->getCheckbox('rebuildFonts') == 1) {
-            $this->container->get('\Xibo\Controller\Library')->installFonts(RouteContext::fromRequest($request)->getRouteParser(),['invalidateCache' => true]);
+            $mediaService = new MediaService($this->getConfig(), $this->getLog(), $this->getStore(), $this->getSanitizerService(), $this->getPool(), $this->mediaFactory);
+            $mediaService->setUser($this->getUser())->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => true]);
         }
 
         return $response;
@@ -113,7 +115,7 @@ class Font extends ModuleWidget
             // Font type
             $embed = intval($font->getData('OS/2', 'fsType'));
 
-            $this->getLog()->debug('Font name adjusted to %s and embeddable flag is %s', $media->name, $embed);
+            $this->getLog()->debug(sprintf('Font name adjusted to %s and embeddable flag is %s', $media->name, $embed));
 
             if ($embed != 0 && $embed != 8)
                 throw new InvalidArgumentException(__('Font file is not embeddable due to its permissions'), 'embed');

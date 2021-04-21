@@ -25,7 +25,6 @@ use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
-use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -33,6 +32,7 @@ use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Stash\Item;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Twig\Error\Error;
 use Xibo\Entity\Media;
@@ -228,8 +228,8 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var Twig */
     protected $view;
 
-    /** @var ContainerInterface */
-    protected $container;
+    /** @var HttpCacheProvider */
+    protected $cacheProvider;
 
     // </editor-fold>
 
@@ -240,7 +240,6 @@ abstract class ModuleWidget implements ModuleInterface
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
      * @param SanitizerService $sanitizer
-     * @param EventDispatcherInterface $dispatcher
      * @param ModuleFactory $moduleFactory
      * @param MediaFactory $mediaFactory
      * @param DataSetFactory $dataSetFactory
@@ -255,16 +254,15 @@ abstract class ModuleWidget implements ModuleInterface
      * @param MenuBoardFactory $menuBoardFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
      * @param Twig $view
-     * @param ContainerInterface $container
+     * @param HttpCacheProvider $cacheProvider
      */
-    public function __construct($store, $pool, $log, $config, $sanitizer, $dispatcher, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, Twig $view, ContainerInterface $container)
+    public function __construct($store, $pool, $log, $config, $sanitizer, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, Twig $view, HttpCacheProvider $cacheProvider)
     {
         $this->store = $store;
         $this->pool = $pool;
         $this->logService = $log;
         $this->configService = $config;
         $this->sanitizerService = $sanitizer;
-        $this->dispatcher = $dispatcher;
 
         $this->moduleFactory = $moduleFactory;
         $this->mediaFactory = $mediaFactory;
@@ -280,7 +278,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->menuBoardFactory = $menuBoardFactory;
         $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
         $this->view = $view;
-        $this->container = $container;
+        $this->cacheProvider = $cacheProvider;
 
         $this->init();
     }
@@ -363,10 +361,22 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
-     * @inheritdoc
+     * @return SanitizerService
      */
-    protected function getDispatcher()
+    protected function getSanitizerService()
     {
+        return $this->sanitizerService;
+    }
+
+    /**
+     * @return EventDispatcher
+     */
+    public function getDispatcher(): EventDispatcher
+    {
+        if ($this->dispatcher === null) {
+            $this->dispatcher = new EventDispatcher();
+        }
+
         return $this->dispatcher;
     }
 
@@ -753,7 +763,7 @@ abstract class ModuleWidget implements ModuleInterface
             $this->getLog()->debug('Dispatching save event ' . $this->saveEvent->getName());
 
             // Dispatch the Edit Event
-            $this->dispatcher->dispatch($this->saveEvent->getName(), $this->saveEvent);
+            $this->getDispatcher()->dispatch($this->saveEvent->getName(), $this->saveEvent);
         }
 
         $this->widget->calculateDuration($this)->save();
@@ -1172,8 +1182,7 @@ abstract class ModuleWidget implements ModuleInterface
             // Get the name with library
             $attachmentName = $sanitizedParams->getString('attachment', ['default' => (($attachment == null) ? $media->storedAs : $attachment)]);
 
-            /** @var $httpCache HttpCacheProvider*/
-            $httpCache = $this->container->get('httpCache');
+            $httpCache = $this->cacheProvider;
             // Issue some headers
             $response = $httpCache->withEtag($response, $media->md5);
             $response = $httpCache->withExpires($response,'+1 week');
