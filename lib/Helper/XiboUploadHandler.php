@@ -184,7 +184,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                                 }
                             }
 
-                            $controller->getLog()->debug('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId);
+                            $controller->getLog()->debug(sprintf('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId));
                             $widget->unassignMedia($oldMedia->mediaId);
                             $widget->assignMedia($media->mediaId);
 
@@ -205,7 +205,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                     // Update any background images
                     if ($media->mediaType == 'image') {
-                        $controller->getLog()->debug('Updating layouts with the old media %d as the background image.', $oldMedia->mediaId);
+                        $controller->getLog()->debug(sprintf('Updating layouts with the old media %d as the background image.', $oldMedia->mediaId));
                         // Get all Layouts with this as the background image
                         foreach ($controller->getLayoutFactory()->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $oldMedia->mediaId]) as $layout) {
                             /* @var Layout $layout */
@@ -217,7 +217,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                                 $controller->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
                             }
 
-                            $controller->getLog()->debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $media->mediaId);
+                            $controller->getLog()->debug(sprintf('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $media->mediaId));
                             $layout->backgroundImageId = $media->mediaId;
                             $layout->save();
                         }
@@ -259,7 +259,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         $controller->getLog()->debug('No prior media found');
                     }
 
-                    $oldMedia->setChildObjectDependencies($controller->getLayoutFactory(), $controller->getWidgetFactory(), $controller->getDisplayGroupFactory(), $controller->getDisplayFactory(), $controller->getScheduleFactory(), $controller->getPlayerVersionFactory());
+                    $oldMedia->setChildObjectDependencies($controller->getLayoutFactory(), $controller->getWidgetFactory(), $controller->getDisplayGroupFactory(), $controller->getDisplayFactory(), $controller->getScheduleFactory());
                     $oldMedia->delete();
 
                 } else {
