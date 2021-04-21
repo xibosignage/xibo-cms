@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -264,11 +264,6 @@ class Media implements \JsonSerializable
     private $permissionFactory;
 
     /**
-     * @var PlayerVersionFactory
-     */
-    private $playerVersionFactory;
-
-    /**
      * @var PlaylistFactory
      */
     private $playlistFactory;
@@ -307,17 +302,15 @@ class Media implements \JsonSerializable
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param PlayerVersionFactory $playerVersionFactory
      * @return $this
      */
-    public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, $playerVersionFactory)
+    public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory)
     {
         $this->layoutFactory = $layoutFactory;
         $this->widgetFactory = $widgetFactory;
         $this->displayGroupFactory  = $displayGroupFactory;
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
-        $this->playerVersionFactory = $playerVersionFactory;
         return $this;
     }
 
@@ -518,7 +511,7 @@ class Media implements \JsonSerializable
             'fullInfo' => false
         ], $options);
 
-        $this->getLog()->debug('Loading Media. Options = %s', json_encode($options));
+        $this->getLog()->debug(sprintf('Loading Media. Options = %s', json_encode($options)));
 
         // Tags
         $this->tags = $this->tagFactory->loadByMediaId($this->mediaId);
@@ -732,11 +725,11 @@ class Media implements \JsonSerializable
 
         // Update any background images
         if ($this->mediaType == 'image' && $parentMedia != null) {
-            $this->getLog()->debug('Updating layouts with the old media %d as the background image.', $this->mediaId);
+            $this->getLog()->debug(sprintf('Updating layouts with the old media %d as the background image.', $this->mediaId));
             // Get all Layouts with this as the background image
             foreach ($this->layoutFactory->query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
                 /* @var Layout $layout */
-                $this->getLog()->debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId);
+                $this->getLog()->debug(sprintf('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId));
                 $layout->backgroundImageId = $parentMedia->mediaId;
                 $layout->save();
             }
@@ -1003,7 +996,7 @@ class Media implements \JsonSerializable
     {
         // Make sure storedAs isn't null
         if ($this->storedAs == null) {
-            $this->getLog()->error('Deleting media [%s] with empty stored as. Skipping library file delete.', $this->name);
+            $this->getLog()->error(sprintf('Deleting media [%s] with empty stored as. Skipping library file delete.', $this->name));
             return;
         }
 

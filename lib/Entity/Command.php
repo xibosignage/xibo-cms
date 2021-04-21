@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,7 +25,6 @@ namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -147,20 +146,13 @@ class Command implements \JsonSerializable
     private $displayProfileFactory;
 
     /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
      * Command constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param $permissionFactory
      */
-    public function __construct($store, $log, $permissionFactory)
+    public function __construct($store, $log)
     {
         $this->setCommonDependencies($store, $log);
-        $this->permissionFactory = $permissionFactory;
     }
 
     /**

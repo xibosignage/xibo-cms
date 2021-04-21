@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,11 +24,12 @@ namespace Xibo\Entity;
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DayPartFactory;
-use Xibo\Factory\DisplayFactory;
+
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
@@ -80,8 +81,8 @@ class DayPart implements \JsonSerializable
     /** @var DisplayGroupFactory */
     private $displayGroupFactory;
 
-    /** @var  DisplayFactory */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /** @var  LayoutFactory */
     private $layoutFactory;
@@ -114,17 +115,17 @@ class DayPart implements \JsonSerializable
 
     /**
      * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param LayoutFactory $layoutFactory
      * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DayPartFactory $dayPartFactory
      * @return $this
      */
-    public function setChildObjectDependencies($displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, $dayPartFactory)
+    public function setChildObjectDependencies($displayGroupFactory, $displayNotifyService, $layoutFactory, $mediaFactory, $scheduleFactory, $dayPartFactory)
     {
         $this->displayGroupFactory = $displayGroupFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
         $this->layoutFactory = $layoutFactory;
         $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
@@ -312,7 +313,7 @@ class DayPart implements \JsonSerializable
         foreach ($schedules as $schedule) {
             /** @var Schedule $schedule */
             $schedule
-                ->setDisplayFactory($this->displayFactory)
+                ->setDisplayNotifyService($this->displayNotifyService)
                 ->load();
 
             // Is this schedule a recurring event?

@@ -23,6 +23,7 @@ namespace Xibo\Entity;
 
 
 use Carbon\Carbon;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\ObjectVars;
 use Xibo\Service\LogServiceInterface;
@@ -56,6 +57,8 @@ trait EntityTrait
      */
     private $log;
 
+    private $dispatcher;
+
     /**
      * Set common dependencies.
      * @param StorageServiceInterface $store
@@ -85,6 +88,18 @@ trait EntityTrait
     protected function getLog()
     {
         return $this->log;
+    }
+
+    /**
+     * @return EventDispatcher
+     */
+    public function getDispatcher(): EventDispatcher
+    {
+        if ($this->dispatcher === null) {
+            $this->dispatcher = new EventDispatcher();
+        }
+
+        return $this->dispatcher;
     }
 
     /**

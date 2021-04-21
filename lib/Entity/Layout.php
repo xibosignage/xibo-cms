@@ -373,7 +373,6 @@ class Layout implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param EventDispatcherInterface $eventDispatcher
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
      * @param TagFactory $tagFactory
@@ -385,12 +384,11 @@ class Layout implements \JsonSerializable
      * @param ActionFactory $actionFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $config, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
+    public function __construct($store, $log, $config, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
         $this->config = $config;
-        $this->dispatcher = $eventDispatcher;
         $this->permissionFactory = $permissionFactory;
         $this->regionFactory = $regionFactory;
         $this->tagFactory = $tagFactory;
@@ -1683,7 +1681,7 @@ class Layout implements \JsonSerializable
             }
 
             $event = new LayoutBuildRegionEvent($region->regionId, $regionNode);
-            $this->dispatcher->dispatch($event::NAME, $event);
+            $this->getDispatcher()->dispatch($event::NAME, $event);
             // End of region loop.
         }
 
@@ -1705,7 +1703,7 @@ class Layout implements \JsonSerializable
 
         // Fire a layout.build event, passing the layout and the generated document.
         $event = new LayoutBuildEvent($this, $document);
-        $this->dispatcher->dispatch($event::NAME, $event);
+        $this->getDispatcher()->dispatch($event::NAME, $event);
 
         return $document->saveXML();
     }

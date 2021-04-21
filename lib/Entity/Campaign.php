@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,11 +24,11 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -136,10 +136,8 @@ class Campaign implements \JsonSerializable
      */
     private $scheduleFactory;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /**
      * Entity constructor.
@@ -147,15 +145,15 @@ class Campaign implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param PermissionFactory $permissionFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $permissionFactory, $scheduleFactory, $displayFactory, $tagFactory)
+    public function __construct($store, $log, $permissionFactory, $scheduleFactory, $displayNotifyService, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->permissionFactory = $permissionFactory;
         $this->scheduleFactory = $scheduleFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
         $this->tagFactory = $tagFactory;
     }
 
@@ -461,7 +459,7 @@ class Campaign implements \JsonSerializable
         // Delete all events
         foreach ($this->events as $event) {
             /* @var Schedule $event */
-            $event->setDisplayFactory($this->displayFactory);
+            $event->setDisplayNotifyService($this->displayNotifyService);
             $event->delete();
         }
 
@@ -704,7 +702,7 @@ class Campaign implements \JsonSerializable
         if ($options['notify']) {
             $this->getLog()->debug('CampaignId ' . $this->campaignId . ' wants to notify.');
 
-            $notify = $this->displayFactory->getDisplayNotifyService();
+            $notify = $this->displayNotifyService;
 
             // Should we collect immediately
             if ($options['collectNow']) {

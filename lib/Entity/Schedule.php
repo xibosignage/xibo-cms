@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,7 +26,6 @@ use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DayPartFactory;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\ScheduleExclusionFactory;
 use Xibo\Factory\ScheduleReminderFactory;
@@ -34,6 +33,7 @@ use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
@@ -282,8 +282,8 @@ class Schedule implements \JsonSerializable
      */
     private $displayGroupFactory;
 
-    /** @var  DisplayFactory */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /** @var  DayPartFactory */
     private $dayPartFactory;
@@ -344,13 +344,22 @@ class Schedule implements \JsonSerializable
     }
 
     /**
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      * @return $this
      */
-    public function setDisplayFactory($displayFactory)
+    public function setDisplayNotifyService($displayNotifyService)
     {
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
         return $this;
+    }
+
+    /**
+     * Get the Display Notify Service
+     * @return DisplayNotifyServiceInterface
+     */
+    public function getDisplayNotifyService(): DisplayNotifyServiceInterface
+    {
+        return $this->displayNotifyService->init();
     }
 
     /**
@@ -603,7 +612,7 @@ class Schedule implements \JsonSerializable
                 $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($this->displayGroups) . ' display groups');
                 foreach ($this->displayGroups as $displayGroup) {
                     /* @var DisplayGroup $displayGroup */
-                    $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+                    $this->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
                 }
             } else {
                 $this->getLog()->debug('Schedule changing is not within the schedule look ahead');
@@ -655,13 +664,13 @@ class Schedule implements \JsonSerializable
 
         // Notify
         // Only if the schedule effects the immediate future - i.e. within the RF Look Ahead
-        if ($this->inScheduleLookAhead() && $this->displayFactory !== null) {
+        if ($this->inScheduleLookAhead() && $this->displayNotifyService !== null) {
             $this->getLog()->debug('Schedule changing is within the schedule look ahead, will notify ' . count($notify) . ' display groups');
             foreach ($notify as $displayGroup) {
                 /* @var DisplayGroup $displayGroup */
-                $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
+                $this->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($displayGroup->displayGroupId);
             }
-        } else if ($this->displayFactory === null) {
+        } else if ($this->displayNotifyService === null) {
             $this->getLog()->info('Notify disabled, dependencies not set');
         }
 
@@ -1263,7 +1272,7 @@ class Schedule implements \JsonSerializable
                 if (count($except) > 0) {
                     foreach ($except as $item) {
                         $this->getLog()->debug('manageAssignments: calling notify on displayGroupId ' . $diff[$item]->getId());
-                        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($diff[$item]->getId());
+                        $this->getDisplayNotifyService()->collectNow()->notifyByDisplayGroupId($diff[$item]->getId());
                     }
                 } else {
                     $this->getLog()->debug('manageAssignments: No need to notify');
