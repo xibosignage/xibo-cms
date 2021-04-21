@@ -580,15 +580,13 @@ class State implements Middleware
             '\Xibo\Controller\Maintenance' => function(ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Maintenance(
                     $c->get('store'),
-                    $c->get('taskFactory'),
                     $c->get('mediaFactory'),
                     $c->get('layoutFactory'),
                     $c->get('widgetFactory'),
                     $c->get('displayGroupFactory'),
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
-                    $c->get('playerVersionFactory'),
-                    $c
+                    $c->get('mediaService')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
