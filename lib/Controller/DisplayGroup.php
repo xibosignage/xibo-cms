@@ -622,6 +622,10 @@ class DisplayGroup extends Base
             $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
         }
 
+        if ($displayGroup->isDynamic === 1) {
+            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+        }
+
         $displayGroup->userId = $this->getUser()->userId;
         $displayGroup->save();
 
