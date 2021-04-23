@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,15 +28,17 @@ use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
 use Stash\Driver\Composite;
 use Stash\Pool;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\SanitizerService;
 use Xibo\Middleware\State;
 use Xibo\Service\ConfigService;
+use Xibo\Service\BaseDependenciesService;
 use Xibo\Service\HelpService;
 use Xibo\Service\ImageProcessingService;
+use Xibo\Service\MediaService;
 use Xibo\Service\ModuleService;
+use Xibo\Service\PermissionService;
 use Xibo\Storage\MySqlTimeSeriesStore;
 use Xibo\Storage\PdoStorageService;
 use Xibo\Twig\ByteFormatterTwigExtension;
@@ -147,8 +149,7 @@ class ContainerFactory
                     $c->get('pool'),
                     $c->get('logService'),
                     $c->get('configService'),
-                    $c->get('sanitizerService'),
-                    $c->get('dispatcher')
+                    $c->get('sanitizerService')
                 );
             },
             'configService' => function(ContainerInterface $c) {
@@ -206,6 +207,52 @@ class ContainerFactory
             },
             'httpCache' => function() {
                 return new \Xibo\Helper\HttpCacheProvider();
+            },
+            'mediaService' => function (ContainerInterface $c) {
+                return new MediaService(
+                    $c->get('configService'),
+                    $c->get('logService'),
+                    $c->get('store'),
+                    $c->get('sanitizerService'),
+                    $c->get('pool'),
+                    $c->get('mediaFactory')
+                );
+            },
+            'permissionService' => function(ContainerInterface $c) {
+                return new PermissionService(
+                    $c->get('logService'),
+                    $c->get('displayGroupFactory'),
+                    $c->get('mediaFactory'),
+                    $c->get('campaignFactory'),
+                    $c->get('widgetFactory'),
+                    $c->get('regionFactory'),
+                    $c->get('playlistFactory'),
+                    $c->get('dataSetFactory'),
+                    $c->get('dayPartFactory'),
+                    $c->get('commandFactory'),
+                    $c->get('folderFactory'),
+                    $c->get('menuBoardFactory')
+                );
+            },
+            'ControllerBaseDependenciesService' => function (ContainerInterface $c) {
+                $controller = new BaseDependenciesService();
+                $controller->setLogger($c->get('logService'));
+                $controller->setSanitizer($c->get('sanitizerService'));
+                $controller->setState($c->get('state'));
+                $controller->setUser($c->get('user'));
+                $controller->setHelp($c->get('helpService'));
+                $controller->setConfig($c->get('configService'));
+                $controller->setView($c->get('view'));
+
+                return $controller;
+            },
+            'RepositoryBaseDependenciesService' => function (ContainerInterface $c) {
+                $repository = new BaseDependenciesService();
+                $repository->setLogger($c->get('logService'));
+                $repository->setSanitizer($c->get('sanitizerService'));
+                $repository->setStore($c->get('store'));
+
+                return $repository;
             }
         ]);
 
