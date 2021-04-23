@@ -23,16 +23,10 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DayPartFactory;
-
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -78,20 +72,8 @@ class DayPart implements \JsonSerializable
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
-    /** @var DisplayGroupFactory */
-    private $displayGroupFactory;
-
     /** @var DisplayNotifyServiceInterface */
     private $displayNotifyService;
-
-    /** @var  LayoutFactory */
-    private $layoutFactory;
-
-    /** @var  MediaFactory */
-    private $mediaFactory;
-
-    /** @var  DayPartFactory */
-    private $dayPartFactory;
 
     /**
      * Entity constructor.
@@ -112,27 +94,6 @@ class DayPart implements \JsonSerializable
         $this->scheduleFactory = $scheduleFactory;
         return $this;
     }
-
-    /**
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayNotifyServiceInterface $displayNotifyService
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @param DayPartFactory $dayPartFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($displayGroupFactory, $displayNotifyService, $layoutFactory, $mediaFactory, $scheduleFactory, $dayPartFactory)
-    {
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->displayNotifyService = $displayNotifyService;
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        $this->dayPartFactory = $dayPartFactory;
-        return $this;
-    }
-
     /**
      * Calculate time hash
      * @return string

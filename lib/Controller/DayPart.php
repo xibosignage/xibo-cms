@@ -24,12 +24,9 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\DayPartFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
-use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class DayPart
@@ -40,37 +37,17 @@ class DayPart extends Base
     /** @var  DayPartFactory */
     private $dayPartFactory;
 
-    /** @var DisplayGroupFactory */
-    private $displayGroupFactory;
-
-    /** @var DisplayNotifyServiceInterface */
-    private $displayNotifyService;
-
-    /** @var  LayoutFactory */
-    private $layoutFactory;
-
-    /** @var  MediaFactory */
-    private $mediaFactory;
-
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
     /**
      * Set common dependencies.
      * @param DayPartFactory $dayPartFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayNotifyServiceInterface $displayNotifyService
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
      */
-    public function __construct($dayPartFactory, $displayGroupFactory, $displayNotifyService, $layoutFactory, $mediaFactory, $scheduleFactory)
+    public function __construct($dayPartFactory, $scheduleFactory)
     {
         $this->dayPartFactory = $dayPartFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->displayNotifyService = $displayNotifyService;
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
     }
 
@@ -495,7 +472,6 @@ class DayPart extends Base
     public function edit(Request $request, Response $response, $id)
     {
         $dayPart = $this->dayPartFactory->getById($id)
-            ->setChildObjectDependencies($this->displayGroupFactory, $this->displayNotifyService, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
             ->load();
 
         if (!$this->getUser()->checkEditable($dayPart)) {
@@ -616,6 +592,10 @@ class DayPart extends Base
 
         if (!$this->getUser()->checkDeleteable($dayPart)) {
             throw new AccessDeniedException();
+        }
+
+        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1) {
+            throw new InvalidArgumentException(__('Cannot Delete system specific DayParts'));
         }
 
         $dayPart

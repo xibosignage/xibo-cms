@@ -24,7 +24,6 @@ namespace Xibo\Entity;
 use Carbon\Carbon;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
@@ -254,9 +253,6 @@ class Widget implements \JsonSerializable
     /** @var DisplayNotifyServiceInterface */
     private $displayNotifyService;
 
-    /** @var  PlaylistFactory */
-    private $playlistFactory;
-
     /** @var ActionFactory */
     private $actionFactory;
     //</editor-fold>
@@ -282,16 +278,6 @@ class Widget implements \JsonSerializable
         $this->permissionFactory = $permissionFactory;
         $this->displayNotifyService = $displayNotifyService;
         $this->actionFactory = $actionFactory;
-    }
-
-    /**
-     * @param PlaylistFactory $playlistFactory
-     * @return $this
-     */
-    public function setChildObjectDepencencies($playlistFactory)
-    {
-        $this->playlistFactory = $playlistFactory;
-        return $this;
     }
 
     public function __clone()

@@ -598,6 +598,8 @@ class MediaFactory extends BaseFactory
             $body .= '
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkwidgetmedia`)
                 AND media.mediaId NOT IN (SELECT mediaId FROM `lkmediadisplaygroup`)
+                AND media.mediaId NOT IN (SELECT mediaId FROM `menu_category` WHERE mediaId IS NOT NULL)
+                AND media.mediaId NOT IN (SELECT mediaId FROM `menu_product` WHERE mediaId IS NOT NULL)
                 AND media.mediaId NOT IN (SELECT backgroundImageId FROM `layout` WHERE backgroundImageId IS NOT NULL)
                 AND media.type <> \'module\'
                 AND media.type <> \'font\'
@@ -811,11 +813,16 @@ class MediaFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
         
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $media = $this->createEmpty()->hydrate($row, [
+            $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
                     'duration', 'size', 'released', 'moduleSystemFile', 'isEdited', 'expires'
                 ]
             ]);
+            $media->excludeProperty('layoutBackgroundImages');
+            $media->excludeProperty('widgets');
+            $media->excludeProperty('displayGroups');
+
+            $entries[] = $media;
         }
 
         // Paging

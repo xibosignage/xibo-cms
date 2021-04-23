@@ -25,13 +25,13 @@ namespace Xibo\Entity;
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -438,16 +438,6 @@ class Display implements \JsonSerializable
      */
     private $layoutFactory;
 
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var ScheduleFactory
-     */
-    private $scheduleFactory;
-
     /** @var FolderFactory */
     private $folderFactory;
 
@@ -477,19 +467,9 @@ class Display implements \JsonSerializable
         v::with('Xibo\\Validation\\Rules\\');
     }
 
-    /**
-     * Set child object dependencies
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($layoutFactory, $mediaFactory, $scheduleFactory)
+    public function setDispatcher(EventDispatcherInterface $dispatcher)
     {
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        return $this;
+        $this->dispatcher = $dispatcher;
     }
 
     /**
@@ -644,12 +624,12 @@ class Display implements \JsonSerializable
 
         // Check the number of licensed displays
         if ($maxDisplays > 0) {
-            $this->getLog()->debug('Testing authorised displays against %d maximum. Currently authorised = %d, authorised = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed);
+            $this->getLog()->debug(sprintf('Testing authorised displays against %d maximum. Currently authorised = %d, authorised = %d.', $maxDisplays, $this->currentlyLicensed, $this->licensed));
 
             if ($this->currentlyLicensed != $this->licensed && $this->licensed == 1) {
                 $countLicensed = $this->getStore()->select('SELECT COUNT(DisplayID) AS CountLicensed FROM display WHERE licensed = 1', []);
 
-                $this->getLog()->debug('There are %d authorised displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays);
+                $this->getLog()->debug(sprintf('There are %d authorised displays and we the maximum is %d', $countLicensed[0]['CountLicensed'], $maxDisplays));
 
                 if (intval($countLicensed[0]['CountLicensed']) + 1 > $maxDisplays) {
                     return false;
@@ -736,7 +716,7 @@ class Display implements \JsonSerializable
         if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('tags')) {
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
-                $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+                $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($group));
                 $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true, 'allowNotify' => $allowNotify]);
             }
         }
@@ -756,14 +736,14 @@ class Display implements \JsonSerializable
         // Remove our display from any groups it is assigned to
         foreach ($this->displayGroups as $displayGroup) {
             /* @var DisplayGroup $displayGroup */
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
             $displayGroup->unassignDisplay($this);
             $displayGroup->save(['validate' => false, 'manageDynamicDisplayLinks' => false]);
         }
 
         // Delete our display specific group
         $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
         $displayGroup->delete();
 
         // Delete the display
@@ -1097,7 +1077,7 @@ class Display implements \JsonSerializable
      * @param PoolInterface $pool
      * @return int|null
      */
-    public function getCurrentLayoutId($pool)
+    public function getCurrentLayoutId($pool, LayoutFactory $layoutFactory)
     {
         $item = $pool->getItem('/currentLayoutId/' . $this->displayId);
 
@@ -1107,7 +1087,7 @@ class Display implements \JsonSerializable
             $this->currentLayoutId = $data;
 
             try {
-                $this->currentLayout = $this->layoutFactory->getById($this->currentLayoutId)->layout;
+                $this->currentLayout = $layoutFactory->getById($this->currentLayoutId)->layout;
             }
             catch (NotFoundException $notFoundException) {
                 // This is ok

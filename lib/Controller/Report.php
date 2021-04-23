@@ -508,7 +508,6 @@ class Report extends Base
                 $media = $this->mediaFactory->getById($savedreport->mediaId);
 
                 $savedreport->load();
-                $media->load();
 
                 // Delete
                 $savedreport->delete();
@@ -974,7 +973,6 @@ class Report extends Base
         }
 
         $savedReport->load();
-        $media->load();
 
         // Delete
         $savedReport->delete();

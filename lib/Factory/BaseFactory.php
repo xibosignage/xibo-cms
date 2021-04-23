@@ -72,6 +72,9 @@ class BaseFactory
      */
     private $baseDependenciesService;
 
+    /**
+     * @param BaseDependenciesService $baseDependenciesService
+     */
     public function useBaseDependenciesService(BaseDependenciesService $baseDependenciesService)
     {
         $this->baseDependenciesService = $baseDependenciesService;

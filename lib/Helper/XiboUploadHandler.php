@@ -8,6 +8,7 @@ use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Event\LibraryReplaceEvent;
 use Xibo\Event\LibraryReplaceWidgetEvent;
+use Xibo\Event\MediaDeleteEvent;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\LibraryFullException;
@@ -259,9 +260,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                         $controller->getLog()->debug('No prior media found');
                     }
 
-                    $oldMedia->setChildObjectDependencies($controller->getLayoutFactory(), $controller->getWidgetFactory(), $controller->getDisplayGroupFactory(), $controller->getDisplayFactory(), $controller->getScheduleFactory());
+                    $controller->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($oldMedia));
                     $oldMedia->delete();
-
                 } else {
                     $oldMedia->parentId = $media->mediaId;
                     $oldMedia->save(['validate' => false]);

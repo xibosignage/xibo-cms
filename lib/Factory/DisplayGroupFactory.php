@@ -464,7 +464,13 @@ class DisplayGroupFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isDisplaySpecific', 'isDynamic']]);
+            $displayGroup = $this->createEmpty()->hydrate($row, ['intProperties' => ['isDisplaySpecific', 'isDynamic']]);
+            $displayGroup->excludeProperty('displays');
+            $displayGroup->excludeProperty('media');
+            $displayGroup->excludeProperty('events');
+            $displayGroup->excludeProperty('layouts');
+
+            $entries[] = $displayGroup;
         }
 
         // Paging

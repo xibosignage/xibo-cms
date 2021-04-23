@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Display;
+use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayFactory;
@@ -32,7 +33,6 @@ use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -88,11 +88,6 @@ class DisplayGroup extends Base
     private $commandFactory;
 
     /**
-     * @var ScheduleFactory
-     */
-    private $scheduleFactory;
-
-    /**
      * @var TagFactory
      */
     private $tagFactory;
@@ -114,12 +109,11 @@ class DisplayGroup extends Base
      * @param ModuleFactory $moduleFactory
      * @param MediaFactory $mediaFactory
      * @param CommandFactory $commandFactory
-     * @param ScheduleFactory $scheduleFactory
      * @param TagFactory $tagFactory
      * @param CampaignFactory $campaignFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $scheduleFactory, $tagFactory, $campaignFactory, $folderFactory)
+    public function __construct($playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $moduleFactory, $mediaFactory, $commandFactory, $tagFactory, $campaignFactory, $folderFactory)
     {
         $this->playerAction = $playerAction;
         $this->displayFactory = $displayFactory;
@@ -128,7 +122,6 @@ class DisplayGroup extends Base
         $this->moduleFactory = $moduleFactory;
         $this->mediaFactory = $mediaFactory;
         $this->commandFactory = $commandFactory;
-        $this->scheduleFactory = $scheduleFactory;
         $this->tagFactory = $tagFactory;
         $this->campaignFactory = $campaignFactory;
         $this->folderFactory = $folderFactory;
@@ -609,7 +602,6 @@ class DisplayGroup extends Base
     public function add(Request $request, Response $response)
     {
         $displayGroup = $this->displayGroupFactory->createEmpty();
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $displayGroup->displayGroup = $sanitizedParams->getString('displayGroup');
@@ -725,8 +717,8 @@ class DisplayGroup extends Base
         if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
-
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $displayGroup->load();
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
         $displayGroup->displayGroup = $parsedRequestParams->getString('displayGroup');
         $displayGroup->description = $parsedRequestParams->getString('description');
         $displayGroup->isDynamic = $parsedRequestParams->getCheckbox('isDynamic');
@@ -807,7 +799,8 @@ class DisplayGroup extends Base
     function delete(Request $request, Response $response, $id)
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $displayGroup->load();
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
 
         if (!$this->getUser()->checkDeleteable($displayGroup)) {
             throw new AccessDeniedException();
@@ -882,8 +875,6 @@ class DisplayGroup extends Base
                 'displayGroupId');
         }
 
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-
         if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
@@ -891,6 +882,9 @@ class DisplayGroup extends Base
         if ($displayGroup->isDynamic == 1) {
             throw new InvalidArgumentException(__('Displays cannot be manually assigned to a Dynamic Group'), 'isDynamic');
         }
+
+        $displayGroup->load();
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
 
         $modifiedDisplays = [];
 
@@ -996,7 +990,8 @@ class DisplayGroup extends Base
                 'displayGroupId');
         }
 
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $displayGroup->load();
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
 
         if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
@@ -1090,7 +1085,7 @@ class DisplayGroup extends Base
                 'displayGroupId');
         }
 
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $displayGroup->load();
 
         if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
@@ -1187,10 +1182,11 @@ class DisplayGroup extends Base
             throw new InvalidArgumentException(__('This is a Display specific Display Group and its assignments cannot be modified.'), 'displayGroupId');
         }
 
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
         if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
         }
+
+        $displayGroup->load();
 
         if ($displayGroup->isDynamic == 1) {
             throw new InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'), 'isDynamic');
@@ -1234,14 +1230,14 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
         $displayGroup->load();
 
         $this->getState()->template = 'displaygroup-form-media';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
             'modules' => $this->moduleFactory->query(null, ['regionSpecific' => 0]),
-            'media' => $this->mediaFactory->getByDisplayGroupId($displayGroup->displayGroupId),
+            'media' => $displayGroup->media,
             'help' => $this->getHelp()->link('DisplayGroup', 'FileAssociations')
         ]);
 
@@ -1307,7 +1303,7 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
         $displayGroup->load();
 
         $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
@@ -1400,7 +1396,7 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
         $displayGroup->load();
 
         $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
@@ -1444,7 +1440,7 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
         $displayGroup->load();
 
         $this->getState()->template = 'displaygroup-form-layouts';
@@ -1517,12 +1513,12 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
         $displayGroup->load();
 
         $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
 
-        // Loop through all the media
+        // Loop through all the Layouts
         foreach ($layoutIds as $layoutId) {
 
             $layout = $this->layoutFactory->getById($layoutId);
@@ -1608,7 +1604,7 @@ class DisplayGroup extends Base
         }
 
         // Load the groups details
-        $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
         $displayGroup->load();
 
         $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
@@ -1868,7 +1864,7 @@ class DisplayGroup extends Base
         // Check to see if this layout is assigned to this display group.
         if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $id])) <= 0) {
             // Assign
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
             $displayGroup->load();
             $displayGroup->assignLayout($layout);
 
@@ -2061,7 +2057,7 @@ class DisplayGroup extends Base
         // Check to see if this layout is assigned to this display group.
         if (count($this->layoutFactory->query(null, ['disableUserCheck' => 1, 'layoutId' => $layout->layoutId, 'displayGroupId' => $id])) <= 0) {
             // Assign
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
             $displayGroup->load();
             $displayGroup->assignLayout($layout);
             // Don't notify, this player action will cause a download.
@@ -2305,17 +2301,12 @@ class DisplayGroup extends Base
             throw new AccessDeniedException();
         }
 
-        // get an array of assigned displays
-        $membersDisplays = $this->displayFactory->getByDisplayGroupId($id);
+        // load Layouts, media and Displays assigned to original Display Group
+        $displayGroup->load();
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
 
         // get an array of assigned display groups
         $membersDisplayGroups = $this->displayGroupFactory->getByParentId($id);
-
-        // get an array of assigned layouts
-        $assignedLayouts = $this->layoutFactory->getByDisplayGroupId($id);
-
-        // get an array of assigned media files
-        $assignedFiles = $this->mediaFactory->getByDisplayGroupId($id);
 
         $copyMembers = $sanitizedParams->getCheckbox('copyMembers');
         $copyTags = $sanitizedParams->getCheckbox('copyTags');
@@ -2329,7 +2320,7 @@ class DisplayGroup extends Base
         if ($copyMembers && !$displayGroup->isDynamic) {
 
             //copy display members
-            foreach ($membersDisplays as $display) {
+            foreach ($displayGroup->displays as $display) {
                 $new->assignDisplay($display);
             }
 
@@ -2344,12 +2335,12 @@ class DisplayGroup extends Base
         if ($copyAssignments) {
 
             // copy layout assignments
-            foreach ($assignedLayouts as $layout) {
+            foreach ($displayGroup->layouts as $layout) {
                 $new->assignLayout($layout);
             }
 
             // copy media assignments
-            foreach ($assignedFiles as $media) {
+            foreach ($displayGroup->media as $media) {
                 $new->assignMedia($media);
             }
         }
@@ -2375,7 +2366,7 @@ class DisplayGroup extends Base
         $new->save(['manageDisplayLinks' => false, 'allowNotify' => false]);
 
         // load the created display group and save along with display links and notify
-        $new->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($new));
         $new->load();
         $new->save();
 

@@ -23,16 +23,9 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlayerVersionFactory;
-use Xibo\Factory\PlaylistFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -41,7 +34,6 @@ use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Media
@@ -223,9 +215,9 @@ class Media implements \JsonSerializable
      */
     public $permissionsFolderId;
 
-    private $widgets = [];
-    private $displayGroups = [];
-    private $layoutBackgroundImages = [];
+    public $widgets = [];
+    public $displayGroups = [];
+    public $layoutBackgroundImages = [];
     private $permissions = [];
 
     /**
@@ -244,35 +236,9 @@ class Media implements \JsonSerializable
     private $tagFactory;
 
     /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var WidgetFactory
-     */
-    private $widgetFactory;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
      * @var PermissionFactory
      */
     private $permissionFactory;
-
-    /**
-     * @var PlaylistFactory
-     */
-    private $playlistFactory;
-
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
-    /** @var  ScheduleFactory */
-    private $scheduleFactory;
 
     /**
      * Entity constructor.
@@ -282,9 +248,8 @@ class Media implements \JsonSerializable
      * @param MediaFactory $mediaFactory
      * @param PermissionFactory $permissionFactory
      * @param TagFactory $tagFactory
-     * @param PlaylistFactory $playlistFactory
      */
-    public function __construct($store, $log, $config, $mediaFactory, $permissionFactory, $tagFactory, $playlistFactory)
+    public function __construct($store, $log, $config, $mediaFactory, $permissionFactory, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
 
@@ -292,26 +257,6 @@ class Media implements \JsonSerializable
         $this->mediaFactory = $mediaFactory;
         $this->permissionFactory = $permissionFactory;
         $this->tagFactory = $tagFactory;
-        $this->playlistFactory = $playlistFactory;
-    }
-
-    /**
-     * Set Child Object Dependencies
-     * @param LayoutFactory $layoutFactory
-     * @param WidgetFactory $widgetFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayFactory $displayFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory)
-    {
-        $this->layoutFactory = $layoutFactory;
-        $this->widgetFactory = $widgetFactory;
-        $this->displayGroupFactory  = $displayGroupFactory;
-        $this->displayFactory = $displayFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        return $this;
     }
 
     public function __clone()
@@ -431,7 +376,7 @@ class Media implements \JsonSerializable
             }
         }
 
-        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
+        $this->getLog()->debug(sprintf('Tags after removal %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -451,12 +396,12 @@ class Media implements \JsonSerializable
                 return $a->tagId - $b->tagId;
             });
 
-            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
+            $this->getLog()->debug(sprintf('Tags to be removed: %s', json_encode($this->unassignTags)));
 
             // Replace the arrays
             $this->tags = $tags;
 
-            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+            $this->getLog()->debug(sprintf('Tags remaining: %s', json_encode($this->tags)));
         } else {
             $this->getLog()->debug('Tags were not changed');
         }
@@ -503,8 +448,9 @@ class Media implements \JsonSerializable
      */
     public function load($options = [])
     {
-        if ($this->loaded || $this->mediaId == null)
+        if ($this->loaded || $this->mediaId == null) {
             return;
+        }
 
         $options = array_merge([
             'deleting' => false,
@@ -519,21 +465,8 @@ class Media implements \JsonSerializable
         // Are we loading for a delete? If so load the child models, unless we're a module file in which case
         // we've no need.
         if ($this->mediaType !== 'module' && ($options['deleting'] || $options['fullInfo'])) {
-
-            if ($this->widgetFactory === null)
-                throw new ConfigurationException(__('Call setChildObjectDependencies before load'));
-
             // Permissions
             $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->mediaId);
-
-            // Widgets
-            $this->widgets = $this->widgetFactory->getByMediaId($this->mediaId);
-
-            // Layout Background Images
-            $this->layoutBackgroundImages = $this->layoutFactory->getByBackgroundImageId($this->mediaId);
-
-            // Display Groups
-            $this->displayGroups = $this->displayGroupFactory->getByMediaId($this->mediaId);
         }
 
         $this->loaded = true;
@@ -650,18 +583,6 @@ class Media implements \JsonSerializable
 
         $this->load(['deleting' => true]);
 
-        // If there is a parent, bring it back
-        try {
-            $parentMedia = $this->mediaFactory->getParentById($this->mediaId);
-            $parentMedia->isEdited = 0;
-            $parentMedia->parentId = null;
-            $parentMedia->save(['validate' => false]);
-        }
-        catch (NotFoundException $e) {
-            // This is fine, no parent
-            $parentMedia = null;
-        }
-
         foreach ($this->permissions as $permission) {
             /* @var Permission $permission */
             $permission->delete();
@@ -673,67 +594,8 @@ class Media implements \JsonSerializable
             $tag->save();
         }
 
-        foreach ($this->widgets as $widget) {
-            /* @var \Xibo\Entity\Widget $widget */
-            $widget->unassignMedia($this->mediaId);
-
-            if ($parentMedia != null) {
-                // Assign the parent media to the widget instead
-                $widget->assignMedia($parentMedia->mediaId);
-
-                // Swap any audio nodes over to this new widget media assignment.
-                $this->getStore()->update('
-                  UPDATE `lkwidgetaudio` SET mediaId = :mediaId WHERE widgetId = :widgetId AND mediaId = :oldMediaId
-                ' , [
-                    'mediaId' => $parentMedia->mediaId,
-                    'widgetId' => $widget->widgetId,
-                    'oldMediaId' => $this->mediaId
-                ]);
-            } else {
-                // Also delete the `lkwidgetaudio`
-                $widget->unassignAudioById($this->mediaId);
-            }
-
-            // This action might result in us deleting a widget (unless we are a temporary file with an expiry date)
-            if ($this->mediaType != 'module' && count($widget->mediaIds) <= 0) {
-                $widget->setChildObjectDepencencies($this->playlistFactory);
-                $widget->delete();
-            } else {
-                $widget->save(['saveWidgetOptions' => false]);
-            }
-        }
-
-        foreach ($this->displayGroups as $displayGroup) {
-            /* @var \Xibo\Entity\DisplayGroup $displayGroup */
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-            $displayGroup->unassignMedia($this);
-
-            if ($parentMedia != null)
-                $displayGroup->assignMedia($parentMedia);
-
-            $displayGroup->save(['validate' => false]);
-        }
-
-        foreach ($this->layoutBackgroundImages as $layout) {
-            /* @var Layout $layout */
-            $layout->backgroundImageId = null;
-            $layout->save(Layout::$saveOptionsMinimum);
-        }
-
         $this->deleteRecord();
         $this->deleteFile();
-
-        // Update any background images
-        if ($this->mediaType == 'image' && $parentMedia != null) {
-            $this->getLog()->debug(sprintf('Updating layouts with the old media %d as the background image.', $this->mediaId));
-            // Get all Layouts with this as the background image
-            foreach ($this->layoutFactory->query(null, ['backgroundImageId' => $this->mediaId]) as $layout) {
-                /* @var Layout $layout */
-                $this->getLog()->debug(sprintf('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId));
-                $layout->backgroundImageId = $parentMedia->mediaId;
-                $layout->save();
-            }
-        }
 
         $this->audit($this->mediaId, 'Deleted', ['mediaId' => $this->mediaId, 'name' => $this->name, 'mediaType' => $this->mediaType, 'fileName' => $this->fileName]);
     }

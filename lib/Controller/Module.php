@@ -26,6 +26,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Xibo\Entity\Widget;
+use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\WidgetAddEvent;
 use Xibo\Event\WidgetEditEvent;
 use Xibo\Factory\DataSetFactory;
@@ -38,7 +39,6 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetAudioFactory;
@@ -114,9 +114,6 @@ class Module extends Base
     /** @var  DisplayFactory */
     private $displayFactory;
 
-    /** @var ScheduleFactory  */
-    private $scheduleFactory;
-
     /** @var DataSetFactory */
     private $dataSetFactory;
 
@@ -138,7 +135,6 @@ class Module extends Base
      * @param DisplayGroupFactory $displayGroupFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param DisplayFactory $displayFactory
-     * @param ScheduleFactory $scheduleFactory
      * @param DataSetFactory $dataSetFactory
      * @param MenuBoardFactory $menuBoardFactory
      */
@@ -156,7 +152,6 @@ class Module extends Base
         $displayGroupFactory,
         $widgetAudioFactory,
         $displayFactory,
-        $scheduleFactory,
         $dataSetFactory,
         $menuBoardFactory
     ) {
@@ -173,7 +168,6 @@ class Module extends Base
         $this->displayGroupFactory = $displayGroupFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->displayFactory = $displayFactory;
-        $this->scheduleFactory = $scheduleFactory;
         $this->dataSetFactory = $dataSetFactory;
         $this->menuBoardFactory = $menuBoardFactory;
     }
@@ -857,7 +851,7 @@ class Module extends Base
                     throw new AccessDeniedException();
                 }
 
-                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory);
+                $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
                 $media->delete();
             }
         }
