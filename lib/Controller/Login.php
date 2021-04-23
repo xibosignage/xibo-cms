@@ -472,7 +472,7 @@ class Login extends Base
      */
     private function generateEmailBody($subject, $body)
     {
-        return $this->renderTemplateToString('email-template.twig', [
+        return $this->renderTemplateToString('email-template', [
             'config' => $this->getConfig(),
             'subject' => $subject, 'body' => $body
         ]);
