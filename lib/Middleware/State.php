@@ -34,15 +34,24 @@ use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
+use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\MediaDeleteEvent;
+use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
+use Xibo\Listener\OnDisplayGroupLoad\DisplayGroupDisplayListener;
+use Xibo\Listener\OnDisplayGroupLoad\DisplayGroupLayoutListener;
+use Xibo\Listener\OnDisplayGroupLoad\DisplayGroupMediaListener;
+use Xibo\Listener\OnDisplayGroupLoad\DisplayGroupScheduleListener;
 use Xibo\Listener\OnLayoutOwnerChange;
 use Xibo\Listener\OnMediaDelete;
+use Xibo\Listener\OnMediaLoad\DisplayGroupListener;
+use Xibo\Listener\OnMediaLoad\LayoutListener;
+use Xibo\Listener\OnMediaLoad\WidgetListener;
 use Xibo\Listener\OnUserDelete;
 use Xibo\Service\ReportService;
 use Xibo\Support\Exception\InstanceSuspendedException;
@@ -425,10 +434,6 @@ class State implements Middleware
             '\Xibo\Controller\DayPart' => function(ContainerInterface $c) {
                 $controller =  new \Xibo\Controller\DayPart(
                     $c->get('dayPartFactory'),
-                    $c->get('displayGroupFactory'),
-                    $c->get('displayNotifyService'),
-                    $c->get('layoutFactory'),
-                    $c->get('mediaFactory'),
                     $c->get('scheduleFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
@@ -441,11 +446,8 @@ class State implements Middleware
                     $c->get('playerActionService'),
                     $c->get('displayFactory'),
                     $c->get('displayGroupFactory'),
-                    $c->get('logFactory'),
                     $c->get('layoutFactory'),
                     $c->get('displayProfileFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('scheduleFactory'),
                     $c->get('displayEventFactory'),
                     $c->get('requiredFileFactory'),
                     $c->get('tagFactory'),
@@ -455,6 +457,7 @@ class State implements Middleware
                     $c->get('dayPartFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                $controller->useDispatcher($c->get('dispatcher'));
                 return $controller;
             },
             '\Xibo\Controller\DisplayGroup' => function(ContainerInterface $c) {
@@ -466,11 +469,11 @@ class State implements Middleware
                     $c->get('moduleFactory'),
                     $c->get('mediaFactory'),
                     $c->get('commandFactory'),
-                    $c->get('scheduleFactory'),
                     $c->get('tagFactory'),
                     $c->get('campaignFactory'),
                     $c->get('folderFactory')
                 );
+                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -545,9 +548,6 @@ class State implements Middleware
                     $c->get('layoutFactory'),
                     $c->get('playlistFactory'),
                     $c->get('userGroupFactory'),
-                    $c->get('displayGroupFactory'),
-                    $c->get('regionFactory'),
-                    $c->get('dataSetFactory'),
                     $c->get('displayFactory'),
                     $c->get('scheduleFactory'),
                     $c->get('playerVersionFactory'),
@@ -656,11 +656,11 @@ class State implements Middleware
                     $c->get('displayGroupFactory'),
                     $c->get('widgetAudioFactory'),
                     $c->get('displayFactory'),
-                    $c->get('scheduleFactory'),
                     $c->get('dataSetFactory'),
                     $c->get('menuBoardFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                $controller->useDispatcher($c->get('dispatcher'));
                 return $controller;
             },
             '\Xibo\Controller\Notification' => function(ContainerInterface $c) {
@@ -681,13 +681,10 @@ class State implements Middleware
                     $c->get('playerVersionFactory'),
                     $c->get('displayProfileFactory'),
                     $c->get('moduleFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('widgetFactory'),
-                    $c->get('displayGroupFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('scheduleFactory')
+                    $c->get('displayFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                $controller->useDispatcher($c->get('dispatcher'));
                 return $controller;
             },
             '\Xibo\Controller\Playlist' => function(ContainerInterface $c) {
@@ -1321,25 +1318,103 @@ class State implements Middleware
             'dispatcher' => function(ContainerInterface $c) {
                 $dispatcher = new EventDispatcher();
 
-                $dispatcher->addListener(MediaDeleteEvent::$NAME, (new OnMediaDelete(
+                // Media Delete Events
+                $dispatcher->addListener(MediaDeleteEvent::$NAME, (new OnMediaDelete\MenuBoardListener(
                     $c->get('menuBoardCategoryFactory')
+                )));
+
+                $dispatcher->addListener(MediaDeleteEvent::$NAME, (new OnMediaDelete\LayoutListener(
+                    $c->get('layoutFactory')
+                )));
+
+                $dispatcher->addListener(MediaDeleteEvent::$NAME, (new OnMediaDelete\WidgetListener(
+                    $c->get('store'),
+                    $c->get('widgetFactory')
+                )));
+
+                $dispatcher->addListener(MediaDeleteEvent::$NAME, (new OnMediaDelete\DisplayGroupListener(
+                    $c->get('displayGroupFactory')
                 ))->useLogger($c->get('logger')));
 
-                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete(
+                // User Delete Events
+                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete\CampaignListener(
                     $c->get('store'),
                     $c->get('campaignFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('scheduleFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('displayGroupFactory'),
-                    $c->get('widgetFactory'),
-                    $c->get('playerVersionFactory'),
-                    $c->get('playlistFactory'),
-                    $c->get('dataSetFactory'),
+                    $c->get('layoutFactory')
+                ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete\DataSetListener(
+                    $c->get('store'),
+                    $c->get('dataSetFactory')
+                ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete\DayPartListener(
+                    $c->get('store'),
                     $c->get('dayPartFactory'),
+                    $c->get('scheduleFactory')
+                ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete\DisplayGroupListener(
+                    $c->get('store'),
+                    $c->get('displayGroupFactory')
+                ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete\LayoutListener(
+                    $c->get('layoutFactory')
+                ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete\MediaListener(
+                    $c->get('store'),
+                    $c->get('mediaFactory')
+                ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete\MenuBoardListener(
+                    $c->get('store'),
                     $c->get('menuBoardFactory')
                 ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete\PlaylistListener(
+                    $c->get('playlistFactory')
+                ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete\ScheduleListener(
+                    $c->get('store'),
+                    $c->get('scheduleFactory')
+                ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete\OnUserDelete(
+                    $c->get('store')
+                ))->useLogger($c->get('logger')));
+
+                // Display Group Load events
+                $dispatcher->addListener(DisplayGroupLoadEvent::$NAME, (new DisplayGroupMediaListener(
+                    $c->get('mediaFactory')
+                )));
+
+                $dispatcher->addListener(DisplayGroupLoadEvent::$NAME, (new DisplayGroupLayoutListener(
+                    $c->get('layoutFactory')
+                )));
+
+                $dispatcher->addListener(DisplayGroupLoadEvent::$NAME, (new DisplayGroupDisplayListener(
+                    $c->get('displayFactory')
+                )));
+
+                $dispatcher->addListener(DisplayGroupLoadEvent::$NAME, (new DisplayGroupScheduleListener(
+                    $c->get('scheduleFactory')
+                )));
+
+                // Media full load events
+                $dispatcher->addListener(MediaFullLoadEvent::$NAME, (new DisplayGroupListener(
+                    $c->get('displayGroupFactory')
+                )));
+
+                $dispatcher->addListener(MediaFullLoadEvent::$NAME, (new LayoutListener(
+                    $c->get('layoutFactory')
+                )));
+
+                $dispatcher->addListener(MediaFullLoadEvent::$NAME, (new WidgetListener(
+                    $c->get('widgetFactory')
+                )));
 
                 $dispatcher->addListener(LayoutOwnerChangeEvent::$NAME, new OnLayoutOwnerChange(
                     $c->get('layoutFactory')

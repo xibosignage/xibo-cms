@@ -12,14 +12,19 @@ class MediaDeleteEvent extends Event
 
     /** @var Media */
     private $media;
+    /**
+     * @var Media|null
+     */
+    private $parentMedia;
 
     /**
      * MediaDeleteEvent constructor.
      * @param $media
      */
-    public function __construct($media)
+    public function __construct($media, $parentMedia = null)
     {
         $this->media = $media;
+        $this->parentMedia = $parentMedia;
     }
 
     /**
@@ -28,5 +33,10 @@ class MediaDeleteEvent extends Event
     public function getMedia() : Media
     {
         return $this->media;
+    }
+
+    public function getParentMedia()
+    {
+        return $this->parentMedia;
     }
 }
