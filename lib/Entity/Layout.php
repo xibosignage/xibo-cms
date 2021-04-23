@@ -1354,6 +1354,7 @@ class Layout implements \JsonSerializable
                 $regionActionNode->setAttribute('source', $action->source);
                 $regionActionNode->setAttribute('actionType', $action->actionType);
                 $regionActionNode->setAttribute('triggerType', $action->triggerType);
+                $regionActionNode->setAttribute('triggerCode', $action->triggerCode);
                 $regionActionNode->setAttribute('id', $action->actionId);
 
                 $regionNode->appendChild($regionActionNode);
@@ -1476,6 +1477,7 @@ class Layout implements \JsonSerializable
                     $widgetActionNode->setAttribute('source', $action->source);
                     $widgetActionNode->setAttribute('actionType', $action->actionType);
                     $widgetActionNode->setAttribute('triggerType', $action->triggerType);
+                    $widgetActionNode->setAttribute('triggerCode', $action->triggerCode);
                     $widgetActionNode->setAttribute('id', $action->actionId);
 
                     $mediaNode->appendChild($widgetActionNode);
@@ -1805,13 +1807,13 @@ class Layout implements \JsonSerializable
 
         if ($fonts != null) {
 
-            $this->getLog()->debug('Matched fonts: %s', json_encode($fonts));
+            $this->getLog()->debug(sprintf('Matched fonts: %s', json_encode($fonts)));
 
             foreach ($fonts[1] as $font) {
                 $matches = $this->mediaFactory->query(null, array('disableUserCheck' => 1, 'nameExact' => $font, 'allModules' => 1, 'type' => 'font'));
 
                 if (count($matches) <= 0) {
-                    $this->getLog()->info('Unmatched font during export: %s', $font);
+                    $this->getLog()->info(sprintf('Unmatched font during export: %s', $font));
                     continue;
                 }
 
