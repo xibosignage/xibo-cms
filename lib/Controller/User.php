@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,39 +21,25 @@
  */
 namespace Xibo\Controller;
 
-use Psr\Container\ContainerInterface;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
-use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\Permission;
+use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Factory\ApplicationFactory;
-use Xibo\Factory\CampaignFactory;
-use Xibo\Factory\DataSetFactory;
-use Xibo\Factory\DayPartFactory;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\FolderFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlayerVersionFactory;
-use Xibo\Factory\PlaylistFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\SessionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\UserTypeFactory;
-use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\QuickChartQRProvider;
 use Xibo\Helper\Random;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
+use Xibo\Service\MediaService;
+use Xibo\Service\PermissionServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
@@ -87,138 +73,54 @@ class User extends Base
     private $permissionFactory;
 
     /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
      * @var ApplicationFactory
      */
     private $applicationFactory;
 
-    /**
-     * @var CampaignFactory
-     */
-    private $campaignFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var ScheduleFactory
-     */
-    private $scheduleFactory;
-
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
     /** @var SessionFactory */
     private $sessionFactory;
 
-    /** @var  DisplayGroupFactory */
-    private $displayGroupFactory;
+    /** @var PermissionServiceInterface */
+    private $permissionService;
 
-    /** @var WidgetFactory */
-    private $widgetFactory;
-
-    /** @var PlayerVersionFactory */
-    private $playerVersionFactory;
-
-    /** @var PlaylistFactory */
-    private $playlistFactory;
-
-    /** @var ContainerInterface */
-    private $container;
-
-    /** @var DataSetFactory */
-    private $dataSetFactory;
-
-    /** @var FolderFactory */
-    private $folderFactory;
-
-    /** @var DayPartFactory */
-    private $dayPartFactory;
+    /** @var MediaService */
+    private $mediaService;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param UserFactory $userFactory
      * @param UserTypeFactory $userTypeFactory
      * @param UserGroupFactory $userGroupFactory
      * @param PermissionFactory $permissionFactory
-     * @param LayoutFactory $layoutFactory
      * @param ApplicationFactory $applicationFactory
-     * @param CampaignFactory $campaignFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @param DisplayFactory $displayFactory
      * @param SessionFactory $sessionFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param WidgetFactory $widgetFactory
-     * @param PlayerVersionFactory $playerVersionFactory
-     * @param PlaylistFactory $playlistFactory
-     * @param Twig $view
-     * @param ContainerInterface $container
-     * @param DataSetFactory $dataSetFactory
-     * @param FolderFactory $folderFactory
-     * @param DayPartFactory $dayPartFactory
+     * @param PermissionServiceInterface $permissionService
+     * @param MediaService $mediaService
      */
     public function __construct(
-        $log,
-        $sanitizerService,
-        $state,
-        $user,
-        $help,
-        $config,
         $userFactory,
         $userTypeFactory,
         $userGroupFactory,
         $permissionFactory,
-        $layoutFactory,
         $applicationFactory,
-        $campaignFactory,
-        $mediaFactory,
-        $scheduleFactory,
-        $displayFactory,
         $sessionFactory,
-        $displayGroupFactory,
-        $widgetFactory,
-        $playerVersionFactory,
-        $playlistFactory,
-        Twig $view,
-        ContainerInterface $container,
-        $dataSetFactory,
-        $folderFactory,
-        $dayPartFactory
+        PermissionServiceInterface $permissionService,
+        MediaService $mediaService
     ) {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->userFactory = $userFactory;
         $this->userTypeFactory = $userTypeFactory;
         $this->userGroupFactory = $userGroupFactory;
         $this->permissionFactory = $permissionFactory;
-        $this->layoutFactory = $layoutFactory;
         $this->applicationFactory = $applicationFactory;
-        $this->campaignFactory = $campaignFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        $this->displayFactory = $displayFactory;
         $this->sessionFactory = $sessionFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->widgetFactory = $widgetFactory;
-        $this->playerVersionFactory = $playerVersionFactory;
-        $this->playlistFactory = $playlistFactory;
-        $this->container = $container;
-        $this->dataSetFactory = $dataSetFactory;
-        $this->folderFactory = $folderFactory;
-        $this->dayPartFactory = $dayPartFactory;
+        $this->permissionService = $permissionService;
+        $this->mediaService = $mediaService;
+    }
+
+    private function getMediaService(\Xibo\Entity\User $user): MediaService
+    {
+        $this->mediaService->setUser($user);
+        return $this->mediaService;
     }
 
     /**
@@ -1039,7 +941,6 @@ class User extends Base
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $user->setChildAclDependencies($this->userGroupFactory);
-        $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory, $this->dayPartFactory);
 
         if ($sanitizedParams->getCheckbox('deleteAllItems') != 1) {
 
@@ -1047,19 +948,19 @@ class User extends Base
             if ($sanitizedParams->getInt('reassignUserId') != null) {
                 // Reassign all content owned by this user to the provided user
                 $this->getLog()->debug(sprintf('Reassigning content to new userId: %d', $sanitizedParams->getInt('reassignUserId')));
-
-                $user->reassignAllTo($this->userFactory->getById($sanitizedParams->getInt('reassignUserId')));
+                $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user, 'reassignAll', $this->userFactory->getById($sanitizedParams->getInt('reassignUserId'))));
             } else {
                 // Check to see if we have any child data that would prevent us from deleting
-                $children = $user->countChildren();
+                /** @var UserDeleteEvent $countChildren */
+                $countChildren = $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user, 'countChildren'));
 
-                if ($children > 0) {
-                    throw new InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $children));
+                if ($countChildren->getReturnValue() > 0) {
+                    throw new InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $countChildren->getReturnValue()));
                 }
             }
         }
 
-        $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user));
+        $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user, 'delete'));
         // Delete the user
         $user->delete();
 
@@ -1641,13 +1542,13 @@ class User extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function permissionsGrid(Request $request, Response $response,$entity, $id)
+    public function permissionsGrid(Request $request, Response $response, $entity, $id)
     {
-        $entity = $this->parsePermissionsEntity($entity, $id);
+        $factory = $this->parsePermissionsEntity($entity, $id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Load our object
-        $object = $entity->getById($id);
+        $object = $factory->getById($id);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object)) {
@@ -1726,9 +1627,9 @@ class User extends Base
         for ($i=0; $i < count($ids); $i++) {
             $objectId = $ids[$i];
 
-            $entityTemp = $this->parsePermissionsEntity($entity, $objectId);
+            $factory = $this->parsePermissionsEntity($entity, $objectId);
 
-            $objects[$i] = $entityTemp->getById($objectId);
+            $objects[$i] = $factory->getById($objectId);
 
             // Does this user have permission to edit the permissions?!
             if (!$this->getUser()->checkPermissionsModifyable($objects[$i])) {
@@ -1790,10 +1691,10 @@ class User extends Base
     {
         $requestEntity = $entity;
 
-        $entity = $this->parsePermissionsEntity($entity, $id);
+        $factory = $this->parsePermissionsEntity($entity, $id);
 
         // Load our object
-        $object = $entity->getById($id);
+        $object = $factory->getById($id);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object)) {
@@ -1925,10 +1826,10 @@ class User extends Base
      */
     public function permissions(Request $request, Response $response, $entity, $id)
     {
-        $entity = $this->parsePermissionsEntity($entity, $id);
+        $factory = $this->parsePermissionsEntity($entity, $id);
 
         // Load our object
-        $object = $entity->getById($id);
+        $object = $factory->getById($id);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object)) {
@@ -1964,23 +1865,19 @@ class User extends Base
             if ($object->permissionsClass() == 'Xibo\Entity\Campaign') {
                 $this->getLog()->debug('Changing owner on child Layout');
 
-                foreach ($this->layoutFactory->getByCampaignId($object->getId(), true, true) as $layout) {
-                    $layout->setOwner($ownerId, true);
-                    $layout->save(['notify' => false]);
-                }
+                $this->getDispatcher()->dispatch(LayoutOwnerChangeEvent::$NAME, new LayoutOwnerChangeEvent($object->getId(), $ownerId));
             }
         }
 
         if ($object->permissionsClass() === 'Xibo\Entity\Folder') {
-            $folder = $this->folderFactory->getById($object->getId());
-            $folder->managePermissions();
-
+            /** @var $object \Xibo\Entity\Folder */
+            $object->managePermissions();
         } else if ($object->permissionsClass() == 'Xibo\Entity\Media') {
             // Are we a font?
             /** @var $object Media */
             if ($object->mediaType === 'font') {
                 // Drop permissions (we need to reassess).
-                $this->container->get('\Xibo\Controller\Library')->installFonts(RouteContext::fromRequest($request)->getRouteParser(),['invalidateCache' => true]);
+                $this->getMediaService($this->getUser())->installFonts(RouteContext::fromRequest($request)->getRouteParser(),['invalidateCache' => true]);
             }
         }
 
@@ -2076,8 +1973,6 @@ class User extends Base
 
     /**
      * Parse the Permissions Entity
-     * //TODO: this does some nasty service location via $app, if anyone has a better idea, please submit a PR
-     * // TODO: we inject containerInterface in user controller then we can get what we need here - better ideas?
      * @param string $entity
      * @param int $objectId
      * @return string
@@ -2096,12 +1991,7 @@ class User extends Base
         // Check to see that we can resolve the entity
         $entity = lcfirst($entity) . 'Factory';
 
-        if (!$this->container->has($entity) || !method_exists($this->container->get($entity), 'getById')) {
-            $this->getLog()->error(sprintf('Invalid Entity %s', $entity));
-            throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
-        }
-
-        return $this->container->get($entity);
+        return $this->permissionService->getFactory($entity);
     }
 
     /**
@@ -2111,7 +2001,7 @@ class User extends Base
      */
     private function updatePermissions($permissions, $groupIds)
     {
-        $this->getLog()->debug('Received Permissions Array to update: %s', var_export($groupIds, true));
+        $this->getLog()->debug(sprintf('Received Permissions Array to update: %s', var_export($groupIds, true)));
 
         // List of groupIds with view, edit and del assignments
         foreach ($permissions as $row) {
