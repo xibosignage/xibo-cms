@@ -25,12 +25,8 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
+use Xibo\Event\MediaDeleteEvent;
 use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ScheduleFactory;
-use Xibo\Factory\WidgetFactory;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -49,21 +45,6 @@ class Maintenance extends Base
     /** @var  MediaFactory */
     private $mediaFactory;
 
-    /** @var  LayoutFactory */
-    private $layoutFactory;
-
-    /** @var  WidgetFactory */
-    private $widgetFactory;
-
-    /** @var  DisplayGroupFactory */
-    private $displayGroupFactory;
-
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
-    /** @var  ScheduleFactory */
-    private $scheduleFactory;
-
     /** @var MediaServiceInterface */
     private $mediaService;
 
@@ -71,22 +52,12 @@ class Maintenance extends Base
      * Set common dependencies.
      * @param StorageServiceInterface $store
      * @param MediaFactory $mediaFactory
-     * @param LayoutFactory $layoutFactory
-     * @param WidgetFactory $widgetFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayFactory $displayFactory
-     * @param ScheduleFactory $scheduleFactory
      * @param MediaServiceInterface $mediaService
      */
-    public function __construct($store, $mediaFactory, $layoutFactory, $widgetFactory, $displayGroupFactory, $displayFactory, $scheduleFactory, MediaServiceInterface $mediaService)
+    public function __construct($store, $mediaFactory, MediaServiceInterface $mediaService)
     {
         $this->store = $store;
         $this->mediaFactory = $mediaFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->widgetFactory = $widgetFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->displayFactory = $displayFactory;
-        $this->scheduleFactory = $scheduleFactory;
         $this->mediaService = $mediaService;
     }
 
@@ -266,17 +237,17 @@ class Maintenance extends Base
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
 
-                $this->mediaFactory->getById($media[$file]['mediaid'])
-                    ->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory)
-                    ->delete();
+                $media = $this->mediaFactory->getById($media[$file]['mediaid']);
+                $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
+                $media->delete();
             }
             else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used any more
                 $this->getLog()->debug('Deleting unused media: ' . $media[$file]['mediaid']);
 
-                $this->mediaFactory->getById($media[$file]['mediaid'])
-                    ->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory)
-                    ->delete();
+                $media = $this->mediaFactory->getById($media[$file]['mediaid']);
+                $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
+                $media->delete();
             }
             else {
                 $i--;
