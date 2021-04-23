@@ -89,8 +89,13 @@ class ApplicationScope implements \JsonSerializable, ScopeEntityInterface
     }
 
     /** @inheritDoc */
-    public function getIdentifier()
+    public function getIdentifier() :string
     {
         return $this->getId();
+    }
+
+    public function getDescription() :string
+    {
+        return $this->description;
     }
 }

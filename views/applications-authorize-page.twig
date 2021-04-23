@@ -32,7 +32,7 @@
             <ul>
                 {% for scope in authParams.scopes %}
                 <li>
-                    {{ scope.getName() }}: {{ scope.getDescription() }}
+                    {{ scope.getIdentifier() }} : {{ scope.getDescription() }}
                 </li>
                 {% endfor %}
             </ul>
