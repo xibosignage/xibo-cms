@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -30,14 +30,13 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
-use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
 use Xibo\Event\MediaDeleteEvent;
+use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -59,10 +58,7 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\Random;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\XiboUploadHandler;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
@@ -136,15 +132,6 @@ class Library extends Base
      */
     private $userGroupFactory;
 
-    /** @var  DisplayGroupFactory */
-    private $displayGroupFactory;
-
-    /** @var  RegionFactory */
-    private $regionFactory;
-
-    /** @var  DataSetFactory */
-    private $dataSetFactory;
-
     /** @var  DisplayFactory */
     private $displayFactory;
 
@@ -159,12 +146,6 @@ class Library extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
      * @param UserFactory $userFactory
@@ -176,20 +157,31 @@ class Library extends Base
      * @param LayoutFactory $layoutFactory
      * @param PlaylistFactory $playlistFactory
      * @param UserGroupFactory $userGroupFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param RegionFactory $regionFactory
-     * @param DataSetFactory $dataSetFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      * @param PlayerVersionFactory $playerVersionFactory
-     * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
      * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $userFactory, $moduleFactory, $tagFactory, $mediaFactory, $widgetFactory, $permissionFactory, $layoutFactory, $playlistFactory, $userGroupFactory, $displayGroupFactory, $regionFactory, $dataSetFactory, $displayFactory, $scheduleFactory, $playerVersionFactory, $view, HttpCacheProvider $cacheProvider, $folderFactory)
-    {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
+    public function __construct(
+        $store,
+        $pool,
+        $userFactory,
+        $moduleFactory,
+        $tagFactory,
+        $mediaFactory,
+        $widgetFactory,
+        $permissionFactory,
+        $layoutFactory,
+        $playlistFactory,
+        $userGroupFactory,
+        $displayFactory,
+        $scheduleFactory,
+        $playerVersionFactory,
+        HttpCacheProvider
+        $cacheProvider,
+        $folderFactory
+    ) {
         $this->store = $store;
         $this->moduleFactory = $moduleFactory;
         $this->mediaFactory = $mediaFactory;
@@ -201,9 +193,6 @@ class Library extends Base
         $this->layoutFactory = $layoutFactory;
         $this->playlistFactory = $playlistFactory;
         $this->userGroupFactory = $userGroupFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->regionFactory = $regionFactory;
-        $this->dataSetFactory = $dataSetFactory;
         $this->displayFactory = $displayFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->playerVersionFactory = $playerVersionFactory;
@@ -272,57 +261,6 @@ class Library extends Base
     public function getPlayerVersionFactory()
     {
         return $this->playerVersionFactory;
-    }
-
-    /**
-     * Get UserGroup Factory
-     * @return UserGroupFactory
-     */
-    public function getUserGroupFactory()
-    {
-        return $this->userGroupFactory;
-    }
-
-    /**
-     * Get RegionFactory
-     * @return RegionFactory
-     */
-    public function getRegionFactory()
-    {
-        return $this->regionFactory;
-    }
-
-    /**
-     * Get DisplayGroup Factory
-     * @return DisplayGroupFactory
-     */
-    public function getDisplayGroupFactory()
-    {
-        return $this->displayGroupFactory;
-    }
-
-    /**
-     * @return DataSetFactory
-     */
-    public function getDataSetFactory()
-    {
-        return $this->dataSetFactory;
-    }
-
-    /**
-     * @return DisplayFactory
-     */
-    public function getDisplayFactory()
-    {
-        return $this->displayFactory;
-    }
-
-    /**
-     * @return ScheduleFactory
-     */
-    public function getScheduleFactory()
-    {
-        return $this->scheduleFactory;
     }
 
     /**
@@ -804,7 +742,6 @@ class Library extends Base
             throw new AccessDeniedException();
         }
 
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
         $media->load(['deleting' => true]);
 
         $this->getState()->template = 'library-form-delete';
@@ -864,7 +801,7 @@ class Library extends Base
         }
 
         // Check
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+        $this->getDispatcher()->dispatch(MediaFullLoadEvent::$NAME, new MediaFullLoadEvent($media));
         $media->load(['deleting' => true]);
 
         if ($media->isUsed() && $this->getSanitizer($request->getParams())->getCheckbox('forceDelete') == 0) {
@@ -1354,13 +1291,13 @@ class Library extends Base
         $i = 0;
         foreach ($media as $item) {
             /* @var Media $item */
-            if ($tidyGenericFiles != 1 && $item->mediaType == 'genericfile')
+            if ($tidyGenericFiles != 1 && $item->mediaType == 'genericfile') {
                 continue;
+            }
 
             // Eligable for delete
             $i++;
-            $item->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
-            $item->load();
+            //$this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
             $item->delete();
         }
 
@@ -1594,24 +1531,6 @@ class Library extends Base
     }
 
     /**
-     * Get font CKEditor config
-     * @param \Slim\Interfaces\RouteParserInterface $routeParser
-     * @return string
-     * @throws ConfigurationException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\DuplicateEntityException
-     */
-    public function fontCKEditorConfig($routeParser)
-    {
-        // Regenerate the CSS for fonts
-        $css = $this->installFonts($routeParser, ['invalidateCache' => false]);
-
-        return $css['ckeditor'];
-    }
-
-    /**
      * Installs fonts
      * @param array $options
      * @param \Slim\Interfaces\RouteParserInterface $routeParser
@@ -1757,31 +1676,6 @@ class Library extends Base
     }
 
     /**
-     * Installs all files related to the enabled modules
-     * @throws NotFoundException
-     * @throws GeneralException
-     */
-    public function installAllModuleFiles()
-    {
-        $this->getLog()->info('Installing all module files');
-
-        // Do this for all enabled modules
-        foreach ($this->moduleFactory->getEnabled() as $module) {
-            /* @var \Xibo\Entity\Module $module */
-
-            // Install Files for this module
-            $moduleObject = $this->moduleFactory->create($module->type);
-            $moduleObject->installFiles();
-        }
-
-        // Dump the cache on all displays
-        foreach ($this->displayFactory->query() as $display) {
-            /** @var \Xibo\Entity\Display $display */
-            $display->notify();
-        }
-    }
-
-    /**
      * Remove temporary files
      */
     public function removeTempFiles()
@@ -1819,9 +1713,9 @@ class Library extends Base
         foreach ($this->mediaFactory->query(null, array('expires' => Carbon::now()->format('U'), 'allModules' => 1, 'length' => 100)) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
-            $this->getLog()->info('Removing Expired File %s', $entry->name);
-            $entry->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+            $this->getLog()->info(sprintf('Removing Expired File %s', $entry->name));
             $this->getLog()->audit('Media', $entry->mediaId, 'Removing Expired', ['mediaId' => $entry->mediaId, 'name' => $entry->name, 'expired' => Carbon::createFromTimestamp($entry->expires)->format(DateFormatHelper::getSystemFormat())]);
+            $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($entry));
             $entry->delete();
         }
     }
@@ -2394,7 +2288,7 @@ class Library extends Base
     {
         // Get the Media
         $media = $this->mediaFactory->getById($id);
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+        $this->getDispatcher()->dispatch(MediaFullLoadEvent::$NAME, new MediaFullLoadEvent($media));
 
         // Check Permissions
         if (!$this->getUser()->checkViewable($media)) {
