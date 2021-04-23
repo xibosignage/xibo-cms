@@ -70,9 +70,13 @@ class TimeSeriesMySQLResults implements TimeSeriesResultsInterface
     }
 
     /** @inheritDoc */
-    public function getEngagementsFromRow($row)
+    public function getEngagementsFromRow($row, $decoded = true)
     {
-        return isset($row['engagements']) ? json_decode($row['engagements']) : [];
+        if ($decoded) {
+            return isset($row['engagements']) ? json_decode($row['engagements']) : [];
+        } else {
+            return $row['engagements'] ?? '[]';
+        }
     }
 
     /** @inheritDoc */
