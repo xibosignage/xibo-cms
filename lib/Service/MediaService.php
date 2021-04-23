@@ -26,11 +26,16 @@ namespace Xibo\Service;
 use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
+use Xibo\Event\MediaDeleteEvent;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 class MediaService implements MediaServiceInterface
 {
@@ -54,6 +59,10 @@ class MediaService implements MediaServiceInterface
 
     /** @var User */
     private $user;
+    /**
+     * @var EventDispatcherInterface
+     */
+    private $dispatcher;
 
     /** @inheritDoc */
     public function __construct(
@@ -83,6 +92,16 @@ class MediaService implements MediaServiceInterface
     public function getUser() : User
     {
         return $this->user;
+    }
+
+    public function setDispatcher(EventDispatcherInterface $dispatcher)
+    {
+        $this->dispatcher = $dispatcher;
+    }
+
+    public function getDispatcher(): EventDispatcherInterface
+    {
+        return $this->dispatcher;
     }
 
     /** @inheritDoc */
@@ -287,6 +306,24 @@ class MediaService implements MediaServiceInterface
             $this->log->debug('Deleting temp file: ' . $item);
 
             unlink($libraryTemp . DIRECTORY_SEPARATOR . $item);
+        }
+    }
+
+    /**
+     * Removes all expired media files
+     * @throws NotFoundException
+     * @throws GeneralException
+     */
+    public function removeExpiredFiles()
+    {
+        // Get a list of all expired files and delete them
+        foreach ($this->mediaFactory->query(null, array('expires' => Carbon::now()->format('U'), 'allModules' => 1, 'length' => 100)) as $entry) {
+            /* @var \Xibo\Entity\Media $entry */
+            // If the media type is a module, then pretend its a generic file
+            $this->log->info(sprintf('Removing Expired File %s', $entry->name));
+            $this->log->audit('Media', $entry->mediaId, 'Removing Expired', ['mediaId' => $entry->mediaId, 'name' => $entry->name, 'expired' => Carbon::createFromTimestamp($entry->expires)->format(DateFormatHelper::getSystemFormat())]);
+            $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($entry));
+            $entry->delete();
         }
     }
 }

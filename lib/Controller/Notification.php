@@ -35,6 +35,8 @@ use Xibo\Helper\AttachmentUploadHandler;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SendFile;
 use Xibo\Service\DisplayNotifyService;
+use Xibo\Service\MediaService;
+use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 
@@ -396,7 +398,7 @@ class Notification extends Base
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
-        Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+        MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         $options = array(
             'userId' => $this->getUser()->userId,

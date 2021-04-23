@@ -29,6 +29,7 @@ use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Helper\DataSetUploadHandler;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Service\MediaService;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -1119,7 +1120,7 @@ class DataSet extends Base
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
-        Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+        MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         $sanitizer = $this->getSanitizer($request->getParams());
 

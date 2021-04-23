@@ -209,7 +209,7 @@ class ContainerFactory
                 return new \Xibo\Helper\HttpCacheProvider();
             },
             'mediaService' => function (ContainerInterface $c) {
-                return new MediaService(
+                $mediaSevice = new MediaService(
                     $c->get('configService'),
                     $c->get('logService'),
                     $c->get('store'),
@@ -217,6 +217,8 @@ class ContainerFactory
                     $c->get('pool'),
                     $c->get('mediaFactory')
                 );
+                $mediaSevice->setDispatcher($c->get('dispatcher'));
+                return $mediaSevice;
             },
             'permissionService' => function(ContainerInterface $c) {
                 return new PermissionService(

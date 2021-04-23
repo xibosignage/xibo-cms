@@ -555,6 +555,7 @@ class State implements Middleware
                     $c->get('folderFactory')
                 );
                 $controller->useDispatcher($c->get('dispatcher'));
+                $controller->useMediaService($c->get('mediaService'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },

@@ -33,6 +33,7 @@ use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
+use Xibo\Service\MediaService;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -343,7 +344,7 @@ class StatusDashboard extends Base
             // Latest news
             if ($this->getConfig()->getSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1 && !empty($this->getConfig()->getSetting('LATEST_NEWS_URL'))) {
                 // Make sure we have the cache location configured
-                Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+                MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
                 try {
                     $feedUrl = $this->getConfig()->getSetting('LATEST_NEWS_URL');
