@@ -30,6 +30,7 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
+use Xibo\Helper\Translate;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -39,6 +40,14 @@ use Xibo\Support\Exception\InvalidArgumentException;
  */
 class Calendar extends ModuleWidget
 {
+    const CALENDAR_TYPES = array(
+        "custom",
+        "agenda",
+        "daily",
+        "weekly",
+        "monthly"
+    );
+
     /** @inheritdoc */
     public function init()
     {
@@ -80,6 +89,7 @@ class Calendar extends ModuleWidget
         // Extends parent's method
         parent::installFiles();
 
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-calendar-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/moment.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-text-render.js')->save();
     }
@@ -322,6 +332,153 @@ class Calendar extends ModuleWidget
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="calendarType",
+     *      in="formData",
+     *      description="Calendar Type (0:custom ; 1:agenda ; 2:daily ; 3:weekly ; 4:monthly )",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="showHeader",
+     *      in="formData",
+     *      description="A flag (0, 1), Should the calendar template have a header?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="timeFormat",
+     *      in="formData",
+     *      description="Moment time format",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="textScale",
+     *      in="formData",
+     *      description="Scale for the text elements on calendar templates, defaults to 1.",
+     *      type="number",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="gridColor",
+     *      in="formData",
+     *      description="Colour for the grid between days/hours",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dayBgColor",
+     *      in="formData",
+     *      description="Background colour for day elements on monthly/weekly calendars",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dayTextColor",
+     *      in="formData",
+     *      description="Text colour for day elements on monthly/weekly calendars",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dayOtherMonthBgColor",
+     *      in="formData",
+     *      description="Background colour for unfocused month day elements on monthly calendar",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dayOtherMonthTextColor",
+     *      in="formData",
+     *      description="Text colour for unfocused month day elements on monthly calendar",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="headerBgColor",
+     *      in="formData",
+     *      description="Background colour for main header",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="headerTextColor",
+     *      in="formData",
+     *      description="Text colour for main header",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="weekDaysHeaderBgColor",
+     *      in="formData",
+     *      description="Background colour for week days label on monthly/weekly calendars",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="weekDaysHeaderTextColor",
+     *      in="formData",
+     *      description="Text colour for week days label on monthly/weekly calendars",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="eventBgColor",
+     *      in="formData",
+     *      description="Background colour for a single day timed event",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="eventTextColor",
+     *      in="formData",
+     *      description="Text colour for a single day timed event",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dailyEventBgColor",
+     *      in="formData",
+     *      description="Background colour for a all day event",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dailyEventTextColor",
+     *      in="formData",
+     *      description="Text colour for a all day event",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="multiDayEventBgColor",
+     *      in="formData",
+     *      description="Background colour for a multiple day event",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="multiDayEventTextColor",
+     *      in="formData",
+     *      description="Text colour for a multiple day event",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="aditionalEventsBgColor",
+     *      in="formData",
+     *      description="Background colour for the extra element counter label",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="aditionalEventsTextColor",
+     *      in="formData",
+     *      description="Text colour for the extra element counter label",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -338,41 +495,62 @@ class Calendar extends ModuleWidget
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
         $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
         $this->setOption('name', $sanitizedParams->getString('name'));
-        $this->setOption('customInterval', $sanitizedParams->getString('customInterval', ['defaultOnEmptyString' => true]));
         $this->setOption('eventLabelNow', $sanitizedParams->getString('eventLabelNow'));
+        $this->setOption('calendarType', $sanitizedParams->getInt('calendarType', ['default' => 0]));
 
-        // Other options
-        $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
-        $this->setOption('numItems', $sanitizedParams->getInt('numItems'));
-        $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));
-        $this->setOption('effect', $sanitizedParams->getString('effect'));
-        $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
-        $this->setOption('itemsSideBySide', $sanitizedParams->getCheckbox('itemsSideBySide'));
-        $this->setOption('useCurrentTemplate', $sanitizedParams->getCheckbox('useCurrentTemplate'));
+        // Template/Configure options
+        if ($this->getOption('calendarType') == 0) {
+            // Custom template
+            $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
+            $this->setOption('numItems', $sanitizedParams->getInt('numItems'));
+            $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));
+            $this->setOption('useCurrentTemplate', $sanitizedParams->getCheckbox('useCurrentTemplate'));
+            $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
+            $this->setOption('effect', $sanitizedParams->getString('effect'));
+            $this->setOption('itemsSideBySide', $sanitizedParams->getCheckbox('itemsSideBySide'));
+            $this->setRawNode('template', $request->getParam('template', null));
+            $this->setOption('template_advanced', $sanitizedParams->getCheckbox('template_advanced'));
+            $this->setRawNode('currentEventTemplate', $request->getParam('currentEventTemplate', null));
+            $this->setOption('currentEventTemplate_advanced', $sanitizedParams->getCheckbox('currentEventTemplate_advanced'));
+            $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', $request->getParam('noDataMessage', null)));
+            $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
+            $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
+            $this->setOption('customInterval', $sanitizedParams->getString('customInterval', ['defaultOnEmptyString' => true]));
+            $this->setOption('useDateRange', $sanitizedParams->getCheckbox('useDateRange'));
+            $this->setOption('rangeStart', $sanitizedParams->getDate('rangeStart'));
+            $this->setOption('rangeEnd', $sanitizedParams->getDate('rangeEnd'));
+        } else {
+            // Properties common to agenda, daily, weekly and monthly view
+            $this->setOption('showHeader', $sanitizedParams->getCheckbox('showHeader'));
+            $this->setOption('timeFormat', $sanitizedParams->getString('timeFormat', ['defaultOnEmptyString' => true]));
+            $this->setOption('textScale', $sanitizedParams->getDouble('textScale'));
+            $this->setOption('gridColor', $sanitizedParams->getString('gridColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('dayBgColor', $sanitizedParams->getString('dayBgColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('dayTextColor', $sanitizedParams->getString('dayTextColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('dayOtherMonthBgColor', $sanitizedParams->getString('dayOtherMonthBgColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('dayOtherMonthTextColor', $sanitizedParams->getString('dayOtherMonthTextColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('headerBgColor', $sanitizedParams->getString('headerBgColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('headerTextColor', $sanitizedParams->getString('headerTextColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('weekDaysHeaderBgColor', $sanitizedParams->getString('weekDaysHeaderBgColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('weekDaysHeaderTextColor', $sanitizedParams->getString('weekDaysHeaderTextColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('eventBgColor', $sanitizedParams->getString('eventBgColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('eventTextColor', $sanitizedParams->getString('eventTextColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('dailyEventBgColor', $sanitizedParams->getString('dailyEventBgColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('dailyEventTextColor', $sanitizedParams->getString('dailyEventTextColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('multiDayEventBgColor', $sanitizedParams->getString('multiDayEventBgColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('multiDayEventTextColor', $sanitizedParams->getString('multiDayEventTextColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('aditionalEventsBgColor', $sanitizedParams->getString('aditionalEventsBgColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('aditionalEventsTextColor', $sanitizedParams->getString('aditionalEventsTextColor', ['defaultOnEmptyString' => true]));
+        }
 
         $this->setOption('excludeCurrent', $sanitizedParams->getCheckbox('excludeCurrent'));
         $this->setOption('excludeAllDay', $sanitizedParams->getCheckbox('excludeAllDay'));
         $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
 
-        $this->setRawNode('template', $request->getParam('template', null));
-        $this->setOption('template_advanced', $sanitizedParams->getCheckbox('template_advanced'));
-
-        $this->setRawNode('currentEventTemplate', $request->getParam('currentEventTemplate', null));
-        $this->setOption('currentEventTemplate_advanced', $sanitizedParams->getCheckbox('currentEventTemplate_advanced'));
-
-        $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', $request->getParam('noDataMessage', null)));
-        $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
-
-        $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
-
         $this->setOption('useEventTimezone', $sanitizedParams->getCheckbox('useEventTimezone'));
         $this->setOption('useCalendarTimezone', $sanitizedParams->getCheckbox('useCalendarTimezone'));
         $this->setOption('windowsFormatCalendar', $sanitizedParams->getCheckbox('windowsFormatCalendar'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
-
-        $this->setOption('useDateRange', $sanitizedParams->getCheckbox('useDateRange'));
-        $this->setOption('rangeStart', $sanitizedParams->getDate('rangeStart'));
-        $this->setOption('rangeEnd', $sanitizedParams->getDate('rangeEnd'));
 
         $this->setOption('noEventTrigger', $sanitizedParams->getString('noEventTrigger'));
         $this->setOption('currentEventTrigger', $sanitizedParams->getString('currentEventTrigger'));
@@ -393,10 +571,26 @@ class Calendar extends ModuleWidget
             ->initialiseGetResource()
             ->appendViewPortWidth($this->region->width);
 
-        // Get the template and start making the body
-        $template = $this->getRawNode('template', '');
-        $currentEventTemplate = ($this->getOption('useCurrentTemplate') == 1) ? $this->getRawNode('currentEventTemplate', '') : null;
-        $styleSheet = $this->getRawNode('styleSheet', '');
+        $calendarType = intval($this->getOption('calendarType', 0));
+
+        if ($calendarType == 0) {
+            // Get the template and start making the body
+            $template = $this->getRawNode('template', '');
+            $currentEventTemplate = ($this->getOption('useCurrentTemplate') == 1) ? $this->getRawNode('currentEventTemplate', '') : null;
+            $styleSheet = $this->getRawNode('styleSheet', '');
+        } else {
+            $styleSheet = '';
+            $template = '';
+            $currentEventTemplate = '';
+
+            $calendarTypeName = self::CALENDAR_TYPES[$calendarType];
+            $templateFromJSON = $this->getTemplateById($calendarTypeName);
+
+            if (isset($templateFromJSON)) {
+                $mainTemplate = $templateFromJSON['template'];
+                $styleSheet = $templateFromJSON['css'];
+            }
+        }
 
         // Parse library references first as its more efficient
         $template = $this->parseLibraryReferences($this->isPreview(), $template);
@@ -404,12 +598,13 @@ class Calendar extends ModuleWidget
         $styleSheet = $this->parseLibraryReferences($this->isPreview(), $styleSheet);
 
         // Get the feed URL contents from cache or source
-        $items = $this->parseFeed($this->getFeed(), $template, $currentEventTemplate);
+        $items = $this->parseFeed($this->getFeed(), $template, $currentEventTemplate, $calendarType);
 
         // Do we have a no-data message to display?
         $noDataMessage = $this->getRawNode('noDataMessage');
 
         // Return no data message as the last element ( removed after JS event filtering )
+        if ($calendarType == 0) {
             if ($noDataMessage != '') {
                 $items[] = [
                     'startDate' => 0,
@@ -422,6 +617,7 @@ class Calendar extends ModuleWidget
                 $this->getLog()->error('Request failed for Widget=' . $this->getWidgetId() . '. Due to No Records Found');
                 return '';
             }
+        }
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
@@ -458,37 +654,70 @@ class Calendar extends ModuleWidget
             $headContent .= '</style>';
         }
 
+        // Build calendar options
+        $calendarOptions = [
+            'originalWidth' => $this->region->width,
+            'originalHeight' => $this->region->height,
+            'fx' => $effect,
+            'duration' => $duration,
+            'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
+            'numItems' => $numItems,
+            'takeItemsFrom' => $takeItemsFrom,
+            'itemsPerPage' => $itemsPerPage,
+            'calendarType' => $calendarType
+        ];
+
+        // Static template only options
+        if ($calendarType > 0) {
+            $calendarOptions = array_merge([
+                'showHeader' => $this->getOption('showHeader'),
+                'timeFormat' => $this->getOption('timeFormat'),
+                'textScale' => $this->getOption('textScale'),
+                'gridColor' => $this->getOption('gridColor'),
+                'dayBgColor' => $this->getOption('dayBgColor'),
+                'dayTextColor' => $this->getOption('dayTextColor'),
+                'dayOtherMonthBgColor' => $this->getOption('dayOtherMonthBgColor'),
+                'dayOtherMonthTextColor' => $this->getOption('dayOtherMonthTextColor'),
+                'headerBgColor' => $this->getOption('headerBgColor'),
+                'headerTextColor' => $this->getOption('headerTextColor'),
+                'weekDaysHeaderBgColor' => $this->getOption('weekDaysHeaderBgColor'),
+                'weekDaysHeaderTextColor' => $this->getOption('weekDaysHeaderTextColor'),
+                'eventBgColor' => $this->getOption('eventBgColor'),
+                'eventTextColor' => $this->getOption('eventTextColor'),
+                'dailyEventBgColor' => $this->getOption('dailyEventBgColor'),
+                'dailyEventTextColor' => $this->getOption('dailyEventTextColor'),
+                'multiDayEventBgColor' => $this->getOption('multiDayEventBgColor'),
+                'multiDayEventTextColor' => $this->getOption('multiDayEventTextColor'),
+                'aditionalEventsBgColor' => $this->getOption('aditionalEventsBgColor'),
+                'aditionalEventsTextColor' => $this->getOption('aditionalEventsTextColor')
+            ], $calendarOptions);
+        }
+
         // Include some vendor items and javascript
         $this
             ->appendJavaScriptFile('vendor/jquery.min.js')
             ->appendJavaScriptFile('vendor/moment.js')
             ->appendJavaScriptFile('xibo-layout-scaler.js')
+            ->appendJavaScriptFile('xibo-calendar-render.js')
             ->appendJavaScriptFile('xibo-image-render.js')
             ->appendJavaScriptFile('xibo-text-render.js')
             ->appendJavaScript('var xiboICTargetId = ' . $this->getWidgetId() . ';')
             ->appendJavaScriptFile('xibo-interactive-control.min.js')
             ->appendJavaScript('xiboIC.lockAllInteractions();')
+            ->appendJavaScript('moment.locale("' . Translate::GetJsLocale() . '");')
             ->appendFontCss()
             ->appendCss($headContent)
             ->appendCss($styleSheet)
             ->appendCss(file_get_contents($this->getConfig()->uri('css/client.css', true)))
-            ->appendOptions([
-                'originalWidth' => $this->region->width,
-                'originalHeight' => $this->region->height,
-                'fx' => $effect,
-                'duration' => $duration,
-                'durationIsPerItem' => (($durationIsPerItem == 0) ? false : true),
-                'numItems' => $numItems,
-                'takeItemsFrom' => $takeItemsFrom,
-                'itemsPerPage' => $itemsPerPage
-            ])
+            ->appendOptions($calendarOptions)
             ->appendJavaScript('
                 $(document).ready(function() {
                     var excludeCurrent = ' . ($this->getOption('excludeCurrent', 0) == 0 ? 'false' : 'true') . ';
                     var parsedItems = [];
                     var now = moment();
                     var ongoingEvent = false;
-                    
+                    var customCalendar = (options.calendarType && options.calendarType > 0) ? false : true;
+
                     var noEventTrigger = ' . ($this->getOption('noEventTrigger', '') == '' ? 'false' : ('"' . $this->getOption('noEventTrigger') . '"')) . ';
                     var currentEventTrigger = ' . ($this->getOption('currentEventTrigger', '') == '' ? 'false' : ('"' . $this->getOption('currentEventTrigger'). '"')) . ';
 
@@ -503,7 +732,7 @@ class Calendar extends ModuleWidget
                         if(parsedItems.length > 0 && element.noDataMessage === 1) {
                             return true;
                         }
-
+                        
                         // Check if there is an event ongoing
                         ongoingEvent = (startDate.isBefore(now) && endDate.isAfter(now) && element.noDataMessage != 1);
                         
@@ -511,19 +740,40 @@ class Calendar extends ModuleWidget
                             if (moment(element.startDate).isBefore(now)) {
                                 // This is a currently active event - do we want to add or exclude these?
                                 if (!excludeCurrent) {
-                                    parsedItems.push(element.currentEventItem);
+                                    if (customCalendar) {
+                                        parsedItems.push(element.currentEventItem);
+                                    } else {
+                                        element.currentEvent = true;
+                                    }
                                 }
                             } else {
-                                parsedItems.push(element.item);
+                                if (customCalendar) {
+                                    parsedItems.push(element.item);
+                                } else {
+                                    element.currentEvent = false;
+                                }
+                                
                             }
+                        }
+
+                        // For static calendar, return all elements
+                        if (!customCalendar) {
+                            parsedItems.push(element);
                         }
                     });
                 
                     $("body").find("img").xiboImageRender(options);
                     $("body").xiboLayoutScaler(options);
+                    $("body").xiboCalendarRender(options, parsedItems);
                     
-                    const runOnVisible = function() { $("#content").xiboTextRender(options, parsedItems); };
-                    (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
+                    const runOnVisible = function() {
+                        $("#content").xiboTextRender(options, parsedItems);
+                    };
+
+                    // Run visible methods only for custom calendar
+                    if(customCalendar) {
+                        (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
+                    }
 
                     if(ongoingEvent && currentEventTrigger) {
                         // If there is an event now, send the Current Event trigger ( if exists )
@@ -535,6 +785,11 @@ class Calendar extends ModuleWidget
                 });
             ')
             ->appendItems($items);
+
+        // Append calendar structure for static types
+        if ($calendarType > 0) {
+            $this->appendBody($mainTemplate);
+        }
 
         // Need the marquee plugin?
         if (stripos($effect, 'marquee') !== false) {
@@ -612,10 +867,11 @@ class Calendar extends ModuleWidget
      * @param $feed
      * @param $template
      * @param $currentEventTemplate
+     * @param $calendarType
      * @return array
      * @throws ConfigurationException
      */
-    private function parseFeed($feed, $template, $currentEventTemplate)
+    private function parseFeed($feed, $template, $currentEventTemplate, $calendarType)
     {
         $items = [];
 
@@ -662,10 +918,26 @@ class Calendar extends ModuleWidget
         // Force timezone of each event?
         $useEventTimezone = $this->getOption('useEventTimezone', 1);
 
-        // do we use interval or provided date range?
-        if ($this->getOption('useDateRange')) {
-            $rangeStart = $this->getOption('rangeStart');
-            $rangeEnd = $this->getOption('rangeEnd');
+        // do we use interval or provided date range? ( use also for daily, weekly and monthly types )
+        if ($this->getOption('useDateRange') || $calendarType > 1) {
+
+            if ($calendarType == 2) {
+                // Daily
+                $rangeStart = $startOfDay;
+                $rangeEnd = $endOfDay;
+            } else if($calendarType == 3) {
+                // Weekly
+                $rangeStart = Carbon::now()->startOfWeek();
+                $rangeEnd = Carbon::now()->endOfWeek();
+            } else if($calendarType == 4) {
+                // Monthly
+                $rangeStart = Carbon::now()->startOfMonth();
+                $rangeEnd = Carbon::now()->endOfMonth();
+            } else {
+                $rangeStart = $this->getOption('rangeStart');
+                $rangeEnd = $this->getOption('rangeEnd');
+            }
+
             $events = $iCal->eventsFromRange($rangeStart, $rangeEnd);
         } else {
             $events = $iCal->eventsFromInterval($this->getOption('customInterval', '1 week'));
@@ -699,12 +971,23 @@ class Calendar extends ModuleWidget
                     $currentEventRow = $rowString;
                 }
 
-                $items[] = [
+                // Create basic event element
+                $itemToAdd = [
                     'startDate' => $startDt->format('c'),
                     'endDate' => $endDt->format('c'),
                     'item' => $rowString,
                     'currentEventItem' => $currentEventRow
                 ];
+
+                // Get event properties and add them to the resulting object
+                if ($calendarType > 0) {
+                    $itemToAdd['summary'] = $event->summary;
+                    $itemToAdd['description'] = $event->description;
+                    $itemToAdd['location'] = $event->location;
+                }
+
+                // Add item to array
+                $items[] = $itemToAdd;
             } catch (\Exception $exception) {
                 $this->getLog()->error('Unable to parse event. ' . var_export($event, true));
             }

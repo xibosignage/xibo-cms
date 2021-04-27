@@ -1333,3 +1333,9 @@ div.dataTables_wrapper div.dataTables_info {
 .nav-tabs .nav-link:hover {
     background-color: #eee;
 }
+
+/* Colour picker */
+.colorpicker-input .input-group-prepend > i{
+    cursor: pointer;
+    padding-left: 20px;
+}
