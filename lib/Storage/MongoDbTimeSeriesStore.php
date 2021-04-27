@@ -438,7 +438,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         // In the case of user switches from mysql to mongo - laststatId were saved as integer
         if (isset($filterBy['statId'])) {
             try {
-                new ObjectID($filterBy['statId']);
                 $statId = new ObjectID($filterBy['statId']);
             } catch (\Exception $e) {
                 throw new InvalidArgumentException(__('Invalid statId provided'), 'statId');
