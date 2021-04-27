@@ -220,22 +220,6 @@ class ContainerFactory
                 $mediaSevice->setDispatcher($c->get('dispatcher'));
                 return $mediaSevice;
             },
-            'permissionService' => function(ContainerInterface $c) {
-                return new PermissionService(
-                    $c->get('logService'),
-                    $c->get('displayGroupFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('campaignFactory'),
-                    $c->get('widgetFactory'),
-                    $c->get('regionFactory'),
-                    $c->get('playlistFactory'),
-                    $c->get('dataSetFactory'),
-                    $c->get('dayPartFactory'),
-                    $c->get('commandFactory'),
-                    $c->get('folderFactory'),
-                    $c->get('menuBoardFactory')
-                );
-            },
             'ControllerBaseDependenciesService' => function (ContainerInterface $c) {
                 $controller = new BaseDependenciesService();
                 $controller->setLogger($c->get('logService'));
