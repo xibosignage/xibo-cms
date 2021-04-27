@@ -976,14 +976,13 @@ class Layout implements \JsonSerializable
             // Unassign from all Campaigns
             foreach ($this->campaigns as $campaign) {
                 /* @var Campaign $campaign */
-                $campaign->setChildObjectDependencies($this->layoutFactory);
+                $campaign->layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
                 $campaign->unassignLayout($this, true);
                 $campaign->save(['validate' => false]);
             }
 
             // Delete our own Campaign
             $campaign = $this->campaignFactory->getById($this->campaignId);
-            $campaign->setChildObjectDependencies($this->layoutFactory);
             $campaign->delete();
 
             // Remove the Layout from any display defaults
@@ -2245,7 +2244,7 @@ class Layout implements \JsonSerializable
 
             // Add this draft layout as a link to the campaign
             $campaign = $this->campaignFactory->getById($this->campaignId);
-            $campaign->setChildObjectDependencies($this->layoutFactory);
+            $campaign->layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
             $campaign->assignLayout($this);
             $campaign->save([
                 'notify' => false

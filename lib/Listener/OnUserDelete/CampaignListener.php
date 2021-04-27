@@ -63,7 +63,6 @@ class CampaignListener implements OnUserDeleteInterface
         // Delete any Campaigns
         foreach ($this->campaignFactory->getByOwnerId($user->userId) as $campaign) {
             /* @var Campaign $campaign */
-            $campaign->setChildObjectDependencies($this->layoutFactory);
             $campaign->delete();
         }
     }
