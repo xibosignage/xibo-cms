@@ -490,13 +490,13 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $match['$match']['statDate'] = $statDateQuery;
         }
 
-        if (!empty($statId)) {
-            $match['$match']['_id'] = [ '$gt' => $statId];
+        if ($statId !== null) {
+            $match['$match']['_id'] = ['$gt' => $statId];
         }
 
         // Displays Filter
         if (count($displayIds) != 0) {
-            $match['$match']['displayId'] = [ '$in' => $displayIds ];
+            $match['$match']['displayId'] = ['$in' => $displayIds];
         }
 
         // Campaign Filter
@@ -539,12 +539,12 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     $campaignIds[] = -1;
                 }
             }
-            $match['$match']['campaignId'] = [ '$in' => $campaignIds ];
+            $match['$match']['campaignId'] = ['$in' => $campaignIds];
         }
 
         // Media Filter
         if (count($mediaIds) != 0) {
-            $match['$match']['mediaId'] = [ '$in' => $mediaIds ];
+            $match['$match']['mediaId'] = ['$in' => $mediaIds];
         }
 
         // Select collection
@@ -669,15 +669,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         // fromDt/toDt Filter
         if (($fromDt != null) && ($toDt != null)) {
             $fromDt = new UTCDateTime($fromDt->format('U')*1000);
-            $match['$match']['end'] = [ '$gt' => $fromDt];
+            $match['$match']['end'] = ['$gt' => $fromDt];
 
             $toDt = new UTCDateTime($toDt->format('U')*1000);
-            $match['$match']['start'] = [ '$lte' => $toDt];
+            $match['$match']['start'] = ['$lte' => $toDt];
         }
 
         // Displays Filter
         if (count($displayIds) != 0) {
-            $match['$match']['displayId'] = [ '$in' => $displayIds ];
+            $match['$match']['displayId'] = ['$in' => $displayIds];
         }
 
         $collection = $this->client->selectCollection($this->config['database'], $this->table);
