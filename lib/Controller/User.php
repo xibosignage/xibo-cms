@@ -28,6 +28,7 @@ use Slim\Routing\RouteContext;
 use Xibo\Entity\Media;
 use Xibo\Entity\Permission;
 use Xibo\Event\LayoutOwnerChangeEvent;
+use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\PermissionFactory;
@@ -39,7 +40,6 @@ use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\QuickChartQRProvider;
 use Xibo\Helper\Random;
 use Xibo\Service\MediaService;
-use Xibo\Service\PermissionServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
@@ -80,9 +80,6 @@ class User extends Base
     /** @var SessionFactory */
     private $sessionFactory;
 
-    /** @var PermissionServiceInterface */
-    private $permissionService;
-
     /** @var MediaService */
     private $mediaService;
 
@@ -94,7 +91,6 @@ class User extends Base
      * @param PermissionFactory $permissionFactory
      * @param ApplicationFactory $applicationFactory
      * @param SessionFactory $sessionFactory
-     * @param PermissionServiceInterface $permissionService
      * @param MediaService $mediaService
      */
     public function __construct(
@@ -104,7 +100,6 @@ class User extends Base
         $permissionFactory,
         $applicationFactory,
         $sessionFactory,
-        PermissionServiceInterface $permissionService,
         MediaService $mediaService
     ) {
         $this->userFactory = $userFactory;
@@ -113,7 +108,6 @@ class User extends Base
         $this->permissionFactory = $permissionFactory;
         $this->applicationFactory = $applicationFactory;
         $this->sessionFactory = $sessionFactory;
-        $this->permissionService = $permissionService;
         $this->mediaService = $mediaService;
     }
 
@@ -1544,11 +1538,10 @@ class User extends Base
      */
     public function permissionsGrid(Request $request, Response $response, $entity, $id)
     {
-        $factory = $this->parsePermissionsEntity($entity, $id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Load our object
-        $object = $factory->getById($id);
+        $object = $this->parsePermissionsEntity($entity, $id);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object)) {
@@ -1627,9 +1620,7 @@ class User extends Base
         for ($i=0; $i < count($ids); $i++) {
             $objectId = $ids[$i];
 
-            $factory = $this->parsePermissionsEntity($entity, $objectId);
-
-            $objects[$i] = $factory->getById($objectId);
+            $objects[$i] = $this->parsePermissionsEntity($entity, $objectId);;
 
             // Does this user have permission to edit the permissions?!
             if (!$this->getUser()->checkPermissionsModifyable($objects[$i])) {
@@ -1691,10 +1682,8 @@ class User extends Base
     {
         $requestEntity = $entity;
 
-        $factory = $this->parsePermissionsEntity($entity, $id);
-
         // Load our object
-        $object = $factory->getById($id);
+        $object = $this->parsePermissionsEntity($entity, $id);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object)) {
@@ -1826,10 +1815,8 @@ class User extends Base
      */
     public function permissions(Request $request, Response $response, $entity, $id)
     {
-        $factory = $this->parsePermissionsEntity($entity, $id);
-
         // Load our object
-        $object = $factory->getById($id);
+        $object = $this->parsePermissionsEntity($entity, $id);
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object)) {
@@ -1975,7 +1962,6 @@ class User extends Base
      * Parse the Permissions Entity
      * @param string $entity
      * @param int $objectId
-     * @return string
      * @throws InvalidArgumentException
      */
     private function parsePermissionsEntity($entity, $objectId)
@@ -1988,10 +1974,10 @@ class User extends Base
             throw new InvalidArgumentException(__('Permissions form requested without an object'));
         }
 
-        // Check to see that we can resolve the entity
-        $entity = lcfirst($entity) . 'Factory';
+        /** @var ParsePermissionEntityEvent $event */
+        $event = $this->getDispatcher()->dispatch(ParsePermissionEntityEvent::$NAME . lcfirst($entity), new ParsePermissionEntityEvent($entity, $objectId));
 
-        return $this->permissionService->getFactory($entity);
+        return $event->getObject();
     }
 
     /**

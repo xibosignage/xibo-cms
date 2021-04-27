@@ -34,15 +34,20 @@ use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
+use Xibo\Event\CampaignLoadEvent;
+use Xibo\Event\CommandDeleteEvent;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
+use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Event\UserDeleteEvent;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
+use Xibo\Listener\OnCampaignLoad;
+use Xibo\Listener\OnCommandDelete;
 use Xibo\Listener\OnDisplayGroupLoad\DisplayGroupDisplayListener;
 use Xibo\Listener\OnDisplayGroupLoad\DisplayGroupLayoutListener;
 use Xibo\Listener\OnDisplayGroupLoad\DisplayGroupMediaListener;
@@ -52,6 +57,18 @@ use Xibo\Listener\OnMediaDelete;
 use Xibo\Listener\OnMediaLoad\DisplayGroupListener;
 use Xibo\Listener\OnMediaLoad\LayoutListener;
 use Xibo\Listener\OnMediaLoad\WidgetListener;
+use Xibo\Listener\OnParsePermissions\PermissionsCommandListener;
+use Xibo\Listener\OnParsePermissions\PermissionsDataSetListener;
+use Xibo\Listener\OnParsePermissions\PermissionsDayPartListener;
+use Xibo\Listener\OnParsePermissions\PermissionsDisplayGroupListener;
+use Xibo\Listener\OnParsePermissions\PermissionsCampaignListener;
+use Xibo\Listener\OnParsePermissions\PermissionsFolderListener;
+use Xibo\Listener\OnParsePermissions\PermissionsMediaListener;
+use Xibo\Listener\OnParsePermissions\PermissionsMenuBoardListener;
+use Xibo\Listener\OnParsePermissions\PermissionsNotificationListener;
+use Xibo\Listener\OnParsePermissions\PermissionsPlaylistListener;
+use Xibo\Listener\OnParsePermissions\PermissionsRegionListener;
+use Xibo\Listener\OnParsePermissions\PermissionsWidgetListener;
 use Xibo\Listener\OnUserDelete;
 use Xibo\Service\ReportService;
 use Xibo\Support\Exception\InstanceSuspendedException;
@@ -365,12 +382,10 @@ class State implements Middleware
                 $controller = new \Xibo\Controller\Campaign(
                     $c->get('campaignFactory'),
                     $c->get('layoutFactory'),
-                    $c->get('permissionFactory'),
-                    $c->get('userGroupFactory'),
                     $c->get('tagFactory'),
                     $c->get('folderFactory')
                 );
-
+                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -384,10 +399,9 @@ class State implements Middleware
             },
             '\Xibo\Controller\Command' => function(ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Command(
-                    $c->get('commandFactory'),
-                    $c->get('displayProfileFactory')
+                    $c->get('commandFactory')
                 );
-
+                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -845,7 +859,6 @@ class State implements Middleware
                     $c->get('permissionFactory'),
                     $c->get('applicationFactory'),
                     $c->get('sessionFactory'),
-                    $c->get('permissionService'),
                     $c->get('mediaService')
                 );
                 $controller->useDispatcher($c->get('dispatcher'));
@@ -1416,6 +1429,65 @@ class State implements Middleware
                 $dispatcher->addListener(LayoutOwnerChangeEvent::$NAME, new OnLayoutOwnerChange(
                     $c->get('layoutFactory')
                 ));
+
+                // Parse Permissions Event Listeners
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'campaign', (new PermissionsCampaignListener(
+                    $c->get('campaignFactory')
+                )));
+
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'command', (new PermissionsCommandListener(
+                    $c->get('commandFactory')
+                )));
+
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'dataSet', (new PermissionsDataSetListener(
+                    $c->get('dataSetFactory')
+                )));
+
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'dayPart', (new PermissionsDayPartListener(
+                    $c->get('dayPartFactory')
+                )));
+
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'displayGroup', (new PermissionsDisplayGroupListener(
+                    $c->get('displayGroupFactory')
+                )));
+
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'folder', (new PermissionsFolderListener(
+                    $c->get('folderFactory')
+                )));
+
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'media', (new PermissionsMediaListener(
+                    $c->get('mediaFactory')
+                )));
+
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'menuBoard', (new PermissionsMenuBoardListener(
+                    $c->get('menuBoardFactory')
+                )));
+
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'notification', (new PermissionsNotificationListener(
+                    $c->get('notificationFactory')
+                )));
+
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'playlist', (new PermissionsPlaylistListener(
+                    $c->get('playlistFactory')
+                )));
+
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'region', (new PermissionsRegionListener(
+                    $c->get('regionFactory')
+                )));
+
+                $dispatcher->addListener(ParsePermissionEntityEvent::$NAME . 'widget', (new PermissionsWidgetListener(
+                    $c->get('widgetFactory')
+                )));
+
+                // On Command delete event listener
+                $dispatcher->addListener(CommandDeleteEvent::$NAME, (new OnCommandDelete(
+                    $c->get('displayProfileFactory')
+                )));
+
+                // On CampaignLoad event listener
+                $dispatcher->addListener(CampaignLoadEvent::$NAME, (new OnCampaignLoad(
+                    $c->get('layoutFactory')
+                )));
 
                 return $dispatcher;
             },
