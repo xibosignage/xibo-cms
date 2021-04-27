@@ -25,6 +25,7 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\CommandDeleteEvent;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -45,19 +46,12 @@ class Command extends Base
     private $commandFactory;
 
     /**
-     * @var DisplayProfileFactory
-     */
-    private $displayProfileFactory;
-
-    /**
      * Set common dependencies.
      * @param CommandFactory $commandFactory
-     * @param DisplayProfileFactory $displayProfileFactory
      */
-    public function __construct($commandFactory, $displayProfileFactory)
+    public function __construct($commandFactory)
     {
         $this->commandFactory = $commandFactory;
-        $this->displayProfileFactory = $displayProfileFactory;
     }
 
     /**
@@ -500,7 +494,8 @@ class Command extends Base
             throw new AccessDeniedException();
         }
 
-        $command->setChildObjectDependencies($this->displayProfileFactory);
+        $this->getDispatcher()->dispatch(CommandDeleteEvent::$NAME, new CommandDeleteEvent($command));
+
         $command->delete();
 
         // Return

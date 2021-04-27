@@ -24,11 +24,9 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Command
@@ -135,17 +133,6 @@ class Command implements \JsonSerializable
     public $groupsWithPermissions;
 
     /**
-     * Display Profiles using this command
-     * @var array[DisplayProfile]
-     */
-    private $displayProfiles = [];
-
-    /**
-     * @var DisplayProfileFactory
-     */
-    private $displayProfileFactory;
-
-    /**
      * Command constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -153,14 +140,6 @@ class Command implements \JsonSerializable
     public function __construct($store, $log)
     {
         $this->setCommonDependencies($store, $log);
-    }
-
-    /**
-     * @param DisplayProfileFactory $displayProfileFactory
-     */
-    public function setChildObjectDependencies($displayProfileFactory)
-    {
-        $this->displayProfileFactory = $displayProfileFactory;
     }
 
     /**
@@ -246,18 +225,6 @@ class Command implements \JsonSerializable
     }
 
     /**
-     * Load
-     * @throws NotFoundException
-     */
-    public function load()
-    {
-        if ($this->loaded || $this->commandId == null)
-            return;
-
-        $this->displayProfiles = $this->displayProfileFactory->getByCommandId($this->commandId);
-    }
-
-    /**
      * Save
      * @param array $options
      *
@@ -280,22 +247,9 @@ class Command implements \JsonSerializable
 
     /**
      * Delete
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
      */
     public function delete()
     {
-        if (!$this->loaded) {
-            $this->load();
-        }
-
-        // Remove from any display profiles
-        foreach ($this->displayProfiles as $profile) {
-            /* @var \Xibo\Entity\DisplayProfile $profile */
-            $profile->unassignCommand($this);
-            $profile->save(['validate' => false]);
-        }
-
         $this->getStore()->update('DELETE FROM `command` WHERE `commandId` = :commandId', ['commandId' => $this->commandId]);
     }
 
