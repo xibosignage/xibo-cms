@@ -439,7 +439,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         if (isset($filterBy['statId'])) {
             try {
                 new ObjectID($filterBy['statId']);
-                $statId = $filterBy['statId'];
+                $statId = new ObjectID($filterBy['statId']);
             } catch (\Exception $e) {
                 throw new InvalidArgumentException(__('Invalid statId provided'), 'statId');
             }
@@ -492,7 +492,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         if (!empty($statId)) {
-            $match['$match']['_id'] = [ '$gt' => new ObjectId($statId)];
+            $match['$match']['_id'] = [ '$gt' => $statId];
         }
 
         // Displays Filter
