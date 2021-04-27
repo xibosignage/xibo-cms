@@ -257,6 +257,9 @@
 
                             {% set title %}{% trans "Text Colour" %}{% endset %}
                             {{ forms.colorPicker("dayTextColor", title, module.getOption("dayTextColor", "#3e4e63"), '', "agenda-control-group daily-control-group weekly-control-group monthly-control-group") }}
+
+                            {% set title %}{% trans "Current day text Colour" %}{% endset %}
+                            {{ forms.colorPicker("todayTextColor", title, module.getOption("todayTextColor", "#fb8100"), '', "agenda-control-group daily-control-group weekly-control-group monthly-control-group") }}
                         </div>
 
                         <div class=" card p-2 pt-3 mb-2">

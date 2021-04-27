@@ -382,6 +382,13 @@ class Calendar extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="todayTextColor",
+     *      in="formData",
+     *      description="Text colour for current day element on monthly/weekly calendars",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="dayOtherMonthBgColor",
      *      in="formData",
      *      description="Background colour for unfocused month day elements on monthly calendar",
@@ -527,6 +534,7 @@ class Calendar extends ModuleWidget
             $this->setOption('gridColor', $sanitizedParams->getString('gridColor', ['defaultOnEmptyString' => true]));
             $this->setOption('dayBgColor', $sanitizedParams->getString('dayBgColor', ['defaultOnEmptyString' => true]));
             $this->setOption('dayTextColor', $sanitizedParams->getString('dayTextColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('todayTextColor', $sanitizedParams->getString('todayTextColor', ['defaultOnEmptyString' => true]));
             $this->setOption('dayOtherMonthBgColor', $sanitizedParams->getString('dayOtherMonthBgColor', ['defaultOnEmptyString' => true]));
             $this->setOption('dayOtherMonthTextColor', $sanitizedParams->getString('dayOtherMonthTextColor', ['defaultOnEmptyString' => true]));
             $this->setOption('headerBgColor', $sanitizedParams->getString('headerBgColor', ['defaultOnEmptyString' => true]));
@@ -676,6 +684,7 @@ class Calendar extends ModuleWidget
                 'gridColor' => $this->getOption('gridColor'),
                 'dayBgColor' => $this->getOption('dayBgColor'),
                 'dayTextColor' => $this->getOption('dayTextColor'),
+                'todayTextColor' => $this->getOption('todayTextColor'),
                 'dayOtherMonthBgColor' => $this->getOption('dayOtherMonthBgColor'),
                 'dayOtherMonthTextColor' => $this->getOption('dayOtherMonthTextColor'),
                 'headerBgColor' => $this->getOption('headerBgColor'),
