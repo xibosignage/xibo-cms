@@ -41,11 +41,11 @@ use Xibo\Support\Exception\InvalidArgumentException;
 class Calendar extends ModuleWidget
 {
     const CALENDAR_TYPES = array(
-        "custom",
-        "agenda",
-        "daily",
-        "weekly",
-        "monthly"
+        'custom',
+        'agenda',
+        'daily',
+        'weekly',
+        'monthly'
     );
 
     /** @inheritdoc */
@@ -920,16 +920,15 @@ class Calendar extends ModuleWidget
 
         // do we use interval or provided date range? ( use also for daily, weekly and monthly types )
         if ($this->getOption('useDateRange') || $calendarType > 1) {
-
             if ($calendarType == 2) {
                 // Daily
                 $rangeStart = $startOfDay;
                 $rangeEnd = $endOfDay;
-            } else if($calendarType == 3) {
+            } else if ($calendarType == 3) {
                 // Weekly
                 $rangeStart = Carbon::now()->startOfWeek();
                 $rangeEnd = Carbon::now()->endOfWeek();
-            } else if($calendarType == 4) {
+            } else if ($calendarType == 4) {
                 // Monthly
                 $rangeStart = Carbon::now()->startOfMonth();
                 $rangeEnd = Carbon::now()->endOfMonth();
