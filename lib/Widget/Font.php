@@ -88,6 +88,7 @@ class Font extends ModuleWidget
     public function settings(Request $request, Response $response): Response
     {
         if ($this->getSanitizer($request->getParams())->getCheckbox('rebuildFonts') == 1) {
+            // Created this way, to avoid injecting this Service to each and every single Widget via DI to Module Controller.
             $mediaService = new MediaService($this->getConfig(), $this->getLog(), $this->getStore(), $this->getSanitizerService(), $this->getPool(), $this->mediaFactory);
             $mediaService->setUser($this->getUser())->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => true]);
         }

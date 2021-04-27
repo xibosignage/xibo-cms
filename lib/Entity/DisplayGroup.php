@@ -601,11 +601,8 @@ class DisplayGroup implements \JsonSerializable
             'loadTags' => true
         ], $options);
 
-        if ($this->loaded || $this->displayGroupId == null || $this->displayGroupId == 0)
+        if ($this->loaded || $this->displayGroupId == null || $this->displayGroupId == 0) {
             return;
-
-        if ($this->permissionFactory == null || $this->displayGroupFactory == null) {
-            throw new \RuntimeException('Cannot load without first calling setChildObjectDependencies');
         }
 
         $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->displayGroupId);
@@ -613,8 +610,9 @@ class DisplayGroup implements \JsonSerializable
         $this->displayGroups = $this->displayGroupFactory->getByParentId($this->displayGroupId);
 
         // Load all tags
-        if ($options['loadTags'])
+        if ($options['loadTags']) {
             $this->tags = $this->tagFactory->loadByDisplayGroupId($this->displayGroupId);
+        }
 
         // Set the originals
         $this->originalDisplayGroups = $this->displayGroups;
@@ -734,8 +732,9 @@ class DisplayGroup implements \JsonSerializable
         }
 
         // Set media incomplete if necessary
-        if ($this->notifyRequired)
+        if ($this->notifyRequired) {
             $this->notify();
+        }
     }
 
     /**

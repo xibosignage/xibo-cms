@@ -19,7 +19,7 @@ class DisplayGroupLoadEvent extends Event
         $this->displayGroup = $displayGroup;
     }
 
-    public function getDisplayGroup()
+    public function getDisplayGroup(): DisplayGroup
     {
         return $this->displayGroup;
     }

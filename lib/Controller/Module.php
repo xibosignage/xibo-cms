@@ -765,9 +765,6 @@ class Module extends Base
             throw new AccessDeniedException();
         }
 
-        // Set some dependencies that are used in the delete
-        $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
-
         // Pass to view
         $this->getState()->template = 'module-form-delete';
         $this->getState()->setData([
@@ -825,9 +822,6 @@ class Module extends Base
         if (!$playlist->isEditable()) {
             throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
         }
-
-        // Set some dependencies that are used in the delete
-        $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
 
         $moduleName = $module->getName();
         $widgetMedia = $module->widget->mediaIds;

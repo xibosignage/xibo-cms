@@ -42,8 +42,6 @@ use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Factory\MenuBoardFactory;
@@ -54,7 +52,6 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\SanitizerService;
@@ -195,15 +192,6 @@ abstract class ModuleWidget implements ModuleInterface
      */
     protected $commandFactory;
 
-    /** @var  LayoutFactory */
-    protected $layoutFactory;
-
-    /** @var  WidgetFactory */
-    protected $widgetFactory;
-
-    /** @var  DisplayGroupFactory */
-    protected $displayGroupFactory;
-
     /** @var  ScheduleFactory */
     protected $scheduleFactory;
 
@@ -281,21 +269,6 @@ abstract class ModuleWidget implements ModuleInterface
         $this->cacheProvider = $cacheProvider;
 
         $this->init();
-    }
-
-    /**
-     * Set Child Object Dependencies
-     * @param LayoutFactory $layoutFactory
-     * @param WidgetFactory $widgetFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($layoutFactory, $widgetFactory, $displayGroupFactory)
-    {
-        $this->layoutFactory = $layoutFactory;
-        $this->widgetFactory = $widgetFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
-        return $this;
     }
 
     /**
@@ -1139,11 +1112,9 @@ abstract class ModuleWidget implements ModuleInterface
      * @return \Xibo\Entity\Media
      * @throws NotFoundException
      */
-    public function getMedia()
+    public function getMedia(): Media
     {
-        $media = $this->mediaFactory->getById($this->getMediaId());
-        $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
-        return $media;
+        return $this->mediaFactory->getById($this->getMediaId());
     }
 
     /**

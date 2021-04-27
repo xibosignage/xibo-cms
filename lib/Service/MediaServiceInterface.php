@@ -29,6 +29,8 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 interface MediaServiceInterface
 {
@@ -93,4 +95,11 @@ interface MediaServiceInterface
      * Remove temporary files
      */
     public function removeTempFiles();
+
+    /**
+     * Removes all expired media files
+     * @throws NotFoundException
+     * @throws GeneralException
+     */
+    public function removeExpiredFiles();
 }

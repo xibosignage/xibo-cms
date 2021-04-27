@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -595,7 +596,6 @@ class Tag extends Base
         // go through each linked displayGroup and unassign the tag
         foreach ($linkedDisplayGroupsIds as $displayGroupId => $value) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $tag->unassignDisplayGroup($displayGroupId);
             $displayGroup->save();
         }
@@ -603,7 +603,6 @@ class Tag extends Base
         // go through each linked campaign and unassign the tag
         foreach ($linkedCampaignsIds as $campaignId => $value) {
             $campaign = $this->campaignFactory->getById($campaignId);
-            $campaign->setChildObjectDependencies($this->layoutFactory);
             $tag->unassignCampaign($campaignId);
             $campaign->save();
         }
@@ -709,10 +708,8 @@ class Tag extends Base
                 case 'campaign':
                     $entityFactory = $this->campaignFactory;
                     break;
-                case 'display':
-                    $entityFactory = $this->displayGroupFactory;
-                    break;
                 case 'displayGroup':
+                case 'display':
                     $entityFactory = $this->displayGroupFactory;
                     break;
             }
@@ -723,13 +720,6 @@ class Tag extends Base
                     $entity = $entityFactory->getByDisplayId($id)[0];
                 } else {
                     $entity = $entityFactory->getById($id);
-                }
-
-                // for DG and campaign we need to setChildObjectDependencies otherwise it won't load.
-                if ($targetType === 'displayGroup' || $targetType === 'display') {
-                    $entity->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-                } else if ($targetType === 'campaign') {
-                    $entity->setChildObjectDependencies($this->layoutFactory);
                 }
 
                 foreach ($untags as $untag) {
@@ -747,7 +737,7 @@ class Tag extends Base
             // Once we're done, and if we're a Display entity, we need to calculate the dynamic display groups
             if ($targetType === 'display') {
                 foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
-                    $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+                    $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($group));
                     $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true, 'allowNotify' => true]);
                 }
             }

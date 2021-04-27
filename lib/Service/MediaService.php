@@ -34,8 +34,6 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
-use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\NotFoundException;
 
 class MediaService implements MediaServiceInterface
 {
@@ -309,11 +307,7 @@ class MediaService implements MediaServiceInterface
         }
     }
 
-    /**
-     * Removes all expired media files
-     * @throws NotFoundException
-     * @throws GeneralException
-     */
+    /** @inheritDoc */
     public function removeExpiredFiles()
     {
         // Get a list of all expired files and delete them

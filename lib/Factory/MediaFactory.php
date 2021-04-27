@@ -361,8 +361,9 @@ class MediaFactory extends BaseFactory
     {
         $media = $this->query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId, 'allModules' => 1));
 
-        if (count($media) <= 0)
+        if (count($media) <= 0) {
             throw new NotFoundException(__('Cannot find media'));
+        }
 
         return $media[0];
     }
@@ -377,8 +378,9 @@ class MediaFactory extends BaseFactory
     {
         $media = $this->query(null, array('disableUserCheck' => 1, 'parentMediaId' => $mediaId, 'allModules' => 1));
 
-        if (count($media) <= 0)
+        if (count($media) <= 0) {
             throw new NotFoundException(__('Cannot find media'));
+        }
 
         return $media[0];
     }

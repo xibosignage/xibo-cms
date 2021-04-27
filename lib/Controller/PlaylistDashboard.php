@@ -235,9 +235,6 @@ class PlaylistDashboard extends Base
             throw new AccessDeniedException();
         }
 
-        // Set some dependencies that are used in the delete
-        $module->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory);
-
         // Pass to view
         $this->getState()->template = 'playlist-module-form-delete';
         $this->getState()->setData([
