@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener;
 
-
 use Xibo\Event\CampaignLoadEvent;
 use Xibo\Factory\LayoutFactory;
 

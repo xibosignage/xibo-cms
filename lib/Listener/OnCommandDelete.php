@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener;
 
-
 use Xibo\Event\CommandDeleteEvent;
 use Xibo\Factory\DisplayProfileFactory;
 

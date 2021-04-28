@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnMediaLoad;
 
-
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Factory\WidgetFactory;
 

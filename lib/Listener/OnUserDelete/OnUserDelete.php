@@ -33,13 +33,13 @@ class OnUserDelete
     /** @var StorageServiceInterface */
     private $store;
 
-    public function __construct(StorageServiceInterface $store) {
+    public function __construct(StorageServiceInterface $store)
+    {
         $this->store = $store;
     }
 
     /**
-     * @param UserDeleteEvent $event
-     * @throws \Xibo\Support\Exception\NotFoundException
+     * @inheritDoc
      */
     public function __invoke(UserDeleteEvent $event)
     {
@@ -49,7 +49,7 @@ class OnUserDelete
 
         if ($function === 'delete') {
             $this->deleteChildren($user);
-        } else if ($function === 'reassignAll') {
+        } elseif ($function === 'reassignAll') {
             $this->reassignAllTo($user, $newUser);
         }
     }
@@ -94,13 +94,5 @@ class OnUserDelete
 
         // Delete oAuth Clients - security concern
         $this->store->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $user->userId]);
-    }
-
-    /**
-     * @param $user
-     */
-    private function countChildren($user)
-    {
-
     }
 }

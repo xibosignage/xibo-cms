@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnParsePermissions;
 
-
 use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Factory\DisplayGroupFactory;
 
@@ -24,6 +23,6 @@ class PermissionsDisplayGroupListener
      */
     public function __invoke(ParsePermissionEntityEvent $event)
     {
-       $event->setObject($this->displayGroupFactory->getById($event->getObjectId()));
+        $event->setObject($this->displayGroupFactory->getById($event->getObjectId()));
     }
 }

@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnDisplayGroupLoad;
 
-
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\DisplayFactory;
 

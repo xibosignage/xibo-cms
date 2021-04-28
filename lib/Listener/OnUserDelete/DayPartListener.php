@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnUserDelete;
 
-
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Event\UserDeleteEvent;
@@ -30,8 +29,11 @@ class DayPartListener implements OnUserDeleteInterface
      */
     private $scheduleFactory;
 
-    public function __construct(StorageServiceInterface $storageService, DayPartFactory $dayPartFactory, ScheduleFactory $scheduleFactory)
-    {
+    public function __construct(
+        StorageServiceInterface $storageService,
+        DayPartFactory $dayPartFactory,
+        ScheduleFactory $scheduleFactory
+    ) {
         $this->storageService = $storageService;
         $this->dayPartFactory = $dayPartFactory;
         $this->scheduleFactory = $scheduleFactory;
@@ -48,9 +50,9 @@ class DayPartListener implements OnUserDeleteInterface
 
         if ($function === 'delete') {
             $this->deleteChildren($user, $dispatcher);
-        } else if ($function === 'reassignAll') {
+        } elseif ($function === 'reassignAll') {
             $this->reassignAllTo($user, $newUser);
-        } else if ($function === 'countChildren') {
+        } elseif ($function === 'countChildren') {
             $event->setReturnValue($event->getReturnValue() + $this->countChildren($user));
         }
     }
@@ -62,7 +64,9 @@ class DayPartListener implements OnUserDeleteInterface
     {
         foreach ($this->dayPartFactory->getByOwnerId($user->userId) as $dayPart) {
             if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1) {
-                throw new InvalidArgumentException(__('Cannot Delete User, as it is an owner of system specific DayParts, please reassign'));
+                throw new InvalidArgumentException(__(
+                    'Cannot Delete User, as it is an owner of system specific DayParts, please reassign'
+                ));
             }
 
             $dayPart->setScheduleFactory($this->scheduleFactory)->delete();

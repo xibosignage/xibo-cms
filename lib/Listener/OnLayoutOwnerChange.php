@@ -22,7 +22,6 @@
 
 namespace Xibo\Listener;
 
-
 use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Support\Exception\InvalidArgumentException;

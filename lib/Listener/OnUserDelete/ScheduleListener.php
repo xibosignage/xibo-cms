@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnUserDelete;
 
-
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Schedule;
 use Xibo\Entity\User;
@@ -39,9 +38,9 @@ class ScheduleListener implements OnUserDeleteInterface
 
         if ($function === 'delete') {
             $this->deleteChildren($user, $dispatcher);
-        } else if ($function === 'reassignAll') {
+        } elseif ($function === 'reassignAll') {
             $this->reassignAllTo($user, $newUser);
-        } else if ($function === 'countChildren') {
+        } elseif ($function === 'countChildren') {
             $event->setReturnValue($event->getReturnValue() + $this->countChildren($user));
         }
     }

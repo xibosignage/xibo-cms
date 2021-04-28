@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnUserDelete;
 
-
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Campaign;
 use Xibo\Event\UserDeleteEvent;
@@ -30,8 +29,11 @@ class CampaignListener implements OnUserDeleteInterface
      * CampaignListener constructor.
      * @param CampaignFactory $campaignFactory
      */
-    public function __construct(StorageServiceInterface $storageService, CampaignFactory $campaignFactory, LayoutFactory $layoutFactory)
-    {
+    public function __construct(
+        StorageServiceInterface $storageService,
+        CampaignFactory $campaignFactory,
+        LayoutFactory $layoutFactory
+    ) {
         $this->storageService = $storageService;
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
@@ -48,9 +50,9 @@ class CampaignListener implements OnUserDeleteInterface
 
         if ($function === 'delete') {
             $this->deleteChildren($user, $dispatcher);
-        } else if ($function === 'reassignAll') {
+        } elseif ($function === 'reassignAll') {
             $this->reassignAllTo($user, $newUser);
-        } else if ($function === 'countChildren') {
+        } elseif ($function === 'countChildren') {
             $event->setReturnValue($event->getReturnValue() + $this->countChildren($user));
         }
     }

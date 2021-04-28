@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnUserDelete;
 
-
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Event\DisplayGroupLoadEvent;
@@ -43,9 +42,9 @@ class DisplayGroupListener implements OnUserDeleteInterface
 
         if ($function === 'delete') {
             $this->deleteChildren($user, $dispatcher);
-        } else if ($function === 'reassignAll') {
+        } elseif ($function === 'reassignAll') {
             $this->reassignAllTo($user, $newUser);
-        } else if ($function === 'countChildren') {
+        } elseif ($function === 'countChildren') {
             $event->setReturnValue($event->getReturnValue() + $this->countChildren($user));
         }
     }
@@ -57,7 +56,9 @@ class DisplayGroupListener implements OnUserDeleteInterface
     {
         foreach ($this->displayGroupFactory->getByOwnerId($user->userId, -1) as $displayGroup) {
             if ($displayGroup->isDisplaySpecific === 1) {
-                throw new InvalidArgumentException(__('Cannot Delete User, as it is an owner of one or more Displays, please reassign'));
+                throw new InvalidArgumentException(__(
+                    'Cannot Delete User, as it is an owner of one or more Displays, please reassign'
+                ));
             }
 
             $displayGroup->load();

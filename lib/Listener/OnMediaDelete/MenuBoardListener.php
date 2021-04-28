@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnMediaDelete;
 
-
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Listener\ListenerLoggerTrait;

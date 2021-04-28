@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnMediaDelete;
 
-
 use Xibo\Entity\Layout;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Factory\LayoutFactory;
@@ -35,8 +34,16 @@ class LayoutListener
 
         foreach ($this->layoutFactory->getByBackgroundImageId($media->mediaId) as $layout) {
             if ($media->mediaType == 'image' && $parentMedia != null) {
-                $this->getLogger()->debug(sprintf('Updating layouts with the old media %d as the background image.', $media->mediaId));
-                $this->getLogger()->debug(sprintf('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $parentMedia->mediaId));
+                $this->getLogger()->debug(sprintf(
+                    'Updating layouts with the old media %d as the background image.',
+                    $media->mediaId
+                ));
+                $this->getLogger()->debug(sprintf(
+                    'Found layout that needs updating. ID = %d. Setting background image id to %d',
+                    $layout->layoutId,
+                    $parentMedia->mediaId
+                ));
+
                 $layout->backgroundImageId = $parentMedia->mediaId;
             } else {
                 $layout->backgroundImageId = null;

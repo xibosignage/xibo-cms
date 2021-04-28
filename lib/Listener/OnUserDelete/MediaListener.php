@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnUserDelete;
 
-
 use Symfony\Component\EventDispatcher\EventDispatcher;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
@@ -48,9 +47,9 @@ class MediaListener implements OnUserDeleteInterface
 
         if ($function === 'delete') {
             $this->deleteChildren($user, $dispatcher);
-        } else if ($function === 'reassignAll') {
+        } elseif ($function === 'reassignAll') {
             $this->reassignAllTo($user, $newUser);
-        } else if ($function === 'countChildren') {
+        } elseif ($function === 'countChildren') {
             $event->setReturnValue($event->getReturnValue() + $this->countChildren($user));
         }
     }
@@ -68,8 +67,7 @@ class MediaListener implements OnUserDeleteInterface
                 $parentMedia->isEdited = 0;
                 $parentMedia->parentId = null;
                 $parentMedia->save(['validate' => false]);
-            }
-            catch (NotFoundException $e) {
+            } catch (NotFoundException $e) {
                 // This is fine, no parent
                 $parentMedia = null;
             }

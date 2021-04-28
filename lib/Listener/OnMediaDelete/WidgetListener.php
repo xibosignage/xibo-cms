@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnMediaDelete;
 
-
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Listener\ListenerLoggerTrait;
@@ -49,7 +48,7 @@ class WidgetListener
                 // Swap any audio nodes over to this new widget media assignment.
                 $this->storageService->update('
                   UPDATE `lkwidgetaudio` SET mediaId = :mediaId WHERE widgetId = :widgetId AND mediaId = :oldMediaId
-                ' , [
+                ', [
                     'mediaId' => $parentMedia->mediaId,
                     'widgetId' => $widget->widgetId,
                     'oldMediaId' => $media->mediaId

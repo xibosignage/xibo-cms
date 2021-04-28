@@ -31,5 +31,4 @@ trait ListenerLoggerTrait
 
         return $this->logger;
     }
-
 }

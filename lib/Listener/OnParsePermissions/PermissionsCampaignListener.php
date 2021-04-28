@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnParsePermissions;
 
-
 use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Factory\CampaignFactory;
 
@@ -27,4 +26,3 @@ class PermissionsCampaignListener
         $event->setObject($this->campaignFactory->getById($event->getObjectId()));
     }
 }
-

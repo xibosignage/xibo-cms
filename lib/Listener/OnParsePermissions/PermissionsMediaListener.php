@@ -3,7 +3,6 @@
 
 namespace Xibo\Listener\OnParsePermissions;
 
-
 use Xibo\Event\ParsePermissionEntityEvent;
 use Xibo\Factory\MediaFactory;
 
