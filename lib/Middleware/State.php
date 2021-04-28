@@ -582,14 +582,16 @@ class State implements Middleware
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\Login' => function(ContainerInterface $c) {
+            '\Xibo\Controller\Login' => function (ContainerInterface $c) {
                 $controller =  new \Xibo\Controller\Login(
                     $c->get('session'),
                     $c->get('userFactory'),
-                    $c->get('pool'),
-                    $c->get('flash')
+                    $c->get('pool')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                if ($c->has('flash')) {
+                    $controller->setFlash($c->get('flash'));
+                }
                 return $controller;
             },
             '\Xibo\Controller\Maintenance' => function(ContainerInterface $c) {
