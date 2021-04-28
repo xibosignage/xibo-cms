@@ -22,7 +22,6 @@
 
 namespace Xibo\Helper;
 
-
 class NullView
 {
     public function fetch(string $template, array $data = [])

@@ -22,7 +22,6 @@
 
 namespace Xibo\Helper;
 
-
 class NullHelpService
 {
     /**
