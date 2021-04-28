@@ -1565,7 +1565,7 @@ class Soap
             // Each element should have these attributes
             $fromdt = $node->getAttribute('fromdt');
             $todt = $node->getAttribute('todt');
-            $type = $node->getAttribute('type');
+            $type = strtolower($node->getAttribute('type'));
             $duration = $node->getAttribute('duration');
             $count = $node->getAttribute('count');
             $engagements = [];
