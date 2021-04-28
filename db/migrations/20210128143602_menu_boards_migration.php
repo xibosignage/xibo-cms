@@ -76,5 +76,23 @@ class MenuBoardsMigration extends AbstractMigration
                 ['entity' => 'Xibo\Entity\MenuBoard']
             ])
             ->save();
+
+        if (!$this->fetchRow('SELECT * FROM module WHERE module = \'menuboard\'')) {
+            $this->table('module')->insert([
+                'module' => 'menuboard',
+                'name' => 'Menu Board',
+                'enabled' => 1,
+                'regionSpecific' => 1,
+                'description' => 'Module for displaying Menu Boards',
+                'schemaVersion' => 1,
+                'validExtensions' => '',
+                'previewEnabled' => 1,
+                'assignable' => 1,
+                'render_as' => 'html',
+                'viewPath' => '../modules',
+                'class' => 'Xibo\Widget\MenuBoard',
+                'defaultDuration' => 60
+            ])->save();
+        }
     }
 }
