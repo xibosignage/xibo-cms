@@ -22,7 +22,6 @@
 
 namespace Xibo\Event;
 
-
 class LayoutOwnerChangeEvent extends Event
 {
     public static $NAME = 'layout.owner.change.event';

@@ -22,7 +22,6 @@
 
 namespace Xibo\Event;
 
-
 use Xibo\Entity\User;
 
 class UserDeleteEvent extends Event

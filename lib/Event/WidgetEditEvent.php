@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2018 Spring Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -18,8 +18,6 @@
  *
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
- *
- * (WidgetEditEvent.php)
  */
 namespace Xibo\Event;
 
