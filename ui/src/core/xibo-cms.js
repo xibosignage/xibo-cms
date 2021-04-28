@@ -466,6 +466,11 @@ function XiboInitialise(scope) {
     $(scope + " input.bootstrap-switch-target").each(function() {
         $(this).bootstrapSwitch();
     });
+
+    // Colour picker
+    $(scope + " .colorpicker-input").each(function() {
+        $(this).colorpicker();
+    });
     
     // Initialize tags input form
     $(scope + " input[data-role=tagsInputInline], " + scope + " input[data-role=tagsInputForm], " + scope + " select[multiple][data-role=tagsInputForm]").each(function() {

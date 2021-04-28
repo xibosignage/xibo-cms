@@ -35,7 +35,7 @@
             <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
             <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
             <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
-            <li class="nav-item dropdown">
+            <li class="nav-item dropdown custom-control-group">
                 <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
                     {% trans "Templates" %}<span class="caret"></span>
                 </a>
@@ -69,7 +69,7 @@
 
                         {% set title %}{% trans "Duration is per item" %}{% endset %}
                         {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
-                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText) }}
+                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText, "custom-control-group") }}
 
                         {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                         {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
@@ -90,26 +90,28 @@
                         {% set helpText %}{% trans "The Link for the iCal Feed" %}{% endset %}
                         {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText)}}
 
-                        {# What range are we looking to return #}
-                        {% set title %}{% trans "Interval" %}{% endset %}
-                        {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
-                        {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText, "interval")}}
+                        <section class="custom-control-group">
+                            {# What range are we looking to return #}
+                            {% set title %}{% trans "Interval" %}{% endset %}
+                            {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
+                            {{ forms.input("customInterval", title, module.getOption("customInterval"), helpText, "interval")}}
 
-                        {% set title %}{% trans "Select a Date range to return events instead?" %}{% endset %}
-                        {% set helpText %}{% trans "Use the checkbox to return events within defined start and end dates" %}{% endset %}
-                        {{ forms.checkbox("useDateRange", title, module.getOption("useDateRange", 0), helpText) }}
+                            {% set title %}{% trans "Select a Date range to return events instead?" %}{% endset %}
+                            {% set helpText %}{% trans "Use the checkbox to return events within defined start and end dates" %}{% endset %}
+                            {{ forms.checkbox("useDateRange", title, module.getOption("useDateRange", 0), helpText) }}
 
-                        <div class="date-range" style="display: none">
-                            {% set title %}{% trans "Start Date" %}{% endset %}
-                            {{ forms.dateTime("rangeStart", title, module.getOption("rangeStart", null), "", "date-range") }}
+                            <div class="date-range" style="display: none">
+                                {% set title %}{% trans "Start Date" %}{% endset %}
+                                {{ forms.dateTime("rangeStart", title, module.getOption("rangeStart", null), "", "date-range") }}
 
-                            {% set title %}{% trans "End Date" %}{% endset %}
-                            {{ forms.dateTime("rangeEnd", title, module.getOption("rangeEnd", null, "", "date-range")) }}
-                        </div>
+                                {% set title %}{% trans "End Date" %}{% endset %}
+                                {{ forms.dateTime("rangeEnd", title, module.getOption("rangeEnd", null, "", "date-range")) }}
+                            </div>
 
-                        {% set title %}{% trans "Number of Items" %}{% endset %}
-                        {% set helpText %}{% trans "The Number of items you want to display" %}{% endset %}
-                        {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
+                            {% set title %}{% trans "Number of Items" %}{% endset %}
+                            {% set helpText %}{% trans "The Number of items you want to display" %}{% endset %}
+                            {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
+                        </section>
 
                         {% set title %}{% trans "Exclude all day events?" %}{% endset %}
                         {% set helpText %}{% trans "When all day events are excluded they are removed from the list of events in the feed and wont be shown" %}{% endset %}
@@ -134,14 +136,34 @@
                     </div>
 
                     <div class="tab-pane" id="appearanceTab">
+                        {% set title %}{% trans "Calendar Type" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the type of calendar to display." %}{% endset %}
+                        {% set custom %}{% trans "Custom" %}{% endset %}
+                        {% set agenda %}{% trans "Agenda" %}{% endset %}
+                        {% set daily %}{% trans "Daily" %}{% endset %}
+                        {% set weekly %}{% trans "Weekly" %}{% endset %}
+                        {% set monthly %}{% trans "Monthly" %}{% endset %}
+                        {% set options = [
+                            { id: 0, value: custom },
+                            { id: 1, value: agenda },
+                            { id: 2, value: daily },
+                            { id: 3, value: weekly },
+                            { id: 4, value: monthly }
+                        ] %}
+                        {{ forms.dropdown("calendarType", "single", title, module.getOption("calendarType"), options, "id", "value", helpText) }}
+
                         {% set title %}{% trans "Date Format" %}{% endset %}
                         {% set manualUrl %}{{ helpService.address("media_module_calendar.html") }}{% endset %}
                         {% set helpText %}{% trans %}The format to apply to dates. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
-                        {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
+                        {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText, "custom-control-group") }}
+
+                        {% set title %}{% trans "Time Format" %}{% endset %}
+                        {% set helpText %}{% trans %}The format to apply to event time (default HH:mm).{% endtrans %}{% endset %}
+                        {{ forms.input("timeFormat", title, module.getOption("timeFormat", "HH:mm"), helpText, "daily-control-group weekly-control-group monthly-control-group") }}
 
                         {% set title %}{% trans "Show items side by side?" %}{% endset %}
                         {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
-                        {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}
+                        {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText, "custom-control-group") }}
 
                         {% set title %}{% trans "Effect" %}{% endset %}
                         {% set helpText %}{% trans "Please select the effect that will be used to transition between items. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
@@ -188,16 +210,105 @@
                             { effectid: "tileSlide", effect: tileSlide},
                             { effectid: "tileBlind", effect: tileBlind}
                         ] %}
-                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), {showAll: showAllOptions, showPaged: showPagedOptions}, "effectid", "effect", helpText, "l", "", "", "", "", optionGroups) }}
+                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), {showAll: showAllOptions, showPaged: showPagedOptions}, "effectid", "effect", helpText, "l custom-control-group", "", "", "", "", optionGroups) }}
 
                         {% set title %}{% trans "Items per page" %}{% endset %}
                         {% set helpText %}{% trans "If an effect has been selected how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page." %}{% endset %}
                         {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}
+
+                        {% set title %}{% trans "Show header?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the selected template have a header?" %}{% endset %}
+                        {{ forms.checkbox("showHeader", title, module.getOption("showHeader", true), helpText, "daily-control-group weekly-control-group monthly-control-group") }}
+
+                        {% set title %}{% trans "Text scale" %}{% endset %}
+                        {% set helpText %}{% trans "Set the scale for the text element on the calendar." %}{% endset %}
+                        {{ forms.number("textScale", title, module.getOption("textScale", 1), helpText, "agenda-control-group daily-control-group weekly-control-group monthly-control-group") }}
+
+                        {% set calendarColorsExplanation %}
+                            {% trans "Use the colour pickers to override the element colours." %}<br>
+                        {% endset %}
+                        {{ forms.raw(calendarColorsExplanation, "h5 mt-3 mb-2 agenda-control-group daily-control-group weekly-control-group monthly-control-group") }}
+
+                        {% set title %}{% trans "Grid Colour" %}{% endset %}
+                        {{ forms.colorPicker("gridColor", title, module.getOption("gridColor", "#dadada"), '', "col-sm-12 mb-2 agenda-control-group daily-control-group weekly-control-group monthly-control-group") }}
+
+                        <div class="card p-2 pt-3 mb-2 agenda-control-group daily-control-group weekly-control-group monthly-control-group">
+                            <div class="card-title font-weight-bold text-info">Header (Month)</div>
+                            {% set title %}{% trans "Background Colour" %}{% endset %}
+                            {{ forms.colorPicker("headerBgColor", title, module.getOption("headerBgColor", "#f9f9f9")) }}
+
+                            {% set title %}{% trans "Text Colour" %}{% endset %}
+                            {{ forms.colorPicker("headerTextColor", title, module.getOption("headerTextColor", "#3e4e63")) }}
+                        </div>
+
+                        <div class="card p-2 pt-3 mb-2 agenda-control-group daily-control-group weekly-control-group monthly-control-group">
+                            <div class="card-title font-weight-bold text-info">Header (Weekdays)</div>
+                            {% set title %}{% trans "Background Colour" %}{% endset %}
+                            {{ forms.colorPicker("weekDaysHeaderBgColor", title, module.getOption("weekDaysHeaderBgColor", "#f9f9f9")) }}
+
+                            {% set title %}{% trans "Text Colour" %}{% endset %}
+                            {{ forms.colorPicker("weekDaysHeaderTextColor", title, module.getOption("weekDaysHeaderTextColor", "#3e4e63")) }}
+                        </div>
+
+                        <div class="card p-2 pt-3 mb-2 agenda-control-group daily-control-group weekly-control-group monthly-control-group">
+                            <div class="card-title font-weight-bold text-info">Month Days</div>
+                            {% set title %}{% trans "Background Colour" %}{% endset %}
+                            {{ forms.colorPicker("dayBgColor", title, module.getOption("dayBgColor", "#f9f9f9")) }}
+
+                            {% set title %}{% trans "Text Colour" %}{% endset %}
+                            {{ forms.colorPicker("dayTextColor", title, module.getOption("dayTextColor", "#3e4e63")) }}
+
+                            {% set title %}{% trans "Current day text Colour" %}{% endset %}
+                            {{ forms.colorPicker("todayTextColor", title, module.getOption("todayTextColor", "#fb8100")) }}
+                        </div>
+
+                        <div class="card p-2 pt-3 mb-2 agenda-control-group daily-control-group weekly-control-group monthly-control-group">
+                            <div class="card-title font-weight-bold text-info">Other Month Days</div>
+                            {% set title %}{% trans "Background Colour" %}{% endset %}
+                            {{ forms.colorPicker("dayOtherMonthBgColor", title, module.getOption("dayOtherMonthBgColor", "#efefef")) }}
+
+                            {% set title %}{% trans "Text Colour" %}{% endset %}
+                            {{ forms.colorPicker("dayOtherMonthTextColor", title, module.getOption("dayOtherMonthTextColor", "#3e4e63")) }}
+                        </div>
+
+                        <div class="card p-2 pt-3 mb-2 agenda-control-group daily-control-group weekly-control-group monthly-control-group">
+                            <div class="card-title font-weight-bold text-info">Events</div>
+                            {% set title %}{% trans "Background Colour" %}{% endset %}
+                            {{ forms.colorPicker("eventBgColor", title, module.getOption("eventBgColor", "transparent")) }}
+
+                            {% set title %}{% trans "Text Colour" %}{% endset %}
+                            {{ forms.colorPicker("eventTextColor", title, module.getOption("eventTextColor", "#3e4e63")) }}
+                        </div>
+
+                        <div class="card p-2 pt-3 mb-2 agenda-control-group daily-control-group weekly-control-group monthly-control-group">
+                            <div class="card-title font-weight-bold text-info">All day events</div>
+                            {% set title %}{% trans "Background Colour" %}{% endset %}
+                            {{ forms.colorPicker("dailyEventBgColor", title, module.getOption("dailyEventBgColor", "#4174B5")) }}
+
+                            {% set title %}{% trans "Text Colour" %}{% endset %}
+                            {{ forms.colorPicker("dailyEventTextColor", title, module.getOption("dailyEventTextColor", "#fff")) }}
+                        </div>
+
+                        <div class="card p-2 pt-3 mb-2 agenda-control-group daily-control-group weekly-control-group monthly-control-group">
+                            <div class="card-title font-weight-bold text-info">Multiple days events</div>
+                            {% set title %}{% trans "Background Colour" %}{% endset %}
+                            {{ forms.colorPicker("multiDayEventBgColor", title, module.getOption("multiDayEventBgColor", "#4174B5")) }}
+
+                            {% set title %}{% trans "Text Colour" %}{% endset %}
+                            {{ forms.colorPicker("multiDayEventTextColor", title, module.getOption("multiDayEventTextColor", "#fff")) }}
+                        </div>
+
+                        <div class="card p-2 pt-3 mb-2 agenda-control-group daily-control-group weekly-control-group monthly-control-group">
+                            <div class="card-title font-weight-bold text-info">Aditional days container</div>
+                            {% set title %}{% trans "Background Colour" %}{% endset %}
+                            {{ forms.colorPicker("aditionalEventsBgColor", title, module.getOption("aditionalEventsBgColor", "#efefef")) }}
+
+                            {% set title %}{% trans "Text Colour" %}{% endset %}
+                            {{ forms.colorPicker("aditionalEventsTextColor", title, module.getOption("aditionalEventsTextColor", "#3e4e63")) }}
+                        </div>
                     </div>
 
-
                     <div class="tab-pane" id="templateTab">
-
                         <div class="form-content-title row">
                             <h4 class="col-6 text-left">{% trans "Main Template" %}</h4>
                             <div class="col-6 text-right">
