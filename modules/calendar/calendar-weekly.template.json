@@ -1,0 +1,5 @@
+{
+    "id": "weekly",
+    "template": "<div class=\"calendar-in-progress\"><p>Calendar type to be developed</p></div>",
+    "css": ".calendar-in-progress {\n    width: 100%;\n    height: 100%;\n    background-color: #bbf744;\n}\n\n.calendar-in-progress > p {\n    text-align: center;\n    font-size: 3rem;\n}"
+}

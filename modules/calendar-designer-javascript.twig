@@ -25,23 +25,38 @@
 
     // Runs after form opens
     function calendar_form_edit_open() {
+        var self = this;
+
+        var updateInlineEditor = function() {
+            var $calendarTemplateSwitch = $(self).find('#template_advanced');
+
+            if($calendarTemplateSwitch.is(':checked') && $(self).find('#calendarType').val() > 0) {
+                $calendarTemplateSwitch.bootstrapSwitch('state', false);
+            }
+        };
 
         // Set duration field, using the helper
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
+        formHelpers.setupCheckboxInputFields($(self).find('form'), '#useDuration', '.duration-fields');
+
+        // Set clock type input field, using the helper ()
+        formHelpers.setupObjectValueInputFields($(self), '#calendarType', ['.custom-control-group', '.agenda-control-group', '.daily-control-group', '.weekly-control-group', '.monthly-control-group'], [0, 1, 2, 3, 4]);
 
         // Set template field, using the helper
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useCurrentTemplate', '.current-event-template');
+        formHelpers.setupCheckboxInputFields($(self).find('form'), '#useCurrentTemplate', '.current-event-template');
 
         // Set effect type input field, using the helper ()
-        formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['none'], true);
+        formHelpers.setupObjectValueInputFields($(self).find('form'), '#effect', ['.effect-controls'], ['none'], true);
 
         // Setup editors
-        formHelpers.setupDualTypeTextArea(this, 'template', !$(this).data('formEditorOnly'));
-        formHelpers.setupDualTypeTextArea(this, 'currentEventTemplate');
-        formHelpers.setupDualTypeTextArea(this, 'noDataMessage');
+        formHelpers.setupDualTypeTextArea(self, 'template', !$(self).data('formEditorOnly'));
+        formHelpers.setupDualTypeTextArea(self, 'currentEventTemplate');
+        formHelpers.setupDualTypeTextArea(self, 'noDataMessage');
 
         // set date range fields
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDateRange', '.date-range', '.interval');
+        formHelpers.setupCheckboxInputFields($(self).find('form'), '#useDateRange', '.date-range', '.interval');
+
+        $(self).find('#calendarType').on('change', updateInlineEditor);
+        updateInlineEditor();
     }
 
     // Runs before form submit
