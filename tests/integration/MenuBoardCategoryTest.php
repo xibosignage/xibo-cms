@@ -73,7 +73,7 @@ class MenuBoardCategoryTest extends LocalWebTestCase
             'mediaId' => $media->mediaId
         ]);
 
-        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
 
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
