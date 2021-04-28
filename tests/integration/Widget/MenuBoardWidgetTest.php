@@ -67,7 +67,7 @@ class MenuBoardWidgetTest extends LocalWebTestCase
             'description' => 'Description for test Menu Board'
         ]);
 
-        $this->menuBoardCategory = $this->getEntityProvider()->post( '/menuboard/' . $this->menuBoard['menuId'] . '/category', [
+        $this->menuBoardCategory = $this->getEntityProvider()->post('/menuboard/' . $this->menuBoard['menuId'] . '/category', [
             'name' => 'phpunit Menu Board Category'
         ]);
 
@@ -109,7 +109,7 @@ class MenuBoardWidgetTest extends LocalWebTestCase
 
     public function testEdit()
     {
-        $response = $this->sendRequest('PUT','/playlist/widget/' . $this->widgetId, [
+        $response = $this->sendRequest('PUT', '/playlist/widget/' . $this->widgetId, [
             'name' => 'Test Menu Board Widget',
             'duration' => 60,
             'useDuration' => 1,
@@ -130,16 +130,15 @@ class MenuBoardWidgetTest extends LocalWebTestCase
         foreach ($widget['widgetOptions'] as $option) {
             if ($option['option'] == 'showUnavailable') {
                 $this->assertSame(0, intval($option['value']));
-            } else if ($option['option'] == 'showImagesFor') {
+            } elseif ($option['option'] == 'showImagesFor') {
                 $this->assertSame('product', $option['value']);
-            } else if ($option['option'] == 'templateId') {
+            } elseif ($option['option'] == 'templateId') {
                 $this->assertSame('menuboard', $option['value']);
-            } else if ($option['option'] == 'name') {
+            } elseif ($option['option'] == 'name') {
                 $this->assertSame('Test Menu Board Widget', $option['value']);
-            } else if ($option['option'] == 'productsHighlight') {
+            } elseif ($option['option'] == 'productsHighlight') {
                 $this->assertSame([$this->menuBoardProduct['menuBoardProductId']], $option['value']);
             }
         }
     }
 }
-

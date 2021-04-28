@@ -196,10 +196,22 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(['enabled DESC'], array('type' => $type));
 
-        $this->getLog()->debug(sprintf('Creating %s out of possible %s', $type, json_encode(array_map(function($element) { return $element->class; }, $modules))));
+        $this->getLog()->debug(sprintf(
+            'Creating %s out of possible %s',
+            $type,
+            json_encode(
+                array_map(
+                    function ($element) {
+                        return $element->class;
+                    },
+                    $modules
+                )
+            )
+        ));
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
+        }
 
         // Create a module
         return $this->moduleService->get(
@@ -232,10 +244,22 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(['enabled DESC'], array('class' => $class));
 
-        $this->getLog()->debug(sprintf('Creating %s out of possible %s', $class, json_encode(array_map(function($element) { return $element->class; }, $modules))));
+        $this->getLog()->debug(sprintf(
+            'Creating %s out of possible %s',
+            $class,
+            json_encode(
+                array_map(
+                    function ($element) {
+                        return $element->class;
+                    },
+                    $modules
+                )
+            )
+        ));
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException(sprintf(__('Unknown class %s'), $class));
+        }
 
         // Create a module
         return $this->moduleService->get(
@@ -324,8 +348,9 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(null, array('type' => $media->mediaType));
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException(sprintf(__('Unknown type %s'), $media->mediaType));
+        }
 
         // Create a widget
         $widget = $this->widgetFactory->createEmpty();
@@ -389,8 +414,7 @@ class ModuleFactory extends BaseFactory
             // Create a new widget to use
             $widget = $this->widgetFactory->create($ownerId, $playlistId, $module->getModuleType(), null);
             $module->setWidget($widget);
-        }
-        else {
+        } else {
             // Load the widget
             $module->setWidget($this->widgetFactory->loadByWidgetId($widgetId));
         }
@@ -434,8 +458,7 @@ class ModuleFactory extends BaseFactory
         $modules = $this->query();
 
         if ($key != null && $key != '') {
-
-            $keyed = array();
+            $keyed = [];
             foreach ($modules as $module) {
                 /* @var Module $module */
                 $keyed[$module->type] = $module;
@@ -465,8 +488,9 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(null, array('moduleId' => $moduleId));
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException();
+        }
 
         return $modules[0];
     }
@@ -481,8 +505,9 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(null, ['installName' => $installName]);
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException();
+        }
 
         return $modules[0];
     }
@@ -498,8 +523,9 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(['enabled DESC'], ['name' => $name]);
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException(sprintf(__('Module type %s does not match any enabled Module'), $name));
+        }
 
         return $modules[0];
     }
@@ -523,8 +549,9 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(['enabled DESC'], array('extension' => $extension));
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException(sprintf(__('Extension %s does not match any enabled Module'), $extension));
+        }
 
         return $modules[0];
     }
@@ -539,7 +566,7 @@ class ModuleFactory extends BaseFactory
         $modules = $this->query(null, $filterBy);
         $extensions = array();
 
-        foreach($modules as $module) {
+        foreach ($modules as $module) {
             /* @var Module $module */
             if ($module->validExtensions != '') {
                 foreach (explode(',', $module->validExtensions) as $extension) {
@@ -577,8 +604,9 @@ class ModuleFactory extends BaseFactory
     {
         $parsedBody = $this->getSanitizer($filterBy);
         
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = array('Module');
+        }
 
         $entries = array();
 
@@ -665,8 +693,9 @@ class ModuleFactory extends BaseFactory
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging

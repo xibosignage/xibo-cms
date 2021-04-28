@@ -54,7 +54,7 @@ class MenuBoardCategoryTest extends LocalWebTestCase
 
     public function testListEmpty()
     {
-        $response = $this->sendRequest('GET','/menuboard/' . $this->menuBoard['menuId'] . '/categories');
+        $response = $this->sendRequest('GET', '/menuboard/' . $this->menuBoard['menuId'] . '/categories');
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotEmpty($response->getBody());
@@ -68,7 +68,7 @@ class MenuBoardCategoryTest extends LocalWebTestCase
         $media = (new XiboLibrary($this->getEntityProvider()))->create(Random::generateString(10, 'API Image'), PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
         $name = Random::generateString(10, 'Category Add');
 
-        $response = $this->sendRequest('POST','/menuboard/' . $this->menuBoard['menuId'] . '/category', [
+        $response = $this->sendRequest('POST', '/menuboard/' . $this->menuBoard['menuId'] . '/category', [
             'name' => $name,
             'mediaId' => $media->mediaId
         ]);
@@ -86,16 +86,16 @@ class MenuBoardCategoryTest extends LocalWebTestCase
 
     public function testEdit()
     {
-        $menuBoardCategory = $this->getEntityProvider()->post( '/menuboard/' . $this->menuBoard['menuId'] . '/category', [
+        $menuBoardCategory = $this->getEntityProvider()->post('/menuboard/' . $this->menuBoard['menuId'] . '/category', [
             'name' => 'Test Menu Board Category Edit'
         ]);
         $name = Random::generateString(10, 'Category Edit');
 
-        $response = $this->sendRequest('PUT','/menuboard/' . $menuBoardCategory['menuCategoryId'] . '/category', [
+        $response = $this->sendRequest('PUT', '/menuboard/' . $menuBoardCategory['menuCategoryId'] . '/category', [
             'name' => $name,
         ]);
 
-        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
 
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
@@ -113,6 +113,6 @@ class MenuBoardCategoryTest extends LocalWebTestCase
 
         $object = json_decode($response->getBody());
         $this->assertSame(204, $object->status);
-        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
     }
 }

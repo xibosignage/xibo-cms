@@ -193,7 +193,7 @@ class MenuBoardProduct extends Base
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'menuBoard.product.delete', ['id' => $menuBoardProduct->menuProductId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'menuBoard.product.delete', ['id' => $menuBoardProduct->menuProductId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'menuBoardProduct_delete_button'],
                         ['name' => 'text', 'value' => __('Delete')],

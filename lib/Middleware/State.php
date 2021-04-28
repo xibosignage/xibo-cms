@@ -1325,7 +1325,7 @@ class State implements Middleware
     public static function registerDispatcherWithDi()
     {
         return [
-            'dispatcher' => function(ContainerInterface $c) {
+            'dispatcher' => function (ContainerInterface $c) {
                 $dispatcher = new EventDispatcher();
 
                 // Media Delete Events

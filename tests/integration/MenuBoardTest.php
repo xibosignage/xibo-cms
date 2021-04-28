@@ -48,7 +48,7 @@ class MenuBoardTest extends LocalWebTestCase
 
     public function testListAll()
     {
-        $response = $this->sendRequest('GET','/menuboards');
+        $response = $this->sendRequest('GET', '/menuboards');
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotEmpty($response->getBody());
@@ -59,12 +59,12 @@ class MenuBoardTest extends LocalWebTestCase
     public function testAdd()
     {
         $name = Random::generateString(10, 'MenuBoard Add');
-        $response = $this->sendRequest('POST','/menuboard', [
+        $response = $this->sendRequest('POST', '/menuboard', [
             'name' => $name,
             'description' => 'Description for test Menu Board Add'
         ]);
 
-        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
 
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
@@ -82,12 +82,12 @@ class MenuBoardTest extends LocalWebTestCase
             'description' => 'Description for test Menu Board Edit'
         ]);
         $name = Random::generateString(10, 'MenuBoard Edit');
-        $response = $this->sendRequest('PUT','/menuboard/' . $menuBoard['menuId'], [
+        $response = $this->sendRequest('PUT', '/menuboard/' . $menuBoard['menuId'], [
             'name' => $name,
             'description' => 'Test Menu Board Edited description'
         ]);
 
-        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
 
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
@@ -109,6 +109,6 @@ class MenuBoardTest extends LocalWebTestCase
 
         $object = json_decode($response->getBody());
         $this->assertSame(204, $object->status);
-        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
     }
 }

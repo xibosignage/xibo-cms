@@ -350,7 +350,7 @@ class Base
 
         // Render the view manually with Twig, parse it and pull out various bits
         try {
-            $view = $this->getView()->render($response,$state->template . '.twig', $data);
+            $view = $this->getView()->render($response, $state->template . '.twig', $data);
         } catch (LoaderError | RuntimeError | SyntaxError $e) {
             throw new GeneralException(__('Twig Error ') . $e->getMessage());
         }

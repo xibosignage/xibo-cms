@@ -1453,7 +1453,7 @@ class Library extends Base
     public function fontCss(Request $request, Response $response)
     {
         // Regenerate the CSS for fonts
-        $css = $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser(),['invalidateCache' => false]);
+        $css = $this->getMediaService()->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => false]);
 
         // Work out the etag
         /** @var $httpCache HttpCacheProvider*/

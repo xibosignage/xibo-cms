@@ -1056,11 +1056,11 @@ class Report extends Base
         $emailTemplate = $this->reportService->getReportEmailTemplate($name);
 
         if (!empty($emailTemplate)) {
-
             // Save PDF attachment
             ob_start();
             // Render the template
-            echo $this->getView()->fetch($emailTemplate,
+            echo $this->getView()->fetch(
+                $emailTemplate,
                 [
                     'header' => $report->description,
                     'logo' => $this->getConfig()->uri('img/xibologo.png', true),
@@ -1072,7 +1072,8 @@ class Report extends Base
                     'src' => isset($src) ? $src : null,
                     'multipleCharts' => isset($multipleCharts) ? $multipleCharts : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null
-                ]);
+                ]
+            );
             $body = ob_get_contents();
             ob_end_clean();
 

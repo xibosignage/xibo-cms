@@ -43,7 +43,7 @@ class MenuBoardProductTest extends LocalWebTestCase
             'description' => 'Description for test Menu Board'
         ]);
 
-        $this->menuBoardCategory = $this->getEntityProvider()->post( '/menuboard/' . $this->menuBoard['menuId'] . '/category', [
+        $this->menuBoardCategory = $this->getEntityProvider()->post('/menuboard/' . $this->menuBoard['menuId'] . '/category', [
             'name' => 'Test Menu Board Category Edit'
         ]);
     }
@@ -59,7 +59,7 @@ class MenuBoardProductTest extends LocalWebTestCase
 
     public function testListEmpty()
     {
-        $response = $this->sendRequest('GET','/menuboard/' . $this->menuBoardCategory['menuCategoryId'] . '/products');
+        $response = $this->sendRequest('GET', '/menuboard/' . $this->menuBoardCategory['menuCategoryId'] . '/products');
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotEmpty($response->getBody());
@@ -73,7 +73,7 @@ class MenuBoardProductTest extends LocalWebTestCase
         $media = (new XiboLibrary($this->getEntityProvider()))->create(Random::generateString(10, 'API Image'), PROJECT_ROOT . '/tests/resources/xts-night-001.jpg');
         $name = Random::generateString(10, 'Product Add');
 
-        $response = $this->sendRequest('POST','/menuboard/' . $this->menuBoardCategory['menuCategoryId'] . '/product', [
+        $response = $this->sendRequest('POST', '/menuboard/' . $this->menuBoardCategory['menuCategoryId'] . '/product', [
             'name' => $name,
             'mediaId' => $media->mediaId,
             'price' => '$12.40',
@@ -85,7 +85,7 @@ class MenuBoardProductTest extends LocalWebTestCase
 
         ]);
 
-        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
 
         $object = json_decode($response->getBody());
 
@@ -103,9 +103,9 @@ class MenuBoardProductTest extends LocalWebTestCase
         $this->assertSame('small', $object->data->productOptions[2]->option);
         $this->assertSame('$10.40', $object->data->productOptions[2]->value);
         $this->assertSame($object->id, $object->data->productOptions[1]->menuProductId);
-        $this->assertSame('medium',  $object->data->productOptions[1]->option);
-        $this->assertSame('$15.40',  $object->data->productOptions[1]->value);
-        $this->assertSame($object->id,  $object->data->productOptions[0]->menuProductId);
+        $this->assertSame('medium', $object->data->productOptions[1]->option);
+        $this->assertSame('$15.40', $object->data->productOptions[1]->value);
+        $this->assertSame($object->id, $object->data->productOptions[0]->menuProductId);
         $this->assertSame('large', $object->data->productOptions[0]->option);
         $this->assertSame('$20.20', $object->data->productOptions[0]->value);
 
@@ -117,7 +117,7 @@ class MenuBoardProductTest extends LocalWebTestCase
      */
     public function testAddFailure($name, $price)
     {
-        $response = $this->sendRequest('POST','/menuboard/' . $this->menuBoardCategory['menuCategoryId'] . '/product', [
+        $response = $this->sendRequest('POST', '/menuboard/' . $this->menuBoardCategory['menuCategoryId'] . '/product', [
             'name' => $name,
             'price' => $price
         ]);
@@ -141,7 +141,7 @@ class MenuBoardProductTest extends LocalWebTestCase
 
     public function testEdit()
     {
-        $menuBoardProduct = $this->getEntityProvider()->post( '/menuboard/' . $this->menuBoardCategory['menuCategoryId'] . '/product', [
+        $menuBoardProduct = $this->getEntityProvider()->post('/menuboard/' . $this->menuBoardCategory['menuCategoryId'] . '/product', [
             'name' => 'Test Menu Board Product Edit',
             'price' => '$11.11',
             'productOptions' => ['small', 'medium', 'large'],
@@ -149,7 +149,7 @@ class MenuBoardProductTest extends LocalWebTestCase
         ]);
         $name = Random::generateString(10, 'Product Edit');
 
-        $response = $this->sendRequest('PUT','/menuboard/' . $menuBoardProduct['menuProductId'] . '/product', [
+        $response = $this->sendRequest('PUT', '/menuboard/' . $menuBoardProduct['menuProductId'] . '/product', [
             'name' => $name,
             'price' => '$9.99',
             'description' => 'Product Description Edited',
@@ -159,7 +159,7 @@ class MenuBoardProductTest extends LocalWebTestCase
             'productValues' => ['$8.40', '$12.40', '$15.20']
         ]);
 
-        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
 
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object);
@@ -175,9 +175,9 @@ class MenuBoardProductTest extends LocalWebTestCase
         $this->assertSame('small', $object->data->productOptions[2]->option);
         $this->assertSame('$8.40', $object->data->productOptions[2]->value);
         $this->assertSame($object->id, $object->data->productOptions[1]->menuProductId);
-        $this->assertSame('medium',  $object->data->productOptions[1]->option);
-        $this->assertSame('$12.40',  $object->data->productOptions[1]->value);
-        $this->assertSame($object->id,  $object->data->productOptions[0]->menuProductId);
+        $this->assertSame('medium', $object->data->productOptions[1]->option);
+        $this->assertSame('$12.40', $object->data->productOptions[1]->value);
+        $this->assertSame($object->id, $object->data->productOptions[0]->menuProductId);
         $this->assertSame('large', $object->data->productOptions[0]->option);
         $this->assertSame('$15.20', $object->data->productOptions[0]->value);
     }
@@ -193,6 +193,6 @@ class MenuBoardProductTest extends LocalWebTestCase
 
         $object = json_decode($response->getBody());
         $this->assertSame(204, $object->status);
-        $this->assertSame(200, $response->getStatusCode(), "Not successful: " . $response->getBody());
+        $this->assertSame(200, $response->getStatusCode(), 'Not successful: ' . $response->getBody());
     }
 }

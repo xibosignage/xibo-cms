@@ -1620,7 +1620,7 @@ class User extends Base
         for ($i=0; $i < count($ids); $i++) {
             $objectId = $ids[$i];
 
-            $objects[$i] = $this->parsePermissionsEntity($entity, $objectId);;
+            $objects[$i] = $this->parsePermissionsEntity($entity, $objectId);
 
             // Does this user have permission to edit the permissions?!
             if (!$this->getUser()->checkPermissionsModifyable($objects[$i])) {
@@ -1864,7 +1864,7 @@ class User extends Base
             /** @var $object Media */
             if ($object->mediaType === 'font') {
                 // Drop permissions (we need to reassess).
-                $this->getMediaService($this->getUser())->installFonts(RouteContext::fromRequest($request)->getRouteParser(),['invalidateCache' => true]);
+                $this->getMediaService($this->getUser())->installFonts(RouteContext::fromRequest($request)->getRouteParser(), ['invalidateCache' => true]);
             }
         }
 

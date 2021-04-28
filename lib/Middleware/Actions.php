@@ -64,16 +64,26 @@ class Actions implements Middleware
 
         // Process Actions
         if (!Environment::migrationPending() && $container->get('configService')->getSetting('DEFAULTS_IMPORTED') == 0) {
-
             $folder = $container->get('configService')->uri('layouts', true);
 
             foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                 if (stripos($file, '.zip')) {
                     try {
                         /** @var \Xibo\Entity\Layout $layout */
-                        $layout = $container->get('layoutFactory')->createFromZip($folder . '/' . $file, null,
-                            $container->get('userFactory')->getSystemUser()->getId(), false, false, true, false,
-                            true, $container->get('dataSetFactory'), null, $routeContext->getRouteParser(), $container->get('mediaService'));
+                        $layout = $container->get('layoutFactory')->createFromZip(
+                            $folder . '/' . $file,
+                            null,
+                            $container->get('userFactory')->getSystemUser()->getId(),
+                            false,
+                            false,
+                            true,
+                            false,
+                            true,
+                            $container->get('dataSetFactory'),
+                            null,
+                            $routeContext->getRouteParser(),
+                            $container->get('mediaService')
+                        );
                         $layout->save([
                             'audit' => false,
                             'import' => true
