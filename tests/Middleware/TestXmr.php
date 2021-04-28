@@ -89,8 +89,7 @@ class TestXmr implements Middleware
                 $app->getContainer()->get('store'),
                 $app->getContainer()->get('pool'),
                 $app->getContainer()->get('playerActionService'),
-                $app->getContainer()->get('scheduleFactory'),
-                $app->getContainer()->get('dayPartFactory')
+                $app->getContainer()->get('scheduleFactory')
             );
         });
     }

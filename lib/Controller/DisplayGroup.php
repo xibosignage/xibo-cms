@@ -1191,6 +1191,7 @@ class DisplayGroup extends Base
         }
 
         $displayGroup->load();
+        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
 
         if ($displayGroup->isDynamic == 1) {
             throw new InvalidArgumentException(__('DisplayGroups cannot be manually unassigned to a Dynamic Group'), 'isDynamic');
