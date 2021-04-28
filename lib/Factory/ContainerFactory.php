@@ -38,7 +38,6 @@ use Xibo\Service\HelpService;
 use Xibo\Service\ImageProcessingService;
 use Xibo\Service\MediaService;
 use Xibo\Service\ModuleService;
-use Xibo\Service\PermissionService;
 use Xibo\Storage\MySqlTimeSeriesStore;
 use Xibo\Storage\PdoStorageService;
 use Xibo\Twig\ByteFormatterTwigExtension;
@@ -71,7 +70,7 @@ class ContainerFactory
                 $uri = (string) parse_url('http://a' . $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
                 if (stripos($uri, $_SERVER['SCRIPT_NAME']) === 0) {
                     return $_SERVER['SCRIPT_NAME'];
-                } else if ($scriptDir !== '/' && stripos($uri, $scriptDir) === 0) {
+                } elseif ($scriptDir !== '/' && stripos($uri, $scriptDir) === 0) {
                     return $scriptDir;
                 } else {
                     return '';
@@ -114,13 +113,13 @@ class ContainerFactory
 
                 return $view;
             },
-            'sanitizerService' => function(ContainerInterface $c) {
+            'sanitizerService' => function (ContainerInterface $c) {
                 return new SanitizerService();
             },
-            'store' => function(ContainerInterface $c) {
+            'store' => function (ContainerInterface $c) {
                 return (new PdoStorageService($c->get('logService')))->setConnection();
             },
-            'timeSeriesStore' => function(ContainerInterface $c) {
+            'timeSeriesStore' => function (ContainerInterface $c) {
                 if ($c->get('configService')->timeSeriesStore == null) {
                     $timeSeriesStore = new MySqlTimeSeriesStore();
                 } else {
@@ -140,10 +139,10 @@ class ContainerFactory
                     )
                     ->setStore($c->get('store'));
             },
-            'state' => function() {
+            'state' => function () {
                 return new ApplicationState();
             },
-            'moduleService' => function(ContainerInterface $c) {
+            'moduleService' => function (ContainerInterface $c) {
                 return new ModuleService(
                     $c->get('store'),
                     $c->get('pool'),
@@ -152,7 +151,7 @@ class ContainerFactory
                     $c->get('sanitizerService')
                 );
             },
-            'configService' => function(ContainerInterface $c) {
+            'configService' => function (ContainerInterface $c) {
                 return ConfigService::Load($c, PROJECT_ROOT . '/web/settings.php');
             },
             'user' => function (ContainerInterface $c) {
@@ -166,7 +165,7 @@ class ContainerFactory
                     $c->get('applicationScopeFactory')
                 );
             },
-            'helpService' => function(ContainerInterface $c) {
+            'helpService' => function (ContainerInterface $c) {
                 return new HelpService(
                     $c->get('store'),
                     $c->get('configService'),
@@ -174,17 +173,21 @@ class ContainerFactory
                     '/'
                 );
             },
-            'pool' => function(ContainerInterface $c) {
+            'pool' => function (ContainerInterface $c) {
                 $drivers = [];
 
                 $c->get('configService')->setDependencies($c->get('store'), $c->get('rootUri'));
 
-                if ($c->get('configService')->getCacheDrivers() != null && is_array($c->get('configService')->getCacheDrivers())) {
+                if ($c->get('configService')->getCacheDrivers() != null &&
+                    is_array($c->get('configService')->getCacheDrivers())
+                ) {
                     $drivers = $c->get('configService')->getCacheDrivers();
                 } else {
                     // File System Driver
                     $realPath = realpath($c->get('configService')->getSetting('LIBRARY_LOCATION'));
-                    $cachePath = ($realPath) ? $realPath . '/cache/' : $c->get('configService')->getSetting('LIBRARY_LOCATION') . 'cache/';
+                    $cachePath = ($realPath)
+                        ? $realPath . '/cache/'
+                        : $c->get('configService')->getSetting('LIBRARY_LOCATION') . 'cache/';
 
                     $drivers[] = new \Stash\Driver\FileSystem(['path' => $cachePath]);
                 }
@@ -198,14 +201,14 @@ class ContainerFactory
                 $c->get('configService')->setPool($pool);
                 return $pool;
             },
-            'imageProcessingService' => function(ContainerInterface $c) {
+            'imageProcessingService' => function (ContainerInterface $c) {
                 $imageProcessingService = new ImageProcessingService();
                 $imageProcessingService->setDependencies(
                     $c->get('logService')
                 );
                 return $imageProcessingService;
             },
-            'httpCache' => function() {
+            'httpCache' => function () {
                 return new \Xibo\Helper\HttpCacheProvider();
             },
             'mediaService' => function (ContainerInterface $c) {
