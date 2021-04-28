@@ -150,7 +150,7 @@ class FolderFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = $this->createEmpty()->hydrate($row);
+            $entries[] = $this->createEmpty()->hydrate($row, ['intProperties' => ['isRoot']]);
         }
 
         // Paging

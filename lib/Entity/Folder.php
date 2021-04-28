@@ -119,9 +119,9 @@ class Folder
         return $this->parentId;
     }
 
-    public function isRoot()
+    public function isRoot(): bool
     {
-        return ($this->isRoot === 1) ? true : false;
+        return $this->isRoot === 1;
     }
 
     public function getChildren()
