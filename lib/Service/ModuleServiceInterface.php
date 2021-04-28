@@ -23,7 +23,6 @@
 
 namespace Xibo\Service;
 
-
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -81,7 +80,24 @@ interface ModuleServiceInterface
      * @param HttpCacheProvider $cacheProvider
      * @return ModuleWidget
      */
-    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, HttpCacheProvider $cacheProvider);
+    public function get(
+        $module,
+        $moduleFactory,
+        $mediaFactory,
+        $dataSetFactory,
+        $dataSetColumnFactory,
+        $transitionFactory,
+        $displayFactory,
+        $commandFactory,
+        $scheduleFactory,
+        $permissionFactory,
+        $userGroupFactory,
+        $playlistFactory,
+        $menuBoardFactory,
+        $menuBoardCategoryFactory,
+        $view,
+        HttpCacheProvider $cacheProvider
+    );
 
     /**
      * @param string $className
@@ -102,5 +118,22 @@ interface ModuleServiceInterface
      * @param HttpCacheProvider $cacheProvider
      * @return ModuleWidget
      */
-    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, HttpCacheProvider $cacheProvider);
+    public function getByClass(
+        $className,
+        $moduleFactory,
+        $mediaFactory,
+        $dataSetFactory,
+        $dataSetColumnFactory,
+        $transitionFactory,
+        $displayFactory,
+        $commandFactory,
+        $scheduleFactory,
+        $permissionFactory,
+        $userGroupFactory,
+        $playlistFactory,
+        $menuBoardFactory,
+        $menuBoardCategoryFactory,
+        $view,
+        HttpCacheProvider $cacheProvider
+    );
 }

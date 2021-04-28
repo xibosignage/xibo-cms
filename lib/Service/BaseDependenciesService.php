@@ -3,7 +3,6 @@
 
 namespace Xibo\Service;
 
-
 use Psr\Log\NullLogger;
 use Slim\Views\Twig;
 use Xibo\Entity\User;
@@ -135,7 +134,6 @@ class BaseDependenciesService
     {
         if ($this->view === null) {
             $this->view = new NullView();
-
         }
         $this->view = $view;
     }

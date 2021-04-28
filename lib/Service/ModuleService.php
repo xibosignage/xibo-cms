@@ -23,7 +23,6 @@
 
 namespace Xibo\Service;
 
-
 use Stash\Interfaces\PoolInterface;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
@@ -76,9 +75,42 @@ class ModuleService implements ModuleServiceInterface
     /**
      * @inheritdoc
      */
-    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, $cacheProvider)
-    {
-        $object = $this->getByClass($module->class, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, $cacheProvider);
+    public function get(
+        $module,
+        $moduleFactory,
+        $mediaFactory,
+        $dataSetFactory,
+        $dataSetColumnFactory,
+        $transitionFactory,
+        $displayFactory,
+        $commandFactory,
+        $scheduleFactory,
+        $permissionFactory,
+        $userGroupFactory,
+        $playlistFactory,
+        $menuBoardFactory,
+        $menuBoardCategoryFactory,
+        $view,
+        $cacheProvider
+    ) {
+        $object = $this->getByClass(
+            $module->class,
+            $moduleFactory,
+            $mediaFactory,
+            $dataSetFactory,
+            $dataSetColumnFactory,
+            $transitionFactory,
+            $displayFactory,
+            $commandFactory,
+            $scheduleFactory,
+            $permissionFactory,
+            $userGroupFactory,
+            $playlistFactory,
+            $menuBoardFactory,
+            $menuBoardCategoryFactory,
+            $view,
+            $cacheProvider
+        );
 
         $object->setModule($module);
 
@@ -88,8 +120,24 @@ class ModuleService implements ModuleServiceInterface
     /**
      * @inheritdoc
      */
-    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $view, $cacheProvider)
-    {
+    public function getByClass(
+        $className,
+        $moduleFactory,
+        $mediaFactory,
+        $dataSetFactory,
+        $dataSetColumnFactory,
+        $transitionFactory,
+        $displayFactory,
+        $commandFactory,
+        $scheduleFactory,
+        $permissionFactory,
+        $userGroupFactory,
+        $playlistFactory,
+        $menuBoardFactory,
+        $menuBoardCategoryFactory,
+        $view,
+        $cacheProvider
+    ) {
         if (!\class_exists($className)) {
             throw new NotFoundException(__('Class %s not found', $className));
         }

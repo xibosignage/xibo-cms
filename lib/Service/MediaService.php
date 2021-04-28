@@ -22,7 +22,6 @@
 
 namespace Xibo\Service;
 
-
 use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
@@ -178,7 +177,8 @@ class MediaService implements MediaServiceInterface
                         continue;
                     }
 
-                    // Separate out the display name and the referenced name (referenced name cannot contain any odd characters or numbers)
+                    // Separate out the display name and the referenced name
+                    // (referenced name cannot contain any odd characters or numbers)
                     $displayName = $font->name;
                     $familyName = strtolower(preg_replace('/\s+/', ' ', preg_replace('/\d+/u', '', $font->name)));
 
@@ -203,7 +203,6 @@ class MediaService implements MediaServiceInterface
 
                 // If we're a full regenerate, we want to also update the fonts.css file.
                 if ($options['invalidateCache']) {
-
                     // Pull out the currently stored fonts.css from the library (if it exists)
                     $existingLibraryFontsCss = '';
                     if (file_exists($libraryLocation . 'fonts.css')) {
@@ -292,9 +291,9 @@ class MediaService implements MediaServiceInterface
 
         // Dump the files in the temp folder
         foreach (scandir($libraryTemp) as $item) {
-            if ($item == '.' || $item == '..')
+            if ($item == '.' || $item == '..') {
                 continue;
-
+            }
             // Has this file been written to recently?
             if (filemtime($libraryTemp . DIRECTORY_SEPARATOR . $item) > Carbon::now()->subSeconds(86400)->format('U')) {
                 $this->log->debug('Skipping active file: ' . $item);
@@ -311,11 +310,27 @@ class MediaService implements MediaServiceInterface
     public function removeExpiredFiles()
     {
         // Get a list of all expired files and delete them
-        foreach ($this->mediaFactory->query(null, array('expires' => Carbon::now()->format('U'), 'allModules' => 1, 'length' => 100)) as $entry) {
+        foreach ($this->mediaFactory->query(
+            null,
+            ['expires' => Carbon::now()->format('U'),
+                'allModules' => 1,
+                'length' => 100
+            ]
+        ) as $entry) {
             /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             $this->log->info(sprintf('Removing Expired File %s', $entry->name));
-            $this->log->audit('Media', $entry->mediaId, 'Removing Expired', ['mediaId' => $entry->mediaId, 'name' => $entry->name, 'expired' => Carbon::createFromTimestamp($entry->expires)->format(DateFormatHelper::getSystemFormat())]);
+            $this->log->audit(
+                'Media',
+                $entry->mediaId,
+                'Removing Expired',
+                [
+                    'mediaId' => $entry->mediaId,
+                    'name' => $entry->name,
+                    'expired' => Carbon::createFromTimestamp($entry->expires)
+                        ->format(DateFormatHelper::getSystemFormat())
+                ]
+            );
             $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($entry));
             $entry->delete();
         }
