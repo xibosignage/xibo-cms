@@ -3,25 +3,14 @@
 namespace Xibo\Report;
 
 use Carbon\Carbon;
-use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
-use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\ReportForm;
+use Xibo\Entity\ReportResult;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\SavedReportFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Service\ReportServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
-use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class Bandwidth
@@ -29,70 +18,25 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Bandwidth implements ReportInterface
 {
-
-    use ReportTrait;
+    use ReportDefaultTrait;
 
     /**
      * @var DisplayFactory
      */
     private $displayFactory;
 
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var SavedReportFactory
-     */
-    private $savedReportFactory;
-
-    /**
-     * @var UserFactory
-     */
-    private $userFactory;
-
-    /**
-     * @var DisplayGroupFactory
-     */
-    private $displayGroupFactory;
-
-    /**
-     * @var ReportServiceInterface
-     */
-    private $reportService;
-
-    /**
-     * Report Constructor.
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param StorageServiceInterface $store
-     * @param TimeSeriesStoreInterface $timeSeriesStore
-     * @param LogServiceInterface $log
-     * @param ConfigServiceInterface $config
-     * @param SanitizerService $sanitizer
-     */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $sanitizer)
-    {
-        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $sanitizer);
-    }
-
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
     {
         $this->displayFactory = $container->get('displayFactory');
-        $this->mediaFactory = $container->get('mediaFactory');
-        $this->layoutFactory = $container->get('layoutFactory');
-        $this->savedReportFactory = $container->get('savedReportFactory');
-        $this->userFactory = $container->get('userFactory');
-        $this->displayGroupFactory = $container->get('displayGroupFactory');
-        $this->reportService = $container->get('reportService');
 
         return $this;
+    }
+
+    /** @inheritdoc */
+    public function getReportChartScript($results)
+    {
+        return json_encode($results->chart);
     }
 
     /** @inheritdoc */
@@ -102,21 +46,26 @@ class Bandwidth implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportForm()
+    public function getSavedReportTemplate()
     {
-        return [
-            'template' => 'bandwidth-report-form',
-            'data' =>  [
-                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
-                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
-                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
-                'availableReports' => $this->reportService->listReports()
-            ]
-        ];
+        return 'bandwidth-report-preview';
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(Request $request)
+    public function getReportForm()
+    {
+        return new ReportForm(
+            'bandwidth-report-form',
+            'bandwidth',
+            'Display',
+            [
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            ]
+        );
+    }
+
+    /** @inheritdoc */
+    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
         $title = __('Add Report Schedule');
 
@@ -132,10 +81,8 @@ class Bandwidth implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function setReportScheduleFormData(Request $request)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
         $filter = $sanitizedParams->getString('filter');
         $displayId = $sanitizedParams->getInt('displayId');
 
@@ -147,12 +94,10 @@ class Bandwidth implements ReportInterface
         if ($filter == 'daily') {
             $schedule = ReportSchedule::$SCHEDULE_DAILY;
             $filterCriteria['reportFilter'] = 'yesterday';
-
-        } else if ($filter == 'monthly') {
+        } elseif ($filter == 'monthly') {
             $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
             $filterCriteria['reportFilter'] = 'lastmonth';
-
-        } else if ($filter == 'yearly') {
+        } elseif ($filter == 'yearly') {
             $schedule = ReportSchedule::$SCHEDULE_YEARLY;
             $filterCriteria['reportFilter'] = 'lastyear';
         }
@@ -168,35 +113,39 @@ class Bandwidth implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName($filterCriteria)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
     {
-        return sprintf(__('%s bandwidth report', ucfirst($filterCriteria['filter'])));
+        return sprintf(__('%s bandwidth report', ucfirst($sanitizedParams->getString('filter'))));
     }
 
     /** @inheritdoc */
-    public function getReportChartScript($results)
+    public function restructureSavedReportOldJson($result)
     {
-        return json_encode($results['results']['chart']);
+        return $result;
     }
 
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
-        // Return data to build chart
-        return array_merge($json, [
-            'template' => 'bandwidth-report-preview',
-            'savedReport' => $savedReport,
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
-        ]);
+        // Report result object
+        return new ReportResult(
+            [
+                'periodStart' => $json['metadata']['periodStart'],
+                'periodEnd' => $json['metadata']['periodEnd'],
+                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+                    ->format(DateFormatHelper::getSystemFormat()),
+                'title' => $savedReport->saveAs,
+            ],
+            $json['table'],
+            0,
+            $json['chart'],
+            true
+        );
     }
 
     /** @inheritdoc */
-    public function getResults($filterCriteria)
+    public function getResults(SanitizerInterface $sanitizedParams)
     {
-        $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
-
-        $sanitizedParams = $this->getSanitizer($filterCriteria);
-
         //
         // From and To Date Selection
         // --------------------------
@@ -209,7 +158,6 @@ class Bandwidth implements ReportInterface
 
         // Bandwidth report does not support weekly as bandwidth has monthly records in DB
         switch ($reportFilter) {
-
             // Daily report if setup which has reportfilter = yesterday will be daily progression of bandwidth usage
             // It always starts from the start of the month so we get the month usage
             case 'yesterday':
@@ -268,18 +216,20 @@ class Bandwidth implements ReportInterface
 
         $SQL = 'SELECT display.display, IFNULL(SUM(Size), 0) AS size ';
 
-        if ($displayId != 0)
+        if ($displayId != 0) {
             $SQL .= ', bandwidthtype.name AS type ';
+        }
 
         $SQL .= ' FROM `bandwidth`
                 LEFT OUTER JOIN `display`
                 ON display.displayid = bandwidth.displayid AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
-        if ($displayId != 0)
+        if ($displayId != 0) {
             $SQL .= '
                     INNER JOIN bandwidthtype
                     ON bandwidthtype.bandwidthtypeid = bandwidth.type
                 ';
+        }
 
         $SQL .= '  WHERE month > :month
                 AND month < :month2 ';
@@ -291,8 +241,9 @@ class Bandwidth implements ReportInterface
 
         $SQL .= 'GROUP BY display.display ';
 
-        if ($displayId != 0)
+        if ($displayId != 0) {
             $SQL .= ' , bandwidthtype.name ';
+        }
 
         $SQL .= 'ORDER BY display.display';
 
@@ -316,7 +267,6 @@ class Bandwidth implements ReportInterface
         $backgroundColor = [];
 
         foreach ($results as $row) {
-
             // label depends whether we are filtered by display
             if ($displayId != 0) {
                 $labels[] = $row['type'];
@@ -333,49 +283,46 @@ class Bandwidth implements ReportInterface
         //
         // Output Results
         // --------------
-
-        // Return data to build chart
-        return [
-            'hasData' => count($data) > 0,
-            'chart' => [
-                'type' => 'bar',
-                'data' => [
-                    'labels' => $labels,
-                    'datasets' => [
+        $chart = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [
+                    [
+                        'label' => __('Bandwidth'),
+                        'backgroundColor' => $backgroundColor,
+                        'data' => $data
+                    ]
+                ]
+            ],
+            'options' => [
+                'scales' => [
+                    'yAxes' => [
                         [
-                            'label' => __('Bandwidth'),
-                            'backgroundColor' => $backgroundColor,
-                            'data' => $data
+                            'scaleLabel' =>  [
+                                'display' =>  true,
+                                'labelString' =>  (isset($suffixes[$base]) ? $suffixes[$base] : '')
+                            ]
                         ]
                     ]
                 ],
-                'options' => [
-                    'scales' => [
-                        'yAxes' => [
-                            [
-                                'scaleLabel' =>  [
-                                    'display' =>  true,
-                                    'labelString' =>  (isset($suffixes[$base]) ? $suffixes[$base] : '')
-                                ]
-                            ]
-                        ]
-                    ],
-                    'legend' =>  [
-                        'display' => false
-                    ],
-                    'maintainAspectRatio' => true
-                ]
-            ],
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-
+                'legend' =>  [
+                    'display' => false
+                ],
+                'maintainAspectRatio' => true
+            ]
         ];
 
-    }
-
-    /** @inheritdoc */
-    public function restructureSavedReportOldJson($result)
-    {
-        return $result;
+        // Return data to build chart
+        return new ReportResult(
+            [
+                'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            ],
+            [],
+            0,
+            $chart,
+            count($data) > 0
+        );
     }
 }

@@ -25,9 +25,9 @@
     <img class="logo right" src="{{ logo }}">
 </div>
 <div class="header">{{ header }}</div>
-<div class="title">{{ title }} <span class="small">({% trans "Generated on: " %}{{ generatedOn }})</span></div>
+<div class="title">{{ title }} <span class="small">({% trans "Generated on: " %}{{ metadata.generatedOn }})</span></div>
 <div>
-    <span class="small">{% trans "From" %} {{ periodStart }} {% trans "To" %} {{ periodEnd }}</span>
+    <span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span>
 </div>
 <span class="small" style="background-color: #d2d2d2; width:150px;">Grey is disconnected %</span>
 <span class="small" style="background-color: #5cb85c; width:150px;">Green is connected %</span>

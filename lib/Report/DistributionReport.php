@@ -5,14 +5,14 @@ namespace Xibo\Report;
 use Carbon\Carbon;
 use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
-use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\ReportForm;
+use Xibo\Entity\ReportResult;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Translate;
@@ -23,6 +23,7 @@ use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class DistributionReport
@@ -31,7 +32,7 @@ use Xibo\Support\Exception\NotFoundException;
 class DistributionReport implements ReportInterface
 {
 
-    use ReportTrait;
+    use ReportDefaultTrait;
 
     /**
      * @var DisplayFactory
@@ -54,11 +55,6 @@ class DistributionReport implements ReportInterface
     private $savedReportFactory;
 
     /**
-     * @var UserFactory
-     */
-    private $userFactory;
-
-    /**
      * @var DisplayGroupFactory
      */
     private $displayGroupFactory;
@@ -72,20 +68,6 @@ class DistributionReport implements ReportInterface
 
     private $periodTable = 'period';
 
-    /**
-     * Report Constructor.
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param StorageServiceInterface $store
-     * @param TimeSeriesStoreInterface $timeSeriesStore
-     * @param LogServiceInterface $log
-     * @param ConfigServiceInterface $config
-     * @param SanitizerService $sanitizer
-     */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $sanitizer)
-    {
-        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $sanitizer);
-    }
-
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
     {
@@ -93,11 +75,16 @@ class DistributionReport implements ReportInterface
         $this->mediaFactory = $container->get('mediaFactory');
         $this->layoutFactory = $container->get('layoutFactory');
         $this->savedReportFactory = $container->get('savedReportFactory');
-        $this->userFactory = $container->get('userFactory');
         $this->displayGroupFactory = $container->get('displayGroupFactory');
         $this->reportService = $container->get('reportService');
 
         return $this;
+    }
+
+    /** @inheritdoc */
+    public function getReportChartScript($results)
+    {
+        return json_encode($results->chart);
     }
 
     /** @inheritdoc */
@@ -107,39 +94,43 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportForm()
+    public function getSavedReportTemplate()
     {
-        return [
-            'template' => 'distribution-report-form',
-            'data' =>  [
-                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
-                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
-                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
-                'availableReports' => $this->reportService->listReports()
-            ]
-        ];
+        return 'distribution-report-preview';
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(Request $request)
+    public function getReportForm()
     {
-        $type = $request->getParam('type', '');
+        return new ReportForm(
+            'distribution-report-form',
+            'distributionReport',
+            'Proof of Play',
+            [
+                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            ],
+            __('Select a type and an item (i.e., layout/media/tag)')
+        );
+    }
+
+    /** @inheritdoc */
+    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    {
+        $type = $sanitizedParams->getString('type');
 
         if ($type == 'layout') {
-            $selectedId = $request->getParam('layoutId', null);
+            $selectedId = $sanitizedParams->getInt('layoutId');
             $title = __('Add Report Schedule for '). $type. ' - '.
                 $this->layoutFactory->getById($selectedId)->layout;
-
-        } else if ($type == 'media') {
-            $selectedId = $request->getParam('mediaId', null);
+        } elseif ($type == 'media') {
+            $selectedId = $sanitizedParams->getInt('mediaId');
             $title = __('Add Report Schedule for '). $type. ' - '.
                 $this->mediaFactory->getById($selectedId)->name;
-
-        } else if ($type == 'event') {
+        } elseif ($type == 'event') {
             $selectedId = 0; // we only need eventTag
-            $eventTag = $request->getParam('eventTag', null);
+            $eventTag = $sanitizedParams->getString('eventTag');
             $title = __('Add Report Schedule for '). $type. ' - '. $eventTag;
-
         }
 
         $data = [];
@@ -161,15 +152,12 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function setReportScheduleFormData(Request $request)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
         $filter = $sanitizedParams->getString('filter');
         $groupByFilter = $sanitizedParams->getString('groupByFilter');
         $displayId = $sanitizedParams->getInt('displayId');
         $hiddenFields = json_decode($sanitizedParams->getString('hiddenFields'), true);
-
 
         $type = $hiddenFields['type'];
         $selectedId = $hiddenFields['selectedId'];
@@ -179,9 +167,9 @@ class DistributionReport implements ReportInterface
         $filterCriteria['type'] = $type;
         if ($type == 'layout') {
             $filterCriteria['layoutId'] = $selectedId;
-        } else if ($type == 'media') {
+        } elseif ($type == 'media') {
             $filterCriteria['mediaId'] = $selectedId;
-        } else if ($type == 'event') {
+        } elseif ($type == 'event') {
             $filterCriteria['eventTag'] = $eventTag;
         }
 
@@ -192,18 +180,15 @@ class DistributionReport implements ReportInterface
             $schedule = ReportSchedule::$SCHEDULE_DAILY;
             $filterCriteria['reportFilter'] = 'yesterday';
             $filterCriteria['groupByFilter'] = $groupByFilter;
-
-        } else if ($filter == 'weekly') {
+        } elseif ($filter == 'weekly') {
             $schedule = ReportSchedule::$SCHEDULE_WEEKLY;
             $filterCriteria['reportFilter'] = 'lastweek';
             $filterCriteria['groupByFilter'] = $groupByFilter;
-
-        } else if ($filter == 'monthly') {
+        } elseif ($filter == 'monthly') {
             $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
             $filterCriteria['reportFilter'] = 'lastmonth';
             $filterCriteria['groupByFilter'] = $groupByFilter;
-
-        } else if ($filter == 'yearly') {
+        } elseif ($filter == 'yearly') {
             $schedule = ReportSchedule::$SCHEDULE_YEARLY;
             $filterCriteria['reportFilter'] = 'lastyear';
             $filterCriteria['groupByFilter'] = $groupByFilter;
@@ -220,44 +205,39 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName($filterCriteria)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
     {
-        if ($filterCriteria['type'] == 'layout') {
+        $type = $sanitizedParams->getString('type');
+        $filter = $sanitizedParams->getString('filter');
+
+        if ($type == 'layout') {
             try {
-                $layout = $this->layoutFactory->getById($filterCriteria['layoutId']);
-
+                $layout = $this->layoutFactory->getById($sanitizedParams->getInt('layoutId'));
             } catch (NotFoundException $error) {
-
                 // Get the campaign ID
-                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($filterCriteria['layoutId']);
+                $campaignId = $this->layoutFactory->getCampaignIdFromLayoutHistory($sanitizedParams->getInt('layoutId'));
                 $layoutId = $this->layoutFactory->getLatestLayoutIdFromLayoutHistory($campaignId);
                 $layout = $this->layoutFactory->getById($layoutId);
-
             }
 
-            $saveAs = sprintf(__('%s report for Layout %s', ucfirst($filterCriteria['filter']), $layout->layout));
-
-        } else if ($filterCriteria['type'] == 'media') {
+            $saveAs = sprintf(__('%s report for Layout %s', ucfirst($filter), $layout->layout));
+        } elseif ($type == 'media') {
             try {
-                $media = $this->mediaFactory->getById($filterCriteria['mediaId']);
-                $saveAs = sprintf(__('%s report for Media %s', ucfirst($filterCriteria['filter']), $media->name));
-
+                $media = $this->mediaFactory->getById($sanitizedParams->getInt('mediaId'));
+                $saveAs = sprintf(__('%s report for Media %s', ucfirst($filter), $media->name));
             } catch (NotFoundException $error) {
                 $saveAs = __('Media not found');
             }
-
-        } else if ($filterCriteria['type'] == 'event') {
-            $saveAs = sprintf(__('%s report for Event %s', ucfirst($filterCriteria['filter']), $filterCriteria['eventTag']));
+        } elseif ($type == 'event') {
+            $saveAs = sprintf(__('%s report for Event %s', ucfirst($filter), $sanitizedParams->getString('eventTag')));
         }
 
         if (!empty($filterCriteria['displayId'])) {
-
             // Get display
-            try{
+            try {
                 $displayName = $this->displayFactory->getById($filterCriteria['displayId'])->display;
                 $saveAs .= ' ('. __('Display') . ': '. $displayName . ')';
-
-            } catch (NotFoundException $error){
+            } catch (NotFoundException $error) {
                 $saveAs .= ' '.__('(DisplayId: Not Found)');
             }
         }
@@ -266,29 +246,99 @@ class DistributionReport implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportChartScript($results)
+    public function restructureSavedReportOldJson($result)
     {
-        return json_encode($results['results']['chart']);
+        $durationData = $result['durationData'];
+        $countData = $result['countData'];
+        $labels = $result['labels'];
+        $backgroundColor = $result['backgroundColor'];
+        $borderColor = $result['borderColor'];
+        $periodStart = $result['periodStart'];
+        $periodEnd = $result['periodEnd'];
+
+        return [
+            'hasData' => count($durationData) > 0 && count($countData) > 0,
+            'chart' => [
+                'type' => 'bar',
+                'data' => [
+                    'labels' => $labels,
+                    'datasets' => [
+                        [
+                            'label' => __('Total duration'),
+                            'yAxisID' => 'Duration',
+                            'backgroundColor' => $backgroundColor,
+                            'data' => $durationData
+                        ],
+                        [
+                            'label' => __('Total count'),
+                            'yAxisID' => 'Count',
+                            'borderColor' => $borderColor,
+                            'type' => 'line',
+                            'fill' => false,
+                            'data' =>  $countData
+                        ]
+                    ]
+                ],
+                'options' => [
+                    'scales' => [
+                        'yAxes' => [
+                            [
+                                'id' => 'Duration',
+                                'type' => 'linear',
+                                'position' =>  'left',
+                                'display' =>  true,
+                                'scaleLabel' =>  [
+                                    'display' =>  true,
+                                    'labelString' => __('Duration(s)')
+                                ],
+                                'ticks' =>  [
+                                    'beginAtZero' => true
+                                ]
+                            ], [
+                                'id' => 'Count',
+                                'type' => 'linear',
+                                'position' =>  'right',
+                                'display' =>  true,
+                                'scaleLabel' =>  [
+                                    'display' =>  true,
+                                    'labelString' => __('Count')
+                                ],
+                                'ticks' =>  [
+                                    'beginAtZero' => true
+                                ]
+                            ]
+                        ]
+                    ]
+                ]
+            ],
+            'periodStart' => $periodStart,
+            'periodEnd' => $periodEnd,
+
+        ];
     }
 
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
-        // Return data to build chart
-        return array_merge($json, [
-            'template' => 'distribution-report-preview',
-            'savedReport' => $savedReport,
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
-        ]);
+        // Report result object
+        return new ReportResult(
+            [
+                'periodStart' => $json['metadata']['periodStart'],
+                'periodEnd' => $json['metadata']['periodEnd'],
+                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+                    ->format(DateFormatHelper::getSystemFormat()),
+                'title' => $savedReport->saveAs,
+            ],
+            $json['table'],
+            0,
+            $json['chart'],
+            true
+        );
     }
 
     /** @inheritdoc */
-    public function getResults($filterCriteria)
+    public function getResults(SanitizerInterface $sanitizedParams)
     {
-        $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
-
-        $sanitizedParams = $this->getSanitizer($filterCriteria);
-
         $type = strtolower($sanitizedParams->getString('type'));
         $layoutId = $sanitizedParams->getInt('layoutId');
         $mediaId = $sanitizedParams->getInt('mediaId');
@@ -339,7 +389,6 @@ class DistributionReport implements ReportInterface
         $now = Carbon::now();
 
         switch ($reportFilter) {
-
             case 'today':
                 $fromDt = $now->copy()->startOfDay();
                 $toDt = $fromDt->copy()->addDay();
@@ -430,75 +479,79 @@ class DistributionReport implements ReportInterface
                 $backgroundColor[] = 'rgb(95, 186, 218, 0.6)';
                 $borderColor[] = 'rgb(240,93,41, 0.8)';
 
-                $count = $this->getSanitizer($row)->getInt('NumberPlays');
+                $count = $row['NumberPlays'];
                 $countData[] = ($count == '') ? 0 : $count;
 
-                $duration = $this->getSanitizer($row)->getInt('Duration');
+                $duration = $row['Duration'];
                 $durationData[] = ($duration == '') ? 0 : $duration;
             }
         }
 
-        // Return data to build chart
-        return [
-            'hasData' => count($durationData) > 0 && count($countData) > 0,
-            'chart' => [
-                'type' => 'bar',
-                'data' => [
-                    'labels' => $labels,
-                    'datasets' => [
-                        [
-                            'label' => __('Total duration'),
-                            'yAxisID' => 'Duration',
-                            'backgroundColor' => $backgroundColor,
-                            'data' => $durationData
-                        ],
-                        [
-                            'label' => __('Total count'),
-                            'yAxisID' => 'Count',
-                            'borderColor' => $borderColor,
-                            'type' => 'line',
-                            'fill' => false,
-                            'data' =>  $countData
-                        ]
+        $chart = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $labels,
+                'datasets' => [
+                    [
+                        'label' => __('Total duration'),
+                        'yAxisID' => 'Duration',
+                        'backgroundColor' => $backgroundColor,
+                        'data' => $durationData
+                    ],
+                    [
+                        'label' => __('Total count'),
+                        'yAxisID' => 'Count',
+                        'borderColor' => $borderColor,
+                        'type' => 'line',
+                        'fill' => false,
+                        'data' =>  $countData
                     ]
-                ],
-                'options' => [
-                    'scales' => [
-                        'yAxes' => [
-                            [
-                                'id' => 'Duration',
-                                'type' => 'linear',
-                                'position' =>  'left',
+                ]
+            ],
+            'options' => [
+                'scales' => [
+                    'yAxes' => [
+                        [
+                            'id' => 'Duration',
+                            'type' => 'linear',
+                            'position' =>  'left',
+                            'display' =>  true,
+                            'scaleLabel' =>  [
                                 'display' =>  true,
-                                'scaleLabel' =>  [
-                                    'display' =>  true,
-                                    'labelString' => __('Duration(s)')
-                                ],
-                                'ticks' =>  [
-                                    'beginAtZero' => true
-                                ]
-                            ], [
-                                'id' => 'Count',
-                                'type' => 'linear',
-                                'position' =>  'right',
+                                'labelString' => __('Duration(s)')
+                            ],
+                            'ticks' =>  [
+                                'beginAtZero' => true
+                            ]
+                        ], [
+                            'id' => 'Count',
+                            'type' => 'linear',
+                            'position' =>  'right',
+                            'display' =>  true,
+                            'scaleLabel' =>  [
                                 'display' =>  true,
-                                'scaleLabel' =>  [
-                                    'display' =>  true,
-                                    'labelString' => __('Count')
-                                ],
-                                'ticks' =>  [
-                                    'beginAtZero' => true
-                                ]
+                                'labelString' => __('Count')
+                            ],
+                            'ticks' =>  [
+                                'beginAtZero' => true
                             ]
                         ]
                     ]
                 ]
-            ],
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-
+            ]
         ];
 
+        // Return data to build chart
+        return new ReportResult(
+            [
+                'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            ],
+            [],
+            0,
+            $chart,
+            count($durationData) > 0 && count($countData) > 0
+        );
     }
 
     /**
@@ -517,8 +570,7 @@ class DistributionReport implements ReportInterface
     private function getDistributionReportMySql($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag)
     {
         // Only return something if we have the necessary options selected.
-        if (
-            (($type == 'media') && ($mediaId != ''))
+        if ((($type == 'media') && ($mediaId != ''))
             || (($type == 'layout') && ($layoutId != ''))
             || (($type == 'event') && ($eventTag != ''))
         ) {
@@ -586,14 +638,12 @@ class DistributionReport implements ReportInterface
                     AND `stat`.campaignId = (SELECT campaignId FROM layouthistory WHERE layoutId = :layoutId) 
                 ';
                 $params['layoutId'] = $layoutId;
-
             } elseif (($type == 'media') && ($mediaId != '')) {
                 // Filter by Media
                 $select .= '
                     AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 
                     AND `stat`.mediaId = :mediaId ';
                 $params['mediaId'] = $mediaId;
-
             } elseif (($type == 'event') && ($eventTag != '')) {
                 // Filter by Event
                 $select .= '
@@ -626,7 +676,6 @@ class DistributionReport implements ReportInterface
                 'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
                 'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat())
             ];
-
         } else {
             return [];
         }
@@ -634,10 +683,9 @@ class DistributionReport implements ReportInterface
 
     private function getDistributionReportMongoDb($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag)
     {
-        if ( (($type == 'media') && ($mediaId != '')) ||
+        if ((($type == 'media') && ($mediaId != '')) ||
             (($type == 'layout') && ($layoutId != '')) ||
-            (($type == 'event') && ($eventTag != '')) ) {
-
+            (($type == 'event') && ($eventTag != ''))) {
             // Get the timezone
             $timezone = Carbon::parse()->getTimezone()->getName();
             $filterRangeStart = new UTCDateTime($fromDt->format('U') * 1000);
@@ -783,9 +831,7 @@ class DistributionReport implements ReportInterface
             $periods = $this->getTimeSeriesStore()->executeQuery(['collection' => $this->periodTable, 'query' => $cursorPeriodQuery]);
 
             // We extend the stat start and stat end so that we can push required periods for them
-            if ( ($groupByFilter == 'bydayofweek') || ($groupByFilter == 'bydayofmonth') )
-
-            {
+            if (($groupByFilter == 'bydayofweek') || ($groupByFilter == 'bydayofmonth')) {
                 $datePartStart = [
                     '$dateFromParts' =>  [
                         'year' => [
@@ -813,9 +859,7 @@ class DistributionReport implements ReportInterface
                         ],
                     ]
                 ];
-
             } else { // by hour
-
                 $datePartStart = [
                     '$dateFromParts' =>  [
                         'year' => [
@@ -1186,10 +1230,9 @@ class DistributionReport implements ReportInterface
             $day = [ 1 => 'Mon', 2 => 'Tues', 3 => 'Wed', 4 => 'Thu', 5 => 'Fri', 6 => 'Sat', 7 => 'Sun'];
 
             foreach ($periods as $key => $period) {
-
                 $id = $period['id'];
 
-                if($groupByFilter == 'byhour'){
+                if ($groupByFilter == 'byhour') {
                     $label = Carbon::createFromTimestamp($period['start']->toDateTime()->format('U'))->format('g:i A');
                 } elseif ($groupByFilter == 'bydayofweek') {
                     $label = $day[$id];
@@ -1199,27 +1242,24 @@ class DistributionReport implements ReportInterface
 
                 $matched = false;
                 foreach ($results as $k => $result) {
-                  if( $result['id'] == $period['id'] ) {
+                    if ($result['id'] == $period['id']) {
+                        $NumberPlays = $result['NumberPlays'];
+                        $Duration = $result['Duration'];
 
-                      $NumberPlays = $result['NumberPlays'];
-                      $Duration = $result['Duration'];
-
-                      $matched = true;
-                      break;
-                  }
+                        $matched = true;
+                        break;
+                    }
                 }
                 
                 $resultArray[$key]['id'] = $id;
                 $resultArray[$key]['label'] = $label;
 
-                if($matched == true) {
+                if ($matched == true) {
                     $resultArray[$key]['NumberPlays'] = $NumberPlays;
                     $resultArray[$key]['Duration'] = $Duration;
-
                 } else {
                     $resultArray[$key]['NumberPlays'] = 0;
                     $resultArray[$key]['Duration'] = 0;
-
                 }
             }
 
@@ -1230,81 +1270,8 @@ class DistributionReport implements ReportInterface
                 'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
                 'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat())
             ];
-
         } else {
             return [];
         }
-    }
-
-    /** @inheritdoc */
-    public function restructureSavedReportOldJson($result)
-    {
-        $durationData = $result['durationData'];
-        $countData = $result['countData'];
-        $labels = $result['labels'];
-        $backgroundColor = $result['backgroundColor'];
-        $borderColor = $result['borderColor'];
-        $periodStart = $result['periodStart'];
-        $periodEnd = $result['periodEnd'];
-
-        return [
-            'hasData' => count($durationData) > 0 && count($countData) > 0,
-            'chart' => [
-                'type' => 'bar',
-                'data' => [
-                    'labels' => $labels,
-                    'datasets' => [
-                        [
-                            'label' => __('Total duration'),
-                            'yAxisID' => 'Duration',
-                            'backgroundColor' => $backgroundColor,
-                            'data' => $durationData
-                        ],
-                        [
-                            'label' => __('Total count'),
-                            'yAxisID' => 'Count',
-                            'borderColor' => $borderColor,
-                            'type' => 'line',
-                            'fill' => false,
-                            'data' =>  $countData
-                        ]
-                    ]
-                ],
-                'options' => [
-                    'scales' => [
-                        'yAxes' => [
-                            [
-                                'id' => 'Duration',
-                                'type' => 'linear',
-                                'position' =>  'left',
-                                'display' =>  true,
-                                'scaleLabel' =>  [
-                                    'display' =>  true,
-                                    'labelString' => __('Duration(s)')
-                                ],
-                                'ticks' =>  [
-                                    'beginAtZero' => true
-                                ]
-                            ], [
-                                'id' => 'Count',
-                                'type' => 'linear',
-                                'position' =>  'right',
-                                'display' =>  true,
-                                'scaleLabel' =>  [
-                                    'display' =>  true,
-                                    'labelString' => __('Count')
-                                ],
-                                'ticks' =>  [
-                                    'beginAtZero' => true
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ],
-            'periodStart' => $periodStart,
-            'periodEnd' => $periodEnd,
-
-        ];
     }
 }

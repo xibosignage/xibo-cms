@@ -705,21 +705,22 @@ $app->group('', function (RouteCollectorProxy $group) {
  * )
  */
 
-$app->get('/report/reportschedule', ['\Xibo\Controller\Report','reportScheduleGrid'])->setName('reportschedule.search');
+$app->get('/report/reportschedule', ['\Xibo\Controller\ScheduleReport','reportScheduleGrid'])->setName('reportschedule.search');
 $app->group('', function (RouteCollectorProxy $group) {
-    $group->post('/report/reportschedule', ['\Xibo\Controller\Report','reportScheduleAdd'])->setName('reportschedule.add');
-    $group->put('/report/reportschedule/{id}', ['\Xibo\Controller\Report','reportScheduleEdit'])->setName('reportschedule.edit');
-    $group->delete('/report/reportschedule/{id}', ['\Xibo\Controller\Report','reportScheduleDelete'])->setName('reportschedule.delete');
-    $group->post('/report/reportschedule/{id}/deletesavedreport', ['\Xibo\Controller\Report','reportScheduleDeleteAllSavedReport'])->setName('reportschedule.deleteall');
-    $group->post('/report/reportschedule/{id}/toggleactive', ['\Xibo\Controller\Report','reportScheduleToggleActive'])->setName('reportschedule.toggleactive');
-    $group->post('/report/reportschedule/{id}/reset', ['\Xibo\Controller\Report','reportScheduleReset'])->setName('reportschedule.reset');
+    $group->post('/report/reportschedule', ['\Xibo\Controller\ScheduleReport','reportScheduleAdd'])->setName('reportschedule.add');
+    $group->put('/report/reportschedule/{id}', ['\Xibo\Controller\ScheduleReport','reportScheduleEdit'])->setName('reportschedule.edit');
+    $group->delete('/report/reportschedule/{id}', ['\Xibo\Controller\ScheduleReport','reportScheduleDelete'])->setName('reportschedule.delete');
+    $group->post('/report/reportschedule/{id}/deletesavedreport', ['\Xibo\Controller\ScheduleReport','reportScheduleDeleteAllSavedReport'])->setName('reportschedule.deleteall');
+    $group->post('/report/reportschedule/{id}/toggleactive', ['\Xibo\Controller\ScheduleReport','reportScheduleToggleActive'])->setName('reportschedule.toggleactive');
+    $group->post('/report/reportschedule/{id}/reset', ['\Xibo\Controller\ScheduleReport','reportScheduleReset'])->setName('reportschedule.reset');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['report.scheduling']));
 
 //
 // Saved reports
 //
-$app->get('/report/savedreport', ['\Xibo\Controller\Report','savedReportGrid'])->setName('savedreport.search');
-$app->delete('/report/savedreport/{id}', ['\Xibo\Controller\Report','savedReportDelete'])
+$app->get('/report/savedreport', ['\Xibo\Controller\SavedReport','savedReportGrid'])
+    ->setName('savedreport.search');
+$app->delete('/report/savedreport/{id}', ['\Xibo\Controller\SavedReport','savedReportDelete'])
     ->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['report.saving']))
     ->setName('savedreport.delete');
 
