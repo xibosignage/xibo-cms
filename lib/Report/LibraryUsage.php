@@ -6,6 +6,9 @@ use Carbon\Carbon;
 use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Controller\DataTablesDotNetTrait;
+use Xibo\Entity\ReportForm;
+use Xibo\Entity\ReportResult;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -14,17 +17,14 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
+use Xibo\Helper\ApplicationState;
 use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Translate;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
-use Xibo\Storage\TimeSeriesStoreInterface;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class LibraryUsage
@@ -32,8 +32,7 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class LibraryUsage implements ReportInterface
 {
-
-    use ReportTrait;
+    use ReportDefaultTrait, DataTablesDotNetTrait;
 
     /**
      * @var DisplayFactory
@@ -76,32 +75,38 @@ class LibraryUsage implements ReportInterface
     private $reportService;
 
     /**
-     * Report Constructor.
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param StorageServiceInterface $store
-     * @param TimeSeriesStoreInterface $timeSeriesStore
-     * @param LogServiceInterface $log
-     * @param ConfigServiceInterface $config
-     * @param SanitizerService $sanitizer
+     * @var ConfigServiceInterface
      */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $sanitizer)
-    {
-        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $sanitizer);
-    }
+    private $configService;
+
+    /**
+     * @var SanitizerService
+     */
+    private $sanitizer;
+
+    /**
+     * @var ApplicationState
+     */
+    private $state;
 
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
     {
-        $this->displayFactory = $container->get('displayFactory');
         $this->mediaFactory = $container->get('mediaFactory');
-        $this->layoutFactory = $container->get('layoutFactory');
-        $this->savedReportFactory = $container->get('savedReportFactory');
         $this->userFactory = $container->get('userFactory');
         $this->userGroupFactory = $container->get('userGroupFactory');
-        $this->displayGroupFactory = $container->get('displayGroupFactory');
         $this->reportService = $container->get('reportService');
+        $this->configService = $container->get('configService');
+        $this->sanitizer = $container->get('sanitizerService');
+        $this->state = $container->get('state');
 
         return $this;
+    }
+
+    /** @inheritdoc */
+    public function getReportChartScript($results)
+    {
+        return json_encode($results->chart);
     }
 
     /** @inheritdoc */
@@ -111,94 +116,14 @@ class LibraryUsage implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(Request $request)
+    public function getSavedReportTemplate()
     {
-        $title = __('Add Report Schedule');
-
-        $data = [];
-
-        $data['formTitle'] = $title;
-        $data['reportName'] = 'libraryusage';
-        $data['users'] = $this->userFactory->query();
-        $data['groups'] = $this->userGroupFactory->query();
-
-        return [
-            'template' => 'libraryusage-schedule-form-add',
-            'data' => $data
-        ];
-    }
-
-    /** @inheritdoc */
-    public function setReportScheduleFormData(Request $request)
-    {
-
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
-        $filter = $sanitizedParams->getString('filter');
-
-        $userId = $sanitizedParams->getInt('userId');
-        $filterCriteria['userId'] = $userId;
-
-        $groupId = $sanitizedParams->getInt('groupId');
-        $filterCriteria['groupId'] = $groupId;
-
-        $filterCriteria['filter'] = $filter;
-
-        $schedule = '';
-        if ($filter == 'daily') {
-            $schedule = ReportSchedule::$SCHEDULE_DAILY;
-            $filterCriteria['reportFilter'] = 'yesterday';
-
-        } else if ($filter == 'weekly') {
-            $schedule = ReportSchedule::$SCHEDULE_WEEKLY;
-            $filterCriteria['reportFilter'] = 'lastweek';
-
-        } else if ($filter == 'monthly') {
-            $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
-            $filterCriteria['reportFilter'] = 'lastmonth';
-
-        } else if ($filter == 'yearly') {
-            $schedule = ReportSchedule::$SCHEDULE_YEARLY;
-            $filterCriteria['reportFilter'] = 'lastyear';
-        }
-
-        $filterCriteria['sendEmail'] = $sanitizedParams->getCheckbox('sendEmail');
-        $filterCriteria['nonusers'] = $sanitizedParams->getString('nonusers');
-
-        // Return
-        return [
-            'filterCriteria' => json_encode($filterCriteria),
-            'schedule' => $schedule
-        ];
-    }
-
-    /** @inheritdoc */
-    public function generateSavedReportName($filterCriteria)
-    {        
-        return sprintf(__('%s library usage report', ucfirst($filterCriteria['filter'])));
-    }
-
-    /** @inheritdoc */
-    public function getReportChartScript($results)
-    {
-        return json_encode($results['results']['chart']);
-    }
-
-    /** @inheritdoc */
-    public function getSavedReportResults($json, $savedReport)
-    {
-        // Return data to build chart
-        return array_merge($json, [
-            'template' => 'libraryusage-report-preview',
-            'savedReport' => $savedReport,
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
-        ]);
+        return 'libraryusage-report-preview';
     }
 
     /** @inheritdoc */
     public function getReportForm()
     {
-
         $data = [];
 
         // Set up some suffixes
@@ -209,7 +134,7 @@ class LibraryUsage implements ReportInterface
             if ($this->userFactory->getUser()->libraryQuota != 0) {
                 $libraryLimit = $this->userFactory->getUser()->libraryQuota * 1024;
             } else {
-                $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+                $libraryLimit = $this->configService->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
             }
 
             // Library Size in Bytes
@@ -267,7 +192,6 @@ class LibraryUsage implements ReportInterface
             $data['librarySuffix'] = $suffixes[$base];
             $data['libraryWidgetLabels'] = json_encode($libraryLabels);
             $data['libraryWidgetData'] = json_encode($libraryUsage);
-
         } catch (\Exception $exception) {
             $this->getLog()->error('Error rendering the library stats page widget');
         }
@@ -276,19 +200,110 @@ class LibraryUsage implements ReportInterface
         $data['groups'] = $this->userGroupFactory->query();
         $data['availableReports'] = $this->reportService->listReports();
 
+        return new ReportForm(
+            'libraryusage-report-form',
+            'libraryusage',
+            'Library',
+            $data
+        );
+    }
+
+    /** @inheritdoc */
+    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
+    {
+        $title = __('Add Report Schedule');
+
+        $data = [];
+
+        $data['formTitle'] = $title;
+        $data['reportName'] = 'libraryusage';
+        $data['users'] = $this->userFactory->query();
+        $data['groups'] = $this->userGroupFactory->query();
+
         return [
-            'template' => 'libraryusage-report-form',
-            'data' =>  $data
+            'template' => 'libraryusage-schedule-form-add',
+            'data' => $data
         ];
     }
 
     /** @inheritdoc */
-    public function getResults($filterCriteria)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
+        $filter = $sanitizedParams->getString('filter');
 
-        $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
+        $userId = $sanitizedParams->getInt('userId');
+        $filterCriteria['userId'] = $userId;
 
-        $sanitizedParams = $this->getSanitizer($filterCriteria);
+        $groupId = $sanitizedParams->getInt('groupId');
+        $filterCriteria['groupId'] = $groupId;
+
+        $filterCriteria['filter'] = $filter;
+
+        $schedule = '';
+        if ($filter == 'daily') {
+            $schedule = ReportSchedule::$SCHEDULE_DAILY;
+            $filterCriteria['reportFilter'] = 'yesterday';
+        } elseif ($filter == 'weekly') {
+            $schedule = ReportSchedule::$SCHEDULE_WEEKLY;
+            $filterCriteria['reportFilter'] = 'lastweek';
+        } elseif ($filter == 'monthly') {
+            $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
+            $filterCriteria['reportFilter'] = 'lastmonth';
+        } elseif ($filter == 'yearly') {
+            $schedule = ReportSchedule::$SCHEDULE_YEARLY;
+            $filterCriteria['reportFilter'] = 'lastyear';
+        }
+
+        $filterCriteria['sendEmail'] = $sanitizedParams->getCheckbox('sendEmail');
+        $filterCriteria['nonusers'] = $sanitizedParams->getString('nonusers');
+
+        // Return
+        return [
+            'filterCriteria' => json_encode($filterCriteria),
+            'schedule' => $schedule
+        ];
+    }
+
+    /** @inheritdoc */
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
+    {
+        return sprintf(__('%s library usage report', ucfirst($sanitizedParams->getString('filter'))));
+    }
+
+    /** @inheritdoc */
+    public function restructureSavedReportOldJson($result)
+    {
+        return $result;
+    }
+
+    /** @inheritdoc */
+    public function getSavedReportResults($json, $savedReport)
+    {
+        // Report result object
+        return new ReportResult(
+            [
+                'periodStart' => $json['metadata']['periodStart'],
+                'periodEnd' => $json['metadata']['periodEnd'],
+                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+                    ->format(DateFormatHelper::getSystemFormat()),
+                'title' => $savedReport->saveAs,
+            ],
+            $json['table'],
+            0,
+            $json['chart'],
+            true
+        );
+    }
+
+    /** @inheritdoc */
+    public function getResults(SanitizerInterface $sanitizedParams)
+    {
+        $filter = [
+            'userId' => $sanitizedParams->getInt('userId'),
+            'groupId' => $sanitizedParams->getInt('groupId'),
+            'start' => $sanitizedParams->getInt('start'),
+            'length' => $sanitizedParams->getInt('length'),
+        ];
 
         //
         // From and To Date Selection
@@ -301,7 +316,6 @@ class LibraryUsage implements ReportInterface
         $now = Carbon::now();
 
         switch ($reportFilter) {
-
             // the monthly data starts from yesterday
             case 'yesterday':
                 $fromDt = $now->copy()->startOfDay()->subDay();
@@ -358,7 +372,7 @@ class LibraryUsage implements ReportInterface
             $filterBy['currentUserId'] = $this->userFactory->getUser()->userId;
         }
         // Group admins can only see users from their groups.
-        else if ($this->userFactory->getUser()->userTypeId == 2) {
+        elseif ($this->userFactory->getUser()->userTypeId == 2) {
             $permissions .= '
                 AND user.userId IN (
                     SELECT `otherUserLinks`.userId
@@ -393,17 +407,18 @@ class LibraryUsage implements ReportInterface
         ';
 
         // Sorting?
-        $filterBy = $this->gridRenderFilter($filterCriteria);
-        $sortOrder = $this->gridRenderSort($filterCriteria);
+        $filterBy = $this->gridRenderFilter($filter);
+        $sortOrder = $this->gridRenderSort($sanitizedParams);
 
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedParams->getInt('start') !== null && $sanitizedParams->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedParams->getInt('start'), 0) . ', ' . $sanitizedParams->getInt('length',['default' => 10]);
+            $limit = ' LIMIT ' . intval($sanitizedParams->getInt('start'), 0) . ', ' . $sanitizedParams->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -411,7 +426,7 @@ class LibraryUsage implements ReportInterface
 
         foreach ($this->store->select($sql, $params) as $row) {
             $entry = [];
-            $sanitizedRow = $this->getSanitizer($row);
+            $sanitizedRow = $this->sanitizer->getSanitizer($row);
 
             $entry['userId'] = $sanitizedRow->getInt('userId');
             $entry['userName'] = $sanitizedRow->getString('userName');
@@ -425,11 +440,11 @@ class LibraryUsage implements ReportInterface
         // Paging
         if ($limit != '' && count($rows) > 0) {
             $results = $this->store->select('SELECT COUNT(*) AS total FROM `user` ' . $permissions, $params);
-            $this->getState()->recordsTotal = intval($results[0]['total']);
+            $this->state->recordsTotal = intval($results[0]['total']);
         }
 
-        $this->getState()->template = 'grid';
-        $this->getState()->setData($rows);
+        $this->state->template = 'grid';
+        $this->state->setData($rows);
 
         // Get the Library widget labels and Widget Data
         $libraryWidgetLabels = [];
@@ -441,7 +456,7 @@ class LibraryUsage implements ReportInterface
             if ($this->userFactory->getUser()->libraryQuota != 0) {
                 $libraryLimit = $this->userFactory->getUser()->libraryQuota * 1024;
             } else {
-                $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+                $libraryLimit = $this->configService->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
             }
 
             // Library Size in Bytes
@@ -495,7 +510,6 @@ class LibraryUsage implements ReportInterface
 
             $libraryWidgetLabels = $libraryLabels;
             $libraryWidgetData = $libraryUsage;
-
         } catch (\Exception $exception) {
             $this->getLog()->error('Error rendering the library stats page widget');
         }
@@ -524,50 +538,49 @@ class LibraryUsage implements ReportInterface
             $libraryColours[] = 'rgb(' . mt_rand(0, 255).','. mt_rand(0, 255).',' . mt_rand(0, 255) .')';
         }
 
-        return [
-            'chart' => [
-                'User_Percentage_Usage' => [ // we will use User_Percentage_Usage as report name when we export/email pdf
-                    'type' => 'pie',
-                    'data' => [
-                        'labels' => $userLabels,
-                        'datasets' => [
-                            [
-                                'backgroundColor' => $colours,
-                                'data' => $userData
-                            ]
+        $chart = [
+            'User_Percentage_Usage' => [ // we will use User_Percentage_Usage as report name when we export/email pdf
+                'type' => 'pie',
+                'data' => [
+                    'labels' => $userLabels,
+                    'datasets' => [
+                        [
+                            'backgroundColor' => $colours,
+                            'data' => $userData
                         ]
-                    ],
-                    'options' => [
-                        'maintainAspectRatio' => false
                     ]
                 ],
-                'Library_Usage' => [
-                    'type' => 'pie',
-                    'data' => [
-                        'labels' => $libraryWidgetLabels,
-                        'datasets' => [
-                            [
-                                'backgroundColor' => $libraryColours,
-                                'data' => $libraryWidgetData
-                            ]
-                        ]
-                    ],
-                    'options' => [
-                        'maintainAspectRatio' => false
-                    ]
+                'options' => [
+                    'maintainAspectRatio' => false
                 ]
             ],
-            'table' => $rows,
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-
+            'Library_Usage' => [
+                'type' => 'pie',
+                'data' => [
+                    'labels' => $libraryWidgetLabels,
+                    'datasets' => [
+                        [
+                            'backgroundColor' => $libraryColours,
+                            'data' => $libraryWidgetData
+                        ]
+                    ]
+                ],
+                'options' => [
+                    'maintainAspectRatio' => false
+                ]
+            ]
         ];
 
-    }
-
-    /** @inheritdoc */
-    public function restructureSavedReportOldJson($result)
-    {
-        return $result;
+        // Return data to build chart
+        return new ReportResult(
+            [
+                'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            ],
+            $rows,
+            0,
+            $chart,
+            true
+        );
     }
 }

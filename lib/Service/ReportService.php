@@ -25,8 +25,10 @@ namespace Xibo\Service;
 use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\ReportResult;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Helper\SanitizerService;
+use Xibo\Report\ReportInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -102,7 +104,6 @@ class ReportService implements ReportServiceInterface
         $files = array_merge(glob(PROJECT_ROOT . '/reports/*.report'), glob(PROJECT_ROOT . '/custom/*.report'));
 
         foreach ($files as $file) {
-
             $config = json_decode(file_get_contents($file));
             $config->file = Str::replaceFirst(PROJECT_ROOT, '', $file);
 
@@ -130,7 +131,6 @@ class ReportService implements ReportServiceInterface
 
 
         foreach ($reports as $k => $report) {
-
             usort($report, function ($a, $b) {
 
                 if (empty($a->sort_order) || empty($b->sort_order)) {
@@ -141,7 +141,6 @@ class ReportService implements ReportServiceInterface
             });
 
             $reports[$k] = $report;
-
         }
 
         return $reports;
@@ -152,10 +151,9 @@ class ReportService implements ReportServiceInterface
      */
     public function getReportByName($reportName)
     {
-        foreach($this->listReports() as $reports) {
-            foreach($reports as $report) {
-                if($report->name == $reportName) {
-
+        foreach ($this->listReports() as $reports) {
+            foreach ($reports as $report) {
+                if ($report->name == $reportName) {
                     $this->log->debug('Get report by name: '.json_encode($report, JSON_PRETTY_PRINT));
 
                     return $report;
@@ -172,10 +170,9 @@ class ReportService implements ReportServiceInterface
      */
     public function getReportClass($reportName)
     {
-        foreach($this->listReports() as $reports) {
-            foreach($reports as $report) {
-
-                if($report->name == $reportName) {
+        foreach ($this->listReports() as $reports) {
+            foreach ($reports as $report) {
+                if ($report->name == $reportName) {
                     if ($report->class == '') {
                         throw new NotFoundException(__('Report class not found'));
                     }
@@ -195,21 +192,20 @@ class ReportService implements ReportServiceInterface
      */
     public function createReportObject($className)
     {
-        if (!\class_exists($className))
+        if (!\class_exists($className)) {
             throw new NotFoundException(__('Class %s not found', $className));
+        }
 
-        $object = new $className(
-            $this->state,
+        $object = new $className();
+
+        $object->setCommonDependencies(
             $this->store,
-            $this->timeSeriesStore,
-            $this->log,
-            $this->config,
-            $this->sanitizer);
+            $this->timeSeriesStore
+        );
 
-        $object->setFactories($this->container);
+        $object->useLogger($this->log)->setFactories($this->container);
 
         return $object;
-
     }
 
     /**
@@ -224,7 +220,7 @@ class ReportService implements ReportServiceInterface
         $object = $this->createReportObject($className);
 
         // Populate form title and hidden fields
-        return $object->getReportScheduleFormData($request);
+        return $object->getReportScheduleFormData($this->sanitizer->getSanitizer($request->getParams()));
     }
 
     /**
@@ -239,7 +235,7 @@ class ReportService implements ReportServiceInterface
         $object = $this->createReportObject($className);
 
         // Set Report Schedule form data
-        return $object->setReportScheduleFormData($request);
+        return $object->setReportScheduleFormData($this->sanitizer->getSanitizer($request->getParams()));
     }
 
     /**
@@ -255,7 +251,7 @@ class ReportService implements ReportServiceInterface
 
         $filterCriteria = json_decode($filterCriteria, true);
 
-        return $object->generateSavedReportName($filterCriteria);
+        return $object->generateSavedReportName($this->sanitizer->getSanitizer($filterCriteria));
     }
 
     /**
@@ -292,11 +288,8 @@ class ReportService implements ReportServiceInterface
         $this->log->debug('Saved Report results'. json_encode($results, JSON_PRETTY_PRINT));
 
         // Return data to build chart
-        return [
-            'results' => $results
-        ];
-
-     }
+        return $results;
+    }
 
     /**
      * @inheritdoc
@@ -330,7 +323,7 @@ class ReportService implements ReportServiceInterface
         $json = $object->restructureSavedReportOldJson($oldjson);
 
         // Format the JSON as schemaVersion 2
-        $fileName = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/','reportschedule');
+        $fileName = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/', 'reportschedule');
         $out = fopen($fileName, 'w');
         fwrite($out, json_encode($json));
         fclose($out);
@@ -349,7 +342,7 @@ class ReportService implements ReportServiceInterface
 
         // Return success
         return;
-     }
+    }
 
     /**
      * @inheritdoc
@@ -367,7 +360,7 @@ class ReportService implements ReportServiceInterface
         $filterCriteria = json_decode($filterCriteria, true);
 
         // Retrieve the result array
-        return $object->getResults($filterCriteria);
+        return $object->getResults($this->sanitizer->getSanitizer($filterCriteria));
     }
 
     /**
@@ -386,8 +379,22 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
+    public function getSavedReportTemplate($reportName)
+    {
+        $className = $this->getReportClass($reportName);
+
+        $object = $this->createReportObject($className);
+
+        // Set Report Schedule form data
+        return $object->getSavedReportTemplate(); // TODO summary repot doesnot have it why???
+    }
+
+    /**
+     * @inheritdoc
+     */
     public function getReportChartScript($savedreportId, $reportName)
     {
+        /* @var ReportResult $results */
         $results = $this->getSavedReportResults($savedreportId, $reportName);
 
         $className = $this->getReportClass($reportName);

@@ -1,6 +1,6 @@
-{#
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+<?php
+/*
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,19 +19,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-#}
 
-<div>
-    <img class="logo right" src="{{ logo }}">
-</div>
-<div class="header">{{ header }}</div>
-<div class="title">{{ title }} <span class="small">({% trans "Generated on: " %}{{ metadata.generatedOn }})</span></div>
-<div>
-    <span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span>
-</div>
-<p></p>
-<span>{{ placeholder }}</span>
-<img src="{{ src }}" >
+namespace Xibo\Report;
 
-
-
+/**
+ * Trait DefaultReportEmailTrait
+ * @package Xibo\Report
+ */
+trait DefaultReportEmailTrait
+{
+    /** @inheritdoc */
+    public function getReportEmailTemplate()
+    {
+        return 'default-email-template.twig';
+    }
+}

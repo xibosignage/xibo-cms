@@ -49,7 +49,10 @@ interface ReportServiceInterface
  */
     public function __construct($app, $state, $store, $timeSeriesStore, $log, $config, $sanitizer, $savedReportFactory);
 
-    // List all reports that are available
+    /**
+     * List all reports that are available
+     * @return array
+     */
     public function listReports();
 
     /**
@@ -136,6 +139,14 @@ interface ReportServiceInterface
      * @return string
      */
     public function getReportEmailTemplate($reportName);
+
+    /**
+     * Get report email template twig file name
+     * @param string $reportName
+     * @throws GeneralException
+     * @return string
+     */
+    public function getSavedReportTemplate($reportName);
 
     /**
      * Get chart script

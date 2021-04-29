@@ -860,14 +860,40 @@ class State implements Middleware
                     $c->get('user'),
                     $c->get('helpService'),
                     $c->get('configService'),
-                    $c->get('store'),
-                    $c->get('timeSeriesStore'),
+                    $c->get('view'),
+                    $c->get('reportService')
+                );
+            },
+            '\Xibo\Controller\ScheduleReport' => function(ContainerInterface $c) {
+                return new \Xibo\Controller\ScheduleReport(
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('state'),
+                    $c->get('user'),
+                    $c->get('helpService'),
+                    $c->get('configService'),
+                    $c->get('view'),
                     $c->get('reportService'),
                     $c->get('reportScheduleFactory'),
                     $c->get('savedReportFactory'),
                     $c->get('mediaFactory'),
-                    $c->get('userFactory'),
-                    $c->get('view')
+                    $c->get('userFactory')
+                );
+            },
+            '\Xibo\Controller\SavedReport' => function(ContainerInterface $c) {
+                return new \Xibo\Controller\SavedReport(
+                    $c->get('logService'),
+                    $c->get('sanitizerService'),
+                    $c->get('state'),
+                    $c->get('user'),
+                    $c->get('helpService'),
+                    $c->get('configService'),
+                    $c->get('view'),
+                    $c->get('reportService'),
+                    $c->get('reportScheduleFactory'),
+                    $c->get('savedReportFactory'),
+                    $c->get('mediaFactory'),
+                    $c->get('userFactory')
                 );
             },
             '\Xibo\Controller\Resolution' => function(ContainerInterface $c) {

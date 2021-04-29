@@ -632,25 +632,25 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 // Report Schedule
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/report/reportschedule/view', ['\Xibo\Controller\Report','displayReportSchedulePage'])->setName('reportschedule.view');
-    $group->get('/report/reportschedule/form/add', ['\Xibo\Controller\Report','addReportScheduleForm'])->setName('reportschedule.add.form');
-    $group->get('/report/reportschedule/form/edit/{id}', ['\Xibo\Controller\Report','editReportScheduleForm'])->setName('reportschedule.edit.form');
-    $group->get('/report/reportschedule/form/delete/{id}', ['\Xibo\Controller\Report','deleteReportScheduleForm'])->setName('reportschedule.delete.form');
-    $group->get('/report/reportschedule/form/deleteall/{id}', ['\Xibo\Controller\Report','deleteAllSavedReportReportScheduleForm'])->setName('reportschedule.deleteall.form');
-    $group->get('/report/reportschedule/form/toggleactive/{id}', ['\Xibo\Controller\Report','toggleActiveReportScheduleForm'])->setName('reportschedule.toggleactive.form');
-    $group->get('/report/reportschedule/form/reset/{id}', ['\Xibo\Controller\Report','resetReportScheduleForm'])->setName('reportschedule.reset.form');
+    $group->get('/report/reportschedule/view', ['\Xibo\Controller\ScheduleReport','displayReportSchedulePage'])->setName('reportschedule.view');
+    $group->get('/report/reportschedule/form/add', ['\Xibo\Controller\ScheduleReport','addReportScheduleForm'])->setName('reportschedule.add.form');
+    $group->get('/report/reportschedule/form/edit/{id}', ['\Xibo\Controller\ScheduleReport','editReportScheduleForm'])->setName('reportschedule.edit.form');
+    $group->get('/report/reportschedule/form/delete/{id}', ['\Xibo\Controller\ScheduleReport','deleteReportScheduleForm'])->setName('reportschedule.delete.form');
+    $group->get('/report/reportschedule/form/deleteall/{id}', ['\Xibo\Controller\ScheduleReport','deleteAllSavedReportReportScheduleForm'])->setName('reportschedule.deleteall.form');
+    $group->get('/report/reportschedule/form/toggleactive/{id}', ['\Xibo\Controller\ScheduleReport','toggleActiveReportScheduleForm'])->setName('reportschedule.toggleactive.form');
+    $group->get('/report/reportschedule/form/reset/{id}', ['\Xibo\Controller\ScheduleReport','resetReportScheduleForm'])->setName('reportschedule.reset.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['report.scheduling']));
 
 //
 // Saved reports
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
-    $group->get('/report/savedreport/view', ['\Xibo\Controller\Report','displaySavedReportPage'])->setName('savedreport.view');
-    $group->get('/report/savedreport/{id}/report/{name}/open', ['\Xibo\Controller\Report','savedReportOpen'])->setName('savedreport.open');
-    $group->get('/report/savedreport/{id}/report/{name}/export', ['\Xibo\Controller\Report','savedReportExport'])->setName('savedreport.export');
-    $group->get('/report/savedreport/form/delete/{id}', ['\Xibo\Controller\Report','deleteSavedReportForm'])->setName('savedreport.delete.form');
-    $group->get('/report/savedreport/{id}/report/{name}/convert', ['\Xibo\Controller\Report','savedReportConvert'])->setName('savedreport.convert');
-    $group->get('/report/savedreport/form/convert/{id}', ['\Xibo\Controller\Report','convertSavedReportForm'])->setName('savedreport.convert.form');
+    $group->get('/report/savedreport/view', ['\Xibo\Controller\SavedReport','displaySavedReportPage'])->setName('savedreport.view');
+    $group->get('/report/savedreport/{id}/report/{name}/open', ['\Xibo\Controller\SavedReport','savedReportOpen'])->setName('savedreport.open');
+    $group->get('/report/savedreport/{id}/report/{name}/export', ['\Xibo\Controller\SavedReport','savedReportExport'])->setName('savedreport.export');
+    $group->get('/report/savedreport/form/delete/{id}', ['\Xibo\Controller\SavedReport','deleteSavedReportForm'])->setName('savedreport.delete.form');
+    $group->get('/report/savedreport/{id}/report/{name}/convert', ['\Xibo\Controller\OldReport','savedReportConvert'])->setName('savedreport.convert');
+    $group->get('/report/savedreport/form/convert/{id}', ['\Xibo\Controller\OldReport','convertSavedReportForm'])->setName('savedreport.convert.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['report.saving']));
 
 //
