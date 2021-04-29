@@ -448,6 +448,10 @@ class MediaFactory extends BaseFactory
      */
     public function getByDisplayGroupId($displayGroupId)
     {
+        if ($displayGroupId == null) {
+            return [];
+        }
+
         return $this->query(null, array('disableUserCheck' => 1, 'displayGroupId' => $displayGroupId));
     }
 

@@ -22,6 +22,8 @@ class DisplayGroupScheduleListener
     {
         $displayGroup = $event->getDisplayGroup();
 
-        $displayGroup->events = $this->scheduleFactory->getByDisplayGroupId($displayGroup->displayGroupId);
+        $displayGroup->events = ($displayGroup->displayGroupId != null)
+            ? $this->scheduleFactory->getByDisplayGroupId($displayGroup->displayGroupId)
+            : [];
     }
 }

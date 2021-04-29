@@ -327,6 +327,7 @@ class Soap5 extends Soap4
                 $display->clientAddress = $this->getIp();
                 $display->xmrChannel = $xmrChannel;
                 $display->xmrPubKey = $xmrPubKey;
+                $display->setDispatcher($this->getDispatcher());
 
                 if (!$display->isDisplaySlotAvailable()) {
                     $display->licensed = 0;

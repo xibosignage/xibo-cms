@@ -684,7 +684,6 @@ class Display implements \JsonSerializable
         ], $options);
 
         $allowNotify = true;
-        $checkDynamicGroups = true;
 
         if ($options['validate']) {
             $this->validate();
@@ -707,7 +706,6 @@ class Display implements \JsonSerializable
 
             // Never notify on add (there is little point, we've only just added).
             $allowNotify = false;
-            $checkDynamicGroups = false;
         } else {
             $this->edit();
         }
@@ -717,7 +715,7 @@ class Display implements \JsonSerializable
         }
 
         // Trigger an update of all dynamic DisplayGroups
-        if (($this->hasPropertyChanged('display') || $this->hasPropertyChanged('tags'))  && $checkDynamicGroups) {
+        if (($this->hasPropertyChanged('display') || $this->hasPropertyChanged('tags'))) {
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
                 /* @var DisplayGroup $group */
                 $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($group));

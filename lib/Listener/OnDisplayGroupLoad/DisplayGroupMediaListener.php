@@ -22,6 +22,8 @@ class DisplayGroupMediaListener
     {
         $displayGroup = $event->getDisplayGroup();
 
-        $displayGroup->media = $this->mediaFactory->getByDisplayGroupId($displayGroup->displayGroupId);
+        $displayGroup->media = ($displayGroup->displayGroupId != null)
+            ? $this->mediaFactory->getByDisplayGroupId($displayGroup->displayGroupId)
+            : [];
     }
 }

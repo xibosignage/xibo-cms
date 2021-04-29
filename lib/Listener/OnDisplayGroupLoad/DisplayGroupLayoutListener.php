@@ -22,6 +22,8 @@ class DisplayGroupLayoutListener
     {
         $displayGroup = $event->getDisplayGroup();
 
-        $displayGroup->layouts = $this->layoutFactory->getByDisplayGroupId($displayGroup->displayGroupId);
+        $displayGroup->layouts = ($displayGroup->displayGroupId != null)
+            ? $this->layoutFactory->getByDisplayGroupId($displayGroup->displayGroupId)
+            : [];
     }
 }

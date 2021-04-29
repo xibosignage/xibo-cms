@@ -623,7 +623,7 @@ class DisplayGroup extends Base
         }
 
         if ($displayGroup->isDynamic === 1) {
-            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
+            $displayGroup->setDisplayFactory($this->displayFactory);
         }
 
         $displayGroup->userId = $this->getUser()->userId;
