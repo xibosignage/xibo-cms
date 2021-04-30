@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,13 +23,12 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Xibo\Factory\ActionFactory;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\WidgetAudioFactory;
 use Xibo\Factory\WidgetMediaFactory;
 use Xibo\Factory\WidgetOptionFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -251,11 +250,8 @@ class Widget implements \JsonSerializable
      */
     private $permissionFactory;
 
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
-    /** @var  PlaylistFactory */
-    private $playlistFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /** @var ActionFactory */
     private $actionFactory;
@@ -269,10 +265,10 @@ class Widget implements \JsonSerializable
      * @param WidgetMediaFactory $widgetMediaFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      * @param PermissionFactory $permissionFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayFactory, $actionFactory)
+    public function __construct($store, $log, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayNotifyService, $actionFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->excludeProperty('module');
@@ -280,18 +276,8 @@ class Widget implements \JsonSerializable
         $this->widgetMediaFactory = $widgetMediaFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
         $this->permissionFactory = $permissionFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
         $this->actionFactory = $actionFactory;
-    }
-
-    /**
-     * @param PlaylistFactory $playlistFactory
-     * @return $this
-     */
-    public function setChildObjectDepencencies($playlistFactory)
-    {
-        $this->playlistFactory = $playlistFactory;
-        return $this;
     }
 
     public function __clone()
@@ -321,6 +307,15 @@ class Widget implements \JsonSerializable
     public function getPermissionFolderId()
     {
         return $this->permissionsFolderId;
+    }
+
+    /**
+     * Get the Display Notify Service
+     * @return DisplayNotifyServiceInterface
+     */
+    public function getDisplayNotifyService(): DisplayNotifyServiceInterface
+    {
+        return $this->displayNotifyService->init();
     }
 
     /**
@@ -970,7 +965,7 @@ class Widget implements \JsonSerializable
         // this is typically done when there has been a dynamic change to the Widget - i.e. the Layout doesn't need
         // to be rebuilt, but the Widget has some change that will be pushed out through getResource
         if ($options['notifyDisplays']) {
-            $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByPlaylistId($this->playlistId);
+            $this->getDisplayNotifyService()->collectNow()->notifyByPlaylistId($this->playlistId);
         }
     }
 

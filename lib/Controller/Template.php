@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,12 +23,8 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -57,21 +53,12 @@ class Template extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param LayoutFactory $layoutFactory
      * @param TagFactory $tagFactory
-     * @param Twig $view
      * @param \Xibo\Factory\ResolutionFactory $resolutionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $layoutFactory, $tagFactory, Twig $view, $resolutionFactory)
+    public function __construct($layoutFactory, $tagFactory, $resolutionFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->layoutFactory = $layoutFactory;
         $this->tagFactory = $tagFactory;
         $this->resolutionFactory = $resolutionFactory;

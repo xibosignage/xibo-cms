@@ -373,7 +373,6 @@ class Layout implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param EventDispatcherInterface $eventDispatcher
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
      * @param TagFactory $tagFactory
@@ -385,12 +384,11 @@ class Layout implements \JsonSerializable
      * @param ActionFactory $actionFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $config, $eventDispatcher, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
+    public function __construct($store, $log, $config, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
         $this->config = $config;
-        $this->dispatcher = $eventDispatcher;
         $this->permissionFactory = $permissionFactory;
         $this->regionFactory = $regionFactory;
         $this->tagFactory = $tagFactory;
@@ -978,14 +976,13 @@ class Layout implements \JsonSerializable
             // Unassign from all Campaigns
             foreach ($this->campaigns as $campaign) {
                 /* @var Campaign $campaign */
-                $campaign->setChildObjectDependencies($this->layoutFactory);
+                $campaign->layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
                 $campaign->unassignLayout($this, true);
                 $campaign->save(['validate' => false]);
             }
 
             // Delete our own Campaign
             $campaign = $this->campaignFactory->getById($this->campaignId);
-            $campaign->setChildObjectDependencies($this->layoutFactory);
             $campaign->delete();
 
             // Remove the Layout from any display defaults
@@ -1356,6 +1353,7 @@ class Layout implements \JsonSerializable
                 $regionActionNode->setAttribute('source', $action->source);
                 $regionActionNode->setAttribute('actionType', $action->actionType);
                 $regionActionNode->setAttribute('triggerType', $action->triggerType);
+                $regionActionNode->setAttribute('triggerCode', $action->triggerCode);
                 $regionActionNode->setAttribute('id', $action->actionId);
 
                 $regionNode->appendChild($regionActionNode);
@@ -1478,6 +1476,7 @@ class Layout implements \JsonSerializable
                     $widgetActionNode->setAttribute('source', $action->source);
                     $widgetActionNode->setAttribute('actionType', $action->actionType);
                     $widgetActionNode->setAttribute('triggerType', $action->triggerType);
+                    $widgetActionNode->setAttribute('triggerCode', $action->triggerCode);
                     $widgetActionNode->setAttribute('id', $action->actionId);
 
                     $mediaNode->appendChild($widgetActionNode);
@@ -1683,7 +1682,7 @@ class Layout implements \JsonSerializable
             }
 
             $event = new LayoutBuildRegionEvent($region->regionId, $regionNode);
-            $this->dispatcher->dispatch($event::NAME, $event);
+            $this->getDispatcher()->dispatch($event::NAME, $event);
             // End of region loop.
         }
 
@@ -1705,7 +1704,7 @@ class Layout implements \JsonSerializable
 
         // Fire a layout.build event, passing the layout and the generated document.
         $event = new LayoutBuildEvent($this, $document);
-        $this->dispatcher->dispatch($event::NAME, $event);
+        $this->getDispatcher()->dispatch($event::NAME, $event);
 
         return $document->saveXML();
     }
@@ -1807,13 +1806,13 @@ class Layout implements \JsonSerializable
 
         if ($fonts != null) {
 
-            $this->getLog()->debug('Matched fonts: %s', json_encode($fonts));
+            $this->getLog()->debug(sprintf('Matched fonts: %s', json_encode($fonts)));
 
             foreach ($fonts[1] as $font) {
                 $matches = $this->mediaFactory->query(null, array('disableUserCheck' => 1, 'nameExact' => $font, 'allModules' => 1, 'type' => 'font'));
 
                 if (count($matches) <= 0) {
-                    $this->getLog()->info('Unmatched font during export: %s', $font);
+                    $this->getLog()->info(sprintf('Unmatched font during export: %s', $font));
                     continue;
                 }
 
@@ -2245,7 +2244,7 @@ class Layout implements \JsonSerializable
 
             // Add this draft layout as a link to the campaign
             $campaign = $this->campaignFactory->getById($this->campaignId);
-            $campaign->setChildObjectDependencies($this->layoutFactory);
+            $campaign->layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
             $campaign->assignLayout($this);
             $campaign->save([
                 'notify' => false

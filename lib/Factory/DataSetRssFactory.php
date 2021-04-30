@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,24 +25,17 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataSetRss;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 class DataSetRssFactory extends BaseFactory
 {
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param \Xibo\Entity\User $user
      * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
+    public function __construct($user, $userFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
     }
 
@@ -61,8 +54,9 @@ class DataSetRssFactory extends BaseFactory
     {
         $feeds = $this->query(null, ['disableUserCheck' => 1, 'id' => $id]);
 
-        if (count($feeds) <= 0)
+        if (count($feeds) <= 0) {
             throw new NotFoundException();
+        }
 
         return $feeds[0];
     }
@@ -77,8 +71,9 @@ class DataSetRssFactory extends BaseFactory
     {
         $feeds = $this->query(null, ['disableUserCheck' => 1, 'psk' => $psk]);
 
-        if (count($feeds) <= 0)
+        if (count($feeds) <= 0) {
             throw new NotFoundException();
+        }
 
         return $feeds[0];
     }

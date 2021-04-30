@@ -142,9 +142,10 @@ class ApplicationState
      */
     public function getData()
     {
-        if ($this->data == null)
+        if ($this->data == null) {
             $this->data = [];
-
+        }
+        
         return $this->data;
     }
 

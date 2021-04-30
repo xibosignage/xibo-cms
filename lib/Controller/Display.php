@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,21 +28,18 @@ use Respect\Validation\Validator as v;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\RequiredFile;
+use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayEventFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\LogFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\RequiredFileFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\ByteFormatter;
@@ -50,10 +47,7 @@ use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Random;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\WakeOnLan;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Service\PlayerActionServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -104,11 +98,6 @@ class Display extends Base
     private $displayGroupFactory;
 
     /**
-     * @var LogFactory
-     */
-    private $logFactory;
-
-    /**
      * @var LayoutFactory
      */
     private $layoutFactory;
@@ -117,16 +106,6 @@ class Display extends Base
      * @var DisplayProfileFactory
      */
     private $displayProfileFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var ScheduleFactory
-     */
-    private $scheduleFactory;
 
     /** @var  DisplayEventFactory */
     private $displayEventFactory;
@@ -148,22 +127,13 @@ class Display extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
      * @param PlayerActionServiceInterface $playerAction
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
-     * @param LogFactory $logFactory
      * @param LayoutFactory $layoutFactory
      * @param DisplayProfileFactory $displayProfileFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
      * @param DisplayEventFactory $displayEventFactory
      * @param RequiredFileFactory $requiredFileFactory
      * @param TagFactory $tagFactory
@@ -171,22 +141,16 @@ class Display extends Base
      * @param UserGroupFactory $userGroupFactory
      * @param PlayerVersionFactory $playerVersionFactory
      * @param DayPartFactory $dayPartFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $logFactory, $layoutFactory, $displayProfileFactory, $mediaFactory, $scheduleFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory, Twig $view)
+    public function __construct($store, $pool, $playerAction, $displayFactory, $displayGroupFactory, $layoutFactory, $displayProfileFactory, $displayEventFactory, $requiredFileFactory, $tagFactory, $notificationFactory, $userGroupFactory, $playerVersionFactory, $dayPartFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->store = $store;
         $this->pool = $pool;
         $this->playerAction = $playerAction;
         $this->displayFactory = $displayFactory;
         $this->displayGroupFactory = $displayGroupFactory;
-        $this->logFactory = $logFactory;
         $this->layoutFactory = $layoutFactory;
         $this->displayProfileFactory = $displayProfileFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
         $this->displayEventFactory = $displayEventFactory;
         $this->requiredFileFactory = $requiredFileFactory;
         $this->tagFactory = $tagFactory;
@@ -577,8 +541,8 @@ class Display extends Base
             $display->bandwidthLimitFormatted = ByteFormatter::format($display->bandwidthLimit * 1024);
 
             // Current layout from cache
-            $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-            $display->getCurrentLayoutId($this->pool);
+            $display->setDispatcher($this->getDispatcher());
+            $display->getCurrentLayoutId($this->pool, $this->layoutFactory);
 
             if ($this->isApi($request)) {
                 $display->lastAccessed = Carbon::createFromTimestamp($display->lastAccessed)->format(DateFormatHelper::getSystemFormat());
@@ -1368,7 +1332,7 @@ class Display extends Base
             $display->xmrPubKey = null;
         }
 
-        $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $display->setDispatcher($this->getDispatcher());
         $display->save();
 
         if ($this->isApi($request)) {
@@ -1423,7 +1387,7 @@ class Display extends Base
             throw new AccessDeniedException();
         }
 
-        $display->setChildObjectDependencies($this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+        $display->setDispatcher($this->getDispatcher());
         $display->delete();
 
         // Return
@@ -1622,7 +1586,8 @@ class Display extends Base
         // Go through each ID to assign
         foreach ($sanitizedParams->getIntArray('displayGroupId') as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $displayGroup->load();
+            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
 
             if (!$this->getUser()->checkEditable($displayGroup)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));
@@ -1635,7 +1600,8 @@ class Display extends Base
         // Have we been provided with unassign id's as well?
         foreach ($sanitizedParams->getIntArray('unassignDisplayGroupId') as $displayGroupId) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+            $displayGroup->load();
+            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
 
             if (!$this->getUser()->checkEditable($displayGroup)) {
                 throw new AccessDeniedException(__('Access Denied to DisplayGroup'));

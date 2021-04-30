@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\Region;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -60,17 +57,13 @@ class RegionFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param PermissionFactory $permissionFactory
      * @param RegionOptionFactory $regionOptionFactory
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory, $campaignFactory)
+    public function __construct($permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory, $campaignFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->permissionFactory = $permissionFactory;
         $this->regionOptionFactory = $regionOptionFactory;
         $this->playlistFactory = $playlistFactory;

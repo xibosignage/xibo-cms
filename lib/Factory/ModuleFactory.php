@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,17 +25,14 @@ namespace Xibo\Factory;
 
 
 use Illuminate\Support\Str;
-use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\Module;
 use Xibo\Entity\Region;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
+use Xibo\Helper\HttpCacheProvider;
 use Xibo\Service\ModuleServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
@@ -105,17 +102,20 @@ class ModuleFactory extends BaseFactory
     /** @var  UserGroupFactory */
     protected $userGroupFactory;
 
+    /** @var MenuBoardFactory */
+    protected $menuBoardFactory;
+
+    /** @var MenuBoardCategoryFactory */
+    protected $menuBoardCategoryFactory;
+
     /** @var Twig */
     protected $view;
 
-    /** @var ContainerInterface */
-    protected $container;
+    /** @var HttpCacheProvider */
+    private $cacheProvider;
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param ModuleServiceInterface $moduleService
@@ -131,12 +131,32 @@ class ModuleFactory extends BaseFactory
      * @param ScheduleFactory $scheduleFactory
      * @param PermissionFactory $permissionFactory
      * @param UserGroupFactory $userGroupFactory
+     * @param MenuBoardFactory $menuBoardFactory
+     * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
      * @param Twig $view
-     * @param ContainerInterface $container
+     * @param HttpCacheProvider $cacheProvider
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $moduleService, $widgetFactory, $regionFactory, $playlistFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $view, ContainerInterface $container)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
+    public function __construct(
+        $user,
+        $userFactory,
+        $moduleService,
+        $widgetFactory,
+        $regionFactory,
+        $playlistFactory,
+        $mediaFactory,
+        $dataSetFactory,
+        $dataSetColumnFactory,
+        $transitionFactory,
+        $displayFactory,
+        $commandFactory,
+        $scheduleFactory,
+        $permissionFactory,
+        $userGroupFactory,
+        $menuBoardFactory,
+        $menuBoardCategoryFactory,
+        $view,
+        HttpCacheProvider $cacheProvider
+    ) {
         $this->setAclDependencies($user, $userFactory);
 
         $this->moduleService = $moduleService;
@@ -152,8 +172,10 @@ class ModuleFactory extends BaseFactory
         $this->scheduleFactory = $scheduleFactory;
         $this->permissionFactory = $permissionFactory;
         $this->userGroupFactory = $userGroupFactory;
+        $this->menuBoardFactory = $menuBoardFactory;
+        $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
         $this->view = $view;
-        $this->container = $container;
+        $this->cacheProvider = $cacheProvider;
     }
 
     /**
@@ -174,10 +196,22 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(['enabled DESC'], array('type' => $type));
 
-        $this->getLog()->debug('Creating %s out of possible %s', $type, json_encode(array_map(function($element) { return $element->class; }, $modules)));
+        $this->getLog()->debug(sprintf(
+            'Creating %s out of possible %s',
+            $type,
+            json_encode(
+                array_map(
+                    function ($element) {
+                        return $element->class;
+                    },
+                    $modules
+                )
+            )
+        ));
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
+        }
 
         // Create a module
         return $this->moduleService->get(
@@ -193,8 +227,10 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
+            $this->menuBoardFactory,
+            $this->menuBoardCategoryFactory,
             $this->view,
-            $this->container
+            $this->cacheProvider
         );
     }
 
@@ -208,10 +244,22 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(['enabled DESC'], array('class' => $class));
 
-        $this->getLog()->debug('Creating %s out of possible %s', $class, json_encode(array_map(function($element) { return $element->class; }, $modules)));
+        $this->getLog()->debug(sprintf(
+            'Creating %s out of possible %s',
+            $class,
+            json_encode(
+                array_map(
+                    function ($element) {
+                        return $element->class;
+                    },
+                    $modules
+                )
+            )
+        ));
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException(sprintf(__('Unknown class %s'), $class));
+        }
 
         // Create a module
         return $this->moduleService->get(
@@ -227,8 +275,10 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
+            $this->menuBoardFactory,
+            $this->menuBoardCategoryFactory,
             $this->view,
-            $this->container
+            $this->cacheProvider
         );
     }
 
@@ -253,8 +303,10 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
+            $this->menuBoardFactory,
+            $this->menuBoardCategoryFactory,
             $this->view,
-            $this->container
+            $this->cacheProvider
         );
     }
 
@@ -279,8 +331,10 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
+            $this->menuBoardFactory,
+            $this->menuBoardCategoryFactory,
             $this->view,
-            $this->container
+            $this->cacheProvider
         );
     }
 
@@ -294,8 +348,9 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(null, array('type' => $media->mediaType));
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException(sprintf(__('Unknown type %s'), $media->mediaType));
+        }
 
         // Create a widget
         $widget = $this->widgetFactory->createEmpty();
@@ -317,8 +372,10 @@ class ModuleFactory extends BaseFactory
             $this->permissionFactory,
             $this->userGroupFactory,
             $this->playlistFactory,
+            $this->menuBoardFactory,
+            $this->menuBoardCategoryFactory,
             $this->view,
-            $this->container
+            $this->cacheProvider
         );
         $object->setWidget($widget);
 
@@ -357,8 +414,7 @@ class ModuleFactory extends BaseFactory
             // Create a new widget to use
             $widget = $this->widgetFactory->create($ownerId, $playlistId, $module->getModuleType(), null);
             $module->setWidget($widget);
-        }
-        else {
+        } else {
             // Load the widget
             $module->setWidget($this->widgetFactory->loadByWidgetId($widgetId));
         }
@@ -402,8 +458,7 @@ class ModuleFactory extends BaseFactory
         $modules = $this->query();
 
         if ($key != null && $key != '') {
-
-            $keyed = array();
+            $keyed = [];
             foreach ($modules as $module) {
                 /* @var Module $module */
                 $keyed[$module->type] = $module;
@@ -433,8 +488,9 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(null, array('moduleId' => $moduleId));
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException();
+        }
 
         return $modules[0];
     }
@@ -449,8 +505,9 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(null, ['installName' => $installName]);
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException();
+        }
 
         return $modules[0];
     }
@@ -466,8 +523,9 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(['enabled DESC'], ['name' => $name]);
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException(sprintf(__('Module type %s does not match any enabled Module'), $name));
+        }
 
         return $modules[0];
     }
@@ -491,8 +549,9 @@ class ModuleFactory extends BaseFactory
     {
         $modules = $this->query(['enabled DESC'], array('extension' => $extension));
 
-        if (count($modules) <= 0)
+        if (count($modules) <= 0) {
             throw new NotFoundException(sprintf(__('Extension %s does not match any enabled Module'), $extension));
+        }
 
         return $modules[0];
     }
@@ -507,7 +566,7 @@ class ModuleFactory extends BaseFactory
         $modules = $this->query(null, $filterBy);
         $extensions = array();
 
-        foreach($modules as $module) {
+        foreach ($modules as $module) {
             /* @var Module $module */
             if ($module->validExtensions != '') {
                 foreach (explode(',', $module->validExtensions) as $extension) {
@@ -545,8 +604,9 @@ class ModuleFactory extends BaseFactory
     {
         $parsedBody = $this->getSanitizer($filterBy);
         
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = array('Module');
+        }
 
         $entries = array();
 
@@ -633,8 +693,9 @@ class ModuleFactory extends BaseFactory
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging

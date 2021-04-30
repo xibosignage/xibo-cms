@@ -301,7 +301,7 @@ class ProofOfPlay implements ReportInterface
         $metadata['title'] = $savedReport->saveAs;
 
         // Report result object
-        return new ReportResult($metadata, $json['table']);
+        return new ReportResult($metadata, $json['table'], $json['recordTotal']);
     }
 
     /** @inheritdoc */

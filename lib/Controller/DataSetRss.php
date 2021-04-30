@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -63,23 +63,14 @@ class DataSetRss extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param DataSetRssFactory $dataSetRssFactory
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PoolInterface $pool
      * @param StorageServiceInterface $store
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetRssFactory, $dataSetFactory, $dataSetColumnFactory, $pool, $store, Twig $view)
+    public function __construct($dataSetRssFactory, $dataSetFactory, $dataSetColumnFactory, $pool, $store)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->dataSetRssFactory = $dataSetRssFactory;
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;

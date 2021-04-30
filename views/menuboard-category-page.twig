@@ -1,0 +1,109 @@
+{% extends "authed.twig" %}
+{% import "inline.twig" as inline %}
+
+{% block title %}{{ "Categories for "|trans }} {{menuBoard.name}} | {% endblock %}
+
+{% block actionMenu %}
+    {% if currentUser.featureEnabled("menuBoard.modify") %}
+        <div class="widget-action-menu pull-right">
+            <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Menu Board Category" %}" href="{{ url_for("menuBoard.category.add.form", {id : menuBoard.menuId}) }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Category" %}</button>
+        </div>
+    {% endif %}
+{% endblock %}
+
+{% block pageContent %}
+    <div class="widget">
+        <div class="widget-title">{% trans "Menu Board Categories for" %} {{menuBoard.name}}</div>
+        <div class="widget-body">
+            <div class="XiboGrid" id="{{ random() }}" data-grid-type="menuBoardCategories" data-grid-name="menuBoardCategoryView">
+                <div class="XiboFilter card mb-3 bg-light">
+                    <div class="FilterDiv card-body" id="Filter">
+                        <form class="form-inline">
+                            {% set title %}{% trans "ID" %}{% endset %}
+                            {{ inline.number("menuCategoryId", title) }}
+
+                            <div class="form-group mr-1 mb-1">
+                                <label class="control-label mr-1" title="" for="name" accesskey="">{% trans "Name" %}</label>
+                                <div class="input-group">
+                                    <input class="form-control" name="name" type="text" id="name" value="">
+                                    <div class="input-group-append input-group-addon">
+                                        <div class="input-group-text">
+                                            <input title="{% trans "Use Regex?" %}" type="checkbox" id="useRegexForName" name="useRegexForName">
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+                <div class="XiboData card pt-3">
+                    <table id="menuBoardCategories" class="table table-striped responsive nowrap" data-content-type="menuBoardCategory" data-content-id-name="menuCategoryId" data-state-preference-name="menuBoardCategoriesGrid" style="width: 100%;">
+                        <thead>
+                        <tr>
+                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Name" %}</th>
+                            <th>{% trans "Media" %}</th>
+                            <th class="rowMenu"></th>
+                        </tr>
+                        </thead>
+                        <tbody>
+
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        var table;
+        $(document).ready(function() {
+            table = $("#menuBoardCategories").DataTable({
+                "language": dataTablesLanguage,
+                "lengthMenu": [10, 25, 50, 100, 250, 500],
+                serverSide: true,
+                stateSave: true,
+                stateDuration: 0,
+                responsive: true,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
+                filter: false,
+                searchDelay: 3000,
+                dataType: 'json',
+                "order": [[1, "asc"]],
+                ajax: {
+                    url: "{{ url_for("menuBoard.category.search", {id: menuBoard.menuId}) }}",
+                    "data": function (d) {
+                        $.extend(d, $("#menuBoardCategories").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+                    }
+                },
+                "columns": [
+                    {"data": "menuCategoryId", responsivePriority: 2},
+                    {
+                        "data": "name",
+                        responsivePriority: 2,
+                        "render": dataTableSpacingPreformatted
+                    },
+                    {
+                        "name": "mediaId",
+                        responsivePriority: 3,
+                        "data": null,
+                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId"}
+                    },
+                    {
+                        "orderable": false,
+                        responsivePriority: 1,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#menuBoardCategories_wrapper').find('.col-md-6').eq(1));
+        });
+
+    </script>
+{% endblock %}

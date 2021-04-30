@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,10 +25,6 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\FolderFactory;
-use Xibo\Factory\PermissionFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -40,26 +36,13 @@ class Folder extends Base
      */
     private $folderFactory;
 
-    /** @var PermissionFactory */
-    private $permissionFactory;
-
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param FolderFactory $folderFactory
-     * @param PermissionFactory $permissionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $folderFactory, $permissionFactory)
+    public function __construct($folderFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config);
-
         $this->folderFactory = $folderFactory;
-        $this->permissionFactory = $permissionFactory;
     }
 
     /**

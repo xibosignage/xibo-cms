@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,15 +24,10 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 
 /**
  * Class MediaManager
@@ -49,34 +44,21 @@ class MediaManager extends Base
     /** @var RegionFactory */
     private $regionFactory;
 
-    /** @var PlaylistFactory */
-    private $playlistFactory;
-
     /** @var WidgetFactory */
     private $widgetFactory;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param ModuleFactory $moduleFactory
      * @param LayoutFactory $layoutFactory
      * @param RegionFactory $regionFactory
-     * @param PlaylistFactory $playlistFactory
      * @param WidgetFactory $widgetFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $moduleFactory, $layoutFactory, $regionFactory, $playlistFactory, $widgetFactory, Twig $view)
+    public function __construct($moduleFactory, $layoutFactory, $regionFactory, $widgetFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
         $this->moduleFactory = $moduleFactory;
         $this->layoutFactory = $layoutFactory;
         $this->regionFactory = $regionFactory;
-        $this->playlistFactory = $playlistFactory;
         $this->widgetFactory = $widgetFactory;
     }
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,9 +27,6 @@ namespace Xibo\Factory;
 use Carbon\Carbon;
 use Xibo\Entity\LogEntry;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class LogFactory
@@ -37,17 +34,6 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class LogFactory extends BaseFactory
 {
-    /**
-     * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     */
-    public function __construct($store, $log, $sanitizerService)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-    }
-
     /**
      * Create Empty
      * @return LogEntry

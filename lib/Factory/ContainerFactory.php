@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,14 +28,15 @@ use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
 use Stash\Driver\Composite;
 use Stash\Pool;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\SanitizerService;
 use Xibo\Middleware\State;
 use Xibo\Service\ConfigService;
+use Xibo\Service\BaseDependenciesService;
 use Xibo\Service\HelpService;
 use Xibo\Service\ImageProcessingService;
+use Xibo\Service\MediaService;
 use Xibo\Service\ModuleService;
 use Xibo\Storage\MySqlTimeSeriesStore;
 use Xibo\Storage\PdoStorageService;
@@ -69,7 +70,7 @@ class ContainerFactory
                 $uri = (string) parse_url('http://a' . $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
                 if (stripos($uri, $_SERVER['SCRIPT_NAME']) === 0) {
                     return $_SERVER['SCRIPT_NAME'];
-                } else if ($scriptDir !== '/' && stripos($uri, $scriptDir) === 0) {
+                } elseif ($scriptDir !== '/' && stripos($uri, $scriptDir) === 0) {
                     return $scriptDir;
                 } else {
                     return '';
@@ -112,13 +113,13 @@ class ContainerFactory
 
                 return $view;
             },
-            'sanitizerService' => function(ContainerInterface $c) {
+            'sanitizerService' => function (ContainerInterface $c) {
                 return new SanitizerService();
             },
-            'store' => function(ContainerInterface $c) {
+            'store' => function (ContainerInterface $c) {
                 return (new PdoStorageService($c->get('logService')))->setConnection();
             },
-            'timeSeriesStore' => function(ContainerInterface $c) {
+            'timeSeriesStore' => function (ContainerInterface $c) {
                 if ($c->get('configService')->timeSeriesStore == null) {
                     $timeSeriesStore = new MySqlTimeSeriesStore();
                 } else {
@@ -138,23 +139,19 @@ class ContainerFactory
                     )
                     ->setStore($c->get('store'));
             },
-            'state' => function() {
+            'state' => function () {
                 return new ApplicationState();
             },
-            'dispatcher' => function() {
-                return new EventDispatcher();
-            },
-            'moduleService' => function(ContainerInterface $c) {
+            'moduleService' => function (ContainerInterface $c) {
                 return new ModuleService(
                     $c->get('store'),
                     $c->get('pool'),
                     $c->get('logService'),
                     $c->get('configService'),
-                    $c->get('sanitizerService'),
-                    $c->get('dispatcher')
+                    $c->get('sanitizerService')
                 );
             },
-            'configService' => function(ContainerInterface $c) {
+            'configService' => function (ContainerInterface $c) {
                 return ConfigService::Load($c, PROJECT_ROOT . '/web/settings.php');
             },
             'user' => function (ContainerInterface $c) {
@@ -168,7 +165,7 @@ class ContainerFactory
                     $c->get('applicationScopeFactory')
                 );
             },
-            'helpService' => function(ContainerInterface $c) {
+            'helpService' => function (ContainerInterface $c) {
                 return new HelpService(
                     $c->get('store'),
                     $c->get('configService'),
@@ -176,17 +173,21 @@ class ContainerFactory
                     '/'
                 );
             },
-            'pool' => function(ContainerInterface $c) {
+            'pool' => function (ContainerInterface $c) {
                 $drivers = [];
 
                 $c->get('configService')->setDependencies($c->get('store'), $c->get('rootUri'));
 
-                if ($c->get('configService')->getCacheDrivers() != null && is_array($c->get('configService')->getCacheDrivers())) {
+                if ($c->get('configService')->getCacheDrivers() != null &&
+                    is_array($c->get('configService')->getCacheDrivers())
+                ) {
                     $drivers = $c->get('configService')->getCacheDrivers();
                 } else {
                     // File System Driver
                     $realPath = realpath($c->get('configService')->getSetting('LIBRARY_LOCATION'));
-                    $cachePath = ($realPath) ? $realPath . '/cache/' : $c->get('configService')->getSetting('LIBRARY_LOCATION') . 'cache/';
+                    $cachePath = ($realPath)
+                        ? $realPath . '/cache/'
+                        : $c->get('configService')->getSetting('LIBRARY_LOCATION') . 'cache/';
 
                     $drivers[] = new \Stash\Driver\FileSystem(['path' => $cachePath]);
                 }
@@ -200,20 +201,53 @@ class ContainerFactory
                 $c->get('configService')->setPool($pool);
                 return $pool;
             },
-            'imageProcessingService' => function(ContainerInterface $c) {
+            'imageProcessingService' => function (ContainerInterface $c) {
                 $imageProcessingService = new ImageProcessingService();
                 $imageProcessingService->setDependencies(
                     $c->get('logService')
                 );
                 return $imageProcessingService;
             },
-            'httpCache' => function() {
+            'httpCache' => function () {
                 return new \Xibo\Helper\HttpCacheProvider();
+            },
+            'mediaService' => function (ContainerInterface $c) {
+                $mediaSevice = new MediaService(
+                    $c->get('configService'),
+                    $c->get('logService'),
+                    $c->get('store'),
+                    $c->get('sanitizerService'),
+                    $c->get('pool'),
+                    $c->get('mediaFactory')
+                );
+                $mediaSevice->setDispatcher($c->get('dispatcher'));
+                return $mediaSevice;
+            },
+            'ControllerBaseDependenciesService' => function (ContainerInterface $c) {
+                $controller = new BaseDependenciesService();
+                $controller->setLogger($c->get('logService'));
+                $controller->setSanitizer($c->get('sanitizerService'));
+                $controller->setState($c->get('state'));
+                $controller->setUser($c->get('user'));
+                $controller->setHelp($c->get('helpService'));
+                $controller->setConfig($c->get('configService'));
+                $controller->setView($c->get('view'));
+
+                return $controller;
+            },
+            'RepositoryBaseDependenciesService' => function (ContainerInterface $c) {
+                $repository = new BaseDependenciesService();
+                $repository->setLogger($c->get('logService'));
+                $repository->setSanitizer($c->get('sanitizerService'));
+                $repository->setStore($c->get('store'));
+
+                return $repository;
             }
         ]);
 
         $containerBuilder->addDefinitions(State::registerControllersWithDi());
         $containerBuilder->addDefinitions(State::registerFactoriesWithDi());
+        $containerBuilder->addDefinitions(State::registerDispatcherWithDi());
 
         // Should we compile the container?
         /*if (!Environment::isDevMode()) {

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -36,21 +36,6 @@ use Xibo\Service\LogServiceInterface;
  */
 class IconDashboard extends Base
 {
-    /**
-     * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
-     * @param Twig $view
-     */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, Twig $view)
-    {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-    }
-
     /**
      * @param Request $request
      * @param Response $response

@@ -1,0 +1,70 @@
+{#
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+
+{% block formTitle %}
+    {% trans "Select your Menu Board" %}
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="menuBoardEditFormStep2" class="XiboForm form-horizontal" data-form-step="2" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}"
+                  data-next-form-url="{{ url_for("module.widget.edit.form", {id: module.widget.widgetId}) }}?step=3">
+
+                {% set message %}{% trans "Below you can select the Categories - drag and drop to reorder and to move between lists." %}{% endset %}
+                {{ forms.message(message) }}
+
+                <div class="row">
+                    <div class="col-md-12 row">
+                        <div class="connectedlist col-sm-6">
+                            <p class="text-info text-center">{% trans "Categories Selected" %}</p>
+                            <ul id="categoriesIn" class="connectedSortable m-auto text-center">
+                                {% for category in module.menuBoardCategoriesSelected() %}
+                                    <li id="{{ category.menuCategoryId }}"
+                                        class="li-sortable dbclick">{{ category.name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                        <div class="connectedlist col-sm-6">
+                            <p class="text-info text-center">{% trans "Categories Available" %}</p>
+                            <ul id="categoriesOut" class="connectedSortable m-auto text-center">
+                                {% for category in module.menuBoardCategoriesNotSelected() %}
+                                    <li id="{{ category.menuCategoryId }}"
+                                        class="li-sortable dbclick">{{ category.name }}</li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+                {% set title %}{% trans "Number of Columns" %}{% endset %}
+                {% set helpText %}{% trans "The Region containing this Widget will be divided into the specified number of columns. Below you can select which selected Categories should be rendered in which column." %}{% endset %}
+                {{ forms.number("numOfColumns", title, module.getOption("numOfColumns", 2), helpText) }}
+
+                <input type="hidden" name="step" value="2" />
+            </form>
+        </div>
+    </div>
+{% endblock %}

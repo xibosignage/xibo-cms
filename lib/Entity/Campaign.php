@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,11 +24,10 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -98,7 +97,7 @@ class Campaign implements \JsonSerializable
     /**
      * @var Layout[]
      */
-    private $layouts = [];
+    public $layouts = [];
 
     /**
      * @var Permission[]
@@ -120,11 +119,6 @@ class Campaign implements \JsonSerializable
      * @var PermissionFactory
      */
     private $permissionFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
     
     /**
      * @var TagFactory
@@ -136,10 +130,8 @@ class Campaign implements \JsonSerializable
      */
     private $scheduleFactory;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /**
      * Entity constructor.
@@ -147,28 +139,16 @@ class Campaign implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param PermissionFactory $permissionFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $permissionFactory, $scheduleFactory, $displayFactory, $tagFactory)
+    public function __construct($store, $log, $permissionFactory, $scheduleFactory, $displayNotifyService, $tagFactory)
     {
         $this->setCommonDependencies($store, $log);
         $this->permissionFactory = $permissionFactory;
         $this->scheduleFactory = $scheduleFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
         $this->tagFactory = $tagFactory;
-    }
-
-    /**
-     * Set Child Object Depencendies
-     *  must be set before calling Load with all objects
-     * @param LayoutFactory $layoutFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($layoutFactory)
-    {
-        $this->layoutFactory = $layoutFactory;
-        return $this;
     }
 
     public function __clone()
@@ -224,27 +204,18 @@ class Campaign implements \JsonSerializable
     {
         $options = array_merge([
             'loadPermissions' => true,
-            'loadLayouts' => true,
             'loadTags' => true,
             'loadEvents' => true
         ], $options);
         
         // If we are already loaded, then don't do it again
-        if ($this->campaignId == null || $this->loaded)
+        if ($this->campaignId == null || $this->loaded) {
             return;
-
-        if ($this->layoutFactory == null) {
-            throw new \RuntimeException('Cannot load campaign with all objects without first calling setChildObjectDependencies');
         }
 
         // Permissions
         if ($options['loadPermissions']) {
             $this->permissions = $this->permissionFactory->getByObjectId('Campaign', $this->campaignId);
-        }
-
-        // Layouts
-        if ($options['loadLayouts']) {
-            $this->layouts = $this->layoutFactory->getByCampaignId($this->campaignId, false);
         }
 
         // Load all tags
@@ -335,7 +306,7 @@ class Campaign implements \JsonSerializable
             }
         }
 
-        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
+        $this->getLog()->debug(sprintf('Tags after removal %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -355,12 +326,12 @@ class Campaign implements \JsonSerializable
                 return $a->tagId - $b->tagId;
             });
 
-            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
+            $this->getLog()->debug(sprintf('Tags to be removed: %s', json_encode($this->unassignTags)));
 
             // Replace the arrays
             $this->tags = $tags;
 
-            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+            $this->getLog()->debug(sprintf('Tags remaining: %s', json_encode($this->tags)));
         } else {
             $this->getLog()->debug('Tags were not changed');
         }
@@ -383,15 +354,16 @@ class Campaign implements \JsonSerializable
 
         $this->getLog()->debug('Saving ' . $this);
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
         if ($this->campaignId == null || $this->campaignId == 0) {
             $this->add();
             $this->loaded = true;
-        }
-        else
+        } else {
             $this->update();
+        }
 
         if ($options['saveTags']) {
             // Remove unwanted ones
@@ -417,11 +389,8 @@ class Campaign implements \JsonSerializable
                 }
             }
         }
-
-        if ($this->loaded) {
-            // Manage assignments
-            $this->manageAssignments();
-        }
+        // Manage assignments
+        $this->manageAssignments();
 
         // Notify anyone interested of the changes
         $this->notify($options);
@@ -461,7 +430,7 @@ class Campaign implements \JsonSerializable
         // Delete all events
         foreach ($this->events as $event) {
             /* @var Schedule $event */
-            $event->setDisplayFactory($this->displayFactory);
+            $event->setDisplayNotifyService($this->displayNotifyService);
             $event->delete();
         }
 
@@ -475,7 +444,6 @@ class Campaign implements \JsonSerializable
      */
     public function getLayouts(): array
     {
-        $this->load();
         return $this->layouts;
     }
 
@@ -704,7 +672,7 @@ class Campaign implements \JsonSerializable
         if ($options['notify']) {
             $this->getLog()->debug('CampaignId ' . $this->campaignId . ' wants to notify.');
 
-            $notify = $this->displayFactory->getDisplayNotifyService();
+            $notify = $this->displayNotifyService->init();
 
             // Should we collect immediately
             if ($options['collectNow']) {

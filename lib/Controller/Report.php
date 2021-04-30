@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,15 +22,24 @@
 
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
-use Xibo\Entity\ReportResult;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
+use Xibo\Entity\Media;
+use Xibo\Entity\ReportSchedule;
+use Xibo\Factory\MediaFactory;
+use Xibo\Factory\ReportScheduleFactory;
+use Xibo\Factory\SavedReportFactory;
+use Xibo\Factory\UserFactory;
+use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\SendFile;
 use Xibo\Service\ReportServiceInterface;
+use Xibo\Storage\StorageServiceInterface;
+use Xibo\Storage\TimeSeriesStoreInterface;
+use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Report
@@ -45,19 +54,10 @@ class Report extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
-     * @param Twig $view
      * @param ReportServiceInterface $reportService
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, Twig $view, $reportService)
+    public function __construct($reportService)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->reportService = $reportService;
     }
 

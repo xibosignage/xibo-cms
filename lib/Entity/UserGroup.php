@@ -252,13 +252,11 @@ class UserGroup
             'loadUsers' => true
         ], $options);
 
-        if ($this->loaded || $this->groupId == 0)
+        if ($this->loaded || $this->groupId == 0) {
             return;
+        }
 
         if ($options['loadUsers']) {
-            if ($this->userFactory == null)
-                throw new \RuntimeException('Cannot load without first calling setChildObjectDependencies');
-
             // Load all assigned users
             $this->users = $this->userFactory->getByGroupId($this->groupId);
         }

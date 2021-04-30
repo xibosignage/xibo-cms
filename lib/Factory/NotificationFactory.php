@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,9 +26,6 @@ namespace Xibo\Factory;
 use Carbon\Carbon;
 use Xibo\Entity\Notification;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -45,17 +42,13 @@ class NotificationFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param UserGroupFactory $userGroupFactory
      * @param DisplayGroupFactory $displayGroupFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $userGroupFactory, $displayGroupFactory)
+    public function __construct($user, $userFactory, $userGroupFactory, $displayGroupFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->userGroupFactory = $userGroupFactory;

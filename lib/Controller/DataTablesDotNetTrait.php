@@ -1,5 +1,5 @@
 <?php
-/*
+/**
  * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk

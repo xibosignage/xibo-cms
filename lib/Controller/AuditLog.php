@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,14 +23,10 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\AuditLogFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\SendFile;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
@@ -46,19 +42,10 @@ class AuditLog extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param AuditLogFactory $auditLogFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $auditLogFactory, Twig $view)
+    public function __construct($auditLogFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->auditLogFactory = $auditLogFactory;
     }
 

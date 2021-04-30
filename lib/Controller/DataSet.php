@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,15 +24,12 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Helper\DataSetUploadHandler;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
+use Xibo\Service\MediaService;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -58,22 +55,13 @@ class DataSet extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
-     * @param Twig $view
      * @param \Xibo\Factory\UserFactory $userFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dataSetFactory, $dataSetColumnFactory, Twig $view, $userFactory, $folderFactory)
+    public function __construct($dataSetFactory, $dataSetColumnFactory, $userFactory, $folderFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->userFactory = $userFactory;
@@ -1132,7 +1120,7 @@ class DataSet extends Base
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Make sure the library exists
-        Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+        MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         $sanitizer = $this->getSanitizer($request->getParams());
 

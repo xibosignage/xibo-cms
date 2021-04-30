@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,7 +22,6 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\DisplayProfileLoadedEvent;
 use Xibo\Factory\CommandFactory;
 use Xibo\Service\ConfigServiceInterface;
@@ -100,9 +99,6 @@ class DisplayProfile implements \JsonSerializable
      */
     private $configService;
 
-    /** @var EventDispatcherInterface  */
-    private $dispatcher;
-
     /**
      * @var CommandFactory
      */
@@ -113,15 +109,13 @@ class DisplayProfile implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param EventDispatcherInterface $dispatcher
      * @param CommandFactory $commandFactory
      */
-    public function __construct($store, $log, $config, $dispatcher, $commandFactory)
+    public function __construct($store, $log, $config, $commandFactory)
     {
         $this->setCommonDependencies($store, $log);
 
         $this->configService = $config;
-        $this->dispatcher = $dispatcher;
         $this->commandFactory = $commandFactory;
     }
 
@@ -351,7 +345,7 @@ class DisplayProfile implements \JsonSerializable
             // We've loaded a profile
             // dispatch an event with a reference to this object, allowing subscribers to modify the config before we
             // continue further.
-            $this->dispatcher->dispatch(DisplayProfileLoadedEvent::NAME, new DisplayProfileLoadedEvent($this));
+            $this->getDispatcher()->dispatch(DisplayProfileLoadedEvent::NAME, new DisplayProfileLoadedEvent($this));
 
             // Populate our combined config accordingly
             $this->configCombined = $this->mergeConfigs($this->configDefault, $this->config);

@@ -21,12 +21,8 @@
  */
 namespace Xibo\Factory;
 
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DisplayProfile;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -40,9 +36,6 @@ class DisplayProfileFactory extends BaseFactory
      */
     private $config;
 
-    /** @var EventDispatcherInterface  */
-    private $dispatcher;
-
     /**
      * @var CommandFactory
      */
@@ -50,19 +43,12 @@ class DisplayProfileFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param ConfigServiceInterface $config
-     * @param EventDispatcherInterface $dispatcher
      * @param CommandFactory $commandFactory
      */
-    public function __construct($store, $log, $sanitizerService, $config, $dispatcher, $commandFactory)
+    public function __construct($config, $commandFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-
         $this->config = $config;
-        $this->dispatcher = $dispatcher;
         $this->commandFactory = $commandFactory;
     }
 
@@ -75,7 +61,6 @@ class DisplayProfileFactory extends BaseFactory
             $this->getStore(),
             $this->getLog(),
             $this->config,
-            $this->dispatcher,
             $this->commandFactory
         );
         $displayProfile->config = [];

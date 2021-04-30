@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,7 +23,6 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -112,12 +111,10 @@ class Action implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param PermissionFactory $permissionFactory
      */
-    public function __construct($store, $log, $permissionFactory)
+    public function __construct($store, $log)
     {
         $this->setCommonDependencies($store, $log);
-        $this->permissionFactory = $permissionFactory;
     }
 
     public function __clone()

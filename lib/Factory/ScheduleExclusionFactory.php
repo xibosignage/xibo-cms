@@ -23,9 +23,6 @@
 namespace Xibo\Factory;
 
 use Xibo\Entity\ScheduleExclusion;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 
 /**
  * Class ScheduleExclusionFactory
@@ -33,17 +30,6 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class ScheduleExclusionFactory extends BaseFactory
 {
-    /**
-     * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     */
-    public function __construct($store, $log, $sanitizerService)
-    {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-    }
-
     /**
      * Load by Event Id
      * @param int $eventId

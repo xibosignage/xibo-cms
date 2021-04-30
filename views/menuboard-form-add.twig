@@ -1,0 +1,63 @@
+{#
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
+
+{% block formTitle %}
+    {% trans "Add Menu Board" %}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#menuBoardAddForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="menuBoardAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("menuBoard.add") }}">
+                {% if currentUser.featureEnabled('folder.view') %}
+                    <div class="form-group row">
+                        <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
+                        <div class="col-sm-10">
+                            <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                            <span id="selectedFormFolder"></span>
+                        </div>
+                    </div>
+                    {{ forms.hidden('folderId') }}
+                {% endif %}
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this Menu Board" %}{% endset %}
+                {{ forms.input("name", title, "", helpText) }}
+
+                {% set title %}{% trans "Description" %}{% endset %}
+                {% set helpText %}{% trans "An optional description of the Menu Board. (1 - 250 characters)" %}{% endset %}
+                {{ forms.textarea("description", title, "", helpText) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

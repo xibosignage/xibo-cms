@@ -248,8 +248,7 @@ class Image extends ModuleWidget
                     $this->getLog()->debug('Outputting Image Response');
 
                     // Output Etags
-                    /** @var $httpCache HttpCacheProvider*/
-                    $httpCache = $this->container->get('httpCache');
+                    $httpCache = $this->cacheProvider;
                     $response = $httpCache->withEtag($response, $media->md5 . $width . $height . $proportional . $preview);
                     $response = $httpCache->withExpires($response,'+1 week');
 

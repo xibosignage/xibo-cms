@@ -34,8 +34,8 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Stash\Invalidation;
-use Xibo\Controller\Library;
 use Xibo\Helper\Environment;
+use Xibo\Service\MediaService;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
@@ -571,7 +571,7 @@ class Ticker extends ModuleWidget
         $items = [];
 
         // Make sure we have the cache location configured
-        Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+        MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.

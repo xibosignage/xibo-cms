@@ -95,10 +95,8 @@ class ScheduleReport extends Base
      * @param MediaFactory $mediaFactory
      * @param UserFactory $userFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, Twig $view, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $userFactory)
+    public function __construct($reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $userFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->reportService = $reportService;
         $this->reportScheduleFactory = $reportScheduleFactory;
         $this->savedReportFactory = $savedReportFactory;

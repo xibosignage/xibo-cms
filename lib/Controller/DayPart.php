@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,17 +23,10 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Factory\DayPartFactory;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ScheduleFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class DayPart
@@ -44,46 +37,17 @@ class DayPart extends Base
     /** @var  DayPartFactory */
     private $dayPartFactory;
 
-    /** @var DisplayGroupFactory */
-    private $displayGroupFactory;
-
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
-    /** @var  LayoutFactory */
-    private $layoutFactory;
-
-    /** @var  MediaFactory */
-    private $mediaFactory;
-
     /** @var  ScheduleFactory */
     private $scheduleFactory;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param DayPartFactory $dayPartFactory
-     * @param DisplayGroupFactory $displayGroupFactory
-     * @param DisplayFactory $displayFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $dayPartFactory, $displayGroupFactory, $displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory, Twig $view)
+    public function __construct($dayPartFactory, $scheduleFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->dayPartFactory = $dayPartFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
-        $this->displayFactory = $displayFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
         $this->scheduleFactory = $scheduleFactory;
     }
 
@@ -508,7 +472,6 @@ class DayPart extends Base
     public function edit(Request $request, Response $response, $id)
     {
         $dayPart = $this->dayPartFactory->getById($id)
-            ->setChildObjectDependencies($this->displayGroupFactory, $this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory)
             ->load();
 
         if (!$this->getUser()->checkEditable($dayPart)) {
@@ -629,6 +592,10 @@ class DayPart extends Base
 
         if (!$this->getUser()->checkDeleteable($dayPart)) {
             throw new AccessDeniedException();
+        }
+
+        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1) {
+            throw new InvalidArgumentException(__('Cannot Delete system specific DayParts'));
         }
 
         $dayPart

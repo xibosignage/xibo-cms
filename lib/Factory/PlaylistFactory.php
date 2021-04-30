@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,10 +26,7 @@ namespace Xibo\Factory;
 use Carbon\Carbon;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -58,19 +55,15 @@ class PlaylistFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
      * @param WidgetFactory $widgetFactory
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $config, $sanitizerService, $user, $userFactory, $permissionFactory, $widgetFactory, $tagFactory)
+    public function __construct($config, $user, $userFactory, $permissionFactory, $widgetFactory, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
 
         $this->config = $config;
