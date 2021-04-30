@@ -332,7 +332,7 @@ class DistributionReport implements ReportInterface
             $json['table'],
             0,
             $json['chart'],
-            true
+            $json['hasChartData']
         );
     }
 
@@ -541,8 +541,12 @@ class DistributionReport implements ReportInterface
             ]
         ];
 
-        // Return data to build chart
+        // ----
+        // Chart Only
+        // Return data to build chart/table
+        // This will get saved to a json file when schedule runs
         return new ReportResult(
+            // metadata
             [
                 'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
                 'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),

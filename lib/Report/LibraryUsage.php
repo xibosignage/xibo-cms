@@ -291,7 +291,7 @@ class LibraryUsage implements ReportInterface
             $json['table'],
             0,
             $json['chart'],
-            true
+            $json['hasChartData']
         );
     }
 
@@ -580,7 +580,7 @@ class LibraryUsage implements ReportInterface
             $rows,
             0,
             $chart,
-            true
+            true // TODO Why True here
         );
     }
 }

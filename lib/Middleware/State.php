@@ -858,7 +858,7 @@ class State implements Middleware
                     $c->get('actionFactory')
                 );
             },
-            '\Xibo\Controller\Report' => function(ContainerInterface $c) {
+            '\Xibo\Controller\Report' => function (ContainerInterface $c) {
                 return new \Xibo\Controller\Report(
                     $c->get('logService'),
                     $c->get('sanitizerService'),
@@ -870,7 +870,7 @@ class State implements Middleware
                     $c->get('reportService')
                 );
             },
-            '\Xibo\Controller\ScheduleReport' => function(ContainerInterface $c) {
+            '\Xibo\Controller\ScheduleReport' => function (ContainerInterface $c) {
                 return new \Xibo\Controller\ScheduleReport(
                     $c->get('logService'),
                     $c->get('sanitizerService'),
@@ -886,7 +886,7 @@ class State implements Middleware
                     $c->get('userFactory')
                 );
             },
-            '\Xibo\Controller\SavedReport' => function(ContainerInterface $c) {
+            '\Xibo\Controller\SavedReport' => function (ContainerInterface $c) {
                 return new \Xibo\Controller\SavedReport(
                     $c->get('logService'),
                     $c->get('sanitizerService'),

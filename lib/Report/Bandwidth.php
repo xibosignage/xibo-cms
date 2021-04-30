@@ -139,7 +139,7 @@ class Bandwidth implements ReportInterface
             $json['table'],
             0,
             $json['chart'],
-            true
+            $json['hasChartData']
         );
     }
 

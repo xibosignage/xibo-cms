@@ -177,7 +177,7 @@ class ReportScheduleTask implements TaskInterface
                     $savedReport = $this->savedReportFactory->create($saveAs, $reportSchedule->reportScheduleId, $media->mediaId, Carbon::now()->format('U'), $reportSchedule->userId);
                     $savedReport->save();
 
-                    //$this->createPdfAndNotification($reportSchedule, $savedReport, $media);
+                    $this->createPdfAndNotification($reportSchedule, $savedReport, $media);
 
                     // Add the last savedreport in Report Schedule
                     $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
@@ -214,16 +214,16 @@ class ReportScheduleTask implements TaskInterface
         $report = $this->reportService->getReportByName($reportSchedule->reportName);
 
         if ($report->output_type == 'both' || $report->output_type == 'chart') {
-            $quickChartUrl = $this->config->getSetting('QUICK_CHART_URL');
-            if (!empty($quickChartUrl)) {
-                $script = $this->reportService->getReportChartScript($savedReport->savedReportId, $reportSchedule->reportName);
-                $src = $quickChartUrl. "/chart?width=1000&height=300&c=".$script;
+            if (!empty($this->config->getSetting('QUICK_CHART_URL'))) {
+                $quickChartUrl = $this->config->getSetting('QUICK_CHART_URL') . '/chart?width=1000&height=300&c=';
+                $script = str_replace('"', '\'', $this->reportService->getReportChartScript($savedReport->savedReportId, $reportSchedule->reportName));
+                $src = $quickChartUrl . $script;
 
                 // If multiple charts needs to be displayed
                 $multipleCharts = [];
                 $chartScriptArray = json_decode($script, true);
                 foreach ($chartScriptArray as $key => $chartData) {
-                    $multipleCharts[$key] = $quickChartUrl . "/chart?width=1000&height=300&c=" .json_encode($chartData);
+                    $multipleCharts[$key] = $quickChartUrl . json_encode($chartData);
                 }
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');

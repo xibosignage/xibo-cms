@@ -189,7 +189,7 @@ class TimeConnected implements ReportInterface
             $json['table'],
             0,
             $json['chart'],
-            true
+            $json['hasChartData']
         );
     }
 
@@ -362,7 +362,7 @@ class TimeConnected implements ReportInterface
             ],
             0,
             [],
-            true
+            true //TODO why true
         );
     }
 

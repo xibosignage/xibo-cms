@@ -510,8 +510,18 @@ class ProofOfPlay implements ReportInterface
             $recordsTotal = intval($result['totalStats']);
         }
 
-        // Report result object
-        return new ReportResult($metadata, $rows, $recordsTotal);
+        // ----
+        // Table Only
+        // Return data to build chart/table
+        // This will get saved to a json file when schedule runs
+        return new ReportResult(
+            // metadata
+            $metadata,
+            // table rows
+            $rows,
+            // total records in table
+            $recordsTotal
+        );
     }
 
     /**

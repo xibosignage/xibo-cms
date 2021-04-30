@@ -164,7 +164,7 @@ class TimeDisconnectedSummary implements ReportInterface
             ],
             $json['table'],
             0,
-            $json['chart']
+            $json['chart'] // TODO Why no haschartData
         );
     }
 
@@ -434,45 +434,45 @@ class TimeDisconnectedSummary implements ReportInterface
         }
 
         $chart = [
-        'type' => 'bar',
-        'data' => [
-            'labels' => $availabilityLabels,
-            'datasets' => [
-                [
-                    'backgroundColor' => 'rgb(11, 98, 164)',
-                    'data' => $availabilityData,
-                    'label' => __('Downtime')
-                ],
-                [
-                    'backgroundColor' => 'rgb(0, 255, 0)',
-                    'data' => $availabilityDataConnected,
-                    'label' => __('Uptime')
-                ]
-            ]
-        ],
-        'options' => [
-
-            'scales' => [
-                'xAxes' => [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $availabilityLabels,
+                'datasets' => [
                     [
-                        'stacked' => true
+                        'backgroundColor' => 'rgb(11, 98, 164)',
+                        'data' => $availabilityData,
+                        'label' => __('Downtime')
+                    ],
+                    [
+                        'backgroundColor' => 'rgb(0, 255, 0)',
+                        'data' => $availabilityDataConnected,
+                        'label' => __('Uptime')
                     ]
-                ],
-                'yAxes' => [
-                    [
-                        'stacked' =>  true,
-                        'scaleLabel' =>  [
-                            'display' =>  true,
-                            'labelString' =>  $postUnits
+                ]
+            ],
+            'options' => [
+
+                'scales' => [
+                    'xAxes' => [
+                        [
+                            'stacked' => true
+                        ]
+                    ],
+                    'yAxes' => [
+                        [
+                            'stacked' =>  true,
+                            'scaleLabel' =>  [
+                                'display' =>  true,
+                                'labelString' =>  $postUnits
+                            ]
                         ]
                     ]
-                ]
-            ],
-            'legend' =>  [
-                'display' => false
-            ],
-            'maintainAspectRatio' => false
-        ]
+                ],
+                'legend' =>  [
+                    'display' => false
+                ],
+                'maintainAspectRatio' => false
+            ]
         ];
 
         // Return data to build chart

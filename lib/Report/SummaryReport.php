@@ -13,6 +13,7 @@ use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Translate;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -52,6 +53,11 @@ class SummaryReport implements ReportInterface
      */
     private $reportService;
 
+    /**
+     * @var SanitizerService
+     */
+    private $sanitizer;
+
     private $table = 'stat';
 
     private $periodTable = 'period';
@@ -63,6 +69,7 @@ class SummaryReport implements ReportInterface
         $this->mediaFactory = $container->get('mediaFactory');
         $this->layoutFactory = $container->get('layoutFactory');
         $this->reportService = $container->get('reportService');
+        $this->sanitizer = $container->get('sanitizerService');
 
         return $this;
     }
@@ -309,7 +316,7 @@ class SummaryReport implements ReportInterface
             $json['table'],
             0,
             $json['chart'],
-            true
+            $json['hasChartData']
         );
     }
 
@@ -449,10 +456,10 @@ class SummaryReport implements ReportInterface
                 $backgroundColor[] = 'rgb(95, 186, 218, 0.6)';
                 $borderColor[] = 'rgb(240,93,41, 0.8)';
 
-                $count = $row['NumberPlays'];
+                $count = $this->sanitizer->getSanitizer($row)->getInt('NumberPlays');
                 $countData[] = ($count == '') ? 0 : $count;
 
-                $duration = $row['Duration'];
+                $duration = $this->sanitizer->getSanitizer($row)->getInt('Duration');
                 $durationData[] = ($duration == '') ? 0 : $duration;
             }
         }
@@ -511,15 +518,23 @@ class SummaryReport implements ReportInterface
             ]
         ];
 
-        // Return data to build chart
+        // ----
+        // Chart Only
+        // Return data to build chart/table
+        // This will get saved to a json file when schedule runs
         return new ReportResult(
+            // metadata
             [
                 'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
                 'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
             ],
+            // table rows
             [],
+            // total records in table
             0,
+            // chart script
             $chart,
+            // is there data in the chart?
             count($durationData) > 0 && count($countData) > 0
         );
     }

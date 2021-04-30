@@ -359,16 +359,17 @@ class SavedReport extends Base
         // Get the report config
         $report = $this->reportService->getReportByName($name);
         if ($report->output_type == 'both' || $report->output_type == 'chart') {
-            $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL');
-            if (!empty($quickChartUrl)) {
-                $script = $this->reportService->getReportChartScript($id, $name);
-                $src = $quickChartUrl . "/chart?width=1000&height=300&c=" . $script;
+            if (!empty($this->getConfig()->getSetting('QUICK_CHART_URL'))) {
+                $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL') . '/chart?width=1000&height=300&c=';
+
+                $script = str_replace('"', '\'', $this->reportService->getReportChartScript($id, $name));
+                $src = $quickChartUrl . $script;
 
                 // If multiple charts needs to be displayed
                 $multipleCharts = [];
                 $chartScriptArray = json_decode($script, true);
                 foreach ($chartScriptArray as $key => $chartData) {
-                    $multipleCharts[$key] = $quickChartUrl . "/chart?width=1000&height=300&c=" .json_encode($chartData);
+                    $multipleCharts[$key] = $quickChartUrl . json_encode($chartData);
                 }
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
@@ -379,7 +380,7 @@ class SavedReport extends Base
             $tableData = $results->table;
         }
 
-        // Get report email template
+        // Get report email template to export
         $emailTemplate = $this->reportService->getReportEmailTemplate($name);
 
         if (!empty($emailTemplate)) {
@@ -392,8 +393,6 @@ class SavedReport extends Base
                     'header' => $report->description,
                     'logo' => $this->getConfig()->uri('img/xibologo.png', true),
                     'title' => $savedReport->saveAs,
-
-                    // TODO FIX
                     'metadata' => $results->metadata,
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,

@@ -48,13 +48,13 @@ interface ReportInterface
     public function getReportChartScript($results);
 
     /**
-     * Return the twig file name of the report email template
+     * Return the twig file name of the saved report email and export template
      * @return string
      */
     public function getReportEmailTemplate();
 
     /**
-     * Return the twig file name of the saved report template
+     * Return the twig file name of the saved report preview template
      * @return string
      */
     public function getSavedReportTemplate();
@@ -95,7 +95,7 @@ interface ReportInterface
     public function restructureSavedReportOldJson($json);
 
     /**
-     * Return data to build chart of saved report
+     * Return data from saved json file to build chart/table for saved report
      * @param array $json
      * @param object $savedReport
      * @return ReportResult
@@ -103,7 +103,8 @@ interface ReportInterface
     public function getSavedReportResults($json, $savedReport);
 
     /**
-     * Get results
+     * Get results when on demand report runs and
+     * This result will get saved to a json if schedule report runs
      * @param SanitizerInterface $sanitizedParams
      * @return ReportResult
      */
