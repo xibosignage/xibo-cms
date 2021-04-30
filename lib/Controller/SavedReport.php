@@ -353,14 +353,14 @@ class SavedReport extends Base
             if (!empty($this->getConfig()->getSetting('QUICK_CHART_URL'))) {
                 $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL') . '/chart?width=1000&height=300&c=';
 
-                $script = str_replace('"', '\'', $this->reportService->getReportChartScript($id, $name));
-                $src = $quickChartUrl . $script;
+                $script = $this->reportService->getReportChartScript($id, $name);
+                $src = $quickChartUrl . str_replace('"', '\'', $script);
 
                 // If multiple charts needs to be displayed
                 $multipleCharts = [];
                 $chartScriptArray = json_decode($script, true);
                 foreach ($chartScriptArray as $key => $chartData) {
-                    $multipleCharts[$key] = $quickChartUrl . json_encode($chartData);
+                    $multipleCharts[$key] = $quickChartUrl . str_replace('"', '\'', json_encode($chartData));
                 }
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');

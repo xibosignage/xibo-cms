@@ -301,7 +301,11 @@ class ProofOfPlay implements ReportInterface
         $metadata['title'] = $savedReport->saveAs;
 
         // Report result object
-        return new ReportResult($metadata, $json['table'], $json['recordTotal']);
+        return new ReportResult(
+            $metadata,
+            $json['table'],
+            $json['recordsTotal']
+        );
     }
 
     /** @inheritdoc */
@@ -515,11 +519,8 @@ class ProofOfPlay implements ReportInterface
         // Return data to build chart/table
         // This will get saved to a json file when schedule runs
         return new ReportResult(
-            // metadata
             $metadata,
-            // table rows
             $rows,
-            // total records in table
             $recordsTotal
         );
     }
@@ -971,7 +972,7 @@ class ProofOfPlay implements ReportInterface
         // Remove ` and DESC from the array strings
         $cols = [];
         foreach ($columns as $column) {
-            $str = str_replace("`", "", str_replace(" DESC", "", $column));
+            $str = str_replace('`', '', str_replace(' DESC', '', $column));
             if (\strpos($column, 'DESC') !== false) {
                 $cols[$str] = -1;
             } else {

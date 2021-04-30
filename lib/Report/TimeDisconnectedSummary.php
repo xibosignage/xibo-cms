@@ -163,8 +163,8 @@ class TimeDisconnectedSummary implements ReportInterface
                 'title' => $savedReport->saveAs,
             ],
             $json['table'],
-            0,
-            $json['chart'] // TODO Why no haschartData
+            $json['recordsTotal'],
+            $json['chart']
         );
     }
 
@@ -355,7 +355,7 @@ class TimeDisconnectedSummary implements ReportInterface
         }
 
         $body .= '
-            GROUP BY display.display
+            GROUP BY display.display, display.displayId
         ';
 
         // Sorting?
@@ -409,16 +409,15 @@ class TimeDisconnectedSummary implements ReportInterface
         }
 
         // Paging
+        $recordsTotal = 0;
         if ($limit != '' && count($rows) > 0) {
             $results = $this->store->select($select . $body, $params);
-            $this->state->recordsTotal = count($results);
+            $recordsTotal = count($results);
         }
 
         //
         // Output Results
         // --------------
-        $this->state->template = 'grid';
-        $this->state->setData($rows);
 
         $availabilityData = [];
         $availabilityDataConnected = [];
@@ -475,14 +474,17 @@ class TimeDisconnectedSummary implements ReportInterface
             ]
         ];
 
-        // Return data to build chart
+        // ----
+        // Both Chart and Table
+        // Return data to build chart/table
+        // This will get saved to a json file when schedule runs
         return new ReportResult(
             [
                 'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
                 'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
             ],
             $rows,
-            0,
+            $recordsTotal,
             $chart
         );
     }

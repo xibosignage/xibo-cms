@@ -98,7 +98,6 @@ class LibraryUsage implements ReportInterface
         $this->reportService = $container->get('reportService');
         $this->configService = $container->get('configService');
         $this->sanitizer = $container->get('sanitizerService');
-        $this->state = $container->get('state');
 
         return $this;
     }
@@ -289,9 +288,8 @@ class LibraryUsage implements ReportInterface
                 'title' => $savedReport->saveAs,
             ],
             $json['table'],
-            0,
-            $json['chart'],
-            $json['hasChartData']
+            $json['recordsTotal'],
+            $json['chart']
         );
     }
 
@@ -438,13 +436,11 @@ class LibraryUsage implements ReportInterface
         }
 
         // Paging
+        $recordsTotal = 0;
         if ($limit != '' && count($rows) > 0) {
             $results = $this->store->select('SELECT COUNT(*) AS total FROM `user` ' . $permissions, $params);
-            $this->state->recordsTotal = intval($results[0]['total']);
+            $recordsTotal = intval($results[0]['total']);
         }
-
-        $this->state->template = 'grid';
-        $this->state->setData($rows);
 
         // Get the Library widget labels and Widget Data
         $libraryWidgetLabels = [];
@@ -571,16 +567,18 @@ class LibraryUsage implements ReportInterface
             ]
         ];
 
-        // Return data to build chart
+        // ----
+        // Both Chart and Table
+        // Return data to build chart/table
+        // This will get saved to a json file when schedule runs
         return new ReportResult(
             [
                 'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
                 'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
             ],
             $rows,
-            0,
-            $chart,
-            true // TODO Why True here
+            $recordsTotal,
+            $chart
         );
     }
 }

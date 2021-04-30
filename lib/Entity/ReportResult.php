@@ -36,7 +36,7 @@ class ReportResult
     public $recordsTotal;
 
     /**
-     * Is it a chart report?
+     * Is it a chart based report?
      * @var bool|false
      */
     public $hasChartData;

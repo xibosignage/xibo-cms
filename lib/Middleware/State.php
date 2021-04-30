@@ -735,14 +735,14 @@ class State implements Middleware
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\Report' => function(ContainerInterface $c) {
+            '\Xibo\Controller\Report' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Report(
                     $c->get('reportService')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\SavedReport' => function(ContainerInterface $c) {
+            '\Xibo\Controller\SavedReport' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\SavedReport(
                     $c->get('reportService'),
                     $c->get('reportScheduleFactory'),
@@ -753,7 +753,7 @@ class State implements Middleware
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\ScheduleReport' => function(ContainerInterface $c) {
+            '\Xibo\Controller\ScheduleReport' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\ScheduleReport(
                     $c->get('reportService'),
                     $c->get('reportScheduleFactory'),

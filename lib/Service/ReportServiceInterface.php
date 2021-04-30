@@ -153,7 +153,7 @@ interface ReportServiceInterface
      * @param int $savedreportId
      * @param string $reportName
      * @throws GeneralException
-     * @return array
+     * @return string
      */
     public function getReportChartScript($savedreportId, $reportName);
 }

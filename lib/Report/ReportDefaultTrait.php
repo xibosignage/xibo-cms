@@ -144,6 +144,11 @@ trait ReportDefaultTrait
         return null;
     }
 
+    /**
+     * Generate saved report name
+     * @param SanitizerInterface $sanitizedParams
+     * @return string
+     */
     public function generateSavedReportName(SanitizerInterface $sanitizedParams)
     {
         $saveAs = sprintf(__('%s report', ucfirst($sanitizedParams->getString('filter'))));

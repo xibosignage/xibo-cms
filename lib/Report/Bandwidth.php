@@ -137,7 +137,7 @@ class Bandwidth implements ReportInterface
                 'title' => $savedReport->saveAs,
             ],
             $json['table'],
-            0,
+            $json['recordsTotal'],
             $json['chart'],
             $json['hasChartData']
         );
@@ -313,7 +313,10 @@ class Bandwidth implements ReportInterface
             ]
         ];
 
-        // Return data to build chart
+        // ----
+        // Chart Only
+        // Return data to build chart/table
+        // This will get saved to a json file when schedule runs
         return new ReportResult(
             [
                 'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),

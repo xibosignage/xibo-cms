@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\Media;
+use Xibo\Entity\ReportResult;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;

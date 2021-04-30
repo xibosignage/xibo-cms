@@ -386,7 +386,7 @@ class ReportService implements ReportServiceInterface
         $object = $this->createReportObject($className);
 
         // Set Report Schedule form data
-        return $object->getSavedReportTemplate(); // TODO summary repot doesnot have it why???
+        return $object->getSavedReportTemplate();
     }
 
     /**

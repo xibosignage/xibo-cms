@@ -41,8 +41,3 @@ services:
 
   quickchart:
     image: ianw/quickchart
-
-networks:
-  default:
-    external:
-      name: mongodb_mongodb

@@ -187,7 +187,7 @@ class TimeConnected implements ReportInterface
                 'title' => $savedReport->saveAs,
             ],
             $json['table'],
-            0,
+            $json['recordsTotal'],
             $json['chart'],
             $json['hasChartData']
         );
@@ -350,7 +350,10 @@ class TimeConnected implements ReportInterface
             }
         }
 
-        // Return data to build chart
+        // ----
+        // No grid
+        // Return data to build chart/table
+        // This will get saved to a json file when schedule runs
         return new ReportResult(
             [
                 'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
@@ -362,7 +365,7 @@ class TimeConnected implements ReportInterface
             ],
             0,
             [],
-            true //TODO why true
+            true // to set state->extra
         );
     }
 
@@ -404,7 +407,9 @@ class TimeConnected implements ReportInterface
         // Join in stats
         // -------------
         $query = '
-            SELECT periods.id,
+            SELECT periods.id,               
+               periods.start,
+               periods.end,
                periods.label,
                periods.customLabel,
                display,
@@ -442,7 +447,10 @@ class TimeConnected implements ReportInterface
         GROUP BY periods.id,
              periods.start,
              periods.end,
-             joined.display
+             periods.label,
+             periods.customLabel,
+             joined.display,
+             joined.displayId
         ORDER BY id, display
             ';
 

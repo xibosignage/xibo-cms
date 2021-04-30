@@ -314,7 +314,7 @@ class SummaryReport implements ReportInterface
                 'title' => $savedReport->saveAs,
             ],
             $json['table'],
-            0,
+            $json['recordsTotal'],
             $json['chart'],
             $json['hasChartData']
         );
@@ -523,18 +523,13 @@ class SummaryReport implements ReportInterface
         // Return data to build chart/table
         // This will get saved to a json file when schedule runs
         return new ReportResult(
-            // metadata
             [
                 'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
                 'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
             ],
-            // table rows
             [],
-            // total records in table
             0,
-            // chart script
             $chart,
-            // is there data in the chart?
             count($durationData) > 0 && count($countData) > 0
         );
     }
