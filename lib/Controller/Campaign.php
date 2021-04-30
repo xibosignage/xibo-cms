@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,16 +23,11 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
+use Xibo\Event\CampaignLoadEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -60,42 +55,20 @@ class Campaign extends Base
      */
     private $tagFactory;
 
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
-     * @var UserGroupFactory
-     */
-    private $userGroupFactory;
-
     /** @var FolderFactory */
     private $folderFactory;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param CampaignFactory $campaignFactory
      * @param LayoutFactory $layoutFactory
-     * @param PermissionFactory $permissionFactory
-     * @param UserGroupFactory $userGroupFactory
      * @param TagFactory $tagFactory
-     * @param Twig $view
+     * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $campaignFactory, $layoutFactory, $permissionFactory, $userGroupFactory, $tagFactory, Twig $view, $folderFactory)
+    public function __construct($campaignFactory, $layoutFactory, $tagFactory, $folderFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->campaignFactory = $campaignFactory;
         $this->layoutFactory = $layoutFactory;
-        $this->permissionFactory = $permissionFactory;
-        $this->userGroupFactory = $userGroupFactory;
         $this->tagFactory = $tagFactory;
         $this->folderFactory = $folderFactory;
     }
@@ -224,12 +197,13 @@ class Campaign extends Base
 
         foreach ($campaigns as $campaign) {
             /* @var \Xibo\Entity\Campaign $campaign */
-
             if (count($embed) > 0) {
-                $campaign->setChildObjectDependencies($this->layoutFactory);
+                if (in_array('layouts', $embed)) {
+                    $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
+                }
+
                 $campaign->load([
                     'loadPermissions' => in_array('permissions', $embed),
-                    'loadLayouts' => in_array('layouts', $embed),
                     'loadTags' => in_array('tags', $embed),
                     'loadEvents' => in_array('events', $embed)
                 ]);
@@ -238,7 +212,7 @@ class Campaign extends Base
             }
 
             if ($this->isApi($request)) {
-                break;
+                continue;
             }
 
             $campaign->includeProperty('buttons');
@@ -598,7 +572,7 @@ class Campaign extends Base
         // Assign layouts?
         if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {
             // Fully decorate our Campaign
-            $campaign->setChildObjectDependencies($this->layoutFactory);
+            $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
 
             // Remove all we've currently got assigned, keeping track of them for sharing check
             $originalLayoutAssignments = array_map(function ($element) {
@@ -706,8 +680,6 @@ class Campaign extends Base
         if (!$this->getUser()->checkDeleteable($campaign)) {
             throw new AccessDeniedException();
         }
-
-        $campaign->setChildObjectDependencies($this->layoutFactory);
 
         $campaign->delete();
 
@@ -817,7 +789,7 @@ class Campaign extends Base
             throw new InvalidArgumentException(__('You cannot change the assignment of a Layout Specific Campaign'), 'campaignId');
         }
 
-        $campaign->setChildObjectDependencies($this->layoutFactory);
+        $this->getDispatcher()->dispatch(CampaignLoadEvent::$NAME, new CampaignLoadEvent($campaign));
 
         // Get the layout we want to add
         $params = $this->getSanitizer($request->getParams());

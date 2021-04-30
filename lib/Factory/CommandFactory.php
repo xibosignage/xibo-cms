@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Command;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -37,29 +34,13 @@ use Xibo\Support\Exception\NotFoundException;
 class CommandFactory extends BaseFactory
 {
     /**
-     * @var DisplayProfileFactory
-     */
-    private $displayProfileFactory;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
-     * @param PermissionFactory $permissionFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory)
+    public function __construct($user, $userFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
-        $this->permissionFactory = $permissionFactory;
     }
 
     /**
@@ -68,7 +49,7 @@ class CommandFactory extends BaseFactory
      */
     public function create()
     {
-        return new Command($this->getStore(), $this->getLog(), $this->permissionFactory);
+        return new Command($this->getStore(), $this->getLog());
     }
 
     /**
@@ -199,7 +180,7 @@ class CommandFactory extends BaseFactory
 
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Command($this->getStore(), $this->getLog(), $this->displayProfileFactory))->hydrate($row);
+            $entries[] = (new Command($this->getStore(), $this->getLog()))->hydrate($row);
         }
 
         // Paging

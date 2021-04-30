@@ -29,6 +29,7 @@ use GuzzleHttp\Client;
 use Monolog\Logger;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\Bandwidth;
 use Xibo\Entity\Display;
 use Xibo\Entity\Region;
@@ -153,6 +154,10 @@ class Soap
 
     /** @var  PlayerVersionFactory */
     protected $playerVersionFactory;
+    /**
+     * @var EventDispatcher
+     */
+    private $dispatcher;
 
     /**
      * Soap constructor.
@@ -180,9 +185,31 @@ class Soap
      * @param PlayerVersionFactory $playerVersionFactory
      */
 
-    public function __construct($logProcessor, $pool, $store, $timeSeriesStore, $log, $sanitizer, $config, $requiredFileFactory, $moduleFactory, $layoutFactory, $dataSetFactory, $displayFactory, $userGroupFactory, $bandwidthFactory, $mediaFactory, $widgetFactory, $regionFactory, $notificationFactory, $displayEventFactory, $scheduleFactory, $dayPartFactory, $playerVersionFactory)
-
-    {
+    public function __construct(
+        $logProcessor,
+        $pool,
+        $store,
+        $timeSeriesStore,
+        $log,
+        $sanitizer,
+        $config,
+        $requiredFileFactory,
+        $moduleFactory,
+        $layoutFactory,
+        $dataSetFactory,
+        $displayFactory,
+        $userGroupFactory,
+        $bandwidthFactory,
+        $mediaFactory,
+        $widgetFactory,
+        $regionFactory,
+        $notificationFactory,
+        $displayEventFactory,
+        $scheduleFactory,
+        $dayPartFactory,
+        $playerVersionFactory,
+        $dispatcher
+    ) {
         $this->logProcessor = $logProcessor;
         $this->pool = $pool;
         $this->store = $store;
@@ -205,6 +232,7 @@ class Soap
         $this->scheduleFactory = $scheduleFactory;
         $this->dayPartFactory = $dayPartFactory;
         $this->playerVersionFactory = $playerVersionFactory;
+        $this->dispatcher = $dispatcher;
     }
 
     /**
@@ -259,6 +287,18 @@ class Soap
     protected function getConfig()
     {
         return $this->configService;
+    }
+
+    /**
+     * @return EventDispatcher
+     */
+    public function getDispatcher(): EventDispatcher
+    {
+        if ($this->dispatcher === null) {
+            $this->dispatcher = new EventDispatcher();
+        }
+
+        return $this->dispatcher;
     }
 
     /**

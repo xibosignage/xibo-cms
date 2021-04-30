@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -29,9 +29,10 @@ use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DataSetColumnFactory;
 use Xibo\Factory\DataSetFactory;
-use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\PermissionFactory;
+use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
@@ -267,22 +268,22 @@ class DataSet implements \JsonSerializable
     /** @var  PermissionFactory */
     private $permissionFactory;
 
-    /** @var  DisplayFactory */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
-     * @param $sanitizerService
+     * @param SanitizerService $sanitizerService
      * @param ConfigServiceInterface $config
      * @param PoolInterface $pool
      * @param DataSetFactory $dataSetFactory
      * @param DataSetColumnFactory $dataSetColumnFactory
      * @param PermissionFactory $permissionFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayFactory)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $dataSetFactory, $dataSetColumnFactory, $permissionFactory, $displayNotifyService)
     {
         $this->setCommonDependencies($store, $log);
         $this->sanitizerService = $sanitizerService;
@@ -291,7 +292,7 @@ class DataSet implements \JsonSerializable
         $this->dataSetFactory = $dataSetFactory;
         $this->dataSetColumnFactory = $dataSetColumnFactory;
         $this->permissionFactory = $permissionFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
     }
 
     /**
@@ -350,6 +351,15 @@ class DataSet implements \JsonSerializable
     public function countLast()
     {
         return $this->countLast;
+    }
+
+    /**
+     * Get the Display Notify Service
+     * @return DisplayNotifyServiceInterface
+     */
+    public function getDisplayNotifyService(): DisplayNotifyServiceInterface
+    {
+        return $this->displayNotifyService->init();
     }
 
     /**
@@ -1067,7 +1077,7 @@ class DataSet implements \JsonSerializable
     {
         $this->getLog()->debug('DataSet ' . $this->dataSetId . ' wants to notify');
 
-        $this->displayFactory->getDisplayNotifyService()->collectNow()->notifyByDataSetId($this->dataSetId);
+        $this->getDisplayNotifyService()->collectNow()->notifyByDataSetId($this->dataSetId);
     }
 
     /**

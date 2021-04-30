@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,7 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\Campaign;
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -46,10 +44,8 @@ class CampaignFactory extends BaseFactory
      */
     private $scheduleFactory;
 
-    /**
-     * @var DisplayFactory
-     */
-    private $displayFactory;
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
     
     /**
      * @var TagFactory
@@ -58,23 +54,19 @@ class CampaignFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      * @param PermissionFactory $permissionFactory
      * @param ScheduleFactory $scheduleFactory
-     * @param DisplayFactory $displayFactory
+     * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param $tagFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory, $permissionFactory, $scheduleFactory, $displayFactory, $tagFactory)
+    public function __construct($user, $userFactory, $permissionFactory, $scheduleFactory, $displayNotifyService, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
         $this->permissionFactory = $permissionFactory;
         $this->scheduleFactory = $scheduleFactory;
-        $this->displayFactory = $displayFactory;
+        $this->displayNotifyService = $displayNotifyService;
         $this->tagFactory = $tagFactory;
     }
 
@@ -83,7 +75,7 @@ class CampaignFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Campaign($this->getStore(), $this->getLog(), $this->permissionFactory, $this->scheduleFactory, $this->displayFactory, $this->tagFactory);
+        return new Campaign($this->getStore(), $this->getLog(), $this->permissionFactory, $this->scheduleFactory, $this->displayNotifyService, $this->tagFactory);
     }
 
     /**
@@ -116,12 +108,12 @@ class CampaignFactory extends BaseFactory
      */
     public function getById($campaignId)
     {
-        $this->getLog()->debug('CampaignFactory getById(%d)', $campaignId);
+        $this->getLog()->debug(sprintf('CampaignFactory getById(%d)', $campaignId));
 
         $campaigns = $this->query(null, ['disableUserCheck' => 1, 'campaignId' => $campaignId, 'isLayoutSpecific' => -1, 'excludeTemplates' => -1]);
 
         if (count($campaigns) <= 0) {
-            $this->getLog()->debug('Campaign not found with ID %d', $campaignId);
+            $this->getLog()->debug(sprintf('Campaign not found with ID %d', $campaignId));
             throw new NotFoundException(__('Campaign not found'));
         }
 
@@ -339,5 +331,4 @@ class CampaignFactory extends BaseFactory
 
         return $campaigns;
     }
-
 }

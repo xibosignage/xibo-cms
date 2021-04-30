@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,7 +25,6 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\MediaFactory;
@@ -33,10 +32,7 @@ use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\SendFile;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
@@ -87,18 +83,7 @@ class Report extends Base
     private $userFactory;
 
     /**
-     * @var Twig
-     */
-    private $view;
-
-    /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param ReportServiceInterface $reportService
@@ -106,12 +91,9 @@ class Report extends Base
      * @param SavedReportFactory $savedReportFactory
      * @param MediaFactory $mediaFactory
      * @param UserFactory $userFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $userFactory, Twig $view)
+    public function __construct($store, $timeSeriesStore, $reportService, $reportScheduleFactory, $savedReportFactory, $mediaFactory, $userFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
         $this->reportService = $reportService;
@@ -119,7 +101,6 @@ class Report extends Base
         $this->savedReportFactory = $savedReportFactory;
         $this->mediaFactory = $mediaFactory;
         $this->userFactory = $userFactory;
-        $this->view = $view;
     }
 
     /// //<editor-fold desc="Report Schedules">
@@ -527,7 +508,6 @@ class Report extends Base
                 $media = $this->mediaFactory->getById($savedreport->mediaId);
 
                 $savedreport->load();
-                $media->load();
 
                 // Delete
                 $savedreport->delete();
@@ -993,7 +973,6 @@ class Report extends Base
         }
 
         $savedReport->load();
-        $media->load();
 
         // Delete
         $savedReport->delete();
@@ -1077,11 +1056,11 @@ class Report extends Base
         $emailTemplate = $this->reportService->getReportEmailTemplate($name);
 
         if (!empty($emailTemplate)) {
-
             // Save PDF attachment
             ob_start();
             // Render the template
-            echo $this->view->fetch($emailTemplate,
+            echo $this->getView()->fetch(
+                $emailTemplate,
                 [
                     'header' => $report->description,
                     'logo' => $this->getConfig()->uri('img/xibologo.png', true),
@@ -1093,7 +1072,8 @@ class Report extends Base
                     'src' => isset($src) ? $src : null,
                     'multipleCharts' => isset($multipleCharts) ? $multipleCharts : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null
-                ]);
+                ]
+            );
             $body = ob_get_contents();
             ob_end_clean();
 

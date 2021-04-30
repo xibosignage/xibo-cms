@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,9 +23,7 @@
 
 namespace Xibo\Service;
 
-
 use Stash\Interfaces\PoolInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -62,51 +60,41 @@ class ModuleService implements ModuleServiceInterface
      */
     private $sanitizerService;
 
-    /** @var  EventDispatcherInterface */
-    private $dispatcher;
-
     /**
      * @inheritdoc
      */
-    public function __construct($store, $pool, $log, $config, $sanitizer, $dispatcher)
+    public function __construct($store, $pool, $log, $config, $sanitizer)
     {
         $this->store = $store;
         $this->pool = $pool;
         $this->logService = $log;
         $this->configService = $config;
         $this->sanitizerService = $sanitizer;
-        $this->dispatcher = $dispatcher;
     }
 
     /**
      * @inheritdoc
      */
-    public function get($module, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, $container)
-    {
-        $object = $this->getByClass($module->class, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, $container);
-
-        $object->setModule($module);
-
-        return $object;
-    }
-
-    /**
-     * @inheritdoc
-     */
-    public function getByClass($className, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $view, $container)
-    {
-        if (!\class_exists($className)) {
-            throw new NotFoundException(__('Class %s not found', $className));
-        }
-
-        /* @var \Xibo\Widget\ModuleWidget $object */
-        $object = new $className(
-            $this->store,
-            $this->pool,
-            $this->logService,
-            $this->configService,
-            $this->sanitizerService,
-            $this->dispatcher,
+    public function get(
+        $module,
+        $moduleFactory,
+        $mediaFactory,
+        $dataSetFactory,
+        $dataSetColumnFactory,
+        $transitionFactory,
+        $displayFactory,
+        $commandFactory,
+        $scheduleFactory,
+        $permissionFactory,
+        $userGroupFactory,
+        $playlistFactory,
+        $menuBoardFactory,
+        $menuBoardCategoryFactory,
+        $view,
+        $cacheProvider
+    ) {
+        $object = $this->getByClass(
+            $module->class,
             $moduleFactory,
             $mediaFactory,
             $dataSetFactory,
@@ -118,8 +106,64 @@ class ModuleService implements ModuleServiceInterface
             $permissionFactory,
             $userGroupFactory,
             $playlistFactory,
+            $menuBoardFactory,
+            $menuBoardCategoryFactory,
             $view,
-            $container
+            $cacheProvider
+        );
+
+        $object->setModule($module);
+
+        return $object;
+    }
+
+    /**
+     * @inheritdoc
+     */
+    public function getByClass(
+        $className,
+        $moduleFactory,
+        $mediaFactory,
+        $dataSetFactory,
+        $dataSetColumnFactory,
+        $transitionFactory,
+        $displayFactory,
+        $commandFactory,
+        $scheduleFactory,
+        $permissionFactory,
+        $userGroupFactory,
+        $playlistFactory,
+        $menuBoardFactory,
+        $menuBoardCategoryFactory,
+        $view,
+        $cacheProvider
+    ) {
+        if (!\class_exists($className)) {
+            throw new NotFoundException(__('Class %s not found', $className));
+        }
+
+        /* @var \Xibo\Widget\ModuleWidget $object */
+        $object = new $className(
+            $this->store,
+            $this->pool,
+            $this->logService,
+            $this->configService,
+            $this->sanitizerService,
+            $moduleFactory,
+            $mediaFactory,
+            $dataSetFactory,
+            $dataSetColumnFactory,
+            $transitionFactory,
+            $displayFactory,
+            $commandFactory,
+            $scheduleFactory,
+            $permissionFactory,
+            $userGroupFactory,
+            $playlistFactory,
+            $menuBoardFactory,
+            $menuBoardCategoryFactory,
+            $view,
+            $cacheProvider
         );
 
         return $object;

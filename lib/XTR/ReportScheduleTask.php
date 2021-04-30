@@ -24,14 +24,13 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use Slim\Views\Twig;
-use Xibo\Controller\Library;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
-use Xibo\Helper\DateFormatHelper;
+use Xibo\Service\MediaService;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -102,7 +101,7 @@ class ReportScheduleTask implements TaskInterface
      */
     private function runReportSchedule()
     {
-        Library::ensureLibraryExists($this->config->getSetting('LIBRARY_LOCATION'));
+        MediaService::ensureLibraryExists($this->config->getSetting('LIBRARY_LOCATION'));
         $reportSchedules = $this->reportScheduleFactory->query(null, ['isActive' => 1, 'disableUserCheck' => 1]);
 
         // Get list of ReportSchedule

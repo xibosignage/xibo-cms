@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,7 +26,6 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
-use Slim\Views\Twig;
 use Xibo\Factory\ActionFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
@@ -35,10 +34,7 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -52,22 +48,12 @@ use Xibo\Support\Exception\NotFoundException;
 class Region extends Base
 {
     /**
-     * @var Session
-     */
-    private $session;
-
-    /**
      * @var RegionFactory
      */
     private $regionFactory;
 
     /** @var WidgetFactory */
     private $widgetFactory;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
 
     /**
      * @var ModuleFactory
@@ -84,48 +70,22 @@ class Region extends Base
      */
     private $transitionFactory;
 
-    /**
-     * @var UserGroupFactory
-     */
-    private $userGroupFactory;
-
-    /**
-     * @var ActionFactory
-     */
-    private $actionFactory;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
-     * @param Session $session
      * @param RegionFactory $regionFactory
      * @param WidgetFactory $widgetFactory
-     * @param PermissionFactory $permissionFactory
      * @param TransitionFactory $transitionFactory
      * @param ModuleFactory $moduleFactory
      * @param LayoutFactory $layoutFactory
-     * @param UserGroupFactory $userGroupFactory
-     * @param Twig $view
-     * @param ActionFactory $actionFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $regionFactory, $widgetFactory, $permissionFactory, $transitionFactory, $moduleFactory, $layoutFactory, $userGroupFactory, Twig $view, $actionFactory)
+    public function __construct($regionFactory, $widgetFactory, $transitionFactory, $moduleFactory, $layoutFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
-        $this->session = $session;
         $this->regionFactory = $regionFactory;
         $this->widgetFactory = $widgetFactory;
-        $this->permissionFactory = $permissionFactory;
         $this->transitionFactory = $transitionFactory;
         $this->layoutFactory = $layoutFactory;
         $this->moduleFactory = $moduleFactory;
-        $this->userGroupFactory = $userGroupFactory;
-        $this->actionFactory = $actionFactory;
     }
 
     /**

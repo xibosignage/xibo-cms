@@ -240,6 +240,7 @@ class Soap4 extends Soap
                 $display->licensed = $this->getConfig()->getSetting('DISPLAY_AUTO_AUTH', 0);
                 $display->incSchedule = 0;
                 $display->clientAddress = $this->getIp();
+                $display->setDispatcher($this->getDispatcher());
 
                 if (!$display->isDisplaySlotAvailable()) {
                     $display->licensed = 0;

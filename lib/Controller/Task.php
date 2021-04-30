@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,20 +27,9 @@ use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Factory\DisplayFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\TaskFactory;
-use Xibo\Factory\UserFactory;
-use Xibo\Factory\UserGroupFactory;
-use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -64,66 +53,23 @@ class Task extends Base
     /** @var  PoolInterface */
     private $pool;
 
-    /** @var  UserFactory */
-    private $userFactory;
-
-    /** @var  UserGroupFactory */
-    private $userGroupFactory;
-
-    /** @var  LayoutFactory */
-    private $layoutFactory;
-
-    /** @var  DisplayFactory */
-    private $displayFactory;
-
-    /** @var  MediaFactory */
-    private $mediaFactory;
-
-    /** @var  NotificationFactory */
-    private $notificationFactory;
-
-    /** @var  UserNotificationFactory */
-    private $userNotificationFactory;
-
     /** ContainerInterface */
     private $container;
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
      * @param PoolInterface $pool
      * @param TaskFactory $taskFactory
-     * @param UserFactory $userFactory
-     * @param UserGroupFactory $userGroupFactory
-     * @param LayoutFactory $layoutFactory
-     * @param DisplayFactory $displayFactory
-     * @param MediaFactory $mediaFactory
-     * @param NotificationFactory $notificationFactory
-     * @param UserNotificationFactory $userNotificationFactory
-     * @param Twig $view
      * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $timeSeriesStore, $pool, $taskFactory, $userFactory, $userGroupFactory, $layoutFactory, $displayFactory, $mediaFactory, $notificationFactory, $userNotificationFactory, Twig $view, ContainerInterface $container)
+    public function __construct($store, $timeSeriesStore, $pool, $taskFactory, ContainerInterface $container)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
         $this->taskFactory = $taskFactory;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
-        $this->userGroupFactory = $userGroupFactory;
         $this->pool = $pool;
-        $this->userFactory = $userFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->displayFactory = $displayFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->notificationFactory = $notificationFactory;
-        $this->userNotificationFactory = $userNotificationFactory;
         $this->container = $container;
     }
 

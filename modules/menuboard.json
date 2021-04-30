@@ -1,0 +1,7 @@
+{
+  "title": "Menu Board Module",
+  "author": "Xibo Signage Ltd",
+  "description": "Module for displaying Menu Boards.",
+  "name": "menuboard",
+  "class": "Xibo\\Widget\\MenuBoard"
+}

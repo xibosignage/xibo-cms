@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,12 +25,9 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
+use Xibo\Event\CommandDeleteEvent;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DisplayProfileFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -49,28 +46,12 @@ class Command extends Base
     private $commandFactory;
 
     /**
-     * @var DisplayProfileFactory
-     */
-    private $displayProfileFactory;
-
-    /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param CommandFactory $commandFactory
-     * @param DisplayProfileFactory $displayProfileFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $commandFactory, $displayProfileFactory, Twig $view)
+    public function __construct($commandFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->commandFactory = $commandFactory;
-        $this->displayProfileFactory = $displayProfileFactory;
     }
 
     /**
@@ -513,7 +494,8 @@ class Command extends Base
             throw new AccessDeniedException();
         }
 
-        $command->setChildObjectDependencies($this->displayProfileFactory);
+        $this->getDispatcher()->dispatch(CommandDeleteEvent::$NAME, new CommandDeleteEvent($command));
+
         $command->delete();
 
         // Return

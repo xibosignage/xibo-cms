@@ -1,6 +1,6 @@
 <?php
 /**
-* Copyright (C) 2020 Xibo Signage Ltd
+* Copyright (C) 2021 Xibo Signage Ltd
 *
 * Xibo - Digital Signage - http://www.xibo.org.uk
 *
@@ -24,7 +24,7 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
+use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -34,10 +34,6 @@ use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -86,18 +82,8 @@ class Tag extends Base
     /** @var UserFactory */
     private $userFactory;
 
-    /** @var StorageServiceInterface */
-    private $store;
-
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
-     * @param StorageServiceInterface $store
      * @param DisplayGroupFactory $displayGroupFactory
      * @param LayoutFactory $layoutFactory
      * @param TagFactory $tagFactory
@@ -107,12 +93,9 @@ class Tag extends Base
      * @param ScheduleFactory $scheduleFactory
      * @param CampaignFactory $campaignFactory
      * @param PlaylistFactory $playlistFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $displayGroupFactory, $layoutFactory, $tagFactory, $userFactory, $displayFactory, $mediaFactory, $scheduleFactory, $campaignFactory, $playlistFactory, Twig $view) {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
-        $this->store = $store;
+    public function __construct($displayGroupFactory, $layoutFactory, $tagFactory, $userFactory, $displayFactory, $mediaFactory, $scheduleFactory, $campaignFactory, $playlistFactory)
+    {
         $this->displayGroupFactory = $displayGroupFactory;
         $this->layoutFactory = $layoutFactory;
         $this->tagFactory = $tagFactory;
@@ -613,7 +596,6 @@ class Tag extends Base
         // go through each linked displayGroup and unassign the tag
         foreach ($linkedDisplayGroupsIds as $displayGroupId => $value) {
             $displayGroup = $this->displayGroupFactory->getById($displayGroupId);
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
             $tag->unassignDisplayGroup($displayGroupId);
             $displayGroup->save();
         }
@@ -621,7 +603,6 @@ class Tag extends Base
         // go through each linked campaign and unassign the tag
         foreach ($linkedCampaignsIds as $campaignId => $value) {
             $campaign = $this->campaignFactory->getById($campaignId);
-            $campaign->setChildObjectDependencies($this->layoutFactory);
             $tag->unassignCampaign($campaignId);
             $campaign->save();
         }
@@ -727,10 +708,8 @@ class Tag extends Base
                 case 'campaign':
                     $entityFactory = $this->campaignFactory;
                     break;
-                case 'display':
-                    $entityFactory = $this->displayGroupFactory;
-                    break;
                 case 'displayGroup':
+                case 'display':
                     $entityFactory = $this->displayGroupFactory;
                     break;
             }
@@ -741,13 +720,6 @@ class Tag extends Base
                     $entity = $entityFactory->getByDisplayId($id)[0];
                 } else {
                     $entity = $entityFactory->getById($id);
-                }
-
-                // for DG and campaign we need to setChildObjectDependencies otherwise it won't load.
-                if ($targetType === 'displayGroup' || $targetType === 'display') {
-                    $entity->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-                } else if ($targetType === 'campaign') {
-                    $entity->setChildObjectDependencies($this->layoutFactory);
                 }
 
                 foreach ($untags as $untag) {
@@ -765,7 +737,7 @@ class Tag extends Base
             // Once we're done, and if we're a Display entity, we need to calculate the dynamic display groups
             if ($targetType === 'display') {
                 foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
-                    $group->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+                    $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($group));
                     $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true, 'allowNotify' => true]);
                 }
             }

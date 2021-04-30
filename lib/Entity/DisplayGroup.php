@@ -164,12 +164,12 @@ class DisplayGroup implements \JsonSerializable
     ];
 
     // Child Items the Display Group is linked to
-    private $displays = [];
+    public $displays = [];
+    public $media = [];
+    public $layouts = [];
+    public $events = [];
     private $displayGroups = [];
-    private $layouts = [];
-    private $media = [];
     private $permissions = [];
-    private $events = [];
     private $unassignTags = [];
     private $jsonInclude = ['displayGroupId', 'displayGroup'];
 
@@ -245,26 +245,14 @@ class DisplayGroup implements \JsonSerializable
         $this->tagFactory = $tagFactory;
     }
 
+    public function setDisplayFactory(DisplayFactory $displayFactory)
+    {
+        $this->displayFactory = $displayFactory;
+    }
+
     public function __clone()
     {
         $this->displayGroupId = null;
-    }
-
-    /**
-     * Set child object dependencies
-     * @param DisplayFactory $displayFactory
-     * @param LayoutFactory $layoutFactory
-     * @param MediaFactory $mediaFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @return $this
-     */
-    public function setChildObjectDependencies($displayFactory, $layoutFactory, $mediaFactory, $scheduleFactory)
-    {
-        $this->displayFactory = $displayFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        return $this;
     }
 
     /**
@@ -358,8 +346,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function assignDisplay($display)
     {
-        $this->load();
-
         $found = false;
         foreach ($this->displays as $existingDisplay) {
             if ($existingDisplay->getId() === $display->getId()) {
@@ -379,8 +365,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function unassignDisplay($display)
     {
-        $this->load();
-
         // Changes made?
         $countBefore = count($this->displays);
 
@@ -404,8 +388,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function assignDisplayGroup($displayGroup)
     {
-        $this->load();
-
         if (!in_array($displayGroup, $this->displayGroups))
             $this->displayGroups[] = $displayGroup;
     }
@@ -417,8 +399,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function unassignDisplayGroup($displayGroup)
     {
-        $this->load();
-
         // Changes made?
         $countBefore = count($this->displayGroups);
 
@@ -442,8 +422,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function assignMedia($media)
     {
-        $this->load();
-
         if (!in_array($media, $this->media)) {
             $this->media[] = $media;
 
@@ -459,8 +437,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function unassignMedia($media)
     {
-        $this->load();
-
         // Changes made?
         $countBefore = count($this->media);
 
@@ -484,8 +460,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function assignLayout($layout)
     {
-        $this->load();
-
         if (!in_array($layout, $this->layouts)) {
             $this->layouts[] = $layout;
 
@@ -501,8 +475,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public function unassignLayout($layout)
     {
-        $this->load();
-
         // Changes made?
         $countBefore = count($this->layouts);
 
@@ -587,7 +559,7 @@ class DisplayGroup implements \JsonSerializable
             }
         }
 
-        $this->getLog()->debug('Tags after removal %s', json_encode($this->tags));
+        $this->getLog()->debug(sprintf('Tags after removal %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -607,12 +579,12 @@ class DisplayGroup implements \JsonSerializable
                 return $a->tagId - $b->tagId;
             });
 
-            $this->getLog()->debug('Tags to be removed: %s', json_encode($this->unassignTags));
+            $this->getLog()->debug(sprintf('Tags to be removed: %s', json_encode($this->unassignTags)));
 
             // Replace the arrays
             $this->tags = $tags;
 
-            $this->getLog()->debug('Tags remaining: %s', json_encode($this->tags));
+            $this->getLog()->debug(sprintf('Tags remaining: %s', json_encode($this->tags)));
         } else {
             $this->getLog()->debug('Tags were not changed');
         }
@@ -629,27 +601,18 @@ class DisplayGroup implements \JsonSerializable
             'loadTags' => true
         ], $options);
 
-        if ($this->loaded || $this->displayGroupId == null || $this->displayGroupId == 0)
+        if ($this->loaded || $this->displayGroupId == null || $this->displayGroupId == 0) {
             return;
-
-        if ($this->permissionFactory == null || $this->displayFactory == null || $this->displayGroupFactory == null || $this->layoutFactory == null || $this->mediaFactory == null || $this->scheduleFactory == null)
-            throw new \RuntimeException('Cannot load without first calling setChildObjectDependencies');
+        }
 
         $this->permissions = $this->permissionFactory->getByObjectId(get_class($this), $this->displayGroupId);
 
-        $this->displays = $this->displayFactory->getByDisplayGroupId($this->displayGroupId);
-
         $this->displayGroups = $this->displayGroupFactory->getByParentId($this->displayGroupId);
 
-        $this->layouts = $this->layoutFactory->getByDisplayGroupId($this->displayGroupId);
-
-        $this->media = $this->mediaFactory->getByDisplayGroupId($this->displayGroupId);
-
-        $this->events = $this->scheduleFactory->getByDisplayGroupId($this->displayGroupId);
-
         // Load all tags
-        if ($options['loadTags'])
+        if ($options['loadTags']) {
             $this->tags = $this->tagFactory->loadByDisplayGroupId($this->displayGroupId);
+        }
 
         // Set the originals
         $this->originalDisplayGroups = $this->displayGroups;
@@ -769,8 +732,9 @@ class DisplayGroup implements \JsonSerializable
         }
 
         // Set media incomplete if necessary
-        if ($this->notifyRequired)
+        if ($this->notifyRequired) {
             $this->notify();
+        }
     }
 
     /**

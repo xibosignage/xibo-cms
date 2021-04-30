@@ -1,0 +1,63 @@
+{#
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+{% extends "form-base.twig" %}
+{% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
+
+{% block formTitle %}
+    {% trans "Add Category to " %} {{ menuBoard.name }}
+{% endblock %}
+
+{% block formButtons %}
+    {% trans "Help" %}, XiboHelpRender("{{ help }}")
+    {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Save" %}, $("#menuBoardCategoryAddForm").submit()
+{% endblock %}
+
+{% block formHtml %}
+    <div class="row">
+        <div class="col-md-12">
+            <form id="menuBoardCategoryAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("menuBoard.category.add", { id: menuBoard.menuId }) }}">
+
+                {% set title %}{% trans "Name" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this Menu Board Category" %}{% endset %}
+                {{ forms.input("name", title, "", helpText) }}
+
+                {% set title %}{% trans "Media" %}{% endset %}
+                {% set helpText %}{% trans "Optionally select Image or Video to be associated with this Menu Board Category" %}{% endset %}
+                {% set attributes = [
+                    { name: "data-search-url", value: url_for("library.search") },
+                    { name: "data-search-term", value: "media" },
+                    { name: "data-search-term-tags", value: "tags" },
+                    { name: "data-id-property", value: "mediaId" },
+                    { name: "data-text-property", value: "name" },
+                    { name: "data-filter-options", value: '{"onlyMenuBoardAllowed":1}' },
+                    { name: "data-allow-clear", value: "true"},
+                    { name: "data-placeholder", value: "Select an Image or Video"}
+                ] %}
+                {{ forms.dropdown("mediaId", "single", title, "", null, "mediaId", "media", helpText, "pagedSelect", "", "d", "", attributes) }}
+            </form>
+        </div>
+    </div>
+{% endblock %}

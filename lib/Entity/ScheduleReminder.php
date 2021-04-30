@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -197,8 +197,9 @@ class ScheduleReminder implements \JsonSerializable
      */
     public function load()
     {
-        if ($this->loaded || $this->scheduleReminderId == null)
+        if ($this->loaded || $this->scheduleReminderId == null) {
             return;
+        }
 
         $this->loaded = true;
     }
@@ -226,9 +227,10 @@ class ScheduleReminder implements \JsonSerializable
      */
     public function save()
     {
-        if ($this->scheduleReminderId == null || $this->scheduleReminderId == 0)
+        if ($this->scheduleReminderId == null || $this->scheduleReminderId == 0) {
             $this->add();
-        else
+        } else {
             $this->edit();
+        }
     }
 }

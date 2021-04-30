@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -89,8 +89,13 @@ class ApplicationScope implements \JsonSerializable, ScopeEntityInterface
     }
 
     /** @inheritDoc */
-    public function getIdentifier()
+    public function getIdentifier() :string
     {
         return $this->getId();
+    }
+
+    public function getDescription() :string
+    {
+        return $this->description;
     }
 }

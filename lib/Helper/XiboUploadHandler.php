@@ -8,6 +8,7 @@ use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Event\LibraryReplaceEvent;
 use Xibo\Event\LibraryReplaceWidgetEvent;
+use Xibo\Event\MediaDeleteEvent;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\LibraryFullException;
@@ -38,11 +39,15 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
         // Upload and Save
         try {
-
             // Check Library
-            if ($this->options['libraryQuotaFull'])
-                throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $this->options['libraryLimit']));
-
+            if ($this->options['libraryQuotaFull']) {
+                throw new LibraryFullException(
+                    sprintf(
+                        __('Your library is full. Library Limit: %s K'),
+                        $this->options['libraryLimit']
+                    )
+                );
+            }
             // Check for a user quota
             // this method has the ability to reconnect to MySQL in the event that the upload has taken a long time.
             // OSX-381
@@ -59,19 +64,25 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $module = $controller->getModuleFactory()->create($module->type);
             $module->setUser($controller->getUser());
 
-            $controller->getLog()->debug(sprintf('Module Type = %s, Name = %s', $module->getModuleType(), $module->getModuleName()));
+            $controller->getLog()->debug(sprintf(
+                'Module Type = %s, Name = %s',
+                $module->getModuleType(),
+                $module->getModuleName()
+            ));
 
             // Do we need to run any pre-processing on the file?
             $module->preProcessFile($filePath);
 
             // Old Media Id or not?
             if ($this->options['oldMediaId'] != 0) {
-
                 $updateInLayouts = ($this->options['updateInLayouts'] == 1);
                 $deleteOldRevisions = ($this->options['deleteOldRevisions'] == 1);
 
-                $controller->getLog()->debug(sprintf('Replacing old with new - updateInLayouts = %d, deleteOldRevisions = %d',
-                    $updateInLayouts, $deleteOldRevisions));
+                $controller->getLog()->debug(sprintf(
+                    'Replacing old with new - updateInLayouts = %d, deleteOldRevisions = %d',
+                    $updateInLayouts,
+                    $deleteOldRevisions
+                ));
 
                 // Load old media
                 $oldMedia = $controller->getMediaFactory()->getById($this->options['oldMediaId']);
@@ -83,7 +94,9 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // Check to see if we are changing the media type
                 if ($oldMedia->mediaType != $module->getModuleType() && $this->options['allowMediaTypeChange'] == 0) {
-                    throw new InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
+                    throw new InvalidArgumentException(
+                        __('You cannot replace this media with an item of a different type')
+                    );
                 }
 
                 // Set the old record to edited
@@ -97,7 +110,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
 
                 // Add the Media
-                //  the userId is either the existing user (if we are changing media type) or the currently logged in user otherwise.
+                // the userId is either the existing user
+                // (if we are changing media type) or the currently logged in user otherwise.
                 $media = $controller->getMediaFactory()->create(
                     $name,
                     $fileName,
@@ -111,16 +125,20 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 }
 
                 // Set the duration
-                if ($oldMedia->mediaType != 'video' && $media->mediaType != 'video')
+                if ($oldMedia->mediaType != 'video' && $media->mediaType != 'video') {
                     $media->duration = $oldMedia->duration;
-                else
+                } else {
                     $media->duration = $module->determineDuration($filePath);
+                }
 
                 // Pre-process
                 $module->preProcess($media, $filePath);
 
                 // Raise an event for this media item
-                $controller->getDispatcher()->dispatch(LibraryReplaceEvent::$NAME, new LibraryReplaceEvent($module, $media, $oldMedia));
+                $controller->getDispatcher()->dispatch(
+                    LibraryReplaceEvent::$NAME,
+                    new LibraryReplaceEvent($module, $media, $oldMedia)
+                );
 
                 $media->enableStat = $oldMedia->enableStat;
                 $media->expires = $this->options['expires'];
@@ -139,7 +157,11 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 $controller->getLog()->debug('Copying permissions to new media');
 
-                foreach ($controller->getPermissionFactory()->getAllByObjectId($controller->getUser(), get_class($oldMedia), $oldMedia->mediaId) as $permission) {
+                foreach ($controller->getPermissionFactory()->getAllByObjectId(
+                    $controller->getUser(),
+                    get_class($oldMedia),
+                    $oldMedia->mediaId
+                ) as $permission) {
                     /* @var Permission $permission */
                     $permission = clone $permission;
                     $permission->objectId = $media->mediaId;
@@ -153,38 +175,52 @@ class XiboUploadHandler extends BlueImpUploadHandler
                     foreach ($controller->getWidgetFactory()->getByMediaId($oldMedia->mediaId) as $widget) {
                         /* @var Widget $widget */
                         if (!$controller->getUser()->checkEditable($widget)) {
-                            // Widget that we cannot update, this means we can't delete the original mediaId when it comes time to do so.
+                            // Widget that we cannot update,
+                            // this means we can't delete the original mediaId when it comes time to do so.
                             $deleteOldRevisions = false;
 
-                            $controller->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
+                            $controller->getLog()->info(
+                                'Media used on Widget that we cannot edit.
+                             Delete Old Revisions has been disabled.'
+                            );
                         }
 
-                        // If we are replacing an audio media item, we should check to see if the widget we've found has any
+                        // If we are replacing an audio media item,
+                        // we should check to see if the widget we've found has any
                         // audio items assigned.
-                        if ($module->getModuleType() == 'audio' && in_array($oldMedia->mediaId, $widget->getAudioIds())) {
+                        if ($module->getModuleType() == 'audio' &&
+                            in_array($oldMedia->mediaId, $widget->getAudioIds())) {
+                            $controller->getLog()->debug('Found audio on widget that needs updating. widgetId = ' .
+                                $widget->getId() . '. Linking ' . $media->mediaId);
 
-                            $controller->getLog()->debug('Found audio on widget that needs updating. widgetId = ' . $widget->getId() . '. Linking ' . $media->mediaId);
                             $widget->unassignAudioById($oldMedia->mediaId);
                             $widget->assignAudioById($media->mediaId);
                             $widget->save();
-
-                        } else if (count($widget->getPrimaryMedia()) > 0 && $widget->getPrimaryMediaId() == $oldMedia->mediaId) {
+                        } elseif (count($widget->getPrimaryMedia()) > 0 &&
+                            $widget->getPrimaryMediaId() == $oldMedia->mediaId) {
                             // We're only interested in primary media at this point (no audio)
                             // Check whether this widget is of the same type as our incoming media item
                             // This needs to be applicable only to non region specific Widgets,
                             // otherwise we would not be able to replace Media references in region specific Widgets.
                             $moduleWidget = $controller->getModuleFactory()->createWithWidget($widget);
 
-                            if ($widget->type != $module->getModuleType() && $moduleWidget->getModule()->regionSpecific == 0) {
+                            if ($widget->type != $module->getModuleType() &&
+                                $moduleWidget->getModule()->regionSpecific == 0) {
                                 // Are we supposed to switch, or should we prevent?
                                 if ($this->options['allowMediaTypeChange'] == 1) {
                                     $widget->type = $module->getModuleType();
                                 } else {
-                                    throw new InvalidArgumentException(__('You cannot replace this media with an item of a different type'));
+                                    throw new InvalidArgumentException(__(
+                                        'You cannot replace this media with an item of a different type'
+                                    ));
                                 }
                             }
 
-                            $controller->getLog()->debug('Found widget that needs updating. ID = %d. Linking %d', $widget->getId(), $media->mediaId);
+                            $controller->getLog()->debug(sprintf(
+                                'Found widget that needs updating. ID = %d. Linking %d',
+                                $widget->getId(),
+                                $media->mediaId
+                            ));
                             $widget->unassignMedia($oldMedia->mediaId);
                             $widget->assignMedia($media->mediaId);
 
@@ -193,10 +229,17 @@ class XiboUploadHandler extends BlueImpUploadHandler
                             $widget->calculateDuration($module);
 
                             // replace mediaId references in applicable widgets
-                            $controller->getLayoutFactory()->handleWidgetMediaIdReferences($widget, $media->mediaId, $oldMedia->mediaId);
+                            $controller->getLayoutFactory()->handleWidgetMediaIdReferences(
+                                $widget,
+                                $media->mediaId,
+                                $oldMedia->mediaId
+                            );
 
                             // Raise an event for this media item
-                            $controller->getDispatcher()->dispatch(LibraryReplaceWidgetEvent::$NAME, new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia));
+                            $controller->getDispatcher()->dispatch(
+                                LibraryReplaceWidgetEvent::$NAME,
+                                new LibraryReplaceWidgetEvent($module, $widget, $media, $oldMedia)
+                            );
 
                             // Save
                             $widget->save(['alwaysUpdate' => true]);
@@ -205,31 +248,44 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                     // Update any background images
                     if ($media->mediaType == 'image') {
-                        $controller->getLog()->debug('Updating layouts with the old media %d as the background image.', $oldMedia->mediaId);
+                        $controller->getLog()->debug(sprintf(
+                            'Updating layouts with the old media %d as the background image.',
+                            $oldMedia->mediaId
+                        ));
                         // Get all Layouts with this as the background image
-                        foreach ($controller->getLayoutFactory()->query(null, ['disableUserCheck' => 1, 'backgroundImageId' => $oldMedia->mediaId]) as $layout) {
+                        foreach ($controller->getLayoutFactory()->query(
+                            null,
+                            ['disableUserCheck' => 1, 'backgroundImageId' => $oldMedia->mediaId]
+                        ) as $layout) {
                             /* @var Layout $layout */
 
                             if (!$controller->getUser()->checkEditable($layout)) {
-                                // Widget that we cannot update, this means we can't delete the original mediaId when it comes time to do so.
+                                // Widget that we cannot update,
+                                // this means we can't delete the original mediaId when it comes time to do so.
                                 $deleteOldRevisions = false;
 
-                                $controller->getLog()->info('Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.');
+                                $controller->getLog()->info(
+                                    'Media used on Widget that we cannot edit. Delete Old Revisions has been disabled.'
+                                );
                             }
 
-                            $controller->getLog()->debug('Found layout that needs updating. ID = %d. Setting background image id to %d', $layout->layoutId, $media->mediaId);
+                            $controller->getLog()->debug(sprintf(
+                                'Found layout that needs updating. ID = %d. Setting background image id to %d',
+                                $layout->layoutId,
+                                $media->mediaId
+                            ));
                             $layout->backgroundImageId = $media->mediaId;
                             $layout->save();
                         }
                     }
-
-                } else if ($this->options['widgetId'] != 0) {
+                } elseif ($this->options['widgetId'] != 0) {
                     $controller->getLog()->debug('Swapping a specific widget only.');
                     // swap this one
                     $widget = $controller->getWidgetFactory()->getById($this->options['widgetId']);
 
-                    if (!$controller->getUser()->checkEditable($widget))
+                    if (!$controller->getUser()->checkEditable($widget)) {
                         throw new AccessDeniedException();
+                    }
 
                     $widget->unassignMedia($oldMedia->mediaId);
                     $widget->assignMedia($media->mediaId);
@@ -238,43 +294,48 @@ class XiboUploadHandler extends BlueImpUploadHandler
 
                 // We either want to Link the old record to this one, or delete it
                 if ($updateInLayouts && $deleteOldRevisions) {
-
                     $controller->getLog()->debug('Delete old revisions of ' . $oldMedia->mediaId);
 
                     // Check we have permission to delete this media
-                    if (!$controller->getUser()->checkDeleteable($oldMedia))
+                    if (!$controller->getUser()->checkDeleteable($oldMedia)) {
                         throw new AccessDeniedException();
+                    }
 
                     try {
                         // Join the prior revision up with the new media.
                         $priorMedia = $controller->getMediaFactory()->getParentById($oldMedia->mediaId);
 
-                        $controller->getLog()->debug('Prior media found, joining ' . $priorMedia->mediaId . ' with ' . $media->mediaId);
+                        $controller->getLog()->debug(
+                            'Prior media found, joining ' .
+                            $priorMedia->mediaId . ' with ' . $media->mediaId
+                        );
 
                         $priorMedia->parentId = $media->mediaId;
                         $priorMedia->save(['validate' => false]);
-                    }
-                    catch (NotFoundException $e) {
+                    } catch (NotFoundException $e) {
                         // Nothing to do then
                         $controller->getLog()->debug('No prior media found');
                     }
 
-                    $oldMedia->setChildObjectDependencies($controller->getLayoutFactory(), $controller->getWidgetFactory(), $controller->getDisplayGroupFactory(), $controller->getDisplayFactory(), $controller->getScheduleFactory(), $controller->getPlayerVersionFactory());
+                    $controller->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($oldMedia));
                     $oldMedia->delete();
-
                 } else {
                     $oldMedia->parentId = $media->mediaId;
                     $oldMedia->save(['validate' => false]);
                 }
-
             } else {
-
                 // The media name might be empty here, because the user isn't forced to select it
                 $name = ($name == '') ? $fileName : $name;
                 $tags = ($tags == '') ? '' : $tags;
 
                 // Add the Media
-                $media = $controller->getMediaFactory()->create($name, $fileName, $module->getModuleType(), $this->options['userId']);
+                $media = $controller->getMediaFactory()->create(
+                    $name,
+                    $fileName,
+                    $module->getModuleType(),
+                    $this->options['userId']
+                );
+
                 if ($tags != '') {
                     $media->replaceTags($controller->getTagFactory()->tagsFromString($tags));
                 }
@@ -295,7 +356,8 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 // Permissions
                 try {
                     $folder = $controller->getFolderFactory()->getById($this->options['oldFolderId']);
-                    $media->permissionsFolderId = ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
+                    $media->permissionsFolderId =
+                        ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
                 } catch (NotFoundException $exception) {
                     $media->permissionsFolderId = 1;
                 }
@@ -324,17 +386,19 @@ class XiboUploadHandler extends BlueImpUploadHandler
             $file->fileName = $fileName;
 
             // Test to ensure the final file size is the same as the file size we're expecting
-            if ($file->fileSize != $file->size)
-                throw new InvalidArgumentException(__('Sorry this is a corrupted upload, the file size doesn\'t match what we\'re expecting.'), 'size');
-
+            if ($file->fileSize != $file->size) {
+                throw new InvalidArgumentException(
+                    __('Sorry this is a corrupted upload, the file size doesn\'t match what we\'re expecting.'),
+                    'size'
+                );
+            }
             // Fonts, then install
             if ($module->getModuleType() == 'font') {
-                $controller->installFonts($this->options['routeParser']);
+                $controller->getMediaService()->installFonts($this->options['routeParser']);
             }
 
             // Are we assigning to a Playlist?
             if ($this->options['playlistId'] != 0 && $this->options['widgetId'] == 0) {
-
                 $controller->getLog()->debug('Assigning uploaded media to playlistId ' . $this->options['playlistId']);
 
                 // Get the Playlist

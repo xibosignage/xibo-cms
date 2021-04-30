@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,9 +26,6 @@ namespace Xibo\Factory;
 use Xibo\Entity\Homepage;
 use Xibo\Entity\User;
 use Xibo\Entity\UserGroup;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -45,15 +42,11 @@ class UserGroupFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param User $user
      * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $sanitizerService, $user, $userFactory)
+    public function __construct($user, $userFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
         $this->setAclDependencies($user, $userFactory);
     }
 
@@ -413,7 +406,7 @@ class UserGroupFactory extends BaseFactory
                 'schedule.modify' => [
                     'feature' => 'schedule.modify',
                     'group' => 'scheduling',
-                    'title' => __('Allow edits including deletion of exsiting Scheduled Events')
+                    'title' => __('Allow edits including deletion of existing Scheduled Events')
                 ],
                 'schedule.now' => [
                     'feature' => 'schedule.now',
@@ -443,7 +436,7 @@ class UserGroupFactory extends BaseFactory
                 'library.add' => [
                     'feature' => 'library.add',
                     'group' => 'library',
-                    'title' => __('Include "Add Media" buttons to allow for addtional content to be uploaded to the Media Library')
+                    'title' => __('Include "Add Media" buttons to allow for additional content to be uploaded to the Media Library')
                 ],
                 'library.modify' => [
                     'feature' => 'library.modify',
@@ -458,17 +451,17 @@ class UserGroupFactory extends BaseFactory
                 'dataset.add' => [
                     'feature' => 'dataset.add',
                     'group' => 'library',
-                    'title' => __('Include "Add DataSet" button to allow for additional DataSets to be created independantly to Layouts')
+                    'title' => __('Include "Add DataSet" button to allow for additional DataSets to be created independently to Layouts')
                 ],
                 'dataset.modify' => [
                     'feature' => 'dataset.modify',
                     'group' => 'library',
-                    'title' => __('Allow edits including deletion to all created DataSets independantly to Layouts')
+                    'title' => __('Allow edits including deletion to all created DataSets independently to Layouts')
                 ],
                 'dataset.data' => [
                     'feature' => 'dataset.data',
                     'group' => 'library',
-                    'title' => __('Allow edits including deletion to all data contained within a DataSet independantly to Layouts')
+                    'title' => __('Allow edits including deletion to all data contained within a DataSet independently to Layouts')
                 ],
                 'layout.view' => [
                     'feature' => 'layout.view',
@@ -528,7 +521,7 @@ class UserGroupFactory extends BaseFactory
                 'resolution.add' => [
                     'feature' => 'resolution.add',
                     'group' => 'layout-design',
-                    'title' => __('Add Resolution button to allow for addtional Resolutions to be added')
+                    'title' => __('Add Resolution button to allow for additional Resolutions to be added')
                 ],
                 'resolution.modify' => [
                     'feature' => 'resolution.modify',
@@ -553,12 +546,12 @@ class UserGroupFactory extends BaseFactory
                 'playlist.add' => [
                     'feature' => 'playlist.add',
                     'group' => 'playlist-design',
-                    'title' => __('Include "Add Playlist" button to allow for additional Layouts to be created independantly to Layouts')
+                    'title' => __('Include "Add Playlist" button to allow for additional Layouts to be created independently to Layouts')
                 ],
                 'playlist.modify' => [
                     'feature' => 'playlist.modify',
                     'group' => 'playlist-design',
-                    'title' => __('Allow edits including deletion to all created Playlists independantly to Layouts')
+                    'title' => __('Allow edits including deletion to all created Playlists independently to Layouts')
                 ],
                 'user.profile' => [
                     'feature' => 'user.profile',
@@ -678,7 +671,7 @@ class UserGroupFactory extends BaseFactory
                 'displayprofile.add' => [
                     'feature' => 'displayprofile.add',
                     'group' => 'displays',
-                    'title' => __('Include "Add Profile" button to allow for addtional Display Setting Profiles to be added to the platform')
+                    'title' => __('Include "Add Profile" button to allow for additional Display Setting Profiles to be added to the platform')
                 ],
                 'displayprofile.modify' => [
                     'feature' => 'displayprofile.modify',
@@ -774,6 +767,21 @@ class UserGroupFactory extends BaseFactory
                     'feature' => 'folder.modify',
                     'group' => 'folders',
                     'title' => __('Rename and Delete existing Folders')
+                ],
+                'menuBoard.view' => [
+                    'feature' => 'menuBoard.view',
+                    'group' => 'menuboard-design',
+                    'title' => __('View the Menu Board page')
+                ],
+                'menuBoard.add' => [
+                    'feature' => 'menuBoard.add',
+                    'group' => 'menuboard-design',
+                    'title' => __('Include "Add Menu Board" button to allow for additional Menu Boards to be added to the platform')
+                ],
+                'menuBoard.modify' => [
+                    'feature' => 'menuBoard.modify',
+                    'group' => 'menuboard-design',
+                    'title' => __('Allow edits, creation of Menu Board Categories and Products including deletion for all created Menu Board content')
                 ],
             ];
         }

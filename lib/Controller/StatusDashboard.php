@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,16 +27,13 @@ use PicoFeed\PicoFeedException;
 use PicoFeed\Reader\Reader;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\ByteFormatter;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
+use Xibo\Service\MediaService;
 use Xibo\Storage\StorageServiceInterface;
 
 /**
@@ -77,24 +74,15 @@ class StatusDashboard extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param StorageServiceInterface $store
      * @param PoolInterface $pool
      * @param UserFactory $userFactory
      * @param DisplayFactory $displayFactory
      * @param DisplayGroupFactory $displayGroupFactory
      * @param MediaFactory $mediaFactory
-     * @param Twig $view
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory, Twig $view)
+    public function __construct($store, $pool, $userFactory, $displayFactory, $displayGroupFactory, $mediaFactory)
     {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
         $this->store = $store;
         $this->pool = $pool;
         $this->userFactory = $userFactory;
@@ -356,7 +344,7 @@ class StatusDashboard extends Base
             // Latest news
             if ($this->getConfig()->getSetting('DASHBOARD_LATEST_NEWS_ENABLED') == 1 && !empty($this->getConfig()->getSetting('LATEST_NEWS_URL'))) {
                 // Make sure we have the cache location configured
-                Library::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
+                MediaService::ensureLibraryExists($this->getConfig()->getSetting('LIBRARY_LOCATION'));
 
                 try {
                     $feedUrl = $this->getConfig()->getSetting('LATEST_NEWS_URL');

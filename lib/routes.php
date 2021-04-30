@@ -319,7 +319,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->delete('/library/{id}', ['\Xibo\Controller\Library','delete'])->setName('library.delete');
     $group->post('/library/copy/{id}', ['\Xibo\Controller\Library','copy'])->setName('library.copy');
     $group->put('/library/{id}/selectfolder', ['\Xibo\Controller\Library','selectFolder'])->setName('library.selectfolder');
-})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['layout.modify']));
+})->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.modify']));
 
 // Tagging
 $app->group('', function (RouteCollectorProxy $group) {
@@ -771,3 +771,31 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/action/{id}', ['\Xibo\Controller\Action', 'edit'])->setName('action.edit');
     $group->delete('/action/{id}', ['\Xibo\Controller\Action', 'delete'])->setName('action.delete');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify', 'playlist.modify']));
+
+/**
+ * Menu Boards
+ * @SWG\Tag(
+ *  name="menuBoards",
+ *  description="Menu Boards"
+ * )
+ */
+$app->get('/menuboards', ['\Xibo\Controller\MenuBoard', 'grid'])->setName('menuBoard.search');
+$app->post('/menuboard', ['\Xibo\Controller\MenuBoard', 'add'])->addMiddleware(new FeatureAuth($app->getContainer(), ['menuBoard.add']))->setName('menuBoard.add');
+
+$app->group('', function (RouteCollectorProxy $group) {
+    $group->put('/menuboard/{id}', ['\Xibo\Controller\MenuBoard', 'edit'])->setName('menuBoard.edit');
+    $group->delete('/menuboard/{id}', ['\Xibo\Controller\MenuBoard', 'delete'])->setName('menuBoard.delete');
+    $group->put('/menuboard/{id}/selectfolder', ['\Xibo\Controller\MenuBoard', 'selectFolder'])->setName('menuBoard.selectfolder');
+
+    $group->get('/menuboard/{id}/categories', ['\Xibo\Controller\MenuBoardCategory', 'grid'])->setName('menuBoard.category.search');
+    $group->post('/menuboard/{id}/category', ['\Xibo\Controller\MenuBoardCategory', 'add'])->setName('menuBoard.category.add');
+    $group->put('/menuboard/{id}/category', ['\Xibo\Controller\MenuBoardCategory', 'edit'])->setName('menuBoard.category.edit');
+    $group->delete('/menuboard/{id}/category', ['\Xibo\Controller\MenuBoardCategory', 'delete'])->setName('menuBoard.category.delete');
+
+    $group->get('/menuboard/{id}/products', ['\Xibo\Controller\MenuBoardProduct', 'grid'])->setName('menuBoard.product.search');
+    $group->get('/menuboard/products', ['\Xibo\Controller\MenuBoardProduct', 'productsForWidget'])->setName('menuBoard.product.search.widget');
+    $group->post('/menuboard/{id}/product', ['\Xibo\Controller\MenuBoardProduct', 'add'])->setName('menuBoard.product.add');
+    $group->put('/menuboard/{id}/product', ['\Xibo\Controller\MenuBoardProduct', 'edit'])->setName('menuBoard.product.edit');
+    $group->delete('/menuboard/{id}/product', ['\Xibo\Controller\MenuBoardProduct', 'delete'])->setName('menuBoard.product.delete');
+})
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['menuBoard.modify']));

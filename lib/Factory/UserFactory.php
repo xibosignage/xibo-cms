@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,12 +23,8 @@
 
 namespace Xibo\Factory;
 
-
 use Xibo\Entity\User;
-use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -58,22 +54,13 @@ class UserFactory extends BaseFactory
 
     /**
      * Construct a factory
-     * @param StorageServiceInterface $store
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
      * @param ConfigServiceInterface $configService
      * @param PermissionFactory $permissionFactory
      * @param UserOptionFactory $userOptionFactory
      * @param ApplicationScopeFactory $applicationScopeFactory
      */
-    public function __construct($store, $log, $sanitizerService,
-                                $configService,
-                                $permissionFactory,
-                                $userOptionFactory,
-                                $applicationScopeFactory)
+    public function __construct($configService, $permissionFactory, $userOptionFactory, $applicationScopeFactory)
     {
-        $this->setCommonDependencies($store, $log, $sanitizerService);
-
         $this->configService = $configService;
         $this->permissionFactory = $permissionFactory;
         $this->userOptionFactory = $userOptionFactory;

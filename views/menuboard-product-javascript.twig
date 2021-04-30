@@ -1,0 +1,67 @@
+{#
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+<script type="text/javascript">
+    function menuBoardProductFormOpen(dialog) {
+        configureProductOptions($(dialog))
+    }
+
+    function configureProductOptions(container) {
+        if(container.length == 0) {
+            return;
+        }
+
+        var $productOptionsContainer = container.find('#productOptionsContainer');
+        var productOptionsTemplate = formHelpers.getTemplate('menuProductOptions');
+        var productOptions =  container.data().extra;
+
+        if(productOptions.length == 0) {
+            // Add a template row
+            var context = {title: '1', value: '', buttonGlyph: 'fa-plus', buttonClass: 'btn-success'};
+            $(productOptionsTemplate(context)).appendTo($productOptionsContainer);
+        } else {
+            // For each of the existing options, create form components
+            var i = 0;
+            $.each(productOptions, function(index, field) {
+                i++;
+
+                var context = {title: i, optionName: field['option'], optionValue: field['value'], buttonGlyph: ((i === 1) ? 'fa-plus' : 'fa-minus')};
+                $productOptionsContainer.append(productOptionsTemplate(context));
+
+            });
+        }
+
+        // Nabble the resulting buttons
+        $productOptionsContainer.on('click', 'button', function(e) {
+            e.preventDefault();
+
+            // find the gylph
+            if($(this).find('i').hasClass('fa-plus')) {
+                var context = {title: $productOptionsContainer.find('.form-product-options').length + 1, value: '', buttonGlyph: 'fa-minus'};
+                $productOptionsContainer.append(productOptionsTemplate(context));
+            } else {
+                // Remove this row
+                $(this).closest('.form-product-options').remove();
+            }
+        });
+    }
+</script>

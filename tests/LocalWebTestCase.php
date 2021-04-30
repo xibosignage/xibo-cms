@@ -279,8 +279,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
                     $c->get('store'),
                     $c->get('pool'),
                     $c->get('playerActionService'),
-                    $c->get('scheduleFactory'),
-                    $c->get('dayPartFactory')
+                    $c->get('scheduleFactory')
                 );
             });
 

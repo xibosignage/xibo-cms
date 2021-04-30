@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,8 +26,6 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
-use Xibo\Entity\Permission;
 use Xibo\Entity\Widget;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\FolderFactory;
@@ -44,9 +42,6 @@ use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -64,24 +59,9 @@ class Playlist extends Base
     private $playlistFactory;
 
     /**
-     * @var RegionFactory
-     */
-    private $regionFactory;
-
-    /**
      * @var MediaFactory
      */
     private $mediaFactory;
-
-    /**
-     * @var PermissionFactory
-     */
-    private $permissionFactory;
-
-    /**
-     * @var TransitionFactory
-     */
-    private $transitionFactory;
 
     /**
      * @var WidgetFactory
@@ -118,38 +98,33 @@ class Playlist extends Base
 
     /**
      * Set common dependencies.
-     * @param LogServiceInterface $log
-     * @param SanitizerService $sanitizerService
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param \Xibo\Entity\User $user
-     * @param \Xibo\Service\HelpServiceInterface $help
-     * @param ConfigServiceInterface $config
      * @param PlaylistFactory $playlistFactory
-     * @param RegionFactory $regionFactory
      * @param MediaFactory $mediaFactory
-     * @param PermissionFactory $permissionFactory
-     * @param TransitionFactory $transitionFactory
      * @param WidgetFactory $widgetFactory
      * @param ModuleFactory $moduleFactory
      * @param UserGroupFactory $userGroupFactory
      * @param UserFactory $userFactory
      * @param TagFactory $tagFactory
-     * @param Twig $view
      * @param LayoutFactory $layoutFactory
      * @param DisplayFactory $displayFactory
      * @param ScheduleFactory $scheduleFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $playlistFactory, $regionFactory, $mediaFactory, $permissionFactory,
-        $transitionFactory, $widgetFactory, $moduleFactory, $userGroupFactory, $userFactory, $tagFactory, Twig $view, $layoutFactory, $displayFactory, $scheduleFactory, $folderFactory)
-    {
-        $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
-
+    public function __construct(
+        $playlistFactory,
+        $mediaFactory,
+        $widgetFactory,
+        $moduleFactory,
+        $userGroupFactory,
+        $userFactory,
+        $tagFactory,
+        $layoutFactory,
+        $displayFactory,
+        $scheduleFactory,
+        $folderFactory
+    ) {
         $this->playlistFactory = $playlistFactory;
-        $this->regionFactory = $regionFactory;
         $this->mediaFactory = $mediaFactory;
-        $this->permissionFactory = $permissionFactory;
-        $this->transitionFactory = $transitionFactory;
         $this->widgetFactory = $widgetFactory;
         $this->moduleFactory = $moduleFactory;
         $this->userGroupFactory = $userGroupFactory;
