@@ -121,7 +121,7 @@ class Folder
 
     public function isRoot()
     {
-        return ($this->isRoot === 1) ? true : false;
+        return $this->isRoot === 1;
     }
 
     public function getChildren()
