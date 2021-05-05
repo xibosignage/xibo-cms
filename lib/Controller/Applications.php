@@ -24,12 +24,9 @@ namespace Xibo\Controller;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
-use League\OAuth2\Server\Util\RedirectUri;
-use Psr\Container\ContainerInterface;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Views\Twig;
-use Xibo\Entity\Application;
 use Xibo\Entity\ApplicationScope;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\ApplicationRedirectUriFactory;
@@ -38,7 +35,6 @@ use Xibo\Factory\UserFactory;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
 use Xibo\OAuth\AuthCodeRepository;
-use Xibo\OAuth\ClientRepository;
 use Xibo\OAuth\RefreshTokenRepository;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -57,9 +53,6 @@ class Applications extends Base
      */
     private $session;
 
-    /** @var  StorageServiceInterface */
-    private $store;
-
     /**
      * @var ApplicationFactory
      */
@@ -76,9 +69,6 @@ class Applications extends Base
     /** @var  UserFactory */
     private $userFactory;
 
-    /** @var ContainerInterface */
-    private $container;
-
     /**
      * Set common dependencies.
      * @param LogServiceInterface $log
@@ -94,19 +84,16 @@ class Applications extends Base
      * @param $applicationScopeFactory
      * @param UserFactory $userFactory
      * @param Twig $view
-     * @param ContainerInterface $container
      */
-    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $store, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory, Twig $view, ContainerInterface $container)
+    public function __construct($log, $sanitizerService, $state, $user, $help, $config, $session, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory, Twig $view)
     {
         $this->setCommonDependencies($log, $sanitizerService, $state, $user, $help, $config, $view);
 
         $this->session = $session;
-        $this->store = $store;
         $this->applicationFactory = $applicationFactory;
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
         $this->userFactory = $userFactory;
-        $this->container = $container;
     }
 
     /**
@@ -140,9 +127,9 @@ class Applications extends Base
         $applications = $this->applicationFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter([], $sanitizedParams));
 
         foreach ($applications as $application) {
-            /* @var Application $application */
-            if ($this->isApi($request))
-                return $response->write('Nope');
+            if ($this->isApi($request)) {
+                throw new AccessDeniedException();
+            }
 
             // Include the buttons property
             $application->includeProperty('buttons');
@@ -186,8 +173,9 @@ class Applications extends Base
     public function authorizeRequest(Request $request, Response $response)
     {
         // Pull authorize params from our session
-        if (!$authParams = $this->session->get('authParams'))
+        if (!$authParams = $this->session->get('authParams')) {
             throw new InvalidArgumentException(__('Authorisation Parameters missing from session.'), 'authParams');
+        }
 
         // Get, show page
         $this->getState()->template = 'applications-authorize-page';
@@ -224,9 +212,9 @@ class Applications extends Base
         $encryptionKey = $apiKeyPaths['publicKeyPath'];
 
         $server = new AuthorizationServer(
-            new ClientRepository($this->container->get('store'), $this->container->get('logService')),
-            new \Xibo\OAuth\AccessTokenRepository($this->container->get('logService')),
-            new \Xibo\OAuth\ScopeRepository(),
+            $this->applicationFactory,
+            new \Xibo\OAuth\AccessTokenRepository($this->getLog()),
+            $this->applicationScopeFactory,
             $privateKey,
             $encryptionKey
         );

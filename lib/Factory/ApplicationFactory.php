@@ -124,7 +124,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
 
     /**
      * @param int $userId
-     * @return array
+     * @return Application[]
      */
     public function getByUserId($userId)
     {
@@ -134,7 +134,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
     /**
      * @param null $sortOrder
      * @param array $filterBy
-     * @return array
+     * @return Application[]
      */
     public function query($sortOrder = null, $filterBy = [])
     {

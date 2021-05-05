@@ -1356,6 +1356,7 @@ class Layout implements \JsonSerializable
                 $regionActionNode->setAttribute('source', $action->source);
                 $regionActionNode->setAttribute('actionType', $action->actionType);
                 $regionActionNode->setAttribute('triggerType', $action->triggerType);
+                $regionActionNode->setAttribute('triggerCode', $action->triggerCode);
                 $regionActionNode->setAttribute('id', $action->actionId);
 
                 $regionNode->appendChild($regionActionNode);
@@ -1478,6 +1479,7 @@ class Layout implements \JsonSerializable
                     $widgetActionNode->setAttribute('source', $action->source);
                     $widgetActionNode->setAttribute('actionType', $action->actionType);
                     $widgetActionNode->setAttribute('triggerType', $action->triggerType);
+                    $widgetActionNode->setAttribute('triggerCode', $action->triggerCode);
                     $widgetActionNode->setAttribute('id', $action->actionId);
 
                     $mediaNode->appendChild($widgetActionNode);

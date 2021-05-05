@@ -340,13 +340,11 @@ class State implements Middleware
                     $c->get('helpService'),
                     $c->get('configService'),
                     $c->get('session'),
-                    $c->get('store'),
                     $c->get('applicationFactory'),
                     $c->get('applicationRedirectUriFactory'),
                     $c->get('applicationScopeFactory'),
                     $c->get('userFactory'),
-                    $c->get('view'),
-                    $c
+                    $c->get('view')
                 );
             },
             '\Xibo\Controller\AuditLog' => function(ContainerInterface $c) {
