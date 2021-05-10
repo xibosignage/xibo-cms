@@ -110,8 +110,9 @@ class Folder extends Base
 
                 if (!$this->getUser()->checkViewable($child)) {
                     $child->text = __('Private Folder');
-                    $child->li_attr['style'] = 'display:none';
+                    $child->li_attr['disabled'] = true;
                 }
+
                 array_push($childrenDetails, $child);
             } catch (NotFoundException $exception) {
                 // this should be fine, just log debug message about it.
