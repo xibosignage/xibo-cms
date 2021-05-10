@@ -102,10 +102,15 @@ class Folder extends Base
 
         foreach ($children as $childId) {
             try {
-                $child = $this->folderFactory->getById($childId);
+                $child = $this->folderFactory->getById($childId, 1);
 
                 if ($child->children != null) {
                     $this->buildTreeView($child);
+                }
+
+                if (!$this->getUser()->checkViewable($child)) {
+                    $child->text = __('Private Folder');
+                    $child->li_attr['style'] = 'display:none';
                 }
                 array_push($childrenDetails, $child);
             } catch (NotFoundException $exception) {
@@ -238,11 +243,11 @@ class Folder extends Base
             $buttons['create'] = true;
         }
 
-        if ($user->featureEnabled('folder.modify') && $user->checkEditable($folder)) {
+        if ($user->featureEnabled('folder.modify') && $user->checkEditable($folder) && !$folder->isRoot()) {
             $buttons['modify'] = true;
         }
 
-        if ($user->featureEnabled('folder.modify') && $user->checkDeleteable($folder)) {
+        if ($user->featureEnabled('folder.modify') && $user->checkDeleteable($folder) && !$folder->isRoot()) {
             $buttons['delete'] = true;
         }
 
