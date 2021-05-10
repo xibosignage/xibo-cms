@@ -246,7 +246,7 @@ class Folder extends Base
             $buttons['delete'] = true;
         }
 
-        if ($user->isSuperAdmin()) {
+        if ($user->isSuperAdmin() && !$folder->isRoot()) {
             $buttons['share'] = true;
         }
 
