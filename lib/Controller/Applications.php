@@ -71,7 +71,6 @@ class Applications extends Base
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
      * @param $applicationScopeFactory
      * @param UserFactory $userFactory
-     * @param Twig $view
      */
     public function __construct($session, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory)
     {
