@@ -736,7 +736,7 @@ class Schedule implements \JsonSerializable
             'fromDt' => $this->fromDt,
             'toDt' => $this->toDt,
             'displayOrder' => $this->displayOrder,
-            'recurrenceType' => $this->recurrenceType,
+            'recurrenceType' => ($this->recurrenceType == '') ? null : $this->recurrenceType,
             'recurrenceDetail' => $this->recurrenceDetail,
             'recurrenceRange' => $this->recurrenceRange,
             'recurrenceRepeatsOn' => $this->recurrenceRepeatsOn,
