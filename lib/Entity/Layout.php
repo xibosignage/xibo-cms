@@ -2665,59 +2665,70 @@ class Layout implements \JsonSerializable
     }
 
     /**
-     * @throws NotFoundException
      * @return array
      */
-    public function getActionLayoutIds()
+    public function getActionLayoutIds(): array
     {
-        $regionIds = [];
-        $widgetIds = [];
         $actionLayoutIds = [];
-        $codes = [];
 
-        foreach ($this->regions as $region) {
-            $regionIds[] = $region->regionId;
-            foreach($region->getPlaylist()->widgets as $widget) {
-                $widgetIds[] = $widget->widgetId;
-            }
-        }
+        // Get Layout Codes set in Actions on this Layout
+        // Actions directly on this Layout
+        $sql = '
+            SELECT DISTINCT `action`.layoutCode
+              FROM `action`
+                INNER JOIN `layout`
+                ON `layout`.layoutId = `action`.sourceId
+             WHERE `action`.actionType = :actionType
+                AND `layout`.layoutId = :layoutId
+                AND `layout`.publishedStatusId = 1
+        ';
 
-        // get the Layout Codes set in Actions on this Layout
+        // Actions on this Layout's Regions
+        $sql .= '
+            UNION
+            SELECT DISTINCT `action`.layoutCode
+              FROM `action`
+                INNER JOIN `region`
+                ON `region`.regionId = `action`.sourceId
+                INNER JOIN `layout`
+                ON `layout`.layoutId = `region`.layoutId
+             WHERE `action`.actionType = :actionType
+                AND `layout`.layoutId = :layoutId
+                AND `layout`.publishedStatusId = 1
+        ';
+
+        // Actions on this Layout's Widgets
+        $sql .= '
+            UNION
+            SELECT DISTINCT `action`.layoutCode
+              FROM `action`
+                INNER JOIN `widget`
+                ON `widget`.widgetId = `action`.sourceId
+                INNER JOIN `playlist`
+                ON `playlist`.playlistId = `widget`.playlistId
+                INNER JOIN `region`
+                ON `region`.regionId = `playlist`.regionId
+                INNER JOIN `layout`
+                ON `layout`.layoutId = `region`.layoutId
+             WHERE `action`.actionType = :actionType
+                AND `layout`.layoutId = :layoutId
+                AND `layout`.publishedStatusId = 1
+        ';
+
+        // Join them together and get the Layout's referenced by those codes
         $actionLayoutCodes = $this->getStore()->select('
-                SELECT DISTINCT action.layoutCode
-                  FROM layout
-                  INNER JOIN action on layout.layoutId = action.sourceId
-                WHERE action.layoutCode IS NOT NULL AND action.actionType = :actionType AND action.sourceId = :layoutId AND layout.publishedStatusId = 1
-            UNION
-                SELECT DISTINCT action.layoutCode
-                    FROM layout
-                    INNER JOIN region ON region.layoutId = layout.layoutId
-                    INNER JOIN action on region.regionId = action.sourceId
-                WHERE action.layoutCode IS NOT NULL AND action.actionType = :actionType AND action.sourceId IN (' . implode(',', $regionIds) . ') AND layout.publishedStatusId = 1
-            UNION
-                SELECT DISTINCT action.layoutCode
-                    FROM layout
-                    INNER JOIN region ON region.layoutId = layout.layoutId
-                    INNER JOIN playlist ON playlist.regionId = region.regionId
-                    INNER JOIN widget on playlist.playlistId = widget.playlistId
-                    INNER JOIN action on widget.widgetId = action.sourceId
-                WHERE action.layoutCode IS NOT NULL AND action.actionType = :actionType AND action.sourceId IN (' . implode(',', $widgetIds) . ') AND layout.publishedStatusId = 1'
-            ,[
-                'actionType' => 'navLayout',
-                'layoutId' => $this->layoutId,
-            ]
-        );
+            SELECT `layout`.layoutId
+              FROM `layout`
+             WHERE `layout`.code IN (
+                 ' . $sql . '
+             )
+        ', [
+            'actionType' => 'navLayout',
+            'layoutId' => $this->layoutId,
+        ]);
 
         foreach ($actionLayoutCodes as $row) {
-            $codes[] = $row['layoutCode'];
-        }
-
-        $codes = "'" .implode("','", $codes  ) . "'";
-        // get Layout Ids linked to the Layout Codes
-        $actionLayouts = $this->getStore()->select("SELECT layoutId FROM layout WHERE layout.code IN ($codes)", []);
-
-        foreach ($actionLayouts as $row) {
-            $actionLayoutIds[] = (int)$row['layoutId'];
+            $actionLayoutIds[] = $row['layoutId'];
         }
 
         return $actionLayoutIds;
