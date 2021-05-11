@@ -74,6 +74,15 @@ trait AuthenticationTrait
     }
 
     /**
+     * @param $array
+     * @return \Xibo\Support\Sanitizer\SanitizerInterface
+     */
+    protected function getSanitizer($array)
+    {
+        return $this->app->getContainer()->get('sanitizerService')->getSanitizer($array);
+    }
+
+    /**
      * @return \Xibo\Factory\UserFactory
      */
     protected function getUserFactory()
