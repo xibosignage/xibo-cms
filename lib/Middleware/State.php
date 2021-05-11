@@ -1215,7 +1215,8 @@ class State implements Middleware
                     $c->get('dayPartFactory'),
                     $c->get('userFactory'),
                     $c->get('scheduleReminderFactory'),
-                    $c->get('scheduleExclusionFactory')
+                    $c->get('scheduleExclusionFactory'),
+                    $c->get('user')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
