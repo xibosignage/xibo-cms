@@ -282,6 +282,11 @@ class DisplayGroupFactory extends BaseFactory
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy);
 
+        // Always include Display specific Display Groups for DOOH.
+        if ($this->getSanitizer()->getInt('disableUserCheck') == 0 && ($this->getUser()->userTypeId == 4 || ($this->getUser()->isSuperAdmin() && $this->getUser()->showContentFrom == 2))) {
+            $body .= ' OR `displaygroup`.isDisplaySpecific = 1 ';
+        }
+
         if ($this->getSanitizer()->getInt('displayGroupId', $filterBy) !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
             $params['displayGroupId'] = $this->getSanitizer()->getInt('displayGroupId', $filterBy);
