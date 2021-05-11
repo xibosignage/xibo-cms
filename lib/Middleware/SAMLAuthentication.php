@@ -29,6 +29,7 @@ use OneLogin\Saml2\Settings;
 use OneLogin\Saml2\Utils;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
+use Slim\Routing\RouteContext;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Random;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -52,7 +53,7 @@ class SAMLAuthentication extends AuthenticationBase
         $app->getContainer()->logoutRoute = 'saml.logout';
 
         // Route providing SAML metadata
-        $app->get('/saml/metadata', function (Request $request, Response $response) {
+        $app->get('/saml/metadata', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
             $settings = new Settings($this->getConfig()->samlSettings, true);
             $metadata = $settings->getSPMetadata();
             $errors = $settings->validateMetadata($metadata);
@@ -69,27 +70,31 @@ class SAMLAuthentication extends AuthenticationBase
         });
 
         // SAML Login
-        $app->get('/saml/login', function (Request $request, Response $response) {
+        $app->get('/saml/login', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
             // Initiate SAML SSO
             $auth = new Auth($this->getConfig()->samlSettings);
             return $auth->login();
         });
 
         // SAML Logout
-        $app->get('/saml/logout', function (Request $request, Response $response) {
+        $app->get('/saml/logout', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
             return $this->samlLogout($request, $response);
         })->setName('saml.logout');
 
         // SAML Assertion Consumer Endpoint
-        $app->post('/saml/acs', function (Request $request, Response $response) {
+        $app->post('/saml/acs', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
             // Log some interesting things
             $this->getLog()->debug('Arrived at the ACS route with own URL: ' . Utils::getSelfRoutedURLNoQuery());
+            $parsedRequest = $this->getSanitizer($request->getParsedBody());
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
 
             // Pull out the SAML settings
             $samlSettings = $this->getConfig()->samlSettings;
-
             $auth = new Auth($samlSettings);
             $auth->processResponse();
+
+            $priorRoute = ($parsedRequest->getString('priorRoute'));
+            $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, $routeParser->urlFor('login'))) ? $routeParser->urlFor('home') : $priorRoute;
 
             // Check for errors
             $errors = $auth->getErrors();
@@ -271,12 +276,12 @@ class SAMLAuthentication extends AuthenticationBase
                 }
 
                 // Redirect to User Homepage
-                return $response->withRedirect($this->getRouteParser()->urlFor('home'));
+                return $response->withRedirect($redirect);
             }
         });
 
         // Single Logout Service
-        $app->get('/saml/sls', function (Request $request, Response $response) use ($app) {
+        $app->get('/saml/sls', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) use ($app) {
 
             $auth = new Auth( $app->getContainer()->get('configService')->samlSettings);
             $auth->processSLO(false, null, false, function() use ($app, $request, $response) {
