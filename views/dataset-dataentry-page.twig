@@ -209,7 +209,7 @@
             let rowIds = [];
             let processedRows = 0;
 
-            $('#datasets tbody tr[role="row"].selected').each((idx, ele) => {
+            $('#datasets tbody tr.selected').each((idx, ele) => {
                 rows.push(table.row(ele).data());
             });
 
