@@ -1553,7 +1553,8 @@ class State extends Middleware
                 $container->dayPartFactory,
                 $container->userFactory,
                 $container->scheduleReminderFactory,
-                $container->scheduleExclusionFactory
+                $container->scheduleExclusionFactory,
+                $container->user
             );
         });
 
