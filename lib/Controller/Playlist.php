@@ -805,6 +805,9 @@ class Playlist extends Base
         // Clone the original
         $playlist = clone $originalPlaylist;
 
+        // Handle tags
+        $tags = $this->tagFactory->getTagsWithValues($playlist);
+
         $playlist->name = $this->getSanitizer()->getString('name');
         $playlist->setOwner($this->getUser()->userId);
 
@@ -822,21 +825,6 @@ class Playlist extends Base
 
                 // Update the widget option with the new ID
                 $widget->setOptionValue('uri', 'attrib', $media->storedAs);
-            }
-        }
-
-        // Handle tags
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $playlist->tags));
-        $arrayOfTagValues = array_filter(explode(',', $playlist->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
             }
         }
 
