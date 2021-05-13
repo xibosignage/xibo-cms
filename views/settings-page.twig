@@ -641,17 +641,6 @@
                                     {{ forms.checkbox("MAINTENANCE_EMAIL_ALERTS", title, theme.getSetting("MAINTENANCE_EMAIL_ALERTS", 1), helpText, "", "", not theme.isSettingEditable("MAINTENANCE_EMAIL_ALERTS")) }}
                                 {% endif %}
 
-                                {% if theme.isSettingVisible("MAINTENANCE_KEY") %}
-                                    {% set title %}{% trans "Maintenance Key" %}{% endset %}
-                                    {% set helpText %}{% trans "String appended to the maintenance script to prevent malicious calls to the script." %}{% endset %}
-
-                                    {% if theme.isSettingEditable("MAINTENANCE_KEY") %}
-                                        {{ forms.input("MAINTENANCE_KEY", title, theme.getSetting("MAINTENANCE_KEY", "changeme"), helpText) }}
-                                    {% else %}
-                                        {{ forms.disabled("MAINTENANCE_KEY", title, theme.getSetting("MAINTENANCE_KEY", "changeme"), helpText) }}
-                                    {% endif %}
-                                {% endif %}
-
                                 {% if theme.isSettingVisible("MAINTENANCE_LOG_MAXAGE") %}
                                     {% set title %}{% trans "Max Log Age" %}{% endset %}
                                     {% set helpText %}{% trans "Maximum age for log entries in days. Set to 0 to keep logs indefinitely." %}{% endset %}

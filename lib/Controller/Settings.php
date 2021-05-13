@@ -506,11 +506,6 @@ class Settings extends Base
             $this->getConfig()->changeSetting('MAINTENANCE_EMAIL_ALERTS', $sanitizedParams->getCheckbox('MAINTENANCE_EMAIL_ALERTS'));
         }
 
-        if ($this->getConfig()->isSettingEditable('MAINTENANCE_KEY')) {
-            $this->handleChangedSettings('MAINTENANCE_KEY', $this->getConfig()->getSetting('MAINTENANCE_KEY'), $sanitizedParams->getString('MAINTENANCE_KEY'), $changedSettings);
-            $this->getConfig()->changeSetting('MAINTENANCE_KEY', $sanitizedParams->getString('MAINTENANCE_KEY'));
-        }
-
         if ($this->getConfig()->isSettingEditable('MAINTENANCE_LOG_MAXAGE')) {
             $this->handleChangedSettings('MAINTENANCE_LOG_MAXAGE', $this->getConfig()->getSetting('MAINTENANCE_LOG_MAXAGE'), $sanitizedParams->getInt('MAINTENANCE_LOG_MAXAGE'), $changedSettings);
             $this->getConfig()->changeSetting('MAINTENANCE_LOG_MAXAGE', $sanitizedParams->getInt('MAINTENANCE_LOG_MAXAGE'));
