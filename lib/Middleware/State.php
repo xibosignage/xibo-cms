@@ -549,10 +549,8 @@ class State implements Middleware
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
-            '\Xibo\Controller\Library' => function(ContainerInterface $c) {
+            '\Xibo\Controller\Library' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Library(
-                    $c->get('store'),
-                    $c->get('pool'),
                     $c->get('userFactory'),
                     $c->get('moduleFactory'),
                     $c->get('tagFactory'),
