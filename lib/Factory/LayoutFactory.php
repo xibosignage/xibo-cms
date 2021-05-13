@@ -2079,7 +2079,7 @@ class LayoutFactory extends BaseFactory
         }
 
         if ($parsedFilter->getString('codeLike', $filterBy) != '') {
-            $body.= " AND layout.code LIKE :codeLike ";
+            $body.= ' AND layout.code LIKE :codeLike ';
             $params['codeLike'] = '%' . $parsedFilter->getString('codeLike') . '%';
         }
 
