@@ -48,11 +48,20 @@
                                         {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
                                     {% endif %}
 
+                                    {% set title %}{% trans "Code" %}{% endset %}
+                                    {{ inline.input('codeLike', title) }}
+
                                     {% set attributes = [
                                     { name: "data-allow-clear", value: "true" },
                                     { name: "data-placeholder--id", value: null },
                                     { name: "data-placeholder--value", value: "" }
                                     ] %}
+
+                                    {% if currentUser.featureEnabled("displaygroup.view") %}
+                                        {% set title %}{% trans "Display Group" %}{% endset %}
+                                        {% set helpText %}{% trans "Show Layouts active on the selected Display / Display Group" %}{% endset %}
+                                        {{ inline.dropdown("activeDisplayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes) }}
+                                    {% endif %}
 
                                     {% set title %}{% trans "Owner" %}{% endset %}
                                     {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
@@ -61,12 +70,6 @@
                                     {% set title %}{% trans "Owner User Group" %}{% endset %}
                                     {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
                                     {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
-
-                                    {% if currentUser.featureEnabled("displaygroup.view") %}
-                                        {% set title %}{% trans "Display Group" %}{% endset %}
-                                        {% set helpText %}{% trans "Show Layouts active on the selected Display / Display Group" %}{% endset %}
-                                        {{ inline.dropdown("activeDisplayGroupId", "single", title, "", [{displayGroupId:null, displayGroup:""}]|merge(displayGroups), "displayGroupId", "displayGroup", helpText, "selectPicker", "", "", "", attributes) }}
-                                    {% endif %}
 
                                     {{ inline.hidden("folderId") }}
                                 </div>

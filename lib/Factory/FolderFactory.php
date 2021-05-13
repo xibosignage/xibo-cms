@@ -71,9 +71,9 @@ class FolderFactory extends BaseFactory
      * @return Folder
      * @throws NotFoundException
      */
-    public function getById($folderId)
+    public function getById($folderId, $disableUserCheck = 0)
     {
-        $folder = $this->query(null, ['folderId' => $folderId]);
+        $folder = $this->query(null, ['folderId' => $folderId, 'disableUserCheck' => $disableUserCheck]);
 
         if (count($folder) <= 0) {
             throw new NotFoundException(__('Folder not found'));

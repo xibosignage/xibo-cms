@@ -2993,6 +2993,19 @@ function initJsTreeAjax(container, id, isForm, ttl)
         });
 
         $(container).on('ready.jstree', function(e, data) {
+            // if node has children and User does not have suitable permissions, disable the node
+            // If node does NOT have children and User does not have suitable permissions, hide the node completely
+            $.each(data.instance._model.data, function(index, e) {
+                if (e.li_attr !== undefined && e.li_attr.disabled) {
+                    var node = $(container).jstree().get_node(e.id);
+                    if (e.children.length === 0) {
+                        $(container).jstree().hide_node(node);
+                    } else {
+                        $(container).jstree().disable_node(node);
+                    }
+                }
+            });
+
             // if we are on the form, we need to select tree node (currentWorkingFolder)
             // this is set/passed to twigs on render time
             if (isForm) {

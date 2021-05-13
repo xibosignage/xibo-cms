@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 use Carbon\Carbon;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Schedule;
+use Xibo\Entity\User;
 use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -74,10 +75,12 @@ class ScheduleFactory extends BaseFactory
      * @param UserFactory $userFactory
      * @param ScheduleReminderFactory $scheduleReminderFactory
      * @param ScheduleExclusionFactory $scheduleExclusionFactory
+     * @param User $user
      */
-    public function __construct($store, $log, $sanitizerService, $config, $pool, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory, $scheduleExclusionFactory)
+    public function __construct($store, $log, $sanitizerService, $config, $pool, $displayGroupFactory, $dayPartFactory, $userFactory, $scheduleReminderFactory, $scheduleExclusionFactory, $user)
     {
         $this->setCommonDependencies($store, $log, $sanitizerService);
+        $this->setAclDependencies($user, $userFactory);
         $this->config = $config;
         $this->pool = $pool;
         $this->displayGroupFactory = $displayGroupFactory;
@@ -316,6 +319,10 @@ class ScheduleFactory extends BaseFactory
             ON `command`.commandId = `schedule`.commandId
           WHERE 1 = 1
         ';
+
+        if ($this->getUser()->userTypeId != 4 && ($this->getUser()->isSuperAdmin() && $this->getUser()->showContentFrom != 2)) {
+            $sql .= ' AND `schedule`.userId IN (SELECT userId FROM user WHERE userTypeId <> 4) ';
+        }
 
         if ($parsedFilter->getInt('eventId') !== null) {
             $sql .= ' AND `schedule`.eventId = :eventId ';
