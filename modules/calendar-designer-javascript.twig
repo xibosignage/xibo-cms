@@ -35,6 +35,43 @@
             }
         };
 
+        var updateColors = function() {
+            var CALENDAR_TYPE_NAMES = [
+                'custom',
+                'agenda',
+                'daily',
+                'weekly',
+                'monthly'
+            ];
+            var overrideTemplate = $(self).find('#overrideColorTemplate').prop('checked');
+            var calendarType = CALENDAR_TYPE_NAMES[$(self).find('#calendarType').val()];
+            var templates = $(self).data().extra.templates;
+            var $templateThemePicker = $(self).find('#templateTheme');
+
+            // Toggle elements
+            $(self).find('.template-colors-select').toggle(!overrideTemplate);
+            $(self).find('.template-colors-custom').toggle(overrideTemplate);
+
+            if(!$(self).find('#overrideColorTemplate').prop('checked')) {
+                var templateColors;
+
+                // Get the current template id and fill the text field with its colour values
+                for(var i = 0;i < templates.length;i++) {
+                    if(templates[i].id == calendarType) {
+                        templateColors = templates[i][$templateThemePicker.val()];
+                        break;
+                    }
+                }
+
+                // Use template colors for the input fields
+                for (var name in templateColors) {
+                    if (templateColors.hasOwnProperty(name)) {
+                        $(self).find('#' + name).val(templateColors[name]);
+                    }
+                }
+            }
+        }
+
         // Set duration field, using the helper
         formHelpers.setupCheckboxInputFields($(self).find('form'), '#useDuration', '.duration-fields');
 
@@ -57,6 +94,9 @@
 
         $(self).find('#calendarType').on('change', updateInlineEditor);
         updateInlineEditor();
+
+        $(self).find('#overrideColorTemplate, #templateTheme').on('change', updateColors);
+        updateColors();
     }
 
     // Runs before form submit
