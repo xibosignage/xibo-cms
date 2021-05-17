@@ -345,11 +345,25 @@ class Calendar extends ModuleWidget
      *      description="A flag (0, 1), Should the calendar template have a header?",
      *      type="integer",
      *      required=false
-     *   ),
+     *  ),
      *  @SWG\Parameter(
      *      name="timeFormat",
      *      in="formData",
      *      description="Moment time format",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="startTime",
+     *      in="formData",
+     *      description="The start time for the calendar view",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="endTime",
+     *      in="formData",
+     *      description="The end time for the calendar view",
      *      type="string",
      *      required=false
      *   ),
@@ -361,9 +375,44 @@ class Calendar extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="weekdayNameLength",
+     *      in="formData",
+     *      description="Week day name length",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="gridStep",
+     *      in="formData",
+     *      description="Weekly/Daily grid step in minutes.",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="templateTheme",
+     *      in="formData",
+     *      description="Template color theme dark/light
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
+     *      name="overrideColorTemplate",
+     *      in="formData",
+     *      description="A flag (0, 1), Should the template colors be overriden?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="gridColor",
      *      in="formData",
      *      description="Colour for the grid between days/hours",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="gridTextColor",
+     *      in="formData",
+     *      description="Colour for the grid text",
      *      type="string",
      *      required=false
      *   ),
@@ -530,25 +579,32 @@ class Calendar extends ModuleWidget
             // Properties common to agenda, daily, weekly and monthly view
             $this->setOption('showHeader', $sanitizedParams->getCheckbox('showHeader'));
             $this->setOption('timeFormat', $sanitizedParams->getString('timeFormat', ['defaultOnEmptyString' => true]));
+            $this->setOption('startTime', $sanitizedParams->getString('startTime'));
+            $this->setOption('endTime', $sanitizedParams->getString('endTime'));
             $this->setOption('textScale', $sanitizedParams->getDouble('textScale'));
-            $this->setOption('gridColor', $sanitizedParams->getString('gridColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('dayBgColor', $sanitizedParams->getString('dayBgColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('dayTextColor', $sanitizedParams->getString('dayTextColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('todayTextColor', $sanitizedParams->getString('todayTextColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('dayOtherMonthBgColor', $sanitizedParams->getString('dayOtherMonthBgColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('dayOtherMonthTextColor', $sanitizedParams->getString('dayOtherMonthTextColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('headerBgColor', $sanitizedParams->getString('headerBgColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('headerTextColor', $sanitizedParams->getString('headerTextColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('weekDaysHeaderBgColor', $sanitizedParams->getString('weekDaysHeaderBgColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('weekDaysHeaderTextColor', $sanitizedParams->getString('weekDaysHeaderTextColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('eventBgColor', $sanitizedParams->getString('eventBgColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('eventTextColor', $sanitizedParams->getString('eventTextColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('dailyEventBgColor', $sanitizedParams->getString('dailyEventBgColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('dailyEventTextColor', $sanitizedParams->getString('dailyEventTextColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('multiDayEventBgColor', $sanitizedParams->getString('multiDayEventBgColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('multiDayEventTextColor', $sanitizedParams->getString('multiDayEventTextColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('aditionalEventsBgColor', $sanitizedParams->getString('aditionalEventsBgColor', ['defaultOnEmptyString' => true]));
-            $this->setOption('aditionalEventsTextColor', $sanitizedParams->getString('aditionalEventsTextColor', ['defaultOnEmptyString' => true]));
+            $this->setOption('weekdayNameLength', $sanitizedParams->getString('weekdayNameLength'));
+            $this->setOption('gridStep', $sanitizedParams->getInt('gridStep'));
+            $this->setOption('templateTheme', $sanitizedParams->getString('templateTheme'));
+            $this->setOption('overrideColorTemplate', $sanitizedParams->getCheckbox('overrideColorTemplate'));
+            $this->setOption('gridColor', $sanitizedParams->getString('gridColor'));
+            $this->setOption('gridTextColor', $sanitizedParams->getString('gridTextColor'));
+            $this->setOption('dayBgColor', $sanitizedParams->getString('dayBgColor'));
+            $this->setOption('dayTextColor', $sanitizedParams->getString('dayTextColor'));
+            $this->setOption('todayTextColor', $sanitizedParams->getString('todayTextColor'));
+            $this->setOption('dayOtherMonthBgColor', $sanitizedParams->getString('dayOtherMonthBgColor'));
+            $this->setOption('dayOtherMonthTextColor', $sanitizedParams->getString('dayOtherMonthTextColor'));
+            $this->setOption('headerBgColor', $sanitizedParams->getString('headerBgColor'));
+            $this->setOption('headerTextColor', $sanitizedParams->getString('headerTextColor'));
+            $this->setOption('weekDaysHeaderBgColor', $sanitizedParams->getString('weekDaysHeaderBgColor'));
+            $this->setOption('weekDaysHeaderTextColor', $sanitizedParams->getString('weekDaysHeaderTextColor'));
+            $this->setOption('eventBgColor', $sanitizedParams->getString('eventBgColor'));
+            $this->setOption('eventTextColor', $sanitizedParams->getString('eventTextColor'));
+            $this->setOption('dailyEventBgColor', $sanitizedParams->getString('dailyEventBgColor'));
+            $this->setOption('dailyEventTextColor', $sanitizedParams->getString('dailyEventTextColor'));
+            $this->setOption('multiDayEventBgColor', $sanitizedParams->getString('multiDayEventBgColor'));
+            $this->setOption('multiDayEventTextColor', $sanitizedParams->getString('multiDayEventTextColor'));
+            $this->setOption('aditionalEventsBgColor', $sanitizedParams->getString('aditionalEventsBgColor'));
+            $this->setOption('aditionalEventsTextColor', $sanitizedParams->getString('aditionalEventsTextColor'));
         }
 
         $this->setOption('excludeCurrent', $sanitizedParams->getCheckbox('excludeCurrent'));
@@ -680,8 +736,13 @@ class Calendar extends ModuleWidget
             $calendarOptions = array_merge([
                 'showHeader' => $this->getOption('showHeader'),
                 'timeFormat' => $this->getOption('timeFormat'),
+                'startTime' => $this->getOption('startTime'),
+                'endTime' => $this->getOption('endTime'),
                 'textScale' => $this->getOption('textScale'),
+                'weekdayNameLength' => $this->getOption('weekdayNameLength'),
+                'gridStep' => $this->getOption('gridStep', 60),
                 'gridColor' => $this->getOption('gridColor'),
+                'gridTextColor' => $this->getOption('gridTextColor'),
                 'dayBgColor' => $this->getOption('dayBgColor'),
                 'dayTextColor' => $this->getOption('dayTextColor'),
                 'todayTextColor' => $this->getOption('todayTextColor'),
@@ -773,7 +834,11 @@ class Calendar extends ModuleWidget
                 
                     $("body").find("img").xiboImageRender(options);
                     $("body").xiboLayoutScaler(options);
-                    $("body").xiboCalendarRender(options, parsedItems);
+
+                    // Run calendar render only for static types
+                    if(!customCalendar) {
+                        $("body").xiboCalendarRender(options, parsedItems);
+                    }
                     
                     const runOnVisible = function() {
                         $("#content").xiboTextRender(options, parsedItems);

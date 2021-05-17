@@ -30,8 +30,6 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
-use Stash\Interfaces\PoolInterface;
-use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\Widget;
@@ -58,7 +56,6 @@ use Xibo\Helper\Random;
 use Xibo\Helper\XiboUploadHandler;
 use Xibo\Service\MediaService;
 use Xibo\Service\MediaServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
@@ -72,14 +69,6 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Library extends Base
 {
-    /**
-     * @var StorageServiceInterface
-     */
-    private $store;
-
-    /** @var  PoolInterface */
-    private $pool;
-
     /** @var EventDispatcherInterface */
     private $dispatcher;
 
@@ -149,8 +138,6 @@ class Library extends Base
 
     /**
      * Set common dependencies.
-     * @param StorageServiceInterface $store
-     * @param PoolInterface $pool
      * @param UserFactory $userFactory
      * @param ModuleFactory $moduleFactory
      * @param TagFactory $tagFactory
@@ -167,8 +154,6 @@ class Library extends Base
      * @param FolderFactory $folderFactory
      */
     public function __construct(
-        $store,
-        $pool,
         $userFactory,
         $moduleFactory,
         $tagFactory,
@@ -185,11 +170,9 @@ class Library extends Base
         $cacheProvider,
         $folderFactory
     ) {
-        $this->store = $store;
         $this->moduleFactory = $moduleFactory;
         $this->mediaFactory = $mediaFactory;
         $this->widgetFactory = $widgetFactory;
-        $this->pool = $pool;
         $this->userFactory = $userFactory;
         $this->tagFactory = $tagFactory;
         $this->permissionFactory = $permissionFactory;
