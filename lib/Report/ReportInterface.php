@@ -22,9 +22,10 @@
 
 namespace Xibo\Report;
 
-
 use Psr\Container\ContainerInterface;
-use Slim\Http\ServerRequest as Request;
+use Xibo\Entity\ReportForm;
+use Xibo\Entity\ReportResult;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Interface ReportInterface
@@ -40,59 +41,51 @@ interface ReportInterface
     public function setFactories(ContainerInterface $container);
 
     /**
-     * Return the twig file name of the report form
-     * Load the report form
-     * @return string
-     */
-    public function getReportForm();
-
-    /**
-     * Return the twig file name of the report email template
-     * @return string
-     */
-    public function getReportEmailTemplate();
-
-    /**
      * Get chart script
+     * @param ReportResult $results
      * @return string
      */
     public function getReportChartScript($results);
 
     /**
+     * Return the twig file name of the saved report email and export template
+     * @return string
+     */
+    public function getReportEmailTemplate();
+
+    /**
+     * Return the twig file name of the saved report preview template
+     * @return string
+     */
+    public function getSavedReportTemplate();
+
+    /**
+     * Return the twig file name of the report form
+     * Load the report form
+     * @return ReportForm
+     */
+    public function getReportForm();
+
+    /**
      * Populate form title and hidden fields
-     * @param Request $request
+     * @param SanitizerInterface $sanitizedParams
      * @return array
      */
-    public function getReportScheduleFormData(Request $request);
+    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams);
 
     /**
      * Set Report Schedule form data
-     * @param Request $request
+     * @param SanitizerInterface $sanitizedParams
      * @return array
      */
-    public function setReportScheduleFormData(Request $request);
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams);
 
     /**
      * Generate saved report name
-     * @param $filterCriteria
+     * @param SanitizerInterface $sanitizedParams
      * @return string
      */
-    public function generateSavedReportName($filterCriteria);
-
-    /**
-     * Return data to build chart of saved report
-     * @param array $json
-     * @param object savedReport
-     * @return array
-     */
-    public function getSavedReportResults($json, $savedReport);
-
-    /**
-     * Return results
-     * @param $filterCriteria
-     * @return array
-     */
-    public function getResults($filterCriteria);
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams);
 
     /**
      * Resrtucture old saved report's json file to support schema version 2
@@ -100,4 +93,20 @@ interface ReportInterface
      * @return array
      */
     public function restructureSavedReportOldJson($json);
+
+    /**
+     * Return data from saved json file to build chart/table for saved report
+     * @param array $json
+     * @param object $savedReport
+     * @return ReportResult
+     */
+    public function getSavedReportResults($json, $savedReport);
+
+    /**
+     * Get results when on demand report runs and
+     * This result will get saved to a json if schedule report runs
+     * @param SanitizerInterface $sanitizedParams
+     * @return ReportResult
+     */
+    public function getResults(SanitizerInterface $sanitizedParams);
 }

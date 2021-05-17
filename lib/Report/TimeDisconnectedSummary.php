@@ -3,26 +3,19 @@
 namespace Xibo\Report;
 
 use Carbon\Carbon;
-use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
-use Slim\Http\ServerRequest as Request;
+use Xibo\Controller\DataTablesDotNetTrait;
+use Xibo\Entity\ReportForm;
+use Xibo\Entity\ReportResult;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\SavedReportFactory;
-use Xibo\Factory\UserFactory;
+use Xibo\Helper\ApplicationState;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Translate;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Service\ReportServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
-use Xibo\Storage\TimeSeriesStoreInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class TimeDisconnectedSummary
@@ -30,8 +23,7 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class TimeDisconnectedSummary implements ReportInterface
 {
-
-    use ReportTrait;
+    use ReportDefaultTrait, DataTablesDotNetTrait;
 
     /**
      * @var DisplayFactory
@@ -39,59 +31,27 @@ class TimeDisconnectedSummary implements ReportInterface
     private $displayFactory;
 
     /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var SavedReportFactory
-     */
-    private $savedReportFactory;
-
-    /**
-     * @var UserFactory
-     */
-    private $userFactory;
-
-    /**
      * @var DisplayGroupFactory
      */
     private $displayGroupFactory;
 
     /**
-     * @var ReportServiceInterface
+     * @var SanitizerService
      */
-    private $reportService;
+    private $sanitizer;
 
     /**
-     * Report Constructor.
-     * @param \Xibo\Helper\ApplicationState $state
-     * @param StorageServiceInterface $store
-     * @param TimeSeriesStoreInterface $timeSeriesStore
-     * @param LogServiceInterface $log
-     * @param ConfigServiceInterface $config
-     * @param SanitizerService $sanitizer
+     * @var ApplicationState
      */
-    public function __construct($state, $store, $timeSeriesStore, $log, $config, $sanitizer)
-    {
-        $this->setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $sanitizer);
-    }
+    private $state;
 
     /** @inheritdoc */
     public function setFactories(ContainerInterface $container)
     {
         $this->displayFactory = $container->get('displayFactory');
-        $this->mediaFactory = $container->get('mediaFactory');
-        $this->layoutFactory = $container->get('layoutFactory');
-        $this->savedReportFactory = $container->get('savedReportFactory');
-        $this->userFactory = $container->get('userFactory');
         $this->displayGroupFactory = $container->get('displayGroupFactory');
-        $this->reportService = $container->get('reportService');
+        $this->sanitizer = $container->get('sanitizerService');
+        $this->state = $container->get('state');
 
         return $this;
     }
@@ -99,7 +59,7 @@ class TimeDisconnectedSummary implements ReportInterface
     /** @inheritdoc */
     public function getReportChartScript($results)
     {
-        return json_encode($results['results']['chart']);
+        return json_encode($results->chart);
     }
 
     /** @inheritdoc */
@@ -109,21 +69,27 @@ class TimeDisconnectedSummary implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function getReportForm()
+    public function getSavedReportTemplate()
     {
-        return [
-            'template' => 'timedisconnectedsummary-report-form',
-            'data' =>  [
-                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
-                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
-                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
-                'availableReports' => $this->reportService->listReports()
-            ]
-        ];
+        return 'timedisconnectedsummary-report-preview';
     }
 
     /** @inheritdoc */
-    public function getReportScheduleFormData(Request $request)
+    public function getReportForm()
+    {
+        return new ReportForm(
+            'timedisconnectedsummary-report-form',
+            'timedisconnectedsummary',
+            'Display',
+            [
+                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+            ]
+        );
+    }
+
+    /** @inheritdoc */
+    public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
         $title = __('Add Report Schedule');
 
@@ -139,10 +105,8 @@ class TimeDisconnectedSummary implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function setReportScheduleFormData(Request $request)
+    public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-
         $filter = $sanitizedParams->getString('filter');
         $displayId = $sanitizedParams->getInt('displayId');
 
@@ -153,16 +117,13 @@ class TimeDisconnectedSummary implements ReportInterface
         if ($filter == 'daily') {
             $schedule = ReportSchedule::$SCHEDULE_DAILY;
             $filterCriteria['reportFilter'] = 'yesterday';
-
-        } else if ($filter == 'weekly') {
+        } elseif ($filter == 'weekly') {
             $schedule = ReportSchedule::$SCHEDULE_WEEKLY;
             $filterCriteria['reportFilter'] = 'lastweek';
-
-        } else if ($filter == 'monthly') {
+        } elseif ($filter == 'monthly') {
             $schedule = ReportSchedule::$SCHEDULE_MONTHLY;
             $filterCriteria['reportFilter'] = 'lastmonth';
-
-        } else if ($filter == 'yearly') {
+        } elseif ($filter == 'yearly') {
             $schedule = ReportSchedule::$SCHEDULE_YEARLY;
             $filterCriteria['reportFilter'] = 'lastyear';
         }
@@ -178,29 +139,45 @@ class TimeDisconnectedSummary implements ReportInterface
     }
 
     /** @inheritdoc */
-    public function generateSavedReportName($filterCriteria)
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
     {
-        return sprintf(__('%s time disconnected summary report', ucfirst($filterCriteria['filter'])));
+        return sprintf(__('%s time disconnected summary report', ucfirst($sanitizedParams->getString('filter'))));
+    }
+
+    /** @inheritdoc */
+    public function restructureSavedReportOldJson($result)
+    {
+        return $result;
     }
 
     /** @inheritdoc */
     public function getSavedReportResults($json, $savedReport)
     {
-        // Return data to build chart
-        return array_merge($json, [
-            'template' => 'timedisconnectedsummary-report-preview',
-            'savedReport' => $savedReport,
-            'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)->format(DateFormatHelper::getSystemFormat())
-        ]);
+        // Report result object
+        return new ReportResult(
+            [
+                'periodStart' => $json['metadata']['periodStart'],
+                'periodEnd' => $json['metadata']['periodEnd'],
+                'generatedOn' => Carbon::createFromTimestamp($savedReport->generatedOn)
+                    ->format(DateFormatHelper::getSystemFormat()),
+                'title' => $savedReport->saveAs,
+            ],
+            $json['table'],
+            $json['recordsTotal'],
+            $json['chart']
+        );
     }
 
     /** @inheritdoc */
-    public function getResults($filterCriteria)
+    public function getResults(SanitizerInterface $sanitizedParams)
     {
-
-        $this->getLog()->debug('Filter criteria: '. json_encode($filterCriteria, JSON_PRETTY_PRINT));
-
-        $sanitizedParams = $this->getSanitizer($filterCriteria);
+        $filter = [
+            'displayId' => $sanitizedParams->getInt('displayId'),
+            'displayGroupId' => $sanitizedParams->getInt('displayGroupId'),
+            'tags' => $sanitizedParams->getString('tags'),
+            'onlyLoggedIn' => $sanitizedParams->getCheckbox('onlyLoggedIn') == 1,
+            'exactTags' => $sanitizedParams->getCheckbox('exactTags')
+        ];
 
         $displayId = $sanitizedParams->getInt('displayId');
         $displayGroupId = $sanitizedParams->getInt('displayGroupId');
@@ -220,7 +197,6 @@ class TimeDisconnectedSummary implements ReportInterface
         $now = Carbon::now();
 
         switch ($reportFilter) {
-
             // the monthly data starts from yesterday
             case 'yesterday':
                 $fromDt = $now->copy()->startOfDay()->subDay();
@@ -352,15 +328,17 @@ class TimeDisconnectedSummary implements ReportInterface
                 foreach (explode(',', $tags) as $tag) {
                     $i++;
 
-                    if ($i == 1)
+                    if ($i == 1) {
                         $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    else
+                    } else {
                         $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
+                    }
 
-                    if ($operator === '=')
+                    if ($operator === '=') {
                         $params['tags' . $i] = $tag;
-                    else
+                    } else {
                         $params['tags' . $i] = '%' . $tag . '%';
+                    }
                 }
 
                 $body .= " ) ";
@@ -377,21 +355,22 @@ class TimeDisconnectedSummary implements ReportInterface
         }
 
         $body .= '
-            GROUP BY display.display
+            GROUP BY display.display, display.displayId
         ';
 
         // Sorting?
-        $filterBy = $this->gridRenderFilter($filterCriteria);
-        $sortOrder = $this->gridRenderSort($filterCriteria);
+        $filterBy = $this->gridRenderFilter($filter);
+        $sortOrder = $this->gridRenderSort($sanitizedParams);
 
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
 
         // Paging
-        $filterBy = $this->getSanitizer($filterBy);
+        $filterBy = $this->sanitizer->getSanitizer($filterBy);
         if ($filterBy !== null && $filterBy->hasParam('start') && $filterBy->hasParam('length')) {
             $limit = ' LIMIT ' . intval($filterBy->getInt('start', ['default' => 0])) . ', '
                 . $filterBy->getInt('length', ['default' => 10]);
@@ -402,24 +381,22 @@ class TimeDisconnectedSummary implements ReportInterface
         $rows = [];
 
         foreach ($this->store->select($sql, $params) as $row) {
-            $maxDuration = $maxDuration + $this->getSanitizer($row)->getDouble('duration');
+            $maxDuration = $maxDuration + $this->sanitizer->getSanitizer($row)->getDouble('duration');
         }
 
         if ($maxDuration > 86400) {
             $postUnits = __('Days');
             $divisor = 86400;
-        }
-        else if ($maxDuration > 3600) {
+        } elseif ($maxDuration > 3600) {
             $postUnits = __('Hours');
             $divisor = 3600;
-        }
-        else {
+        } else {
             $postUnits = __('Minutes');
             $divisor = 60;
         }
 
         foreach ($this->store->select($sql, $params) as $row) {
-            $sanitizedRow = $this->getSanitizer($row);
+            $sanitizedRow = $this->sanitizer->getSanitizer($row);
 
             $entry = [];
             $entry['displayId'] = $sanitizedRow->getInt(('displayId'));
@@ -432,16 +409,15 @@ class TimeDisconnectedSummary implements ReportInterface
         }
 
         // Paging
+        $recordsTotal = 0;
         if ($limit != '' && count($rows) > 0) {
             $results = $this->store->select($select . $body, $params);
-            $this->getState()->recordsTotal = count($results);
+            $recordsTotal = count($results);
         }
 
         //
         // Output Results
         // --------------
-        $this->getState()->template = 'grid';
-        $this->getState()->setData($rows);
 
         $availabilityData = [];
         $availabilityDataConnected = [];
@@ -456,60 +432,60 @@ class TimeDisconnectedSummary implements ReportInterface
             $postUnits = $row['postUnits'];
         }
 
-        return [
+        $chart = [
+            'type' => 'bar',
+            'data' => [
+                'labels' => $availabilityLabels,
+                'datasets' => [
+                    [
+                        'backgroundColor' => 'rgb(11, 98, 164)',
+                        'data' => $availabilityData,
+                        'label' => __('Downtime')
+                    ],
+                    [
+                        'backgroundColor' => 'rgb(0, 255, 0)',
+                        'data' => $availabilityDataConnected,
+                        'label' => __('Uptime')
+                    ]
+                ]
+            ],
+            'options' => [
 
-            'table' => $rows,
-            'chart' => [
-                'type' => 'bar',
-                'data' => [
-                    'labels' => $availabilityLabels,
-                    'datasets' => [
+                'scales' => [
+                    'xAxes' => [
                         [
-                            'backgroundColor' => 'rgb(11, 98, 164)',
-                            'data' => $availabilityData,
-                            'label' => __('Downtime')
-                        ],
+                            'stacked' => true
+                        ]
+                    ],
+                    'yAxes' => [
                         [
-                            'backgroundColor' => 'rgb(0, 255, 0)',
-                            'data' => $availabilityDataConnected,
-                            'label' => __('Uptime')
+                            'stacked' =>  true,
+                            'scaleLabel' =>  [
+                                'display' =>  true,
+                                'labelString' =>  $postUnits
+                            ]
                         ]
                     ]
                 ],
-                'options' => [
-
-                    'scales' => [
-                        'xAxes' => [
-                            [
-                                'stacked' => true
-                            ]
-                        ],
-                        'yAxes' => [
-                            [
-                                'stacked' =>  true,
-                                'scaleLabel' =>  [
-                                    'display' =>  true,
-                                    'labelString' =>  $postUnits
-                                ]
-                            ]
-                        ]
-                    ],
-                    'legend' =>  [
-                        'display' => false
-                    ],
-                    'maintainAspectRatio' => false
-                ]
-            ],
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-
+                'legend' =>  [
+                    'display' => false
+                ],
+                'maintainAspectRatio' => false
+            ]
         ];
 
-    }
-
-    /** @inheritdoc */
-    public function restructureSavedReportOldJson($result)
-    {
-        return $result;
+        // ----
+        // Both Chart and Table
+        // Return data to build chart/table
+        // This will get saved to a json file when schedule runs
+        return new ReportResult(
+            [
+                'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            ],
+            $rows,
+            $recordsTotal,
+            $chart
+        );
     }
 }

@@ -24,6 +24,7 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use Slim\Views\Twig;
+use Xibo\Entity\ReportResult;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\ReportScheduleFactory;
@@ -33,7 +34,6 @@ use Xibo\Factory\UserGroupFactory;
 use Xibo\Service\MediaService;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
-
 
 /**
  * Class ReportScheduleTask
@@ -105,8 +105,7 @@ class ReportScheduleTask implements TaskInterface
         $reportSchedules = $this->reportScheduleFactory->query(null, ['isActive' => 1, 'disableUserCheck' => 1]);
 
         // Get list of ReportSchedule
-        foreach($reportSchedules as $reportSchedule) {
-
+        foreach ($reportSchedules as $reportSchedule) {
             $cron = \Cron\CronExpression::factory($reportSchedule->schedule);
             $nextRunDt = $cron->getNextRunDate(\DateTime::createFromFormat('U', $reportSchedule->lastRunDt))->format('U');
             $now = Carbon::now()->format('U');
@@ -126,13 +125,11 @@ class ReportScheduleTask implements TaskInterface
             }
 
             if ($nextRunDt <= $now  && $reportSchedule->isActive) {
-
                 // random run of report schedules
                 $skip = $this->skipReportRun($now, $nextRunDt);
                 if ($skip == true) {
                     continue;
                 }
-
                 // execute the report
                 $reportSchedule->previousRunDt = $reportSchedule->lastRunDt;
                 $reportSchedule->lastRunDt = Carbon::now()->format('U');
@@ -147,8 +144,9 @@ class ReportScheduleTask implements TaskInterface
                     $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria, $reportSchedule->userId);
                     $this->log->debug(__('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT)));
 
+
                     //  Save the result in a json file
-                    $fileName = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/','reportschedule');
+                    $fileName = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/', 'reportschedule');
                     $out = fopen($fileName, 'w');
                     fwrite($out, json_encode($result));
                     fclose($out);
@@ -171,7 +169,7 @@ class ReportScheduleTask implements TaskInterface
                     $runDateTimestamp = Carbon::now()->format('U');
 
                     // Upload to the library
-                    $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp ), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
+                    $media = $this->mediaFactory->create(__('reportschedule_' . $reportSchedule->reportScheduleId . '_' . $runDateTimestamp), 'reportschedule.json.zip', 'savedreport', $reportSchedule->userId);
                     $media->save();
 
                     // Save Saved report
@@ -184,7 +182,6 @@ class ReportScheduleTask implements TaskInterface
                     $this->log->debug('Last savedReportId in Report Schedule: '. $savedReport->savedReportId);
                     $reportSchedule->lastSavedReportId = $savedReport->savedReportId;
                     $reportSchedule->message = null;
-
                 } catch (\Exception $error) {
                     $reportSchedule->isActive = 0;
                     $reportSchedule->message = $error->getMessage();
@@ -209,22 +206,23 @@ class ReportScheduleTask implements TaskInterface
      */
     private function createPdfAndNotification($reportSchedule, $savedReport, $media)
     {
+        /* @var ReportResult $savedReportData */
         $savedReportData = $this->reportService->getSavedReportResults($savedReport->savedReportId, $reportSchedule->reportName);
 
         // Get the report config
         $report = $this->reportService->getReportByName($reportSchedule->reportName);
 
         if ($report->output_type == 'both' || $report->output_type == 'chart') {
-            $quickChartUrl = $this->config->getSetting('QUICK_CHART_URL');
-            if (!empty($quickChartUrl)) {
-                $script = $this->reportService->getReportChartScript($savedReport->savedReportId, $reportSchedule->reportName);
-                $src = $quickChartUrl. "/chart?width=1000&height=300&c=".$script;
+            if (!empty($this->config->getSetting('QUICK_CHART_URL'))) {
+                $quickChartUrl = $this->config->getSetting('QUICK_CHART_URL') . '/chart?width=1000&height=300&c=';
+                $script = str_replace('"', '\'', $this->reportService->getReportChartScript($savedReport->savedReportId, $reportSchedule->reportName));
+                $src = $quickChartUrl . $script;
 
                 // If multiple charts needs to be displayed
                 $multipleCharts = [];
                 $chartScriptArray = json_decode($script, true);
                 foreach ($chartScriptArray as $key => $chartData) {
-                    $multipleCharts[$key] = $quickChartUrl . "/chart?width=1000&height=300&c=" .json_encode($chartData);
+                    $multipleCharts[$key] = $quickChartUrl . json_encode($chartData);
                 }
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
@@ -232,29 +230,28 @@ class ReportScheduleTask implements TaskInterface
         }
 
         if ($report->output_type == 'both' || $report->output_type == 'table') {
-            $tableData = $savedReportData['results']['table'];
+            $tableData = $savedReportData->table;
         }
 
         // Get report email template
         $emailTemplate = $this->reportService->getReportEmailTemplate($reportSchedule->reportName);
 
-        if(!empty($emailTemplate)) {
-
+        if (!empty($emailTemplate)) {
             // Save PDF attachment
             ob_start();
-            echo $this->view->fetch($emailTemplate,
+            echo $this->view->fetch(
+                $emailTemplate,
                 [
                     'header' => $report->description,
                     'logo' => $this->config->uri('img/xibologo.png', true),
                     'title' => $savedReport->saveAs,
-                    'periodStart' => $savedReportData['results']['periodStart'],
-                    'periodEnd' => $savedReportData['results']['periodEnd'],
-                    'generatedOn' => Carbon::createFromFormat( 'U', $savedReport->generatedOn)->format('Y-m-d H:i:s'),
+                    'metadata' => $savedReportData->metadata,
                     'tableData' => isset($tableData) ? $tableData : null,
                     'src' => isset($src) ? $src : null,
                     'multipleCharts' => isset($multipleCharts) ? $multipleCharts : null,
                     'placeholder' => isset($placeholder) ? $placeholder : null
-                ]);
+                ]
+            );
             $body = ob_get_contents();
             ob_end_clean();
 
@@ -305,7 +302,6 @@ class ReportScheduleTask implements TaskInterface
                 $this->runMessage .= $error->getMessage() . PHP_EOL . PHP_EOL;
             }
         }
-
     }
 
     private function skipReportRun($now, $nextRunDt)
@@ -320,27 +316,23 @@ class ReportScheduleTask implements TaskInterface
         $range = 100;
         $random = rand(1, $range);
         if ($diffFromNow < $oneHourInSeconds) {
-
             // don't run the report
-            if ($random <= 70 ) { // 70% chance of skipping
+            if ($random <= 70) { // 70% chance of skipping
                 return true;
             }
         } elseif ($diffFromNow < $twoHoursInSeconds) {
-
             // don't run the report
-            if ($random <= 50 ) { // 50% chance of skipping
+            if ($random <= 50) { // 50% chance of skipping
                 return true;
             }
         } elseif ($diffFromNow < $threeHoursInSeconds) {
-
             // don't run the report
-            if ($random <= 40 ) { // 40% chance of skipping
+            if ($random <= 40) { // 40% chance of skipping
                 return true;
             }
         } elseif ($diffFromNow < $fourHoursInSeconds) {
-
             // don't run the report
-            if ($random <= 25 ) { // 25% chance of skipping
+            if ($random <= 25) { // 25% chance of skipping
                 return true;
             }
         }

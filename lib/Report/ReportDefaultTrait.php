@@ -23,11 +23,12 @@
 namespace Xibo\Report;
 
 use Carbon\Carbon;
+use Psr\Log\NullLogger;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Controller\DataTablesDotNetTrait;
+use Xibo\Entity\ReportResult;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Translate;
-use Xibo\Service\ConfigServiceInterface;
+use Xibo\Middleware\State;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
@@ -35,18 +36,11 @@ use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
- * Trait ReportTrait
+ * Trait ReportDefaultTrait
  * @package Xibo\Report
  */
-trait ReportTrait
+trait ReportDefaultTrait
 {
-    use DataTablesDotNetTrait;
-
-    /**
-     * @var \Xibo\Helper\ApplicationState
-     */
-    private $state;
-
     /**
      * @var StorageServiceInterface
      */
@@ -63,16 +57,6 @@ trait ReportTrait
     private $logService;
 
     /**
-     * @var ConfigServiceInterface
-     */
-    private $configService;
-
-    /**
-     * @var SanitizerService
-     */
-    private $sanitizerService;
-
-    /**
      * @var Request
      */
     private $request;
@@ -81,32 +65,27 @@ trait ReportTrait
 
     /**
      * Set common dependencies.
-     * @param \Xibo\Helper\ApplicationState $state
      * @param StorageServiceInterface $store
      * @param TimeSeriesStoreInterface $timeSeriesStore
-     * @param LogServiceInterface $log
-     * @param ConfigServiceInterface $config
-     * @param SanitizerService $sanitizer
      * @return $this
      */
-    public function setCommonDependencies($state, $store, $timeSeriesStore, $log, $config, $sanitizer)
+    public function setCommonDependencies($store, $timeSeriesStore)
     {
-        $this->state = $state;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
-        $this->logService = $log;
-        $this->configService = $config;
-        $this->sanitizerService = $sanitizer;
+        $this->logService = new NullLogger();
         return $this;
     }
 
     /**
-     * Get the Application State
-     * @return \Xibo\Helper\ApplicationState
+     * @param LogServiceInterface $logService
+     * @return $this
      */
-    protected function getState()
+    public function useLogger(LogServiceInterface $logService)
     {
-        return $this->state;
+        $this->logService = $logService;
+
+        return $this;
     }
 
     /**
@@ -137,97 +116,44 @@ trait ReportTrait
     }
 
     /**
-     * Get Config
-     * @return ConfigServiceInterface
+     * Get user Id
      */
-    public function getConfig()
+    public function getUserId()
     {
-        return $this->configService;
+        return $this->userId;
     }
 
     /**
-     * @param $array
-     * @return SanitizerInterface
+     * Set user Id
+     * @param $userId
+     * @return $this
      */
-    protected function getSanitizer($array)
+    public function setUserId($userId)
     {
-        return $this->sanitizerService->getSanitizer($array);
+        $this->userId = $userId;
+        return $this;
     }
 
-    public function generateHourPeriods($filterRangeStart, $filterRangeEnd, $start,$end, $ranges)
+    /**
+     * Get chart script
+     * @param ReportResult $results
+     * @return string
+     */
+    public function getReportChartScript($results)
     {
-
-        $periodData = []; // to generate periods table
-
-        // Generate all hours of the period
-        foreach ($ranges as $range) {
-
-            $startHour = $start->addHour()->format('U');
-
-            // Remove the period which crossed the end range
-            if ($startHour >= $filterRangeEnd) {
-                continue;
-            }
-
-            // Period start
-            $periodData[$range]['start'] = $startHour;
-            if ($periodData[$range]['start'] < $filterRangeStart) {
-                $periodData[$range]['start'] = $filterRangeStart;
-            }
-
-            // Period end
-            $periodData[$range]['end'] = $end->addHour()->format('U');
-            if ($periodData[$range]['end'] > $filterRangeEnd) {
-                $periodData[$range]['end'] = $filterRangeEnd;
-            }
-
-            $hourofday = Carbon::createFromTimestamp($periodData[$range]['start'])->hour;
-
-            // groupbycol =  hour
-            $periodData[$range]['groupbycol'] = $hourofday;
-
-        }
-
-        return $periodData;
+        return null;
     }
 
-    public function generateDayPeriods($filterRangeStart, $filterRangeEnd, $start, $end, $ranges, $groupByFilter = null)
+    /**
+     * Generate saved report name
+     * @param SanitizerInterface $sanitizedParams
+     * @return string
+     */
+    public function generateSavedReportName(SanitizerInterface $sanitizedParams)
     {
-        $periodData = []; // to generate periods table
+        $saveAs = sprintf(__('%s report', ucfirst($sanitizedParams->getString('filter'))));
 
-        // Generate all days of the period
-        foreach ($ranges as $range) {
-
-            $startDay = $start->addDay()->format('U');
-
-            // Remove the period which crossed the end range
-            if ($startDay >= $filterRangeEnd) {
-                continue;
-            }
-            // Period start
-            $periodData[$range]['start'] = $startDay;
-            if ($periodData[$range]['start'] < $filterRangeStart) {
-                $periodData[$range]['start'] = $filterRangeStart;
-            }
-
-            // Period end
-            $periodData[$range]['end'] = $end->addDay()->format('U');
-            if ($periodData[$range]['end'] > $filterRangeEnd) {
-                $periodData[$range]['end'] = $filterRangeEnd;
-            }
-
-            if ($groupByFilter == 'bydayofweek') {
-                $groupbycol = Carbon::createFromTimestamp($periodData[$range]['start'])->dayOfWeekIso;
-            } else {
-                $groupbycol =  Carbon::createFromTimestamp($periodData[$range]['start'])->day;
-            }
-
-            // groupbycol =  dayofweek
-            $periodData[$range]['groupbycol'] = $groupbycol;
-
-        }
-        return $periodData;
-
+        return $saveAs. ' '. Carbon::now()->format('Y-m-d');
     }
 
     /**
@@ -299,7 +225,7 @@ trait ReportTrait
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addHour()->format('U')
                 ]);
-            } else if ($groupByFilter == 'byday') {
+            } elseif ($groupByFilter == 'byday') {
                 $periods->execute([
                     'id' => $loopDate->year . $loopDate->month . $loopDate->day,
                     'customLabel' => $loopDate->format($customLabel),
@@ -307,9 +233,9 @@ trait ReportTrait
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addDay()->format('U')
                 ]);
-            } else if ($groupByFilter == 'byweek') {
+            } elseif ($groupByFilter == 'byweek') {
                 $weekNo = $loopDate->locale(Translate::GetLocale())->week();
-                
+
                 $periods->execute([
                     'id' => $loopDate->weekOfYear . $loopDate->year,
                     'customLabel' => $loopDate->format($customLabel),
@@ -317,7 +243,7 @@ trait ReportTrait
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addWeek()->format('U')
                 ]);
-            } else if ($groupByFilter == 'bymonth') {
+            } elseif ($groupByFilter == 'bymonth') {
                 $periods->execute([
                     'id' => $loopDate->year . $loopDate->month,
                     'customLabel' => $loopDate->format($customLabel),
@@ -325,7 +251,7 @@ trait ReportTrait
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addMonth()->format('U')
                 ]);
-            } else if ($groupByFilter == 'bydayofweek') {
+            } elseif ($groupByFilter == 'bydayofweek') {
                 $periods->execute([
                     'id' => $loopDate->dayOfWeek,
                     'customLabel' => $loopDate->format($customLabel),
@@ -333,7 +259,7 @@ trait ReportTrait
                     'start' => $loopDate->format('U'),
                     'end' => $loopDate->addDay()->format('U')
                 ]);
-            } else if ($groupByFilter == 'bydayofmonth') {
+            } elseif ($groupByFilter == 'bydayofmonth') {
                 $periods->execute([
                     'id' => $loopDate->day,
                     'customLabel' => $loopDate->format($customLabel),
@@ -350,23 +276,5 @@ trait ReportTrait
         $this->getLog()->debug(json_encode($this->store->select('SELECT * FROM ' . $table, []), JSON_PRETTY_PRINT));
 
         return $table;
-    }
-
-    /**
-     * @return int
-     */
-    public function getUserId()
-    {
-        return $this->userId;
-    }
-
-    /**
-     * @param $userId
-     * @return $this
-     */
-    public function setUserId($userId)
-    {
-        $this->userId = $userId;
-        return $this;
     }
 }
