@@ -37,8 +37,6 @@ jQuery.fn.extend({
 
     // NOTE: month format for momentjs is 1-12 and month value is zero indexed
     const INITIAL_MONTH = moment().month();
-
-    const INITIAL_WEEK = moment().week();
     const INITIAL_DATE = moment().date();
 
     const TIME_FORMAT = options.timeFormat || 'HH:mm';
@@ -85,6 +83,9 @@ jQuery.fn.extend({
 
       options.todayTextColor &&
         $(':root').css('--today-text-color', options.todayTextColor);
+
+      options.nowMarkerColor &&
+        $(':root').css('--now-marker-color', options.nowMarkerColor);
 
       options.dayOtherMonthBgColor &&
         $(':root').css(
@@ -150,6 +151,46 @@ jQuery.fn.extend({
      */
     function getWeekday(date) {
       return moment(date).weekday() + 1;
+    }
+
+    /**
+     * Create a marker showing current time
+     * @param {object} $container target container
+     * @param {object} timeData data with start and end dates for the view
+     */
+    function createNowMarker($container, timeData) {
+      const dayViewDuration = timeData.end - timeData.start;
+      const $nowMarker = $('<div class="now-marker">');
+
+      const nowTimeInMinutes = moment
+        .duration(
+          moment(TODAY).diff(
+            moment(TODAY).startOf('day'),
+          ),
+        )
+        .as('minutes');
+
+      // Skip if it's not included in the selected delta time view
+      if (
+        nowTimeInMinutes >= timeData.end ||
+        nowTimeInMinutes <= timeData.start
+      ) {
+        return;
+      }
+
+      // Calculate position
+      const eventPositionPerc = (
+        nowTimeInMinutes / dayViewDuration -
+        timeData.start / dayViewDuration
+      ) * 100;
+
+      $nowMarker.css(
+        'top',
+        eventPositionPerc + '%',
+      );
+
+      // Append event to container
+      $nowMarker.appendTo($container);
     }
 
     /**
@@ -239,6 +280,7 @@ jQuery.fn.extend({
     } else if (options.calendarType == 2) {
       // Daily View
       console.log('Daily View');
+      console.log(events);
 
       createCalendar = function() {
         console.log('Daily > createCalendar');
@@ -254,10 +296,9 @@ jQuery.fn.extend({
       const $hourGrid = $('.hour-grid');
 
       createCalendar = function() {
-        year = INITIAL_YEAR;
-        month = INITIAL_MONTH;
-        week = INITIAL_WEEK;
-        date = INITIAL_DATE;
+        const year = INITIAL_YEAR;
+        const month = INITIAL_MONTH;
+        const date = INITIAL_DATE;
 
         weekdaysNames.forEach((weekday, idx) => {
           const $weekDay = $('<li id="' + idx + '">');
@@ -379,6 +420,13 @@ jQuery.fn.extend({
 
         if (day.date === moment(TODAY).format('YYYY-MM-DD')) {
           $daysOfWeek.find('#' + day.dayOfWeek).addClass('day-of-week--today');
+
+          if (options.showNowMarker == 1) {
+            createNowMarker(
+              $dayElement.find('.calendar-events-container'),
+              $('.hour-grid').data(),
+            );
+          }
         }
       }
 
@@ -684,8 +732,8 @@ jQuery.fn.extend({
 
       createCalendar = function() {
         const $calendarDays = $('#calendarDays');
-        year = INITIAL_YEAR;
-        month = INITIAL_MONTH;
+        const year = INITIAL_YEAR;
+        const month = INITIAL_MONTH;
         const $daysOfWeek = $('#daysOfWeek');
 
         weekdaysNames.forEach((weekday) => {

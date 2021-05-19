@@ -230,6 +230,10 @@
                         {% set helpText %}{% trans "Should the selected template have a header?" %}{% endset %}
                         {{ forms.checkbox("showHeader", title, module.getOption("showHeader", true), helpText, "monthly-control-group") }}
 
+                        {% set title %}{% trans "Show now marker?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the calendar show a marker for the current time?" %}{% endset %}
+                        {{ forms.checkbox("showNowMarker", title, module.getOption("showNowMarker", true), helpText, "daily-control-group weekly-control-group") }}
+
                         {% set title %}{% trans "Text scale" %}{% endset %}
                         {% set helpText %}{% trans "Set the scale for the text element on the calendar." %}{% endset %}
                         {{ forms.number("textScale", title, module.getOption("textScale", 1.0), helpText, "agenda-control-group daily-control-group weekly-control-group monthly-control-group") }}
@@ -305,6 +309,9 @@
 
                                     {% set title %}{% trans "Current day text Colour" %}{% endset %}
                                     {{ forms.colorPicker("todayTextColor", title, module.getOption("todayTextColor")) }}
+
+                                    {% set title %}{% trans "Now marker Colour" %}{% endset %}
+                                    {{ forms.colorPicker("nowMarkerColor", title, module.getOption("nowMarkerColor"), "", "daily-control-group weekly-control-group") }}
                                 </div>
 
                                 <div class="card p-2 pt-3 mb-2">
