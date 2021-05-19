@@ -178,5 +178,5 @@ module.exports = (env, argv) => {
     moduleConfig.devtool = false;
   }
 
-  return [mainConfig, moduleConfig];
+  return [moduleConfig, mainConfig];
 };
