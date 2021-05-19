@@ -347,6 +347,13 @@ class Calendar extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="showNowMarker",
+     *      in="formData",
+     *      description="A flag (0, 1), Should the calendar show a marker for the current time?",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="timeFormat",
      *      in="formData",
      *      description="Moment time format",
@@ -434,6 +441,13 @@ class Calendar extends ModuleWidget
      *      name="todayTextColor",
      *      in="formData",
      *      description="Text colour for current day element on monthly/weekly calendars",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="nowMarkerColor",
+     *      in="formData",
+     *      description="Background colour for the current time marker",
      *      type="string",
      *      required=false
      *   ),
@@ -578,6 +592,7 @@ class Calendar extends ModuleWidget
         } else {
             // Properties common to agenda, daily, weekly and monthly view
             $this->setOption('showHeader', $sanitizedParams->getCheckbox('showHeader'));
+            $this->setOption('showNowMarker', $sanitizedParams->getCheckbox('showNowMarker'));
             $this->setOption('timeFormat', $sanitizedParams->getString('timeFormat', ['defaultOnEmptyString' => true]));
             $this->setOption('startTime', $sanitizedParams->getString('startTime'));
             $this->setOption('endTime', $sanitizedParams->getString('endTime'));
@@ -591,6 +606,7 @@ class Calendar extends ModuleWidget
             $this->setOption('dayBgColor', $sanitizedParams->getString('dayBgColor'));
             $this->setOption('dayTextColor', $sanitizedParams->getString('dayTextColor'));
             $this->setOption('todayTextColor', $sanitizedParams->getString('todayTextColor'));
+            $this->setOption('nowMarkerColor', $sanitizedParams->getString('nowMarkerColor'));
             $this->setOption('dayOtherMonthBgColor', $sanitizedParams->getString('dayOtherMonthBgColor'));
             $this->setOption('dayOtherMonthTextColor', $sanitizedParams->getString('dayOtherMonthTextColor'));
             $this->setOption('headerBgColor', $sanitizedParams->getString('headerBgColor'));
@@ -735,6 +751,7 @@ class Calendar extends ModuleWidget
         if ($calendarType > 0) {
             $calendarOptions = array_merge([
                 'showHeader' => $this->getOption('showHeader'),
+                'showNowMarker' => $this->getOption('showNowMarker'),
                 'timeFormat' => $this->getOption('timeFormat'),
                 'startTime' => $this->getOption('startTime'),
                 'endTime' => $this->getOption('endTime'),
@@ -746,6 +763,7 @@ class Calendar extends ModuleWidget
                 'dayBgColor' => $this->getOption('dayBgColor'),
                 'dayTextColor' => $this->getOption('dayTextColor'),
                 'todayTextColor' => $this->getOption('todayTextColor'),
+                'nowMarkerColor' => $this->getOption('nowMarkerColor'),
                 'dayOtherMonthBgColor' => $this->getOption('dayOtherMonthBgColor'),
                 'dayOtherMonthTextColor' => $this->getOption('dayOtherMonthTextColor'),
                 'headerBgColor' => $this->getOption('headerBgColor'),
