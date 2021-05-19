@@ -55,6 +55,9 @@ RUN npm install --only=prod
 # Copy ui folder
 COPY ./ui ./ui
 
+# Copy modules source folder
+COPY ./modules/src ./modules/src
+
 # Build webpack
 RUN npm run publish
 
@@ -169,6 +172,9 @@ COPY --from=composer /app /var/www/cms
 
 # Copy dist built webpack app folder to web
 COPY --from=webpack /app/web/dist /var/www/cms/web/dist
+
+# Copy modules built webpack app folder to cms modules
+COPY --from=webpack /app/modules /var/www/cms/modules
 
 # All other files (.dockerignore excludes many things, but we tidy up the rest below)
 COPY --chown=apache:apache . /var/www/cms
