@@ -141,13 +141,13 @@
                         {% set title %}{% trans "Calendar Type" %}{% endset %}
                         {% set helpText %}{% trans "Please select the type of calendar to display." %}{% endset %}
                         {% set custom %}{% trans "Custom" %}{% endset %}
-                        {% set agenda %}{% trans "Agenda" %}{% endset %}
+                        {% set schedule %}{% trans "Schedule" %}{% endset %}
                         {% set daily %}{% trans "Daily" %}{% endset %}
                         {% set weekly %}{% trans "Weekly" %}{% endset %}
                         {% set monthly %}{% trans "Monthly" %}{% endset %}
                         {% set options = [
                             { id: 0, value: custom },
-                            { id: 1, value: agenda },
+                            { id: 1, value: schedule },
                             { id: 2, value: daily },
                             { id: 3, value: weekly },
                             { id: 4, value: monthly }
@@ -236,7 +236,7 @@
 
                         {% set title %}{% trans "Text scale" %}{% endset %}
                         {% set helpText %}{% trans "Set the scale for the text element on the calendar." %}{% endset %}
-                        {{ forms.number("textScale", title, module.getOption("textScale", 1.0), helpText, "agenda-control-group daily-control-group weekly-control-group monthly-control-group") }}
+                        {{ forms.number("textScale", title, module.getOption("textScale", 1.0), helpText, "schedule-control-group daily-control-group weekly-control-group monthly-control-group") }}
                         
                         {% set title %}{% trans "Week name length" %}{% endset %}
                         {% set helpText %}{% trans "Please select the lenght for the week names." %}{% endset %}
@@ -254,7 +254,7 @@
                         {% set helpText %}{% trans "Duration, in minutes, for each row in the grid." %}{% endset %}
                         {{ forms.number("gridStep", title, module.getOption("gridStep", 60), helpText, "daily-control-group weekly-control-group") }}
 
-                        <div id="template-colors" class="agenda-control-group daily-control-group weekly-control-group monthly-control-group">
+                        <div id="template-colors" class="schedule-control-group daily-control-group weekly-control-group monthly-control-group">
                             {% set title %}{% trans "Theme" %}{% endset %}
                             {% set helpText %}{% trans "Please select the colours scheme." %}{% endset %}
                             {% set light %}{% trans "Light" %}{% endset %}
@@ -300,7 +300,7 @@
                                 </div>
 
                                 <div class="card p-2 pt-3 mb-2">
-                                    <div class="card-title font-weight-bold text-info">Month Days</div>
+                                    <div class="card-title font-weight-bold text-info">Calendar Days</div>
                                     {% set title %}{% trans "Background Colour" %}{% endset %}
                                     {{ forms.colorPicker("dayBgColor", title, module.getOption("dayBgColor")) }}
 
@@ -314,7 +314,7 @@
                                     {{ forms.colorPicker("nowMarkerColor", title, module.getOption("nowMarkerColor"), "", "daily-control-group weekly-control-group") }}
                                 </div>
 
-                                <div class="card p-2 pt-3 mb-2">
+                                <div class="card p-2 pt-3 mb-2 monthly-control-group">
                                     <div class="card-title font-weight-bold text-info">Other Month Days</div>
                                     {% set title %}{% trans "Background Colour" %}{% endset %}
                                     {{ forms.colorPicker("dayOtherMonthBgColor", title, module.getOption("dayOtherMonthBgColor")) }}

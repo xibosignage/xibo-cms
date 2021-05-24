@@ -44,8 +44,8 @@ jQuery.fn.extend({
     const DEFAULT_DAY_START_TIME = moment().startOf('day').format(TIME_FORMAT);
     const DEFAULT_DAY_END_TIME = moment().endOf('day').format(TIME_FORMAT);
 
-    const GRID_STEP =
-      options.gridStep && options.gridStep > 0 ? options.gridStep : 60;
+    const GRID_STEP = options.gridStep &&
+      options.gridStep > 0 ? options.gridStep : 60;
 
     const DEFAULT_FONT_SIZE = 16;
     const DEFAULT_FONT_SCALE = options.textScale || 1;
@@ -194,6 +194,306 @@ jQuery.fn.extend({
     }
 
     /**
+     * Add events to calendar
+     */
+    function addEventsToCalendarBase() {
+      events.forEach((event) => {
+        const startDate = moment(event.startDate).startOf('date');
+
+        // Check if event is an all day
+        // (startDate 00:00 day 1, endDate 00:00 day after last day)
+        const allDayEvent =
+          moment(event.startDate).isSame(startDate) &&
+          moment(event.endDate).isSame(moment(event.endDate).startOf('date'));
+        event.allDay = allDayEvent;
+
+        const endDate = allDayEvent ?
+          moment(event.endDate).startOf('date').subtract(1, 'd') :
+          moment(event.endDate).startOf('date');
+
+        const eventTotalDays = endDate.diff(startDate, 'days') + 1;
+        let currentDayOfEvent = 1;
+
+        // Days loop
+        const momentAux = moment(startDate);
+        while (momentAux <= endDate) {
+          addEventToDay(momentAux, event, eventTotalDays, currentDayOfEvent);
+          currentDayOfEvent++;
+          momentAux.add(1, 'd');
+        }
+      });
+    }
+
+    /**
+       * Add event to specific day
+       * @param {object} date  momentjs date
+       * @param {object} event
+       * @param {number} eventTotalDays
+       * @param {number} currentDayOfEvent
+       */
+    function addEventToDay(date, event, eventTotalDays, currentDayOfEvent) {
+      /**
+       * Get container by date
+       * @param {object} date
+       * @return {object} Jquery container
+       */
+      function getEventContainer(date) {
+        return (options.calendarType == 2) ?
+          $('.calendar-day .calendar-events-container') :
+          $('#day_' + date.date()).find('.calendar-events-container');
+      }
+
+      /**
+       * Get all days container by date
+       * @param {object} date
+       * @return {object} Jquery container
+       */
+      function getAllDayEventsContainer(date) {
+        return (options.calendarType == 2) ?
+          $('.calendar-day .calendar-all-day-events-container') :
+          $('#day_' + date.date()).find('.calendar-all-day-events-container');
+      }
+
+      const $newEvent = $('<div class="calendar-event">');
+      const weekDay = getWeekday(date);
+      let eventDuration = 1;
+
+      // Mark event as an all day
+      if (event.allDay) {
+        $newEvent.addClass('all-day');
+      }
+
+      if (eventTotalDays > 1) {
+        // Multiple day event
+        let htmlToAdd =
+          '<span class="event-summary">' + event.summary + '</span>';
+
+        // Mark as multi event
+        $newEvent.addClass('multi-day');
+
+        // Draw only on the first day of the event
+        // or at the beggining of the weeks when it breaks
+        if (currentDayOfEvent == 1 || weekDay == 1) {
+          if (currentDayOfEvent == 1 && !event.allDay) {
+            htmlToAdd =
+              '<div class="event-time">' +
+              moment(event.startDate).format(TIME_FORMAT) +
+              '</div>' +
+              htmlToAdd;
+          }
+
+          // Show event content in multiple days
+          $newEvent.html(htmlToAdd);
+
+          // Update element duration based on event duration
+          eventDuration = eventTotalDays - (currentDayOfEvent - 1);
+
+          const remainingDays = 8 - weekDay;
+          if (eventDuration > remainingDays) {
+            eventDuration = remainingDays;
+            $newEvent.addClass('cropped-event-end');
+          }
+
+          if (currentDayOfEvent > 1) {
+            $newEvent.addClass('cropped-event-start');
+          }
+          $newEvent.css(
+            'width',
+            'calc(' +
+            eventDuration * 100 +
+            '% + ' +
+            eventDuration * 2 +
+            'px)',
+          );
+        } else {
+          // Multiple event that was extended, no need to be rendered
+          return;
+        }
+      } else {
+        // Single day event
+        let htmlToAdd =
+          '<div class="event-summary">' + event.summary + '</div>';
+
+        // Mark event as an all day
+        if (event.allDay) {
+          $newEvent.addClass('all-day');
+        } else {
+          htmlToAdd =
+            htmlToAdd +
+            '<div class="event-time">' +
+            moment(event.startDate).format(TIME_FORMAT) +
+            ' - ' +
+            moment(event.endDate).format(TIME_FORMAT) +
+            '</div>';
+        }
+
+        // Add inner html
+        $newEvent.html(htmlToAdd);
+      }
+
+      // All day or multi day events
+      if (eventTotalDays > 1 || event.allDay) {
+        // If there's at least one daily event
+        // enable the container in the calendar view
+        $('.calendar-container').addClass('show-all-day-events');
+
+        const $dailyEventsContainer = getAllDayEventsContainer(date);
+
+        // Calculate event slot
+        let slots = $dailyEventsContainer.data('slots');
+        let daySlot;
+        if (slots != undefined) {
+          for (let index = 0; index < slots.length; index++) {
+            const slot = slots[index];
+            if (slot === undefined) {
+              daySlot = index;
+              slots[index] = 1;
+              break;
+            }
+          }
+
+          if (daySlot === undefined) {
+            daySlot = slots.length;
+            slots.push(1);
+          }
+        } else {
+          daySlot = 0;
+          slots = [1];
+        }
+
+        $dailyEventsContainer.data('slots', slots);
+
+        // Extend event to the remaining days
+        if (eventDuration > 1 && options.calendarType != 2) {
+          for (let dayAfter = 1; dayAfter < eventDuration; dayAfter++) {
+            const $newContainer = getAllDayEventsContainer(
+              moment(date).add(dayAfter, 'd'),
+            );
+            let dataSlots = $newContainer.data('slots');
+
+            if (dataSlots === undefined) {
+              dataSlots = [];
+            }
+
+            dataSlots[daySlot] = 2;
+            $newContainer.data('slots', dataSlots);
+          }
+        }
+
+        $newEvent.css('top', 1.875 * daySlot + 'rem');
+
+        // Append event to container
+        $newEvent.appendTo($dailyEventsContainer);
+
+        // Check container height and slots to show number of extra events
+        updateContainerExtraEvents($dailyEventsContainer, slots);
+      } else {
+        // Daily timed event
+        const $eventsContainer = getEventContainer(date);
+        const containerData = $('.hour-grid').data();
+
+        const dayViewDuration = containerData.end - containerData.start;
+        const eventData = {
+          start: moment
+            .duration(
+              moment(event.startDate).diff(
+                moment(event.startDate).startOf('day'),
+              ),
+            )
+            .as('minutes'),
+          duration: moment
+            .duration(moment(event.endDate).diff(moment(event.startDate)))
+            .as('minutes'),
+        };
+
+        // Skip event if it's not included in the selected delta time view
+        if (
+          eventData.start >= containerData.end ||
+          eventData.start + eventData.duration <= containerData.start
+        ) {
+          return;
+        }
+
+        // Calculate position
+        let eventPositionPerc = (
+          eventData.start / dayViewDuration -
+          containerData.start / dayViewDuration
+        ) * 100;
+        let eventHeightAdj = 0;
+
+        // Check if event starts before view time
+        if (eventPositionPerc < 0) {
+          $newEvent.addClass('before-view');
+          eventHeightAdj = eventPositionPerc;
+          eventPositionPerc = 0;
+        }
+
+        $newEvent.css(
+          'top',
+          eventPositionPerc + '%',
+        );
+
+        // Calculate event slot
+        let slots = $eventsContainer.data('slots');
+        let eventLevel = 0;
+        if (slots != undefined) {
+          let newLevel = 0;
+          for (let index = 0; index < slots.length; index++) {
+            const slot = slots[index];
+            if (
+              !(
+                eventData.start >= slot.end ||
+                eventData.start + eventData.duration <= slot.start
+              )
+            ) {
+              newLevel = slot.level + 1;
+            }
+          }
+
+          slots.push({
+            level: newLevel,
+            start: eventData.start,
+            end: eventData.start + eventData.duration,
+          });
+
+          eventLevel = newLevel;
+        } else {
+          slots = [
+            {
+              level: 0,
+              start: eventData.start,
+              end: eventData.start + eventData.duration,
+            },
+          ];
+
+          eventLevel = 0;
+        }
+
+        // Update container slots
+        $eventsContainer.data('slots', slots);
+
+        // Assign level
+        $newEvent.addClass('level-' + eventLevel);
+        $newEvent.toggleClass('concurrent', eventLevel > 0);
+
+        // Calculate height
+        const eventHeight = ((eventData.duration / dayViewDuration) * 100) +
+          eventHeightAdj;
+
+        $newEvent.height(eventHeight + '%');
+
+        // Append event to container
+        $newEvent.appendTo($eventsContainer);
+
+        // Mark shorter events to be styled
+        if ($newEvent.height() < parseFloat($newEvent.css('font-size')) * 2) {
+          $newEvent.addClass('shorter-event');
+          $newEvent.find('.event-time').prependTo($newEvent);
+        }
+      }
+    }
+
+    /**
      * Update container and hide the number of extra events
      * @param {object} $container jquery container
      * @param {object} slots occupied slots
@@ -265,30 +565,111 @@ jQuery.fn.extend({
       }
     }
 
+    /**
+     * Create hour grid
+     * @param {object} $container jquery container
+     * @param {string} start
+     * @param {string} end
+     */
+    function createCalendarHourGrid($container, start, end) {
+      start =
+        start == '' ?
+          moment(DEFAULT_DAY_START_TIME, TIME_FORMAT) :
+          moment(start, TIME_FORMAT);
+      end =
+        end == '' ?
+          moment(DEFAULT_DAY_END_TIME, TIME_FORMAT) :
+          moment(end, TIME_FORMAT);
+
+      // Hour loop
+      const momentAux = moment(start);
+      while (momentAux <= end) {
+        $container.append(
+          '<li class="hour-time">' + momentAux.format(TIME_FORMAT) + '</li>',
+        );
+        momentAux.add(GRID_STEP, 'm');
+      }
+
+      // Save properties to the container for later use
+      const containerData = {
+        start: moment
+          .duration(moment(start).diff(moment(start).startOf('day')))
+          .as('minutes'),
+        end: moment
+          .duration(moment(end).diff(moment(end).startOf('day')))
+          .as('minutes'),
+      };
+      $container.data(containerData);
+
+      // Calculate hour grid spacing
+      const gridSpacing =
+        (1 / ((containerData.end - containerData.start) / GRID_STEP)) * 100;
+      $container.find('.hour-time').height(gridSpacing + '%');
+    }
+
     // Functions by calendar type
     if (options.calendarType == 1) {
-      // Agenda View
-      console.log('Agenda View');
+      // Schedule View
+      console.log('Schedule View');
 
       createCalendar = function() {
-        console.log('Agenda > createCalendar');
+        console.log('Schedule > createCalendar');
       };
 
       addEventsToCalendar = function(events) {
-        console.log('Agenda > addEventsToCalendar');
+        console.log('Schedule > addEventsToCalendar');
       };
     } else if (options.calendarType == 2) {
       // Daily View
-      console.log('Daily View');
-      console.log(events);
+      const $hourGrid = $('.hour-grid');
+      const $dayTitle = $('.day-title');
+      const $dayContainer = $('.day-container');
 
       createCalendar = function() {
-        console.log('Daily > createCalendar');
+        // Add day label
+        const $weekDay = $('<li>');
+        $dayTitle.append($weekDay);
+        $weekDay.html('<div class="week-day">' +
+          weekdaysNames[TODAY.weekday()] +
+          '</div>');
+
+        const today = moment(TODAY);
+        const day = {
+          date: today.format('YYYY-MM-DD'),
+          dayOfMonth: today.date(),
+        };
+
+        const $dayOfMonthElement = $('<div class="week-day-date">');
+        $dayOfMonthElement.html(day.dayOfMonth);
+        $weekDay.append($dayOfMonthElement);
+
+        // Add hour grid
+        createCalendarHourGrid($hourGrid, options.startTime, options.endTime);
+
+        // Add day element
+        const $dayElement = $('<li id="day_' + day.dayOfMonth + '">');
+        $dayElement.addClass('calendar-day');
+
+        // Append all day events container
+        $dayElement.append(
+          $('<div class="calendar-all-day-events-container">'),
+        );
+
+        // Append normal events container
+        $dayElement.append($('<div class="calendar-events-container">'));
+
+        // Append day to container
+        $dayContainer.append($dayElement);
+
+        if (options.showNowMarker == 1) {
+          createNowMarker(
+            $dayElement.find('.calendar-events-container'),
+            $('.hour-grid').data(),
+          );
+        }
       };
 
-      addEventsToCalendar = function(events) {
-        console.log('Daily > addEventsToCalendar');
-      };
+      addEventsToCalendar = addEventsToCalendarBase;
     } else if (options.calendarType == 3) {
       // Weekly View
       const $daysOfWeek = $('.day-of-week');
@@ -306,14 +687,6 @@ jQuery.fn.extend({
           $weekDay.html('<div class="week-day">' + weekday + '</div>');
         });
 
-        $('.current-week').html(
-          moment({
-            year: year,
-            month: month,
-            date: date,
-          }).format('w'),
-        );
-
         // Add hour grid
         createCalendarHourGrid($hourGrid, options.startTime, options.endTime);
 
@@ -326,48 +699,6 @@ jQuery.fn.extend({
           appendDay(day, $calendarDays);
         });
       };
-
-      /**
-       * Create hour grid
-       * @param {object} $container jquery container
-       * @param {string} start
-       * @param {string} end
-       */
-      function createCalendarHourGrid($container, start, end) {
-        start =
-          start == '' ?
-            moment(DEFAULT_DAY_START_TIME, TIME_FORMAT) :
-            moment(start, TIME_FORMAT);
-        end =
-          end == '' ?
-            moment(DEFAULT_DAY_END_TIME, TIME_FORMAT) :
-            moment(end, TIME_FORMAT);
-
-        // Hour loop
-        const momentAux = moment(start);
-        while (momentAux <= end) {
-          $container.append(
-            '<li class="hour-time">' + momentAux.format(TIME_FORMAT) + '</li>',
-          );
-          momentAux.add(GRID_STEP, 'm');
-        }
-
-        // Save properties to the container for later use
-        const containerData = {
-          start: moment
-            .duration(moment(start).diff(moment(start).startOf('day')))
-            .as('minutes'),
-          end: moment
-            .duration(moment(end).diff(moment(end).startOf('day')))
-            .as('minutes'),
-        };
-        $container.data(containerData);
-
-        // Calculate hour grid spacing
-        const gridSpacing =
-          (1 / ((containerData.end - containerData.start) / GRID_STEP)) * 100;
-        $container.find('.hour-time').height(gridSpacing + '%');
-      }
 
       /**
        * Create days for current week
@@ -430,6 +761,7 @@ jQuery.fn.extend({
         }
       }
 
+      // Override addEventsToCalendarBase
       addEventsToCalendar = function(events) {
         events.forEach((event) => {
           const startDate = moment(event.startDate).startOf('date');
@@ -457,273 +789,6 @@ jQuery.fn.extend({
           }
         });
       };
-
-      /**
-       * Add event to specific day
-       * @param {object} date  momentjs date
-       * @param {object} event
-       * @param {number} eventTotalDays
-       * @param {number} currentDayOfEvent
-       */
-      function addEventToDay(date, event, eventTotalDays, currentDayOfEvent) {
-        /**
-         * Get container by date
-         * @param {object} date
-         * @return {object} Jquery container
-         */
-        function getEventContainer(date) {
-          return $('#day_' + date.date()).find('.calendar-events-container');
-        }
-
-        /**
-         * Get all days container by date
-         * @param {object} date
-         * @return {object} Jquery container
-         */
-        function getAllDayEventsContainer(date) {
-          return $('#day_' + date.date()).find(
-            '.calendar-all-day-events-container',
-          );
-        }
-
-        const $newEvent = $('<div class="calendar-event">');
-        const weekDay = getWeekday(date);
-        let eventDuration = 1;
-
-        // Mark event as an all day
-        if (event.allDay) {
-          $newEvent.addClass('all-day');
-        }
-
-        if (eventTotalDays > 1) {
-          // Multiple day event
-          let htmlToAdd =
-            '<span class="event-summary">' + event.summary + '</span>';
-
-          // Mark as multi event
-          $newEvent.addClass('multi-day');
-
-          // Draw only on the first day of the event
-          // or at the beggining of the weeks when it breaks
-          if (currentDayOfEvent == 1 || weekDay == 1) {
-            if (currentDayOfEvent == 1 && !event.allDay) {
-              htmlToAdd =
-                '<div class="event-time">' +
-                moment(event.startDate).format(TIME_FORMAT) +
-                '</div>' +
-                htmlToAdd;
-            }
-
-            // Show event content in multiple days
-            $newEvent.html(htmlToAdd);
-
-            // Update element duration based on event duration
-            eventDuration = eventTotalDays - (currentDayOfEvent - 1);
-
-            const remainingDays = 8 - weekDay;
-            if (eventDuration > remainingDays) {
-              eventDuration = remainingDays;
-              $newEvent.addClass('cropped-event-end');
-            }
-
-            if (currentDayOfEvent > 1) {
-              $newEvent.addClass('cropped-event-start');
-            }
-            $newEvent.css(
-              'width',
-              'calc(' +
-              eventDuration * 100 +
-              '% + ' +
-              eventDuration * 2 +
-              'px)',
-            );
-          } else {
-            // Multiple event that was extended, no need to be rendered
-            return;
-          }
-        } else {
-          // Single day event
-          let htmlToAdd =
-            '<div class="event-summary">' + event.summary + '</div>';
-
-          // Mark event as an all day
-          if (event.allDay) {
-            $newEvent.addClass('all-day');
-          } else {
-            htmlToAdd =
-              htmlToAdd +
-              '<div class="event-time">' +
-              moment(event.startDate).format(TIME_FORMAT) +
-              ' - ' +
-              moment(event.endDate).format(TIME_FORMAT) +
-              '</div>';
-          }
-
-          // Add inner html
-          $newEvent.html(htmlToAdd);
-        }
-
-        // All day or multi day events
-        if (eventTotalDays > 1 || event.allDay) {
-          // If there's at least one daily event
-          // enable the container in the calendar view
-          $('.calendar-week').addClass('show-all-day-events');
-
-          const $dailyEventsContainer = getAllDayEventsContainer(date);
-
-          // Calculate event slot
-          let slots = $dailyEventsContainer.data('slots');
-          let daySlot;
-          if (slots != undefined) {
-            for (let index = 0; index < slots.length; index++) {
-              const slot = slots[index];
-              if (slot === undefined) {
-                daySlot = index;
-                slots[index] = 1;
-                break;
-              }
-            }
-
-            if (daySlot === undefined) {
-              daySlot = slots.length;
-              slots.push(1);
-            }
-          } else {
-            daySlot = 0;
-            slots = [1];
-          }
-
-          $dailyEventsContainer.data('slots', slots);
-
-          // Extend event to the remaining days
-          if (eventDuration > 1) {
-            for (let dayAfter = 1; dayAfter < eventDuration; dayAfter++) {
-              const $newContainer = getAllDayEventsContainer(
-                moment(date).add(dayAfter, 'd'),
-              );
-              let dataSlots = $newContainer.data('slots');
-
-              if (dataSlots === undefined) {
-                dataSlots = [];
-              }
-
-              dataSlots[daySlot] = 2;
-              $newContainer.data('slots', dataSlots);
-            }
-          }
-
-          $newEvent.css('top', 1.875 * daySlot + 'rem');
-
-          // Append event to container
-          $newEvent.appendTo($dailyEventsContainer);
-
-          // Check container height and slots to show number of extra events
-          updateContainerExtraEvents($dailyEventsContainer, slots);
-        } else {
-          // Daily timed event
-          const $eventsContainer = getEventContainer(date);
-          const containerData = $hourGrid.data();
-
-          const dayViewDuration = containerData.end - containerData.start;
-          const eventData = {
-            start: moment
-              .duration(
-                moment(event.startDate).diff(
-                  moment(event.startDate).startOf('day'),
-                ),
-              )
-              .as('minutes'),
-            duration: moment
-              .duration(moment(event.endDate).diff(moment(event.startDate)))
-              .as('minutes'),
-          };
-
-          // Skip event if it's not included in the selected delta time view
-          if (
-            eventData.start >= containerData.end ||
-            eventData.start + eventData.duration <= containerData.start
-          ) {
-            return;
-          }
-
-          // Calculate position
-          let eventPositionPerc = (
-            eventData.start / dayViewDuration -
-            containerData.start / dayViewDuration
-          ) * 100;
-          let eventHeightAdj = 0;
-
-          // Check if event starts before view time
-          if (eventPositionPerc < 0) {
-            $newEvent.addClass('before-view');
-            eventHeightAdj = eventPositionPerc;
-            eventPositionPerc = 0;
-          }
-
-          $newEvent.css(
-            'top',
-            eventPositionPerc + '%',
-          );
-
-          // Calculate event slot
-          let slots = $eventsContainer.data('slots');
-          let eventLevel = 0;
-          if (slots != undefined) {
-            let newLevel = 0;
-            for (let index = 0; index < slots.length; index++) {
-              const slot = slots[index];
-              if (
-                !(
-                  eventData.start >= slot.end ||
-                  eventData.start + eventData.duration <= slot.start
-                )
-              ) {
-                newLevel = slot.level + 1;
-              }
-            }
-
-            slots.push({
-              level: newLevel,
-              start: eventData.start,
-              end: eventData.start + eventData.duration,
-            });
-
-            eventLevel = newLevel;
-          } else {
-            slots = [
-              {
-                level: 0,
-                start: eventData.start,
-                end: eventData.start + eventData.duration,
-              },
-            ];
-
-            eventLevel = 0;
-          }
-
-          // Update container slots
-          $eventsContainer.data('slots', slots);
-
-          // Assign level
-          $newEvent.addClass('level-' + eventLevel);
-          $newEvent.toggleClass('concurrent', eventLevel > 0);
-
-          // Calculate height
-          const eventHeight = ((eventData.duration / dayViewDuration) * 100) +
-            eventHeightAdj;
-
-          $newEvent.height(eventHeight + '%');
-
-          // Append event to container
-          $newEvent.appendTo($eventsContainer);
-
-          // Mark shorter events to be styled
-          if ($newEvent.height() < parseFloat($newEvent.css('font-size')) * 2) {
-            $newEvent.addClass('shorter-event');
-            $newEvent.find('.event-time').prependTo($newEvent);
-          }
-        }
-      }
     } else if (options.calendarType == 4) {
       // Monthly View
       let currentMonthDays;
@@ -944,7 +1009,7 @@ jQuery.fn.extend({
       };
 
       /**
-       * Add event to specific day
+       * Add event to specific day (override)
        * @param {object} date  momentjs date
        * @param {object} event
        * @param {number} eventTotalDays

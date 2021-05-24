@@ -42,7 +42,7 @@ class Calendar extends ModuleWidget
 {
     const CALENDAR_TYPES = array(
         'custom',
-        'agenda',
+        'schedule',
         'daily',
         'weekly',
         'monthly'
@@ -335,7 +335,7 @@ class Calendar extends ModuleWidget
      *  @SWG\Parameter(
      *      name="calendarType",
      *      in="formData",
-     *      description="Calendar Type (0:custom ; 1:agenda ; 2:daily ; 3:weekly ; 4:monthly )",
+     *      description="Calendar Type (0:custom ; 1:schedule ; 2:daily ; 3:weekly ; 4:monthly )",
      *      type="integer",
      *      required=false
      *  ),
@@ -590,7 +590,7 @@ class Calendar extends ModuleWidget
             $this->setOption('rangeStart', $sanitizedParams->getDate('rangeStart'));
             $this->setOption('rangeEnd', $sanitizedParams->getDate('rangeEnd'));
         } else {
-            // Properties common to agenda, daily, weekly and monthly view
+            // Properties common to schedule, daily, weekly and monthly view
             $this->setOption('showHeader', $sanitizedParams->getCheckbox('showHeader'));
             $this->setOption('showNowMarker', $sanitizedParams->getCheckbox('showNowMarker'));
             $this->setOption('timeFormat', $sanitizedParams->getString('timeFormat', ['defaultOnEmptyString' => true]));
