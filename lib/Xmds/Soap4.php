@@ -582,10 +582,15 @@ class Soap4 extends Soap
         }
 
         // Current Layout
-        $currentLayoutId = $sanitizedStatus->getInt('currentLayoutId');
+        // don't fail: xibosignage/xibo#2517
+        try {
+            $currentLayoutId = $sanitizedStatus->getInt('currentLayoutId');
 
-        if ($currentLayoutId !== null) {
-            $this->display->setCurrentLayoutId($this->getPool(), $currentLayoutId);
+            if ($currentLayoutId !== null) {
+                $this->display->setCurrentLayoutId($this->getPool(), $currentLayoutId);
+            }
+        } catch (\Exception $exception) {
+            $this->getLog()->debug('Ignoring currentLayout due to a validation error.');
         }
 
         // Status Dialog
