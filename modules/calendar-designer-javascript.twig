@@ -38,7 +38,7 @@
         var updateColors = function() {
             var CALENDAR_TYPE_NAMES = [
                 'custom',
-                'agenda',
+                'schedule',
                 'daily',
                 'weekly',
                 'monthly'
@@ -76,7 +76,7 @@
         formHelpers.setupCheckboxInputFields($(self).find('form'), '#useDuration', '.duration-fields');
 
         // Set clock type input field, using the helper ()
-        formHelpers.setupObjectValueInputFields($(self), '#calendarType', ['.custom-control-group', '.agenda-control-group', '.daily-control-group', '.weekly-control-group', '.monthly-control-group'], [0, 1, 2, 3, 4]);
+        formHelpers.setupObjectValueInputFields($(self), '#calendarType', ['.custom-control-group', '.schedule-control-group', '.daily-control-group', '.weekly-control-group', '.monthly-control-group'], [0, 1, 2, 3, 4]);
 
         // Set template field, using the helper
         formHelpers.setupCheckboxInputFields($(self).find('form'), '#useCurrentTemplate', '.current-event-template');
