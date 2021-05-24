@@ -98,12 +98,12 @@ jQuery.fn.extend({
                     width: options.widgetDesignWidth,
                     height: options.widgetDesignHeight
                 });
-            } else {
-                $(this).css({
-                    width: newWidth,
-                    height: newHeight
-                });
             }
+
+            $(this).css({
+                width: newWidth,
+                height: newHeight
+            });
             
             // Handle the scaling
             // What IE are we?
