@@ -91,7 +91,8 @@ class MenuBoardsMigration extends AbstractMigration
                 'render_as' => 'html',
                 'viewPath' => '../modules',
                 'class' => 'Xibo\Widget\MenuBoard',
-                'defaultDuration' => 60
+                'defaultDuration' => 60,
+                'installName' => 'menuboard'
             ])->save();
         }
     }
