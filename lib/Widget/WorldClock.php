@@ -471,6 +471,7 @@ class WorldClock extends ModuleWidget
                         $styleSheet .= '
                             .analogue-steps > div:nth-child(' . ($i + 1) .') {
                                 transform: rotate(' . ($i * 30) . 'deg);
+                                -webkit-transform: rotate(' . ($i * 30) . 'deg);
                             }';
                     }
                 }
