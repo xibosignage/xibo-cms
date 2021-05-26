@@ -88,7 +88,7 @@ jQuery.fn.extend({
         $(this).each(function() {
             if(!$.isEmptyObject(mElOptions)) {
                 $(this).find('#content').css('transform-origin', 'top left');
-                $(this).find('#content').css('transform', 'scale(' + Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY) + ')');
+                $(this).find('#content').css('transform', 'scale(' + ratio * Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY) + ')');
                 $(this).find('#content').width(mElOptions.contentWidth);
                 $(this).find('#content').height(mElOptions.contentHeight);
 
@@ -98,25 +98,25 @@ jQuery.fn.extend({
                     width: options.widgetDesignWidth,
                     height: options.widgetDesignHeight
                 });
-            }
+            } else {
+                $(this).css({
+                    width: newWidth,
+                    height: newHeight
+                });
 
-            $(this).css({
-                width: newWidth,
-                height: newHeight
-            });
-            
-            // Handle the scaling
-            // What IE are we?
-            if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
-                $(this).css({
-                    "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + ratio + ", M12=0, M21=0, M22=" + ratio + ", SizingMethod=\'auto expand\'"
-                });
-            }
-            else {
-                $(this).css({
-                    "transform": "scale(" + ratio + ")",
-                    "transform-origin": "0 0"
-                });
+                // Handle the scaling
+                // What IE are we?
+                if ($("body").hasClass("ie7") || $("body").hasClass("ie8")) {
+                    $(this).css({
+                        "filter": "progid:DXImageTransform.Microsoft.Matrix(M11=" + ratio + ", M12=0, M21=0, M22=" + ratio + ", SizingMethod=\'auto expand\'"
+                    });
+                } else {
+
+                    $(this).css({
+                        "transform": "scale(" + ratio + ")",
+                        "transform-origin": "0 0"
+                    });
+                }
             }
         });
 
