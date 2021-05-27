@@ -232,8 +232,13 @@ then
 
     /bin/sed -i "s/maildomain .*$/maildomain $CMS_SMTP_REWRITE_DOMAIN/" /etc/msmtprc
     /bin/sed -i "s/domain .*$/domain $CMS_SMTP_HOSTNAME/" /etc/msmtprc
-    
-    /bin/sed -i "s/from .*$/from cms@$CMS_SMTP_REWRITE_DOMAIN/" /etc/msmtprc
+
+    if [ "$CMS_SMTP_FROM" == "none" ]
+    then    
+      /bin/sed -i "s/from .*$/from cms@$CMS_SMTP_REWRITE_DOMAIN/" /etc/msmtprc
+    else
+      /bin/sed -i "s/from .*$/from $CMS_SMTP_FROM/" /etc/msmtprc
+    fi
 
     mkdir -p /var/www/cms/library/temp
     chown apache.apache -R /var/www/cms/library
