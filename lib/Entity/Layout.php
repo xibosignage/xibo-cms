@@ -2635,6 +2635,15 @@ class Layout implements \JsonSerializable
             foreach ($region->getPlaylist()->widgets as $widget) {
                 $originalWidget = $original->getPlaylist()->getWidget($widget->getOriginalValue('widgetId'));
 
+                // Make sure we update targetRegionId in Drawer Widgets on checkout.
+                if ($region->isDrawer === 1) {
+                    foreach ($combinedRegionIds as $old => $new) {
+                        if ($widget->getOptionValue('targetRegionId', null) == $old) {
+                            $widget->setOptionValue('targetRegionId', 'attrib', $new);
+                            $widget->save();
+                        }
+                    }
+                }
                 // Interactive Actions on Widget
                 foreach ($widget->actions as $action) {
                     // switch source Id

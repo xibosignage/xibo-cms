@@ -155,6 +155,11 @@ class DayPartFactory extends BaseFactory
         // View Permissions
         $this->viewPermissionSql('Xibo\Entity\DayPart', $body, $params, '`daypart`.dayPartId', '`daypart`.userId', $filterBy);
 
+        // Always include Custom and Always Daypart for DOOH user.
+        if ($sanitizedFilter->getInt('disableUserCheck') == 0 && ($this->getUser()->userTypeId == 4 || ($this->getUser()->isSuperAdmin() && $this->getUser()->showContentFrom == 2))) {
+            $body .= ' OR `daypart`.isCustom = 1 OR `daypart`.isAlways = 1 ';
+        }
+
         if ($sanitizedFilter->getInt('dayPartId') !== null) {
             $body .= ' AND `daypart`.dayPartId = :dayPartId ';
             $params['dayPartId'] = $sanitizedFilter->getInt('dayPartId');
