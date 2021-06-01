@@ -1,0 +1,36 @@
+{
+    "id": "schedule",
+    "template": "<div class=\"calendar-schedule calendar-container\">\n</div>",
+    "css": ":root {\n  --main-background-color: #ffffff;\n  --grid-color: #6e6e6e;\n  --weekdays-bg-color: #ffffff;\n  --weekdays-text-color: #3e3e3e;\n  --day-bg-color: #f9f9f9;\n  --today-text-color: #f53030;\n  --now-marker-color: #f53030;\n  --event-bg-color: #e2ddff;\n  --event-text-color: #353535;\n  --event-description-text-color: #bbb0ff;\n  --daily-event-bg-color: #8174d4;\n  --daily-event-text-color: #ffffff;\n  --multi-day-event-bg-color: #695ac6;\n  --multi-day-event-text-color: #ffffff;\n  font-size: 16px;\n}\n\n#content {\n  overflow: hidden;\n  height: 100%;\n  background-color: var(--main-background-color);\n}\n\nol, li {\n  padding: 0;\n  margin: 0;\n  list-style: none;\n}\n\n.calendar-schedule {\n  position: relative;\n  height: 100%;\n}\n\n.day-container {\n  display: flex;\n  background-color: var(--day-bg-color);\n  border-bottom: 1px solid var(--grid-color);\n}\n\n.title-container {\n  width: 8rem;\n  padding: 0.25rem;\n  margin: 0.25rem;\n  color: var(--weekdays-text-color);\n  background-color: var(--weekdays-bg-color);\n  border-radius: 4px;\n}\n\n.day-title-date, .day-title-month {\n  display: inline-block;\n}\n\n.day-title-date {\n  font-size: 1.5rem;\n  font-weight: bold;\n  margin: 0 0.25rem;\n}\n\n.day-container.today .day-title-date {\n  color: var(--today-text-color);\n  font-size: 1.8rem;\n}\n\n.day-title-weekday {\n  font-size: 0.8rem;\n  margin-left: 0.25rem;\n}\n\n.day-events {\n  width: calc(100% - 9rem);\n  padding: 0  0.25rem 0.25rem 0;\n}\n\n.calendar-event {\n  color: var(--event-text-color);\n  background-color: var(--event-bg-color);\n  padding: 0.25rem;\n  min-height: 1.75rem;\n  top: 2rem;\n  display: flex;\n  align-items: center;\n  flex-wrap: wrap;\n  border-radius: 4px;\n  margin: 0.3rem 0;\n}\n\n.calendar-event.all-day {\n  color: var(--daily-event-text-color);\n  background-color: var(--daily-event-bg-color);\n}\n\n.calendar-event.multi {\n  color: var(--multi-day-event-text-color);\n  background-color: var(--multi-day-event-bg-color);\n}\n\n.event-description {\n  font-size: 0.9em;\n  opacity: 0.8;\n  margin-top: 0.2rem;\n  flex-basis: 100%;\n  width: 0;\n  margin-left: 0.6rem;\n}\n\n.event-summary {\n  white-space: nowrap;\n  overflow: hidden;\n  text-overflow: ellipsis;\n  margin-left: 0.3rem;\n}\n\n.event-start-time, .event-end-time {\n  font-weight: bold;\n}\n\n.now-marker {\n  background-color: var(--now-marker-color);\n  height: 0.2rem;\n  width: calc(100% + 1rem);\n  margin: 0.4rem 0 0.4rem -1rem;\n  position: relative;\n}\n\n.now-marker::before {\n  content: '';\n  width: 1rem;\n  height: 1rem;\n  background-color: var(--now-marker-color);\n  top: -0.4rem;\n  left: -0.5rem;\n  position: absolute;\n  border-radius: 50%;\n}",
+    "light": {
+        "mainBackgroundColor": "#ffffff",
+        "gridColor": "#6e6e6e",
+        "weekDaysHeaderBgColor": "#ffffff",
+        "weekDaysHeaderTextColor": "#3e3e3e",
+        "dayBgColor": "#f9f9f9",
+        "todayTextColor": "#f53030",
+        "nowMarkerColor": "#f53030",
+        "eventBgColor": "#e2ddff",
+        "eventTextColor": "#353535",
+        "dailyEventBgColor": "#8174d4",
+        "dailyEventTextColor": "#ffffff",
+        "multiDayEventBgColor": "#695ac6",
+        "multiDayEventTextColor": "#ffffff"
+    },
+    "dark": {
+        "mainBackgroundColor": "#f9f9f9",
+        "gridColor": "#dadada",
+        "weekDaysHeaderBgColor": "#f9f9f9",
+        "weekDaysHeaderTextColor": "#292929",
+        "dayBgColor": "#f9f9f9",
+        "todayTextColor": "#65668d",
+        "nowMarkerColor": "#ff2525",
+        "eventBgColor": "#9264A6",
+        "eventTextColor": "#fff",
+        "eventDescriptionTextColor": "#fff",
+        "dailyEventBgColor": "#70497E",
+        "dailyEventTextColor": "#fff",
+        "multiDayEventBgColor": "#603D6B",
+        "multiDayEventTextColor": "#fff"
+    }
+}
