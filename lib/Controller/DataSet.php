@@ -422,6 +422,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="userAgent",
+     *      in="formData",
+     *      description="Custom user Agent value",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="refreshRate",
      *      in="formData",
      *      description="How often in seconds should this remote DataSet be refreshed",
@@ -715,6 +722,13 @@ class DataSet extends Base
      *      name="customHeaders",
      *      in="formData",
      *      description="Comma separated string of custom HTTP headers",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="userAgent",
+     *      in="formData",
+     *      description="Custom user Agent value",
      *      type="string",
      *      required=false
      *   ),
