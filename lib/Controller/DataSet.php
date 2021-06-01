@@ -546,6 +546,7 @@ class DataSet extends Base
             $dataSet->username = $sanitizedParams->getString('username');
             $dataSet->password = $sanitizedParams->getString('password');
             $dataSet->customHeaders = $sanitizedParams->getString('customHeaders');
+            $dataSet->userAgent = $sanitizedParams->getString('userAgent');
             $dataSet->refreshRate = $sanitizedParams->getInt('refreshRate');
             $dataSet->clearRate = $sanitizedParams->getInt('clearRate');
             $dataSet->runsAfter = $sanitizedParams->getInt('runsAfter');
@@ -829,6 +830,7 @@ class DataSet extends Base
             $dataSet->username = $sanitizedParams->getString('username');
             $dataSet->password = $sanitizedParams->getString('password');
             $dataSet->customHeaders = $sanitizedParams->getString('customHeaders');
+            $dataSet->userAgent = $sanitizedParams->getString('userAgent');
             $dataSet->refreshRate = $sanitizedParams->getInt('refreshRate');
             $dataSet->clearRate = $sanitizedParams->getInt('clearRate');
             $dataSet->runsAfter = $sanitizedParams->getInt('runsAfter');
