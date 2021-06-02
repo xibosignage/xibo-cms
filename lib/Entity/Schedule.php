@@ -1077,22 +1077,14 @@ class Schedule implements \JsonSerializable
                         $ordinals = ['first', 'second', 'third', 'fourth', 'last'];
                         $ordinal = $ordinals[ceil($originalStart->day / 7) - 1];
 
-                        // We rely on english modify strings
-                        $englishOriginalStart = new Carbon($originalStart->format('Y-m-d H:i:s.u'), $originalStart->getTimezone());
-                        $englishStart = new Carbon($start->format('Y-m-d H:i:s.u'), $start->getTimezone());
-
                         // Move forwards to the start of the appropriate month
                         for ($i = 0; $i < $this->recurrenceDetail; $i++) {
-                            $englishStart->endOfMonth()->addSecond();
+                            $start->endOfMonth()->addSecond();
                         }
 
                         // Set to the right day
-                        $englishStart
-                            ->modify($ordinal . ' ' . $englishOriginalStart->format('l') . ' of ' . $englishStart->format('F Y'))
-                            ->setTimeFrom($englishOriginalStart);
-
-                        // Copy over to start
-                        $start = Carbon::instance($englishStart);
+                        $start->modify($ordinal . ' ' . $originalStart->format('l') . ' of ' . $start->format('F Y'));
+                        $start->setTimeFrom($originalStart);
 
                         $this->getLog()->debug('Monthly repeats every ' . $this->recurrenceDetail . ' months on '
                             . $ordinal . ' ' . $start->format('l') . ' of ' . $start->format('F Y'));
