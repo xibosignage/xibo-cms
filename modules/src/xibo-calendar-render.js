@@ -61,9 +61,14 @@ jQuery.fn.extend({
       weekdaysNames = moment.weekdaysShort(true);
     }
 
+    let monthsNames = moment.months();
+    if (options.monthNameLength == 'short') {
+      monthsNames = moment.monthsShort();
+    }
+
     // Main functions to be overriden
-    let createCalendar;
-    let addEventsToCalendar;
+    let createCalendar = () => {};
+    let addEventsToCalendar = () => {};
 
     /**
      * Apply style based on options
@@ -71,6 +76,9 @@ jQuery.fn.extend({
     function applyStyleOptions() {
       $('#content').toggleClass('hide-header', options.showHeader != '1');
       $(':root').css('font-size', DEFAULT_FONT_SIZE * DEFAULT_FONT_SCALE);
+
+      options.mainBackgroundColor &&
+        $(':root').css('--main-background-color', options.mainBackgroundColor);
 
       options.gridColor && $(':root').css('--grid-color', options.gridColor);
       options.gridTextColor &&
@@ -189,7 +197,7 @@ jQuery.fn.extend({
         eventPositionPerc + '%',
       );
 
-      // Append event to container
+      // Append marker to container
       $nowMarker.appendTo($container);
     }
 
@@ -524,7 +532,7 @@ jQuery.fn.extend({
       // Get number of dummy events that were generated
       // by extended events in the visible elements
       const numberOfExtendedEvents = slots.filter((ev, idx) => {
-        return ev == 2 && idx < maxEventsForThisDay;
+        return ev == 2 && idx <= maxEventsForThisDay;
       }).length;
 
       // Remove extra elements
@@ -550,6 +558,14 @@ jQuery.fn.extend({
           numEventsToHide++;
         }
       }
+
+      // Fix for extended events
+      let numExtendedEventsFix = 0;
+      if (maxEventsForThisDay > 0 &&
+        maxEventsForThisDay < numberOfExtendedEvents) {
+        numExtendedEventsFix = numberOfExtendedEvents - maxEventsForThisDay;
+      }
+      numEventsToHide -= numExtendedEventsFix;
 
       // Update extra events label
       if (numEventsToHide > 0) {
@@ -610,14 +626,190 @@ jQuery.fn.extend({
     // Functions by calendar type
     if (options.calendarType == 1) {
       // Schedule View
-      console.log('Schedule View');
+      const $calendarContainer = $('.calendar-container');
 
-      createCalendar = function() {
-        console.log('Schedule > createCalendar');
-      };
+      /**
+       * Add event to specific day (override)
+       * @param {object} date  momentjs date
+       * @param {object} event
+       * @param {number} eventTotalDays
+       * @param {number} currentDayOfEvent
+       */
+      function addEventToDay(date, event, eventTotalDays, currentDayOfEvent) {
+        /**
+         * Get container by date
+         * @param {object} date
+         * @return {object} Jquery container
+         */
+        function getDayContainer(date) {
+          let $dayContainerTemp;
+          let $dayContainerTitle;
 
+          if ($('#day_' + date.month() + '_' + date.date()).length > 0) {
+            $dayContainerTemp = $('#day_' + date.month() + '_' + date.date());
+          } else {
+            $dayContainerTemp = $('<div>').attr('id', 'day_' +
+              date.month() + '_' + date.date()).addClass('day-container');
+
+            $dayContainerTitle = $('<div class="title-container">').appendTo(
+              $dayContainerTemp);
+
+            if (moment(date).startOf('d').isSame(moment(TODAY).startOf('d'))) {
+              $dayContainerTemp.addClass('today');
+            }
+
+            $('<div class="day-title-date">' +
+              date.date() +
+              '</div>').appendTo($dayContainerTitle);
+
+            $('<div class="day-title-month">' +
+              monthsNames[date.month()] +
+                '</div>').appendTo($dayContainerTitle);
+
+            $('<div class="day-title-weekday">' +
+              weekdaysNames[date.weekday()] +
+              '</div>').appendTo($dayContainerTitle);
+
+            $('<div class="day-events">').appendTo($dayContainerTemp);
+
+            $dayContainerTemp.appendTo($calendarContainer);
+          }
+
+          // $calendarContainer
+          return $dayContainerTemp;
+        }
+
+        const $newEvent = $('<div class="calendar-event">');
+        const $dayContainer = getDayContainer(date);
+        const $dayContainerEvents = $dayContainer.find('.day-events');
+        let htmlToAdd = '';
+
+        // Add time
+        if (!event.allDay) {
+          if (currentDayOfEvent == 1) {
+            htmlToAdd +=
+              '<span class="event-start-time">' +
+                moment(event.startDate).format(TIME_FORMAT) +
+              '</span>';
+
+            // Save start date to object data
+            $newEvent.data('start', event.startDate);
+
+            if (eventTotalDays == 1) {
+              htmlToAdd +=
+                ' - <span class="event-end-time">' +
+                  moment(event.endDate).format(TIME_FORMAT) +
+                '</span>';
+            }
+          }
+        } else {
+          // Mark event as an all day
+          $newEvent.addClass('all-day');
+        }
+
+        // Mark event as a multi-day
+        if (eventTotalDays > 1) {
+          $newEvent.addClass('multi');
+        }
+
+        // Add summary
+        htmlToAdd += '<span class="event-summary">' + event.summary + '</span>';
+
+        if (options.showDescription == 1 && event.description) {
+          htmlToAdd += '<div class="event-description">' +
+            event.description + '</div>';
+        }
+
+        // Add inner html
+        $newEvent.html(htmlToAdd);
+
+        // Append event to container
+        if (event.allDay) {
+          $newEvent.prependTo($dayContainerEvents);
+        } else {
+          $newEvent.appendTo($dayContainerEvents);
+        }
+      }
+
+      // Override addEventsToCalendarBase
       addEventsToCalendar = function(events) {
-        console.log('Schedule > addEventsToCalendar');
+        events.forEach((event) => {
+          const startDate = moment(event.startDate).startOf('date');
+
+          // Check if event is an all day
+          // (startDate 00:00 day 1, endDate 00:00 day after last day)
+          const allDayEvent =
+            moment(event.startDate).isSame(startDate) &&
+            moment(event.endDate).isSame(moment(event.endDate).startOf('date'));
+          event.allDay = allDayEvent;
+
+          const endDate = allDayEvent ?
+            moment(event.endDate).startOf('date').subtract(1, 'd') :
+            moment(event.endDate).startOf('date');
+
+          const eventTotalDays = endDate.diff(startDate, 'days') + 1;
+          let currentDayOfEvent = 1;
+
+          // Days loop
+          const momentAux = moment(startDate);
+
+          while (momentAux <= endDate) {
+            let startDate = null;
+            let endDate = null;
+
+            // If we're using a date range
+            // show only events from the start date onwards
+            // and before the end date
+            if (options.useDateRange == 1) {
+              (options.rangeStart) && (startDate = moment(options.rangeStart));
+              (options.rangeEnd) && (endDate = moment(options.rangeEnd));
+            } else {
+              startDate = TODAY.startOf('d');
+            }
+
+            // Add event
+            if ((!startDate || momentAux >= startDate) &&
+              (!endDate || momentAux <= endDate)) {
+              addEventToDay(
+                momentAux,
+                event,
+                eventTotalDays,
+                currentDayOfEvent);
+            }
+
+            currentDayOfEvent++;
+            momentAux.add(1, 'd');
+          }
+        });
+
+        // Create now marker
+        if (options.showNowMarker == 1) {
+          const $nowMarker = $('<div class="now-marker">');
+          const $dayEventsContainer = $calendarContainer.find('#day_' +
+            moment(TODAY).month() + '_' + moment(TODAY).date() +
+            ' .day-events');
+          let $targetElement;
+
+          if ($dayEventsContainer.length == 0) {
+            return;
+          }
+
+          // Calculate position
+          $dayEventsContainer.find('.calendar-event').each((idx, event) => {
+            const start = $(event).data('start');
+
+            if (start && TODAY < moment(start)) {
+              $targetElement = $(event);
+              $nowMarker.insertBefore($targetElement);
+              return false;
+            }
+          });
+
+          // Append marker to container
+          if (!$targetElement) {
+            $nowMarker.appendTo($dayEventsContainer);
+          }
+        }
       };
     } else if (options.calendarType == 2) {
       // Daily View

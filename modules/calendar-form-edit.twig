@@ -92,7 +92,7 @@
                         {% set helpText %}{% trans "The Link for the iCal Feed" %}{% endset %}
                         {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText)}}
 
-                        <section class="custom-control-group">
+                        <section class="custom-control-group schedule-control-group">
                             {# What range are we looking to return #}
                             {% set title %}{% trans "Interval" %}{% endset %}
                             {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
@@ -112,7 +112,7 @@
 
                             {% set title %}{% trans "Number of Items" %}{% endset %}
                             {% set helpText %}{% trans "The Number of items you want to display" %}{% endset %}
-                            {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
+                            {{ forms.number("numItems", title, module.getOption("numItems"), helpText, "custom-control-group") }}
                         </section>
 
                         {% set title %}{% trans "Exclude all day events?" %}{% endset %}
@@ -161,7 +161,7 @@
 
                         {% set title %}{% trans "Time Format" %}{% endset %}
                         {% set helpText %}{% trans %}The format to apply to event time (default HH:mm).{% endtrans %}{% endset %}
-                        {{ forms.input("timeFormat", title, module.getOption("timeFormat", "HH:mm"), helpText, "daily-control-group weekly-control-group monthly-control-group") }}
+                        {{ forms.input("timeFormat", title, module.getOption("timeFormat", "HH:mm"), helpText, "schedule-control-group daily-control-group weekly-control-group monthly-control-group") }}
 
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans %}Current view starting time.{% endtrans %}{% endset %}
@@ -232,7 +232,11 @@
 
                         {% set title %}{% trans "Show now marker?" %}{% endset %}
                         {% set helpText %}{% trans "Should the calendar show a marker for the current time?" %}{% endset %}
-                        {{ forms.checkbox("showNowMarker", title, module.getOption("showNowMarker", true), helpText, "daily-control-group weekly-control-group") }}
+                        {{ forms.checkbox("showNowMarker", title, module.getOption("showNowMarker", true), helpText, "schedule-control-group daily-control-group weekly-control-group") }}
+
+                        {% set title %}{% trans "Show event description?" %}{% endset %}
+                        {% set helpText %}{% trans "Should events with descriptions display them?" %}{% endset %}
+                        {{ forms.checkbox("showDescription", title, module.getOption("showDescription", true), helpText, "schedule-control-group") }}
 
                         {% set title %}{% trans "Text scale" %}{% endset %}
                         {% set helpText %}{% trans "Set the scale for the text element on the calendar." %}{% endset %}
@@ -275,6 +279,9 @@
                                 {% endset %}
                                 {{ forms.raw(calendarColorsExplanation, "h5 mt-3 mb-2") }}
 
+                                {% set title %}{% trans "Main Background Colour" %}{% endset %}
+                                {{ forms.colorPicker("mainBackgroundColor", title, module.getOption("mainBackgroundColor"), '', "col-sm-12 mb-2 schedule-control-group") }}
+
                                 {% set title %}{% trans "Grid Colour" %}{% endset %}
                                 {{ forms.colorPicker("gridColor", title, module.getOption("gridColor"), '', "col-sm-12 mb-2") }}
 
@@ -305,13 +312,13 @@
                                     {{ forms.colorPicker("dayBgColor", title, module.getOption("dayBgColor")) }}
 
                                     {% set title %}{% trans "Text Colour" %}{% endset %}
-                                    {{ forms.colorPicker("dayTextColor", title, module.getOption("dayTextColor")) }}
+                                    {{ forms.colorPicker("dayTextColor", title, module.getOption("dayTextColor"), "", "daily-control-group weekly-control-group monthly-control-group") }}
 
                                     {% set title %}{% trans "Current day text Colour" %}{% endset %}
                                     {{ forms.colorPicker("todayTextColor", title, module.getOption("todayTextColor")) }}
 
                                     {% set title %}{% trans "Now marker Colour" %}{% endset %}
-                                    {{ forms.colorPicker("nowMarkerColor", title, module.getOption("nowMarkerColor"), "", "daily-control-group weekly-control-group") }}
+                                    {{ forms.colorPicker("nowMarkerColor", title, module.getOption("nowMarkerColor"), "", "schedule-control-group daily-control-group weekly-control-group") }}
                                 </div>
 
                                 <div class="card p-2 pt-3 mb-2 monthly-control-group">
@@ -350,7 +357,7 @@
                                     {{ forms.colorPicker("multiDayEventTextColor", title, module.getOption("multiDayEventTextColor")) }}
                                 </div>
 
-                                <div class="card p-2 pt-3 mb-2">
+                                <div class="card p-2 pt-3 mb-2 daily-control-group weekly-control-group monthly-control-group">
                                     <div class="card-title font-weight-bold text-info">Aditional days container</div>
                                     {% set title %}{% trans "Background Colour" %}{% endset %}
                                     {{ forms.colorPicker("aditionalEventsBgColor", title, module.getOption("aditionalEventsBgColor")) }}

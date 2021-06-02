@@ -354,6 +354,13 @@ class Calendar extends ModuleWidget
      *      required=false
      *  ),
      *  @SWG\Parameter(
+     *      name="showDescription",
+     *      in="formData",
+     *      description="A flag (0, 1), Should the event description if exists?",
+     *      type="integer",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="timeFormat",
      *      in="formData",
      *      description="Moment time format",
@@ -413,6 +420,13 @@ class Calendar extends ModuleWidget
      *      name="gridColor",
      *      in="formData",
      *      description="Colour for the grid between days/hours",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="mainBackgroundColor",
+     *      in="formData",
+     *      description="Colour for the main template",
      *      type="string",
      *      required=false
      *   ),
@@ -569,10 +583,18 @@ class Calendar extends ModuleWidget
         $this->setOption('calendarType', $sanitizedParams->getInt('calendarType', ['default' => 0]));
 
         // Template/Configure options
+        if ($this->getOption('calendarType') < 2) {
+            // Custom and schedule templates
+            $this->setOption('numItems', $sanitizedParams->getInt('numItems'));
+            $this->setOption('customInterval', $sanitizedParams->getString('customInterval', ['defaultOnEmptyString' => true]));
+            $this->setOption('useDateRange', $sanitizedParams->getCheckbox('useDateRange'));
+            $this->setOption('rangeStart', $sanitizedParams->getDate('rangeStart'));
+            $this->setOption('rangeEnd', $sanitizedParams->getDate('rangeEnd'));
+        }
+
         if ($this->getOption('calendarType') == 0) {
             // Custom template
             $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
-            $this->setOption('numItems', $sanitizedParams->getInt('numItems'));
             $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));
             $this->setOption('useCurrentTemplate', $sanitizedParams->getCheckbox('useCurrentTemplate'));
             $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
@@ -585,14 +607,11 @@ class Calendar extends ModuleWidget
             $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', $request->getParam('noDataMessage', null)));
             $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
             $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
-            $this->setOption('customInterval', $sanitizedParams->getString('customInterval', ['defaultOnEmptyString' => true]));
-            $this->setOption('useDateRange', $sanitizedParams->getCheckbox('useDateRange'));
-            $this->setOption('rangeStart', $sanitizedParams->getDate('rangeStart'));
-            $this->setOption('rangeEnd', $sanitizedParams->getDate('rangeEnd'));
         } else {
             // Properties common to schedule, daily, weekly and monthly view
             $this->setOption('showHeader', $sanitizedParams->getCheckbox('showHeader'));
             $this->setOption('showNowMarker', $sanitizedParams->getCheckbox('showNowMarker'));
+            $this->setOption('showDescription', $sanitizedParams->getCheckbox('showDescription'));
             $this->setOption('timeFormat', $sanitizedParams->getString('timeFormat', ['defaultOnEmptyString' => true]));
             $this->setOption('startTime', $sanitizedParams->getString('startTime'));
             $this->setOption('endTime', $sanitizedParams->getString('endTime'));
@@ -602,6 +621,7 @@ class Calendar extends ModuleWidget
             $this->setOption('templateTheme', $sanitizedParams->getString('templateTheme'));
             $this->setOption('overrideColorTemplate', $sanitizedParams->getCheckbox('overrideColorTemplate'));
             $this->setOption('gridColor', $sanitizedParams->getString('gridColor'));
+            $this->setOption('mainBackgroundColor', $sanitizedParams->getString('mainBackgroundColor'));
             $this->setOption('gridTextColor', $sanitizedParams->getString('gridTextColor'));
             $this->setOption('dayBgColor', $sanitizedParams->getString('dayBgColor'));
             $this->setOption('dayTextColor', $sanitizedParams->getString('dayTextColor'));
@@ -752,13 +772,19 @@ class Calendar extends ModuleWidget
             $calendarOptions = array_merge([
                 'showHeader' => $this->getOption('showHeader'),
                 'showNowMarker' => $this->getOption('showNowMarker'),
+                'showDescription' => $this->getOption('showDescription'),
                 'timeFormat' => $this->getOption('timeFormat'),
+                'useDateRange' => $this->getOption('useDateRange'),
+                'rangeStart' => $this->getOption('rangeStart'),
+                'rangeEnd' => $this->getOption('rangeEnd'),
                 'startTime' => $this->getOption('startTime'),
+                'endTime' => $this->getOption('endTime'),
                 'endTime' => $this->getOption('endTime'),
                 'textScale' => $this->getOption('textScale'),
                 'weekdayNameLength' => $this->getOption('weekdayNameLength'),
                 'gridStep' => $this->getOption('gridStep', 60),
                 'gridColor' => $this->getOption('gridColor'),
+                'mainBackgroundColor' => $this->getOption('mainBackgroundColor'),
                 'gridTextColor' => $this->getOption('gridTextColor'),
                 'dayBgColor' => $this->getOption('dayBgColor'),
                 'dayTextColor' => $this->getOption('dayTextColor'),
