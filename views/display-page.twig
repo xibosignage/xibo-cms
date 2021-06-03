@@ -980,7 +980,7 @@
                 success: function (data) {
                     if (data != null) {
                         // do some processing on data received from webOS and Tizen Players.
-                        if (displayType === 'webOS' || displayType === 'tizen') {
+                        if (displayType === 'webOS' || displayType === 'sssp') {
                             data.logMessagesArray = JSON.stringify(data.logMessagesArray);
                             data.allLayouts = JSON.stringify(data.allLayouts);
                             data.scheduledLayouts = JSON.stringify(data.scheduledLayouts);

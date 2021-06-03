@@ -422,6 +422,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="userAgent",
+     *      in="formData",
+     *      description="Custom user Agent value",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="refreshRate",
      *      in="formData",
      *      description="How often in seconds should this remote DataSet be refreshed",
@@ -546,6 +553,7 @@ class DataSet extends Base
             $dataSet->username = $sanitizedParams->getString('username');
             $dataSet->password = $sanitizedParams->getString('password');
             $dataSet->customHeaders = $sanitizedParams->getString('customHeaders');
+            $dataSet->userAgent = $sanitizedParams->getString('userAgent');
             $dataSet->refreshRate = $sanitizedParams->getInt('refreshRate');
             $dataSet->clearRate = $sanitizedParams->getInt('clearRate');
             $dataSet->runsAfter = $sanitizedParams->getInt('runsAfter');
@@ -718,6 +726,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="userAgent",
+     *      in="formData",
+     *      description="Custom user Agent value",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="refreshRate",
      *      in="formData",
      *      description="How often in seconds should this remote DataSet be refreshed",
@@ -829,6 +844,7 @@ class DataSet extends Base
             $dataSet->username = $sanitizedParams->getString('username');
             $dataSet->password = $sanitizedParams->getString('password');
             $dataSet->customHeaders = $sanitizedParams->getString('customHeaders');
+            $dataSet->userAgent = $sanitizedParams->getString('userAgent');
             $dataSet->refreshRate = $sanitizedParams->getInt('refreshRate');
             $dataSet->clearRate = $sanitizedParams->getInt('clearRate');
             $dataSet->runsAfter = $sanitizedParams->getInt('runsAfter');
