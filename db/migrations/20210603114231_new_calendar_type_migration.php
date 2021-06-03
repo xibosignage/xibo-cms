@@ -11,8 +11,25 @@ class NewCalendarTypeMigration extends AbstractMigration
     /** @inheritDoc */
     public function change()
     {
-        // Rename old calendar to agenda
-        $this->execute('UPDATE `module` SET module.module = \'agenda\', module.class = \'Xibo\\\\Widget\\\\Agenda\', module.name = \'Agenda\' WHERE module.module = \'calendar\' ');
+        // Add new calendar type to agenda
+        $this->table('module')->insert(
+            [
+                'module' => 'agenda',
+                'name' => 'Agenda',
+                'enabled' => 1,
+                'regionSpecific' => 1,
+                'description' => 'A module for displaying an agenda based on an iCal feed',
+                'schemaVersion' => 1,
+                'validExtensions' => '',
+                'previewEnabled' => 1,
+                'assignable' => 1,
+                'render_as' => 'html',
+                'viewPath' => '../modules',
+                'class' => 'Xibo\Widget\Agenda',
+                'defaultDuration' => 60,
+                'installName' => 'agenda'
+            ]
+        )->save();
 
         // Update widgets type to the new agenda
         $this->execute('UPDATE `widget` SET widget.type = \'agenda\' WHERE widget.type = \'calendar\' ');
