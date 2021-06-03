@@ -57,6 +57,6 @@ class NatoAlphabet
             $converted[] = $convertedWord;
         }
 
-        return implode(" ", $converted);
+        return implode(' ', $converted);
     }
 }

@@ -1,5 +1,8 @@
 <?php
-
+/**
+ * Add userAgent column to DataSet table
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
 
 use Phinx\Migration\AbstractMigration;
 
