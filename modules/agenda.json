@@ -1,0 +1,7 @@
+{
+  "title": "Agenda Module",
+  "author": "Spring Signage Ltd",
+  "description": "A module for displaying an agenda based on an iCal feed",
+  "name": "agenda",
+  "class": "Xibo\\Widget\\Agenda"
+}
