@@ -400,6 +400,7 @@ class DataSetColumn implements \JsonSerializable
                 break;
 
             case 1:
+            case 6:
                 $dataType = 'TEXT';
                 break;
 
