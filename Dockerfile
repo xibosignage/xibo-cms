@@ -156,6 +156,9 @@ ENV CMS_DEV_MODE=false \
     CMS_APACHE_TIMEOUT=30 \
     CMS_APACHE_OPTIONS_INDEXES=false \
     CMS_QUICK_CHART_URL=http://cms-quickchart:3400 \
+    CMS_USE_MEMCACHED=true \
+    MEMCACHED_HOST=memcached \
+    MEMCACHED_PORT=11211 \
     XTR_ENABLED=true \
     GIT_COMMIT=$GIT_COMMIT
 
