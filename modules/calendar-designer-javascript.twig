@@ -27,14 +27,6 @@
     function calendar_form_edit_open() {
         var self = this;
 
-        var updateInlineEditor = function() {
-            var $calendarTemplateSwitch = $(self).find('#template_advanced');
-
-            if($calendarTemplateSwitch.is(':checked') && $(self).find('#calendarType').val() > 0) {
-                $calendarTemplateSwitch.bootstrapSwitch('state', false);
-            }
-        };
-
         var updateColors = function() {
             var CALENDAR_TYPE_NAMES = [
                 'custom',
@@ -52,7 +44,7 @@
             $(self).find('.template-colors-select').toggle(!overrideTemplate);
             $(self).find('.template-colors-custom').toggle(overrideTemplate);
 
-            if(!$(self).find('#overrideColorTemplate').prop('checked')) {
+            if(!overrideTemplate) {
                 var templateColors;
 
                 // Get the current template id and fill the text field with its colour values
@@ -78,24 +70,10 @@
         // Set clock type input field, using the helper ()
         formHelpers.setupObjectValueInputFields($(self), '#calendarType', ['.custom-control-group', '.schedule-control-group', '.daily-control-group', '.weekly-control-group', '.monthly-control-group'], [0, 1, 2, 3, 4]);
 
-        // Set template field, using the helper
-        formHelpers.setupCheckboxInputFields($(self).find('form'), '#useCurrentTemplate', '.current-event-template');
-
-        // Set effect type input field, using the helper ()
-        formHelpers.setupObjectValueInputFields($(self).find('form'), '#effect', ['.effect-controls'], ['none'], true);
-
-        // Setup editors
-        formHelpers.setupDualTypeTextArea(self, 'template', !$(self).data('formEditorOnly'));
-        formHelpers.setupDualTypeTextArea(self, 'currentEventTemplate');
-        formHelpers.setupDualTypeTextArea(self, 'noDataMessage');
-
         // set date range fields
         formHelpers.setupCheckboxInputFields($(self).find('form'), '#useDateRange', '.date-range', '.interval');
 
-        $(self).find('#calendarType').on('change', updateInlineEditor);
-        updateInlineEditor();
-
-        $(self).find('#overrideColorTemplate, #templateTheme').on('change', updateColors);
+        $(self).find('#overrideColorTemplate, #templateTheme, #calendarType').on('change', updateColors);
         updateColors();
     }
 

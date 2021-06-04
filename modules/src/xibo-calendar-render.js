@@ -150,6 +150,17 @@ jQuery.fn.extend({
           '--aditional-events-text-color',
           options.aditionalEventsTextColor,
         );
+
+      options.noEventsBgColor &&
+        $(':root').css(
+          '--no-events-bg-color',
+          options.noEventsBgColor,
+        );
+      options.noEventsTextColor &&
+        $(':root').css(
+          '--no-events-text-color',
+          options.noEventsTextColor,
+        );
     }
 
     /**
@@ -627,6 +638,7 @@ jQuery.fn.extend({
     if (options.calendarType == 1) {
       // Schedule View
       const $calendarContainer = $('.calendar-container');
+      let addedEvents = 0;
 
       /**
        * Add event to specific day (override)
@@ -729,6 +741,8 @@ jQuery.fn.extend({
         } else {
           $newEvent.appendTo($dayContainerEvents);
         }
+
+        addedEvents++;
       }
 
       // Override addEventsToCalendarBase
@@ -790,26 +804,31 @@ jQuery.fn.extend({
             ' .day-events');
           let $targetElement;
 
-          if ($dayEventsContainer.length == 0) {
-            return;
-          }
+          if ($dayEventsContainer.length > 0) {
+            // Calculate position
+            $dayEventsContainer.find('.calendar-event').each((idx, event) => {
+              const start = $(event).data('start');
 
-          // Calculate position
-          $dayEventsContainer.find('.calendar-event').each((idx, event) => {
-            const start = $(event).data('start');
+              if (start && TODAY < moment(start)) {
+                $targetElement = $(event);
+                $nowMarker.insertBefore($targetElement);
+                return false;
+              }
+            });
 
-            if (start && TODAY < moment(start)) {
-              $targetElement = $(event);
-              $nowMarker.insertBefore($targetElement);
-              return false;
+            // Append marker to container
+            if (!$targetElement) {
+              $nowMarker.appendTo($dayEventsContainer);
             }
-          });
-
-          // Append marker to container
-          if (!$targetElement) {
-            $nowMarker.appendTo($dayEventsContainer);
           }
         }
+
+        // Show no events message
+        if (options.noEventsMessage != '' && addedEvents == 0) {
+          $calendarContainer.append('<div class="no-events-message">' +
+            options.noEventsMessage + '</div>');
+        }
+        // noEventsMessage
       };
     } else if (options.calendarType == 2) {
       // Daily View

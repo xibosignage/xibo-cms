@@ -78,6 +78,11 @@
                         {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText)}}
 
                         <section class="schedule-control-group">
+                            {% set title %}{% trans "No events message" %}{% endset %}
+                            {% set defaultMessage %}{% trans "No upcoming events" %}{% endset %}
+                            {% set helpText %}{% trans "Message to be shown if no events are returned" %}{% endset %}
+                            {{ forms.input("noEventsMessage", title, module.getOption("noEventsMessage", defaultMessage), helpText) }}
+
                             {# What range are we looking to return #}
                             {% set title %}{% trans "Interval" %}{% endset %}
                             {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
@@ -282,6 +287,15 @@
 
                                     {% set title %}{% trans "Text Colour" %}{% endset %}
                                     {{ forms.colorPicker("aditionalEventsTextColor", title, module.getOption("aditionalEventsTextColor")) }}
+                                </div>
+
+                                <div class="card p-2 pt-3 mb-2 schedule-control-group">
+                                    <div class="card-title font-weight-bold text-info">No events message</div>
+                                    {% set title %}{% trans "Background Colour" %}{% endset %}
+                                    {{ forms.colorPicker("noEventsBgColor", title, module.getOption("noEventsBgColor")) }}
+
+                                    {% set title %}{% trans "Text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("noEventsTextColor", title, module.getOption("noEventsTextColor")) }}
                                 </div>
                             </div>
                         </div>

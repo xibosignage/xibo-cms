@@ -151,6 +151,13 @@ class Calendar extends ModuleWidget
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="noEventsMessage",
+     *      in="formData",
+     *      description="No upcoming events message",
+     *      type="string",
+     *      required=false
+     *  ),
+     *  @SWG\Parameter(
      *      name="customInterval",
      *      in="formData",
      *      description="Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.",
@@ -458,6 +465,20 @@ class Calendar extends ModuleWidget
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="noEventsBgColor",
+     *      in="formData",
+     *      description="Background colour for the no events message",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="noEventsTextColor",
+     *      in="formData",
+     *      description="Text colour for the no events message",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -481,6 +502,9 @@ class Calendar extends ModuleWidget
         if ($this->getOption('calendarType') == 1) {
             // Schedule templates
             $this->setOption('customInterval', $sanitizedParams->getString('customInterval', ['defaultOnEmptyString' => true]));
+            $this->setOption('noEventsMessage', $sanitizedParams->getString('noEventsMessage', ['defaultOnEmptyString' => true]));
+            $this->setOption('noEventsBgColor', $sanitizedParams->getString('noEventsBgColor'));
+            $this->setOption('noEventsTextColor', $sanitizedParams->getString('noEventsTextColor'));
             $this->setOption('useDateRange', $sanitizedParams->getCheckbox('useDateRange'));
             $this->setOption('rangeStart', $sanitizedParams->getDate('rangeStart'));
             $this->setOption('rangeEnd', $sanitizedParams->getDate('rangeEnd'));
@@ -597,6 +621,7 @@ class Calendar extends ModuleWidget
             'startTime' => $this->getOption('startTime'),
             'endTime' => $this->getOption('endTime'),
             'endTime' => $this->getOption('endTime'),
+            'noEventsMessage' => $this->getOption('noEventsMessage'),
             'textScale' => $this->getOption('textScale'),
             'weekdayNameLength' => $this->getOption('weekdayNameLength'),
             'gridStep' => $this->getOption('gridStep', 60),
@@ -620,7 +645,9 @@ class Calendar extends ModuleWidget
             'multiDayEventBgColor' => $this->getOption('multiDayEventBgColor'),
             'multiDayEventTextColor' => $this->getOption('multiDayEventTextColor'),
             'aditionalEventsBgColor' => $this->getOption('aditionalEventsBgColor'),
-            'aditionalEventsTextColor' => $this->getOption('aditionalEventsTextColor')
+            'aditionalEventsTextColor' => $this->getOption('aditionalEventsTextColor'),
+            'noEventsBgColor' => $this->getOption('noEventsBgColor'),
+            'noEventsTextColor' => $this->getOption('noEventsTextColor')
         ];
 
         // Include some vendor items and javascript
