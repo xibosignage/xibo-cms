@@ -1356,7 +1356,7 @@ if(!String.prototype.formatNum) {
 			let event_start = moment(this.scheduleEvent.fromDt, "YYYY-MM-DD HH:mm:ss");
 			let event_end = (this.end != null) ? moment(this.scheduleEvent.toDt, "YYYY-MM-DD HH:mm:ss") : event_start;
 
-			if (event_start.isBefore(period_end) && event_end.isSameOrAfter(period_start)) {
+			if (event_start.isBefore(period_end) && event_end.isAfter(period_start)) {
 				//console.log("X. ES: " + event_start.format() + "(" + this.scheduleEvent.fromDt + "), EE: " + event_end.format() + " (" + this.scheduleEvent.toDt + ")");
 				// Override the dates with our timezone neutral ones.
 				this.start = event_start.valueOf();

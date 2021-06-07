@@ -264,8 +264,13 @@ try {
     $container->get('logger')->pushProcessor($logProcessor);
 
     // Create a SoapServer
-    $soap = new SoapServer($wsdl);
-    //$soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
+    // explicitly define caching.
+    if (\Xibo\Helper\Environment::isDevMode()) {
+        // No cache - our WSDL might change in development
+        $soap = new SoapServer($wsdl, ['cache_wsdl' => WSDL_CACHE_NONE]);
+    } else {
+        $soap = new SoapServer($wsdl, ['cache_wsdl' => WSDL_CACHE_MEMORY]);
+    }
     $soap->setClass('\Xibo\Xmds\Soap' . $version,
         $logProcessor,
         $container->get('pool'),
@@ -290,7 +295,8 @@ try {
         $container->get('dayPartFactory'),
         $container->get('playerVersionFactory')
     );
-    $soap->handle();
+    // Add manual raw post data parsing, as HTTP_RAW_POST_DATA is deprecated.
+    $soap->handle(file_get_contents('php://input'));
 
     // Get the stats for this connection
     $stats = $container->get('store')->stats();
