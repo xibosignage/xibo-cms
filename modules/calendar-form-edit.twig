@@ -37,17 +37,6 @@
             <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
             <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
             <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
-            <li class="nav-item dropdown custom-control-group">
-                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">
-                    {% trans "Templates" %}<span class="caret"></span>
-                </a>
-                <div class="dropdown-menu">
-                    <a class="dropdown-item" href="#templateTab" role="tab" data-toggle="tab"><span>{% trans "Main" %}</span></a>
-                    <a class="dropdown-item" href="#currentEventTemplateTab" role="tab" data-toggle="tab"><span>{% trans "Current Event" %}</span></a>
-                    <a class="dropdown-item" href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a>
-                    <a class="dropdown-item" href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
-                </div>
-            </li>
             <li class="nav-item"><a class="nav-link" href="#cachingTab" role="tab" data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
             <li class="nav-item"><a class="nav-link" href="#triggerTab" role="tab" data-toggle="tab"><span>{% trans "Trigger" %}</span></a></li>
         </ul>
@@ -69,10 +58,6 @@
                         {% set helpText %}{% trans "The duration in seconds this should be displayed" %}{% endset %}
                         {{ forms.number("duration", title, module.getDuration(), helpText, "duration-fields", "required") }}
 
-                        {% set title %}{% trans "Duration is per item" %}{% endset %}
-                        {% set helpText %}{% trans "The duration specified is per item otherwise it is per feed." %}{% endset %}
-                        {{ forms.checkbox("durationIsPerItem", title, module.getOption("durationIsPerItem"), helpText, "custom-control-group") }}
-
                         {% set title %}{% trans "Enable Stats Collection?" %}{% endset %}
                         {% set helpText %}{% trans "Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." %}{% endset %}
 
@@ -92,7 +77,12 @@
                         {% set helpText %}{% trans "The Link for the iCal Feed" %}{% endset %}
                         {{ forms.input("uri", title, module.getOption("uri")|url_decode, helpText)}}
 
-                        <section class="custom-control-group">
+                        <section class="schedule-control-group">
+                            {% set title %}{% trans "No events message" %}{% endset %}
+                            {% set defaultMessage %}{% trans "No upcoming events" %}{% endset %}
+                            {% set helpText %}{% trans "Message to be shown if no events are returned" %}{% endset %}
+                            {{ forms.input("noEventsMessage", title, module.getOption("noEventsMessage", defaultMessage), helpText) }}
+
                             {# What range are we looking to return #}
                             {% set title %}{% trans "Interval" %}{% endset %}
                             {% set helpText %}{% trans "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week." %}{% endset %}
@@ -109,10 +99,6 @@
                                 {% set title %}{% trans "End Date" %}{% endset %}
                                 {{ forms.dateTime("rangeEnd", title, module.getOption("rangeEnd", null, "", "date-range")) }}
                             </div>
-
-                            {% set title %}{% trans "Number of Items" %}{% endset %}
-                            {% set helpText %}{% trans "The Number of items you want to display" %}{% endset %}
-                            {{ forms.number("numItems", title, module.getOption("numItems"), helpText) }}
                         </section>
 
                         {% set title %}{% trans "Exclude all day events?" %}{% endset %}
@@ -134,19 +120,16 @@
                         {% set title %}{% trans "Windows format Calendar?" %}{% endset %}
                         {% set helpText %}{% trans "Does the calendar feed come from Windows - if unsure leave unselected." %}{% endset %}
                         {{ forms.checkbox("windowsFormatCalendar", title, module.getOption("windowsFormatCalendar", 0), helpText) }}
-
                     </div>
 
                     <div class="tab-pane" id="appearanceTab">
                         {% set title %}{% trans "Calendar Type" %}{% endset %}
                         {% set helpText %}{% trans "Please select the type of calendar to display." %}{% endset %}
-                        {% set custom %}{% trans "Custom" %}{% endset %}
                         {% set schedule %}{% trans "Schedule" %}{% endset %}
                         {% set daily %}{% trans "Daily" %}{% endset %}
                         {% set weekly %}{% trans "Weekly" %}{% endset %}
                         {% set monthly %}{% trans "Monthly" %}{% endset %}
                         {% set options = [
-                            { id: 0, value: custom },
                             { id: 1, value: schedule },
                             { id: 2, value: daily },
                             { id: 3, value: weekly },
@@ -154,14 +137,9 @@
                         ] %}
                         {{ forms.dropdown("calendarType", "single", title, module.getOption("calendarType"), options, "id", "value", helpText) }}
 
-                        {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set manualUrl %}{{ helpService.address("media_module_calendar.html") }}{% endset %}
-                        {% set helpText %}{% trans %}The format to apply to dates. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
-                        {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText, "custom-control-group") }}
-
                         {% set title %}{% trans "Time Format" %}{% endset %}
                         {% set helpText %}{% trans %}The format to apply to event time (default HH:mm).{% endtrans %}{% endset %}
-                        {{ forms.input("timeFormat", title, module.getOption("timeFormat", "HH:mm"), helpText, "daily-control-group weekly-control-group monthly-control-group") }}
+                        {{ forms.input("timeFormat", title, module.getOption("timeFormat", "HH:mm"), helpText, "schedule-control-group daily-control-group weekly-control-group monthly-control-group") }}
 
                         {% set title %}{% trans "Start Time" %}{% endset %}
                         {% set helpText %}{% trans %}Current view starting time.{% endtrans %}{% endset %}
@@ -171,68 +149,17 @@
                         {% set helpText %}{% trans %}Current view ending time.{% endtrans %}{% endset %}
                         {{ forms.time("endTime", title, module.getOption("endTime"), helpText, "daily-control-group weekly-control-group") }}
 
-                        {% set title %}{% trans "Show items side by side?" %}{% endset %}
-                        {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
-                        {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText, "custom-control-group") }}
-
-                        {% set title %}{% trans "Effect" %}{% endset %}
-                        {% set helpText %}{% trans "Please select the effect that will be used to transition between items. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}
-
-                        {% set showAll %}{% trans "Show all items" %}{% endset %}
-                        {% set showPaged %}{% trans "Paged" %}{% endset %}
-                        {% set marqueeLeft %}{% trans "Marquee Left" %}{% endset %}
-                        {% set marqueeRight %}{% trans "Marquee Right" %}{% endset %}
-                        {% set marqueeUp %}{% trans "Marquee Up" %}{% endset %}
-                        {% set marqueeDown %}{% trans "Marquee Down" %}{% endset %}
-                        {% set optionGroups = [
-                            {id: "showAll", label: showAll},
-                            {id: "showPaged", label: showPaged}
-                        ] %}
-
-                        {% set noneOption %}{% trans "No effect - all items are shown" %}{% endset %}
-                        {% set showAllOptions = [
-                            { effectid: "none", effect: noneOption },
-                            { effectid: "marqueeLeft", effect: marqueeLeft},
-                            { effectid: "marqueeRight", effect: marqueeRight},
-                            { effectid: "marqueeUp", effect: marqueeUp},
-                            { effectid: "marqueeDown", effect: marqueeDown}
-                        ] %}
-
-                        {% set noTransitionOption %}{% trans "No transition" %}{% endset %}
-                        {% set fade %}{% trans "Fade" %}{% endset %}
-                        {% set fadeout %}{% trans "Fade Out" %}{% endset %}
-                        {% set scrollHorz %}{% trans "Scroll Horizontal" %}{% endset %}
-                        {% set scrollVert %}{% trans "Scroll Vertical" %}{% endset %}
-                        {% set flipHorz %}{% trans "Flip Horizontal" %}{% endset %}
-                        {% set flipVert %}{% trans "Flip Vertical" %}{% endset %}
-                        {% set shuffle %}{% trans "Shuffle" %}{% endset %}
-                        {% set tileSlide %}{% trans "Tile Slide" %}{% endset %}
-                        {% set tileBlind %}{% trans "Tile Blind" %}{% endset %}
-                        {% set showPagedOptions = [
-                            { effectid: "noTransition", effect: noTransitionOption },
-                            { effectid: "fade", effect: fade },
-                            { effectid: "fadeout", effect: fadeout},
-                            { effectid: "scrollHorz", effect: scrollHorz},
-                            { effectid: "scrollVert", effect: scrollVert},
-                            { effectid: "flipHorz", effect: flipHorz},
-                            { effectid: "flipVert", effect: flipVert},
-                            { effectid: "shuffle", effect: shuffle},
-                            { effectid: "tileSlide", effect: tileSlide},
-                            { effectid: "tileBlind", effect: tileBlind}
-                        ] %}
-                        {{ forms.dropdown("effect", "single", title, module.getOption("effect"), {showAll: showAllOptions, showPaged: showPagedOptions}, "effectid", "effect", helpText, "l custom-control-group", "", "", "", "", optionGroups) }}
-
-                        {% set title %}{% trans "Items per page" %}{% endset %}
-                        {% set helpText %}{% trans "If an effect has been selected how many pages should we split the items across? If you don't enter anything here 1 item will be put on each page." %}{% endset %}
-                        {{ forms.number("itemsPerPage", title, module.getOption("itemsPerPage"), helpText, "effect-controls") }}
-
                         {% set title %}{% trans "Show header?" %}{% endset %}
                         {% set helpText %}{% trans "Should the selected template have a header?" %}{% endset %}
                         {{ forms.checkbox("showHeader", title, module.getOption("showHeader", true), helpText, "monthly-control-group") }}
 
                         {% set title %}{% trans "Show now marker?" %}{% endset %}
                         {% set helpText %}{% trans "Should the calendar show a marker for the current time?" %}{% endset %}
-                        {{ forms.checkbox("showNowMarker", title, module.getOption("showNowMarker", true), helpText, "daily-control-group weekly-control-group") }}
+                        {{ forms.checkbox("showNowMarker", title, module.getOption("showNowMarker", true), helpText, "schedule-control-group daily-control-group weekly-control-group") }}
+
+                        {% set title %}{% trans "Show event description?" %}{% endset %}
+                        {% set helpText %}{% trans "Should events with descriptions display them?" %}{% endset %}
+                        {{ forms.checkbox("showDescription", title, module.getOption("showDescription", true), helpText, "schedule-control-group") }}
 
                         {% set title %}{% trans "Text scale" %}{% endset %}
                         {% set helpText %}{% trans "Set the scale for the text element on the calendar." %}{% endset %}
@@ -275,6 +202,9 @@
                                 {% endset %}
                                 {{ forms.raw(calendarColorsExplanation, "h5 mt-3 mb-2") }}
 
+                                {% set title %}{% trans "Main Background Colour" %}{% endset %}
+                                {{ forms.colorPicker("mainBackgroundColor", title, module.getOption("mainBackgroundColor"), '', "col-sm-12 mb-2 schedule-control-group") }}
+
                                 {% set title %}{% trans "Grid Colour" %}{% endset %}
                                 {{ forms.colorPicker("gridColor", title, module.getOption("gridColor"), '', "col-sm-12 mb-2") }}
 
@@ -305,13 +235,13 @@
                                     {{ forms.colorPicker("dayBgColor", title, module.getOption("dayBgColor")) }}
 
                                     {% set title %}{% trans "Text Colour" %}{% endset %}
-                                    {{ forms.colorPicker("dayTextColor", title, module.getOption("dayTextColor")) }}
+                                    {{ forms.colorPicker("dayTextColor", title, module.getOption("dayTextColor"), "", "daily-control-group weekly-control-group monthly-control-group") }}
 
                                     {% set title %}{% trans "Current day text Colour" %}{% endset %}
                                     {{ forms.colorPicker("todayTextColor", title, module.getOption("todayTextColor")) }}
 
                                     {% set title %}{% trans "Now marker Colour" %}{% endset %}
-                                    {{ forms.colorPicker("nowMarkerColor", title, module.getOption("nowMarkerColor"), "", "daily-control-group weekly-control-group") }}
+                                    {{ forms.colorPicker("nowMarkerColor", title, module.getOption("nowMarkerColor"), "", "schedule-control-group daily-control-group weekly-control-group") }}
                                 </div>
 
                                 <div class="card p-2 pt-3 mb-2 monthly-control-group">
@@ -350,7 +280,7 @@
                                     {{ forms.colorPicker("multiDayEventTextColor", title, module.getOption("multiDayEventTextColor")) }}
                                 </div>
 
-                                <div class="card p-2 pt-3 mb-2">
+                                <div class="card p-2 pt-3 mb-2 daily-control-group weekly-control-group monthly-control-group">
                                     <div class="card-title font-weight-bold text-info">Aditional days container</div>
                                     {% set title %}{% trans "Background Colour" %}{% endset %}
                                     {{ forms.colorPicker("aditionalEventsBgColor", title, module.getOption("aditionalEventsBgColor")) }}
@@ -358,189 +288,17 @@
                                     {% set title %}{% trans "Text Colour" %}{% endset %}
                                     {{ forms.colorPicker("aditionalEventsTextColor", title, module.getOption("aditionalEventsTextColor")) }}
                                 </div>
-                            </div>
-                        </div>
-                    </div>
 
-                    <div class="tab-pane" id="templateTab">
-                        <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "Main Template" %}</h4>
-                            <div class="col-6 text-right">
-                                <input type="checkbox" class="bootstrap-switch-target" id="template_advanced" name="template_advanced" {% if module.getOption("template_advanced", 0) == 1 %}checked{% endif %}
-                                    data-size="small"
-                                    data-label-text="{% trans "Visual editor" %}"
-                                    data-label-width="80px"
-                                    data-on-text="{% trans "On" %}"
-                                    data-off-text="{% trans "Off" %}">
-                            </div>
-                        </div>
+                                <div class="card p-2 pt-3 mb-2 schedule-control-group">
+                                    <div class="card-title font-weight-bold text-info">No events message</div>
+                                    {% set title %}{% trans "Background Colour" %}{% endset %}
+                                    {{ forms.colorPicker("noEventsBgColor", title, module.getOption("noEventsBgColor")) }}
 
-                        <div class="editor-messages">
-                            {% set simpleTextEditorMessage %}
-                                {% trans "Enter text or HTML in the box below." %}<br>
-                            {% endset %}
-                            {{ forms.message(simpleTextEditorMessage, 'ta_text-advanced-editor-hide inline-editor-hide') }}
-
-                            {# Layout Designer messages #}
-                            {% set layoutDesignerMessage %}
-                                {% trans "Enter text to display using the inline editor which can be opened by clicking in the preview on the left." %}
-                                {% trans "When using the inline editor Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(layoutDesignerMessage, 'layout-designer-message inline-editor-show') }}
-
-                            {# Playlist Editor messages #}
-                            {% set playlistEditorMessage %}
-                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
-                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(playlistEditorMessage, 'playlist-editor-message ta_text-advanced-editor-show') }}
-                        </div>
-
-                        <div class="form-group row ckeditor_controls inline-editor-hide" data-linked-to="template">
-                            <div class="col-sm-6">
-                                <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
-                                <div class="col-sm-8 ckeditor_select_container">
-                                    <select id="ckeditor_snippets_select"
-                                    class="ckeditor_snippets_select form-control"
-                                    data-linked-to="template">
-                                        <option value=""></option>
-                                        <option value="Name">Name</option>
-                                        <option value="Summary">Summary</option>
-                                        <option value="Description">Description</option>
-                                        <option value="Location">Location</option>
-                                        <option value="StartDate">StartDate</option>
-                                        <option value="StartDate|Y-m-d H:i">StartDate|Y-m-d H:i</option>
-                                        <option value="EndDate">EndDate</option>
-                                        <option value="EndDate|Y-m-d H:i">EndDate|Y-m-d H:i</option>
-                                    </select>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
-                                <div class="col-sm-8">
-                                    <select id="ckeditor_library_select2"
-                                            class="ckeditor_library_select form-control"
-                                            data-width="100%"
-                                            data-linked-to="template"
-                                            data-search-url="{{ url_for("library.search") }}"
-                                            data-image-url="{{ url_for("library.download", {id: ':id'}) }}?preview=1">
-                                    </select>
+                                    {% set title %}{% trans "Text Colour" %}{% endset %}
+                                    {{ forms.colorPicker("noEventsTextColor", title, module.getOption("noEventsTextColor")) }}
                                 </div>
                             </div>
                         </div>
-
-                        {{ forms.textarea("template", "", module.getRawNode("template"), "", "inline-editor-hide", "", 10) }}
-                    </div>
-
-                    <div class="tab-pane" id="currentEventTemplateTab">
-
-                        <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "Current Event Template" %}</h4>
-                            <div class="current-event-template ml-auto">
-                                <input type="checkbox" class="bootstrap-switch-target" id="currentEventTemplate_advanced" name="currentEventTemplate_advanced" {% if module.getOption("currentEventTemplate_advanced", 0) == 1 %}checked{% endif %}
-                                    data-size="small"
-                                    data-label-text="{% trans "Visual editor" %}"
-                                    data-label-width="80px"
-                                    data-on-text="{% trans "On" %}"
-                                    data-off-text="{% trans "Off" %}">
-                                </div>
-                        </div>
-
-                        {% set title %}{% trans "Use an alternative template for Current Events?" %}{% endset %}
-                        {% set helpText %}{% trans "This will use the Players Date/Time to work out if the event showing is current." %}{% endset %}
-                        {{ forms.checkbox("useCurrentTemplate", title, module.getOption("useCurrentTemplate"), helpText) }}
-
-                        <div class="editor-messages current-event-template">
-                            {% set simpleTextEditorMessage %}
-                                {% trans "Enter text or HTML in the box below." %}<br>
-                            {% endset %}
-                            {{ forms.message(simpleTextEditorMessage, 'currentEventTemplate-advanced-editor-hide') }}
-
-                            {% set simpleTextEditorMessage2 %}
-                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
-                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(simpleTextEditorMessage2, 'currentEventTemplate-advanced-editor-show') }}
-                        </div>
-
-                        <div class="ckeditor_controls row current-event-template" data-linked-to="currentEventTemplate">
-                            <div class="col-sm-6">
-                                <div class="form-group row">
-                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
-                                    <div class="col-sm-8 ckeditor_select_container">
-                                        <select id="ckeditor_snippets_select"
-                                        class="ckeditor_snippets_select form-control"
-                                        data-linked-to="currentEventTemplate">
-                                            <option value=""></option>
-                                            <option value="Name">Name</option>
-                                            <option value="Summary">Summary</option>
-                                            <option value="Description">Description</option>
-                                            <option value="Location">Location</option>
-                                            <option value="StartDate">StartDate</option>
-                                            <option value="EndDate">EndDate</option>
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-sm-6">
-                                <div class="form-group row">
-                                    <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
-                                    <div class="col-sm-8">
-                                        <select id="ckeditor_library_select2"
-                                                class="ckeditor_library_select form-control"
-                                                data-width="100%"
-                                                data-linked-to="currentEventTemplate"
-                                                data-search-url="{{ url_for("library.search") }}"
-                                                data-image-url="{{ url_for("library.download", {id: ':id'}) }}?preview=1">
-                                        </select>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {% set helpText %}
-                            {% trans "Enter the alternative template for events that are current." %}
-                        {% endset %}
-                        {{ forms.textarea("currentEventTemplate", "", module.getRawNode("currentEventTemplate"), helpText, "current-event-template", "", 10) }}
-                    </div>
-
-                    <div class="tab-pane" id="noDataTemplateTab">
-
-                        <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "No Data Template" %}</h4>
-                            <div class="col-6 text-right">
-                                <input type="checkbox" class="bootstrap-switch-target" id="noDataMessage_advanced" name="noDataMessage_advanced" {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %}
-                                    data-size="small"
-                                    data-label-text="{% trans "Visual editor" %}"
-                                    data-label-width="80px"
-                                    data-on-text="{% trans "On" %}"
-                                    data-off-text="{% trans "Off" %}">
-                            </div>
-                        </div>
-
-                        {% set noDataMessageMessage1 %}
-                            {% trans "Enter text or HTML in the box below." %}<br>
-                        {% endset %}
-                        {{ forms.message(noDataMessageMessage1, 'noDataMessage-advanced-editor-hide') }}
-
-                        {% set noDataMessageMessage2 %}
-                            {% trans "Enter the text to display." %}
-                            {% trans "The red rectangle reflects the size of the region you are editing." %}
-                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                        {% endset %}
-                        {{ forms.message(noDataMessageMessage2, 'noDataMessage-advanced-editor-show') }}
-
-                        {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
-                        {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
-                    </div>
-
-                    <div class="tab-pane" id="optionalStylesheetTab">
-
-                        <div class="form-content-title">
-                            <h4>{% trans "Optional Stylesheet Template" %}</h4>
-                        </div>
-
-                        {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet"), "", "", "", 10) }}
                     </div>
 
                     <div class="tab-pane" id="cachingTab">

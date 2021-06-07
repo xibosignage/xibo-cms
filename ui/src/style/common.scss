@@ -141,12 +141,16 @@ $fa-font-path: "~font-awesome/fonts";
 }
 
 /* Modules icons */
+.module-icon-agenda {
+    @extend .fa-calendar-o;
+}
+
 .module-icon-audio {
     @extend .fa-file-audio;
 }
 
 .module-icon-calendar {
-    @extend .fa-calendar;
+    @extend .fa-calendar-alt;
 }
 
 .module-icon-chart {
