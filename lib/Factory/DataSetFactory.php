@@ -196,6 +196,7 @@ class DataSetFactory extends BaseFactory
             dataset.`username`,
             dataset.`password`,
             dataset.`customHeaders`,
+            dataset.`userAgent`,
             dataset.`refreshRate`,
             dataset.`clearRate`,
             dataset.`runsAfter`,
@@ -380,6 +381,10 @@ class DataSetFactory extends BaseFactory
                 parse_str(parse_url($resolvedUri, PHP_URL_QUERY), $queryParamsArray);
                 parse_str($this->replaceParams($dataSet->postData, $options), $dataSetPostData);
                 $requestParams['query'] = array_merge($queryParamsArray, $dataSetPostData);
+            }
+
+            if (!empty($dataSet->userAgent)) {
+                $requestParams['headers']['User-Agent'] = trim($dataSet->userAgent);
             }
 
             $this->getLog()->debug('Making request to ' . $resolvedUri . ' with params: ' . var_export($requestParams, true));

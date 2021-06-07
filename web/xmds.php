@@ -278,8 +278,13 @@ try {
     });
 
     // Create a SoapServer
-    //$soap = new SoapServer($wsdl); // Uncomment in development for WSDL changes
-    $soap = new SoapServer($wsdl, array('cache_wsdl' => WSDL_CACHE_NONE));
+    // explicitly define caching.
+    if (\Xibo\Helper\Environment::isDevMode()) {
+        // No cache - our WSDL might change in development
+        $soap = new SoapServer($wsdl, ['cache_wsdl' => WSDL_CACHE_NONE]);
+    } else {
+        $soap = new SoapServer($wsdl, ['cache_wsdl' => WSDL_CACHE_MEMORY]);
+    }
     $soap->setClass('\Xibo\Xmds\Soap' . $version,
         $logProcessor,
         $container->get('pool'),

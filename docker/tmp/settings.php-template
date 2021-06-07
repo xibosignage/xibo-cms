@@ -24,6 +24,16 @@ if (!defined('SECRET_KEY')) {
     define('SECRET_KEY','');
 }
 
+if (array_key_exists('CMS_USE_MEMCACHED', $_SERVER) && $_SERVER['CMS_USE_MEMCACHED'] === true) {
+    global $cacheDrivers;
+    $cacheDrivers = [
+        new Stash\Driver\Memcache([
+            'servers' => [$_SERVER['MEMCACHED_HOST'], $_SERVER['MEMCACHED_PORT']],
+            'CONNECT_TIMEOUT' => 10,
+        ])
+    ];
+}
+
 if (file_exists('/var/www/cms/custom/settings-custom.php')) {
     include('/var/www/cms/custom/settings-custom.php');
 }

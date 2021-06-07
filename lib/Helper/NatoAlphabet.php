@@ -22,7 +22,6 @@
 
 namespace Xibo\Helper;
 
-
 class NatoAlphabet
 {
     public static function convertToNato($word) {
@@ -43,8 +42,21 @@ class NatoAlphabet
             "-"=>"Dash", " "=>"(Space)"
         ];
 
-        $converted = preg_replace('/(?<!\ )[A-Z]/', ' $0', strtr(strtolower($word), $replacement));
+        $converted = [];
 
-        return $converted;
+        for ($i=0; $i < strlen($word); $i++) {
+            $currentLetter  = substr($word, $i, 1);
+
+            if (!empty($replacement[$currentLetter])) {
+                $convertedWord = strtolower($replacement[$currentLetter]);
+            } elseif (!empty($replacement[strtolower($currentLetter)])) {
+                $convertedWord = $replacement[strtolower($currentLetter)];
+            } else {
+                $convertedWord = $currentLetter;
+            }
+            $converted[] = $convertedWord;
+        }
+
+        return implode(' ', $converted);
     }
 }
