@@ -308,6 +308,7 @@ class WorldClock extends ModuleWidget
                     position: absolute;
                     top: 50%;
                     left: 50%;
+                    -webkit-transform: translate(-50%, -50%);
                     transform: translate(-50%, -50%);
                     border-radius: 50%;
                     background: ' . $this->getOption('dialColor') . ';
@@ -380,6 +381,7 @@ class WorldClock extends ModuleWidget
                             position: relative;
                             left: 50%;
                             width: 70px;
+                            -webkit-transform: translateX(-50%);
                             transform: translateX(-50%);
                             line-height: 22px;
                         }';
@@ -469,6 +471,7 @@ class WorldClock extends ModuleWidget
                         $styleSheet .= '
                             .analogue-steps > div:nth-child(' . ($i + 1) .') {
                                 transform: rotate(' . ($i * 30) . 'deg);
+                                -webkit-transform: rotate(' . ($i * 30) . 'deg);
                             }';
                     }
                 }

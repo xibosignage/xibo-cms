@@ -32,6 +32,10 @@ services:
       CMS_DEV_MODE: "true"
       MYSQL_DATABASE: "cms"
 
+  memcached:
+    image: memcached:alpine
+    command: memcached -m 15
+
   swagger:
     image: swaggerapi/swagger-ui:latest
     ports:

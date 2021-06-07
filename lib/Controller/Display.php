@@ -2241,6 +2241,10 @@ class Display extends Base
                 throw new InvalidArgumentException(__('Provided CMS URL is invalid'), 'newCmsUrl');
             }
 
+            if (!v::stringType()->length(1, 1000)->validate($newCmsAddress)) {
+                throw new InvalidArgumentException(__('New CMS URL can have maximum of 1000 characters'), 'newCmsUrl');
+            }
+
             if ($newCmsKey == '') {
                 throw new InvalidArgumentException(__('Provided CMS Key is invalid'), 'newCmsKey');
             }
