@@ -183,7 +183,7 @@ class BaseFactory
 
         // Check the whether we need to restrict to the DOOH user.
         // we only do this for entities which have an owner, and only if the user check hasn't been disabled.
-        if ($ownerColumn !== null && $performUserCheck) {
+        if ($ownerColumn !== null && $performUserCheck && $user->showContentFrom != 3) {
             if (($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4) {
                 // DOOH only
                 $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId = 4) ';
