@@ -127,7 +127,7 @@
 
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+                        {{ forms.color("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
 
                         {% set title %}{% trans "Count" %}{% endset %}
                         {% set helpText %}{% trans "The number of Tweets to return (default = 15)." %}{% endset %}

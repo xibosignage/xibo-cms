@@ -891,7 +891,7 @@ pE.showLocalLoadingScreen = function() {
 pE.clearTemporaryData = function() {
 
     // Fix for remaining ckeditor elements or colorpickers
-    pE.editorContainer.find('.colorpicker-element').colorpicker('destroy');
+    destroyColorPicker(pE.editorContainer.find('.colorpicker-element'));
 
     // Hide open tooltips
     pE.editorContainer.find('.tooltip').remove();

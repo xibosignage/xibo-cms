@@ -47,18 +47,5 @@
                 '#widgetOriginalWidth': 'widgetOriginalWidth',
                 '#widgetOriginalHeight': 'widgetOriginalHeight'
             });
-
-        // Setupd color picker
-        $(this).find('#color').colorpicker();
-
-        // Tidy up colorpickers on modal close
-        if($(this).hasClass('modal')) {
-            $(this).on("hide.bs.modal", function(e) {
-                if(e.namespace === 'bs.modal') {
-                    // Remove colour pickers
-                    $(this).find("#color").colorpicker('destroy');
-                }
-            });
-        }
     }
 </script>

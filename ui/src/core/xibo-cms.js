@@ -810,6 +810,12 @@ function XiboInitialise(scope) {
         // Disable main input
         $input.attr('readonly', 'readonly');
     });
+
+    // Initialize color picker
+    $(scope + " .XiboColorPicker").each(function() {
+        // Create color picker
+        createColorPicker(this);
+    });
 }
 
 /**
@@ -3281,5 +3287,31 @@ function formatBytes(size, precision){
 
     const c=0 > precision ? 0 : precision, d = Math.floor(Math.log(size)/Math.log(1024));
     return parseFloat((size/Math.pow(1024,d)).toFixed(c))+" "+["Bytes","KB","MB","GB","TB","PB","EB","ZB","YB"][d]
+}
+
+/**
+ * Create bootstrap colorpicker
+ * @param {object} element jquery object or CSS selector
+ * @param {object} options bootstrap-colorpicker options (https://itsjavi.com/bootstrap-colorpicker/v2/)
+ */
+function createColorPicker(element, options) {
+    var $self = $(element);
+
+    // Disable autocomplete
+    $self.attr('autocomplete', 'off');
+    
+    $self.colorpicker(Object.assign({
+        format: "hex"
+    }, options));
+}
+
+/**
+ * Destroy bootstrap colorpicker
+ * @param {object} element jquery object or CSS selector
+ */
+ function destroyColorPicker(element) {
+    var $self = $(element);
+
+    $self.colorpicker('destroy');
 }
 

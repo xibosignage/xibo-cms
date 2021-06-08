@@ -1545,7 +1545,7 @@ lD.clearTemporaryData = function() {
     $('.cke').remove();
 
     // Fix for remaining ckeditor elements or colorpickers
-    lD.editorContainer.find('.colorpicker-element').colorpicker('destroy');
+    destroyColorPicker(lD.editorContainer.find('.colorpicker-element'));
 
     // Hide open tooltips
     lD.editorContainer.find('.tooltip').remove();
