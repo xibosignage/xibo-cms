@@ -33,9 +33,16 @@ class UserOnboardingMigration extends AbstractMigration
             ->save();
 
         // If we only have the preset user groups, add some more.
-        $countGroups = $this->fetchRow('SELECT COUNT(*) AS cnt FROM `group` WHERE isUserSpecific = 0 AND isEveryone = 0');
+        // We add a total of 3 preset groups by this point
+        $countGroups = $this->fetchRow('
+            SELECT COUNT(*) AS cnt 
+              FROM `group` 
+             WHERE `group`.isUserSpecific = 0 
+                AND `group`.isEveryone = 0
+                AND `group`.group NOT IN (\'Users\', \'System Notifications\', \'Playlist Dashboard User\')
+        ');
 
-        if ($countGroups['cnt'] <= 3) {
+        if ($countGroups['cnt'] <= 0) {
             // These can't be translated out the box as we don't know language on install?
             $this->table('group')
                 ->insert([
@@ -85,6 +92,9 @@ class UserOnboardingMigration extends AbstractMigration
                     ],
                 ])
                 ->save();
+        } else {
+            // We should add something, otherwise we won't have any options when it comes to the new wizard
+            $this->execute('UPDATE `group` SET isShownForAddUser = 1 WHERE isUserSpecific = 0 AND isEveryone = 0 AND isSystemNotification = 0');
         }
     }
 }

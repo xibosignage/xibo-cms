@@ -2679,7 +2679,7 @@ class Layout implements \JsonSerializable
     /**
      * @return array
      */
-    public function getActionLayoutIds(): array
+    public function getActionPublishedLayoutIds(): array
     {
         $actionLayoutIds = [];
 
@@ -2692,7 +2692,7 @@ class Layout implements \JsonSerializable
                 ON `layout`.layoutId = `action`.sourceId
              WHERE `action`.actionType = :actionType
                 AND `layout`.layoutId = :layoutId
-                AND `layout`.publishedStatusId = 1
+                AND `layout`.parentId IS NULL
         ';
 
         // Actions on this Layout's Regions
@@ -2706,7 +2706,7 @@ class Layout implements \JsonSerializable
                 ON `layout`.layoutId = `region`.layoutId
              WHERE `action`.actionType = :actionType
                 AND `layout`.layoutId = :layoutId
-                AND `layout`.publishedStatusId = 1
+                AND `layout`.parentId IS NULL
         ';
 
         // Actions on this Layout's Widgets
@@ -2724,7 +2724,7 @@ class Layout implements \JsonSerializable
                 ON `layout`.layoutId = `region`.layoutId
              WHERE `action`.actionType = :actionType
                 AND `layout`.layoutId = :layoutId
-                AND `layout`.publishedStatusId = 1
+                AND `layout`.parentId IS NULL
         ';
 
         // Join them together and get the Layout's referenced by those codes
