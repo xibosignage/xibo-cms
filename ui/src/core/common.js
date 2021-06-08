@@ -32,8 +32,9 @@ module.exports = {
         let enableTooltips = (forcedOption != null) ? forcedOption : this.displayTooltips;
 
         container.tooltip('dispose').tooltip({
-            boundary: 'viewport',
-            selector: (enableTooltips) ? '[data-toggle="tooltip"]' : '[data-toggle="tooltip"].tooltip-always-on'
+            boundary: 'window',
+            trigger: 'hover',
+            selector: (enableTooltips) ? '[data-toggle="tooltip"]:not(:disabled)' : '[data-toggle="tooltip"].tooltip-always-on:not(:disabled)'
         });
 
         // Remove rogue/detached tooltips
