@@ -396,7 +396,7 @@
                                 return data.thumbnail;
 
                             if (data.thumbnail != "") {
-                                return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" data-display-id="'+ data.displayId +'" data-type="'+ data.clientType +'" /></a>';
+                                return '<a class="display-screenshot-container" data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" data-display-id="'+ data.displayId +'" data-type="'+ data.clientType +'" /></a>';
                             }
                             else {
                                 return "";
