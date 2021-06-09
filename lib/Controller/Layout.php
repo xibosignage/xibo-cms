@@ -1256,7 +1256,8 @@ class Layout extends Base
             'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId'),
             'campaignId' => $parsedQueryParams->getInt('campaignId'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
-            'codeLike' => $parsedQueryParams->getString('codeLike')
+            'codeLike' => $parsedQueryParams->getString('codeLike'),
+            'onlyMyLayouts' => $parsedQueryParams->getCheckbox('onlyMyLayouts')
         ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
