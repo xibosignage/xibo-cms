@@ -2032,7 +2032,7 @@ class LayoutFactory extends BaseFactory
         }
 
         if ($parsedFilter->getCheckbox('onlyMyLayouts') === 1) {
-            $body .= " AND layout.userid = :userId ";
+            $body .= ' AND layout.userid = :userId ';
             $params['userId'] = $this->getUser()->userId;
         }
 
