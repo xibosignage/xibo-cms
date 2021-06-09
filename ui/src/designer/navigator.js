@@ -217,6 +217,9 @@ Navigator.prototype.renderNavbar = function() {
 
     // Navbar buttons
     this.navbarContainer.find('#close-btn').click(function() {
+        if (self.DOMObject.parent().remove('fullscreen')) {
+            self.DOMObject.parent().removeClass('fullscreen')
+        }
         lD.toggleNavigatorEditing(false);
     });
 
