@@ -103,14 +103,14 @@
 
                 {{!-- Options menu --}}
                 {{#if showOptions}}
-                    <li class="dropdown navbar-submenu navbar-submenu-options" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top"
+                    <li class="dropup navbar-submenu navbar-submenu-options" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="top"
                         data-title="{{trans.options}}">
-                        <a id="optionsContainer" href="#" class="dropdown-toggle btn-menu-option" data-toggle="dropdown" role="button" aria-haspopup="true"
+                        <a id="optionsContainer" class="dropdown-toggle btn-menu-option option-container" data-toggle="dropdown" role="button" aria-haspopup="true"
                             aria-expanded="false">
-                            <i class="fa fa-cog"></i>
+                            <i class="fa fa-bars"></i>
                         </a>
                     
-                        <div class="dropdown-menu navbar-submenu-container navbar-submenu-options-container">
+                        <div class="dropdown-menu dropdown-menu-right navbar-submenu-container navbar-submenu-options-container" aria-labelledby="optionsContainer">
                             <a class="dropdown-item">
                                 <label class="navbar-submenu-item navbar-submenu-item-options displayTooltips-container tooltip-always-on"
                                     for="displayTooltips" data-toggle="tooltip" data-container=".editor-bottom-bar" data-placement="left" data-title="{{trans.displayTooltipsTitle}}"

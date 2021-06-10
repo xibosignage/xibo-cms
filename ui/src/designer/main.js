@@ -177,17 +177,6 @@ $(document).ready(function() {
                     // Custom dropdown options
                     [
                         {
-                            id: 'discardLayout',
-                            title: layoutDesignerTrans.discardTitle,
-                            logo: 'fa-times-circle-o',
-                            class: 'btn-warning',
-                            action: lD.showDiscardScreen,
-                            inactiveCheck: function() {
-                                return (lD.layout.editable == false);
-                            },
-                            inactiveCheckClass: 'd-none',
-                        },
-                        {
                             id: 'publishLayout',
                             title: layoutDesignerTrans.publishTitle,
                             logo: 'fa-check-square-o',
@@ -210,10 +199,19 @@ $(document).ready(function() {
                             inactiveCheckClass: 'd-none',
                         },
                         {
+                            id: 'discardLayout',
+                            title: layoutDesignerTrans.discardTitle,
+                            logo: 'fa-times-circle-o',
+                            action: lD.showDiscardScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == false);
+                            },
+                            inactiveCheckClass: 'd-none',
+                        },
+                        {
                             id: 'scheduleLayout',
                             title: layoutDesignerTrans.scheduleTitle,
                             logo: 'fa-clock-o',
-                            class: 'btn-primary',
                             action: lD.showScheduleScreen,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true || lD.layout.scheduleNowPermission == false);
@@ -224,7 +222,6 @@ $(document).ready(function() {
                             id: 'saveTemplate',
                             title: layoutDesignerTrans.saveTemplateTitle,
                             logo: 'fa-floppy-o',
-                            class: 'btn-primary',
                             action: lD.showSaveTemplateScreen,
                             inactiveCheck: function() {
                                 return (lD.layout.editable == true);
