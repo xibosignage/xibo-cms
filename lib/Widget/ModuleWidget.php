@@ -1246,9 +1246,10 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Get templatesAvailable
      * @param bool $loadImage Should the image URL be loaded?
+     * @param null $folder Optional path to templates for custom Modules
      * @return array
      */
-    public function templatesAvailable($loadImage = true)
+    public function templatesAvailable($loadImage = true, $folder = null)
     {
         if ($this->moduleTemplates === null) {
             $this->moduleTemplates = [];
@@ -1258,6 +1259,11 @@ abstract class ModuleWidget implements ModuleInterface
 
             // Scan the custom folder for template files.
             $this->scanFolderForTemplates(PROJECT_ROOT . '/custom/' . $this->module->type . '/*.template.json', $loadImage);
+
+            // Scan the custom folder for template files.
+            if ($folder != null) {
+                $this->scanFolderForTemplates($folder, $loadImage);
+            }
         }
 
         return $this->moduleTemplates;
