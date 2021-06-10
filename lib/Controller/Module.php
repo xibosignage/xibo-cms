@@ -1415,8 +1415,7 @@ class Module extends Base
             );
 
         // Call the form named
-        $response = $module->$name($request, $response);
-        return $this->render($request, $response);
+        return $module->$name($request, $response);
     }
 
     /**
