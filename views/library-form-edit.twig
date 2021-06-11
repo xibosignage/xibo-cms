@@ -107,6 +107,13 @@
                     ] %}
                     {{ forms.dropdown("enableStat", "single", title, media.enableStat, options, "id", "value", helpText) }}
 
+                    {% set title %}{% trans "Orientation" %}{% endset %}
+                    {% set helpText %}{% trans "Set intended orientation for this Media, this is for filtering purpose only." %}{% endset %}
+                    {% set option1 = "Landscape"|trans %}
+                    {% set option2 = "Portrait"|trans %}
+                    {% set values = [{id: 'landscape', value: option1}, {id: 'portrait', value: option2}] %}
+                    {{ forms.dropdown("orientation", "single", title, media.orientation, values, "id", "value", helpText) }}
+
                     {% set title %}{% trans "Update this media in all layouts it is assigned to?" %}{% endset %}
                     {% set helpText %}{% trans "Note: It will only be updated in layouts you have permission to edit." %}{% endset %}
                     {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}

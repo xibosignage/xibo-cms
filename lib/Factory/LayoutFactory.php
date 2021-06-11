@@ -206,6 +206,7 @@ class LayoutFactory extends BaseFactory
         $layout = $this->createEmpty();
         $layout->width = $resolution->width;
         $layout->height = $resolution->height;
+        $layout->orientation = ($layout->width >= $layout->height) ? 'landscape' : 'portrait';
 
         // Set the properties
         $layout->layout = $name;
@@ -1827,6 +1828,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.enableStat, ";
         $select .= "        layout.width, ";
         $select .= "        layout.height, ";
+        $select .= "        layout.orientation, ";
         $select .= "        layout.retired, ";
         $select .= "        layout.createdDt, ";
         $select .= "        layout.modifiedDt, ";
@@ -2179,6 +2181,11 @@ class LayoutFactory extends BaseFactory
             $params['folderId'] = $parsedFilter->getInt('folderId');
         }
 
+        if ($parsedFilter->getString('orientation') !== null) {
+            $body .= " AND layout.orientation = :orientation ";
+            $params['orientation'] = $parsedFilter->getString('orientation');
+        }
+
         // Sorting?
         $order = '';
 
@@ -2219,6 +2226,7 @@ class LayoutFactory extends BaseFactory
             $layout->backgroundzIndex = $parsedRow->getInt('backgroundzIndex');
             $layout->width = $parsedRow->getDouble('width');
             $layout->height = $parsedRow->getDouble('height');
+            $layout->orientation = $parsedRow->getString('orientation');
             $layout->createdDt = $parsedRow->getDate('createdDt');
             $layout->modifiedDt = $parsedRow->getDate('modifiedDt');
             $layout->displayOrder = $parsedRow->getInt('displayOrder');

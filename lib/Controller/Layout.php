@@ -1229,7 +1229,8 @@ class Layout extends Base
             'activeDisplayGroupId' => $parsedQueryParams->getInt('activeDisplayGroupId'),
             'campaignId' => $parsedQueryParams->getInt('campaignId'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
-            'codeLike' => $parsedQueryParams->getString('codeLike')
+            'codeLike' => $parsedQueryParams->getString('codeLike'),
+            'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
         ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {
