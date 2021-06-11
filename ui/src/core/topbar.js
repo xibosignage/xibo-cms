@@ -163,9 +163,12 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
 
                 var query = {
                     layout: params.term,
+                    onlyMyLayouts: $('#onlyMyLayouts').is(":checked"),
                     start: 0,
                     length: 10
                 };
+
+                localStorage.liveSearchOnlyMyLayouts = $('#onlyMyLayouts').is(":checked") ? 1 : 0;
 
                 // Tags
                 if(query.layout != undefined) {
@@ -233,6 +236,26 @@ Topbar.prototype.setupJumpList = function(jumpListContainer) {
                 $search.trigger("input");
             }, 100);
         }
+    }).on('select2:open', function(e) {
+        // append checkbox after select2 search input (only once)
+        if ($('#onlyMyLayouts').length === 0) {
+            $("<input style='margin-left: 5px; margin-bottom: 15px' type='checkbox' id='onlyMyLayouts' name='onlyMyLayouts'> " + topbarTrans.onlyMyLayouts + "</input>")
+                .insertAfter(".select2-search");
+
+            // if checkbox was checked last time, check it now
+            if (Number(localStorage.getItem('liveSearchOnlyMyLayouts')) === 1) {
+                $('#onlyMyLayouts').prop('checked', true);
+            }
+        }
+
+        var $search = jumpList.data("select2").dropdown.$search;
+
+        // when checkbox state is changed trigger the select2 to make a new search
+        $('#onlyMyLayouts').on('change', function(e) {
+            setTimeout(function() {
+                $search.trigger("input");
+            }, 100);
+        })
     });
 };
 

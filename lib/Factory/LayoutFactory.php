@@ -2040,6 +2040,11 @@ class LayoutFactory extends BaseFactory
             $params['userId'] = $parsedFilter->getInt('userId', ['default' => 0]);
         }
 
+        if ($parsedFilter->getCheckbox('onlyMyLayouts') === 1) {
+            $body .= ' AND layout.userid = :userId ';
+            $params['userId'] = $this->getUser()->userId;
+        }
+
         // User Group filter
         if ($parsedFilter->getInt('ownerUserGroupId', ['default' => 0]) != 0) {
             $body .= ' AND layout.userid IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';

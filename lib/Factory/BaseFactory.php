@@ -193,7 +193,7 @@ class BaseFactory
             if (($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4) {
                 // DOOH only
                 $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId = 4) ';
-            } else {
+            } elseif ($user->showContentFrom != 3) {
                 // Standard only
                 $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId <> 4) ';
             }

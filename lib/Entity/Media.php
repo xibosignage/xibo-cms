@@ -613,6 +613,14 @@ class Media implements \JsonSerializable
      */
     private function add()
     {
+        // The originalFileName column has limit of 254 characters
+        // if the filename basename that we are about to save is still over the limit, attempt to strip query string
+        // we cannot make any operations directly on $this->fileName, as that might be still needed to processDownloads
+        $fileName = basename($this->fileName);
+        if (strpos(basename($fileName), '?') && $this->mediaType == 'module') {
+            $fileName = substr(basename($fileName), 0, strpos(basename($fileName), '?'));
+        }
+
         $this->mediaId = $this->getStore()->insert('
             INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`, `permissionsFolderId`, `orientation`)
               VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat, :folderId, :permissionsFolderId, :orientation)
@@ -620,7 +628,7 @@ class Media implements \JsonSerializable
             'name' => $this->name,
             'type' => $this->mediaType,
             'duration' => $this->duration,
-            'originalFileName' => basename($this->fileName),
+            'originalFileName' => $fileName,
             'userId' => $this->ownerId,
             'retired' => $this->retired,
             'moduleSystemFile' => (($this->moduleSystemFile) ? 1 : 0),
@@ -780,30 +788,13 @@ class Media implements \JsonSerializable
         // This also sets orientation
         $this->assessDimensions();
 
-        // If we are saving module file that has ? in the basename, make sure we remove that here and update fileName in database
-        // we cannot do this on queue download, as we need full url as fileName to download it in processDownloads
-        if (strpos(basename($this->fileName), '?') && $this->mediaType == 'module') {
-            $this->fileName = substr(basename($this->fileName), 0, strpos(basename($this->fileName), '?'));
-        }
-
         // Update the MD5 and storedAs to suit
-        $this->getStore()->update('
-            UPDATE `media` 
-            SET md5 = :md5,
-                fileSize = :fileSize,
-                storedAs = :storedAs,
-                expires = :expires,
-                released = :released,
-                originalFileName = :originalFileName,
-                orientation = :orientation,
-                valid = 1 
-            WHERE mediaId = :mediaId', [
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, orientation = :orientation, valid = 1 WHERE mediaId = :mediaId', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
             'expires' => $this->expires,
             'released' => $this->released,
-            'originalFileName' => basename($this->fileName),
             'orientation' => $this->orientation,
             'mediaId' => $this->mediaId
         ]);
