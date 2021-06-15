@@ -692,6 +692,7 @@ class Display extends Base
                         ['name' => 'commit-url', 'value' => $this->urlFor($request, 'display.delete', ['id' => $display->displayId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'display_button_delete'],
+                        ['name' => 'sort-group', 'value' => 1],
                         ['name' => 'text', 'value' => __('Delete')],
                         ['name' => 'rowtitle', 'value' => $display->display]
                     ];
@@ -720,6 +721,7 @@ class Display extends Base
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.authorise', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_authorise'),
+                        array('name' => 'sort-group', 'value' => 2),
                         array('name' => 'text', 'value' => __('Toggle Authorise')),
                         array('name' => 'rowtitle', 'value' => $display->display)
                     )
@@ -735,6 +737,7 @@ class Display extends Base
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.defaultlayout', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
                         array('name' => 'id', 'value' => 'display_button_defaultlayout'),
+                        array('name' => 'sort-group', 'value' => 2),
                         array('name' => 'text', 'value' => __('Set Default Layout')),
                         array('name' => 'rowtitle', 'value' => $display->display),
                         ['name' => 'form-callback', 'value' => 'setDefaultMultiSelectFormOpen']
@@ -752,6 +755,7 @@ class Display extends Base
                             ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $display->displayGroupId])],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
+                            ['name' => 'sort-group', 'value' => 2],
                             ['name' => 'text', 'value' => __('Move to Folder')],
                             ['name' => 'rowtitle', 'value' => $display->display],
                             ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
@@ -770,6 +774,7 @@ class Display extends Base
                             array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.licencecheck', ['id' => $display->displayId])),
                             array('name' => 'commit-method', 'value' => 'put'),
                             array('name' => 'id', 'value' => 'display_button_checkLicence'),
+                            array('name' => 'sort-group', 'value' => 2),
                             array('name' => 'text', 'value' => __('Check Licence')),
                             array('name' => 'rowtitle', 'value' => $display->display)
                         )
@@ -828,6 +833,7 @@ class Display extends Base
                         ['name' => 'auto-submit', 'value' => true],
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'display.requestscreenshot', ['id' => $display->displayId])),
                         array('name' => 'commit-method', 'value' => 'put'),
+                        array('name' => 'sort-group', 'value' => 3),
                         array('name' => 'id', 'value' => 'display_button_requestScreenShot'),
                         array('name' => 'text', 'value' => __('Request Screen Shot')),
                         array('name' => 'rowtitle', 'value' => $display->display)
@@ -844,6 +850,7 @@ class Display extends Base
                         ['name' => 'auto-submit', 'value' => true],
                         array('name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.collectNow', ['id' => $display->displayGroupId])),
                         array('name' => 'commit-method', 'value' => 'post'),
+                        array('name' => 'sort-group', 'value' => 3),
                         array('name' => 'id', 'value' => 'display_button_collectNow'),
                         array('name' => 'text', 'value' => __('Collect Now')),
                         array('name' => 'rowtitle', 'value' => $display->display)
@@ -860,6 +867,7 @@ class Display extends Base
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.trigger.webhook', ['id' => $display->displayGroupId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'display_button_trigger_webhook'],
+                        ['name' => 'sort-group', 'value' => 3],
                         ['name' => 'text', 'value' => __('Trigger a web hook')],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
@@ -891,7 +899,7 @@ class Display extends Base
                         ['name' => 'id', 'value' => 'display_button_group_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $display->display],
-                        ['name' => 'sort-group', 'value' => 2],
+                        ['name' => 'sort-group', 'value' => 4],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
                         ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
                         ['name' => 'content-id-name', 'value' => 'displayGroupId']
@@ -931,6 +939,7 @@ class Display extends Base
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'display_button_move_cms'],
                         ['name' => 'text', 'value' => __('Transfer to another CMS')],
+                        ['name' => 'sort-group', 'value' => 5],
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'form-callback', 'value' => 'setMoveCmsMultiSelectFormOpen']
                     ]

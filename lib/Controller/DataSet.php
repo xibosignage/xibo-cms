@@ -292,6 +292,7 @@ class DataSet extends Base
                         'id' => 'dataset_button_permissions',
                         'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId]),
                         'text' => __('Share'),
+                        'multi-select' => true,
                         'dataAttributes' => [
                             ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DataSet', 'id' => $dataSet->dataSetId])],
                             ['name' => 'commit-method', 'value' => 'post'],
