@@ -330,6 +330,7 @@ function XiboInitialise(scope) {
                 jsDateFormat,
                 {
                     enableTime: true,
+                    time_24hr: true,
                     enableSeconds: enableSeconds,
                     altFormat: jsDateFormat
                 }
