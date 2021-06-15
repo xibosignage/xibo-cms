@@ -2677,7 +2677,7 @@ function makeLocalSelect(element, parent) {
             // Find by text
             for(var index = 0;index < queryText.length; index++) {
                 var text = queryText[index];
-                if(text != '' && data.text.indexOf(text) > -1) {
+                if(text != '' && data.text.toUpperCase().indexOf(text.toUpperCase()) > -1) {
                     return data;
                 }
             }
@@ -2685,7 +2685,7 @@ function makeLocalSelect(element, parent) {
             // Find by tag ( data-tag )
             for(var index = 0;index < queryTags.length;index++) {
                 var tag = queryTags[index];
-                if(tag != '' && $(data.element).data('tags') != undefined && $(data.element).data('tags').indexOf(tag) > -1) {
+                if(tag != '' && $(data.element).data('tags') != undefined && $(data.element).data('tags').toUpperCase().indexOf(tag.toUpperCase()) > -1) {
                     return data;
                 }
             }
