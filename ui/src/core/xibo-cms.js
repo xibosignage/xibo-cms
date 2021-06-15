@@ -846,6 +846,9 @@ function dataTableDraw(e, settings) {
     // Check to see if we have tag filter for the current table
     var $tagsElement = target.closest(".XiboGrid").find('.FilterDiv #tags');
 
+    // Check to see if we have a folder system for this table
+    var $folderController = target.closest(".XiboGrid").find('.folder-controller');
+
     if (enabledButtons.length > 0 || $tagsElement.length > 0) {
 
         var searchByKey = function(array, item, key) {
@@ -926,6 +929,12 @@ function dataTableDraw(e, settings) {
               allRows.addClass('selected');
             }
         });
+    }
+
+    // Move and show folder controller if it's not inside of the table container
+    if ($folderController.length > 0 && target.closest(".dataTables_wrapper").find('.dataTables_folder .folder-controller').length == 0) {
+        $folderController.appendTo('.dataTables_folder');
+        $folderController.removeClass('d-none').addClass('d-inline-flex');
     }
 
     // Bind any buttons

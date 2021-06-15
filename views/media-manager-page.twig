@@ -115,6 +115,7 @@
 
             table = $("#entries").DataTable({
                 "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
                 serverSide: true,
                 filter: false,
                 searchDelay: 3000,
@@ -223,7 +224,7 @@
                 });
             });
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#entries_wrapper').find('.col-md-6').eq(1));
+            dataTableAddButtons(table, $('#entries_wrapper').find('.dataTables_buttons'));
         });
 
         /**
