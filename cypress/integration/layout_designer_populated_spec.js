@@ -368,8 +368,8 @@ describe('Layout Designer (Populated)', function() {
         cy.server();
         cy.route('PUT', '/layout/publish/*').as('layoutPublish');
 
-        cy.get('#layout-editor-topbar li#actionsSubmenu').click();
-        cy.get('#layout-editor-topbar li#actionsSubmenu #publishLayout').click();
+        cy.get('#layout-editor-topbar li.navbar-submenu-options a#optionsContainerTop').click();
+        cy.get('#layout-editor-topbar li.navbar-submenu-options #publishLayout').click();
 
         cy.get('button.btn-bb-Publish').click();
 

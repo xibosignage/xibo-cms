@@ -381,6 +381,7 @@ class DisplayGroup extends Base
                     'id' => 'displaygroup_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
                     'text' => __('Share'),
+                    'multi-select' => true,
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId])],
                         ['name' => 'commit-method', 'value' => 'post'],

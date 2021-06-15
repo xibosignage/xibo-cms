@@ -56,15 +56,6 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
-                    </div>
-                    <div class="form-group col-sm-11" style="padding: 0">
-                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
-                    </div>
-                </div>
-
-                <div class="row">
                     <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
@@ -72,8 +63,12 @@
                         </div>
                         <div id="container-folder-tree"></div>
                     </div>
+                    <div class="folder-controller d-none">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
+                        <div id="breadcrumbs" class="mt-2 pl-2"></div>
+                    </div>
                     <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
-                        <div class="XiboData card pt-3">
+                        <div class="XiboData">
                             <table id="templates" class="table table-striped" data-content-type="layout" data-content-id-name="layoutId" data-state-preference-name="templateGrid">
                                 <thead>
                                     <tr>
@@ -105,6 +100,7 @@
         {% endif %}
         var table = $("#templates").DataTable({
             "language": dataTablesLanguage,
+            dom: dataTablesTemplate,
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
@@ -143,7 +139,7 @@
         table.on('draw', dataTableDraw);
         table.on('draw', { form: $("#templates").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#templates_wrapper').find('.col-md-6').eq(1));
+        dataTableAddButtons(table, $('#templates_wrapper').find('.dataTables_buttons'));
 
         function templateFormOpen() {
             if ($('#folder-tree-form-modal').length === 0) {

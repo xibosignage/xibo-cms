@@ -75,6 +75,7 @@
 {% block javaScript %}
     <script type="text/javascript">
         var table = $("#commands").DataTable({ "language": dataTablesLanguage,
+            dom: dataTablesTemplate,
             serverSide: true,
             stateSave: true,
             stateDuration: 0,
@@ -138,6 +139,6 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#commands_wrapper').find('.col-md-6').eq(1));
+        dataTableAddButtons(table, $('#commands_wrapper').find('.dataTables_buttons'));
     </script>
 {% endblock %}

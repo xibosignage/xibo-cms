@@ -104,7 +104,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     overflow-x: hidden;
     overflow-y: auto;
     padding-top: 8px;
-    max-height: calc(100vh - 95px - #{$toolbar-height});
+    height: calc(100vh - 95px - #{$toolbar-height});
 }
 
 #layout-editor .container-designer {
@@ -673,12 +673,13 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
 /* Viewer navbar */
 #layout-editor #layout-viewer-navbar {
+    height: 42px;
     
     .viewer-navbar {
         display: block;
         background: $viewer-navbar-bg-colour;
         color: $viewer-navbar-fg-colour;
-        min-height: 40px;
+        min-height: 100%;
         margin: 0;
         padding: 4px;
         border-width: 4px 0 0 0;
@@ -718,12 +719,16 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
         /* CKEditor controls */
         .ckeditor_controls {
-            padding: 0 8px;
+            padding: 0 !important;
 
             > div {
                 padding: 0 5px;
                 min-width: 220px;
                 float: right;
+            }
+
+            .form-group {
+                margin-bottom: 0 !important;
             }
 
             .select2-container--bootstrap .select2-selection--single {
@@ -733,8 +738,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         }
 
         .inline-editor-templates {
-            float: left;
-            padding: 0 8px;
+            padding-right: 8px;
 
             .control-label {
                 padding: 2px 4px;

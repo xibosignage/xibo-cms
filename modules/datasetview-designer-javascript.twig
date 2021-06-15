@@ -91,11 +91,6 @@
         // Configure the query for sorting and filtering
         formHelpers.configureQueryBuilder(dialog, datasetQueryBuilderTranslations);
 
-        // Configure some color pickers
-        $(dialog).find("#backgroundColor").colorpicker();
-        $(dialog).find("#borderColor").colorpicker();
-        $(dialog).find("#fontColor").colorpicker();
-
         // Populate the font list with options
         var $fontFamily = $(dialog).find("#fontFamily");
         $.ajax({
@@ -118,7 +113,7 @@
             $(dialog).on("hide.bs.modal", function(e) {
                 if(e.namespace === 'bs.modal') {
                     // Remove colour pickers
-                    $(dialog).find(".colorpicker-element").colorpicker('destroy');
+                    destroyColorPicker($(dialog).find(".XiboColorPicker"));
                 }
             });
         }

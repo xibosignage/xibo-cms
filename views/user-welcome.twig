@@ -189,7 +189,7 @@
                 },
                 { // 17
                     content: "{% trans "Click anywhere inside the Region to select it so that we can edit." %}",
-                    element: '#layout-navigator div[data-type="region"]',
+                    element: '#layout-navigator div[data-type="region"]:last',
                     smartPlacement: true,
                     reflex: true,
                     template: no_nav_template,
@@ -201,7 +201,7 @@
                 },
                 {
                     content: "{% trans "Grab the Region handle, and drag to resize." %}",
-                    element: '#layout-navigator div[data-type="region"] .ui-resizable-se',
+                    element: '#layout-navigator div[data-type="region"]:last .ui-resizable-se',
                     placement: "bottom",
                     reflex: "mouseenter",
                     template: no_nav_template,
@@ -234,7 +234,7 @@
                 { // 21
                     container: '#layout-editor',
                     content: "{% trans "You will now have an empty Region, resized and positioned on a default black background." %}",
-                    element: '#layout-timeline .designer-region',
+                    element: '#layout-timeline .designer-region:last',
                     placement: "bottom",
                     template: next_template,
                     delay: 1000,
@@ -298,7 +298,6 @@
                 { // 27
                     content: "{% trans "Add the Text Widget by using the 'Grab' option and dragging to the Region or click the '+' button to select then click in the target Region. Click Next after adding the Widget." %}",
                     element: '#layout-editor-toolbar .toolbar-card[data-sub-type="text"]',
-                    placement: "top",
                     template: next_template,
                     onShown: function (tour) {
                         // Check if the text widget is into view
@@ -430,8 +429,8 @@
                     template: next_template
                 },
                 {
-                    content: "{% trans "Do this by clicking on the Actions menu on the top toolbar." %}",
-                    element: '#layout-editor-topbar #actionsSubmenu > a',
+                    content: "{% trans "Do this by clicking on the menu on the top toolbar." %}",
+                    element: '#layout-editor-topbar li.navbar-submenu-options a#optionsContainerTop',
                     placement: "left",
                     reflex: true,
                     template: no_nav_template
@@ -454,7 +453,10 @@
                     content: "{% trans "You can Publish now or untick this option and provide your own Publish Date, confirm your selection by clicking Publish." %}",
                     template: no_nav_template,
                     reflex: true,
-                    delay: 500
+                    delayOnElement: {
+                        delayElement: "element",
+                        maxDelay: 4000
+                    }
                 },
                 { // 41
                     content: "{% trans "Success! Your Layout is now ready for to be scheduled to Displays / Display Groups!" %}",
@@ -889,7 +891,7 @@
                     template: next_template
                 },
                 {
-                    element: '#layout-editor-topbar #actionsSubmenu',
+                    element: '#layout-editor-topbar li.navbar-submenu-options',
                     content: "{% trans "When happy with your layout you will need to publish before being able to schedule to displays." %}",
                     placement: "bottom",
                     template: next_template,
