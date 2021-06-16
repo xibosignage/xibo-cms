@@ -177,6 +177,7 @@ class DayPart extends Base
                     'id' => 'daypart_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId]),
                     'text' => __('Share'),
+                    'multi-select' => true,
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DayPart', 'id' => $dayPart->dayPartId])],
                         ['name' => 'commit-method', 'value' => 'post'],

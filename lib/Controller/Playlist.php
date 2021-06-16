@@ -431,6 +431,7 @@ class Playlist extends Base
                     'id' => 'playlist_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Playlist', 'id' => $playlist->playlistId]),
                     'text' => __('Share'),
+                    'multi-select' => true,
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Playlist', 'id' => $playlist->playlistId])],
                         ['name' => 'commit-method', 'value' => 'post'],

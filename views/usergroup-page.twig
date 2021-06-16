@@ -88,6 +88,7 @@
         $(document).ready(function() {
             var table = $("#userGroups").DataTable({
                 "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
                 stateDuration: 0,
@@ -133,7 +134,7 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#userGroups_wrapper').find('.col-md-6').eq(1));
+            dataTableAddButtons(table, $('#userGroups_wrapper').find('.dataTables_buttons'));
 
             $(".refresh-grid").click(function() {
                 table.ajax.reload();

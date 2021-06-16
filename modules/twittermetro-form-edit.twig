@@ -138,7 +138,7 @@
                     <div class="tab-pane" id="appearanceTemplateTab">
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+                        {{ forms.color("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
                         
                         {% set title %}{% trans "No tweets" %}{% endset %}
                         {% set helpText %}{% trans "A message to display when there are no tweets returned by the search query" %}{% endset %}
