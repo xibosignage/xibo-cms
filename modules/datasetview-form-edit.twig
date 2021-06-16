@@ -145,15 +145,15 @@
                         <div class="template-selector-default">
                             {% set title %}{% trans "Background Colour" %}{% endset %}
                             {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
-                            {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "template-selector-control") }}
+                            {{ forms.color("backgroundColor", title, module.getOption("backgroundColor"), helpText, "template-selector-control") }}
 
                             {% set title %}{% trans "Border Colour" %}{% endset %}
                             {% set helpText %}{% trans "Use the colour picker to select the border colour" %}{% endset %}
-                            {{ forms.input("borderColor", title, module.getOption("borderColor"), helpText, "template-selector-control") }}
+                            {{ forms.color("borderColor", title, module.getOption("borderColor"), helpText, "template-selector-control") }}
 
                             {% set title %}{% trans "Font Colour" %}{% endset %}
                             {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
-                            {{ forms.input("fontColor", title, module.getOption("fontColor"), helpText, "template-selector-control") }}
+                            {{ forms.color("fontColor", title, module.getOption("fontColor"), helpText, "template-selector-control") }}
                         </div>
 
                         {% set title %}{% trans "Font" %}{% endset %}

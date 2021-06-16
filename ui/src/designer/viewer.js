@@ -559,7 +559,6 @@ Viewer.prototype.openInlineEditorContent = function() {
 
     // Show fullscreen editor save button
     const $saveEditorButton = this.DOMObject.parents('#layout-viewer-container.fullscreen').find('#inline-editor-save').show();
-    this.DOMObject.parents('#layout-viewer-container.fullscreen').find('#fs-btn').removeClass('fa-arrows-alt').addClass('fa-close');
     this.navbarContainer.addClass('fs-edit');
 
     $saveEditorButton.off().click(function() {

@@ -47,7 +47,7 @@
                     <div class="tab-pane active" id="general">
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
-                        {{ forms.input("backgroundColor", title, layout.backgroundColor, helpText) }}
+                        {{ forms.color("backgroundColor", title, layout.backgroundColor, helpText) }}
 
                         {% set attributes = [
                             { name: "data-allow-clear", value: "true" },

@@ -164,7 +164,7 @@
                         {% set title %}{% trans "Text scale" %}{% endset %}
                         {% set helpText %}{% trans "Set the scale for the text element on the calendar." %}{% endset %}
                         {{ forms.number("textScale", title, module.getOption("textScale", 1.0), helpText, "schedule-control-group daily-control-group weekly-control-group monthly-control-group") }}
-                        
+
                         {% set title %}{% trans "Week name length" %}{% endset %}
                         {% set helpText %}{% trans "Please select the lenght for the week names." %}{% endset %}
                         {% set short %}{% trans "Short" %}{% endset %}

@@ -77,6 +77,7 @@
         $(document).ready(function() {
             var table = $("#resolutions").DataTable({
                 "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
                 responsive: true,
@@ -108,7 +109,7 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#resolutions_wrapper').find('.col-md-6').eq(1));
+            dataTableAddButtons(table, $('#resolutions_wrapper').find('.dataTables_buttons'));
         });
     </script>
 {% endblock %}

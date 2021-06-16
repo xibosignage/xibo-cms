@@ -217,6 +217,7 @@
         $(document).ready(function() {
             var table = $("#logs").DataTable({
                 "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
                 serverSide: true, stateSave: true, stateDuration: 0,
                 filter: false,
                 responsive: true,

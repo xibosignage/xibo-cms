@@ -320,3 +320,13 @@
             </ul>'>
     </span>
 {% endmacro %}
+
+{% macro color(name, title, value, helpText, groupClass, validation, accessKey) %}
+    <div class="form-group row {{ groupClass }}">
+        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <div class="col-sm-10">
+            <input class="form-control XiboColorPicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} />
+            <small class="form-text text-muted">{{ helpText }}</small>
+        </div>
+    </div>
+{% endmacro %}

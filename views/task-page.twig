@@ -76,6 +76,7 @@
     <script type="text/javascript">
         var table = $("#tasks").DataTable({
             "language": dataTablesLanguage,
+            dom: dataTablesTemplate,
             serverSide: true,
             stateSave: true,
             responsive: true,
@@ -177,7 +178,7 @@
 
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#tasks_wrapper').find('.col-md-6').eq(1));
+        dataTableAddButtons(table, $('#tasks_wrapper').find('.dataTables_buttons'));
 
         $("#refreshLog").click(function () {
             table.ajax.reload();
