@@ -27,37 +27,37 @@ const timeLineLabelMap = [
     {
         maxTime: 60,
         step: 1,
-        delta: 5
+        delta: 2
     },
     {
         maxTime: 120,
         step: 2,
-        delta: 10
+        delta: 4
     },
     {
         maxTime: 240,
         step: 5,
-        delta: 20
+        delta: 4
     },
     {
         maxTime: 600,
         step: 10,
-        delta: 20
+        delta: 4
     },
     {
         maxTime: 1200,
         step: 10,
-        delta: 60
+        delta: 4
     },
     {
         maxTime: 3600,
         step: 60,
-        delta: 300
+        delta: 4
     },
     {
         maxTime: 10000,
         step: 300,
-        delta: 3600
+        delta: 4
     }
 ];
 
@@ -75,6 +75,7 @@ let Timeline = function(parent, container) {
     // Properties to be used for the template
     this.properties = {
         zoom: -1, // Zoom by default is -1 so that can be calculated based on the widgets of the regions
+        timelineMaxZoom: 30000,
         startingZoom: -1,
         minTime: 0,
         maxTime: lD.layout.duration,
@@ -251,12 +252,18 @@ Timeline.prototype.calculateRegionPreview = function(regions) {
 Timeline.prototype.calculateTimeruler = function() {
     let steps = [];
     let totalElements = 0;
-    let labelStep = 3600; // Max default values
-    let labelDelta = 18000; // Max default values
+    let labelStep = null;
+    let labelDelta = null;
     let selectiveRender = false;
     let selectiveRenderStart = 0;
     let selectiveRenderEnd = 0;
-    let selectiveRenderOffset = 10; // 10 elements of offset
+    const selectiveRenderOffset = 10; // 10 elements of offset
+
+    // don't show timeline for bigger zooms
+    if(this.properties.zoom > this.properties.timelineMaxZoom) {
+        this.timeruler = null;
+        return null;
+    }
 
     // Calculate step and delta times
     for(let index = 0;index < timeLineLabelMap.length; index++) {
@@ -269,45 +276,44 @@ Timeline.prototype.calculateTimeruler = function() {
         }
     }
 
-    let selectiveTemp1 = [];
-    let selectiveTemp2 = [];
-    
+    // If the value is too big, calculate grid based on percentage
+    if (labelStep == null || labelDelta == null) {
+        labelStep = this.properties.deltaTime / 20;
+        labelStep = Math.ceil(labelStep);
+        labelDelta = 4;
+    }
+
     // If the number of elements is too high, use selective rendering
     if((lD.layout.duration / labelStep) > 100) {
         selectiveRender = true;
     }
 
-    for(let idx = 0;idx < lD.layout.duration;idx = idx + labelStep) {
+    totalElements = Math.floor(lD.layout.duration / labelStep);
+    selectiveRenderStart = (this.properties.minTime - selectiveRenderOffset * labelStep);
+    selectiveRenderEnd = (this.properties.maxTime + selectiveRenderOffset * labelStep);
+    selectiveRenderStart = (selectiveRenderStart < 0) ? 0 : selectiveRenderStart;
+    selectiveRenderEnd = (selectiveRenderEnd > lD.layout.duration) ? lD.layout.duration : selectiveRenderEnd;
 
-        let addFlag = true;
-
-        totalElements++;
-
-        if(selectiveRender) {
-            if(idx < (this.properties.minTime - selectiveRenderOffset * labelDelta)) {
-                selectiveRenderStart++;
-                addFlag = false;
-                selectiveTemp1.push(idx);
-            } else if(idx > (this.properties.maxTime + selectiveRenderOffset * labelDelta)) {
-                selectiveRenderEnd++;
-                addFlag = false;
-                selectiveTemp2.push(idx);
-            }
-        }
-
-        if(addFlag){
-            steps.push({
-                labelled: (idx % labelDelta == 0),
-                label: lD.common.timeFormat(idx)
-            });
-        }
+    // Calculate the visible steps
+    let addElementCount = -1;
+    for(let idx = selectiveRenderStart;idx < selectiveRenderEnd;idx = idx + labelStep) {
+        addElementCount++;
+        
+        steps.push({
+            labelled: (addElementCount % labelDelta == 0),
+            label: lD.common.timeFormat(idx)
+        });
     }
+
+    const elementWidth = 100 / totalElements;
+    const startElementsNumber = Math.floor(selectiveRenderStart / labelStep);
+    const endElementsNumber = totalElements - startElementsNumber + labelStep;
 
     // Save timeruler object
     this.timeruler = {
-        startMargin: (100 / totalElements) * selectiveRenderStart,
-        endMargin: (100 / totalElements) * selectiveRenderEnd,
-        gap: 100 / totalElements,
+        startMargin: elementWidth * startElementsNumber,
+        endMargin: elementWidth * endElementsNumber,
+        gap: elementWidth,
         steps: steps
     };
 };
