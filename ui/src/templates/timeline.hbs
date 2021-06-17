@@ -30,16 +30,20 @@
         {{!-- Regions container --}}
         <div id="regions" class="timeline-regions-container" style="width: {{properties.zoom}}%;" data-zoom="{{properties.zoom}}">
             <div id="timeruler">
-                {{!-- Time ruler --}}
-                <div class="step-margin" style="width:{{timeruler.startMargin}}%;"></div>
-                {{#each timeruler.steps}}
-                    <div class="step {{#if labelled}}labelled{{/if}}" data-title="{{label}}" style="width:{{../timeruler.gap}}%;">
-                        {{#if labelled}}
-                            <span>{{label}}</span>
-                        {{/if}}
-                    </div>
-                {{/each}}
-                <div class="step-margin" style="width:{{timeruler.endMargin}}%;"></div>
+                {{#if timeruler}}
+                    {{!-- Time ruler --}}
+                    <div class="step-margin" style="width:{{timeruler.startMargin}}%;"></div>
+                    {{#each timeruler.steps}}
+                        <div class="step {{#if labelled}}labelled{{/if}}" title="{{label}}" style="width:{{../timeruler.gap}}%;">
+                            {{#if labelled}}
+                                <span>{{label}}</span>
+                            {{/if}}
+                        </div>
+                    {{/each}}
+                    <div class="step-margin" style="width:{{timeruler.endMargin}}%;"></div>
+                {{else}}
+                    <span class="timeruler-message">{{trans.hiddenTimeruler}}</span>
+                {{/if}}
             </div>
 
             {{#each layout.regions}}
