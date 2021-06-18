@@ -760,6 +760,14 @@
                         $($inputFields).prop('checked', newValue);
                     } else if(timepickerFixFlag) {
                         $($inputFields).find('input').val(newValue);
+                    } else if(timepickerOptionsFixFlag) {
+                        $.each(newValue, function(name, value){
+                            if(name == 'on') {
+                                $($inputFields).find('input.timersOn').val(value);
+                            } else if(name == 'off') {
+                                $($inputFields).find('input.timersOff').val(value);
+                            }
+                        })
                     } else {
                         $($inputFields).val(newValue);
                     }

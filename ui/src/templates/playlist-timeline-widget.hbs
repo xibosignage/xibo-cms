@@ -34,7 +34,7 @@
         {{/each}}
 
         {{#gt expireStatus 0}}
-            <i class="fa {{expireStatusIcon}} editProperty" data-toggle="tooltip" data-container="#playlist-timeline" 
+            <i class="fa {{expireStatusIcon}} editProperty" data-html="true" data-toggle="tooltip" data-container="#playlist-timeline"
                 data-title="{{expireStatusTitle}}" data-property="Expiry"></i>
         {{/gt}}
     </div>
