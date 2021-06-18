@@ -649,11 +649,10 @@
 
             // Method to create a new input field based on the hidden form
             const createInputField = function(target, inputName, newValue = null) {
-                
-                let select2FixFlag = false;
+                var select2FixFlag = false;
 
                 // Grab input field from hidden table
-                let $inputFields = $settings.find('#' + inputName);
+                var $inputFields = $settings.find('#' + inputName);
 
                 // If no input field is capture by ID, get special fields
                 if($inputFields.length == 0) {
@@ -683,6 +682,11 @@
                 // Add input field to the target
                 $(target).html($inputFields);
 
+                // Initialize time picker
+                if($(target).find('.timePicker.dateControl, .multiSelectInputs .timePickerDisplayEditForm').length > 0) {
+                    timersFormInit($(target));
+                }
+                
                 // Set value if defined
                 if(newValue != null) {
                     if($(target).find('.multiSelectInputs .timePickerDisplayEditForm').length > 0) {
