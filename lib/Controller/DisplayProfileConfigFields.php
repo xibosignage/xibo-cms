@@ -255,6 +255,11 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('videoEngine', $sanitizedParams->getString('videoEngine'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('isTouchEnabled')) {
+                    $this->handleChangedSettings('isTouchEnabled', ($ownConfig) ? $displayProfile->getSetting('isTouchEnabled') : $display->getSetting('isTouchEnabled'), $sanitizedParams->getCheckbox('isTouchEnabled'), $changedSettings);
+                    $displayProfile->setSetting('isTouchEnabled', $sanitizedParams->getCheckbox('isTouchEnabled'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'windows':
