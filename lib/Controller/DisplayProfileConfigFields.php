@@ -250,6 +250,11 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('isRecordGeoLocationOnProofOfPlay', $sanitizedParams->getCheckbox('isRecordGeoLocationOnProofOfPlay'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('videoEngine')) {
+                    $this->handleChangedSettings('videoEngine', ($ownConfig) ? $displayProfile->getSetting('videoEngine') : $display->getSetting('videoEngine'), $sanitizedParams->getString('videoEngine'), $changedSettings);
+                    $displayProfile->setSetting('videoEngine', $sanitizedParams->getString('videoEngine'), $ownConfig, $config);
+                }
+
                 break;
 
             case 'windows':

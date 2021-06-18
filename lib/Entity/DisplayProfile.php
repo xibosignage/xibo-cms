@@ -607,7 +607,8 @@ class DisplayProfile implements \JsonSerializable
                 ['name' => 'isUseMultipleVideoDecoders', 'default' => 'default', 'type' => 'string'],
                 ['name' => 'maxRegionCount', 'default' => 0],
                 ['name' => 'embeddedServerAllowWan', 'default' => 0, 'type' => 'checkbox'],
-                ['name' => 'isRecordGeoLocationOnProofOfPlay', 'default' => 0, 'type' => 'checkbox']
+                ['name' => 'isRecordGeoLocationOnProofOfPlay', 'default' => 0, 'type' => 'checkbox'],
+                ['name' => 'videoEngine', 'default' => 'exoplayer', 'type' => 'string']
             ],
             'linux' => [
                 ['name' => 'collectInterval', 'default' => 300],
