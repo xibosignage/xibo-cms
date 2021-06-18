@@ -324,6 +324,12 @@ class Playlist extends Base
                     // Add widget module type name
                     $widget->moduleName = $widget->module->getModuleName();
 
+                    // Get transitions
+                    $widget->transitionIn = $widget->getOptionValue('transIn', null);
+                    $widget->transitionOut = $widget->getOptionValue('transOut', null);
+                    $widget->transitionDurationIn = $widget->getOptionValue('transInDuration', null);
+                    $widget->transitionDurationOut = $widget->getOptionValue('transOutDuration', null);
+
                     // Permissions?
                     if ($loadPermissions) {
                         // Augment with editable flag
