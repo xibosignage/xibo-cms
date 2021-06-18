@@ -154,7 +154,7 @@
             };
             $seriesColors.append(seriesColorsTemplate(context));
 
-            $seriesColors.find('.color-picker').colorpicker({format: "hex"});
+            createColorPicker($seriesColors.find('.color-picker'), {format: "hex"});
         } else {
             // For each of the existing config options, create form components
             var j = 0;
@@ -170,7 +170,7 @@
                 $seriesColors.append(seriesColorsTemplate(context));
             });
 
-            $seriesColors.find('.color-picker').colorpicker({format: "hex"});
+            createColorPicker($seriesColors.find('.color-picker'), {format: "hex"});
         }
 
         // Nabble the resulting buttons
@@ -186,7 +186,7 @@
                 };
                 $seriesColors.append(seriesColorsTemplate(context));
 
-                $seriesColors.find('.color-picker').colorpicker({format: "hex"});
+                createColorPicker($seriesColors.find('.color-picker'), {format: "hex"});
             } else {
                 // Remove this row
                 $(this).closest(".form-group").remove();
@@ -207,16 +207,16 @@
         }
 
         // Set up the colour selectors
-        $("#backgroundColor", dialog).colorpicker({format: "hex"});
+        createColorPicker($("#backgroundColor", dialog), {format: "hex"});
 
-        $fontInput.colorpicker({format: "hex"});
+        createColorPicker($fontInput, {format: "hex"});
 
         // Tidy up colorpickers on modal close
         if(dialog.hasClass('modal')) {
             dialog.on("hide.bs.modal", function(e) {
                 if(e.namespace === 'bs.modal') {
-                    // Remove colour pickers
-                    dialog.find(".colorpicker-element").colorpicker('destroy');
+                    // Remove colour pickers                    
+                    destroyColorPicker(dialog.find(".colorpicker-element"));
                 }
             });
         }

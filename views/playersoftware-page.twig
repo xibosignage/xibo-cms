@@ -94,6 +94,7 @@
         $(document).ready(function() {
             table = $("#playerSoftwareItems").DataTable({
                 "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
                 stateDuration: 0,
@@ -136,7 +137,7 @@
 
             table.on('draw', dataTableDraw);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#playerSoftwareItems_wrapper').find('.col-md-6').eq(1));
+            dataTableAddButtons(table, $('#playerSoftwareItems_wrapper').find('.dataTables_buttons'));
         });
 
         $("#playerSoftwareUploadForm").click(function(e) {

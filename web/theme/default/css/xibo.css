@@ -309,8 +309,15 @@ div.dropdown-menu-form {
     }
 }
 
+.display-screenshot-container {
+    text-align: center;
+    display: block;
+    background-color: #333;
+}
+
 .display-screenshot {
-    width: 200px;
+    max-width: 120px;
+    max-height: 80px;
 }
 
 #page-wrapper {

@@ -77,7 +77,7 @@
 
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "If you want to use a background colour for the Widget, select one here." %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "") }}
+                        {{ forms.color("backgroundColor", title, module.getOption("backgroundColor"), helpText, "") }}
 
                         {% set title %}{% trans "Effect" %}{% endset %}
                         {% set helpText %}{% trans "Please select the effect that will be used to transition between items. If all items should be output, select None. Marquee effects are CPU intensive and may not be suitable for lower power displays." %}{% endset %}

@@ -748,7 +748,7 @@
                             return data.thumbnail;
 
                         if (data.thumbnail != "") {
-                            return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
+                            return '<a class="display-screenshot-container" data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
                         }
                         else {
                             return "";
@@ -804,6 +804,6 @@
         table2.on('draw', dataTableDraw);
         table2.on('draw', { form: $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
         table2.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table2, $('#displaysGrid_wrapper').find('.col-md-6').eq(1));
+        dataTableAddButtons(table2, $('#displaysGrid_wrapper').find('.dataTables_buttons'));
     </script>
 {% endblock %}

@@ -611,9 +611,7 @@ ul.sidebar {
 }
 
 .editor-toolbar .navbar-submenu-container {
-    background: $toolbar-tab-fg-color;
-    padding: 2px;
-    border: none;
+    background: $xibo-color-primary;
 
     & > a {
         padding: 0;
@@ -625,7 +623,7 @@ ul.sidebar {
 }
 
 .editor-toolbar .navbar-submenu-item {
-    padding: 4px;
+    padding: 3px 6px;
     cursor: pointer;
 }
 
@@ -679,7 +677,7 @@ ul.sidebar {
         padding: 10px;
         line-height: 20px;
 
-        &#optionsContainer {
+        &.option-container {
             width: 50px;
             text-align: center;
             font-size: 1.75rem;
@@ -705,7 +703,6 @@ ul.sidebar {
 
     .navbar-submenu-item-options {
         width: 100%;
-        background-color: $toolbar-main-color;
         font-weight: normal;
         margin: 0;
 
@@ -713,14 +710,9 @@ ul.sidebar {
             padding: 1px;
             margin-top: 4px;
         }
-
-        &:hover {
-            color: $toolbar-tab-fg-color;    
-            background-color: darken($toolbar-main-color, 10%);
-        }
     }
 }
 
-.editor-bottom-bar .navbar-submenu > a#optionsContainer {
+.editor-bottom-bar .navbar-submenu > a.option-container {
     padding: 10px;
 }
