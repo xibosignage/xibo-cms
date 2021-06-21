@@ -298,6 +298,18 @@
                     {% set title = "Maximum Region Count"|trans %}
                     {% set helpText = "This setting is a memory limit protection setting which will stop rendering regions beyond the limit set. Leave at 0 for no limit."|trans %}
                     {{ forms.number("maxRegionCount", title, displayProfile.getSetting("maxRegionCount"), helpText) }}
+
+                    {% set title = "Video Engine"|trans %}
+                    {% set helpText = "Select which video engine should be used to playback video. ExoPlayer is usually better, but if you experience issues you can revert back to Android Media Player. HLS always uses ExoPlayer. Available from v3 R300."|trans %}
+                    {% set options = [
+                        { id: 'exoplayer', value: "ExoPlayer"|trans },
+                        { id: 'mediaplayer', value: "Android Media Player"|trans },
+                    ] %}
+                    {{ forms.dropdown("videoEngine", "single", title, displayProfile.getSetting("videoEngine"), options, "id", "value", helpText) }}
+
+                    {% set title = "Enable touch capabilities on the device?"|trans %}
+                    {% set helpText = "If this device will be used as a touch screen check this option. Checking this option will cause a message to appear on the player which needs to be manually dismissed once. If this option is disabled, touching the screen will show the action bar according to the Action Bar Mode option. Available from v3 R300."|trans %}
+                    {{ forms.checkbox("isTouchEnabled", title, displayProfile.getSetting("isTouchEnabled"), helpText) }}
                 </div>
 
                 {% if commands|length > 0 %}

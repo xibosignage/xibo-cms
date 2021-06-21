@@ -138,7 +138,7 @@
                         <a {{#each dataAttributes}}
                             data-{{ name }}="{{ value }}"
                             {{/each}}
-                            class="dropdown-item {{#if class}}{{ class }}{{else}}XiboMultiHiddenButton{{/if}} {{ id }}" style="display: none;" tabindex="-1" href="#">
+                            class="dropdown-item multi-select-button {{#if class}}{{ class }}{{else}}XiboMultiHiddenButton{{/if}} {{ id }}" style="display: none;" tabindex="-1" href="#">
                             {{ text }}
                         </a>
                     {{else}}
@@ -150,7 +150,7 @@
                             <a {{#each dataAttributes}}
                                 data-{{ name }}="{{ value }}"
                                 {{/each}}
-                                class="dropdown-item {{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}} tabindex="-1" href="#">
+                                class="dropdown-item {{#if multi-select}}multi-select-button{{/if}} {{#if class}}{{ class }}{{else}}XiboFormButton{{/if}} {{ id }}" href="{{ url }}"{{#if title}} title="{{title}}"{{/if}} tabindex="-1" href="#">
                                 {{ text }}
                             </a>
                         {{/unless}}
@@ -161,7 +161,7 @@
     </script>
 
     <script type="text/x-handlebars-template" id="multiselect-button-template">
-        <div class="btn-group dropup">
+        <div class="btn-group dropup mr-2">
             <button class="btn btn-primary select-all" data-toggle="selectAll">
                 {{ selectAll }}
             </button>

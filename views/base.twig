@@ -152,6 +152,9 @@
                     "print": "{{ "Print"|trans }}"
                 }
             };
+            var dataTablesTemplate = "<'row'<'dataTables_folder col-sm-12 col-lg-5'><'col-sm-12 col-lg-7 text-right'<'d-inline-block mr-2'l><'dataTables_buttons d-inline-block'>>>" +
+                "<'row'<'col-sm-12'tr>>" +
+                "<'row'<'col-sm-12 col-lg-5'i><'col-lg-7 col-sm-12'p>>";
             {% endautoescape %}
 
             moment.locale("{{ translate.jsLocale }}");

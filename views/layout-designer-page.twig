@@ -50,7 +50,7 @@
                 {# Insert custom translations here #}
                 var layoutDesignerTrans = {
                     publishTitle: "{% trans "Publish layout" %}",
-                    discardTitle: "{% trans "Discard layout" %}",
+                    discardTitle: "{% trans "Discard draft" %}",
                     publishMessage: "{% trans "Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed." %}",
                     checkoutTitle: "{% trans "Checkout" %}",
                     scheduleTitle: "{% trans "Schedule Now" %}",
@@ -84,6 +84,7 @@
                     zoomOut: "{% trans "Zoom out" %}",
                     resetZoom: "{% trans "Reset zoom" %}",
                     zoomDelta: "{% trans "Visible area time span" %}",
+                    hiddenTimeruler: "{% trans "Zoom out to see timeruler!" %}",
                     zoomFindSelected: "{% trans "Scroll to selected widget" %}",
                     startTime: "{% trans "Visible area start time" %}",
                     endTime: "{% trans "Visible area end time" %}",
@@ -127,8 +128,6 @@
              * Setup the background form.
              */
             function backGroundFormSetup(dialog) {
-                $('#backgroundColor').colorpicker({format: "hex"});
-
                 var backgroundImageList = $('#backgroundImageId');
                 var notFoundIcon = $('#bg_not_found_icon');
                 var backgroundImage = $('#bg_image_image');
