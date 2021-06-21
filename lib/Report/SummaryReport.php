@@ -1005,8 +1005,8 @@ class SummaryReport implements ReportInterface
                         'end' => '$end',
                         'period_start' => 1,
                         'period_end' => 1,
-                        'NumberPlays' => 1,
-                        'Duration' => 1,
+                        'NumberPlays' => ['$toInt' => '$NumberPlays'],
+                        'Duration' => ['$toInt' => '$Duration'],
                     ]
                 ],
 
@@ -1014,7 +1014,8 @@ class SummaryReport implements ReportInterface
 
             // Stats result
             $results = $this->getTimeSeriesStore()->executeQuery(['collection' => $this->table, 'query' => $statQuery]);
-
+//var_dump($results);
+//die();
             // Run period loop and map the stat result for each period
             $resultArray = [];
 
