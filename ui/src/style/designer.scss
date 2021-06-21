@@ -206,6 +206,13 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         font-size: 0;
         opacity: 0.8;
 
+        .timeruler-message {
+            color: white;
+            font-size: 13px;
+            padding-left: 6px;
+            line-height: 21px;
+        }
+
         .step-margin {
             display: inline-block;
             height: 10px;
@@ -221,8 +228,11 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
                 color: $xibo-color-white;
                 font-size: 0.85rem;
                 height: 18px;
-                padding-left: 2px;
                 line-height: 34px;
+
+                span {
+                    padding-left: 2px;
+                }
             }
         }
     }

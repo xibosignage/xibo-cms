@@ -935,8 +935,9 @@ class DataSet implements \JsonSerializable
     public function deleteData()
     {
         // The last thing we do is drop the dataSet table
-        $this->getStore()->isolated('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
-        $this->getStore()->isolated('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
+        $this->getStore()->update('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
+        $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
+        $this->getStore()->commitIfNecessary();
     }
 
     /**
