@@ -1164,8 +1164,8 @@ class DistributionReport implements ReportInterface
                         'end' => '$end',
                         'period_start' => 1,
                         'period_end' => 1,
-                        'NumberPlays' => 1,
-                        'Duration' => 1,
+                        'NumberPlays' => ['$toInt' => '$NumberPlays'],
+                        'Duration' => ['$toInt' => '$Duration'],
                         'id' => 1,
 
 
