@@ -1424,11 +1424,13 @@ class Layout implements \JsonSerializable
                 // Is this Widget one that does not have a duration of its own?
                 // Assuming we have at least 1 region with a set duration, then we ought to
                 // Reset to the minimum duration
+                // do not do that if we are in the drawer Region!
                 if ($widget->useDuration == 0
                     && $countWidgets <= 1
                     && $regionLoop == 0
                     && $widget->type != 'video'
                     && $layoutCountRegionsWithDuration >= 1
+                    && $region->isDrawer === 0
                 ) {
                     // Make sure this Widget expires immediately so that the other Regions can be the leaders when
                     // it comes to expiring the Layout
