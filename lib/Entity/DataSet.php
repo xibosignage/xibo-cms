@@ -927,7 +927,7 @@ class DataSet implements \JsonSerializable
         // The last thing we do is drop the dataSet table
         $this->getStore()->update('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
         $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
-        $this->store->commitIfNecessary();
+        $this->getStore()->commitIfNecessary();
     }
 
     /**
