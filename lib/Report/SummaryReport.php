@@ -1014,8 +1014,7 @@ class SummaryReport implements ReportInterface
 
             // Stats result
             $results = $this->getTimeSeriesStore()->executeQuery(['collection' => $this->table, 'query' => $statQuery]);
-//var_dump($results);
-//die();
+
             // Run period loop and map the stat result for each period
             $resultArray = [];
 
