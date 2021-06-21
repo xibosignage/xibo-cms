@@ -1280,22 +1280,19 @@ class DataSet extends Base
                     if ($columns[$key] == 2) {
                         // Number
                         $value = $sanitizedRow->getDouble($key);
-                    }
-                    else if ($columns[$key] == 3) {
+                    } elseif ($columns[$key] == 3) {
                         // Date
                         try {
                             $date = $sanitizedRow->getDate($key);
-                            $value = $date->format(DateFormatHelper::getSystemFormat());;
+                            $value = $date->format(DateFormatHelper::getSystemFormat());
                         } catch (\Exception $e) {
                             $this->getLog()->error(sprintf('Incorrect date provided %s, expected date format Y-m-d H:i:s ', $value));
                             throw new InvalidArgumentException(sprintf(__('Incorrect date provided %s, expected date format Y-m-d H:i:s '), $value), 'date');
                         }
-                    }
-                    else if ($columns[$key] == 5) {
+                    } elseif ($columns[$key] == 5) {
                         // Media Id
                         $value = $sanitizedRow->getInt($key);
-                    }
-                    else {
+                    } else {
                         // String
                         $value = $sanitizedRow->getString($key);
                     }
