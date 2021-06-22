@@ -2523,6 +2523,21 @@ class Layout implements \JsonSerializable
 
             $action->save();
         }
+
+        // Make sure we update targetRegionId in Drawer Widgets.
+        foreach ($allNewRegions as $region) {
+            foreach ($region->getPlaylist()->widgets as $widget) {
+                if ($region->isDrawer === 1) {
+                    foreach ($combined as $old => $new) {
+                        if ($widget->getOptionValue('targetRegionId', null) == $old) {
+                            $this->getLog()->debug('Layout Import, switching Widget targetRegionId from ' . $old . ' to ' . $new);
+                            $widget->setOptionValue('targetRegionId', 'attrib', $new);
+                            $widget->save();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     /**
