@@ -326,6 +326,16 @@
                         "description": "Folder ID to which this object should be assigned to",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "layoutIds",
+                        "in": "formData",
+                        "description": "An array of layoutIds to assign to this Campaign, in order.",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -373,6 +383,23 @@
                         "description": "Folder ID to which this object should be assigned to",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "manageLayouts",
+                        "in": "formData",
+                        "description": "Flag indicating whether to manage layouts or not. Default to no.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "layoutIds",
+                        "in": "formData",
+                        "description": "An array of layoutIds to assign to this Campaign, in order.",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "integer"
+                        }
                     }
                 ],
                 "responses": {
@@ -412,8 +439,8 @@
                 "tags": [
                     "campaign"
                 ],
-                "summary": "Assign Layouts",
-                "description": "Assign Layouts to a Campaign",
+                "summary": "Assign Layout",
+                "description": "Assign a Layout to a Campaign. Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.",
                 "operationId": "campaignAssignLayout",
                 "parameters": [
                     {
@@ -426,22 +453,9 @@
                     {
                         "name": "layoutId",
                         "in": "formData",
-                        "description": "Array of Layout ID/Display Orders to Assign",
+                        "description": "Layout ID to Assign: Please note that as of v3.0.0 this API no longer accepts multiple layoutIds.",
                         "required": true,
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/LayoutAssignmentArray"
-                        }
-                    },
-                    {
-                        "name": "unassignLayoutId",
-                        "in": "formData",
-                        "description": "Array of Layout ID/Display Orders to unassign",
-                        "required": false,
-                        "type": "array",
-                        "items": {
-                            "$ref": "#/definitions/LayoutAssignmentArray"
-                        }
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -5372,6 +5386,37 @@
                 }
             }
         },
+        "/playlist/widget/{widgetId}/region": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Set Widget Region",
+                "description": "Set the Region this Widget is intended for - only suitable for Drawer Widgets",
+                "operationId": "WidgetAssignedRegionSet",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "Id of the Widget to set region on",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "targetRegionId",
+                        "in": "formData",
+                        "description": "The target regionId",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/notification": {
             "get": {
                 "tags": [
@@ -9706,7 +9751,7 @@
                     {
                         "name": "template",
                         "in": "formData",
-                        "description": "Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 or with sourceId=2 ",
+                        "description": "Template for each item",
                         "required": false,
                         "type": "string"
                     },
@@ -12320,18 +12365,6 @@
         }
     },
     "definitions": {
-        "LayoutAssignmentArray": {
-            "properties": {
-                "layoutId": {
-                    "description": "Model to use for supplying key/value pairs to arrays",
-                    "type": "integer"
-                },
-                "displayOrder": {
-                    "description": "Model to use for supplying key/value pairs to arrays",
-                    "type": "integer"
-                }
-            }
-        },
         "importJsonSchema": {
             "properties": {
                 "uniqueKeys": {
@@ -14503,6 +14536,20 @@
                     "type": "array",
                     "items": {
                         "$ref": "#/definitions/Playlist"
+                    }
+                },
+                "displayGroups": {
+                    "description": "An array of Display Groups owned by this User",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DisplayGroup"
+                    }
+                },
+                "dayParts": {
+                    "description": "An array of Dayparts owned by this User",
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/DayPart"
                     }
                 },
                 "isSystemNotification": {
