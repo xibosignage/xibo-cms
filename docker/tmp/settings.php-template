@@ -24,7 +24,9 @@ if (!defined('SECRET_KEY')) {
     define('SECRET_KEY','');
 }
 
-if (array_key_exists('CMS_USE_MEMCACHED', $_SERVER) && $_SERVER['CMS_USE_MEMCACHED'] === true) {
+if (array_key_exists('CMS_USE_MEMCACHED', $_SERVER)
+    && ($_SERVER['CMS_USE_MEMCACHED'] === true || $_SERVER['CMS_USE_MEMCACHED'] === 'true')
+) {
     global $cacheDrivers;
     $cacheDrivers = [
         new Stash\Driver\Memcache([
