@@ -462,6 +462,11 @@ abstract class ModuleWidget implements ModuleInterface
             throw new InvalidArgumentException(__('Duration needs to be a positive value'), 'duration');
         }
 
+        // Set maximum duration
+        if ($duration > 526000) {
+            throw new InvalidArgumentException(__('Duration must be lower than 526000'), 'duration');
+        }
+
         $this->widget->duration = $duration;
         return $this;
     }
