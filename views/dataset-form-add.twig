@@ -137,6 +137,10 @@
                         {% set title %}{% trans "Custom Headers" %}{% endset %}
                         {% set helpText %}{% trans "Comma separated string of custom HTTP headers in headerName:headerValue format" %}{% endset %}
                         {{ forms.input("customHeaders", title, "", helpText) }}
+
+                        {% set title %}{% trans "User Agent" %}{% endset %}
+                        {% set helpText %}{% trans "Optionally set specific User Agent for this request, provide only the value, relevant header will be added automatically" %}{% endset %}
+                        {{ forms.input("userAgent", title, "", helpText) }}
                     </div>
 
                     <div class="tab-pane" id="data">

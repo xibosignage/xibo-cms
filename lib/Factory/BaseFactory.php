@@ -187,7 +187,7 @@ class BaseFactory
             if (($user->userTypeId == 1 && $user->showContentFrom == 2) || $user->userTypeId == 4) {
                 // DOOH only
                 $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId = 4) ';
-            } else {
+            } elseif ($user->showContentFrom != 3) {
                 // Standard only
                 $permissionSql .= ' AND ' . $ownerColumn . ' IN (SELECT userId FROM user WHERE userTypeId <> 4) ';
             }
@@ -333,60 +333,47 @@ class BaseFactory
     public function nameFilter($tableName, $tableColumn, $terms, &$body, &$params, $useRegex = false)
     {
         $i = 0;
-        $j = 0;
-        $searchNames = [];
+
         $tableAndColumn = $tableName . '.' . $tableColumn;
-        // Convert into commas
-        foreach ($terms as $term) {
-            // convert into a space delimited array
-            $names = explode(' ', $term);
-            // filter empty array elements, in an attempt to better handle spaces after `,`.
-            $filteredNames = array_filter($names);
+        // filter empty array elements, in an attempt to better handle spaces after `,`.
+        $filteredNames = array_filter($terms, function ($element) {
+            return is_string($element) && '' !== trim($element);
+        });
 
-            foreach ($filteredNames as $searchName) {
-                $i++;
-                if (!isset($filteredNames[0])) {
-                    $j = 1;
-                }
+        foreach ($filteredNames as $searchName) {
+            $i++;
 
-                // Trim/Sanitise
-                $searchName = trim($searchName);
+            // Trim/Sanitise
+            $searchName = trim($searchName);
 
-                // Discard any incompatible
-                if ($searchName === '-') {
-                    continue;
-                }
+            // Discard any incompatible
+            if ($searchName === '-' || empty($searchName)) {
+                continue;
+            }
 
-                // store searchName array
-                $searchNames[] = $searchName;
-
-                // Not like, or like?
-                if (substr($searchName, 0, 1) == '-') {
-                    if ($i == 1) {
-                        $body .= " AND ( $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
-                    } elseif ( (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) || strpos($searchNames[$i-1], '-') !== false ) {
-                        $body .= " AND $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
-                    } else {
-                        $body .= " OR $tableAndColumn NOT RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
-                    }
+            // Not like, or like?
+            if (substr($searchName, 0, 1) == '-') {
+                if ($i === 1) {
+                    $body .= ' AND ( '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
+                    $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
                 } else {
-                    if ($i === 1) {
-                        $body .= " AND ( $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
-                    } elseif (count($filteredNames) > 1 && $filteredNames[$j] != $searchName) {
-                        $body .= " AND $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
-                    } else {
-                        $body .= " OR  $tableAndColumn RLIKE (:search$i) ";
-                        $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
-                    }
+                    $body .= ' OR '.$tableAndColumn.' NOT RLIKE (:search'.$i.') ';
+                    $params['search' . $i] = $useRegex ? ltrim(($searchName), '-') : preg_quote(ltrim(($searchName), '-'));
+                }
+            } else {
+                if ($i === 1) {
+                    $body .= ' AND ( '.$tableAndColumn.' RLIKE (:search'.$i.') ';
+                    $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
+                } else {
+                    $body .= ' OR  '.$tableAndColumn.' RLIKE (:search'.$i.') ';
+                    $params['search' . $i] = $useRegex ? $searchName : preg_quote($searchName);
                 }
             }
         }
-        $body .= ' ) ';
+
+        if (!empty($filteredNames)) {
+            $body .= ' ) ';
+        }
     }
 
     /**

@@ -233,33 +233,37 @@
 
                         <div class="form-group row ckeditor_controls inline-editor-hide" data-linked-to="template">
                             <div class="col-sm-6">
-                                <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
-                                <div class="col-sm-8 ckeditor_select_container">
-                                    <select id="ckeditor_snippets_select"
-                                    class="ckeditor_snippets_select form-control"
-                                    data-linked-to="template">
-                                        <option value=""></option>
-                                        <option value="Name">Name</option>
-                                        <option value="Summary">Summary</option>
-                                        <option value="Description">Description</option>
-                                        <option value="Location">Location</option>
-                                        <option value="StartDate">StartDate</option>
-                                        <option value="StartDate|Y-m-d H:i">StartDate|Y-m-d H:i</option>
-                                        <option value="EndDate">EndDate</option>
-                                        <option value="EndDate|Y-m-d H:i">EndDate|Y-m-d H:i</option>
-                                    </select>
+                                <div class="form-group row">
+                                    <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
+                                    <div class="col-sm-8 ckeditor_select_container">
+                                        <select id="ckeditor_snippets_select"
+                                        class="ckeditor_snippets_select form-control"
+                                        data-linked-to="template">
+                                            <option value=""></option>
+                                            <option value="Name">Name</option>
+                                            <option value="Summary">Summary</option>
+                                            <option value="Description">Description</option>
+                                            <option value="Location">Location</option>
+                                            <option value="StartDate">StartDate</option>
+                                            <option value="StartDate|Y-m-d H:i">StartDate|Y-m-d H:i</option>
+                                            <option value="EndDate">EndDate</option>
+                                            <option value="EndDate|Y-m-d H:i">EndDate|Y-m-d H:i</option>
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                             <div class="col-sm-6">
-                                <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
-                                <div class="col-sm-8">
-                                    <select id="ckeditor_library_select2"
-                                            class="ckeditor_library_select form-control"
-                                            data-width="100%"
-                                            data-linked-to="template"
-                                            data-search-url="{{ url_for("library.search") }}"
-                                            data-image-url="{{ url_for("library.download", {id: ':id'}) }}?preview=1">
-                                    </select>
+                                <div class="form-group row">
+                                    <label class="col-sm-4 control-label" for="ckeditor_library_select2">{% trans "Library" %}</label>
+                                    <div class="col-sm-8">
+                                        <select id="ckeditor_library_select2"
+                                                class="ckeditor_library_select form-control"
+                                                data-width="100%"
+                                                data-linked-to="template"
+                                                data-search-url="{{ url_for("library.search") }}"
+                                                data-image-url="{{ url_for("library.download", {id: ':id'}) }}?preview=1">
+                                        </select>
+                                    </div>
                                 </div>
                             </div>
                         </div>

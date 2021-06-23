@@ -324,6 +324,12 @@ class Playlist extends Base
                     // Add widget module type name
                     $widget->moduleName = $widget->module->getModuleName();
 
+                    // Get transitions
+                    $widget->transitionIn = $widget->getOptionValue('transIn', null);
+                    $widget->transitionOut = $widget->getOptionValue('transOut', null);
+                    $widget->transitionDurationIn = $widget->getOptionValue('transInDuration', null);
+                    $widget->transitionDurationOut = $widget->getOptionValue('transOutDuration', null);
+
                     // Permissions?
                     if ($loadPermissions) {
                         // Augment with editable flag
@@ -456,6 +462,7 @@ class Playlist extends Base
                     'id' => 'playlist_button_permissions',
                     'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Playlist', 'id' => $playlist->playlistId]),
                     'text' => __('Share'),
+                    'multi-select' => true,
                     'dataAttributes' => [
                         ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Playlist', 'id' => $playlist->playlistId])],
                         ['name' => 'commit-method', 'value' => 'post'],

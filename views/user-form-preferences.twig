@@ -56,7 +56,8 @@
                     {% set helpText %}{% trans "Select Standard or DOOH to see relevant content" %}{% endset %}
                     {% set options = [
                         { id: 1, value: "Standard"|trans },
-                        { id: 2, value: "DOOH"|trans }
+                        { id: 2, value: "DOOH"|trans },
+                        { id: 3, value: "Both"|trans }
                     ] %}
                     {{ forms.dropdown("showContentFrom", "single", title, currentUser.showContentFrom, options, "id", "value", helpText) }}
                 {% endif %}

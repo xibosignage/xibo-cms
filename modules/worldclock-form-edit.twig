@@ -112,19 +112,19 @@
 
                         {% set title %}{% trans "Background colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
-                        {{ forms.input("bgColor", title, module.getOption("bgColor", "#f9f9f9"), helpText, "clock-color-input") }}
+                        {{ forms.color("bgColor", title, module.getOption("bgColor", "#f9f9f9"), helpText) }}
                         
                         {% set title %}{% trans "Case colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the case colour" %}{% endset %}
-                        {{ forms.input("caseColor", title, module.getOption("caseColor", "#222"), helpText, "clock-color-input") }}
+                        {{ forms.color("caseColor", title, module.getOption("caseColor", "#222"), helpText) }}
 
                         {% set title %}{% trans "Hour hand colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the hour hand colour" %}{% endset %}
-                        {{ forms.input("hourHandColor", title, module.getOption("hourHandColor", "#333"), helpText, "clock-color-input") }}
+                        {{ forms.color("hourHandColor", title, module.getOption("hourHandColor", "#333"), helpText) }}
 
                         {% set title %}{% trans "Minute hand colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the minute hand colour" %}{% endset %}
-                        {{ forms.input("minuteHandColor", title, module.getOption("minuteHandColor", "#333"), helpText, "clock-color-input") }}
+                        {{ forms.color("minuteHandColor", title, module.getOption("minuteHandColor", "#333"), helpText) }}
 
                         {% set title %}{% trans "Show seconds hand?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to show the seconds hand." %}{% endset %}
@@ -132,12 +132,12 @@
 
                         {% set title %}{% trans "Seconds hand colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the seconds hand colour" %}{% endset %}
-                        {{ forms.input("secondsHandColor", title, module.getOption("secondsHandColor", "#aa0202"), helpText, "clock-color-input seconds-fields") }}
+                        {{ forms.color("secondsHandColor", title, module.getOption("secondsHandColor", "#aa0202"), helpText, "seconds-fields") }}
                         <hr class="seconds-fields">
 
                         {% set title %}{% trans "Dial centre colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the dial centre colour" %}{% endset %}
-                        {{ forms.input("dialColor", title, module.getOption("dialColor", "#222"), helpText, "clock-color-input") }}
+                        {{ forms.color("dialColor", title, module.getOption("dialColor", "#222"), helpText) }}
 
                         {% set title %}{% trans "Show steps?" %}{% endset %}
                         {% set helpText %}{% trans "Tick if you would like to show the clock steps." %}{% endset %}
@@ -145,11 +145,11 @@
 
                         {% set title %}{% trans "Steps colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the steps colour" %}{% endset %}
-                        {{ forms.input("stepsColor", title, module.getOption("stepsColor", "#333"), helpText, "clock-color-input steps-fields") }}
+                        {{ forms.color("stepsColor", title, module.getOption("stepsColor", "#333"), helpText, "steps-fields") }}
 
                         {% set title %}{% trans "Secondary steps colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the secondary steps colour" %}{% endset %}
-                        {{ forms.input("secondaryStepsColor", title, module.getOption("secondaryStepsColor", "#333"), helpText, "clock-color-input steps-fields") }}
+                        {{ forms.color("secondaryStepsColor", title, module.getOption("secondaryStepsColor", "#333"), helpText, "steps-fields") }}
                         <hr class="steps-fields">
 
                         {% set title %}{% trans "Detailed look?" %}{% endset %}
@@ -162,11 +162,11 @@
 
                         {% set title %}{% trans "Digital clock text colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the digital clock text colour" %}{% endset %}
-                        {{ forms.input("digitalClockTextColor", title, module.getOption("digitalClockTextColor", "#3b3b3b"), helpText, "clock-color-input inner-digital-fields") }}
+                        {{ forms.color("digitalClockTextColor", title, module.getOption("digitalClockTextColor", "#3b3b3b"), helpText, "inner-digital-fields") }}
 
                         {% set title %}{% trans "Digital clock background colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the digital clock background colour" %}{% endset %}
-                        {{ forms.input("digitalClockBgColor", title, module.getOption("digitalClockBgColor", "#e6e6e6"), helpText, "clock-color-input inner-digital-fields") }}
+                        {{ forms.color("digitalClockBgColor", title, module.getOption("digitalClockBgColor", "#e6e6e6"), helpText, "inner-digital-fields") }}
                         <hr class="inner-digital-fields">
 
                         {% set title %}{% trans "Show label?" %}{% endset %}
@@ -175,11 +175,11 @@
 
                         {% set title %}{% trans "Label text colour" %}{% endset %}
                         {% set helpText %}{% trans "Use the colour picker to select the label text colour" %}{% endset %}
-                        {{ forms.input("labelTextColor", title, module.getOption("labelTextColor", "#f9f9f9"), helpText, "clock-color-input label-fields") }}
+                        {{ forms.color("labelTextColor", title, module.getOption("labelTextColor", "#f9f9f9"), helpText, "label-fields") }}
                         
                         {% set title %}{% trans "Label background colour" %}{% endset %}
                         {% set helpBg %}{% trans "Use the colour picker to select the label background colour" %}{% endset %}
-                        {{ forms.input("labelBgColor", title, module.getOption("labelBgColor", "#222"), helpText, "clock-color-input label-fields") }}
+                        {{ forms.color("labelBgColor", title, module.getOption("labelBgColor", "#222"), helpText, "label-fields") }}
                         <hr class="label-fields">
                     </div>
 

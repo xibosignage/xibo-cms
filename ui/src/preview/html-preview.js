@@ -376,7 +376,7 @@ function Region(parent, id, xml, options, preload) {
     self.oneMedia = false;
     self.oldMedia = undefined;
     self.curMedia = undefined;
-    self.totalMediaObjects = $(self.xml).find("media").length;
+    self.totalMediaObjects = $(self.xml).children("media").length;
     
     self.finished = function() {
         // Remove temporary media elements
@@ -537,7 +537,7 @@ function Region(parent, id, xml, options, preload) {
     playLog(7, "debug", "Render will be (" + self.sWidth + "x" + self.sHeight + ") pixels");
     playLog(7, "debug", "Offset will be (" + self.offsetX + "," + self.offsetY + ") pixels");
     
-    $(self.xml).find("media").each(function() { 
+    $(self.xml).children("media").each(function() { 
         playLog(5, "debug", "Creating media " + $(this).attr('id'), false);
         self.mediaObjects.push(new media(self, $(this).attr('id'), this, options, preload));
     });
@@ -557,7 +557,7 @@ function Region(parent, id, xml, options, preload) {
     }
     
     // If the regions does not have any media change its background to transparent red
-    if ($(self.xml).find("media").length == 0) {
+    if ($(self.xml).children("media").length == 0) {
         $self = $("#" + self.containerName);
         
         messageSize = (self.sWidth > self.sHeight ) ? self.sHeight : self.sWidth;

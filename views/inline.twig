@@ -63,10 +63,10 @@
     </div>
 {% endmacro %}
 
-{% macro number(name, title, value, helpText, groupClass, validation, accessKey) %}
+{% macro number(name, title, value, helpText, groupClass, validation, accessKey, maxNumber) %}
     <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <input class="form-control" name="{{ name }}" type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
+        <input class="form-control" name="{{ name }}" {% if maxNumber %}max="{{maxNumber}}"{% else %}max="526000"{% endif %} type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}
 
@@ -224,5 +224,12 @@
                     {% if labelWidth not in [null, undefined, ""] %} data-label-width="{{ labelWidth }}"{% endif %}
             >
         </div>
+    </div>
+{% endmacro %}
+
+{% macro color(name, title, value, helpText, groupClass, validation, accessKey) %}
+    <div class="form-group mr-1 mb-1 {{ groupClass }}">
+        <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+        <input class="form-control XiboColorPicker" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" {{ validation }} />
     </div>
 {% endmacro %}

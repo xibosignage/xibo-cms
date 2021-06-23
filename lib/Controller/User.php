@@ -2486,7 +2486,8 @@ class User extends Base
             $this->getUser()->showContentFrom = $parsedParams->getInt('showContentFrom');
         }
 
-        if (!$this->getUser()->isSuperAdmin() && $parsedParams->getInt('showContentFrom') == 2) {
+        // if we are not a super admin do not allow anything else than standard view.
+        if (!$this->getUser()->isSuperAdmin() && ($parsedParams->getInt('showContentFrom') == 2 || $parsedParams->getInt('showContentFrom') == 3)) {
             throw new InvalidArgumentException(__('Option available only for Super Admins'), 'showContentFrom');
         }
 

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,21 +20,25 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-use Phinx\Migration\AbstractMigration;
+namespace Xibo\Xmds;
 
-class DisplayMoveCmsMigration extends AbstractMigration
+/**
+ * Class Soap6
+ * @package Xibo\Xmds
+ */
+class Soap6 extends Soap5
 {
-    /** @inheritdoc */
-    public function change()
+    /**
+     * Report Player Fault to the CMS
+     *
+     * @param string $serverKey
+     * @param string $hardwareKey
+     * @param string $fault
+     *
+     * @return bool
+     */
+    public function reportFaults($serverKey, $hardwareKey, $fault): bool
     {
-        $displayTable = $this->table('display');
-
-        // Add a two new columns to Display table, newCmsAddress and newCmsKey
-        if (!$displayTable->hasColumn('newCmsAddress')) {
-            $displayTable
-                ->addColumn('newCmsAddress', 'string', ['limit' => 1000, 'default' => null, 'null' => true])
-                ->addColumn('newCmsKey', 'string', ['limit' => 40, 'default' => null, 'null' => true])
-                ->save();
-        }
+        return true;
     }
 }

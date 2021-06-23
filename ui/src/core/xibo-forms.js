@@ -138,7 +138,7 @@ var text_callback = function(dialog, extraData) {
             }
 
             // Remove colour picker
-            $("#backgroundColor").colorpicker('destroy');
+            destroyColorPicker('#backgroundColor');
         }
     });
 
@@ -250,7 +250,7 @@ var text_callback = function(dialog, extraData) {
     }
 
     // Turn the background colour into a picker
-    $("#backgroundColor").colorpicker();
+    createColorPicker('#backgroundColor');
 
     return false;
 };

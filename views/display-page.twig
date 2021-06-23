@@ -175,21 +175,16 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-sm-1 form-group" style="padding: 0">
-                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary btn-sm" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-bars fa-1x"></i></button>
-                    </div>
-                    <div class="form-group col-sm-11" style="padding: 0">
-                        <div id="breadcrumbs" style="margin-top: 5px;"></div>
-                    </div>
-                </div>
-
-                <div class="row">
                     <div class="col-sm-2 p-3 bg-light" id="grid-folder-filter">
                         <div class="form-check">
                             <input type="checkbox" class="form-check-input" id="folder-tree-clear-selection-button">
-                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "Global Search" %}</label>
+                            <label class="form-check-label" for="folder-tree-clear-selection-button" title="{% trans "Search in all folders" %}">{% trans "All Folders" %}</label>
                         </div>
                         <div id="container-folder-tree"></div>
+                    </div>
+                    <div class="folder-controller d-none">
+                        <button type="button" id="folder-tree-select-folder-button" class="btn btn-outline-secondary" title="{% trans "Open / Close Folder Search options" %}"><i class="fas fa-folder fa-1x"></i></button>
+                        <div id="breadcrumbs" class="mt-2 pl-2"></div>
                     </div>
                     <div id="datatable-container" class="card col-sm-10 pt-4 px-2">
                         <div class="XiboData">
@@ -255,6 +250,7 @@
         $(document).ready(function() {
             var table = $("#displays").DataTable({
                 "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
                 stateDuration: 0,
@@ -396,7 +392,7 @@
                                 return data.thumbnail;
 
                             if (data.thumbnail != "") {
-                                return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" data-display-id="'+ data.displayId +'" data-type="'+ data.clientType +'" /></a>';
+                                return '<a class="display-screenshot-container" data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" data-display-id="'+ data.displayId +'" data-type="'+ data.clientType +'" /></a>';
                             }
                             else {
                                 return "";
@@ -534,7 +530,7 @@
             table.on('draw', dataTableDraw);
             table.on('draw', { form: $("#displays").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
-            dataTableAddButtons(table, $('#displays_wrapper').find('.col-md-6').eq(1));
+            dataTableAddButtons(table, $('#displays_wrapper').find('.dataTables_buttons'));
 
             $("#refreshGrid").click(function () {
                 table.ajax.reload();
@@ -764,6 +760,14 @@
                         $($inputFields).prop('checked', newValue);
                     } else if(timepickerFixFlag) {
                         $($inputFields).find('input').val(newValue);
+                    } else if(timepickerOptionsFixFlag) {
+                        $.each(newValue, function(name, value){
+                            if(name == 'on') {
+                                $($inputFields).find('input.timersOn').val(value);
+                            } else if(name == 'off') {
+                                $($inputFields).find('input.timersOff').val(value);
+                            }
+                        })
                     } else {
                         $($inputFields).val(newValue);
                     }
@@ -980,7 +984,7 @@
                 success: function (data) {
                     if (data != null) {
                         // do some processing on data received from webOS and Tizen Players.
-                        if (displayType === 'webOS' || displayType === 'tizen') {
+                        if (displayType === 'webOS' || displayType === 'sssp') {
                             data.logMessagesArray = JSON.stringify(data.logMessagesArray);
                             data.allLayouts = JSON.stringify(data.allLayouts);
                             data.scheduledLayouts = JSON.stringify(data.scheduledLayouts);

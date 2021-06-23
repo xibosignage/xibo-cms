@@ -153,6 +153,12 @@ class DataSet implements \JsonSerializable
     public $customHeaders;
 
     /**
+     * @SWG\Property(description="Custom User agent")
+     * @var string
+     */
+    public $userAgent;
+
+    /**
      * @SWG\Property(description="Time in seconds this DataSet should fetch new Datas from the remote host")
      * @var int
      */
@@ -919,8 +925,9 @@ class DataSet implements \JsonSerializable
     public function deleteData()
     {
         // The last thing we do is drop the dataSet table
-        $this->getStore()->isolated('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
-        $this->getStore()->isolated('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
+        $this->getStore()->update('TRUNCATE TABLE `dataset_' . $this->dataSetId . '`', []);
+        $this->getStore()->update('ALTER TABLE `dataset_' . $this->dataSetId . '` AUTO_INCREMENT = 1', []);
+        $this->getStore()->commitIfNecessary();
     }
 
     /**
@@ -946,8 +953,8 @@ class DataSet implements \JsonSerializable
 
         // Insert the extra columns we expect for a remote DataSet
         if ($this->isRemote === 1) {
-            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`';
-            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy';
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `userAgent`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :userAgent, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -956,6 +963,7 @@ class DataSet implements \JsonSerializable
             $params['username'] = $this->username;
             $params['password'] = $this->password;
             $params['customHeaders'] = $this->customHeaders;
+            $params['userAgent'] = $this->userAgent;
             $params['refreshRate'] = $this->refreshRate;
             $params['clearRate'] = $this->clearRate;
             $params['runsAfter'] = $this->runsAfter;
@@ -996,7 +1004,7 @@ class DataSet implements \JsonSerializable
         ];
 
         if ($this->isRemote) {
-            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy ';
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, `userAgent` = :userAgent, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy ';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -1005,6 +1013,7 @@ class DataSet implements \JsonSerializable
             $params['username'] = $this->username;
             $params['password'] = $this->password;
             $params['customHeaders'] = $this->customHeaders;
+            $params['userAgent'] = $this->userAgent;
             $params['refreshRate'] = $this->refreshRate;
             $params['clearRate'] = $this->clearRate;
             $params['runsAfter'] = $this->runsAfter;

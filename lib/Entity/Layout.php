@@ -1424,11 +1424,13 @@ class Layout implements \JsonSerializable
                 // Is this Widget one that does not have a duration of its own?
                 // Assuming we have at least 1 region with a set duration, then we ought to
                 // Reset to the minimum duration
+                // do not do that if we are in the drawer Region!
                 if ($widget->useDuration == 0
                     && $countWidgets <= 1
                     && $regionLoop == 0
                     && $widget->type != 'video'
                     && $layoutCountRegionsWithDuration >= 1
+                    && $region->isDrawer === 0
                 ) {
                     // Make sure this Widget expires immediately so that the other Regions can be the leaders when
                     // it comes to expiring the Layout
@@ -2520,6 +2522,21 @@ class Layout implements \JsonSerializable
             }
 
             $action->save();
+        }
+
+        // Make sure we update targetRegionId in Drawer Widgets.
+        foreach ($allNewRegions as $region) {
+            foreach ($region->getPlaylist()->widgets as $widget) {
+                if ($region->isDrawer === 1) {
+                    foreach ($combined as $old => $new) {
+                        if ($widget->getOptionValue('targetRegionId', null) == $old) {
+                            $this->getLog()->debug('Layout Import, switching Widget targetRegionId from ' . $old . ' to ' . $new);
+                            $widget->setOptionValue('targetRegionId', 'attrib', $new);
+                            $widget->save();
+                        }
+                    }
+                }
+            }
         }
     }
 

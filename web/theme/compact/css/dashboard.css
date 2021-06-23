@@ -339,12 +339,14 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 .widget .widget-body table thead {
   background: #fafafa;
 }
-.widget .widget-body .dataTables_info {
-    padding-left: 6px;
-    padding-top: 8px;
+.widget .widget-body .dataTables_length {
+  margin: 3px 0 -3px 0;
 }
-.widget .widget-body .dataTables_paginate {
-    padding-right: 6px;
+.widget .widget-body .dataTables_length label {
+  margin: 0;
+}
+.dataTables_wrapper .row:first-child > div {
+  margin-bottom: 0.5rem;
 }
 .widget .widget-body.large {
   height: 350px;
@@ -360,9 +362,6 @@ ul.sidebar .sidebar-list a:hover .menu-icon {
 }
 .widget .widget-body.no-padding {
   padding: 0;
-}
-.widget .widget-body button {
-  margin-left: 5px;
 }
 .widget .widget-body div.alert {
   margin-bottom: 10px;

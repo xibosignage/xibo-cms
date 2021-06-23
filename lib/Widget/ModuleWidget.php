@@ -462,6 +462,11 @@ abstract class ModuleWidget implements ModuleInterface
             throw new InvalidArgumentException(__('Duration needs to be a positive value'), 'duration');
         }
 
+        // Set maximum duration
+        if ($duration > 526000) {
+            throw new InvalidArgumentException(__('Duration must be lower than 526000'), 'duration');
+        }
+
         $this->widget->duration = $duration;
         return $this;
     }
@@ -1254,9 +1259,10 @@ abstract class ModuleWidget implements ModuleInterface
     /**
      * Get templatesAvailable
      * @param bool $loadImage Should the image URL be loaded?
+     * @param null $folder Optional path to templates for custom Modules
      * @return array
      */
-    public function templatesAvailable($loadImage = true)
+    public function templatesAvailable($loadImage = true, $folder = null)
     {
         if ($this->moduleTemplates === null) {
             $this->moduleTemplates = [];
@@ -1266,6 +1272,11 @@ abstract class ModuleWidget implements ModuleInterface
 
             // Scan the custom folder for template files.
             $this->scanFolderForTemplates(PROJECT_ROOT . '/custom/' . $this->module->type . '/*.template.json', $loadImage);
+
+            // Scan the custom folder for template files.
+            if ($folder != null) {
+                $this->scanFolderForTemplates($folder, $loadImage);
+            }
         }
 
         return $this->moduleTemplates;
