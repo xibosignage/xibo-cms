@@ -54,7 +54,7 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
     $container->get('logService')->info('Installer Step %s', $step);
 
     $install = new \Xibo\Helper\Install($container);
-    $settingsExists = $app->settingsExists;
+    $settingsExists = file_exists(PROJECT_ROOT . '/web/settings.php');
     $template = '';
     $data = [];
 
@@ -95,9 +95,8 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
             unset($_SESSION['error']);
             try {
                 $install->Step3($request, $response);
-
                 // Redirect to step 4
-                $response = $response->withRedirect($routeParser->urlFor('install', ['step' => 4]));
+               return $response->withRedirect($routeParser->urlFor('install', ['step' => 4]));
             }
             catch (InstallationError $e) {
                 $container->get('logService')->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
@@ -127,9 +126,7 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
             // Create a user account
             try {
                 $install->Step5($request, $response);
-
-                // Redirect to step 6
-                $response = $response->withRedirect($routeParser->urlFor('install', ['step' => 6]));
+                return $response->withRedirect($routeParser->urlFor('install', ['step' => 6]));
             }
             catch (InstallationError $e) {
 
@@ -152,7 +149,6 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
             unset($_SESSION['error']);
             // Create a user account
             try {
-                $template = 'install-step7';
                 $install->Step7($request, $response);
 
                 // Redirect to login
@@ -160,9 +156,9 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
                 $login = str_replace('/install', '', $routeParser->urlFor('login'));
 
                 $container->get('logService')->info('Installation Complete. Redirecting to %s', $login);
-
                 $response = $response->withRedirect($login);
                 session_destroy();
+                return $response;
             } catch (InstallationError $e) {
                 $container->get('logService')->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
@@ -175,8 +171,7 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
             break;
     }
 
-    $response = $view->render($response, $template . '.twig', $data);
     // Render
-    return $response;
+    return $view->render($response, $template . '.twig', $data);
 
 })->setName('install');

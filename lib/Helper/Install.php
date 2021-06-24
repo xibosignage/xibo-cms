@@ -95,10 +95,9 @@ class Install
     /**
      * @param Request $request
      * @param Response $response
-     * @return Response
      * @throws InstallationError
      */
-    public function Step3(Request $request, Response $response) : Response
+    public function Step3(Request $request, Response $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -255,7 +254,7 @@ class Install
 
         // If we get here, we want to move on to the next step.
         // This is handled by the calling function (i.e. there is no output from this call, we just reload and move on)
-        return $response;
+        return [];
     }
 
     /**
@@ -269,13 +268,11 @@ class Install
     /**
      * @param Request $request
      * @param Response $response
-     * @return Response
      * @throws InstallationError
      */
-    public function Step5(Request $request, Response $response) : Response
+    public function Step5(Request $request, Response $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-
         /** @var StorageServiceInterface $store */
         $store = $this->container->get('store');
         // Configure the user account
@@ -310,7 +307,7 @@ class Install
             throw new InstallationError(sprintf(__('Unable to set the user details. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
 
-        return $response;
+        return [];
     }
 
     /**
@@ -326,10 +323,9 @@ class Install
     /**
      * @param Request $request
      * @param Response $response
-     * @return Response
      * @throws InstallationError
      */
-    public function Step7(Request $request, Response $response) : Response
+    public function Step7(Request $request, Response $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -411,7 +407,7 @@ class Install
             throw new InstallationError(__("Unable to delete install/index.php. Please ensure the web server has permission to unlink this file and retry"));
         }
 
-        return $response;
+        return [];
     }
 
     /**
