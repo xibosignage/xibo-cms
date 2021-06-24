@@ -59,10 +59,7 @@ $container->set('logger', function () {
 $app = \DI\Bridge\Slim\Bridge::create($container);
 $app->setBasePath($container->get('basePath'));
 // Config
-$twigMiddleware = TwigMiddleware::createFromContainer($app);
-
-$app->add(new \Xibo\Middleware\Theme('default'));
-$app->add($twigMiddleware);
+$app->add(TwigMiddleware::createFromContainer($app));
 $app->addRoutingMiddleware();
 $app->addErrorMiddleware(true, true, true);
 
@@ -80,6 +77,14 @@ $app->getContainer()->set('configService', $emptyConfigService);
 
 if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
     // Set-up the translations for get text
+    // Populate our new DB info
+    require(PROJECT_ROOT . '/web/settings.php');
+    \Xibo\Service\ConfigService::$dbConfig = [
+        'host' => $dbhost,
+        'user' => $dbuser,
+        'password' => $dbpass,
+        'name' => $dbname
+    ];
     $app->getContainer()->get('configService')->setDependencies($app->getContainer()->get('store'), $app->getBasePath());
     Translate::InitLocale($app->getContainer()->get('configService'));
 
