@@ -65,21 +65,25 @@ class ContainerFactory
 
         $containerBuilder->addDefinitions([
             'basePath' => function (ContainerInterface $c) {
-                $scriptDir = str_replace('\\', '/', dirname($_SERVER['SCRIPT_NAME']));
-                $uri = (string) parse_url('http://a' . $_SERVER['REQUEST_URI'] ?? '', PHP_URL_PATH);
-                if (stripos($uri, $_SERVER['SCRIPT_NAME']) === 0) {
-                    return $_SERVER['SCRIPT_NAME'];
-                } else if ($scriptDir !== '/' && stripos($uri, $scriptDir) === 0) {
-                    return $scriptDir;
-                } else {
+                // Server params
+                $scriptName = $_SERVER['SCRIPT_NAME'] ?? ''; // <-- "/foo/index.php"
+                $requestUri = $_SERVER['REQUEST_URI'] ?? ''; // <-- "/foo/bar?test=abc" or "/foo/index.php/bar?test=abc"
+
+                // Physical path
+                if (empty($scriptName) || empty($requestUri)) {
                     return '';
+                } else if (strpos($requestUri, $scriptName) !== false) {
+                    $physicalPath = $scriptName; // <-- Without rewriting
+                } else {
+                    $physicalPath = str_replace('\\', '', dirname($scriptName)); // <-- With rewriting
                 }
+                return rtrim($physicalPath, '/'); // <-- Remove trailing slashes
             },
             'rootUri' => function (ContainerInterface $c) {
                 // Work out whether we're in a folder, and what our base path is relative to that folder
                 // Static source, so remove index.php from the path
                 // this should only happen if rewrite is disabled
-                $basePath = str_replace('/index.php', '', $c->get('basePath'));
+                $basePath = str_replace('/index.php', '', $c->get('basePath') . '/');
 
                 // Replace out all of the entrypoints to get back to the root
                 $basePath = str_replace('/api/authorize', '', $basePath);
@@ -173,13 +177,11 @@ class ContainerFactory
                     $c->get('store'),
                     $c->get('configService'),
                     $c->get('pool'),
-                    '/'
+                    $c->get('rootUri')
                 );
             },
             'pool' => function(ContainerInterface $c) {
                 $drivers = [];
-
-                $c->get('configService')->setDependencies($c->get('store'), $c->get('rootUri'));
 
                 if ($c->get('configService')->getCacheDrivers() != null && is_array($c->get('configService')->getCacheDrivers())) {
                     $drivers = $c->get('configService')->getCacheDrivers();

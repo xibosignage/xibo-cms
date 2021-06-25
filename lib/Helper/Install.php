@@ -77,7 +77,7 @@ class Install
     /**
      * @return array
      */
-    public function Step1()
+    public function step1(): array
     {
         return [
             'config' => $this->container->get('configService')
@@ -87,7 +87,7 @@ class Install
     /**
      * @return array
      */
-    public function Step2()
+    public function step2(): array
     {
         return [];
     }
@@ -95,10 +95,9 @@ class Install
     /**
      * @param Request $request
      * @param Response $response
-     * @return Response
      * @throws InstallationError
      */
-    public function Step3(Request $request, Response $response) : Response
+    public function step3(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -261,7 +260,7 @@ class Install
     /**
      * @return array
      */
-    public function Step4()
+    public function step4(): array
     {
         return [];
     }
@@ -269,13 +268,11 @@ class Install
     /**
      * @param Request $request
      * @param Response $response
-     * @return Response
      * @throws InstallationError
      */
-    public function Step5(Request $request, Response $response) : Response
+    public function step5(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-
         /** @var StorageServiceInterface $store */
         $store = $this->container->get('store');
         // Configure the user account
@@ -316,7 +313,7 @@ class Install
     /**
      * @return array
      */
-    public function Step6()
+    public function step6(): array
     {
         return [
             'serverKey' => Install::generateSecret(6)
@@ -326,10 +323,9 @@ class Install
     /**
      * @param Request $request
      * @param Response $response
-     * @return Response
      * @throws InstallationError
      */
-    public function Step7(Request $request, Response $response) : Response
+    public function step7(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -425,7 +421,7 @@ class Install
      *                    $options - An array of values 'return_files' or 'return_folders' or both
      * Returns       : A flat list with the path of all the files(no folders) that matches the condition given.
      */
-    public static function ls($pattern = "*", $folder = "", $recursivly = false, $options = array('return_files', 'return_folders'))
+    public static function ls($pattern = '*', $folder = '', $recursivly = false, $options = ['return_files', 'return_folders']): array
     {
         if ($folder) {
             $current_folder = realpath('.');
@@ -480,7 +476,7 @@ class Install
      * @param int $length
      * @return string
      */
-    public static function generateSecret($length = 12)
+    public static function generateSecret($length = 12): string
     {
         # Generates a random 12 character alphanumeric string to use as a salt
         mt_srand((double)microtime() * 1000000);
