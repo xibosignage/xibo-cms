@@ -77,7 +77,7 @@ class Install
     /**
      * @return array
      */
-    public function Step1()
+    public function step1(): array
     {
         return [
             'config' => $this->container->get('configService')
@@ -87,7 +87,7 @@ class Install
     /**
      * @return array
      */
-    public function Step2()
+    public function step2(): array
     {
         return [];
     }
@@ -97,7 +97,7 @@ class Install
      * @param Response $response
      * @throws InstallationError
      */
-    public function Step3(Request $request, Response $response)
+    public function step3(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -254,13 +254,13 @@ class Install
 
         // If we get here, we want to move on to the next step.
         // This is handled by the calling function (i.e. there is no output from this call, we just reload and move on)
-        return [];
+        return $response;
     }
 
     /**
      * @return array
      */
-    public function Step4()
+    public function step4(): array
     {
         return [];
     }
@@ -270,7 +270,7 @@ class Install
      * @param Response $response
      * @throws InstallationError
      */
-    public function Step5(Request $request, Response $response)
+    public function step5(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         /** @var StorageServiceInterface $store */
@@ -307,13 +307,13 @@ class Install
             throw new InstallationError(sprintf(__('Unable to set the user details. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
 
-        return [];
+        return $response;
     }
 
     /**
      * @return array
      */
-    public function Step6()
+    public function step6(): array
     {
         return [
             'serverKey' => Install::generateSecret(6)
@@ -325,7 +325,7 @@ class Install
      * @param Response $response
      * @throws InstallationError
      */
-    public function Step7(Request $request, Response $response)
+    public function step7(Request $request, Response $response) : Response
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -407,7 +407,7 @@ class Install
             throw new InstallationError(__("Unable to delete install/index.php. Please ensure the web server has permission to unlink this file and retry"));
         }
 
-        return [];
+        return $response;
     }
 
     /**
@@ -421,7 +421,7 @@ class Install
      *                    $options - An array of values 'return_files' or 'return_folders' or both
      * Returns       : A flat list with the path of all the files(no folders) that matches the condition given.
      */
-    public static function ls($pattern = "*", $folder = "", $recursivly = false, $options = array('return_files', 'return_folders'))
+    public static function ls($pattern = '*', $folder = '', $recursivly = false, $options = ['return_files', 'return_folders']): array
     {
         if ($folder) {
             $current_folder = realpath('.');
@@ -476,7 +476,7 @@ class Install
      * @param int $length
      * @return string
      */
-    public static function generateSecret($length = 12)
+    public static function generateSecret($length = 12): string
     {
         # Generates a random 12 character alphanumeric string to use as a salt
         mt_srand((double)microtime() * 1000000);

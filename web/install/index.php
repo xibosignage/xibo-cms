@@ -76,7 +76,6 @@ $twig->offsetSet('theme', $emptyConfigService);
 $app->getContainer()->set('configService', $emptyConfigService);
 
 if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
-    // Set-up the translations for get text
     // Populate our new DB info
     require(PROJECT_ROOT . '/web/settings.php');
     \Xibo\Service\ConfigService::$dbConfig = [
@@ -85,10 +84,10 @@ if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
         'password' => $dbpass,
         'name' => $dbname
     ];
+
+    // Set-up the translations for get text
     $app->getContainer()->get('configService')->setDependencies($app->getContainer()->get('store'), $app->getBasePath());
     Translate::InitLocale($app->getContainer()->get('configService'));
-
-    $app->settingsExists = true;
 }
 else {
     Translate::InitLocale($app->getContainer()->get('configService'), 'en_GB');

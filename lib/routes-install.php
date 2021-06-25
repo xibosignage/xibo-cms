@@ -68,7 +68,7 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
             // Welcome to the installer (this should only show once)
             // Checks environment
             $template = 'install-step1';
-            $data = $install->Step1();
+            $data = $install->step1();
             break;
 
         case 2:
@@ -79,7 +79,7 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
             unset($_SESSION['error']);
             // Collect details about the database
             $template = 'install-step2';
-            $data = $install->Step2();
+            $data = $install->step2();
             break;
 
         case 3:
@@ -94,9 +94,9 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
             }
             unset($_SESSION['error']);
             try {
-                $install->Step3($request, $response);
+                $install->step3($request, $response);
                 // Redirect to step 4
-               return $response->withRedirect($routeParser->urlFor('install', ['step' => 4]));
+                return $response->withRedirect($routeParser->urlFor('install', ['step' => 4]));
             }
             catch (InstallationError $e) {
                 $container->get('logService')->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
@@ -110,14 +110,14 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
 
                 // Reload step 2
                 $template = 'install-step2';
-                $data = $install->Step2();
+                $data = $install->step2();
             }
             break;
 
         case 4:
             // DB installed and we are ready to collect some more details
             // We should get the admin username and password
-            $data = $install->Step4();
+            $data = $install->step4();
             $template = 'install-step4';
             break;
 
@@ -125,7 +125,7 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
             unset($_SESSION['error']);
             // Create a user account
             try {
-                $install->Step5($request, $response);
+                $install->step5($request, $response);
                 return $response->withRedirect($routeParser->urlFor('install', ['step' => 6]));
             }
             catch (InstallationError $e) {
@@ -136,29 +136,28 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
 
                 // Reload step 4
                 $template = 'install-step4';
-                $data = $install->Step4();
+                $data = $install->step4();
             }
             break;
 
         case 6:
             $template = 'install-step6';
-            $data = $install->Step6();
+            $data = $install->step6();
             break;
 
         case 7:
             unset($_SESSION['error']);
             // Create a user account
             try {
-                $install->Step7($request, $response);
+                $install->step7($request, $response);
 
                 // Redirect to login
                 // This will always be one folder down
                 $login = str_replace('/install', '', $routeParser->urlFor('login'));
 
                 $container->get('logService')->info('Installation Complete. Redirecting to %s', $login);
-                $response = $response->withRedirect($login);
                 session_destroy();
-                return $response;
+                return $response->withRedirect($login);
             } catch (InstallationError $e) {
                 $container->get('logService')->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
@@ -166,7 +165,7 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
 
                 // Reload step 6
                 $template = 'install-step6';
-                $data = $install->Step6();
+                $data = $install->step6();
             }
             break;
     }
