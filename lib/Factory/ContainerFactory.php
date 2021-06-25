@@ -183,6 +183,8 @@ class ContainerFactory
             'pool' => function(ContainerInterface $c) {
                 $drivers = [];
 
+                $c->get('configService')->setDependencies($c->get('store'), $c->get('rootUri'));
+
                 if ($c->get('configService')->getCacheDrivers() != null && is_array($c->get('configService')->getCacheDrivers())) {
                     $drivers = $c->get('configService')->getCacheDrivers();
                 } else {
