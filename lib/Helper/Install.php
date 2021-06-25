@@ -421,7 +421,7 @@ class Install
      *                    $options - An array of values 'return_files' or 'return_folders' or both
      * Returns       : A flat list with the path of all the files(no folders) that matches the condition given.
      */
-    public static function ls($pattern = "*", $folder = "", $recursivly = false, $options = array('return_files', 'return_folders')): array
+    public static function ls($pattern = '*', $folder = '', $recursivly = false, $options = ['return_files', 'return_folders']): array
     {
         if ($folder) {
             $current_folder = realpath('.');

@@ -96,7 +96,7 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
             try {
                 $install->step3($request, $response);
                 // Redirect to step 4
-               return $response->withRedirect($routeParser->urlFor('install', ['step' => 4]));
+                return $response->withRedirect($routeParser->urlFor('install', ['step' => 4]));
             }
             catch (InstallationError $e) {
                 $container->get('logService')->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
