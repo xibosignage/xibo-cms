@@ -118,8 +118,8 @@
                 },
                 { // 7
                     content: "{% trans "A status indicator is shown to show you the current 'play' status of the layout." %}",
-                    element: "#layout-editor #layoutInfo",
-                    placement: "bottom",
+                    element: "#layout-editor #layout-info-status i",
+                    placement: "right",
                     template: next_template,
                     delayOnElement: {
                         delayElement: "element",
@@ -298,6 +298,8 @@
                 { // 27
                     content: "{% trans "Add the Text Widget by using the 'Grab' option and dragging to the Region or click the '+' button to select then click in the target Region. Click Next after adding the Widget." %}",
                     element: '#layout-editor-toolbar .toolbar-card[data-sub-type="text"]',
+                    boundary: "window",
+                    placement: "top",
                     template: next_template,
                     onShown: function (tour) {
                         // Check if the text widget is into view
@@ -336,7 +338,7 @@
                 },
                 { // 29
                     content: "{% trans "We can now edit the Text Widget, Click on the Widget in the Timeline (it will go green once selected)." %}",
-                    element: '#layout-timeline .designer-widget',
+                    element: '#layout-timeline .designer-widget:first',
                     placement: "bottom",
                     template: next_template,
                     boundary: "window",
@@ -414,7 +416,7 @@
                 },
                 {
                     content: "{% trans "The Text Widget will now show the updated duration for the Region in the Timeline." %}",
-                    element: '#layout-timeline .designer-widget .widgetLabel .widgetDuration',
+                    element: '#layout-timeline .designer-widget:first .widgetLabel .widgetDuration',
                     placement: "top",
                     boundary: "window",
                     template: next_template,

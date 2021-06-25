@@ -85,11 +85,11 @@
     </div>
 {% endmacro %}
 
-{% macro number(name, title, value, helpText, groupClass, validation, accessKey) %}
+{% macro number(name, title, value, helpText, groupClass, validation, accessKey, maxNumber) %}
     <div class="form-group row {{ groupClass }}">
         <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         <div class="col-sm-10">
-            <input class="form-control" name="{{ name }}" type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
+            <input class="form-control" name="{{ name }}" {% if maxNumber %}max="{{maxNumber}}"{% else %}max="526000"{% endif %} type="number" id="{{ name }}" value="{{ value }}" {{ validation }} />
             <small class="form-text text-muted">{{ helpText }}</small>
         </div>
     </div>
