@@ -173,13 +173,11 @@ class ContainerFactory
                     $c->get('store'),
                     $c->get('configService'),
                     $c->get('pool'),
-                    '/'
+                    $c->get('rootUri')
                 );
             },
             'pool' => function(ContainerInterface $c) {
                 $drivers = [];
-
-                $c->get('configService')->setDependencies($c->get('store'), $c->get('rootUri'));
 
                 if ($c->get('configService')->getCacheDrivers() != null && is_array($c->get('configService')->getCacheDrivers())) {
                     $drivers = $c->get('configService')->getCacheDrivers();
