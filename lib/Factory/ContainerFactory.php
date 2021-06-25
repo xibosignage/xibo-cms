@@ -66,11 +66,11 @@ class ContainerFactory
         $containerBuilder->addDefinitions([
             'basePath' => function (ContainerInterface $c) {
                 // Server params
-                $scriptName = $_SERVER['SCRIPT_NAME']; // <-- "/foo/index.php"
-                $requestUri = $_SERVER['REQUEST_URI']; // <-- "/foo/bar?test=abc" or "/foo/index.php/bar?test=abc"
+                $scriptName = $_SERVER['SCRIPT_NAME'] ?? ''; // <-- "/foo/index.php"
+                $requestUri = $_SERVER['REQUEST_URI'] ?? ''; // <-- "/foo/bar?test=abc" or "/foo/index.php/bar?test=abc"
 
                 // Physical path
-                if (empty($scriptName)) {
+                if (empty($scriptName) || empty($requestUri)) {
                     return '';
                 } else if (strpos($requestUri, $scriptName) !== false) {
                     $physicalPath = $scriptName; // <-- Without rewriting
