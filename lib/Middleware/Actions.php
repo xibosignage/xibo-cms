@@ -54,6 +54,7 @@ class Actions implements Middleware
     {
         $app = $this->app;
         $container = $app->getContainer();
+        $container->get('configService')->setDependencies($container->get('store'), $container->get('rootUri'));
 
         // Get the current route pattern
         $routeContext = RouteContext::fromRequest($request);
