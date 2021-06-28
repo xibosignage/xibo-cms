@@ -108,9 +108,7 @@
     * Init/Update timePicker fields
     */
     function timersFormInit(container) {
-
-        container.find('.timePickerDisplayEditForm').each(function() {
-
+        container.find('.timePickerDisplayEditForm, .timePicker').each(function() {
             $(this).timepicker({
                 'timeFormat': timeFormat,
                 'step': 15
@@ -125,7 +123,6 @@
             if (preset != undefined && preset != "") {
                 $(this).timepicker('setTime', preset);
             }
-        
         });
     }
 
