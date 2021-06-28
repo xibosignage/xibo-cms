@@ -375,6 +375,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             try {
                 $collection->insertMany($this->stats);
 
+                // Reset
+                $this->stats = [];
+
             } catch (\MongoDB\Exception\RuntimeException $e) {
                 $this->log->error($e->getMessage());
                 throw new \MongoDB\Exception\RuntimeException($e->getMessage());
