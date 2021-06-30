@@ -218,7 +218,7 @@ function Layout(id, options, preload, layoutPreview) {
         // Set the background color
         layout.css("background-color", self.bgColour);
         
-        $(self.layoutNode).find("region").each(function() {
+        $($.parseXML(self.layoutNode)).find("region").each(function() {
             playLog(4, "debug", "Creating region " + $(this).attr('id'), false);
 
             self.regionObjects.push(new Region(self, $(this).attr('id'), this, options, preload));
