@@ -410,6 +410,8 @@
                     "three_state" : false
                 },
             }).on("ready.jstree", function(e, data) {
+                $(this).jstree().disable_checkbox(1);
+                $(this).jstree().disable_node(1);
                 $(this).jstree("open_all");
             });
         }
@@ -475,6 +477,9 @@
         }
         .onboarding-form .has-error {
             color: red;
+        }
+        .jstree-checkbox-disabled {
+            display: none !important;
         }
     </style>
 {% endblock %}
