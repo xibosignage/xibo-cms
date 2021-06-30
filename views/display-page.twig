@@ -994,8 +994,6 @@
                             data.spaceTotal = formatBytes(data.spaceTotal, 2);
                             data.spaceFree = formatBytes(data.spaceFree, 2);
                             data.spaceUsed = formatBytes(data.spaceUsed, 2);
-                            data.trialLicenseRemain = moment.unix(data.trialLicenseRemain).format('YYYY-MM-DD HH:mm:ss');
-                            data.mainLicenseRemain = moment.unix(data.mainLicenseRemain).format('YYYY-MM-DD HH:mm:ss');
                         }
 
                         statusWindowData['data'] = data;
