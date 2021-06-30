@@ -321,6 +321,11 @@
 
             // Add some buttons.
             $(dialog).find(".modal-footer")
+                .append($('<a class="btn btn-default">').html("{{ "Close"|trans }}")
+                    .click(function(e) {
+                        e.preventDefault();
+                        XiboDialogClose();
+                    }))
                 .append($('<a id="onboarding-steper-next-button" class="btn">').html("{{ "Next"|trans }}")
                     .addClass("btn-primary")
                     .click(function(e) {
@@ -385,11 +390,6 @@
                                 nextStepWizard.removeAttr('disabled').trigger('click');
                             }
                         }
-                    }))
-                .append($('<a class="btn btn-default">').html("{{ "Close"|trans }}")
-                    .click(function(e) {
-                        e.preventDefault();
-                        XiboDialogClose();
                     }));
         }
 
