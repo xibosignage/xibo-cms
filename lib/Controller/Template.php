@@ -178,6 +178,24 @@ class Template extends Base
                     'text' => __('Edit')
                 );
 
+                // Select Folder
+                if ($this->getUser()->featureEnabled('folder.view')) {
+                    $template->buttons[] = [
+                        'id' => 'campaign_button_selectfolder',
+                        'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $template->campaignId]),
+                        'text' => __('Select Folder'),
+                        'multi-select' => true,
+                        'dataAttributes' => [
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $template->campaignId])],
+                            ['name' => 'commit-method', 'value' => 'put'],
+                            ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
+                            ['name' => 'text', 'value' => __('Move to Folder')],
+                            ['name' => 'rowtitle', 'value' => $template->layout],
+                            ['name' => 'form-callback', 'value' => 'moveFolderMultiSelectFormOpen']
+                        ]
+                    ];
+                }
+
                 // Copy Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_copy',
