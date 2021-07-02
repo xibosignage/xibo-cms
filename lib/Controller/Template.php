@@ -182,11 +182,11 @@ class Template extends Base
                 if ($this->getUser()->featureEnabled('folder.view')) {
                     $template->buttons[] = [
                         'id' => 'campaign_button_selectfolder',
-                        'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $template->campaignId]),
+                        'url' => $this->urlFor($request, 'campaign.selectfolder.form', ['id' => $template->campaignId]),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $template->campaignId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'campaign.selectfolder', ['id' => $template->campaignId])],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
                             ['name' => 'text', 'value' => __('Move to Folder')],
