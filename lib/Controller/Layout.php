@@ -544,6 +544,7 @@ class Layout extends Base
         $isTemplate = false;
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $folderChanged = false;
+        $nameChanged = false;
 
         // check if we're dealing with the template
         $currentTags = explode(',', $layout->tags);
@@ -589,6 +590,10 @@ class Layout extends Base
             $folderChanged = true;
         }
 
+        if ($layout->hasPropertyChanged('layout')) {
+            $nameChanged = true;
+        }
+
         // Save
         $layout->save([
             'saveLayout' => true,
@@ -598,15 +603,36 @@ class Layout extends Base
             'notify' => false
         ]);
 
-        if ($folderChanged) {
-            $savedLayout = $this->layoutFactory->getById($layout->layoutId);
-            $savedLayout->load();
-            foreach ($savedLayout->regions as $region) {
-                /* @var Region $region */
-                $playlist = $region->getPlaylist();
-                $playlist->folderId = $savedLayout->folderId;
-                $playlist->permissionsFolderId = $savedLayout->permissionsFolderId;
-                $playlist->save();
+        if ($folderChanged || $nameChanged) {
+            // permissionsFolderId depends on the Campaign, hence why we need to get the edited Layout back here
+            $editedLayout = $this->layoutFactory->getById($layout->layoutId);
+
+            // this will return the original Layout we edited and its draft
+            $layouts = $this->layoutFactory->getByCampaignId($layout->campaignId, true, true);
+
+            foreach ($layouts as $savedLayout) {
+                // if we changed the name of the original Layout, updated its draft name as well
+                if ($savedLayout->isChild() && $nameChanged) {
+                    $savedLayout->layout =  $editedLayout->layout;
+                    $savedLayout->save([
+                        'saveLayout' => true,
+                        'saveRegions' => false,
+                        'saveTags' => false,
+                        'setBuildRequired' => false,
+                        'notify' => false
+                    ]);
+                }
+
+                // if the folder changed on original Layout, make sure we keep its regionPlaylists and draft regionPlaylists updated
+                if ($folderChanged) {
+                    $savedLayout->load();
+                    foreach ($savedLayout->regions as $region) {
+                        $playlist = $region->getPlaylist();
+                        $playlist->folderId = $editedLayout->folderId;
+                        $playlist->permissionsFolderId = $editedLayout->permissionsFolderId;
+                        $playlist->save();
+                    }
+                }
             }
         }
 

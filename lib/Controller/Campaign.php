@@ -1053,12 +1053,11 @@ class Campaign extends Base
         $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
 
         if ($campaign->isLayoutSpecific === 1) {
-            $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId);
+            $layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, true, true);
 
             foreach ($layouts as $layout) {
                 $layout->load();
                 foreach ($layout->regions as $region) {
-                    /* @var Region $region */
                     $playlist = $region->getPlaylist();
                     $playlist->folderId = $campaign->folderId;
                     $playlist->permissionsFolderId = $campaign->permissionsFolderId;
