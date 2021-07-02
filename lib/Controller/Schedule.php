@@ -977,7 +977,7 @@ class Schedule extends Base
         $schedule->displayOrder = $sanitizedParams->getInt('displayOrder', ['default' => 0]);
         $schedule->isPriority = $sanitizedParams->getInt('isPriority', ['default' => 0]);
         $schedule->dayPartId = $sanitizedParams->getInt('dayPartId', ['default' => $customDayPart->dayPartId]);
-        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice') : null;
+        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice', ['throw' => new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice')]) : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
@@ -1494,7 +1494,7 @@ class Schedule extends Base
         $schedule->recurrenceRepeatsOn = (empty($recurrenceRepeatsOn)) ? null : implode(',', $recurrenceRepeatsOn);
         $schedule->recurrenceMonthlyRepeatsOn = $sanitizedParams->getInt('recurrenceMonthlyRepeatsOn', ['default' => 0]);
         $schedule->displayGroups = [];
-        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice') : null;
+        $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice', ['throw' => new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice')]) : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
