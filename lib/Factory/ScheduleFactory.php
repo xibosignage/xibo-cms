@@ -321,7 +321,7 @@ class ScheduleFactory extends BaseFactory
         ';
 
         // Hide dooh Schedules from standard view.
-        if ($this->getUser()->showContentFrom == 1 && $this->getUser()->userTypeId != 4) {
+        if ($this->getUser()->showContentFrom == 1 && $this->getUser()->userTypeId != 4 && $parsedFilter->getInt('disableUserCheck') !== 1) {
             $sql .= ' AND `schedule`.userId IN (SELECT userId FROM user WHERE userTypeId <> 4) ';
         }
 
