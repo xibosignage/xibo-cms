@@ -54,8 +54,17 @@ class AddFoldersMigration extends AbstractMigration
             ])
             ->save();
 
+        // update media/playlist to make sure there aren't any date times with a default value which is nolonger
+        // acceptable.
+        $this->execute('UPDATE `media` SET createdDt = \'1970-01-01 00:00:00\' WHERE createdDt < \'2000-01-01\'');
+        $this->execute('UPDATE `media` SET modifiedDt = \'1970-01-01 00:00:00\' WHERE modifiedDt < \'2000-01-01\'');
+        $this->execute('UPDATE `playlist` SET createdDt = \'1970-01-01 00:00:00\' WHERE createdDt < \'2000-01-01\'');
+        $this->execute('UPDATE `playlist` SET modifiedDt = \'1970-01-01 00:00:00\' WHERE modifiedDt < \'2000-01-01\'');
+
         // add folderId column to root object tables
         $this->table('media')
+            ->changeColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+            ->changeColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('folderId', 'integer', ['default' => 1])
             ->addColumn('permissionsFolderId', 'integer', ['default' => 1])
             ->addForeignKey('folderId', 'folder', 'folderId')
@@ -68,6 +77,8 @@ class AddFoldersMigration extends AbstractMigration
             ->save();
 
         $this->table('playlist')
+            ->changeColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+            ->changeColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('folderId', 'integer', ['default' => 1])
             ->addColumn('permissionsFolderId', 'integer', ['default' => 1])
             ->addForeignKey('folderId', 'folder', 'folderId')
