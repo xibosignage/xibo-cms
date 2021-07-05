@@ -1346,8 +1346,7 @@ class Soap
         }
 
         // Current log level
-        //$logLevel = $this->logProcessor->getLevel();
-        $logLevel = 'error';
+        $logLevel = $this->logProcessor->getLevel();
         $discardedLogs = 0;
 
         // Get the display timezone to use when adjusting log dates.
