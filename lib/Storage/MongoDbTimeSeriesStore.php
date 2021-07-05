@@ -172,15 +172,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         // Media name
         $mediaName = null;
         if (!empty($statData['mediaId'])) {
-
             if (array_key_exists($statData['mediaId'], $this->mediaItems)) {
-
                 $media = $this->mediaItems[$statData['mediaId']];
-
             } else {
-
                 try {
-
                     // Media exists in not found cache
                     if (in_array($statData['mediaId'], $this->mediaItemsNotFound)) {
                         return;
@@ -190,9 +185,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                     // Cache media
                     $this->mediaItems[$statData['mediaId']] = $media;
-
                 } catch (NotFoundException $error) {
-
                     // Cache Media not found, ignore and log the stat
                     if (!in_array($statData['mediaId'], $this->mediaItemsNotFound)) {
                         $this->mediaItemsNotFound[] = $statData['mediaId'];
@@ -210,10 +203,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             if (isset($mediaTags)) {
                 $arrayOfTags = explode(',', $mediaTags);
                 for ($i=0; $i<count($arrayOfTags); $i++) {
-                    if (isset($arrayOfTags[$i]) ) {
-
-                        if (!empty($arrayOfTags[$i]))
+                    if (isset($arrayOfTags[$i])) {
+                        if (!empty($arrayOfTags[$i])) {
                             $tagFilter['media'][$i]['tag'] = $arrayOfTags[$i];
+                        }
                     }
                 }
             }
@@ -221,13 +214,9 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
         // Widget name
         if (!empty($statData['widgetId'])) {
-
             if (array_key_exists($statData['widgetId'], $this->widgets)) {
-
                 $widget = $this->widgets[$statData['widgetId']];
-
             } else {
-
                 // We are already doing getWidgetForStat is XMDS,
                 // checking widgetId not found does not require
                 // We should always be able to get the widget
@@ -236,7 +225,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                     // Cache widget
                     $this->widgets[$statData['widgetId']] = $widget;
-
                 } catch (\Exception $error) {
                     // Widget not found, ignore and log the stat
                     $this->log->error('Widget not found. Widget Id: '. $statData['widgetId']);
@@ -245,14 +233,13 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 }
             }
 
-            if($widget != null) {
+            if ($widget != null) {
                 $widget->load();
                 $widgetName = isset($mediaName) ? $mediaName : $widget->getOptionValue('name', $widget->type);
 
                 // SET widgetName
                 $statData['widgetName'] = $widgetName;
             }
-
         }
 
         // Layout data
@@ -266,9 +253,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             if (array_key_exists($statData['layoutId'], $this->layouts)) {
                 $layout = $this->layouts[$statData['layoutId']];
             } else {
-
                 try {
-
                     // Layout exists in not found cache
                     if (in_array($statData['layoutId'], $this->layoutsNotFound)) {
                         return;
@@ -281,7 +266,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                     // Cache layout
                     $this->layouts[$statData['layoutId']] = $layout;
-
                 } catch (NotFoundException $error) {
                     // All we can do here is log
                     // we shouldn't ever get in this situation because the campaignId we used above will have
@@ -295,7 +279,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                     return;
                 } catch (GeneralException $error) {
-
                     // Cache layouts not found
                     if (!in_array($statData['layoutId'], $this->layoutsNotFound)) {
                         $this->layoutsNotFound[] = $statData['layoutId'];
@@ -309,7 +292,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $campaignId = (int) $layout->campaignId;
             $layoutName = $layout->layout;
             $layoutTags = $layout->tags;
-
         }
 
         // Get layout Campaign ID
@@ -321,10 +303,10 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         if (isset($layoutTags)) {
             $arrayOfTags = explode(',', $layoutTags);
             for ($i=0; $i<count($arrayOfTags); $i++) {
-                if (isset($arrayOfTags[$i]) ) {
-
-                    if (!empty($arrayOfTags[$i]))
+                if (isset($arrayOfTags[$i])) {
+                    if (!empty($arrayOfTags[$i])) {
                         $tagFilter['layout'][$i]['tag'] = $arrayOfTags[$i];
+                    }
                 }
             }
         }
@@ -356,19 +338,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         if (array_key_exists($display->displayGroupId, $this->displayGroups)) {
             $displayGroup = $this->displayGroups[$display->displayGroupId];
         } else {
-
             try {
-
                 $displayGroup = $this->displayGroupFactory->getById($display->displayGroupId);
 
                 // Cache displaygroup
                 $this->displayGroups[$display->displayGroupId] = $displayGroup;
-
             } catch (NotFoundException $notFoundException) {
                 $this->log->error('Display group not found');
                 return;
             }
-
         }
 
         $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
@@ -386,7 +364,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $statData['tagFilter'] = $tagFilter;
 
         $this->stats[] = $statData;
-
     }
 
     /**
@@ -404,7 +381,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                 // Reset
                 $this->stats = [];
-
             } catch (\MongoDB\Exception\RuntimeException $e) {
                 $this->log->error($e->getMessage());
                 throw new \MongoDB\Exception\RuntimeException($e->getMessage());
@@ -417,18 +393,15 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         try {
             $cursor = $collectionPeriod->findOne(['name' => 'period']);
 
-            if (count($cursor) <= 0 ) {
+            if (count($cursor) <= 0) {
                 $this->log->error('Period collection does not exist in Mongo DB.');
                 // Period collection created
                 $collectionPeriod->insertOne(['name' => 'period']);
                 $this->log->debug('Period collection created.');
-
             }
-
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
-
     }
 
     /** @inheritdoc */
@@ -445,7 +418,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             if (count($earliestDate) > 0) {
                 return Carbon::instance($earliestDate[0]['start']->toDateTime());
             }
-
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
         }
@@ -496,8 +468,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $toDt = new UTCDateTime($toDt->format('U')*1000);
             $match['$match']['start'] = ['$lte' => $toDt];
-
-        } else if (($fromDt != null) && ($toDt == null)) {
+        } elseif (($fromDt != null) && ($toDt == null)) {
             $fromDt = new UTCDateTime($fromDt->format('U') * 1000);
             $match['$match']['start'] = ['$gte' => $fromDt];
         }
@@ -509,7 +480,7 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $statDate = new UTCDateTime($statDate->format('U')*1000);
             $statDateQuery['$gte'] = $statDate;
         }
-        
+
         if ($statDateLessThan != null) {
             $statDateLessThan = new UTCDateTime($statDateLessThan->format('U')*1000);
             $statDateQuery['$lt'] = $statDateLessThan;
@@ -543,7 +514,8 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                     // Add to our match
                     $match['$match']['campaignId'] = ['$in' => $campaignIds];
                 }
-            } catch (NotFoundException $ignored) {}
+            } catch (NotFoundException $ignored) {
+            }
         }
 
         // Type Filter
@@ -610,7 +582,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
                 $totalCount = $totalCursor->toArray();
                 $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
-
             } catch (\Exception $e) {
                 $this->log->error('Error: Total Count. ' . $e->getMessage());
                 throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
@@ -642,13 +613,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             ];
 
             if (count($match) > 0) {
-
                 $query = [
                     $match,
                     $project,
                 ];
             } else {
-
                 $query = [
                     $project,
                 ];
@@ -668,7 +637,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             // Total (we have worked this out above if we have paging enabled, otherwise its 0)
             $result->totalCount = $total;
-
         } catch (\Exception $e) {
             $this->log->error('Error: Get total. '. $e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting Proof of Play data, please consult your administrator'));
@@ -719,7 +687,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
 
             $totalCount = $totalCursor->toArray();
             $total = (count($totalCount) > 0) ? $totalCount[0]['count'] : 0;
-
         } catch (\Exception $e) {
             $this->log->error($e->getMessage());
             throw new GeneralException(__('Sorry we encountered an error getting total number of Proof of Play data, please consult your administrator'));
@@ -750,7 +717,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
                 ->deleteMany($filter);
 
             return $deleteResult->getDeletedCount();
-
         } catch (\MongoDB\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
             throw new GeneralException('Stats cannot be deleted.');
@@ -786,7 +752,6 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             $this->log->debug(json_encode($options['query']));
 
             $results = $cursor->toArray();
-
         } catch (\MongoDB\Driver\Exception\RuntimeException $e) {
             $this->log->error($e->getMessage());
             $this->log->debug($e->getTraceAsString());
