@@ -1396,7 +1396,7 @@ class Soap
                 $levelName = 'NOTICE';
             }
 
-            if ($recordLogLevel > $logLevel) {
+            if ($recordLogLevel < $logLevel) {
                 $discardedLogs++;
                 continue;
             }
