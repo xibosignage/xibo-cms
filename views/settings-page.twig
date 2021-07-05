@@ -831,7 +831,7 @@
                                     {% set helpText %}{% trans "The Time to Live (maxage) of the STS header expressed in seconds." %}{% endset %}
 
                                     {% if theme.isSettingEditable("STS_TTL") %}
-                                        {{ forms.number("STS_TTL", title, theme.getSetting("STS_TTL", "600"), helpText) }}
+                                        {{ forms.number("STS_TTL", title, theme.getSetting("STS_TTL", "600"), helpText, "", "", "", 999999999) }}
                                     {% else %}
                                         {{ forms.disabled("STS_TTL", title, theme.getSetting("STS_TTL", "600"), helpText) }}
                                     {% endif %}

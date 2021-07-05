@@ -373,7 +373,7 @@
 
                 // Disable download button when downloading
                 $(this).addClass("btn-success disabled");
-                $("#dldata").text('{% trans "Downloading file" %}');
+                $("#dldata").text('{{ "Downloading file"|trans }}');
                 $("#dldata").prop("href", $("#dldata").data().baseHref + "?" + $(".funkyradio").find("input[type=checkbox]").serialize());
 
 
@@ -385,7 +385,7 @@
                     } else {
                         $('#dldata').removeClass('disabled').attr('enabled');
                         ;
-                        $("#dldata").text('{% trans "Download selected items" %}');
+                        $("#dldata").text('{{ "Download selected items"|trans }}');
                     }
                 });
 
@@ -397,7 +397,7 @@
         <script>
             $("#toggler").click(function () {
                 $(this).text(function (i, v) {
-                    return v === '{% trans "Hide Environment checks" %}' ? '{% trans "Show Environment checks" %}' : '{% trans "Hide Environment checks" %}'
+                    return v === '{{ "Hide Environment checks"|trans }}' ? '{{ "Show Environment checks"|trans }}' : '{{ "Hide Environment checks"|trans }}'
                 })
                 $("#checksWithSuccess").toggle();
             });

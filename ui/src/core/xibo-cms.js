@@ -48,8 +48,9 @@ $(document).delegate('*[data-toggle="lightbox"]', 'click', function(event) {
     event.preventDefault();
     $(this).ekkoLightbox({
         onContentLoaded: function() {
-            var container = $('.ekko-lightbox-container');
-            container.css({'max-height': container.height(), "height": ""});
+            var $container = $('.ekko-lightbox-container');
+            $container.css({'max-height': $container.height(), "height": "", 'max-width': $container.width()});
+            $container.parents('.modal-content').css({'width' : 'fit-content'});
         }
     });
 });

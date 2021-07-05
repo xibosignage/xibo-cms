@@ -76,7 +76,7 @@
         $(document).ready(function() {
 
             // Hide reshow welcome on this page
-            $('#reshowWelcomeMenuItem').parent().remove();
+            $('#reshowWelcomeMenuItem').remove();
 
             // We need to have the URL of hte upload form available
             uploadUrl = "{{ url_for("playlistdashboard.library.add") }}";
