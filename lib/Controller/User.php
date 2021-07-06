@@ -135,7 +135,11 @@ class User extends Base
         // User wizard seen, go to home page
         $this->getLog()->debug('Showing the homepage: ' . $this->getUser()->homePageId);
 
-        $homepage = $this->userGroupFactory->getHomepageByName($this->getUser()->homePageId);
+        try {
+            $homepage = $this->userGroupFactory->getHomepageByName($this->getUser()->homePageId);
+        } catch (NotFoundException $exception) {
+            return $response->withRedirect($this->urlFor($request, 'icondashboard.view'));
+        }
 
         if (!$this->getUser()->featureEnabled($homepage->feature)) {
             return $response->withRedirect($this->urlFor($request, 'icondashboard.view'));

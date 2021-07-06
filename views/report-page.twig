@@ -112,7 +112,7 @@
                                 return;
                             } else {
                                 var total = response.data.total;
-                                $(dialog).find("#totalStat").append('<div class="total-stat alert alert-success">{% trans "Total number of records to be exported: <strong> " %}' + total + '</strong></div>');
+                                $(dialog).find("#totalStat").append('<div class="total-stat alert alert-success">{{ "Total number of records to be exported "|trans }}' + '<strong>' + total + '</strong></div>');
                             }
 
                             $(dialog).find('.save-button').prop('disabled', false);
@@ -151,7 +151,7 @@
                 form.closest(".modal-dialog").find(".save-button").removeClass("disabled");
 
                 if (!form.find(".form-error").length) {
-                    form.append('<div class="alert alert-danger form-error">{% trans "Form field is required." %}</div>');
+                    form.append('<div class="alert alert-danger form-error">{{ "Form field is required."|trans }}</div>');
                 }
             }
         }

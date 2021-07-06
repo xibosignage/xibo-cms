@@ -129,7 +129,7 @@
                         <div class="form-group row interrupt-control">
                             <label class="col-sm-2 control-label" for="shareOfVoice" accesskey="">{% trans "Share of Voice" %}</label>
                             <div class="col-sm-5">
-                                <input class="form-control" name="shareOfVoice" type="number" id="shareOfVoice" value="{{ event.shareOfVoice }}">
+                                <input class="form-control" name="shareOfVoice" type="number" id="shareOfVoice" value="{{ event.shareOfVoice }}" min="0" max="3600" step="1">
                                 <small class="form-text text-muted">{% trans "The amount of time this Layout should be shown, in seconds per hour." %}</small>
                             </div>
 

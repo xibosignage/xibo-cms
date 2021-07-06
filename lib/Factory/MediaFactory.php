@@ -664,7 +664,7 @@ class MediaFactory extends BaseFactory
         } else if ($sanitizedFilter->getInt('parentMediaId') !== null) {
             $body .= ' AND media.editedMediaId = :mediaId ';
             $params['mediaId'] = $sanitizedFilter->getInt('parentMediaId');
-        } else if ($sanitizedFilter->getInt('isEdited') != -1) {
+        } else if ($sanitizedFilter->getInt('isEdited', ['default' => -1]) != -1) {
             $body .= ' AND media.isEdited <> -1 ';
         } else {
             $body .= ' AND media.isEdited = 0 ';
