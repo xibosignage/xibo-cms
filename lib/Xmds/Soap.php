@@ -440,8 +440,7 @@ class Soap
 
         // workout if any of the layouts we have in our list has Actions pointing to another Layout.
         foreach ($layouts as $layoutId) {
-            $layout = $this->layoutFactory->loadById($layoutId);
-            $actionLayoutIds = $layout->getActionPublishedLayoutIds();
+            $actionLayoutIds = $this->layoutFactory->getActionPublishedLayoutIds($layoutId);
 
             // merge the Action layouts to our array, we need the player to download all resources on them
             if (!empty($actionLayoutIds) ) {
