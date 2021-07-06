@@ -561,11 +561,6 @@ class DataSetTicker extends ModuleWidget
             $headContent .= ' body { background-color: ' . $this->getOption('backgroundColor') . '; }';
         }
 
-        // Add the CSS if it isn't empty
-        if ($css != '') {
-            $headContent .= '<style type="text/css">' . $css . '</style>';
-        }
-
         $this
             ->appendControlMeta('NUMITEMS', $pages)
             ->appendControlMeta('DURATION', $totalDuration)
@@ -608,6 +603,11 @@ class DataSetTicker extends ModuleWidget
                 });
             ')
             ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')));
+
+        // Add the CSS if it isn't empty
+        if ($css != '') {
+            $this->appendCss($css);
+        }
 
         return $this->finaliseGetResource();
     }

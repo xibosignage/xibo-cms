@@ -779,6 +779,14 @@
                     makePagedSelect($inputFields);
                 }
 
+                // Android dimensions init
+                if(inputName == 'screenDimensions') {
+                    setAndroidDimensions($(target));
+
+                    // CSS fix
+                    $(target).find('.androidDimensionInput').removeClass('col-3').addClass('col-6');
+                }
+
                 // If there's a multiselect, set the value of the dropdown ( it's not kept on cloning ) and hide it
                 $(target).find('.multiSelect').val(inputName).hide();
 
@@ -880,6 +888,10 @@
                     // Get text and value
                     text = $label.text();
                     value = $input.find('option:selected').text();
+                } else if(over === 'screenDimensions'){
+                    // Get text and value
+                    text = $label.text();
+                    value = $(element).find('#screenDimensions').val();
                 } else {
                     // Get text and value
                     text = $label.text();

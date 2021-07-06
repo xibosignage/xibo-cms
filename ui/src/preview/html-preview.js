@@ -233,13 +233,13 @@ function Layout(id, options, preload, layoutPreview) {
         self.actionController = new ActionController(self, actions, options);
 
         // Create drawer
-        $(self.layoutNode).find("drawer").each(function() {
+        $($.parseXML(self.layoutNode)).find("drawer").each(function() {
             playLog(4, "debug", "Creating drawer " + $(this).attr('id'), false);
             self.drawer = this;
         });
 
         // Create regions
-        $(self.layoutNode).find("region").each(function() {
+        $($.parseXML(self.layoutNode)).find("region").each(function() {
             playLog(4, "debug", "Creating region " + $(this).attr('id'), false);
             self.regionObjects.push(new Region(self, $(this).attr('id'), this, options, preload));
         });
