@@ -71,6 +71,9 @@ class AdspaceExchange extends ModuleWidget
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
+        $this->setOption('key', $sanitizedParams->getString('key', [
+            'default' => $this->getOption('key', '')
+        ]));
         $this->saveWidget();
         return $response;
     }
