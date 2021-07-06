@@ -480,8 +480,7 @@ class Soap
 
         // workout if any of the layouts we have in our list has Actions pointing to another Layout.
         foreach ($layouts as $layoutId) {
-            $layout = $this->layoutFactory->loadById($layoutId);
-            $actionLayoutIds = $layout->getActionPublishedLayoutIds();
+            $actionLayoutIds = $this->layoutFactory->getActionPublishedLayoutIds($layoutId);
 
             // merge the Action layouts to our array, we need the player to download all resources on them
             if (!empty($actionLayoutIds) ) {
@@ -775,6 +774,9 @@ class Soap
                             $resourceFile->setAttribute('mediaid', $widget->widgetId);
                             $resourceFile->setAttribute('updated', $updatedDt->format('U'));
                             $fileElements->appendChild($resourceFile);
+                        } else if ($widget->type === 'adspaceexchange') {
+                            // Append an attribute to the Layout indicating that an AdspaceExchange widget is present
+                            $file->setAttribute('adspaceExchange', 1);
                         }
                     }
                 }
