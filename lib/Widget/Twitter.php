@@ -792,7 +792,7 @@ class Twitter extends TwitterBase
         }
 
         // Generate a JSON string of substituted items.
-        $items = $this->getTwitterFeed($displayId);
+        $items = $this->getTwitterFeed($displayId, $this->isPreview());
 
         // Return empty string if there are no items to show.
         if (count($items) == 0) {

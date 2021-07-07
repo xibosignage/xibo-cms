@@ -728,7 +728,7 @@ class TwitterMetro extends TwitterBase
         // Information from the Module
         $duration = $this->getCalculatedDurationForGetResource();
         // Generate a JSON string of substituted items.
-        $items = $this->getTwitterFeed($displayId);
+        $items = $this->getTwitterFeed($displayId, $this->isPreview());
         // Get the template data
         $templateData = $this->getTemplateData();
         
