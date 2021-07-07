@@ -452,7 +452,7 @@ class StatsMigrationTask implements TaskInterface
             // Run the select
             $stats->execute();
 
-            // Keep count how many stats we've inserted
+            // Keep count how many stats we've processed
             $recordCount = $stats->rowCount();
             $count+= $recordCount;
 
@@ -490,6 +490,7 @@ class StatsMigrationTask implements TaskInterface
 
                 if (empty($display)) {
                     $this->log->error('Display not found. Display Id: '. $stat['displayId']);
+                    $statIgnoredCount+= 1;
                     continue;
                 }
 
@@ -507,7 +508,6 @@ class StatsMigrationTask implements TaskInterface
                         }
                     } catch (NotFoundException $error) {
                         $statIgnoredCount+= 1;
-                        $count = $count - 1;
                         continue;
                     }
                 } else {
@@ -553,8 +553,8 @@ class StatsMigrationTask implements TaskInterface
             // Give Mongo time to recover
             if ($watermark > 0) {
 
-                if($statCount > 0 ) {
-                    $this->appendRunMessage('- '. $count. ' rows migrated.');
+                if ($statCount > 0 ) {
+                    $this->appendRunMessage('- '. $count. ' rows processed. ' . $statCount. ' rows migrated');
                     $this->log->debug('Mongo stats migration from stat_archive. '.$count.' rows effected, sleeping.');
                 }
                 sleep($options['pauseBetweenLoops']);

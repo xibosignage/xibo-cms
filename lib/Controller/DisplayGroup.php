@@ -1980,8 +1980,6 @@ class DisplayGroup extends Base
         $copyTags = $this->getSanitizer()->getCheckbox('copyTags', 0);
         $copyAssignments = $this->getSanitizer()->getCheckbox('copyAssignments', 0);
 
-
-
         $new = clone $displayGroup;
 
         // handle display group members
@@ -2021,19 +2019,8 @@ class DisplayGroup extends Base
 
         // handle tags
         if ($copyTags) {
-            $tags = '';
-
-            $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
-            $arrayOfTagValues = array_filter(explode(',', $displayGroup->tagValues));
-
-            for ($i=0; $i<count($arrayOfTags); $i++) {
-                if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                    $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                    $tags .= ',';
-                } else {
-                    $tags .= $arrayOfTags[$i] . ',';
-                }
-            }
+            // Handle tags
+            $tags = $this->tagFactory->getTagsWithValues($new);
             $new->replaceTags($this->tagFactory->tagsFromString($tags));
         }
 
