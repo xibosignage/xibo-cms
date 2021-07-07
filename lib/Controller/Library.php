@@ -2380,9 +2380,9 @@ class Library extends Base
             throw new InvalidArgumentException(__('Incorrect image data'));
         }
 
-        file_put_contents($libraryLocation . $mediaId . "_" . $media->mediaType . "cover." . $type, $image);
+        file_put_contents($libraryLocation . $mediaId . '_' . $media->mediaType . 'cover.' . $type, $image);
 
-        list($imgWidth, $imgHeight) = @getimagesize($libraryLocation . $mediaId . "_" . $media->mediaType . "cover." . $type);
+        list($imgWidth, $imgHeight) = @getimagesize($libraryLocation . $mediaId . '_' . $media->mediaType . 'cover.' . $type);
 
         $media->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
         $media->save(['saveTags' => false, 'validate' => false]);
