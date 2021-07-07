@@ -5,7 +5,6 @@
  * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
  */
 
-use Intervention\Image\ImageManagerStatic as Img;
 use Phinx\Migration\AbstractMigration;
 
 class AddOrientationToResolutionAndMediaMigration extends AbstractMigration
