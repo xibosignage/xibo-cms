@@ -23,6 +23,9 @@
 namespace Xibo\Factory;
 
 
+use Stash\Interfaces\PoolInterface;
+use Stash\Invalidation;
+use Stash\Pool;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
@@ -109,6 +112,9 @@ class LayoutFactory extends BaseFactory
 
     /** @var  PlaylistFactory */
     private $playlistFactory;
+
+    /** @var PoolInterface */
+    private $pool;
 
     /**
      * @return DateServiceInterface
@@ -2097,4 +2103,107 @@ class LayoutFactory extends BaseFactory
 
         return $newPlaylist;
     }
+
+    // <editor-fold desc="Concurrency Locking">
+
+    /**
+     * @param \Stash\Interfaces\PoolInterface $pool
+     * @return $this
+     */
+    public function usePool(PoolInterface $pool)
+    {
+        $this->pool = $pool;
+        return $this;
+    }
+
+    /**
+     * @return \Stash\Interfaces\PoolInterface|\Stash\Pool
+     */
+    private function getPool()
+    {
+        if ($this->pool === null) {
+            return new Pool();
+        } else {
+            return $this->pool;
+        }
+    }
+
+    /**
+     * Hold a lock on concurrent requests
+     *  blocks if the request is locked
+     * @param int $ttl seconds
+     * @param int $wait seconds
+     * @param int $tries
+     * @throws XiboException
+     */
+    public function concurrentRequestLock(Layout $layout, $pass = 1, $ttl = 300, $wait = 6, $tries = 10): Layout
+    {
+        $lock = $this->getPool()->getItem('locks/layout/' . $layout->campaignId);
+
+        // Set the invalidation method to simply return the value (not that we use it, but it gets us a miss on expiry)
+        // isMiss() returns false if the item is missing or expired, no exceptions.
+        $lock->setInvalidationMethod(Invalidation::NONE);
+
+        // Get the lock
+        // other requests will wait here until we're done, or we've timed out
+        $locked = $lock->get();
+
+        // Did we get a lock?
+        // if we're a miss, then we're not already locked
+        if ($lock->isMiss() || $locked === false) {
+            $this->getLog()->debug('Lock miss or false. Locking for ' . $ttl . ' seconds. $locked is '. var_export($locked, true));
+
+            // so lock now
+            $lock->set(true);
+            $lock->expiresAfter($ttl);
+            $lock->save();
+
+            // If we have been locked previously, then reload our layout before passing back out.
+            if ($pass > 1) {
+                $layout = $this->getById($layout->layoutId);
+            }
+
+            return $layout;
+        } else {
+            // We are a hit - we must be locked
+            $this->getLog()->debug('LOCK hit for ' . $layout->campaignId . ' expires '
+                . $lock->getExpiration()->format('Y-m-d H:i:s') . ', created '
+                . $lock->getCreation()->format('Y-m-d H:i:s'));
+
+            // Try again?
+            $tries--;
+
+            if ($tries <= 0) {
+                // We've waited long enough
+                throw new XiboException('Concurrent record locked, time out.');
+            } else {
+                $this->getLog()->debug('Unable to get a lock, trying again. Remaining retries: ' . $tries);
+
+                // Hang about waiting for the lock to be released.
+                sleep($wait);
+
+                // Recursive request (we've decremented the number of tries)
+                $pass++;
+                return $this->concurrentRequestLock($layout, $pass, $ttl, $wait, $tries);
+            }
+        }
+    }
+
+    /**
+     * Release a lock on concurrent requests
+     */
+    public function concurrentRequestRelease(Layout $layout)
+    {
+        $this->getLog()->debug('Releasing lock ' . $layout->campaignId);
+
+        $lock = $this->getPool()->getItem('locks/layout/' . $layout->campaignId);
+
+        // Release lock
+        $lock->set(false);
+        $lock->expiresAfter(10); // Expire straight away (but give it time to save the thing)
+
+        $this->getPool()->save($lock);
+    }
+
+    // </editor-fold>
 }

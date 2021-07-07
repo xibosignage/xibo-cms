@@ -30,6 +30,7 @@ use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\WidgetFactory;
+use Xibo\Helper\Profiler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -855,6 +856,7 @@ class Playlist implements \JsonSerializable
      */
     public function expandWidgets($parentWidgetId = 0, $expandSubplaylists = true)
     {
+        Profiler::start('Playlist::expandWidgets:' . $this->playlistId, $this->getLog());
         $this->load();
 
         $widgets = [];
@@ -885,6 +887,7 @@ class Playlist implements \JsonSerializable
             }
         }
 
+        Profiler::end('Playlist::expandWidgets:' . $this->playlistId, $this->getLog());
         return $widgets;
     }
 

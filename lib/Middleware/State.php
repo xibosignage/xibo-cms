@@ -1357,7 +1357,7 @@ class State extends Middleware
         });
 
         $container->singleton('layoutFactory', function($container) {
-            return new \Xibo\Factory\LayoutFactory(
+            return (new \Xibo\Factory\LayoutFactory(
                 $container->store,
                 $container->logService,
                 $container->sanitizerService,
@@ -1377,7 +1377,7 @@ class State extends Middleware
                 $container->widgetOptionFactory,
                 $container->playlistFactory,
                 $container->widgetAudioFactory
-            );
+            ))->usePool($container->get('pool'));
         });
 
         $container->singleton('logFactory', function($container) {
