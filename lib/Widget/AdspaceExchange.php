@@ -42,7 +42,6 @@ class AdspaceExchange extends ModuleWidget
             $module->name = 'Adspace Exchange';
             $module->type = 'adspaceexchange';
             $module->class = 'Xibo\Widget\AdspaceExchange';
-            $module->viewPath = '../custom/XiboAdspace';
             $module->description = 'Adspace Exchange facilitates advertising content delivered to your network via Adspace\'s demand partners.';
             $module->enabled = 1;
             $module->previewEnabled = 0;
