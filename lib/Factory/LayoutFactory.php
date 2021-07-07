@@ -1828,7 +1828,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.enableStat, ";
         $select .= "        layout.width, ";
         $select .= "        layout.height, ";
-        $select .= "        layout.orientation, ";
+        $select .= '        layout.orientation, ';
         $select .= "        layout.retired, ";
         $select .= "        layout.createdDt, ";
         $select .= "        layout.modifiedDt, ";
@@ -2187,7 +2187,7 @@ class LayoutFactory extends BaseFactory
         }
 
         if ($parsedFilter->getString('orientation') !== null) {
-            $body .= " AND layout.orientation = :orientation ";
+            $body .= ' AND layout.orientation = :orientation ';
             $params['orientation'] = $parsedFilter->getString('orientation');
         }
 

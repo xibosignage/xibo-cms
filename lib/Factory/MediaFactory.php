@@ -807,12 +807,12 @@ class MediaFactory extends BaseFactory
         }
 
         if ($sanitizedFilter->getString('orientation') !== null) {
-            $body .= " AND media.orientation = :orientation ";
+            $body .= ' AND media.orientation = :orientation ';
             $params['orientation'] = $sanitizedFilter->getString('orientation');
         }
 
         if ($sanitizedFilter->getInt('noOrientation') === 1) {
-            $body .= " AND media.orientation IS NULL ";
+            $body .= ' AND media.orientation IS NULL ';
         }
 
         // Sorting?
