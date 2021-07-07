@@ -173,7 +173,7 @@ describe('Layout Designer (Empty)', function() {
 
             cy.wait('@mediaLoad');
 
-            cy.get('#layout-viewer-navbar #navigator-edit-btn').click();
+            cy.get('#layout-viewer-navbar #navigator-edit-btn').click({force:true});
 
             // Get a table row, select it and add to the region
             cy.get('#layout-editor-toolbar .media-table .assignItem:first').click().then(() => {
