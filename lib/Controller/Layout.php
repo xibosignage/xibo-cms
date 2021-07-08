@@ -28,7 +28,6 @@ use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
 use Xibo\Exception\AccessDeniedException;
-use Xibo\Exception\GeneralException;
 use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
@@ -44,6 +43,7 @@ use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\LayoutUploadHandler;
+use Xibo\Helper\Profiler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\DateServiceInterface;
 use Xibo\Service\LogServiceInterface;
@@ -1864,7 +1864,7 @@ class Layout extends Base
     public function status($layoutId)
     {
         // Get the layout
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($layoutId));
 
         $layout->xlfToDisk();
 
@@ -1908,6 +1908,9 @@ class Layout extends Base
             $this->getState()->success = true;
             $this->session->refreshExpiry = false;
         }
+
+        // Release lock
+        $this->layoutFactory->concurrentRequestRelease($layout);
     }
 
     /**
@@ -2304,7 +2307,8 @@ class Layout extends Base
      */
     public function publish($layoutId)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        Profiler::start('Layout::publish', $this->getLog());
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($layoutId));
         $publishDate = $this->getSanitizer()->getDate('publishDate');
         $publishNow = $this->getSanitizer()->getCheckbox('publishNow');
 
@@ -2327,7 +2331,7 @@ class Layout extends Base
 
             // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
             // error message
-            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false, 'publishing' => true]);
+            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
             // Return
             $this->getState()->hydrate([
@@ -2343,6 +2347,11 @@ class Layout extends Base
                 'data' => $layout
             ]);
         }
+
+        Profiler::end('Layout::publish', $this->getLog());
+
+        // Release lock
+        $this->layoutFactory->concurrentRequestRelease($layout);
     }
 
     /**

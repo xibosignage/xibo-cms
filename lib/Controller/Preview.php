@@ -88,13 +88,19 @@ class Preview extends Base
      */
     function getXlf($layoutId)
     {
-        $layout = $this->layoutFactory->getById($layoutId);
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($layoutId));
 
         if (!$this->getUser()->checkViewable($layout))
             throw new AccessDeniedException();
 
-        echo file_get_contents($layout->xlfToDisk());
+        echo file_get_contents($layout->xlfToDisk([
+            'notify' => false,
+            'collectNow' => false,
+        ]));
 
         $this->setNoOutput(true);
+
+        // Release lock
+        $this->layoutFactory->concurrentRequestRelease($layout);
     }
 }

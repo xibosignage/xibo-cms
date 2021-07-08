@@ -164,8 +164,9 @@ class Soap3 extends Soap
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
                 // Load the layout
-                $layout = $this->layoutFactory->getById($fileId);
+                $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($fileId));
                 $path = $layout->xlfToDisk();
+                $this->layoutFactory->concurrentRequestRelease($layout);
 
                 $file = file_get_contents($path);
                 $chunkSize = filesize($path);

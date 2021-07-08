@@ -725,7 +725,7 @@ class Schedule implements \JsonSerializable
             'fromDt' => $this->fromDt,
             'toDt' => $this->toDt,
             'displayOrder' => $this->displayOrder,
-            'recurrenceType' => $this->recurrenceType,
+            'recurrenceType' => empty($this->recurrenceType) ? null : $this->recurrenceType,
             'recurrenceDetail' => $this->recurrenceDetail,
             'recurrenceRange' => $this->recurrenceRange,
             'recurrenceRepeatsOn' => $this->recurrenceRepeatsOn,
@@ -775,7 +775,7 @@ class Schedule implements \JsonSerializable
             'fromDt' => $this->fromDt,
             'toDt' => $this->toDt,
             'displayOrder' => $this->displayOrder,
-            'recurrenceType' => ($this->recurrenceType == '') ? null : $this->recurrenceType,
+            'recurrenceType' => empty($this->recurrenceType) ? null : $this->recurrenceType,
             'recurrenceDetail' => $this->recurrenceDetail,
             'recurrenceRange' => $this->recurrenceRange,
             'recurrenceRepeatsOn' => $this->recurrenceRepeatsOn,
@@ -1117,25 +1117,32 @@ class Schedule implements \JsonSerializable
                         $englishOriginalStart = new Carbon($originalStart->format('Y-m-d H:i:s.u'), $originalStart->getTimezone());
                         $englishStart = new Carbon($start->format('Y-m-d H:i:s.u'), $start->getTimezone());
 
-                        $englishStart->addDays(28 * $this->recurrenceDetail)
+                        // Move forwards to the start of the appropriate month
+                        for ($i = 0; $i < $this->recurrenceDetail; $i++) {
+                            $englishStart->endOfMonth()->addSecond();
+                        }
+
+                        // Set to the right day
+                        $englishStart
                             ->modify($ordinal . ' ' . $englishOriginalStart->format('l') . ' of ' . $englishStart->format('F Y'))
                             ->setTimeFrom($englishOriginalStart);
 
+                        // Copy over to start
                         $start = Date::instance($englishStart);
 
                         $this->getLog()->debug('Monthly repeats every ' . $this->recurrenceDetail . ' months on '
                             . $ordinal . ' ' . $start->format('l') . ' of ' . $start->format('F Y'));
                     } else {
                         // Day repeat
-                        $start = $start->copy()->addDays(28 * $this->recurrenceDetail);
-                        if ($originalStart->day > intval($start->format('t'))) {
+                        $startTest = $start->copy()->addDays(28 * $this->recurrenceDetail);
+                        if ($originalStart->day > intval($startTest->format('t'))) {
                             // The next month has fewer days than the current month
-                            $start->endOfMonth()->setTimeFrom($originalStart);
+                            $start = $startTest->endOfMonth()->setTimeFrom($originalStart);
                         } else {
-                            $start->day($originalStart->day);
+                            $start->addMonth()->day($originalStart->day);
                         }
 
-                        $this->getLog()->debug('Monthly repeats every ' . $this->recurrenceDetail . ' months on '
+                        $this->getLog()->debug('Monthly repeats every ' . $this->recurrenceDetail . ' months '
                             . ' on a specific day ' . $originalStart->day . ' days this month ' . $start->format('t')
                             . ' set to ' . $start->format('Y-m-d'));
                     }
