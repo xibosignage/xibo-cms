@@ -2107,10 +2107,10 @@ class LayoutFactory extends BaseFactory
     // <editor-fold desc="Concurrency Locking">
 
     /**
-     * @param \Stash\Interfaces\PoolInterface $pool
+     * @param \Stash\Interfaces\PoolInterface|null $pool
      * @return $this
      */
-    public function usePool(PoolInterface $pool)
+    public function usePool($pool)
     {
         $this->pool = $pool;
         return $this;
