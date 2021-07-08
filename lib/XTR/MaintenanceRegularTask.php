@@ -246,11 +246,13 @@ class MaintenanceRegularTask implements TaskInterface
         foreach ($this->layoutFactory->query(null, ['status' => 3, 'showDrafts' => 0, 'disableUserCheck' => 1]) as $layout) {
             /* @var \Xibo\Entity\Layout $layout */
             try {
+                $layout = $this->layoutFactory->concurrentRequestLock($layout);
                 $layout->xlfToDisk(['notify' => true]);
 
                 // Commit after each build
                 // https://github.com/xibosignage/xibo/issues/1593
                 $this->store->commitIfNecessary();
+                $this->layoutFactory->concurrentRequestRelease($layout);
             } catch (\Exception $e) {
                 $this->log->error(sprintf('Maintenance cannot build Layout %d, %s.', $layout->layoutId, $e->getMessage()));
             }
@@ -412,11 +414,13 @@ class MaintenanceRegularTask implements TaskInterface
                             throw new GeneralException(__($layout->statusMessage));
                         } else {
                             // publish the layout
+                            $layout = $this->layoutFactory->concurrentRequestLock($layout);
                             $draft = $this->layoutFactory->getByParentId($layout->layoutId);
                             $draft->publishDraft();
                             $draft->load();
                             $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
+                            $this->layoutFactory->concurrentRequestRelease($layout);
                             $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
                         }
                     } catch (GeneralException $e) {

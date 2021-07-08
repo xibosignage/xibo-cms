@@ -39,6 +39,7 @@ use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
+use Xibo\Helper\Profiler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -53,6 +54,8 @@ use Xibo\Widget\ModuleWidget;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
+ *
+ * @property $isLocked
  */
 class Layout implements \JsonSerializable
 {
@@ -1250,6 +1253,7 @@ class Layout implements \JsonSerializable
      */
     public function toXlf()
     {
+        Profiler::start('Layout::toXlf', $this->getLog());
         $this->getLog()->debug('Layout toXLF for Layout ' . $this->layout . ' - ' . $this->layoutId);
 
         $this->load(['loadPlaylists' => true]);
@@ -1708,6 +1712,7 @@ class Layout implements \JsonSerializable
         $event = new LayoutBuildEvent($this, $document);
         $this->getDispatcher()->dispatch($event::NAME, $event);
 
+        Profiler::end('Layout::toXlf', $this->getLog());
         return $document->saveXML();
     }
 
@@ -1931,10 +1936,11 @@ class Layout implements \JsonSerializable
             'publishing' => false
         ], $options);
 
+        Profiler::start('Layout::xlfToDisk', $this->getLog());
+
         $path = $this->getCachePath();
 
-        if ($this->status == 3 || !file_exists($path) || ($options['publishing'] && $this->status == 5) ) {
-
+        if ($this->status == 3 || !file_exists($path)) {
             $this->getLog()->debug('XLF needs building for Layout ' . $this->layoutId);
 
             $this->load(['loadPlaylists' => true]);
@@ -2017,6 +2023,7 @@ class Layout implements \JsonSerializable
             ]);
         }
 
+        Profiler::end('Layout::xlfToDisk', $this->getLog());
         return $path;
     }
 
@@ -2131,7 +2138,7 @@ class Layout implements \JsonSerializable
 
         // Nullify my parentId (I no longer have a parent)
         $this->parentId = null;
-        $this->status = 5;
+
         // Add a layout history
         $this->addLayoutHistory();
 

@@ -31,6 +31,7 @@ use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\MediaServiceInterface;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class MaintenanceDailyTask
@@ -152,6 +153,12 @@ class MaintenanceDailyTask implements TaskInterface
                         'audit' => false,
                         'import' => true
                     ]);
+
+                    try {
+                        $this->layoutFactory->getById($this->config->getSetting('DEFAULT_LAYOUT'));
+                    } catch (NotFoundException $exception) {
+                        $this->config->changeSetting('DEFAULT_LAYOUT', $layout->layoutId);
+                    }
                 }
             }
 

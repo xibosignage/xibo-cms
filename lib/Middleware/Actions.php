@@ -34,6 +34,7 @@ use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Translate;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Actions
@@ -87,6 +88,12 @@ class Actions implements Middleware
                             'audit' => false,
                             'import' => true
                         ]);
+
+                        try {
+                            $container->get('layoutFactory')->getById($container->get('configService')->getSetting('DEFAULT_LAYOUT'));
+                        } catch (NotFoundException $exception) {
+                            $container->get('configService')->changeSetting('DEFAULT_LAYOUT', $layout->layoutId);
+                        }
                     } catch (\Exception $e) {
                         $container->get('logService')->error('Unable to import layout: ' . $file . '. E = ' . $e->getMessage());
                         $container->get('logService')->debug($e->getTraceAsString());
