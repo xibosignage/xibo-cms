@@ -117,7 +117,7 @@ class Preview extends Base
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    function getXlf(Request $request, Response $response, $id)
+    public function getXlf(Request $request, Response $response, $id)
     {
         $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
 

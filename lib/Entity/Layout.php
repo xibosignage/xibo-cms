@@ -1944,7 +1944,6 @@ class Layout implements \JsonSerializable
         $path = $this->getCachePath();
 
         if ($this->status == 3 || !file_exists($path)) {
-
             $this->getLog()->debug('XLF needs building for Layout ' . $this->layoutId);
 
             $this->load(['loadPlaylists' => true]);
