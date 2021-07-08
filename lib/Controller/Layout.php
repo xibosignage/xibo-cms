@@ -46,6 +46,7 @@ use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\LayoutUploadHandler;
+use Xibo\Helper\Profiler;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
@@ -1276,10 +1277,9 @@ class Layout extends Base
 
             // Populate the status message
             $layout->getStatusMessage();
-            /** @var $locked Item */
-            $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
-            $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
 
+            // Add Locking information
+            $layout = $this->layoutFactory->decorateLockedProperties($layout);
 
             // Annotate each Widget with its validity, tags and permissions
             if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) { 
@@ -2161,16 +2161,9 @@ class Layout extends Base
     public function status(Request $request, Response $response, $id)
     {
         // Get the layout
-        /* @var \Xibo\Entity\Layout $layout */
-        $layout = $this->layoutFactory->getById($id);
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
+        $layout = $this->layoutFactory->decorateLockedProperties($layout);
         $layout->xlfToDisk();
-
-        /** @var $locked Item */
-        $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
-        $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
-        if(!empty($layout->isLocked)) {
-            $layout->isLocked->lockedUser = ($layout->isLocked->userId != $this->getUser()->userId);
-        }
 
         switch ($layout->status) {
 
@@ -2213,6 +2206,9 @@ class Layout extends Base
             $this->getState()->success = true;
             $this->session->refreshExpiry = false;
         }
+
+        // Release lock
+        $this->layoutFactory->concurrentRequestRelease($layout);
 
         return $this->render($request, $response);
     }
@@ -2604,7 +2600,8 @@ class Layout extends Base
      */
     public function publish(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($id);
+        Profiler::start('Layout::publish', $this->getLog());
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $publishDate = $sanitizedParams->getDate('publishDate');
         $publishNow = $sanitizedParams->getCheckbox('publishNow');
@@ -2628,7 +2625,7 @@ class Layout extends Base
 
             // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
             // error message
-            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false, 'publishing' => true]);
+            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
             // Return
             $this->getState()->hydrate([
@@ -2644,6 +2641,12 @@ class Layout extends Base
                 'data' => $layout
             ]);
         }
+
+        Profiler::end('Layout::publish', $this->getLog());
+
+        // Release lock
+        $this->layoutFactory->concurrentRequestRelease($layout);
+
         return $this->render($request, $response);
     }
 

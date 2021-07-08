@@ -117,17 +117,24 @@ class Preview extends Base
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    function getXlf(Request $request, Response $response, $id )
+    function getXlf(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($id);
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
 
         if (!$this->getUser()->checkViewable($layout)) {
             throw new AccessDeniedException();
         }
 
-        echo file_get_contents($layout->xlfToDisk());
+        echo file_get_contents($layout->xlfToDisk([
+            'notify' => false,
+            'collectNow' => false,
+        ]));
 
         $this->setNoOutput(true);
+
+        // Release lock
+        $this->layoutFactory->concurrentRequestRelease($layout);
+
         return $this->render($request, $response);
     }
 }

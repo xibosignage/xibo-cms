@@ -1282,7 +1282,7 @@ class State implements Middleware
                 );
             },
             'layoutFactory' => function(ContainerInterface $c) {
-                return new \Xibo\Factory\LayoutFactory(
+                $factory = new \Xibo\Factory\LayoutFactory(
                     $c->get('store'),
                     $c->get('logService'),
                     $c->get('sanitizerService'),
@@ -1304,6 +1304,12 @@ class State implements Middleware
                     $c->get('actionFactory'),
                     $c->get('folderFactory')
                 );
+
+                if ($c->has('pool')) {
+                    $factory->usePool($c->get('pool'));
+                }
+
+                return $factory;
             },
             'logFactory' => function(ContainerInterface $c) {
                 return new \Xibo\Factory\LogFactory(
