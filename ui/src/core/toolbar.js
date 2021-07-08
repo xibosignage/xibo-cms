@@ -796,6 +796,10 @@ Toolbar.prototype.createNewTab = function(menu) {
                 name: toolbarTrans.searchFilters.owner,
                 values: usersListFiltered
             },
+            orientation: {
+                name: toolbarTrans.searchFilters.orientation,
+                value: ''
+            },
         }
     });
 
@@ -1113,12 +1117,20 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
 
     // Refresh the table results
     var filterRefresh = function(mediaTable, tabObj) {
+        // if the orientation filter does not exist on this tab, add it.
+        if (!tabObj.filters.orientation) {
+            tabObj.filters.orientation = {
+                name: toolbarTrans.searchFilters.orientation,
+                value: ''
+            }
+        }
 
         // Save filter options
         tabObj.filters.name.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-name-' + tabIndex).val();
         tabObj.filters.tag.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-tag-' + tabIndex).val();
         tabObj.filters.type.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-type-' + tabIndex).val();
         tabObj.filters.owner.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-owner-' + tabIndex).val();
+        tabObj.filters.orientation.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-orientation-' + tabIndex).val();
 
         self.savePrefs();
 

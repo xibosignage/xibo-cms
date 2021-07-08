@@ -211,6 +211,14 @@ class Layout implements \JsonSerializable
     public $height;
 
     /**
+     * @var string
+     * @SWG\Property(
+     *  description="The Layout Orientation"
+     * )
+     */
+    public $orientation;
+
+    /**
      * @var int
      * @SWG\Property(
      *  description="If this Layout has been requested by Campaign, then this is the display order of the Layout within the Campaign"
@@ -2180,10 +2188,10 @@ class Layout implements \JsonSerializable
      */
     private function add()
     {
-        $this->getLog()->debug('Adding Layout' . $this->layout);
+        $this->getLog()->debug('Adding Layout ' . $this->layout);
 
-        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, retired, duration, autoApplyTransitions, code)
-                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, :schemaVersion, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, 0, :autoApplyTransitions, :code)';
+        $sql  = 'INSERT INTO layout (layout, description, userID, createdDT, modifiedDT, publishedStatusId, status, width, height, orientation, schemaVersion, backgroundImageId, backgroundColor, backgroundzIndex, parentId, enableStat, retired, duration, autoApplyTransitions, code)
+                  VALUES (:layout, :description, :userid, :createddt, :modifieddt, :publishedStatusId, :status, :width, :height, :orientation, :schemaVersion, :backgroundImageId, :backgroundColor, :backgroundzIndex, :parentId, :enableStat, 0, 0, :autoApplyTransitions, :code)';
 
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
@@ -2197,6 +2205,7 @@ class Layout implements \JsonSerializable
             'status' => 3,
             'width' => $this->width,
             'height' => $this->height,
+            'orientation' => ($this->orientation == null) ?? ($this->width >= $this->height) ? 'landscape' : 'portrait',
             'schemaVersion' => Environment::$XLF_VERSION,
             'backgroundImageId' => $this->backgroundImageId,
             'backgroundColor' => $this->backgroundColor,
@@ -2277,6 +2286,7 @@ class Layout implements \JsonSerializable
               retired = :retired,
               width = :width,
               height = :height,
+              orientation = :orientation,
               backgroundImageId = :backgroundImageId,
               backgroundColor = :backgroundColor,
               backgroundzIndex = :backgroundzIndex,
@@ -2302,6 +2312,7 @@ class Layout implements \JsonSerializable
             'retired' => ($this->retired == null) ? 0 : $this->retired,
             'width' => $this->width,
             'height' => $this->height,
+            'orientation' => $this->orientation,
             'backgroundImageId' => ($this->backgroundImageId == null) ? null : $this->backgroundImageId,
             'backgroundColor' => $this->backgroundColor,
             'backgroundzIndex' => $this->backgroundzIndex,

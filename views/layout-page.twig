@@ -71,6 +71,13 @@
                                     {% set helpText %}{% trans "Show items owned by users in the selected User Group." %}{% endset %}
                                     {{ inline.dropdown("ownerUserGroupId", "single", title, "", [{groupId:null, group:""}]|merge(groups), "groupId", "group", helpText, "selectPicker", "", "", "", attributes) }}
 
+                                    {% set title %}{% trans "Orientation" %}{% endset %}
+                                    {% set option1 = "All"|trans %}
+                                    {% set option2 = "Landscape"|trans %}
+                                    {% set option3 = "Portrait"|trans %}
+                                    {% set values = [{id: '', value: option1}, {id: 'landscape', value: option2}, {id: 'portrait', value: option3}] %}
+                                    {{ inline.dropdown("orientation", "single", title, '', values, "id", "value") }}
+
                                     {{ inline.hidden("folderId") }}
                                 </div>
                                 <div class="tab-pane" id="advanced-filter" role="tabpanel">

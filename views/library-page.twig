@@ -97,6 +97,13 @@
 
                             {% set title %}{% trans "Layout ID" %}{% endset %}
                             {{ inline.number("layoutId", title, layoutId) }}
+
+                            {% set title %}{% trans "Orientation" %}{% endset %}
+                            {% set option1 = "All"|trans %}
+                            {% set option2 = "Landscape"|trans %}
+                            {% set option3 = "Portrait"|trans %}
+                            {% set values = [{id: '', value: option1}, {id: 'landscape', value: option2}, {id: 'portrait', value: option3}] %}
+                            {{ inline.dropdown("orientation", "single", title, '', values, "id", "value") }}
                         </form>
                     </div>
                 </div>

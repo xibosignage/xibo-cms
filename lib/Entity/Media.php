@@ -191,6 +191,14 @@ class Media implements \JsonSerializable
      */
     public $enableStat;
 
+    /**
+     * @var string
+     * @SWG\Property(
+     *  description="The orientation of the Media file"
+     * )
+     */
+    public $orientation;
+
     // Private
     private $unassignTags = [];
     private $requestOptions = [];
@@ -614,8 +622,8 @@ class Media implements \JsonSerializable
         }
 
         $this->mediaId = $this->getStore()->insert('
-            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`, `permissionsFolderId`)
-              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat, :folderId, :permissionsFolderId)
+            INSERT INTO `media` (`name`, `type`, duration, originalFilename, userID, retired, moduleSystemFile, released, apiRef, valid, `createdDt`, `modifiedDt`, `enableStat`, `folderId`, `permissionsFolderId`, `orientation`)
+              VALUES (:name, :type, :duration, :originalFileName, :userId, :retired, :moduleSystemFile, :released, :apiRef, :valid, :createdDt, :modifiedDt, :enableStat, :folderId, :permissionsFolderId, :orientation)
         ', [
             'name' => $this->name,
             'type' => $this->mediaType,
@@ -631,9 +639,9 @@ class Media implements \JsonSerializable
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'enableStat' => $this->enableStat,
             'folderId' => ($this->folderId === null) ? 1 : $this->folderId,
-            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
+            'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId,
+            'orientation' => $this->orientation
         ]);
-
     }
 
     /**
@@ -656,7 +664,8 @@ class Media implements \JsonSerializable
                 `enableStat` = :enableStat,
                 expires = :expires,
                 folderId = :folderId,
-                permissionsFolderId = :permissionsFolderId
+                permissionsFolderId = :permissionsFolderId,
+                orientation = :orientation
            WHERE mediaId = :mediaId
         ';
 
@@ -675,7 +684,8 @@ class Media implements \JsonSerializable
             'enableStat' => $this->enableStat,
             'expires' => $this->expires,
             'folderId' => $this->folderId,
-            'permissionsFolderId' => $this->permissionsFolderId
+            'permissionsFolderId' => $this->permissionsFolderId,
+            'orientation' => $this->orientation
         ];
 
         $this->getStore()->update($sql, $params);
@@ -775,24 +785,24 @@ class Media implements \JsonSerializable
         $this->valid = 1;
 
         // Resize image dimensions if threshold exceeds
+        // This also sets orientation
         $this->assessDimensions();
 
         // Update the MD5 and storedAs to suit
-        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, valid = 1 WHERE mediaId = :mediaId', [
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, orientation = :orientation, valid = 1 WHERE mediaId = :mediaId', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
             'expires' => $this->expires,
             'released' => $this->released,
+            'orientation' => $this->orientation,
             'mediaId' => $this->mediaId
         ]);
     }
 
     private function assessDimensions()
     {
-
         if ($this->mediaType === 'image' || ($this->mediaType === 'module' && $this->moduleSystemFile === 0)) {
-
             $libraryFolder = $this->config->getSetting('LIBRARY_LOCATION');
             $filePath = $libraryFolder . $this->storedAs;
             list($imgWidth, $imgHeight) = @getimagesize($filePath);
@@ -800,15 +810,15 @@ class Media implements \JsonSerializable
             $resizeThreshold = $this->config->getSetting('DEFAULT_RESIZE_THRESHOLD');
             $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
 
+            $this->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
+
             // Media released set to 0 for large size images
             // if image size is greater than Resize Limit then we flag that image as too big
             if ($resizeLimit > 0 && ($imgWidth > $resizeLimit || $imgHeight > $resizeLimit)) {
                 $this->released = 2;
                 $this->getLog()->debug('Image size is too big. MediaId '. $this->mediaId);
-
             } elseif ($resizeThreshold > 0) {
                 if ($imgWidth > $imgHeight) { // 'landscape';
-
                     if ($imgWidth <= $resizeThreshold) {
                         $this->released = 1;
                     } else {
@@ -818,7 +828,6 @@ class Media implements \JsonSerializable
                         }
                     }
                 } else { // 'portrait';
-
                     if ($imgHeight <= $resizeThreshold) {
                         $this->released = 1;
                     } else {
@@ -829,7 +838,6 @@ class Media implements \JsonSerializable
                     }
                 }
             }
-
         }
     }
 

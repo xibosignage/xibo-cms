@@ -527,6 +527,7 @@ class MediaFactory extends BaseFactory
                `media`.enableStat,
                `media`.folderId,
                `media`.permissionsFolderId,
+               `media`.orientation,
             ';
 
         $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
@@ -803,6 +804,15 @@ class MediaFactory extends BaseFactory
 
         if ($sanitizedFilter->getInt('onlyMenuBoardAllowed') !== null) {
             $body .= ' AND ( media.type = \'image\' OR media.type = \'video\' ) ';
+        }
+
+        if ($sanitizedFilter->getString('orientation') !== null) {
+            $body .= ' AND media.orientation = :orientation ';
+            $params['orientation'] = $sanitizedFilter->getString('orientation');
+        }
+
+        if ($sanitizedFilter->getInt('noOrientation') === 1) {
+            $body .= ' AND media.orientation IS NULL ';
         }
 
         // Sorting?
