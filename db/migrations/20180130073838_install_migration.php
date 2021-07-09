@@ -952,7 +952,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('mediaId', 'integer', ['default' => null, 'null' => true])
             ->addColumn('widgetId', 'integer', ['default' => null, 'null' => true])
             ->addColumn('start', 'datetime', ['null' => true, 'default' => null])
-            ->addColumn('end', 'datetime', , ['null' => true, 'default' => null])
+            ->addColumn('end', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('tag', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->addIndex('statDate')
             ->addIndex(['displayId', 'end', 'type'])
