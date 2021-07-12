@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -133,7 +134,7 @@ class StatisticsTest extends LocalWebTestCase
         $this->media2->deleteAssigned();
 
         // Delete stat records
-        self::$container->timeSeriesStore->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->timeSeriesStore->deleteStats(Date::now(), Date::now()->startOfDay()->subDays(5));
     }
 
     /**
@@ -165,8 +166,8 @@ class StatisticsTest extends LocalWebTestCase
         // First insert
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-15 00:00:00" 
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(5)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s') .'" 
                         type="layout" 
                         scheduleid="0" 
                         layoutid="' . $this->layout->layoutId . '" />
@@ -175,8 +176,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-13 00:00:00" 
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(5)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(4)->format('Y-m-d H:i:s') .'" 
                         type="media" 
                         scheduleid="0" 
                         layoutid="' . $this->layout->layoutId . '" 
@@ -186,8 +187,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-14 00:00:00"
-                        todt="2018-02-15 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(3)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s') .'" 
                         type="media"
                         scheduleid="0"
                         layoutid="' . $this->layout->layoutId . '"
@@ -197,8 +198,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-12 00:00:00"
-                        todt="2018-02-15 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(5)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s') .'" 
                         type="widget"
                         scheduleid="0"
                         layoutid="' . $this->layout->layoutId . '"
@@ -208,8 +209,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-12 00:00:00"
-                        todt="2018-02-15 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(5)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s') .'" 
                         type="event"
                         scheduleid="0"
                         layoutid="0"
@@ -220,8 +221,8 @@ class StatisticsTest extends LocalWebTestCase
         // Second insert
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-15 00:00:00"
-                        todt="2018-02-16 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(1)->format('Y-m-d H:i:s') .'" 
                         type="layout"
                         scheduleid="0"
                         layoutid="' . $this->layout->layoutId . '"/>
@@ -230,8 +231,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-13 00:00:00"
-                        todt="2018-02-14 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(4)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(3)->format('Y-m-d H:i:s') .'" 
                         type="media"
                         scheduleid="0"
                         layoutid="' . $this->layout->layoutId . '"
@@ -241,8 +242,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-15 00:00:00"
-                        todt="2018-02-16 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(1)->format('Y-m-d H:i:s') .'" 
                         type="media"
                         scheduleid="0"
                         layoutid="' . $this->layout->layoutId . '"
@@ -252,8 +253,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-15 00:00:00"
-                        todt="2018-02-16 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(1)->format('Y-m-d H:i:s') .'" 
                         type="widget"
                         scheduleid="0"
                         layoutid="' . $this->layout->layoutId . '"
@@ -263,8 +264,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-15 00:00:00"
-                        todt="2018-02-16 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(1)->format('Y-m-d H:i:s') .'" 
                         type="event"
                         scheduleid="0"
                         layoutid="0"
@@ -275,8 +276,8 @@ class StatisticsTest extends LocalWebTestCase
         // Third insert
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-16 00:00:00"
-                        todt="2018-02-17 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(1)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->format('Y-m-d H:i:s') .'" 
                         type="layout"
                         scheduleid="0"
                         layoutid="' . $this->layout->layoutId . '"/>
@@ -285,8 +286,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-16 12:00:00"
-                        todt="2018-02-17 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subHours(12)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->format('Y-m-d H:i:s') .'" 
                         type="media"
                         scheduleid="0"
                         layoutid="' . $this->layout->layoutId . '"
@@ -296,8 +297,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-16 00:00:00"
-                        todt="2018-02-16 12:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDay()->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subHours(12)->format('Y-m-d H:i:s') .'" 
                         type="media"
                         scheduleid="0"
                         layoutid="' . $this->layout->layoutId . '"
@@ -307,8 +308,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-16 00:00:00"
-                        todt="2018-02-17 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDay()->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->format('Y-m-d H:i:s') .'" 
                         type="widget"
                         scheduleid="0"
                         layoutid="' . $this->layout->layoutId . '"
@@ -318,8 +319,8 @@ class StatisticsTest extends LocalWebTestCase
 
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-16 00:00:00"
-                        todt="2018-02-17 00:00:00"
+                        <stat fromdt="'. Date::now()->startOfDay()->subDay()->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->format('Y-m-d H:i:s') .'" 
                         type="event"
                         scheduleid="0"
                         layoutid="0"
@@ -329,8 +330,8 @@ class StatisticsTest extends LocalWebTestCase
 
         // Get stats and see if they match with what we expect
         $this->client->get('/stats', [
-            'fromDt' => '2018-02-12 00:00:00',
-            'toDt' => '2018-02-17 00:00:00',
+            'fromDt' => Date::now()->startOfDay()->subDays(5)->format('Y-m-d H:i:s'),
+            'toDt' => Date::now()->startOfDay()->format('Y-m-d H:i:s'),
             'displayId' => $this->display->displayId
         ]);
 
@@ -339,7 +340,7 @@ class StatisticsTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
         // $this->getLogger()->debug($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $this->layout->layoutId]);
+        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => Date::now()->startOfDay()->subDays(5)->format('Y-m-d H:i:s'), 'toDt' => Date::now()->startOfDay()->format('Y-m-d H:i:s'), 'layoutId' => $this->layout->layoutId]);
         // print_r($stats);
         $this->assertNotEquals(0, count($stats));
     }
@@ -354,8 +355,8 @@ class StatisticsTest extends LocalWebTestCase
         // One insert
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-15 00:00:00" 
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(5)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s') .'" 
                         type="layout" 
                         scheduleid="0" 
                         layoutid="' . $this->layout->layoutId . '" />
@@ -363,13 +364,43 @@ class StatisticsTest extends LocalWebTestCase
         $this->assertSame(true, $response);
 
         $this->client->get('/stats/export', [
-            'fromDt' => '2018-02-12 00:00:00',
-            'toDt' => '2018-02-15 00:00:00'
+            'fromDt' => Date::now()->startOfDay()->subDays(5)->format('Y-m-d H:i:s'),
+            'toDt' => Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s'),
         ]);
         $this->assertSame(200, $this->client->response->status());
 
         $body = $this->client->response->body();
-        $this->assertContains('layout,"2018-02-12', $body);
+        $this->assertContains('layout,"'. Date::now()->startOfDay()->subDays(5)->format('Y-m-d'), $body);
     }
 
+    public function testProofOldStats()
+    {
+        $hardwareId = $this->display->license;
+
+        // Attempt to insert stat data older than 30 days
+        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
+            '<stats>
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(35)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(31)->format('Y-m-d H:i:s') .'" 
+                        type="layout" 
+                        scheduleid="0" 
+                        layoutid="' . $this->layout->layoutId . '" />
+                    </stats>');
+        $this->assertSame(true, $response);
+
+        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
+            '<stats>
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(40)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(38)->format('Y-m-d H:i:s') .'" 
+                        type="layout" 
+                        scheduleid="0" 
+                        layoutid="' . $this->layout->layoutId . '" />
+                    </stats>');
+        $this->assertSame(true, $response);
+
+        // Default max stat age is 30 days, therefore we expect to get no results after the attempted inserts.
+        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => Date::now()->startOfDay()->subDays(41)->format('Y-m-d H:i:s'), 'toDt' => Date::now()->startOfDay()->subDays(31)->format('Y-m-d H:i:s'), 'layoutId' => $this->layout->layoutId]);
+        // print_r($stats);
+        $this->assertEquals(0, count($stats));
+    }
 }

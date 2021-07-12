@@ -110,7 +110,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('userName', 'string', ['limit' => 50])
             ->addColumn('userPassword', 'string', ['limit' => 255])
             ->addColumn('loggedIn', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
-            ->addColumn('lastAccessed', 'datetime', ['null' => true])
+            ->addColumn('lastAccessed', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('email', 'string', ['limit' => 255, 'null' => true, 'default' => null])
             ->addColumn('homePageId', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 1])
             ->addColumn('retired', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
@@ -304,8 +304,8 @@ class InstallMigration extends AbstractMigration
             ->addColumn('expires', 'integer', ['default' => null, 'null' => true])
             ->addColumn('released', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 1])
             ->addColumn('apiRef', 'string', ['limit' => 254, 'default' => null, 'null' => true])
-            ->addColumn('createdDt', 'datetime')
-            ->addColumn('modifiedDt', 'datetime')
+            ->addColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+            ->addColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
             ->addForeignKey('userId', 'user', 'userId')
             ->save();
 
@@ -348,8 +348,8 @@ class InstallMigration extends AbstractMigration
         $layout
             ->addColumn('layout', 'string', ['limit' => 254])
             ->addColumn('userId', 'integer')
-            ->addColumn('createdDt', 'datetime')
-            ->addColumn('modifiedDt', 'datetime')
+            ->addColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+            ->addColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('description', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->addColumn('retired', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
             ->addColumn('duration', 'integer')
@@ -945,14 +945,14 @@ class InstallMigration extends AbstractMigration
         $stat = $this->table('stat', ['id' => 'statId']);
         $stat
             ->addColumn('type', 'string', ['limit' => 20])
-            ->addColumn('statDate', 'datetime')
+            ->addColumn('statDate', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('scheduleId', 'integer')
             ->addColumn('displayId', 'integer')
             ->addColumn('layoutId', 'integer', ['default' => null, 'null' => true])
             ->addColumn('mediaId', 'integer', ['default' => null, 'null' => true])
             ->addColumn('widgetId', 'integer', ['default' => null, 'null' => true])
-            ->addColumn('start', 'datetime')
-            ->addColumn('end', 'datetime', ['default' => null, 'null' => true])
+            ->addColumn('start', 'datetime', ['null' => true, 'default' => null])
+            ->addColumn('end', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('tag', 'string', ['limit' => 254, 'default' => null, 'null' => true])
             ->addIndex('statDate')
             ->addIndex(['displayId', 'end', 'type'])
@@ -973,7 +973,7 @@ class InstallMigration extends AbstractMigration
         $log = $this->table('log', ['id' => 'logId']);
         $log
             ->addColumn('runNo', 'string', ['limit' => 10])
-            ->addColumn('logDate', 'datetime')
+            ->addColumn('logDate', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('channel', 'string', ['limit' => 20])
             ->addColumn('type', 'string', ['limit' => 254])
             ->addColumn('page', 'string', ['limit' => 50])

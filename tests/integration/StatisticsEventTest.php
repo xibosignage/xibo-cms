@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -80,7 +80,7 @@ class StatisticsEventTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
 
         // Delete stat records
-        self::$container->timeSeriesStore->deleteStats(Date::now(), Date::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->timeSeriesStore->deleteStats(Date::now(), Date::now()->startOfDay()->subDays(5));
     }
 
     /**
@@ -101,8 +101,8 @@ class StatisticsEventTest extends LocalWebTestCase
         // First insert
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-15 00:00:00" 
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(5)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s') .'" 
                         type="'.$type.'" 
                         scheduleid="0" 
                         layoutid="0" 
@@ -113,8 +113,8 @@ class StatisticsEventTest extends LocalWebTestCase
         // Second insert
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-15 00:00:00" 
-                        todt="2018-02-16 00:00:00" 
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(2)->format('Y-m-d H:i:s') .'" 
+                        todt="'.Date::now()->startOfDay()->subDays(1)->format('Y-m-d H:i:s'). '" 
                         type="'.$type.'" 
                         scheduleid="0" 
                         layoutid="0"
@@ -125,8 +125,8 @@ class StatisticsEventTest extends LocalWebTestCase
         // Third insert
         $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-16 00:00:00" 
-                        todt="2018-02-17 00:00:00" 
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(1)->format('Y-m-d H:i:s') .'" 
+                        todt="'. Date::now()->startOfDay()->format('Y-m-d H:i:s') .'" 
                         type="'.$type.'" 
                         scheduleid="0" 
                         layoutid="0"
@@ -136,8 +136,8 @@ class StatisticsEventTest extends LocalWebTestCase
 
         // Get stats and see if they match with what we expect
         $this->client->get('/stats' , [
-            'fromDt' => '2018-02-12 00:00:00',
-            'toDt' => '2018-02-17 00:00:00',
+            'fromDt' => Date::now()->startOfDay()->subDays(5)->format('Y-m-d H:i:s'),
+            'toDt' => Date::now()->startOfDay()->format('Y-m-d H:i:s'),
             'displayId' => $this->display->displayId,
             'type' => $type
         ]);
@@ -147,7 +147,7 @@ class StatisticsEventTest extends LocalWebTestCase
         $object = json_decode($this->client->response->body());
         //$this->getLogger()->debug($this->client->response->body());
         $this->assertObjectHasAttribute('data', $object, $this->client->response->body());
-        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => '2018-02-12 00:00:00', 'toDt' => '2018-02-17 00:00:00', 'layoutId' => $layout->layoutId]);
+        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => Date::now()->startOfDay()->subDays(5)->format('Y-m-d H:i:s'), 'toDt' => Date::now()->startOfDay()->format('Y-m-d H:i:s'), 'layoutId' => $layout->layoutId]);
         // print_r($stats);
         $this->assertNotEquals(0, count($stats));
 

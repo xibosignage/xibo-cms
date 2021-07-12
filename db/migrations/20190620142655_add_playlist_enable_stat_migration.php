@@ -30,8 +30,12 @@ class AddPlaylistEnableStatMigration extends AbstractMigration
         $playlistTable = $this->table('playlist');
 
         if (!$playlistTable->hasColumn('enableStat')) {
+            $this->execute('UPDATE `playlist` SET createdDt = \'1970-01-01 00:00:00\' WHERE createdDt < \'2000-01-01\'');
+            $this->execute('UPDATE `playlist` SET modifiedDt = \'1970-01-01 00:00:00\' WHERE modifiedDt < \'2000-01-01\'');
 
             $playlistTable
+                ->changeColumn('createdDt', 'datetime', ['null' => true, 'default' => null])
+                ->changeColumn('modifiedDt', 'datetime', ['null' => true, 'default' => null])
                 ->addColumn('enableStat', 'string', ['null' => true])
                 ->save();
         }

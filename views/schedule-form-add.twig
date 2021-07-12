@@ -126,7 +126,7 @@
                         <div class="form-group interrupt-control" style="display: block;">
                             <label class="col-sm-2 control-label" for="shareOfVoice" accesskey="">{% trans "Share of Voice" %}</label>
                             <div class="col-sm-5">
-                                <input class="form-control" name="shareOfVoice" type="number" id="shareOfVoice" value="0">
+                                <input class="form-control" name="shareOfVoice" type="number" id="shareOfVoice" value="0" min="0" max="3600" step="1">
                                 <span class="help-block">{% trans "The amount of time this Layout should be shown, in seconds per hour." %}</span>
                             </div>
 

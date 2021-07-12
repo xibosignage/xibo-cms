@@ -457,17 +457,17 @@
                                 var html = "<div class='remote-icons'>";
                                 if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" !== "" && row.clientAddress != null && row.clientAddress !== "") {
                                     var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', row.clientAddress);
-                                    html += '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">'
+                                    html += '<a href="' + link + '" title="{{ "VNC to this Display"|trans }}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">'
                                         + '<i class="fa fa-eye"></i></a>';
                                 }
 
                                 if (row.teamViewerLink !== "") {
-                                    html += '<a href="' + row.teamViewerLink + '" title="{% trans "TeamViewer to this Display" %}" target="_blank">'
+                                    html += '<a href="' + row.teamViewerLink + '" title="{{ "TeamViewer to this Display"|trans }}" target="_blank">'
                                         + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/teamviewer.png" alt="TeamViewer Icon"></a>';
                                 }
 
                                 if (row.webkeyLink !== "") {
-                                    html += '<a href="' + row.webkeyLink + '" title="{% trans "Webkey to this Display" %}" target="_blank">'
+                                    html += '<a href="' + row.webkeyLink + '" title="{{ "Webkey to this Display"|trans }}" target="_blank">'
                                         + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/webkey.png" alt="Webkey Icon"></a>';
                                 }
 
@@ -479,6 +479,9 @@
                                 }
                                 if (row.webkeyLink !== "") {
                                     return "Webkey: " + row.webkeyLink;
+                                }
+                                if (row.teamViewerLink === "" && row.webkeyLink === "") {
+                                    return "";
                                 }
                             } else {
                                 return "";
@@ -560,7 +563,7 @@
 
             let $message = $(
                 '<div class="col-sm-12 alert alert-info">' +
-                    "<p>{% trans 'Please note: Once the CMS Address and Key are authenticated in this form the Display will attempt to register with the CMS Instance details entered. Once transferred the Display will stop communicating with this CMS Instance.' %}</p>" +
+                    "<p>{{ 'Please note: Once the CMS Address and Key are authenticated in this form the Display will attempt to register with the CMS Instance details entered. Once transferred the Display will stop communicating with this CMS Instance.'|trans }}</p>" +
                 '</div>'
             );
 
@@ -571,7 +574,7 @@
                     '<label class="col-sm-2 control-label" for="newCmsAddress" accesskey="">New CMS Address</label>' +
                     '<div class="col-sm-10">' +
                         '<input class="form-control" name="newCmsAddress" type="text" id="newCmsAddress" value="">' +
-                        '<span class="help-block">{% trans "Full URL to the new CMS, including https:// "%}</span>' +
+                        '<span class="help-block">{{ "Full URL to the new CMS, including https:// "|trans }}</span>' +
                     '</div>' +
                 '</div>'
             );
@@ -581,7 +584,7 @@
                     '<label class="col-sm-2 control-label" for="newCmsKey" accesskey="">New CMS Key</label>' +
                     '<div class="col-sm-10">' +
                         '<input class="form-control" name="newCmsKey" type="text" id="newCmsKey" value="">' +
-                        '<span class="help-block">{% trans "CMS Secret Key associated with the provided new CMS Address"%}</span>' +
+                        '<span class="help-block">{{ "CMS Secret Key associated with the provided new CMS Address"|trans }}</span>' +
                     '</div>' +
                 '</div>'
             );
@@ -591,7 +594,7 @@
                     '<label class="col-sm-2 control-label" for="twoFactorCode" accesskey="">Two Factor Code</label>' +
                     '<div class="col-sm-10">' +
                         '<input class="form-control" name="twoFactorCode" type="text" id="twoFactorCode" value="">' +
-                        '<span class="help-block">{% trans "Please enter your Two Factor authentication code"%}</span>' +
+                '<span class="help-block">{{ "Please enter your Two Factor authentication code"|trans }}</span>' +
                     '</div>' +
                 '</div>'
             );

@@ -1673,6 +1673,17 @@ class Soap
                 continue;
             }
 
+            // check maximum retention period against stat date, do not record if it's older than max stat age
+            $maxAge = intval($this->getConfig()->getSetting('MAINTENANCE_STAT_MAXAGE'));
+            if ($maxAge != 0) {
+                $maxAgeDate = Date::now()->subDays($maxAge);
+
+                if ($todt->isBefore($maxAgeDate)) {
+                    $this->getLog()->debug('Stat older than max retention period, skipping.');
+                    continue;
+                }
+            }
+
             // Important - stats will now send display entity instead of displayId
             $stats = [
                 'type' => $type,

@@ -193,11 +193,15 @@ class DarkSkyProvider implements WeatherProvider
         $day->temperatureEveningRound = $day->temperatureRound;
 
         // Wind direction
-        foreach (self::cardinalDirections() as $dir => $angles) {
-            if ($day->windBearing >= $angles[0] && $day->windBearing < $angles[1]) {
-                $day->windDirection = $dir;
-                break;
+        if ($day->windBearing !== null && $day->windBearing !== 0) {
+            foreach (self::cardinalDirections() as $dir => $angles) {
+                if ($day->windBearing >= $angles[0] && $day->windBearing < $angles[1]) {
+                    $day->windDirection = $dir;
+                    break;
+                }
             }
+        } else {
+            $day->windDirection = '--';
         }
 
         // Map icon
