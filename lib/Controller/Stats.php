@@ -1101,7 +1101,7 @@ class Stats extends Base
         }
 
         $body .= '
-            GROUP BY display.display
+            GROUP BY display.display, display.displayId
         ';
 
         // Sorting?
