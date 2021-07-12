@@ -157,8 +157,7 @@ class StatsArchiveTask implements TaskInterface
             'toDt'=> $toDt,
         ]);
 
-        if ($resultSet->getTotalCount() > 0 ) {
-
+        if ($resultSet->getTotalCount() > 0) {
             $this->log->debug('Stats query run, create temporary file for export');
 
             // Create a temporary file for this
@@ -167,18 +166,15 @@ class StatsArchiveTask implements TaskInterface
             $out = fopen($fileName, 'w');
             fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId', 'Engagements']);
 
-            while ($row = $resultSet->getNextRow() ) {
-
+            while ($row = $resultSet->getNextRow()) {
                 $sanitizedRow = $this->getSanitizer($row);
 
                 if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-
                     $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()) : null;
                     $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
                     $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
                     $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
                 } else {
-
                     $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
                     $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
                     $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
@@ -277,11 +273,11 @@ class StatsArchiveTask implements TaskInterface
         if ($archiveOwner == null) {
             $admins = $this->userFactory->getSuperAdmins();
 
-            if (count($admins) <= 0)
+            if (count($admins) <= 0) {
                 throw new TaskRunException(__('No super admins to use as the archive owner, please set one in the configuration.'));
+            }
 
             $this->archiveOwner = $admins[0];
-
         } else {
             try {
                 $this->archiveOwner = $this->userFactory->getByName($archiveOwner);
