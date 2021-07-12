@@ -131,109 +131,115 @@ class StatsArchiveTask implements TaskInterface
         $this->runMessage .= ' - ' . $this->date->getLocalDate($fromDt) . ' / ' . $this->date->getLocalDate($toDt) . PHP_EOL;
 
         $resultSet = $this->timeSeriesStore->getStats([
-            'fromDt'=> $fromDt,
-            'toDt'=> $toDt,
+            'fromDt' => $fromDt,
+            'toDt' => $toDt,
         ]);
 
-        $this->log->debug('Stats query run, create temporary file for export');
+        if ($resultSet->getTotalCount() > 0) {
 
-        // Create a temporary file for this
-        $fileName = tempnam(sys_get_temp_dir(), 'stats');
+            $this->log->debug('Stats query run, create temporary file for export');
 
-        $out = fopen($fileName, 'w');
-        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId', 'Engagements']);
+            // Create a temporary file for this
+            $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
-        while ($row = $resultSet->getNextRow() ) {
+            $out = fopen($fileName, 'w');
+            fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId', 'Engagements']);
 
-            if ($this->timeSeriesStore->getEngine() == 'mongodb') {
+            while ($row = $resultSet->getNextRow()) {
 
-                $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
-                $start = $this->date->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                $end = $this->date->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
-            } else {
+                if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-                $statDate = isset($row['statDate']) ?$this->date->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
-                $start = $this->date->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-                $end = $this->date->parse($row['end'], 'U')->format('Y-m-d H:i:s');
-                $engagements = isset($row['engagements']) ? $row['engagements'] : '[]';
+                    $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
+                    $start = $this->date->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                    $end = $this->date->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                    $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
+                } else {
+
+                    $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
+                    $start = $this->date->parse($row['start'], 'U')->format('Y-m-d H:i:s');
+                    $end = $this->date->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+                    $engagements = isset($row['engagements']) ? $row['engagements'] : '[]';
+                }
+
+                // Read the columns
+                fputcsv($out, [
+                    $statDate,
+                    $this->sanitizer->string($row['type']),
+                    $start,
+                    $end,
+                    isset($row['layout']) ? $this->sanitizer->string($row['layout']) : '',
+                    isset($row['display']) ? $this->sanitizer->string($row['display']) : '',
+                    isset($row['media']) ? $this->sanitizer->string($row['media']) : '',
+                    isset($row['tag']) ? $this->sanitizer->string($row['tag']) : '',
+                    $this->sanitizer->string($row['duration']),
+                    $this->sanitizer->string($row['count']),
+                    $this->sanitizer->int($row['displayId']),
+                    isset($row['layoutId']) ? $this->sanitizer->int($row['layoutId']) : '',
+                    isset($row['widgetId']) ? $this->sanitizer->int($row['widgetId']) : '',
+                    isset($row['mediaId']) ? $this->sanitizer->int($row['mediaId']) : '',
+                    $engagements
+                ]);
             }
 
-            // Read the columns
-            fputcsv($out, [
-                $statDate,
-                $this->sanitizer->string($row['type']),
-                $start,
-                $end,
-                isset($row['layout']) ? $this->sanitizer->string($row['layout']) :'',
-                isset($row['display']) ? $this->sanitizer->string($row['display']) :'',
-                isset($row['media']) ? $this->sanitizer->string($row['media']) :'',
-                isset($row['tag']) ? $this->sanitizer->string($row['tag']) :'',
-                $this->sanitizer->string($row['duration']),
-                $this->sanitizer->string($row['count']),
-                $this->sanitizer->int($row['displayId']),
-                isset($row['layoutId']) ? $this->sanitizer->int($row['layoutId']) :'',
-                isset($row['widgetId']) ? $this->sanitizer->int($row['widgetId']) :'',
-                isset($row['mediaId']) ? $this->sanitizer->int($row['mediaId']) :'',
-                $engagements
-            ]);
+            fclose($out);
+            $this->log->debug('Temporary file written, zipping');
+
+            // Create a ZIP file and add our temporary file
+            $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/stats.csv.zip';
+            $zip = new \ZipArchive();
+            $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+            if ($result !== true)
+                throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+
+            $zip->addFile($fileName, 'stats.csv');
+            $zip->close();
+
+            // Remove the CSV file
+            unlink($fileName);
+
+            $this->log->debug('Zipped to ' . $zipName);
+
+            // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
+            $this->store->select('SELECT 1', [], null, true);
+
+            $this->log->debug('MySQL connection refreshed if necessary');
+
+            // Upload to the library
+            $media = $this->mediaFactory->create(
+                __('Stats Export %s to %s - %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d'), Random::generateString(5)),
+                'stats.csv.zip',
+                'genericfile',
+                $this->archiveOwner->getId()
+            );
+            $media->save();
+
+            $this->log->debug('Media saved as ' . $media->name);
+
+            // Commit before the delete (the delete might take a long time)
+            $this->store->commitIfNecessary();
+
+            // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported
+            $options = [
+                'maxAttempts' => -1,
+                'statsDeleteSleep' => 1,
+                'limit' => 1000
+            ];
+
+            $this->log->debug('Delete stats for period: ' . $fromDt->toAtomString() . ' - ' . $toDt->toAtomString());
+
+            // Delete the stats, incrementally
+            $this->timeSeriesStore->deleteStats($toDt, $fromDt, $options);
+
+            // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
+            $this->store->select('SELECT 1', [], null, true);
+
+            $this->log->debug('MySQL connection refreshed if necessary');
+
+            $this->log->debug('Delete stats completed, export period completed.');
+
+        } else {
+            $this->log->debug('There are no stats to archive');
         }
-
-        fclose($out);
-        $this->log->debug('Temporary file written, zipping');
-
-        // Create a ZIP file and add our temporary file
-        $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/stats.csv.zip';
-        $zip = new \ZipArchive();
-        $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        if ($result !== true)
-            throw new \InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
-
-        $zip->addFile($fileName, 'stats.csv');
-        $zip->close();
-
-        // Remove the CSV file
-        unlink($fileName);
-
-        $this->log->debug('Zipped to ' . $zipName);
-
-        // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
-        $this->store->select('SELECT 1', [], null, true);
-
-        $this->log->debug('MySQL connection refreshed if necessary');
-
-        // Upload to the library
-        $media = $this->mediaFactory->create(
-            __('Stats Export %s to %s - %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d'), Random::generateString(5)),
-            'stats.csv.zip',
-            'genericfile',
-            $this->archiveOwner->getId()
-        );
-        $media->save();
-
-        $this->log->debug('Media saved as ' . $media->name);
-
-        // Commit before the delete (the delete might take a long time)
-        $this->store->commitIfNecessary();
-
-        // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported
-        $options = [
-            'maxAttempts' => -1,
-            'statsDeleteSleep' => 1,
-            'limit' => 1000
-        ];
-
-        $this->log->debug('Delete stats for period: ' . $fromDt->toAtomString() . ' - ' . $toDt->toAtomString());
-
-        // Delete the stats, incrementally
-        $this->timeSeriesStore->deleteStats($toDt, $fromDt, $options);
-
-        // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
-        $this->store->select('SELECT 1', [], null, true);
-
-        $this->log->debug('MySQL connection refreshed if necessary');
-
-        $this->log->debug('Delete stats completed, export period completed.');
     }
 
     /**
