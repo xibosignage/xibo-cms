@@ -529,8 +529,11 @@ class Stats extends Base
         if ($displayId != 0)
             $SQL .= ', bandwidthtype.name AS type ';
 
-        $SQL .= ' FROM `bandwidth`
-                LEFT OUTER JOIN `display`
+        // For user with limited access, return only data for displays this user has permissions to.
+        $joinType = ($this->getUser()->isSuperAdmin()) ? 'LEFT OUTER JOIN' : 'INNER JOIN';
+
+        $SQL .= ' FROM `bandwidth` ' .
+                $joinType . ' `display`
                 ON display.displayid = bandwidth.displayid AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
         if ($displayId != 0)
