@@ -372,4 +372,35 @@ class StatisticsTest extends LocalWebTestCase
         $body = $this->client->response->body();
         $this->assertContains('layout,"'. Date::now()->startOfDay()->subDays(5)->format('Y-m-d'), $body);
     }
+
+    public function testProofOldStats()
+    {
+        $hardwareId = $this->display->license;
+
+        // Attempt to insert stat data older than 30 days
+        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
+            '<stats>
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(35)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(31)->format('Y-m-d H:i:s') .'" 
+                        type="layout" 
+                        scheduleid="0" 
+                        layoutid="' . $this->layout->layoutId . '" />
+                    </stats>');
+        $this->assertSame(true, $response);
+
+        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
+            '<stats>
+                        <stat fromdt="'. Date::now()->startOfDay()->subDays(40)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Date::now()->startOfDay()->subDays(38)->format('Y-m-d H:i:s') .'" 
+                        type="layout" 
+                        scheduleid="0" 
+                        layoutid="' . $this->layout->layoutId . '" />
+                    </stats>');
+        $this->assertSame(true, $response);
+
+        // Default max stat age is 30 days, therefore we expect to get no results after the attempted inserts.
+        $stats = (new XiboStats($this->getEntityProvider()))->get(['fromDt' => Date::now()->startOfDay()->subDays(41)->format('Y-m-d H:i:s'), 'toDt' => Date::now()->startOfDay()->subDays(31)->format('Y-m-d H:i:s'), 'layoutId' => $this->layout->layoutId]);
+        // print_r($stats);
+        $this->assertEquals(0, count($stats));
+    }
 }
