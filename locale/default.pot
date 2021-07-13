@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-04-08 10:56+0100\n"
+"POT-Creation-Date: 2021-07-12 17:07+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -662,7 +662,7 @@ msgstr ""
 #: cache/48/485bf6fd1c457a4c6de1d2a921c9e2f9f69c27776706b7f5f1cd3809f724cecb.php:73
 #: cache/7d/7d2daffb6294004e4d1346823bb1dc4575d25964831ff535161bfc58fb85872a.php:77
 #: cache/6a/6ae9958dacd14501592551f72cfcc4e92b0499a80b3e253aaff7951d06ead5bc.php:66
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:274
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:278
 #: cache/03/036aa5443aafdde6471273eb1306d878b43dda44223e48aef21a57b5a40a161e.php:67
 #: cache/03/038c36390630d1973d9061354e8cca9ce978487bf74d20e53723fd5e5622c3ea.php:63
 #: cache/62/6265c9e63fa2cadec92466c6799cd5847da390940fb8b5e5ca2e1d46c3d7f170.php:66
@@ -1921,7 +1921,7 @@ msgstr ""
 
 #: cache/3d/3dd387b6105c512e1d7d2a0fc64b41964c38428ec8af6c2950944c85f6e13e77.php:205
 #: cache/0d/0d6e051141f48c2153387827a93bdd6e773d64372cd7a89567ed34b1d789623b.php:123
-#: lib/Controller/Stats.php:1133
+#: lib/Controller/Stats.php:1136
 msgid "Hours"
 msgstr ""
 
@@ -1931,7 +1931,7 @@ msgstr ""
 
 #: cache/3d/3dd387b6105c512e1d7d2a0fc64b41964c38428ec8af6c2950944c85f6e13e77.php:220
 #: cache/0d/0d6e051141f48c2153387827a93bdd6e773d64372cd7a89567ed34b1d789623b.php:118
-#: lib/Controller/Stats.php:1137
+#: lib/Controller/Stats.php:1140
 msgid "Minutes"
 msgstr ""
 
@@ -2395,7 +2395,7 @@ msgstr ""
 #: cache/81/815b05bea7fe88b8e8ed83ed2c67641342e7c39c2a3c16a54bab8947b0c5d1cd.php:97
 #: lib/Controller/DisplayGroup.php:325 lib/Controller/Template.php:187
 #: lib/Controller/Library.php:641 lib/Controller/DayPart.php:193
-#: lib/Controller/Campaign.php:278 lib/Controller/Playlist.php:387
+#: lib/Controller/Campaign.php:278 lib/Controller/Playlist.php:393
 #: lib/Controller/Command.php:151 lib/Controller/Layout.php:1412
 #: lib/Controller/DataSet.php:269 lib/Controller/Display.php:806
 #: lib/Controller/PlayerSoftware.php:182
@@ -2512,6 +2512,12 @@ msgstr ""
 #: lib/XTR/RemoteDataSetFetchTask.php:169
 #: lib/XTR/MaintenanceRegularTask.php:104 lib/XTR/StatsArchiveTask.php:112
 msgid "Done"
+msgstr ""
+
+#: cache/56/563a8ff5556168179bb590f7ebfd0d7e8c24914d6c914e67938de1a13adc6461.php:731
+msgid ""
+"Check to enable the collection of Proof of Play statistics for the selected "
+"items."
 msgstr ""
 
 #: cache/4c/4c3090a007c8e4e37d552f089a012bac6041c54984dba3c24babea55d54ab95a.php:48
@@ -3555,7 +3561,7 @@ msgstr ""
 #: cache/a6/a6092e66d2389821b6a4c5fe7498c523f98673ba97b347afe7a7dc990f0c4e28.php:56
 #: cache/a5/a5fb71d9263a580105bb70caaadcf16d8a854fd1297644a774d159d65be3964a.php:48
 #: cache/20/209b8f543290c1b19d95551c9828d2eaba25bacc851b645eb0abd97d383ccead.php:72
-#: lib/XTR/MaintenanceRegularTask.php:243
+#: lib/XTR/MaintenanceRegularTask.php:247
 msgid "Tidy Library"
 msgstr ""
 
@@ -3907,7 +3913,7 @@ msgstr ""
 
 #: cache/df/df8798a332849cc35978c8a44f8ee224bb284651f03a5e7a6d0d451de7f0de2b.php:70
 #: cache/d0/d069942ea870380ba4daddc2260055006bd11d80b40882caaefb2ec58369262e.php:108
-#: lib/Controller/Library.php:1860 lib/Controller/Playlist.php:1398
+#: lib/Controller/Library.php:1860 lib/Controller/Playlist.php:1392
 #: lib/Controller/Layout.php:1220
 msgid "Design"
 msgstr ""
@@ -4111,7 +4117,7 @@ msgstr ""
 #: cache/e2/e22e530a5b710304ef176700746516c4f592a0d43d83522b04f25f297ffde918.php:58
 #: cache/48/48b4940722328a69cccc4be53821347dc66277f6f2eb199b30a8dc683e589caa.php:62
 #: cache/a7/a7df2a942f7b7b3f01189a98ca3fd1b30e154673997b8eb71275983a5a749c66.php:75
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:266
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:270
 #: cache/60/60d787548a084caef81a5d2827212ce5cbc11a8d1039671ae73c2807865351d2.php:51
 #: cache/f2/f2ec4f0fdaa5e9ab1aba900a88c4cfcb333368e9bf020715f2031762c3d6f32f.php:395
 #: cache/eb/eb5401a78c8dc4bc6d26baf15436295229b4f1d77c5a6b0bf5f25f0061fe3f6c.php:64
@@ -4166,7 +4172,7 @@ msgid "Export"
 msgstr ""
 
 #: cache/31/319f872ef9b5e8d57861de46cd884129e5469bae6df7c707c0994558f4e08fc2.php:178
-msgid "Total number of records to be exported: <strong> "
+msgid "Total number of records to be exported "
 msgstr ""
 
 #: cache/31/319f872ef9b5e8d57861de46cd884129e5469bae6df7c707c0994558f4e08fc2.php:222
@@ -4898,8 +4904,8 @@ msgstr ""
 
 #: cache/e4/e45b0742a48d3cfcff68139992baf915c0c3497c2a4f55a09549ba61fa78d5c7.php:194
 #: cache/29/29047b1f0644c28327bd823cd997393aafcdf5b4e0ef30da417be8a65b2f3686.php:89
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:223
-#: lib/Entity/Layout.php:1674 lib/Controller/Region.php:627
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:227
+#: lib/Entity/Layout.php:1678 lib/Controller/Region.php:627
 msgid "Empty Region"
 msgstr ""
 
@@ -5647,8 +5653,9 @@ msgstr ""
 
 #: cache/a6/a6092e66d2389821b6a4c5fe7498c523f98673ba97b347afe7a7dc990f0c4e28.php:1904
 msgid ""
-"Maximum age for statistics entries in days. Set to 0 to keep statistics "
-"indefinitely."
+"Maximum age for statistics entries in days. Entries older than this will not "
+"be processed and existing entries will be removed. Set to 0 to keep "
+"statistics indefinitely."
 msgstr ""
 
 #: cache/a6/a6092e66d2389821b6a4c5fe7498c523f98673ba97b347afe7a7dc990f0c4e28.php:1934
@@ -6574,7 +6581,7 @@ msgstr ""
 #: lib/Controller/DayPart.php:171 lib/Controller/DayPart.php:177
 #: lib/Controller/User.php:337 lib/Controller/Campaign.php:258
 #: lib/Controller/Campaign.php:264 lib/Controller/Notification.php:184
-#: lib/Controller/Playlist.php:367 lib/Controller/Playlist.php:373
+#: lib/Controller/Playlist.php:373 lib/Controller/Playlist.php:379
 #: lib/Controller/Tag.php:236 lib/Controller/Tag.php:242
 #: lib/Controller/Report.php:231 lib/Controller/Report.php:237
 #: lib/Controller/Report.php:618 lib/Controller/Report.php:624
@@ -7775,7 +7782,7 @@ msgstr ""
 #: lib/Controller/DataSetColumn.php:149 lib/Controller/Applications.php:137
 #: lib/Controller/DisplayProfile.php:186 lib/Controller/DayPart.php:164
 #: lib/Controller/User.php:328 lib/Controller/Campaign.php:240
-#: lib/Controller/Notification.php:177 lib/Controller/Playlist.php:332
+#: lib/Controller/Notification.php:177 lib/Controller/Playlist.php:338
 #: lib/Controller/MediaManager.php:171 lib/Controller/Tag.php:229
 #: lib/Controller/Report.php:213 lib/Controller/Transition.php:91
 #: lib/Controller/UserGroup.php:149 lib/Controller/Command.php:124
@@ -8890,7 +8897,7 @@ msgstr ""
 #: cache/eb/eb789856e951d1231e5ff5feaf4395b1f364b20a943c15cad25893729d9419d9.php:63
 #: lib/Controller/DisplayGroup.php:279 lib/Controller/Template.php:157
 #: lib/Controller/Library.php:614 lib/Controller/DisplayProfile.php:192
-#: lib/Controller/Campaign.php:247 lib/Controller/Playlist.php:339
+#: lib/Controller/Campaign.php:247 lib/Controller/Playlist.php:345
 #: lib/Controller/UserGroup.php:166 lib/Controller/Layout.php:1328
 #: lib/Controller/DataSet.php:229
 msgid "Copy"
@@ -9256,7 +9263,7 @@ msgid "Inline Editor"
 msgstr ""
 
 #: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:148
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:254
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:258
 msgid "Toggle Fullscreen Mode"
 msgstr ""
 
@@ -9307,71 +9314,75 @@ msgid "Visible area time span"
 msgstr ""
 
 #: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:199
-msgid "Scroll to selected widget"
+msgid "Zoom out to see timeruler!"
 msgstr ""
 
 #: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:203
-msgid "Visible area start time"
+msgid "Scroll to selected widget"
 msgstr ""
 
 #: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:207
-msgid "Visible area end time"
+msgid "Visible area start time"
 msgstr ""
 
 #: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:211
+msgid "Visible area end time"
+msgstr ""
+
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:215
 #: cache/72/72aece665a0c92835f6708803e28b7853815fee04ad8bda355f8b03943cae6d7.php:931
 msgid "Layout name"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:215
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:219
 #: cache/72/72aece665a0c92835f6708803e28b7853815fee04ad8bda355f8b03943cae6d7.php:939
 msgid "Layout duration"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:219
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:223
 #: cache/72/72aece665a0c92835f6708803e28b7853815fee04ad8bda355f8b03943cae6d7.php:947
 msgid "Layout dimensions"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:227
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:231
 msgid "Add to this position"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:231
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:235
 msgid "Zoom in to see more details!"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:238
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:242
 msgid "Edit layout regions"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:242
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:246
 #: cache/80/80068084c6267df134dc1776c89cef7cbf29c956880aad542709793e13086bad.php:301
 #: cache/72/72aece665a0c92835f6708803e28b7853815fee04ad8bda355f8b03943cae6d7.php:704
 msgid "Add"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:246
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:250
 msgid "Add a new region"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:250
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:254
 msgid "Delete region"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:258
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:262
 msgid "Undo"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:262
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:266
 msgid "Revert last change"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:270
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:274
 msgid "Return to Layout View"
 msgstr ""
 
-#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:278
+#: cache/11/1119a3ccbb5643adc432bed25012f6c40ef7d79aa502fb22731031e2d01b065e.php:282
 msgid "Save changes"
 msgstr ""
 
@@ -10868,8 +10879,8 @@ msgid ""
 "descendants."
 msgstr ""
 
-#: cache/a3/a3396bb698b43590408d9270f20d3900177de1ec4155d7dcdd43cc893a422714.php:282
-#: cache/a3/a3396bb698b43590408d9270f20d3900177de1ec4155d7dcdd43cc893a422714.php:300
+#: cache/a3/a3396bb698b43590408d9270f20d3900177de1ec4155d7dcdd43cc893a422714.php:279
+#: cache/a3/a3396bb698b43590408d9270f20d3900177de1ec4155d7dcdd43cc893a422714.php:297
 msgid "Select a property to display inputs"
 msgstr ""
 
@@ -11600,7 +11611,7 @@ msgid "Locked"
 msgstr ""
 
 #: cache/80/80068084c6267df134dc1776c89cef7cbf29c956880aad542709793e13086bad.php:307
-#: lib/Controller/StatusDashboard.php:290 lib/Controller/Stats.php:841
+#: lib/Controller/StatusDashboard.php:290 lib/Controller/Stats.php:844
 msgid "Empty"
 msgstr ""
 
@@ -11841,7 +11852,7 @@ msgid "Transfer to another CMS"
 msgstr ""
 
 #: cache/9d/9d8d72c85d8c8d189d0fe5cf08db48f4c5982c97c9709a3e89c22b5224733ff1.php:78
-#: cache/79/7936d718dd95691b98581e4ed5b342af7b7a00d01a621bf0a193dcf213854d97.php:961
+#: cache/79/7936d718dd95691b98581e4ed5b342af7b7a00d01a621bf0a193dcf213854d97.php:964
 msgid ""
 "Please note: Once the CMS Address and Key are authenticated in this form the "
 "Display will attempt to register with the CMS Instance details entered. Once "
@@ -11861,7 +11872,7 @@ msgid "New CMS Key"
 msgstr ""
 
 #: cache/9d/9d8d72c85d8c8d189d0fe5cf08db48f4c5982c97c9709a3e89c22b5224733ff1.php:100
-#: cache/79/7936d718dd95691b98581e4ed5b342af7b7a00d01a621bf0a193dcf213854d97.php:988
+#: cache/79/7936d718dd95691b98581e4ed5b342af7b7a00d01a621bf0a193dcf213854d97.php:991
 msgid "CMS Secret Key associated with the provided new CMS Address"
 msgstr ""
 
@@ -11870,7 +11881,7 @@ msgid "Two Factor Code"
 msgstr ""
 
 #: cache/9d/9d8d72c85d8c8d189d0fe5cf08db48f4c5982c97c9709a3e89c22b5224733ff1.php:111
-#: cache/79/7936d718dd95691b98581e4ed5b342af7b7a00d01a621bf0a193dcf213854d97.php:1001
+#: cache/79/7936d718dd95691b98581e4ed5b342af7b7a00d01a621bf0a193dcf213854d97.php:1004
 msgid "Please enter your Two Factor authentication code"
 msgstr ""
 
@@ -13700,7 +13711,7 @@ msgstr ""
 msgid "Webkey to this Display"
 msgstr ""
 
-#: cache/79/7936d718dd95691b98581e4ed5b342af7b7a00d01a621bf0a193dcf213854d97.php:975
+#: cache/79/7936d718dd95691b98581e4ed5b342af7b7a00d01a621bf0a193dcf213854d97.php:978
 msgid "Full URL to the new CMS, including https:// "
 msgstr ""
 
@@ -14251,182 +14262,182 @@ msgstr ""
 msgid "Unable to import row %d"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:212
+#: lib/Weather/DarkSkyProvider.php:216
 #: lib/Weather/OpenWeatherMapProvider.php:357
 msgid "Arabic"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:213
+#: lib/Weather/DarkSkyProvider.php:217
 #: lib/Weather/OpenWeatherMapProvider.php:358
 msgid "Azerbaijani"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:214
+#: lib/Weather/DarkSkyProvider.php:218
 msgid "Belarusian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:215
+#: lib/Weather/DarkSkyProvider.php:219
 msgid "Bosnian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:216
+#: lib/Weather/DarkSkyProvider.php:220
 #: lib/Weather/OpenWeatherMapProvider.php:359
 msgid "Bulgarian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:217
+#: lib/Weather/DarkSkyProvider.php:221
 #: lib/Weather/OpenWeatherMapProvider.php:360
 msgid "Catalan"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:218
+#: lib/Weather/DarkSkyProvider.php:222
 msgid "Cornish"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:219
+#: lib/Weather/DarkSkyProvider.php:223
 msgid "Simplified Chinese"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:220
+#: lib/Weather/DarkSkyProvider.php:224
 msgid "Traditional Chinese"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:221
+#: lib/Weather/DarkSkyProvider.php:225
 #: lib/Weather/OpenWeatherMapProvider.php:375
 msgid "Croatian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:222
+#: lib/Weather/DarkSkyProvider.php:226
 #: lib/Weather/OpenWeatherMapProvider.php:363
 msgid "Czech"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:223
+#: lib/Weather/DarkSkyProvider.php:227
 #: lib/Weather/OpenWeatherMapProvider.php:364
 msgid "Danish"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:224
+#: lib/Weather/DarkSkyProvider.php:228
 #: lib/Weather/OpenWeatherMapProvider.php:385
 msgid "Dutch"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:225
+#: lib/Weather/DarkSkyProvider.php:229
 msgid "Georgian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:226
+#: lib/Weather/DarkSkyProvider.php:230
 #: lib/Weather/OpenWeatherMapProvider.php:365
 msgid "German"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:227
+#: lib/Weather/DarkSkyProvider.php:231
 #: lib/Weather/OpenWeatherMapProvider.php:366
 msgid "Greek"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:228
+#: lib/Weather/DarkSkyProvider.php:232
 #: lib/Weather/OpenWeatherMapProvider.php:367
 msgid "English"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:229
+#: lib/Weather/DarkSkyProvider.php:233
 msgid "Estonian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:230
+#: lib/Weather/DarkSkyProvider.php:234
 #: lib/Weather/OpenWeatherMapProvider.php:370
 msgid "Finnish"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:231
+#: lib/Weather/DarkSkyProvider.php:235
 #: lib/Weather/OpenWeatherMapProvider.php:371
 msgid "French"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:232
+#: lib/Weather/DarkSkyProvider.php:236
 #: lib/Weather/OpenWeatherMapProvider.php:376
 msgid "Hungarian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:233
+#: lib/Weather/DarkSkyProvider.php:237
 msgid "Icelandic"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:234
+#: lib/Weather/DarkSkyProvider.php:238
 #: lib/Weather/OpenWeatherMapProvider.php:377
 msgid "Indonesian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:235
+#: lib/Weather/DarkSkyProvider.php:239
 #: lib/Weather/OpenWeatherMapProvider.php:378
 msgid "Italian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:236
+#: lib/Weather/DarkSkyProvider.php:240
 #: lib/Weather/OpenWeatherMapProvider.php:379
 msgid "Japanese"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:237
+#: lib/Weather/DarkSkyProvider.php:241
 msgid "Norwegian Bokmål"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:238
+#: lib/Weather/DarkSkyProvider.php:242
 #: lib/Weather/OpenWeatherMapProvider.php:386
 msgid "Polish"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:239
+#: lib/Weather/DarkSkyProvider.php:243
 #: lib/Weather/OpenWeatherMapProvider.php:387
 msgid "Portuguese"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:240
+#: lib/Weather/DarkSkyProvider.php:244
 #: lib/Weather/OpenWeatherMapProvider.php:390
 msgid "Russian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:241
+#: lib/Weather/DarkSkyProvider.php:245
 #: lib/Weather/OpenWeatherMapProvider.php:395
 msgid "Serbian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:242
+#: lib/Weather/DarkSkyProvider.php:246
 #: lib/Weather/OpenWeatherMapProvider.php:392
 msgid "Slovak"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:243
+#: lib/Weather/DarkSkyProvider.php:247
 #: lib/Weather/OpenWeatherMapProvider.php:393
 msgid "Slovenian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:244
+#: lib/Weather/DarkSkyProvider.php:248
 #: lib/Weather/OpenWeatherMapProvider.php:394
 msgid "Spanish"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:245
+#: lib/Weather/DarkSkyProvider.php:249
 #: lib/Weather/OpenWeatherMapProvider.php:391
 msgid "Swedish"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:246
+#: lib/Weather/DarkSkyProvider.php:250
 msgid "Tetum"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:247
+#: lib/Weather/DarkSkyProvider.php:251
 #: lib/Weather/OpenWeatherMapProvider.php:397
 msgid "Turkish"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:248
+#: lib/Weather/DarkSkyProvider.php:252
 #: lib/Weather/OpenWeatherMapProvider.php:398
 msgid "Ukrainian"
 msgstr ""
 
-#: lib/Weather/DarkSkyProvider.php:249
+#: lib/Weather/DarkSkyProvider.php:253
 msgid "lgpay Atinlay"
 msgstr ""
 
@@ -14504,7 +14515,7 @@ msgstr ""
 
 #: lib/Widget/Countdown.php:415 lib/Widget/Twitter.php:870
 #: lib/Widget/Stocks.php:654 lib/Widget/Currencies.php:827
-#: lib/Widget/TwitterMetro.php:161 lib/Widget/ForecastIo.php:724
+#: lib/Widget/TwitterMetro.php:161 lib/Widget/ForecastIo.php:726
 msgid "Please choose a template"
 msgstr ""
 
@@ -14678,7 +14689,7 @@ msgstr ""
 #: lib/Widget/GoogleTraffic.php:235 lib/Widget/Hls.php:174
 #: lib/Widget/Calendar.php:695 lib/Widget/Stocks.php:657
 #: lib/Widget/Currencies.php:830 lib/Widget/TwitterMetro.php:164
-#: lib/Widget/ForecastIo.php:727 lib/Widget/Ticker.php:894
+#: lib/Widget/ForecastIo.php:729 lib/Widget/Ticker.php:894
 #: lib/Widget/DataSetTicker.php:836
 msgid "Please enter a duration"
 msgstr ""
@@ -14737,12 +14748,12 @@ msgstr ""
 msgid "Please enter a zoom level"
 msgstr ""
 
-#: lib/Widget/GoogleTraffic.php:243 lib/Widget/ForecastIo.php:732
+#: lib/Widget/GoogleTraffic.php:243 lib/Widget/ForecastIo.php:734
 #: lib/Entity/Display.php:580 lib/Controller/Settings.php:306
 msgid "The latitude entered is not valid."
 msgstr ""
 
-#: lib/Widget/GoogleTraffic.php:246 lib/Widget/ForecastIo.php:735
+#: lib/Widget/GoogleTraffic.php:246 lib/Widget/ForecastIo.php:737
 #: lib/Entity/Display.php:577 lib/Controller/Settings.php:316
 msgid "The longitude entered is not valid."
 msgstr ""
@@ -14846,7 +14857,7 @@ msgstr ""
 msgid "Please select at least 1 Playlist to embed"
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:282 lib/Entity/Layout.php:2018
+#: lib/Widget/SubPlaylist.php:282 lib/Entity/Layout.php:2022
 msgid "Cannot add the same SubPlaylist twice."
 msgstr ""
 
@@ -14870,7 +14881,7 @@ msgstr ""
 msgid "cURL extension is required for Twitter"
 msgstr ""
 
-#: lib/Widget/ForecastIo.php:591
+#: lib/Widget/ForecastIo.php:593
 msgid "Template not found, please edit the Widget and select another."
 msgstr ""
 
@@ -14895,7 +14906,7 @@ msgstr ""
 msgid "Please enter a display group name"
 msgstr ""
 
-#: lib/Entity/DisplayGroup.php:604 lib/Entity/Layout.php:829
+#: lib/Entity/DisplayGroup.php:604 lib/Entity/Layout.php:830
 #: lib/Entity/DataSet.php:670
 msgid "Description can not be longer than 254 characters"
 msgstr ""
@@ -15076,26 +15087,26 @@ msgstr ""
 msgid "Please provide a body"
 msgstr ""
 
-#: lib/Entity/Playlist.php:322
+#: lib/Entity/Playlist.php:323
 #, php-format
 msgid "You already own a Playlist called '%s'. Please choose another name."
 msgstr ""
 
-#: lib/Entity/Playlist.php:376
+#: lib/Entity/Playlist.php:377
 #, php-format
 msgid "Widget not found at index %d"
 msgstr ""
 
-#: lib/Entity/Playlist.php:397
+#: lib/Entity/Playlist.php:398
 #, php-format
 msgid "Widget not found with ID %d"
 msgstr ""
 
-#: lib/Entity/Playlist.php:443
+#: lib/Entity/Playlist.php:444
 msgid "Cannot delete a Widget that isn't assigned to me"
 msgstr ""
 
-#: lib/Entity/Playlist.php:678
+#: lib/Entity/Playlist.php:679
 msgid "This Playlist belongs to a Region, please delete the Region instead."
 msgstr ""
 
@@ -15120,19 +15131,19 @@ msgstr ""
 msgid "Call setChildObjectDependencies before load"
 msgstr ""
 
-#: lib/Entity/Media.php:836
+#: lib/Entity/Media.php:843
 msgid "Problem copying file in the Library Folder"
 msgstr ""
 
-#: lib/Entity/Media.php:842
+#: lib/Entity/Media.php:849
 msgid "Problem moving uploaded file into the Library Folder"
 msgstr ""
 
-#: lib/Entity/Media.php:860
+#: lib/Entity/Media.php:867
 msgid "Problem moving downloaded file into the Library Folder"
 msgstr ""
 
-#: lib/Entity/Media.php:866
+#: lib/Entity/Media.php:873
 msgid "Problem copying provided file into the Library Folder"
 msgstr ""
 
@@ -15159,7 +15170,7 @@ msgstr ""
 msgid "The Region dimensions cannot be empty or negative"
 msgstr ""
 
-#: lib/Entity/Region.php:359 lib/Entity/Layout.php:847
+#: lib/Entity/Region.php:359 lib/Entity/Layout.php:848
 msgid "Layer must be 0 or a positive number"
 msgstr ""
 
@@ -15185,41 +15196,41 @@ msgstr ""
 msgid "Please enter a description between 1 and 1000 characters"
 msgstr ""
 
-#: lib/Entity/Layout.php:468
+#: lib/Entity/Layout.php:469
 msgid "Cannot find region"
 msgstr ""
 
-#: lib/Entity/Layout.php:733
+#: lib/Entity/Layout.php:734
 msgid "This layout is used as the global default and cannot be deleted"
 msgstr ""
 
-#: lib/Entity/Layout.php:822
+#: lib/Entity/Layout.php:823
 msgid "The layout dimensions cannot be empty"
 msgstr ""
 
-#: lib/Entity/Layout.php:826
+#: lib/Entity/Layout.php:827
 msgid "Layout Name must be between 1 and 50 characters"
 msgstr ""
 
-#: lib/Entity/Layout.php:842
+#: lib/Entity/Layout.php:843
 #, php-format
 msgid "You already own a Layout called '%s'. Please choose another name."
 msgstr ""
 
-#: lib/Entity/Layout.php:1415 lib/Controller/Fault.php:99
+#: lib/Entity/Layout.php:1418 lib/Controller/Fault.php:99
 msgid "Can't create ZIP. Error Code: "
 msgstr ""
 
-#: lib/Entity/Layout.php:1666
+#: lib/Entity/Layout.php:1670
 #, php-format
 msgid "There is an error with this Layout: %s"
 msgstr ""
 
-#: lib/Entity/Layout.php:1710 lib/Entity/Layout.php:1826
+#: lib/Entity/Layout.php:1715 lib/Entity/Layout.php:1830
 msgid "Not a Draft"
 msgstr ""
 
-#: lib/Entity/Layout.php:1900
+#: lib/Entity/Layout.php:1904
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
@@ -15373,13 +15384,13 @@ msgstr ""
 msgid "Unable to generate schedule, unknown event"
 msgstr ""
 
-#: lib/Entity/Schedule.php:1497 lib/Entity/Schedule.php:1508
+#: lib/Entity/Schedule.php:1504 lib/Entity/Schedule.php:1515
 #: lib/Controller/Schedule.php:319 lib/Controller/Schedule.php:330
 #, php-format
 msgid "%s scheduled on %s"
 msgstr ""
 
-#: lib/Entity/Schedule.php:1506 lib/Controller/Schedule.php:328
+#: lib/Entity/Schedule.php:1513 lib/Controller/Schedule.php:328
 #: lib/Controller/Schedule.php:541
 msgid "Private Item"
 msgstr ""
@@ -15401,12 +15412,12 @@ msgid "Done."
 msgstr ""
 
 #: lib/XTR/MaintenanceDailyTask.php:81 lib/XTR/MaintenanceDailyTask.php:221
-#: lib/XTR/StatsArchiveTask.php:300
+#: lib/XTR/StatsArchiveTask.php:306
 msgid "Error."
 msgstr ""
 
 #: lib/XTR/MaintenanceDailyTask.php:85 lib/XTR/StatsArchiveTask.php:115
-#: lib/XTR/StatsArchiveTask.php:303 lib/Controller/User.php:312
+#: lib/XTR/StatsArchiveTask.php:309 lib/Controller/User.php:312
 msgid "Disabled"
 msgstr ""
 
@@ -15436,7 +15447,7 @@ msgid "Run report results: %s."
 msgstr ""
 
 #: lib/XTR/ReportScheduleTask.php:152 lib/XTR/AuditLogArchiveTask.php:152
-#: lib/XTR/StatsArchiveTask.php:190
+#: lib/XTR/StatsArchiveTask.php:192
 #, php-format
 msgid "Can't create ZIP. Error Code: %s"
 msgstr ""
@@ -15500,13 +15511,13 @@ msgstr ""
 msgid "AuditLog Export %s to %s"
 msgstr ""
 
-#: lib/XTR/AuditLogArchiveTask.php:180 lib/XTR/StatsArchiveTask.php:251
+#: lib/XTR/AuditLogArchiveTask.php:180 lib/XTR/StatsArchiveTask.php:257
 msgid ""
 "No super admins to use as the archive owner, please set one in the "
 "configuration."
 msgstr ""
 
-#: lib/XTR/AuditLogArchiveTask.php:188 lib/XTR/StatsArchiveTask.php:259
+#: lib/XTR/AuditLogArchiveTask.php:188 lib/XTR/StatsArchiveTask.php:265
 msgid "Archive Owner not found"
 msgstr ""
 
@@ -15562,27 +15573,27 @@ msgstr ""
 msgid "Build Layouts"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:268
+#: lib/XTR/MaintenanceRegularTask.php:272
 msgid "Library allowance exceeded"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:314
+#: lib/XTR/MaintenanceRegularTask.php:318
 #, php-format
 msgid "%s is downloading %d files too many times"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:319
+#: lib/XTR/MaintenanceRegularTask.php:323
 #, php-format
 msgid ""
 "Please check the bandwidth graphs and display status for %s to investigate "
 "the issue."
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:346
+#: lib/XTR/MaintenanceRegularTask.php:350
 msgid "Playlist Duration Updates"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:368
+#: lib/XTR/MaintenanceRegularTask.php:372
 msgid "Publishing layouts with set publish dates"
 msgstr ""
 
@@ -15590,16 +15601,16 @@ msgstr ""
 msgid "Stats Archive"
 msgstr ""
 
-#: lib/XTR/StatsArchiveTask.php:207
+#: lib/XTR/StatsArchiveTask.php:209
 #, php-format
 msgid "Stats Export %s to %s - %s"
 msgstr ""
 
-#: lib/XTR/StatsArchiveTask.php:271
+#: lib/XTR/StatsArchiveTask.php:277
 msgid "Tidy Stats"
 msgstr ""
 
-#: lib/XTR/StatsArchiveTask.php:297
+#: lib/XTR/StatsArchiveTask.php:303
 #, php-format
 msgid "Done - %d deleted."
 msgstr ""
@@ -15737,13 +15748,13 @@ msgstr ""
 msgid "Assign Layouts"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:515 lib/Controller/DisplayGroup.php:2052
+#: lib/Controller/DisplayGroup.php:515 lib/Controller/DisplayGroup.php:2043
 #: lib/Controller/Help.php:168 lib/Controller/DataSetColumn.php:316
 #: lib/Controller/Applications.php:302 lib/Controller/Applications.php:346
 #: lib/Controller/DisplayProfile.php:274 lib/Controller/DisplayProfile.php:555
 #: lib/Controller/DayPart.php:347 lib/Controller/User.php:577
 #: lib/Controller/Campaign.php:348 lib/Controller/Campaign.php:861
-#: lib/Controller/Notification.php:488 lib/Controller/Playlist.php:562
+#: lib/Controller/Notification.php:488 lib/Controller/Playlist.php:568
 #: lib/Controller/Tag.php:332 lib/Controller/Region.php:263
 #: lib/Controller/UserGroup.php:317 lib/Controller/Command.php:261
 #: lib/Controller/DataSetRss.php:311 lib/Controller/Layout.php:383
@@ -15759,7 +15770,7 @@ msgstr ""
 #: lib/Controller/Applications.php:438 lib/Controller/DisplayProfile.php:417
 #: lib/Controller/DayPart.php:452 lib/Controller/User.php:812
 #: lib/Controller/Campaign.php:453 lib/Controller/Notification.php:610
-#: lib/Controller/Playlist.php:684 lib/Controller/Tag.php:464
+#: lib/Controller/Playlist.php:690 lib/Controller/Tag.php:464
 #: lib/Controller/Report.php:337 lib/Controller/Transition.php:135
 #: lib/Controller/Region.php:401 lib/Controller/Region.php:553
 #: lib/Controller/UserGroup.php:404 lib/Controller/Command.php:322
@@ -15777,7 +15788,7 @@ msgstr ""
 #: lib/Controller/Applications.php:460 lib/Controller/DisplayProfile.php:481
 #: lib/Controller/DayPart.php:554 lib/Controller/User.php:892
 #: lib/Controller/Campaign.php:516 lib/Controller/Notification.php:661
-#: lib/Controller/Playlist.php:725 lib/Controller/Tag.php:577
+#: lib/Controller/Playlist.php:731 lib/Controller/Tag.php:577
 #: lib/Controller/Report.php:364 lib/Controller/Report.php:691
 #: lib/Controller/Region.php:450 lib/Controller/UserGroup.php:448
 #: lib/Controller/Command.php:365 lib/Controller/DataSetRss.php:598
@@ -15875,29 +15886,29 @@ msgid "Layouts unassigned from %s"
 msgstr ""
 
 #: lib/Controller/DisplayGroup.php:1429 lib/Controller/DisplayGroup.php:1470
-#: lib/Controller/DisplayGroup.php:1614 lib/Controller/DisplayGroup.php:1656
-#: lib/Controller/DisplayGroup.php:1788 lib/Controller/DisplayGroup.php:1866
+#: lib/Controller/DisplayGroup.php:1616 lib/Controller/DisplayGroup.php:1658
+#: lib/Controller/DisplayGroup.php:1792 lib/Controller/DisplayGroup.php:1870
 #, php-format
 msgid "Command Sent to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1551 lib/Controller/DisplayGroup.php:1730
+#: lib/Controller/DisplayGroup.php:1551 lib/Controller/DisplayGroup.php:1732
 msgid "Please provide a Layout ID or Campaign ID"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1561 lib/Controller/DisplayGroup.php:1740
+#: lib/Controller/DisplayGroup.php:1561 lib/Controller/DisplayGroup.php:1742
 msgid "Please provide Layout specific campaign ID"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1567 lib/Controller/DisplayGroup.php:1746
+#: lib/Controller/DisplayGroup.php:1567 lib/Controller/DisplayGroup.php:1748
 msgid "Cannot find layout by campaignId"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1572 lib/Controller/DisplayGroup.php:1751
+#: lib/Controller/DisplayGroup.php:1572 lib/Controller/DisplayGroup.php:1753
 msgid "Please provide Layout id or Campaign id"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1881 lib/Controller/DisplayProfile.php:473
+#: lib/Controller/DisplayGroup.php:1885 lib/Controller/DisplayProfile.php:473
 #: lib/Controller/DisplayProfile.php:495 lib/Controller/DisplayProfile.php:546
 msgid "You do not have permission to delete this profile"
 msgstr ""
@@ -15956,12 +15967,12 @@ msgid "Download"
 msgstr ""
 
 #: lib/Controller/Library.php:657 lib/Controller/Library.php:663
-#: lib/Controller/Playlist.php:346 lib/Controller/Playlist.php:352
+#: lib/Controller/Playlist.php:352 lib/Controller/Playlist.php:358
 #: lib/Controller/Layout.php:1376 lib/Controller/Layout.php:1382
 msgid "Enable stats collection?"
 msgstr ""
 
-#: lib/Controller/Library.php:674 lib/Controller/Playlist.php:396
+#: lib/Controller/Library.php:674 lib/Controller/Playlist.php:402
 msgid "Usage Report"
 msgstr ""
 
@@ -16013,12 +16024,12 @@ msgstr ""
 msgid "Specified Media item is not in use."
 msgstr ""
 
-#: lib/Controller/Library.php:1870 lib/Controller/Playlist.php:1408
+#: lib/Controller/Library.php:1870 lib/Controller/Playlist.php:1402
 #: lib/Controller/Layout.php:1261
 msgid "Preview Layout"
 msgstr ""
 
-#: lib/Controller/Library.php:1999 lib/Controller/Playlist.php:873
+#: lib/Controller/Library.php:1999 lib/Controller/Playlist.php:867
 #: lib/Controller/Layout.php:1701
 #, php-format
 msgid "Copied as %s"
@@ -16061,7 +16072,7 @@ msgstr ""
 msgid "Available"
 msgstr ""
 
-#: lib/Controller/StatusDashboard.php:284 lib/Controller/Stats.php:835
+#: lib/Controller/StatusDashboard.php:284 lib/Controller/Stats.php:838
 msgid "Free"
 msgstr ""
 
@@ -16264,27 +16275,27 @@ msgstr ""
 msgid "Problem moving uploaded file into the Attachment Folder"
 msgstr ""
 
-#: lib/Controller/Playlist.php:302
+#: lib/Controller/Playlist.php:308
 msgid "This Playlist has enable stat collection set to ON"
 msgstr ""
 
-#: lib/Controller/Playlist.php:306
+#: lib/Controller/Playlist.php:312
 msgid "This Playlist has enable stat collection set to OFF"
 msgstr ""
 
-#: lib/Controller/Playlist.php:310
+#: lib/Controller/Playlist.php:316
 msgid "This Playlist has enable stat collection set to INHERIT"
 msgstr ""
 
-#: lib/Controller/Playlist.php:322
+#: lib/Controller/Playlist.php:328
 msgid "Timeline"
 msgstr ""
 
-#: lib/Controller/Playlist.php:475
+#: lib/Controller/Playlist.php:481
 msgid "Please enter playlist name"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1035 lib/Controller/Playlist.php:1201
+#: lib/Controller/Playlist.php:1029 lib/Controller/Playlist.php:1195
 #: lib/Controller/Region.php:215 lib/Controller/Region.php:368
 #: lib/Controller/Region.php:443 lib/Controller/Region.php:501
 #: lib/Controller/Layout.php:582 lib/Controller/Module.php:465
@@ -16294,41 +16305,41 @@ msgstr ""
 msgid "This Layout is not a Draft, please checkout."
 msgstr ""
 
-#: lib/Controller/Playlist.php:1038
+#: lib/Controller/Playlist.php:1032
 msgid ""
 "This Playlist is dynamically managed so cannot accept manual assignments."
 msgstr ""
 
-#: lib/Controller/Playlist.php:1044
+#: lib/Controller/Playlist.php:1038
 msgid "Please provide Media to Assign"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1060
+#: lib/Controller/Playlist.php:1054
 msgid "You do not have permissions to use this media"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1063
+#: lib/Controller/Playlist.php:1057
 #, php-format
 msgid "You cannot assign file type %s to a playlist"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1135
+#: lib/Controller/Playlist.php:1129
 msgid "Media Assigned"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1210
+#: lib/Controller/Playlist.php:1204
 msgid "Cannot Save empty region playlist. Please add widgets"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1230
+#: lib/Controller/Playlist.php:1224
 msgid "Order Changed"
 msgstr ""
 
-#: lib/Controller/Playlist.php:1347 lib/Controller/Playlist.php:1415
+#: lib/Controller/Playlist.php:1341 lib/Controller/Playlist.php:1409
 msgid "Specified Playlist item is not in use."
 msgstr ""
 
-#: lib/Controller/Playlist.php:1474
+#: lib/Controller/Playlist.php:1468
 #, php-format
 msgid "For Playlist %s Enable Stats Collection is set to %s"
 msgstr ""
@@ -16562,7 +16573,7 @@ msgstr ""
 msgid "Please enter author name"
 msgstr ""
 
-#: lib/Controller/Layout.php:388 lib/Controller/Layout.php:2177
+#: lib/Controller/Layout.php:388 lib/Controller/Layout.php:2180
 msgid "Draft"
 msgstr ""
 
@@ -16577,9 +16588,9 @@ msgstr ""
 #: lib/Controller/Layout.php:648 lib/Controller/Layout.php:736
 #: lib/Controller/Layout.php:774 lib/Controller/Layout.php:815
 #: lib/Controller/Layout.php:874 lib/Controller/Layout.php:903
-#: lib/Controller/Layout.php:2123 lib/Controller/Layout.php:2163
-#: lib/Controller/Layout.php:2257 lib/Controller/Layout.php:2313
-#: lib/Controller/Layout.php:2359 lib/Controller/Layout.php:2401
+#: lib/Controller/Layout.php:2126 lib/Controller/Layout.php:2166
+#: lib/Controller/Layout.php:2260 lib/Controller/Layout.php:2317
+#: lib/Controller/Layout.php:2368 lib/Controller/Layout.php:2410
 msgid "You do not have permissions to edit this layout"
 msgstr ""
 
@@ -16668,30 +16679,30 @@ msgstr ""
 msgid "Cannot copy a Draft Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:2167
+#: lib/Controller/Layout.php:2170
 msgid "Layout is already checked out"
 msgstr ""
 
-#: lib/Controller/Layout.php:2240
+#: lib/Controller/Layout.php:2243
 #, php-format
 msgid "Checked out %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2335
+#: lib/Controller/Layout.php:2339
 #, php-format
 msgid "Published %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2342
+#: lib/Controller/Layout.php:2346
 #, php-format
 msgid "Layout will be published on %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2405
+#: lib/Controller/Layout.php:2414
 msgid "Layout is not checked out"
 msgstr ""
 
-#: lib/Controller/Layout.php:2416
+#: lib/Controller/Layout.php:2425
 #, php-format
 msgid "Discarded %s"
 msgstr ""
@@ -16701,7 +16712,7 @@ msgid "Deleted from Layout"
 msgstr ""
 
 #: lib/Controller/Stats.php:453 lib/Controller/Stats.php:454
-#: lib/Controller/Stats.php:754 lib/Controller/Stats.php:755
+#: lib/Controller/Stats.php:757 lib/Controller/Stats.php:758
 #: lib/Report/DistributionReport.php:282 lib/Report/DistributionReport.php:300
 #: lib/Report/SummaryReport.php:269 lib/Report/ProofOfPlay.php:275
 #: lib/Report/ProofOfPlay.php:295 lib/Report/ProofOfPlay.php:526
@@ -16709,26 +16720,26 @@ msgstr ""
 msgid "Not Found"
 msgstr ""
 
-#: lib/Controller/Stats.php:516 lib/Controller/Stats.php:641
-#: lib/Controller/Stats.php:694 lib/Controller/Stats.php:994
-#: lib/Controller/Stats.php:1383 lib/Report/DistributionReport.php:358
+#: lib/Controller/Stats.php:516 lib/Controller/Stats.php:644
+#: lib/Controller/Stats.php:697 lib/Controller/Stats.php:997
+#: lib/Controller/Stats.php:1386 lib/Report/DistributionReport.php:358
 #: lib/Report/SummaryReport.php:321 lib/Report/ProofOfPlay.php:368
 msgid "No displays with View permissions"
 msgstr ""
 
-#: lib/Controller/Stats.php:582
+#: lib/Controller/Stats.php:585
 msgid "Deleted Displays"
 msgstr ""
 
-#: lib/Controller/Stats.php:711
+#: lib/Controller/Stats.php:714
 msgid "Both fromDt/toDt should be provided"
 msgstr ""
 
-#: lib/Controller/Stats.php:1004 lib/Report/DistributionReport.php:369
+#: lib/Controller/Stats.php:1007 lib/Report/DistributionReport.php:369
 msgid "No display groups with View permissions"
 msgstr ""
 
-#: lib/Controller/Stats.php:1129
+#: lib/Controller/Stats.php:1132
 msgid "Days"
 msgstr ""
 
@@ -16832,7 +16843,7 @@ msgstr ""
 msgid "once it has connected for the first time"
 msgstr ""
 
-#: lib/Controller/Display.php:1531 lib/Controller/Display.php:2097
+#: lib/Controller/Display.php:1531 lib/Controller/Display.php:2101
 #, php-format
 msgid "Request sent for %s"
 msgstr ""
@@ -16873,14 +16884,18 @@ msgid "Provided CMS URL is invalid"
 msgstr ""
 
 #: lib/Controller/Display.php:1936
+msgid "New CMS URL can have maximum of 40 characters"
+msgstr ""
+
+#: lib/Controller/Display.php:1940
 msgid "Provided CMS Key is invalid"
 msgstr ""
 
-#: lib/Controller/Display.php:1945
+#: lib/Controller/Display.php:1949
 msgid "Invalid Two Factor Authentication Code"
 msgstr ""
 
-#: lib/Controller/Display.php:1985
+#: lib/Controller/Display.php:1989
 #, php-format
 msgid "Cancelled CMS Transfer for %s"
 msgstr ""
@@ -17232,46 +17247,46 @@ msgstr ""
 msgid "Campaign not found"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:251
+#: lib/Factory/LayoutFactory.php:257
 msgid "LayoutId is 0"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:256 lib/Factory/LayoutFactory.php:300
-#: lib/Factory/LayoutFactory.php:344 lib/Factory/LayoutFactory.php:365
-#: lib/Factory/LayoutFactory.php:419
+#: lib/Factory/LayoutFactory.php:262 lib/Factory/LayoutFactory.php:306
+#: lib/Factory/LayoutFactory.php:350 lib/Factory/LayoutFactory.php:371
+#: lib/Factory/LayoutFactory.php:425
 msgid "Layout not found"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:279 lib/Factory/LayoutFactory.php:323
+#: lib/Factory/LayoutFactory.php:285 lib/Factory/LayoutFactory.php:329
 msgid "Layout does not exist"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:700
+#: lib/Factory/LayoutFactory.php:706
 msgid "playlist.json not found in the archive"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1004 lib/Service/ReportService.php:253
+#: lib/Factory/LayoutFactory.php:1010 lib/Service/ReportService.php:253
 msgid "File does not exist"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1009 lib/Service/ReportService.php:258
+#: lib/Factory/LayoutFactory.php:1015 lib/Service/ReportService.php:258
 msgid "Unable to open ZIP"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1126
+#: lib/Factory/LayoutFactory.php:1132
 msgid "Empty file in ZIP"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1131
+#: lib/Factory/LayoutFactory.php:1137
 msgid "Cannot save media file from ZIP file"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1358
+#: lib/Factory/LayoutFactory.php:1364
 #, php-format
 msgid "DataSets have different number of columns imported = %d, existing = %d"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1369
+#: lib/Factory/LayoutFactory.php:1375
 msgid "DataSets have different column names"
 msgstr ""
 
@@ -17541,21 +17556,21 @@ msgid "Tags from"
 msgstr ""
 
 #: lib/Storage/MySqlTimeSeriesStore.php:192
-#: lib/Storage/MongoDbTimeSeriesStore.php:441
+#: lib/Storage/MongoDbTimeSeriesStore.php:446
 msgid "Invalid statId provided"
 msgstr ""
 
-#: lib/Storage/MongoDbTimeSeriesStore.php:588
-#: lib/Storage/MongoDbTimeSeriesStore.php:591
-#: lib/Storage/MongoDbTimeSeriesStore.php:650
-#: lib/Storage/MongoDbTimeSeriesStore.php:653
+#: lib/Storage/MongoDbTimeSeriesStore.php:590
+#: lib/Storage/MongoDbTimeSeriesStore.php:593
+#: lib/Storage/MongoDbTimeSeriesStore.php:652
+#: lib/Storage/MongoDbTimeSeriesStore.php:655
 msgid ""
 "Sorry we encountered an error getting Proof of Play data, please consult "
 "your administrator"
 msgstr ""
 
-#: lib/Storage/MongoDbTimeSeriesStore.php:704
-#: lib/Storage/MongoDbTimeSeriesStore.php:707
+#: lib/Storage/MongoDbTimeSeriesStore.php:706
+#: lib/Storage/MongoDbTimeSeriesStore.php:709
 msgid ""
 "Sorry we encountered an error getting total number of Proof of Play data, "
 "please consult your administrator"
@@ -17566,21 +17581,21 @@ msgstr ""
 msgid "Failed to write to database after %d retries. Please try again later."
 msgstr ""
 
-#: lib/Xmds/Soap.php:2012
+#: lib/Xmds/Soap.php:2025
 #, php-format
 msgid "Recovery for Display %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2013
+#: lib/Xmds/Soap.php:2026
 #, php-format
 msgid "Display ID %d is now back online %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2084
+#: lib/Xmds/Soap.php:2097
 msgid "Bandwidth allowance exceeded"
 msgstr ""
 
-#: lib/Xmds/Soap4.php:666
+#: lib/Xmds/Soap4.php:667
 msgid "Incorrect Screen shot Format"
 msgstr ""
 
