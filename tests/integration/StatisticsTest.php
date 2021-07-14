@@ -134,7 +134,7 @@ class StatisticsTest extends LocalWebTestCase
 
         // Delete stat records
         self::$container->get('timeSeriesStore')
-            ->deleteStats(Carbon::now(), Carbon::now()->startOfDay()->subDays(5));
+            ->deleteStats(Carbon::now(), Carbon::now()->startOfDay()->subDays(10));
     }
 
     /**

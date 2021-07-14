@@ -111,7 +111,7 @@ class ReportScheduleDataTest extends LocalWebTestCase
 
         // Delete stat records
         self::$container->get('timeSeriesStore')
-            ->deleteStats(Carbon::now(), Carbon::now()->startOfDay()->subDays(4));
+            ->deleteStats(Carbon::now(), Carbon::now()->startOfDay()->subDays(10));
     }
 
     /**
