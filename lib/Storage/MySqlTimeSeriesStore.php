@@ -470,7 +470,7 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
                 $delete->bindParam(':limit', $options['limit'], \PDO::PARAM_INT);
             } else {
                 $delete = $this->store->getConnection()
-                    ->prepare('DELETE FROM `stat` WHERE stat.end > :maxage LIMIT :limit');
+                    ->prepare('DELETE FROM `stat` WHERE stat.start <= :maxage LIMIT :limit');
                 $delete->bindParam(':maxage', $maxage, \PDO::PARAM_STR);
                 $delete->bindParam(':limit', $options['limit'], \PDO::PARAM_INT);
             }
