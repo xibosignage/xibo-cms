@@ -164,8 +164,6 @@ class NotificationFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        self::viewPermissionSql('Xibo\Entity\Notification', $body, $params, '`notification`.notificationId', '`notification`.userId', $filterBy);
-
         if ($sanitizedFilter->getInt('notificationId') !== null) {
             $body .= ' AND `notification`.notificationId = :notificationId ';
             $params['notificationId'] = $sanitizedFilter->getInt('notificationId');
@@ -214,6 +212,8 @@ class NotificationFactory extends BaseFactory
             )';
             $params['displayId'] = $sanitizedFilter->getInt('displayId');
         }
+
+        self::viewPermissionSql('Xibo\Entity\Notification', $body, $params, '`notification`.notificationId', '`notification`.userId', $filterBy);
 
         // Sorting?
         $order = '';

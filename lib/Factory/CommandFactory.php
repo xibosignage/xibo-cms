@@ -161,8 +161,6 @@ class CommandFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\Command', $body, $params, 'command.commandId', 'command.userId', $filterBy);
-
         if ($sanitizedFilter->getInt('commandId') !== null) {
             $body .= ' AND `command`.commandId = :commandId ';
             $params['commandId'] = $sanitizedFilter->getInt('commandId');
@@ -182,6 +180,8 @@ class CommandFactory extends BaseFactory
             $body .= ' AND (IFNULL(`command`.availableOn, \'\') = \'\' OR `command`.availableOn LIKE :type) ';
             $params['type'] = '%' . $sanitizedFilter->getString('type') . '%';
         }
+
+        $this->viewPermissionSql('Xibo\Entity\Command', $body, $params, 'command.commandId', 'command.userId', $filterBy);
 
         // Sorting?
         $order = '';
