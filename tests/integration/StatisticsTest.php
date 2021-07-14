@@ -151,7 +151,7 @@ class StatisticsTest extends LocalWebTestCase
                   layoutid="' . $this->layout->layoutId . '" />
         </stats>');
 
-        $response = $this->sendRequest('GET','/stats');
+        $response = $this->sendRequest('GET', '/stats');
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotEmpty($response->getBody());
