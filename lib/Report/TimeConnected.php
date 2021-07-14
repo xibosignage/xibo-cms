@@ -483,7 +483,10 @@ class TimeConnected implements ReportInterface
         GROUP BY periods.id,
              periods.start,
              periods.end,
-             joined.display
+             joined.display,
+             periods.label,
+             periods.customLabel,
+             joined.displayId
         ORDER BY id, display
             ';
 

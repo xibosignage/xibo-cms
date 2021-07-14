@@ -510,6 +510,9 @@
                                 if (row.webkeyLink !== "") {
                                     return "Webkey: " + row.webkeyLink;
                                 }
+                                if (row.teamViewerLink === "" && row.webkeyLink === "") {
+                                    return "";
+                                }
                             } else {
                                 return "";
                             }
