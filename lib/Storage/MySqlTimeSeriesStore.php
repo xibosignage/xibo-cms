@@ -457,14 +457,14 @@ class MySqlTimeSeriesStore implements TimeSeriesStoreInterface
 
                 // Prepare a delete statement which we will use multiple times
                 $delete = $this->store->getConnection()
-                    ->prepare('DELETE FROM `stat` WHERE stat.statDate >= :fromDt AND stat.statDate < :toDt ORDER BY statId LIMIT :limit');
+                    ->prepare('DELETE FROM `stat` WHERE stat.start <= :toDt AND stat.end > :fromDt ORDER BY statId LIMIT :limit');
 
                 $delete->bindParam(':fromDt', $fromDt, \PDO::PARAM_STR);
                 $delete->bindParam(':toDt', $maxage, \PDO::PARAM_STR);
                 $delete->bindParam(':limit', $options['limit'], \PDO::PARAM_INT);
             } else {
                 $delete = $this->store->getConnection()
-                    ->prepare('DELETE FROM `stat` WHERE stat.statDate < :maxage LIMIT :limit');
+                    ->prepare('DELETE FROM `stat` WHERE stat.end > :maxage LIMIT :limit');
                 $delete->bindParam(':maxage', $maxage, \PDO::PARAM_STR);
                 $delete->bindParam(':limit', $options['limit'], \PDO::PARAM_INT);
             }
