@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,9 +23,9 @@
 namespace Xibo\Tests\Integration;
 
 use Carbon\Carbon;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
-use Xibo\OAuth2\Client\Entity\XiboStats;
 use Xibo\OAuth2\Client\Entity\XiboText;
 use Xibo\Tests\Helper\DisplayHelperTrait;
 use Xibo\Tests\Helper\LayoutHelperTrait;
@@ -37,7 +37,6 @@ use Xibo\Tests\LocalWebTestCase;
  */
 class StatisticsWidgetTest extends LocalWebTestCase
 {
-
     use LayoutHelperTrait, DisplayHelperTrait;
 
     /** @var XiboLayout */
@@ -100,7 +99,7 @@ class StatisticsWidgetTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
 
         // Delete stat records
-        self::$container->get('timeSeriesStore')->deleteStats(Carbon::now(), Carbon::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->get('timeSeriesStore')->deleteStats(Carbon::now(), Carbon::now()->startOfDay()->subDays(5));
     }
 
     /**
@@ -113,45 +112,51 @@ class StatisticsWidgetTest extends LocalWebTestCase
         $hardwareId = $this->display->license;
 
         // First insert
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
-                '<stats>
-                        <stat fromdt="2018-02-12 00:00:00" 
-                        todt="2018-02-15 00:00:00" 
+        $response = $this->getXmdsWrapper()->SubmitStats(
+            $hardwareId,
+            '<stats>
+                        <stat fromdt="'. Carbon::now()->startOfDay()->subDays(5)->format(DateFormatHelper::getSystemFormat()) . '" 
+                        todt="'.Carbon::now()->startOfDay()->subDays(2)->format(DateFormatHelper::getSystemFormat()) .'" 
                         type="'.$type.'" 
                         scheduleid="0" 
                         layoutid="'.$this->layout->layoutId.'" 
                         mediaid="'.$this->widget->widgetId.'"/>
-                    </stats>');
+                    </stats>'
+        );
         $this->assertSame(true, $response);
 
         // Second insert
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
+        $response = $this->getXmdsWrapper()->SubmitStats(
+            $hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-15 00:00:00" 
-                        todt="2018-02-16 00:00:00" 
+                        <stat fromdt="'. Carbon::now()->startOfDay()->subDays(2)->format(DateFormatHelper::getSystemFormat()) . '" 
+                        todt="'.Carbon::now()->startOfDay()->subDays(1)->format(DateFormatHelper::getSystemFormat()) .'" 
                         type="'.$type.'" 
                         scheduleid="0" 
                         layoutid="'.$this->layout->layoutId.'" 
                         mediaid="'.$this->widget->widgetId.'"/>
-                    </stats>');
+                    </stats>'
+        );
         $this->assertSame(true, $response);
 
         // Third insert
-        $response = $this->getXmdsWrapper()->SubmitStats($hardwareId,
+        $response = $this->getXmdsWrapper()->SubmitStats(
+            $hardwareId,
             '<stats>
-                        <stat fromdt="2018-02-16 00:00:00" 
-                        todt="2018-02-17 00:00:00" 
+                        <stat fromdt="'. Carbon::now()->startOfDay()->subDays(1)->format(DateFormatHelper::getSystemFormat()) .'" 
+                        todt="'. Carbon::now()->startOfDay()->format(DateFormatHelper::getSystemFormat()) .'" 
                         type="'.$type.'" 
                         scheduleid="0" 
                         layoutid="'.$this->layout->layoutId.'" 
                         mediaid="'.$this->widget->widgetId.'"/>
-                    </stats>');
+                    </stats>'
+        );
         $this->assertSame(true, $response);
 
         // Get stats and see if they match with what we expect
-        $response = $this->sendRequest('GET','/stats' , [
-            'fromDt' => '2018-02-12 00:00:00',
-            'toDt' => '2018-02-17 00:00:00',
+        $response = $this->sendRequest('GET', '/stats', [
+            'fromDt' => Carbon::now()->startOfDay()->subDays(5)->format(DateFormatHelper::getSystemFormat()),
+            'toDt' => Carbon::now()->startOfDay()->format(DateFormatHelper::getSystemFormat()),
             'displayId' => $this->display->displayId,
             'layoutId' => [$this->layout->layoutId],
             'type' => $type
@@ -160,16 +165,9 @@ class StatisticsWidgetTest extends LocalWebTestCase
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
-        //$this->getLogger()->debug($response->getBody());
-        $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $stats = (new XiboStats($this->getEntityProvider()))->get([
-            'fromDt' => '2018-02-12 00:00:00',
-            'toDt' => '2018-02-17 00:00:00',
-            'displayId' => $this->display->displayId,
-            'layoutId' => [$this->layout->layoutId],
-            'type' => $type
-        ]);
-        $this->assertNotEquals(0, count($stats));
 
+        $this->assertObjectHasAttribute('data', $object, $response->getBody());
+        $this->assertEquals(3, $object->data->recordsTotal);
+        $this->assertCount(3, $object->data->data);
     }
 }
