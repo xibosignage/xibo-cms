@@ -135,8 +135,14 @@ class StatsArchiveTask implements TaskInterface
             'toDt' => $toDt,
         ]);
 
-        if ($resultSet->getTotalCount() > 0) {
+        $hasStatsToArchive = false;
+        while ($resultSet->getNextRow()) {
+            $this->log->debug('Has stats to archive');
+            $hasStatsToArchive = true;
+            break;
+        }
 
+        if ($hasStatsToArchive) {
             $this->log->debug('Stats query run, create temporary file for export');
 
             // Create a temporary file for this
