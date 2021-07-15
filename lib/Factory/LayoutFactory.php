@@ -1974,9 +1974,6 @@ class LayoutFactory extends BaseFactory
 
         $body .= " WHERE 1 = 1 ";
 
-        // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
-
         // Layout Like
         if ($parsedFilter->getString('layout') != '') {
             $terms = explode(',', $parsedFilter->getString('layout'));
@@ -2186,6 +2183,9 @@ class LayoutFactory extends BaseFactory
             $body .= " AND campaign.folderId = :folderId ";
             $params['folderId'] = $parsedFilter->getInt('folderId');
         }
+
+        // Logged in user view permissions
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
 
         // Sorting?
         $order = '';

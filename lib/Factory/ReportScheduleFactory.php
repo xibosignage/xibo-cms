@@ -118,11 +118,6 @@ class ReportScheduleFactory extends BaseFactory
 
         $body .= " WHERE 1 = 1 ";
 
-        // View Permissions
-        if ($this->getUser()->userTypeId != 1) {
-            $this->viewPermissionSql('Xibo\Entity\ReportSchedule', $body, $params, '`reportschedule`.reportScheduleId', '`reportschedule`.userId', $filterBy);
-        }
-
         // Like
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
@@ -155,6 +150,11 @@ class ReportScheduleFactory extends BaseFactory
         if ($sanitizedFilter->getInt('isActive') !== null) {
             $body .= " AND reportschedule.isActive = :isActive ";
             $params['isActive'] = $sanitizedFilter->getInt('isActive');
+        }
+
+        // View Permissions
+        if ($this->getUser()->userTypeId != 1) {
+            $this->viewPermissionSql('Xibo\Entity\ReportSchedule', $body, $params, '`reportschedule`.reportScheduleId', '`reportschedule`.userId', $filterBy);
         }
 
         // Sorting?

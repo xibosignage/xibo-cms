@@ -522,6 +522,8 @@ class ForecastIo extends ModuleWidget
                 // Match that in the array
                 if (isset($data[$replace])) {
                     $source = str_replace($sub, $data[$replace], $source);
+                } else {
+                    $source = str_replace($sub, '', $source);
                 }
             }
         }
