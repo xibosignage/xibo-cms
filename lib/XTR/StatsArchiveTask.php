@@ -194,9 +194,6 @@ class StatsArchiveTask implements TaskInterface
             $zip->addFile($fileName, 'stats.csv');
             $zip->close();
 
-            // Remove the CSV file
-            unlink($fileName);
-
             $this->log->debug('Zipped to ' . $zipName);
 
             // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
@@ -240,6 +237,9 @@ class StatsArchiveTask implements TaskInterface
         } else {
             $this->log->debug('There are no stats to archive');
         }
+
+        // Remove the CSV file
+        unlink($fileName);
     }
 
     /**
