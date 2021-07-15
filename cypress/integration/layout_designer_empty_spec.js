@@ -173,11 +173,11 @@ describe('Layout Designer (Empty)', function() {
 
             cy.wait('@mediaLoad');
 
-            cy.get('#layout-viewer-navbar #navigator-edit-btn').click();
+            cy.get('#layout-viewer-navbar #navigator-edit-btn').click({force:true});
 
             // Get a table row, select it and add to the region
-            cy.get('#layout-editor-toolbar .media-table .assignItem:first').click().then(() => {
-                cy.get('#layout-navigator [data-type="region"]:first-child').click().then(() => {
+            cy.get('#layout-editor-toolbar .media-table .assignItem:first').click({force:true}).then(() => {
+                cy.get('#layout-navigator [data-type="region"]:first-child').click({force:true}).then(() => {
 
                     // Wait for the layout to reload
                     cy.wait('@reloadLayout');

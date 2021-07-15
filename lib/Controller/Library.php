@@ -520,7 +520,8 @@ class Library extends Base
             'notSavedReport' => 1,
             'onlyMenuBoardAllowed' => $parsedQueryParams->getInt('onlyMenuBoardAllowed'),
             'layoutId' => $parsedQueryParams->getInt('layoutId'),
-            'includeLayoutBackgroundImage' => ($parsedQueryParams->getInt('layoutId') != null) ? 1 : 0
+            'includeLayoutBackgroundImage' => ($parsedQueryParams->getInt('layoutId') != null) ? 1 : 0,
+            'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
         ], $parsedQueryParams));
 
         // Add some additional row content
@@ -739,6 +740,7 @@ class Library extends Base
             throw new AccessDeniedException();
         }
 
+        $this->getDispatcher()->dispatch(MediaFullLoadEvent::$NAME, new MediaFullLoadEvent($media));
         $media->load(['deleting' => true]);
 
         $this->getState()->template = 'library-form-delete';
@@ -1154,6 +1156,7 @@ class Library extends Base
 
         $media->enableStat = $sanitizedParams->getString('enableStat');
         $media->folderId = $sanitizedParams->getInt('folderId', ['default' => $media->folderId]);
+        $media->orientation = $sanitizedParams->getString('orientation', ['default' => $media->orientation]);
 
         if ($media->hasPropertyChanged('folderId')) {
             $folder = $this->folderFactory->getById($media->folderId);
@@ -2377,7 +2380,12 @@ class Library extends Base
             throw new InvalidArgumentException(__('Incorrect image data'));
         }
 
-        file_put_contents($libraryLocation . "{$mediaId}_{$media->mediaType}cover.{$type}", $image);
+        file_put_contents($libraryLocation . $mediaId . '_' . $media->mediaType . 'cover.' . $type, $image);
+
+        list($imgWidth, $imgHeight) = @getimagesize($libraryLocation . $mediaId . '_' . $media->mediaType . 'cover.' . $type);
+
+        $media->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
+        $media->save(['saveTags' => false, 'validate' => false]);
 
         return $response->withStatus(204);
     }

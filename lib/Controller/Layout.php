@@ -1257,6 +1257,7 @@ class Layout extends Base
             'campaignId' => $parsedQueryParams->getInt('campaignId'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'codeLike' => $parsedQueryParams->getString('codeLike'),
+            'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
             'onlyMyLayouts' => $parsedQueryParams->getCheckbox('onlyMyLayouts')
         ], $parsedQueryParams));
 

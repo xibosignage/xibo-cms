@@ -45,6 +45,12 @@
                     <option value="{{userId}}" {{#eq ../filters.owner.value userId}}selected{{/eq}}>{{name}}</option>
                 {{/each}}
             </select>
+
+            <select id="input-orientation-{{@index}}" name="orientation" class="form-control mr-1 form-control-inline input-orientation">
+                <option value="" {{#eq ../filters.orientation.value ""}}selected{{/eq}}>{{../trans.orientationValues.all}}</option>
+                <option value="landscape" {{#eq ../filters.orientation.value "landscape"}}selected{{/eq}}>{{../trans.orientationValues.landscape}}</option>
+                <option value="portrait" {{#eq ../filters.orientation.value "portrait"}}selected{{/eq}}>{{../trans.orientationValues.portrait}}</option>
+            </select>
         </div>
     </form>
 {{/each}}

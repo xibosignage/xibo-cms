@@ -1,6 +1,6 @@
 <?php
 /**
- * Remove not needed column from saved_report table
+ * Install Agenda Widget and update current Calendar Widgets type to Agenda.
  * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
  */
 
