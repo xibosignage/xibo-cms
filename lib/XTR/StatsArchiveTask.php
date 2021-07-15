@@ -157,51 +157,54 @@ class StatsArchiveTask implements TaskInterface
             'toDt'=> $toDt,
         ]);
 
-        if ($resultSet->getTotalCount() > 0) {
-            $this->log->debug('Stats query run, create temporary file for export');
+        $this->log->debug('Get stats');
 
-            // Create a temporary file for this
-            $fileName = tempnam(sys_get_temp_dir(), 'stats');
+        // Create a temporary file for this
+        $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
-            $out = fopen($fileName, 'w');
-            fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId', 'Engagements']);
+        $out = fopen($fileName, 'w');
+        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId', 'Engagements']);
 
-            while ($row = $resultSet->getNextRow()) {
-                $sanitizedRow = $this->getSanitizer($row);
+        $hasStatsToArchive = false;
+        while ($row = $resultSet->getNextRow()) {
+            $hasStatsToArchive = true;
+            $sanitizedRow = $this->getSanitizer($row);
 
-                if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-                    $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()) : null;
-                    $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
-                    $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
-                    $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
-                } else {
-                    $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
-                    $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
-                    $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
-                    $engagements = isset($row['engagements']) ? $row['engagements'] : '[]';
-                }
-
-                // Read the columns
-                fputcsv($out, [
-                    $statDate,
-                    $sanitizedRow->getString('type'),
-                    $start,
-                    $end,
-                    isset($row['layout']) ? $sanitizedRow->getString('layout') :'',
-                    isset($row['display']) ? $sanitizedRow->getString('display') :'',
-                    isset($row['media']) ? $sanitizedRow->getString('media') :'',
-                    isset($row['tag']) ? $sanitizedRow->getString('tag') :'',
-                    $sanitizedRow->getInt('duration'),
-                    $sanitizedRow->getInt('count'),
-                    $sanitizedRow->getInt('displayId'),
-                    isset($row['layoutId']) ? $sanitizedRow->getInt('layoutId') :'',
-                    isset($row['widgetId']) ? $sanitizedRow->getInt('widgetId') :'',
-                    isset($row['mediaId']) ? $sanitizedRow->getInt('mediaId') :'',
-                    $engagements
-                ]);
+            if ($this->timeSeriesStore->getEngine() == 'mongodb') {
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()) : null;
+                $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
+                $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
+                $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
+            } else {
+                $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
+                $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
+                $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
+                $engagements = isset($row['engagements']) ? $row['engagements'] : '[]';
             }
 
-            fclose($out);
+            // Read the columns
+            fputcsv($out, [
+                $statDate,
+                $sanitizedRow->getString('type'),
+                $start,
+                $end,
+                isset($row['layout']) ? $sanitizedRow->getString('layout') :'',
+                isset($row['display']) ? $sanitizedRow->getString('display') :'',
+                isset($row['media']) ? $sanitizedRow->getString('media') :'',
+                isset($row['tag']) ? $sanitizedRow->getString('tag') :'',
+                $sanitizedRow->getInt('duration'),
+                $sanitizedRow->getInt('count'),
+                $sanitizedRow->getInt('displayId'),
+                isset($row['layoutId']) ? $sanitizedRow->getInt('layoutId') :'',
+                isset($row['widgetId']) ? $sanitizedRow->getInt('widgetId') :'',
+                isset($row['mediaId']) ? $sanitizedRow->getInt('mediaId') :'',
+                $engagements
+            ]);
+        }
+
+        fclose($out);
+
+        if ($hasStatsToArchive) {
             $this->log->debug('Temporary file written, zipping');
 
             // Create a ZIP file and add our temporary file
@@ -214,9 +217,6 @@ class StatsArchiveTask implements TaskInterface
 
             $zip->addFile($fileName, 'stats.csv');
             $zip->close();
-
-            // Remove the CSV file
-            unlink($fileName);
 
             $this->log->debug('Zipped to ' . $zipName);
 
@@ -260,6 +260,9 @@ class StatsArchiveTask implements TaskInterface
         } else {
             $this->log->debug('There are no stats to archive');
         }
+
+        // Remove the CSV file
+        unlink($fileName);
     }
 
     /**
