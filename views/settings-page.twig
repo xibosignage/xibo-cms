@@ -665,7 +665,7 @@
 
                                 {% if theme.isSettingVisible("MAINTENANCE_STAT_MAXAGE") %}
                                     {% set title %}{% trans "Max Statistics Age" %}{% endset %}
-                                    {% set helpText %}{% trans "Maximum age for statistics entries in days. Set to 0 to keep statistics indefinitely." %}{% endset %}
+                                    {% set helpText %}{% trans "Maximum age for statistics entries in days. Entries older than this will not be processed and existing entries will be removed. Set to 0 to keep statistics indefinitely." %}{% endset %}
 
                                     {% if theme.isSettingEditable("MAINTENANCE_STAT_MAXAGE") %}
                                         {{ forms.number("MAINTENANCE_STAT_MAXAGE", title, theme.getSetting("MAINTENANCE_STAT_MAXAGE", 30), helpText) }}
@@ -842,7 +842,7 @@
                                     {% set helpText %}{% trans "The Time to Live (maxage) of the STS header expressed in seconds." %}{% endset %}
 
                                     {% if theme.isSettingEditable("STS_TTL") %}
-                                        {{ forms.number("STS_TTL", title, theme.getSetting("STS_TTL", "600"), helpText) }}
+                                        {{ forms.number("STS_TTL", title, theme.getSetting("STS_TTL", "600"), helpText, "", "", "", 999999999) }}
                                     {% else %}
                                         {{ forms.disabled("STS_TTL", title, theme.getSetting("STS_TTL", "600"), helpText) }}
                                     {% endif %}

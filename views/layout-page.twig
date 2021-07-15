@@ -311,12 +311,12 @@
             // Open the upload dialog with our options.
             openUploadForm({
                 url: "{{ url_for("layout.import") }}",
-                title: "{% trans "Upload Layout" %}",
+                title: "{{ "Upload Layout"|trans }}",
                 multi: true,
                 videoImageCovers: false,
                 buttons: {
                     main: {
-                        label: "{% trans "Done" %}",
+                        label: "{{ "Done"|trans }}",
                         className: "btn-primary btn-bb-main",
                         callback: function () {
                             table.ajax.reload();
@@ -329,17 +329,17 @@
                     updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %},
                     deleteOldRevisionsChecked: {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %},
                     trans: {
-                        addFiles: "{% trans "Add Layout Export ZIP Files" %}",
-                        startUpload: "{% trans "Start Import" %}",
-                        cancelUpload: "{% trans "Cancel Import" %}",
-                        replaceExistingMediaMessage: "{% trans "Replace Existing Media?" %}",
-                        importTagsMessage: "{% trans "Import Tags?" %}",
-                        useExistingDataSetsMessage: "{% trans "Use existing DataSets matched by name?" %}",
-                        dataSetDataMessage: "{% trans "Import DataSet Data?" %}",
-                        selectFolder: "{% trans "Select Folder" %}",
-                        selectFolderTitle: "{% trans "Change Current Folder location" %}",
-                        selectedFolder: "{% trans "Current Folder" %}:",
-                        selectedFolderTitle: "{% trans "Upload files to this Folder" %}"
+                        addFiles: "{{ "Add Layout Export ZIP Files"|trans }}",
+                        startUpload: "{{ "Start Import"|trans }}",
+                        cancelUpload: "{{ "Cancel Import"|trans }}",
+                        replaceExistingMediaMessage: "{{ "Replace Existing Media?"|trans }}",
+                        importTagsMessage: "{{ "Import Tags?"|trans }}",
+                        useExistingDataSetsMessage: "{{ "Use existing DataSets matched by name?"|trans }}",
+                        dataSetDataMessage: "{{ "Import DataSet Data?"|trans }}",
+                        selectFolder: "{{ "Select Folder"|trans }}",
+                        selectFolderTitle: "{{ "Change Current Folder location"|trans }}",
+                        selectedFolder: "{{ "Current Folder"|trans }}:",
+                        selectedFolderTitle: "{{ "Upload files to this Folder"|trans }}"
                     },
                     upload: {
                         maxSize: {{ libraryUpload.maxSize }},
@@ -434,8 +434,8 @@
         }
 
         function setEnableStatMultiSelectFormOpen(dialog) {
-            var $input = $('<input type=checkbox id="enableStat" name="enableStat"> {% trans %} Enable Stats Collection? {% endtrans %} </input>');
-            var $helpText = $('<span class="help-block">Check to enable the collection of Proof of Play statistics for the selected items. </span>');
+            var $input = $('<input type=checkbox id="enableStat" name="enableStat"> {{ "Enable Stats Collection?"|trans }} </input>');
+            var $helpText = $('<span class="help-block">{{ "Check to enable the collection of Proof of Play statistics for the selected items."|trans }}</span>');
 
             $input.on('change', function() {
                 dialog.data().commitData = {enableStat: $(this).val()};

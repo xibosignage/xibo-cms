@@ -329,9 +329,6 @@ class DisplayGroupFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy, '`displaygroup`.permissionsFolderId');
-
         // Always include Display specific Display Groups for DOOH.
         if ($parsedBody->getInt('disableUserCheck') == 0 && ($this->getUser()->userTypeId == 4 || ($this->getUser()->isSuperAdmin() && $this->getUser()->showContentFrom == 2))) {
             $body .= ' OR `displaygroup`.isDisplaySpecific = 1 ';
@@ -444,6 +441,9 @@ class DisplayGroupFactory extends BaseFactory
             $body .= ' AND `displaygroup`.folderId = :folderId ';
             $params['folderId'] = $parsedBody->getInt('folderId');
         }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy, '`displaygroup`.permissionsFolderId');
 
         // Sorting?
         $order = '';

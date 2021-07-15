@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,6 +23,7 @@
 namespace Xibo\Tests\Integration;
 
 use Carbon\Carbon;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
 use Xibo\Tests\Helper\DisplayHelperTrait;
@@ -60,39 +61,37 @@ class ReportScheduleDataTest extends LocalWebTestCase
         $this->display = $this->createDisplay();
         $this->displaySetLicensed($this->display);
 
-
         $this->type = 'layout';
         $hardwareId = $this->display->license;
-        $yesterday = Carbon::parse()->subDay()->startOfDay();
-        $today = Carbon::parse()->startOfDay();
 
         // Record some stats
-        $this->getXmdsWrapper()->SubmitStats($hardwareId,
+        $this->getXmdsWrapper()->SubmitStats(
+            $hardwareId,
             '<stats>
-                        <stat fromdt="2020-03-31 00:00:00" 
-                        todt="2020-04-01 00:00:00" 
+                    <stat fromdt="'. Carbon::now()->startOfDay()->subDays(4)->format(DateFormatHelper::getSystemFormat()) . '" 
+                          todt="'.Carbon::now()->startOfDay()->subDays(3)->format(DateFormatHelper::getSystemFormat()) .'"
                         type="'.$this->type.'" 
                         scheduleid="0" 
                         layoutid="'.$this->layout->layoutId.'" />
-                        <stat fromdt="2020-04-01 00:00:00" 
-                        todt="2020-04-02 00:00:00" 
+                    <stat fromdt="'. Carbon::now()->startOfDay()->subDays(3)->format(DateFormatHelper::getSystemFormat()) . '" 
+                          todt="'.Carbon::now()->startOfDay()->subDays(2)->format(DateFormatHelper::getSystemFormat()) .'"
                         type="'.$this->type.'" 
                         scheduleid="0" 
                         layoutid="'.$this->layout->layoutId.'"/>
-                        <stat fromdt="2020-04-02 00:00:00" 
-                        todt="2020-04-03 00:00:00" 
+                    <stat fromdt="'. Carbon::now()->startOfDay()->subDays(2)->format(DateFormatHelper::getSystemFormat()) . '" 
+                          todt="'.Carbon::now()->startOfDay()->subDays()->format(DateFormatHelper::getSystemFormat()) .'"
                         type="'.$this->type.'" 
                         scheduleid="0" 
                         layoutid="'.$this->layout->layoutId.'"/>
-                        <stat fromdt="'.$yesterday.'"
-                        todt="'.$today.'"
+                    <stat fromdt="'. Carbon::now()->startOfDay()->subDays()->format(DateFormatHelper::getSystemFormat()) . '" 
+                          todt="'.Carbon::now()->startOfDay()->format(DateFormatHelper::getSystemFormat()) .'"
                         type="'.$this->type.'" 
                         scheduleid="0" 
                         layoutid="'.$this->layout->layoutId.'" />
-                    </stats>');
+                    </stats>'
+        );
 
        $this->getLogger()->debug('Finished Setup');
-
     }
 
     /**
@@ -111,7 +110,8 @@ class ReportScheduleDataTest extends LocalWebTestCase
         $this->deleteDisplay($this->display);
 
         // Delete stat records
-        self::$container->get('timeSeriesStore')->deleteStats(Carbon::now(), Carbon::createFromFormat("Y-m-d H:i:s", '2020-03-31 00:00:00'));
+        self::$container->get('timeSeriesStore')
+            ->deleteStats(Carbon::now(), Carbon::now()->startOfDay()->subDays(10));
     }
 
     /**
@@ -119,8 +119,7 @@ class ReportScheduleDataTest extends LocalWebTestCase
      */
     public function testProofOfPlayReportYesterday()
     {
-
-        $response = $this->sendRequest('GET','/report/data/proofofplayReport', [
+        $response = $this->sendRequest('GET', '/report/data/proofofplayReport', [
             'reportFilter'=> 'yesterday',
             'groupByFilter' => 'byday',
             'displayId' => $this->display->displayId,
@@ -138,7 +137,7 @@ class ReportScheduleDataTest extends LocalWebTestCase
         $this->assertNotEmpty($body);
         $object = json_decode($body);
         $this->assertObjectHasAttribute('data', $object, $body);
-        $this->assertSame(1,  $object->data[0]->numberPlays);
+        $this->assertSame(1, $object->data[0]->numberPlays);
     }
     
     /**
@@ -146,9 +145,9 @@ class ReportScheduleDataTest extends LocalWebTestCase
      */
     public function testProofOfPlayReport()
     {
-        $response = $this->sendRequest('GET','/report/data/proofofplayReport', [
-            'statsFromDt' => Carbon::parse('2020-03-31 00:00:00'),
-            'statsToDt' => Carbon::parse('2020-04-01 00:00:00'),
+        $response = $this->sendRequest('GET', '/report/data/proofofplayReport', [
+            'statsFromDt' => Carbon::now()->startOfDay()->subDays(3)->format(DateFormatHelper::getSystemFormat()),
+            'statsToDt' => Carbon::now()->startOfDay()->subDays(2)->format(DateFormatHelper::getSystemFormat()),
             'groupByFilter' => 'byday',
             'displayId' => $this->display->displayId,
             'layoutId' => [$this->layout->layoutId],
@@ -159,7 +158,7 @@ class ReportScheduleDataTest extends LocalWebTestCase
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $this->assertSame(2,  $object->data[0]->numberPlays);
+        $this->assertSame(2, $object->data[0]->numberPlays);
     }
 
     /**
@@ -167,9 +166,9 @@ class ReportScheduleDataTest extends LocalWebTestCase
      */
     public function testSummaryReport()
     {
-        $response = $this->sendRequest('GET','/report/data/summaryReport', [
-            'statsFromDt' => Carbon::parse('2020-03-31 00:00:00'),
-            'statsToDt' => Carbon::parse('2020-04-31 00:00:00'),
+        $response = $this->sendRequest('GET', '/report/data/summaryReport', [
+            'statsFromDt' => Carbon::now()->startOfDay()->subDays(3)->format(DateFormatHelper::getSystemFormat()),
+            'statsToDt' => Carbon::now()->startOfDay()->format(DateFormatHelper::getSystemFormat()),
             'groupByFilter' => 'byday',
             'displayId' => $this->display->displayId,
             'layoutId' => $this->layout->layoutId,

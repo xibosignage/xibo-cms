@@ -46,6 +46,7 @@ use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Helper\LayoutUploadHandler;
+use Xibo\Helper\Profiler;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\SendFile;
 use Xibo\Service\ConfigServiceInterface;
@@ -544,6 +545,7 @@ class Layout extends Base
         $isTemplate = false;
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $folderChanged = false;
+        $nameChanged = false;
 
         // check if we're dealing with the template
         $currentTags = explode(',', $layout->tags);
@@ -589,6 +591,10 @@ class Layout extends Base
             $folderChanged = true;
         }
 
+        if ($layout->hasPropertyChanged('layout')) {
+            $nameChanged = true;
+        }
+
         // Save
         $layout->save([
             'saveLayout' => true,
@@ -598,15 +604,36 @@ class Layout extends Base
             'notify' => false
         ]);
 
-        if ($folderChanged) {
-            $savedLayout = $this->layoutFactory->getById($layout->layoutId);
-            $savedLayout->load();
-            foreach ($savedLayout->regions as $region) {
-                /* @var Region $region */
-                $playlist = $region->getPlaylist();
-                $playlist->folderId = $savedLayout->folderId;
-                $playlist->permissionsFolderId = $savedLayout->permissionsFolderId;
-                $playlist->save();
+        if ($folderChanged || $nameChanged) {
+            // permissionsFolderId depends on the Campaign, hence why we need to get the edited Layout back here
+            $editedLayout = $this->layoutFactory->getById($layout->layoutId);
+
+            // this will return the original Layout we edited and its draft
+            $layouts = $this->layoutFactory->getByCampaignId($layout->campaignId, true, true);
+
+            foreach ($layouts as $savedLayout) {
+                // if we changed the name of the original Layout, updated its draft name as well
+                if ($savedLayout->isChild() && $nameChanged) {
+                    $savedLayout->layout =  $editedLayout->layout;
+                    $savedLayout->save([
+                        'saveLayout' => true,
+                        'saveRegions' => false,
+                        'saveTags' => false,
+                        'setBuildRequired' => false,
+                        'notify' => false
+                    ]);
+                }
+
+                // if the folder changed on original Layout, make sure we keep its regionPlaylists and draft regionPlaylists updated
+                if ($folderChanged) {
+                    $savedLayout->load();
+                    foreach ($savedLayout->regions as $region) {
+                        $playlist = $region->getPlaylist();
+                        $playlist->folderId = $editedLayout->folderId;
+                        $playlist->permissionsFolderId = $editedLayout->permissionsFolderId;
+                        $playlist->save();
+                    }
+                }
             }
         }
 
@@ -1276,10 +1303,9 @@ class Layout extends Base
 
             // Populate the status message
             $layout->getStatusMessage();
-            /** @var $locked Item */
-            $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
-            $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
 
+            // Add Locking information
+            $layout = $this->layoutFactory->decorateLockedProperties($layout);
 
             // Annotate each Widget with its validity, tags and permissions
             if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) { 
@@ -2161,16 +2187,9 @@ class Layout extends Base
     public function status(Request $request, Response $response, $id)
     {
         // Get the layout
-        /* @var \Xibo\Entity\Layout $layout */
-        $layout = $this->layoutFactory->getById($id);
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
+        $layout = $this->layoutFactory->decorateLockedProperties($layout);
         $layout->xlfToDisk();
-
-        /** @var $locked Item */
-        $locked = $this->pool->getItem('locks/layout/' . $layout->layoutId);
-        $layout->isLocked = $locked->isMiss() ? [] : $locked->get();
-        if(!empty($layout->isLocked)) {
-            $layout->isLocked->lockedUser = ($layout->isLocked->userId != $this->getUser()->userId);
-        }
 
         switch ($layout->status) {
 
@@ -2213,6 +2232,9 @@ class Layout extends Base
             $this->getState()->success = true;
             $this->session->refreshExpiry = false;
         }
+
+        // Release lock
+        $this->layoutFactory->concurrentRequestRelease($layout);
 
         return $this->render($request, $response);
     }
@@ -2604,7 +2626,8 @@ class Layout extends Base
      */
     public function publish(Request $request, Response $response, $id)
     {
-        $layout = $this->layoutFactory->getById($id);
+        Profiler::start('Layout::publish', $this->getLog());
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $publishDate = $sanitizedParams->getDate('publishDate');
         $publishNow = $sanitizedParams->getCheckbox('publishNow');
@@ -2628,7 +2651,7 @@ class Layout extends Base
 
             // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
             // error message
-            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false, 'publishing' => true]);
+            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
 
             // Return
             $this->getState()->hydrate([
@@ -2644,6 +2667,12 @@ class Layout extends Base
                 'data' => $layout
             ]);
         }
+
+        Profiler::end('Layout::publish', $this->getLog());
+
+        // Release lock
+        $this->layoutFactory->concurrentRequestRelease($layout);
+
         return $this->render($request, $response);
     }
 

@@ -440,8 +440,7 @@ class Soap
 
         // workout if any of the layouts we have in our list has Actions pointing to another Layout.
         foreach ($layouts as $layoutId) {
-            $layout = $this->layoutFactory->loadById($layoutId);
-            $actionLayoutIds = $layout->getActionPublishedLayoutIds();
+            $actionLayoutIds = $this->layoutFactory->getActionPublishedLayoutIds($layoutId);
 
             // merge the Action layouts to our array, we need the player to download all resources on them
             if (!empty($actionLayoutIds) ) {
@@ -617,11 +616,13 @@ class Soap
                 }
 
                 // Load this layout
-                $layout = $this->layoutFactory->loadById($layoutId);
+                $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->loadById($layoutId));
                 $layout->loadPlaylists();
 
                 // Make sure its XLF is up to date
                 $path = $layout->xlfToDisk(['notify' => false]);
+
+                $this->layoutFactory->concurrentRequestRelease($layout);
 
                 // If the status is *still* 4, then we skip this layout as it cannot build
                 if ($layout->status === ModuleWidget::$STATUS_INVALID) {
@@ -735,6 +736,9 @@ class Soap
                             $resourceFile->setAttribute('mediaid', $widget->widgetId);
                             $resourceFile->setAttribute('updated', $updatedDt->format('U'));
                             $fileElements->appendChild($resourceFile);
+                        } else if ($widget->type === 'adspaceexchange') {
+                            // Append an attribute to the Layout indicating that an AdspaceExchange widget is present
+                            $file->setAttribute('adspaceExchange', 1);
                         }
                     }
                 }
@@ -1346,8 +1350,7 @@ class Soap
         }
 
         // Current log level
-        //$logLevel = $this->logProcessor->getLevel();
-        $logLevel = 'error';
+        $logLevel = $this->logProcessor->getLevel();
         $discardedLogs = 0;
 
         // Get the display timezone to use when adjusting log dates.
@@ -1397,7 +1400,7 @@ class Soap
                 $levelName = 'NOTICE';
             }
 
-            if ($recordLogLevel > $logLevel) {
+            if ($recordLogLevel < $logLevel) {
                 $discardedLogs++;
                 continue;
             }
@@ -1703,6 +1706,17 @@ class Soap
                 // Protect against the date format being unreadable
                 $this->getLog()->error('Stat with a from or to date that cannot be understood. fromDt: ' . $fromdt . ', toDt: ' . $todt . '. E = ' . $e->getMessage());
                 continue;
+            }
+
+            // check maximum retention period against stat date, do not record if it's older than max stat age
+            $maxAge = intval($this->getConfig()->getSetting('MAINTENANCE_STAT_MAXAGE'));
+            if ($maxAge != 0) {
+                $maxAgeDate = Carbon::now()->subDays($maxAge);
+
+                if ($todt->isBefore($maxAgeDate)) {
+                    $this->getLog()->debug('Stat older than max retention period, skipping.');
+                    continue;
+                }
             }
 
             // Important - stats will now send display entity instead of displayId
