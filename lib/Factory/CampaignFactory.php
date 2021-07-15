@@ -196,9 +196,6 @@ class CampaignFactory extends BaseFactory
            WHERE 1 = 1
         ';
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy, '`campaign`.permissionsFolderId');
-
         if ($sanitizedFilter->getInt('isLayoutSpecific', ['default' => 0]) != -1) {
             // Exclude layout specific campaigns
             $body .= " AND `campaign`.isLayoutSpecific = :isLayoutSpecific ";
@@ -280,6 +277,9 @@ class CampaignFactory extends BaseFactory
             $body .= " AND campaign.folderId = :folderId ";
             $params['folderId'] = $sanitizedFilter->getInt('folderId');
         }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, '`campaign`.campaignId', '`campaign`.userId', $filterBy, '`campaign`.permissionsFolderId');
 
         $group = 'GROUP BY `campaign`.CampaignID, Campaign, IsLayoutSpecific, `campaign`.userId ';
 

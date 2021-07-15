@@ -1,7 +1,8 @@
 <?php
-/*
+/**
+ * Copyright (C) 2021 Xibo Signage Ltd
+ *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2015-2018 Spring Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -22,6 +23,7 @@
 namespace Xibo\Tests\Integration;
 
 use Carbon\Carbon;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Random;
 use Xibo\OAuth2\Client\Entity\XiboDisplay;
 use Xibo\OAuth2\Client\Entity\XiboLayout;
@@ -108,44 +110,6 @@ class StatisticsTest extends LocalWebTestCase
         // Publish the Layout
         $this->layout = $this->publish($this->layout);
 
-        // Record some stats for all tests to use.
-        // One word name for the event
-        $eventName = Random::generateString(10, 'event');
-
-        $response = $this->getXmdsWrapper()->SubmitStats($this->display->license, '<stats>
-            <stat fromdt="2018-02-12 00:00:00" todt="2018-02-15 00:00:00" type="layout" scheduleid="0" 
-                layoutid="' . $this->layout->layoutId . '" />
-            <stat fromdt="2018-02-12 00:00:00" todt="2018-02-13 00:00:00" type="media" scheduleid="0" 
-                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget->widgetId . '"/>
-            <stat fromdt="2018-02-14 00:00:00" todt="2018-02-15 00:00:00" type="media" scheduleid="0"
-                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget2->widgetId . '"/>
-            <stat fromdt="2018-02-12 00:00:00" todt="2018-02-15 00:00:00" type="widget" scheduleid="0"
-                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->textWidget->widgetId . '"/>
-            <stat fromdt="2018-02-12 00:00:00" todt="2018-02-15 00:00:00" type="event" scheduleid="0" 
-                layoutid="0" tag="'.$eventName.'"/>
-            <stat fromdt="2018-02-15 00:00:00" todt="2018-02-16 00:00:00" type="layout" scheduleid="0"
-                layoutid="' . $this->layout->layoutId . '"/>
-            <stat fromdt="2018-02-13 00:00:00" todt="2018-02-14 00:00:00" type="media" scheduleid="0"
-                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget->widgetId . '"/>
-            <stat fromdt="2018-02-15 00:00:00" todt="2018-02-16 00:00:00" type="media" scheduleid="0"
-                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget2->widgetId . '"/>
-            <stat fromdt="2018-02-15 00:00:00" todt="2018-02-16 00:00:00" type="widget" scheduleid="0"
-                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->textWidget->widgetId . '"/>
-            <stat fromdt="2018-02-15 00:00:00" todt="2018-02-16 00:00:00" type="event" scheduleid="0"
-                layoutid="0" tag="'.$eventName.'"/>
-            <stat fromdt="2018-02-16 00:00:00" todt="2018-02-17 00:00:00" type="layout" scheduleid="0"
-                layoutid="' . $this->layout->layoutId . '"/>
-            <stat fromdt="2018-02-16 00:00:00" todt="2018-02-16 12:00:00" type="media" scheduleid="0"
-                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget2->widgetId . '"/>
-            <stat fromdt="2018-02-16 12:00:00" todt="2018-02-17 00:00:00" type="media" scheduleid="0"
-                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->widget->widgetId . '"/>
-            <stat fromdt="2018-02-16 00:00:00" todt="2018-02-17 00:00:00" type="widget" scheduleid="0"
-                layoutid="' . $this->layout->layoutId . '" mediaid="' . $this->textWidget->widgetId . '"/>
-            <stat fromdt="2018-02-16 00:00:00" todt="2018-02-17 00:00:00" type="event" scheduleid="0" 
-                layoutid="0" tag="'.$eventName.'"/>
-        </stats>');
-        $this->assertSame(true, $response);
-
         $this->getLogger()->debug('Finished Setup');
     }
 
@@ -169,54 +133,32 @@ class StatisticsTest extends LocalWebTestCase
         $this->media2->deleteAssigned();
 
         // Delete stat records
-        self::$container->get('timeSeriesStore')->deleteStats(Carbon::now(), Carbon::createFromFormat("Y-m-d H:i:s", '2018-02-12 00:00:00'));
+        self::$container->get('timeSeriesStore')
+            ->deleteStats(Carbon::now(), Carbon::now()->startOfDay()->subDays(10));
     }
 
     /**
      * Test the method call with default values
-     * @group broken
      */
     public function testListAll()
     {
-        $response = $this->sendRequest('GET','/stats');
+        $this->getXmdsWrapper()->SubmitStats($this->display->license, '
+        <stats>
+            <stat fromdt="'. Carbon::now()->startOfDay()->subHours(12)->format(DateFormatHelper::getSystemFormat()) . '" 
+                  todt="'.Carbon::now()->startOfDay()->format(DateFormatHelper::getSystemFormat()) .'"
+                  type="layout"
+                  scheduleid="0" 
+                  layoutid="' . $this->layout->layoutId . '" />
+        </stats>');
+
+        $response = $this->sendRequest('GET', '/stats');
 
         $this->assertSame(200, $response->getStatusCode());
         $this->assertNotEmpty($response->getBody());
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object, $response->getBody());
-    }
-
-
-    /**
-     * Check if proof of play statistics are correct for all types
-     * @group broken
-     *
-     * TODO: I've no idea what we were trying to test here - this needs to be improved or removed.
-     * I believe the intention here was to test that the stats submitted are accurate and have been submitted
-     * correctly?
-     */
-    public function testProof()
-    {
-        // Get stats and see if they match with what we expect
-        $response = $this->sendRequest('GET','/stats', [
-            'fromDt' => '2018-02-12 00:00:00',
-            'toDt' => '2018-02-17 00:00:00',
-            'displayId' => $this->display->displayId,
-            'layoutId' => [$this->layout->layoutId]
-        ]);
-
-        $this->assertSame(200, $response->getStatusCode());
-        $this->assertNotEmpty($response->getBody());
-        $object = json_decode($response->getBody());
-
-        $this->assertObjectHasAttribute('data', $object, $response->getBody());
-        $stats = (new XiboStats($this->getEntityProvider()))->get([
-            'fromDt' => '2018-02-12 00:00:00',
-            'toDt' => '2018-02-17 00:00:00',
-            'displayId' => $this->display->displayId,
-            'layoutId' => [$this->layout->layoutId]
-        ]);
-        $this->assertNotEquals(0, count($stats));
+        $this->assertEquals(1, $object->data->recordsTotal);
+        $this->assertCount(1, $object->data->data);
     }
 
     /**
@@ -224,9 +166,31 @@ class StatisticsTest extends LocalWebTestCase
      */
     public function testExport()
     {
-        $response = $this->sendRequest('GET','/stats/export', [
-            'fromDt' => '2018-02-12 00:00:00',
-            'toDt' => '2018-02-15 00:00:00'
+        $this->getXmdsWrapper()->SubmitStats($this->display->license, '
+            <stats>
+                <stat fromdt="'. Carbon::now()->startOfDay()->subDays(4)->format(DateFormatHelper::getSystemFormat()) . '" 
+                      todt="'.Carbon::now()->startOfDay()->subDays(3)->format(DateFormatHelper::getSystemFormat()) .'"
+                      type="layout"
+                      scheduleid="0" 
+                      layoutid="' . $this->layout->layoutId . '" />
+                <stat fromdt="'. Carbon::now()->startOfDay()->subDays(4)->format(DateFormatHelper::getSystemFormat()) . '" 
+                      todt="'.Carbon::now()->startOfDay()->subDays(3)->format(DateFormatHelper::getSystemFormat()) .'" 
+                      type="media" 
+                      scheduleid="0" 
+                      layoutid="' . $this->layout->layoutId . '" 
+                      mediaid="' . $this->widget->widgetId . '"/>
+                <stat fromdt="'. Carbon::now()->startOfDay()->subDays(4)->format(DateFormatHelper::getSystemFormat()) . '" 
+                      todt="'.Carbon::now()->startOfDay()->subDays(3)->format(DateFormatHelper::getSystemFormat()) .'"
+                      type="widget"
+                      scheduleid="0"
+                      layoutid="' . $this->layout->layoutId . '"
+                      mediaid="' . $this->textWidget->widgetId . '"/>
+            </stats>');
+
+
+        $response = $this->sendRequest('GET', '/stats/export', [
+            'fromDt' => Carbon::now()->startOfDay()->subDays(5)->format(DateFormatHelper::getSystemFormat()),
+            'toDt' => Carbon::now()->startOfDay()->subDays(2)->format(DateFormatHelper::getSystemFormat())
         ]);
 
         // Check 200
@@ -238,5 +202,45 @@ class StatisticsTest extends LocalWebTestCase
         $this->assertGreaterThan(0, $response->getHeader('Content-Length')[0] ?? 0);
 
         // We can't test the body, because there isn't any web server involved with this request.
+    }
+
+    public function testProofOldStats()
+    {
+        $hardwareId = $this->display->license;
+
+        // Attempt to insert stat data older than 30 days
+        $response = $this->getXmdsWrapper()->SubmitStats(
+            $hardwareId,
+            '<stats>
+                        <stat fromdt="'. Carbon::now()->startOfDay()->subDays(35)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Carbon::now()->startOfDay()->subDays(31)->format('Y-m-d H:i:s') .'" 
+                        type="layout" 
+                        scheduleid="0" 
+                        layoutid="' . $this->layout->layoutId . '" />
+                    </stats>'
+        );
+        $this->assertSame(true, $response);
+
+        $response = $this->getXmdsWrapper()->SubmitStats(
+            $hardwareId,
+            '<stats>
+                        <stat fromdt="'. Carbon::now()->startOfDay()->subDays(40)->format('Y-m-d H:i:s') . '" 
+                        todt="'.Carbon::now()->startOfDay()->subDays(38)->format('Y-m-d H:i:s') .'" 
+                        type="layout" 
+                        scheduleid="0" 
+                        layoutid="' . $this->layout->layoutId . '" />
+                    </stats>'
+        );
+
+        $this->assertSame(true, $response);
+
+        // Default max stat age is 30 days, therefore we expect to get no results after the attempted inserts.
+        $stats = (new XiboStats($this->getEntityProvider()))->get([
+            'fromDt' => Carbon::now()->startOfDay()->subDays(41)->format('Y-m-d H:i:s'),
+            'toDt' => Carbon::now()->startOfDay()->subDays(31)->format('Y-m-d H:i:s'),
+            'layoutId' => [$this->layout->layoutId],
+            'type' => 'layout'
+        ]);
+        $this->assertEquals(0, count($stats));
     }
 }
