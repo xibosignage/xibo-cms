@@ -22,12 +22,14 @@
 namespace Xibo\Middleware;
 
 use League\OAuth2\Server\Grant\AuthCodeGrant;
+use League\OAuth2\Server\Grant\RefreshTokenGrant;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
+use Xibo\OAuth\RefreshTokenRepository;
 use Xibo\Support\Exception\ConfigurationException;
 
 /**
@@ -98,6 +100,8 @@ class ApiAuthentication implements Middleware
                     ),
                     new \DateInterval('PT1H')
                 );
+
+                $server->enableGrantType(new RefreshTokenGrant(new RefreshTokenRepository()));
 
                 return $server;
             } catch (\LogicException $exception) {
