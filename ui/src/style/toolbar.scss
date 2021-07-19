@@ -13,26 +13,39 @@ ul.sidebar {
 
 .editor-toolbar nav {
     background: $toolbar-main-color;
+    color: $toolbar-secondary-color;
     z-index: $toolbar-z-index;
     margin-left: 0;
-    min-height: $toolbar-height;
+    height: 100%;
     border: none;
     padding: 0 !important;
 }
 
-#page-wrapper .editor-toolbar nav {
-    margin-left: 11rem;
+.editor-toolbar.editor-side-bar nav {
+    width: $toolbar-width;
+    padding: 8px 0 !important;
+
+    &.stretch {
+        margin-right: 120px;
+    }
+}
+
+.editor-toolbar.editor-side-bar-playlist-editor nav {
+    position: fixed;
+    top: 0;
+    left: 0;
+    bottom: 0;
 }
 
 @media (max-width: 768px) {
-    .editor-toolbar nav,
-    #page-wrapper .editor-toolbar nav {
+    .editor-toolbar nav {
         margin-left: 0;
     }
 }
 
 #toolbar-navbar-collapse {
     width: inherit;
+    padding: 8px 0;
 }
 
 .drag-handle {
@@ -44,7 +57,8 @@ ul.sidebar {
 }
 
 .editor-toolbar .container-toolbar {
-    padding: 0 15px;
+    padding: 0;
+    height: 100%;
 }
 
 .editor-toolbar .container-toolbar .navbar-btn {
@@ -53,9 +67,9 @@ ul.sidebar {
 
 .editor-toolbar .container-toolbar .navbar-peek-button {
     display: block;
-    width: 50px;
+    width: $toolbar-width;
     text-align: center;
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     padding: 10px;
     line-height: 30px;
     @include set-transparent-color(background, $toolbar-disabled-color, 0.3);
@@ -106,7 +120,7 @@ ul.sidebar {
     right: 0px;
     height: fit-content;
     opacity: 0.95;
-    border: 2px solid $xibo-color-blue;
+    border: 3px solid $xibo-color-pastel-blue;
 
     &.hide-mode {
         width: 0 !important;
@@ -202,6 +216,14 @@ ul.sidebar {
     .media-search-form {
         input[type="text"] {
             max-width: 140px;
+        }
+
+        .search-form-group {
+            width: 100%;
+
+            & > * {
+                margin-bottom: 6px;
+            }
         }
     }
 
@@ -300,15 +322,16 @@ ul.sidebar {
 
 .editor-toolbar .toolbar-pane {
     display: none;
+    flex-direction: column !important;
 }
 
 .editor-toolbar .toolbar-pane.active {
-    display: block;
+    display: flex;
 }
 
 .editor-toolbar .toolbar-pane form {
-    background: $xibo-color-blue;
-    padding: 5px 5px;
+    background: $xibo-color-pastel-blue;
+    padding: 6px;
 }
 
 /* Toolbar - button content */
@@ -321,14 +344,13 @@ ul.sidebar {
         color: $xibo-color-white;
         width: $toolbar-tools-card-width;
         height: $toolbar-tools-card-height;
-        margin: 2px;
         @include border-radius(4px);
 
         .card-title {
             display: block;
             position: relative;
             line-height: 30px;
-            height: $toolbar-height;
+            height: $toolbar-width;
             padding: 5px 2px;
             margin-left: 40px;
             overflow: hidden;
@@ -338,7 +360,7 @@ ul.sidebar {
 
         .card-icon {
             line-height: 30px;
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             padding: 5px 10px;
             position: absolute;
         }
@@ -410,16 +432,18 @@ ul.sidebar {
 
     a {
         &.pagination-btn {
-            float: left;
-            display: inline-block;
-            width: 20px;
+            width: 120px;
             font-size: 1.4rem;
-            height: $toolbar-height;
+            height: 24px;
             border: none;
-            line-height: 30px;
-            padding: 10px 5px;
+            line-height: 24px;
+            padding: 0;
             @include border-radius(0);
             background-color: $xibo-color-black;
+
+            i {
+                transform: rotate(90deg);
+            }
 
             &.pag-btn-top-right, &.pag-btn-top-left {
                 font-size: 0.8rem;
@@ -442,15 +466,17 @@ ul.sidebar {
     /* Tools Pane */
     .toolbar-tools-pane {
         position: absolute;
-        bottom: $toolbar-height;
-        left: 18px;
+        padding: 4px;
+        top: 54px;
+        left: $toolbar-width;
         background: $toolbar-menu-content-bg-color;
-        border-width: 2px 2px 0 2px;
+        border-width: 4px 4px 4px 0px;
         border-color: $toolbar-main-color;
         border-style: solid;
 
         .toolbar-card {
-            height: 40px;
+            height: 38px;
+            margin: 2px 0;
         }
 
         .toolbar-pane-content.selected .toolbar-card:not(.card-dragged):not(.card-selected):not(.ui-draggable-dragging) {
@@ -460,16 +486,22 @@ ul.sidebar {
 
     /* Widget Pane */
     .toolbar-widgets-pane {
-        position: relative;
+        position: absolute;
+        left: $toolbar-width;
+        top: 0;
+        bottom: 0;
         background: $toolbar-disabled-color;
         font-size: 0;
+        border-width: 4px 4px 4px 0;
+        border-style: solid;
+        border-color: $toolbar-main-color;
 
         .toolbar-card {
-            margin: 0 $toolbar-widgets-card-margin;
+            margin: $toolbar-widgets-card-margin;
             width: $toolbar-widgets-card-width;
             height: $toolbar-widgets-card-height;
             background: $xibo-color-primary;
-            @include border-radius(0px 0 4px 4px);
+            @include border-radius(4px);
             font-size: 0.95rem;
 
             .card-title {
@@ -487,8 +519,8 @@ ul.sidebar {
             }
 
             .card-icon {
-                line-height: 10px;
-                font-size: 1rem;
+                line-height: 25px;
+                font-size: 1.25rem;
                 transform: translate(-50%);
                 padding: 0;
                 position: relative;
@@ -548,10 +580,11 @@ ul.sidebar {
         .toolbar-pane-content-container {
             float: left;
             scroll-behavior: smooth;
-            overflow-x: scroll;
-            overflow-y: hidden;
+            overflow-x: hidden;
+            overflow-y: scroll;
             background: $xibo-color-white;
-            height: $toolbar-height;
+            width: 120px;
+            height: calc(100% - 96px);
             scrollbar-width: thin; /* For firefox */
             scrollbar-color: lighten($xibo-color-black, 40%) lighten($xibo-color-gray, 40%); /* For firefox */
 
@@ -565,7 +598,7 @@ ul.sidebar {
             /* SCROLLBAR */
             /* width */
             &::-webkit-scrollbar {
-                height: 7px;
+                width: 7px;
             }
 
             /* Track */
@@ -585,10 +618,12 @@ ul.sidebar {
         }
 
         .toolbar-pane-content {
-            max-height: $toolbar-height;
+            display: flex;
+            flex-direction: column !important;
+            align-items: center;
+            max-width: 120px;
             width: auto;
             white-space: nowrap;
-            padding: 0 2px;
         }
 
         .toolbar-card {
@@ -611,7 +646,7 @@ ul.sidebar {
 }
 
 .editor-toolbar .navbar-submenu-container {
-    background: $xibo-color-primary;
+    background: $xibo-color-pastel-blue;
 
     & > a {
         padding: 0;
@@ -630,12 +665,12 @@ ul.sidebar {
 .editor-toolbar .btn-menu-option {
     display: block;
     color: $xibo-color-white;
-    width: 50px;
+    width: $toolbar-width;
     text-align: center;
-    font-size: 1.75rem;
+    font-size: 1.5rem;
     padding: 10px;
     line-height: 30px;
-    max-height: $toolbar-height;
+    max-height: $toolbar-width;
 
     .material-icons {
         font-size: 1.85rem;
@@ -680,7 +715,7 @@ ul.sidebar {
         &.option-container {
             width: 50px;
             text-align: center;
-            font-size: 1.75rem;
+            font-size: 1.5rem;
             padding: 5px 10px;
             line-height: 30px;
             
@@ -689,11 +724,11 @@ ul.sidebar {
             }
         }
 
-        color: $xibo-color-white;
+        color: $toolbar-secondary-color;
 
         &:hover, &:focus {
-            color: $toolbar-main-color;
-            background-color: $xibo-color-white;
+            color: $xibo-color-white;
+            background-color: $toolbar-main-color;
         }
     }
 
@@ -713,6 +748,21 @@ ul.sidebar {
     }
 }
 
-.editor-bottom-bar .navbar-submenu > a.option-container {
+.editor-toolbar.editor-side-bar-playlist-editor .navbar-submenu > a.option-container {
+    text-align: center;
+    font-size: 1.5rem;
+    color: $xibo-color-white;
+    width: $toolbar-width;
     padding: 10px;
+    line-height: 30px;
+    max-height: $toolbar-width;
+    
+    &::after {
+        display: none;
+    }
+
+    &:hover {
+        color: $xibo-color-blue;
+        background: $xibo-color-white;
+    }
 }

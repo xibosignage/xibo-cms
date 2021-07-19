@@ -106,6 +106,9 @@ let Toolbar = function(parent, container, customActions = {}, showOptions = fals
     // Flag to mark if the toolbar has been rendered at least one time
     this.firstRun = true;
 
+    // Flag to mark if the toolbar is stretched
+    this.stretched = true;
+
     // Use queue to add media
     this.useQueue = true;
 
@@ -171,7 +174,7 @@ Toolbar.prototype.loadPrefs = function() {
             app.common.reloadTooltips(app.editorContainer);
 
             // If there was a opened menu, load content for that one
-            if(self.openedMenu != -1) {
+            if(self.openedMenu != -1 && self.firstRun == true) {
                 self.openMenu(self.openedMenu, true);
             } else {
                 // Render to reflect the loaded toolbar
@@ -201,11 +204,15 @@ Toolbar.prototype.loadPrefs = function() {
             }
         }
 
+        // Mark toolbar as loaded
+        self.firstRun = false;
     }).catch(function(jqXHR, textStatus, errorThrown) {
 
         console.error(jqXHR, textStatus, errorThrown);
         toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
 
+        // Mark toolbar as loaded
+        self.firstRun = false;
     });
 };
 
@@ -301,11 +308,10 @@ Toolbar.prototype.render = function() {
 
     // Load preferences when the toolbar is rendered for the first time
     if(this.firstRun) {
-        // Mark toolbar as loaded
-        this.firstRun = false;
-
         // Load user preferences
         this.loadPrefs();
+
+        return;
     }
 
     let self = this;
@@ -338,9 +344,14 @@ Toolbar.prototype.render = function() {
         }
     }
 
+    console.log(this.openedMenu);
+
+    const toolbarStretched = (this.openedMenu == 2);
+
     // Compile toolbar template with data
     const html = ToolbarTemplate({
         opened: (this.openedMenu != -1),
+        stretchBar: toolbarStretched,
         menuItems: this.menuItems,
         displayTooltips: app.common.displayTooltips,
         trashActive: trashBinActive,
@@ -378,19 +389,19 @@ Toolbar.prototype.render = function() {
             });
 
             this.DOMObject.find('#content-' + index + ' #pag-btn-left-' + index).click(function() {
-                $scrollArea.scrollLeft($scrollArea.scrollLeft() - scrollStepSpeed);
+                $scrollArea.scrollTop($scrollArea.scrollTop() - scrollStepSpeed);
             });
 
             this.DOMObject.find('#content-' + index + ' #pag-btn-right-' + index).click(function() {
-                $scrollArea.scrollLeft($scrollArea.scrollLeft() + scrollStepSpeed);
+                $scrollArea.scrollTop($scrollArea.scrollTop() + scrollStepSpeed);
             });
 
             this.DOMObject.find('#content-' + index + ' #pag-btn-top-left-' + index).click(function() {
-                $scrollArea.scrollLeft(0);
+                $scrollArea.scrollTop(0);
             });
 
             this.DOMObject.find('#content-' + index + ' #pag-btn-top-right-' + index).click(function() {
-                $scrollArea.scrollLeft(9999);
+                $scrollArea.scrollTop(9999);
             });
         }
 
@@ -529,6 +540,24 @@ Toolbar.prototype.render = function() {
 
     // Save default tolbar nav z-index
     this.defaultZIndex = this.DOMObject.find('nav').css('z-index');
+
+    console.log(toolbarStretched);
+
+    // If toolbar changes width, refresh containers
+    if(this.stretched != toolbarStretched) {
+
+        if(app.mainObjectType != 'playlist') {
+            // Refresh main containers
+            app.renderContainer(app.viewer, app.selectedObject);
+            app.renderContainer(app.navigator, app.selectedObject);
+        }
+        
+        this.stretched = toolbarStretched;
+    }
+
+    if(app.mainObjectType == 'playlist') {
+        app.editorContainer.parents('.editor-modal').toggleClass('stretchedBar', toolbarStretched);
+    }
 };
 
 /**
@@ -544,14 +573,6 @@ Toolbar.prototype.loadContent = function(menu = -1) {
     if(this.menuItems[menu].name === 'tools') {
         this.menuItems[menu].content = toolsList;
     } else if(this.menuItems[menu].name === 'widgets') {
-        // Calculate scroll region width
-        var totalWidth = this.DOMObject.find('.container-toolbar').width();
-        var widthMenuLeft = this.DOMObject.find('.toolbar-menu-left').outerWidth();
-        var widthMenuRight = this.DOMObject.find('.toolbar-menu-right').outerWidth();
-
-        // Content width minus the left and right button areas, and the paging buttons width (20px * 4)
-        this.menuItems[menu].containerWidth = totalWidth - widthMenuLeft - widthMenuRight - 80;
-
         // Sort by favourites
         var favouriteModules = [];
         var otherModules = [];
@@ -617,6 +638,8 @@ Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
                 return; // To avoid double save and render
             }
         }
+    } else {
+        this.openedMenu = -1;
     }
 
     // Save user preferences
@@ -906,7 +929,7 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     
     // Make search window to be draggable and resizable
     $libraryWindowContent
-        .appendTo('.editor-bottom-bar > nav')
+        .appendTo('.editor-side-bar > nav')
         .draggable({
             containment: 'window',
             scroll: false,
