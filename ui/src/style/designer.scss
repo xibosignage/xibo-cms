@@ -3,6 +3,7 @@
 @import "mixins";
 
 // Colours
+$designer-color-background: $xibo-color-white;
 $designer-colour-layout: $xibo-color-light-blue;
 $designer-colour-region: $xibo-color-orange;
 $designer-colour-widget: $xibo-color-green; 
@@ -91,45 +92,99 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 }
 
 // CSS
-#layout-editor  {
-    overflow: hidden;
-    margin: 18px -15px 0 -15px;
+.layout-editor-flex {
+    display: flex;  
+    flex-flow: row wrap;
+    flex: 1;
 }
 
-#page-wrapper #layout-editor  {
-    margin-top: 25px;
+#content-wrapper .page-content > .row {
+    > div {
+        margin: 0;
+    }
+
+    &.header.header-side {
+        height: 50px;
+        margin-bottom: 0;
+
+        .navbar-toggler-side {
+            margin-top: 8px;
+            margin-right: 8px;
+        }
+
+        .user {
+            & > .item {
+                width: auto;
+                height: 50px;
+                padding-right: 16px;
+
+                & > a {
+                    padding: 7px 0;
+                }
+
+                img.nav-avatar {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 2px;
+                }
+            }
+        }
+
+        .xibo-logo-container {
+            margin-left: 50%;
+            transform: translateX(-50%);
+
+            .page {
+                width: auto;
+                padding: 0;
+
+                .xibo-logo {
+                    height: 30px;
+                    margin: 10px 0;
+                }
+            }
+        }
+
+        .user-notif > .item > a {
+            padding: 5px 0;
+        }
+    }
+}
+
+#layout-editor  {
+    overflow: hidden;
+    margin: 0 -15px -15px -15px;
+    background-color: $designer-color-background;
+}
+
+@media (max-width: 768px) {
+    #layout-editor {
+        margin-top: 50px;
+    } 
 }
 
 #layout-editor-main {
     overflow-x: hidden;
     overflow-y: auto;
-    padding-top: 8px;
-    height: calc(100vh - 95px - #{$toolbar-height});
+    padding-top: 16px;
+    height: calc(100vh - 90px);
 }
 
 #layout-editor .container-designer {
     margin: 0 16px;
 }
 
-@media (max-width: 1200px) {
-    #layout-editor  {
-        margin-top: -20px;
+#layout-editor #back-button {
+    position: fixed;
+    left: 16px;
+    top: 8px;
+
+    span {
+        margin-left: 6px;
+        font-weight: bold;
     }
 }
 
-@media (max-width: 768px) {
-    #layout-editor-main {
-        padding-top: 15px;
-    }
-
-    #layout-editor {
-        margin-top: -20px;
-    } 
-    
-    #page-wrapper #layout-editor  {
-        margin-top: 0;
-    }
-}
 
 #layout-editor .layout-module {
     padding-right: 2px;
@@ -549,11 +604,11 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     @include border-radius(4px);
     border: 2px solid $designer-module-border-color;
     background: $xibo-color-black;
-    min-height: calc(45vh + 46px); /* Fix for the reload of a viewer element */
+    min-height: calc(54vh + 46px); /* Fix for the reload of a viewer element */
 }
 
 #layout-editor #layout-viewer {
-    min-height: 45vh;
+    min-height: 54vh;
     background: $viewer-player-bg-colour;
 
     .layout-viewer-border {
@@ -906,7 +961,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     }
 
     .loading-container {
-        height: calc(45vh + 46px);
+        height: calc(54vh + 46px);
         @include border-radius(4px);
         background: $designer-module-bg-color;
         border: 2px solid $xibo-color-dark-blue;
@@ -918,7 +973,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
     #properties-panel-container {
         background: $designer-module-bg-color;
-        height: calc(45vh + 46px);
+        height: calc(54vh + 46px);
         position: relative;
         border: 2px solid $xibo-color-dark-blue;
         @include border-radius(4px);
@@ -952,7 +1007,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         .form-container {
             overflow-x: hidden;
             overflow-y: auto;
-            height: calc(45vh - 28px);
+            height: calc(54vh - 28px);
 
             .row > div {
                 padding: 6px;
@@ -1173,7 +1228,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
     #layout-navigator-content {
         background: $xibo-color-black;
-        min-height: 45vh;
+        min-height: 54vh;
     }
 
     #layout-navigator-navbar {
@@ -1376,7 +1431,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
 /* Loading Container */
 #layout-editor .loading-container {
-    height: 100%;
+    height: calc(100vh - 130px);
     width: 100%;
     position: absolute;
 }
@@ -1387,7 +1442,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     top: 50%;
     transform: translateY(-50%);
     font-size: 5.35rem;
-    color: $xibo-color-white;
+    color: $xibo-color-primary;
     z-index: 0;
 }
 
@@ -1421,10 +1476,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     z-index: $designer-overlay-z-index;
     position: fixed;
     bottom: 0;
-}
-
-#page-wrapper #layout-editor #lockedLayoutMessage {
-    width: calc(90% - 180px);
 }
 
 /* Hide or show content based on the lock */
