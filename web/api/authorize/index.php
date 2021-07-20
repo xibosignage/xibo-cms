@@ -82,12 +82,10 @@ $app->get('/', function(Request $request, Response $response) use ($app) {
     /** @var \League\OAuth2\Server\AuthorizationServer $server */
     $server = $app->getContainer()->get('server');
     $authRequest = $server->validateAuthorizationRequest($request);
-    $app->getContainer()->get('session')->set('authParams', $authRequest);
+
     // Redirect the user to the UI - save the auth params in the session.
-    //$app->getContainer()->get('session')->set('authParams', $authParams);
-    //$app->redirect(str_replace('/api/authorize/', '/application/authorize', $app->request()->getPath()));
-    // We know we are at /api/authorize, so convert that to /application/authorize
-    return $response->withRedirect('/application/authorize');
+    $app->getContainer()->get('session')->set('authParams', $authRequest);
+    return $response->withRedirect(str_replace('/api/authorize/', '/application/authorize', $request->getUri()->getPath()));
 
 })->setName('home');
 
