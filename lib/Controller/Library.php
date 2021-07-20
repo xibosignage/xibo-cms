@@ -2663,7 +2663,7 @@ class Library extends Base
                 $extension = $mimeTypes->getExtension($extension);
             }
         } catch (RequestException $e) {
-            $this->getLog()->debug('Upload from url failed for URL ' . $url . ' with following message ' . $e->getMessage());
+            $this->getLog()->debug('Upload from url head request failed for URL ' . $url . ' with following message ' . $e->getMessage());
         }
 
         $downloadInfo['size'] = $size;
