@@ -126,14 +126,13 @@ class ApiAuthorization implements Middleware
             if (is_array($scopes) && count($scopes) > 0) {
                 foreach ($scopes as $scope) {
                     // Valid routes
-                    if ($scope->id != 'all') {
+                    if ($scope !== 'all') {
                         $logger->debug(sprintf('Test authentication for %s %s against scope %s',
-                            $resource, $request->getMethod(), $scope->id));
+                            $resource, $request->getMethod(), $scope));
 
                         // Check the route and request method
                         try {
-                            $applicationScopeFactory->getById($scope->id)->checkRoute($request->getMethod(),
-                                $resource);
+                            $applicationScopeFactory->getById($scope)->checkRoute($request->getMethod(), $resource);
                         } catch (NotFoundException $notFoundException) {
                             throw new AccessDeniedException();
                         }
