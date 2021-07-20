@@ -150,7 +150,8 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
                 `user`.UserName AS owner,
                 `oauth_clients`.authCode,
                 `oauth_clients`.clientCredentials,
-                `oauth_clients`.userId ';
+                `oauth_clients`.userId, 
+                `oauth_clients`.isConfidential';
 
         $body = ' FROM `oauth_clients` ';
         $body .= ' INNER JOIN `user` ON `user`.userId = `oauth_clients`.userId ';
@@ -173,8 +174,9 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging

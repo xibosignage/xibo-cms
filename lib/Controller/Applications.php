@@ -467,6 +467,7 @@ class Applications extends Base
         $client->name = $sanitizedParams->getString('name');
         $client->authCode = $sanitizedParams->getCheckbox('authCode');
         $client->clientCredentials = $sanitizedParams->getCheckbox('clientCredentials');
+        $client->isConfidential = $sanitizedParams->getCheckbox('isConfidential');
 
         if ($sanitizedParams->getCheckbox('resetKeys') == 1) {
             $client->resetSecret();
