@@ -189,6 +189,11 @@ class NotificationFactory extends BaseFactory
             $params['createToDt'] = $sanitizedFilter->getInt('createToDt');
         }
 
+        if ($sanitizedFilter->getInt('onlyReleased') === 1) {
+            $body .= ' AND `notification`.releaseDt <= :now ';
+            $params['now'] = Carbon::now()->format('U');
+        }
+
         // User Id?
         if ($sanitizedFilter->getInt('userId') !== null) {
             $body .= ' AND `notification`.notificationId IN (
