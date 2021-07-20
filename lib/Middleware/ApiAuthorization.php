@@ -127,8 +127,13 @@ class ApiAuthorization implements Middleware
                 foreach ($scopes as $scope) {
                     // Valid routes
                     if ($scope !== 'all') {
-                        $logger->debug(sprintf('Test authentication for %s %s against scope %s',
-                            $resource, $request->getMethod(), $scope));
+                        $logger->debug(
+                            sprintf('Test authentication for %s %s against scope %s',
+                                $resource,
+                                $request->getMethod(),
+                                $scope
+                            )
+                        );
 
                         // Check the route and request method
                         try {
