@@ -231,18 +231,15 @@ class Applications extends Base
         // Default scope
         $server->setDefaultScope('all');
 
+        // get oauth User Entity and set the UserId to the current web userId
+        $authRequest->setUser($this->getUser());
         // We are authorized
         if ($sanitizedQueryParams->getString('authorization') === 'Approve') {
-
             $authRequest->setAuthorizationApproved(true);
-
-            // get oauth User Entity and set the UserId to the current web userId
-            $authRequest->setUser($this->getUser());
 
             // Redirect back to the home page
             return $server->completeAuthorizationRequest($authRequest, $response);
-        }
-        else {
+        } else {
             $authRequest->setAuthorizationApproved(false);
             return $server->completeAuthorizationRequest($authRequest, $response);
         }
