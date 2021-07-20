@@ -128,7 +128,8 @@ class ApiAuthorization implements Middleware
                     // Valid routes
                     if ($scope !== 'all') {
                         $logger->debug(
-                            sprintf('Test authentication for %s %s against scope %s',
+                            sprintf(
+                                'Test authentication for %s %s against scope %s',
                                 $resource,
                                 $request->getMethod(),
                                 $scope
