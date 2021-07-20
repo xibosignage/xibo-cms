@@ -22,7 +22,6 @@
 
 namespace Xibo\Entity;
 
-use League\OAuth2\Server\Entities\ScopeEntityInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -31,7 +30,7 @@ use Xibo\Support\Exception\AccessDeniedException;
  * Class ApplicationScope
  * @package Xibo\Entity
  */
-class ApplicationScope implements \JsonSerializable, ScopeEntityInterface
+class ApplicationScope implements \JsonSerializable
 {
     use EntityTrait;
 
@@ -86,16 +85,5 @@ class ApplicationScope implements \JsonSerializable, ScopeEntityInterface
 
         if (count($route) <= 0)
             throw new AccessDeniedException(__('Access to this route is denied for this scope'));
-    }
-
-    /** @inheritDoc */
-    public function getIdentifier() :string
-    {
-        return $this->getId();
-    }
-
-    public function getDescription() :string
-    {
-        return $this->description;
     }
 }
