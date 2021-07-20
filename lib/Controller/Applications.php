@@ -181,20 +181,17 @@ class Applications extends Base
     public function authorize(Request $request, Response $response)
     {
         // Pull authorize params from our session
-        if (!$authParams = $this->session->get('authParams')) {
+        /** @var AuthorizationRequest $authRequest */
+        $authRequest = $this->session->get('authParams');
+        if (!$authRequest) {
             throw new InvalidArgumentException(__('Authorisation Parameters missing from session.'), 'authParams');
         }
 
         $sanitizedQueryParams = $this->getSanitizer($request->getParams());
 
-        // get auth server
-        /** @var AuthorizationRequest $authRequest */
-        $authRequest = $this->session->get('authParams');
-
         $apiKeyPaths = $this->getConfig()->getApiKeyDetails();
-
         $privateKey = $apiKeyPaths['privateKeyPath'];
-        $encryptionKey = $apiKeyPaths['publicKeyPath'];
+        $encryptionKey = $apiKeyPaths['encryptionKey'];
 
         $server = new AuthorizationServer(
             $this->applicationFactory,
