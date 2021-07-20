@@ -181,20 +181,17 @@ class Applications extends Base
     public function authorize(Request $request, Response $response)
     {
         // Pull authorize params from our session
-        if (!$authParams = $this->session->get('authParams')) {
+        /** @var AuthorizationRequest $authRequest */
+        $authRequest = $this->session->get('authParams');
+        if (!$authRequest) {
             throw new InvalidArgumentException(__('Authorisation Parameters missing from session.'), 'authParams');
         }
 
         $sanitizedQueryParams = $this->getSanitizer($request->getParams());
 
-        // get auth server
-        /** @var AuthorizationRequest $authRequest */
-        $authRequest = $this->session->get('authParams');
-
         $apiKeyPaths = $this->getConfig()->getApiKeyDetails();
-
         $privateKey = $apiKeyPaths['privateKeyPath'];
-        $encryptionKey = $apiKeyPaths['publicKeyPath'];
+        $encryptionKey = $apiKeyPaths['encryptionKey'];
 
         $server = new AuthorizationServer(
             $this->applicationFactory,
@@ -216,21 +213,18 @@ class Applications extends Base
         // Default scope
         $server->setDefaultScope('all');
 
+        // get oauth User Entity and set the UserId to the current web userId
+        $authRequest->setUser($this->getUser());
+
         // We are authorized
         if ($sanitizedQueryParams->getString('authorization') === 'Approve') {
-
             $authRequest->setAuthorizationApproved(true);
-
-            // get oauth User Entity and set the UserId to the current web userId
-            $authRequest->setUser($this->getUser());
-
-            // Redirect back to the home page
-            return $server->completeAuthorizationRequest($authRequest, $response);
-        }
-        else {
+        } else {
             $authRequest->setAuthorizationApproved(false);
-            return $server->completeAuthorizationRequest($authRequest, $response);
         }
+
+        // Redirect back to the specified redirect url
+        return $server->completeAuthorizationRequest($authRequest, $response);
     }
 
     /**
@@ -455,6 +449,7 @@ class Applications extends Base
         $client->name = $sanitizedParams->getString('name');
         $client->authCode = $sanitizedParams->getCheckbox('authCode');
         $client->clientCredentials = $sanitizedParams->getCheckbox('clientCredentials');
+        $client->isConfidential = $sanitizedParams->getCheckbox('isConfidential');
 
         if ($sanitizedParams->getCheckbox('resetKeys') == 1) {
             $client->resetSecret();

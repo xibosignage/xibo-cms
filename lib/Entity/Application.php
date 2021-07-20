@@ -186,7 +186,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
              * @var ApplicationScope $a
              * @var ApplicationScope $b
              */
-            return $a->getId() - $b->getId();
+            return $a->getId() !== $b->getId();
         });
     }
 
