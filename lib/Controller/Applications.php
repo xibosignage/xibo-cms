@@ -230,16 +230,16 @@ class Applications extends Base
 
         // get oauth User Entity and set the UserId to the current web userId
         $authRequest->setUser($this->getUser());
+
         // We are authorized
         if ($sanitizedQueryParams->getString('authorization') === 'Approve') {
             $authRequest->setAuthorizationApproved(true);
-
-            // Redirect back to the home page
-            return $server->completeAuthorizationRequest($authRequest, $response);
         } else {
             $authRequest->setAuthorizationApproved(false);
-            return $server->completeAuthorizationRequest($authRequest, $response);
         }
+
+        // Redirect back to the specified redirect url
+        return $server->completeAuthorizationRequest($authRequest, $response);
     }
 
     /**
