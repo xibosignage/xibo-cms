@@ -1795,7 +1795,7 @@ class Layout implements \JsonSerializable
             $media = $this->mediaFactory->getById($this->backgroundImageId);
             $zip->addFile($libraryLocation . $media->storedAs, 'library/' . $media->fileName);
             $media->load();
-            
+
             $mappings[] = [
                 'file' => $media->fileName,
                 'mediaid' => $media->mediaId,
@@ -2024,6 +2024,8 @@ class Layout implements \JsonSerializable
                 'notify' => $options['notify'],
                 'collectNow' => $options['collectNow']
             ]);
+        } else {
+            $this->getLog()->debug('xlfToDisk: no build required for layoutId: ' . $this->layoutId);
         }
 
         Profiler::end('Layout::xlfToDisk', $this->getLog());
@@ -2047,6 +2049,8 @@ class Layout implements \JsonSerializable
      */
     public function publishDraft()
     {
+        $this->getLog()->debug('publish: publishing draft layoutId: ' . $this->layoutId . ', status: ' . $this->status);
+
         // We are the draft - make sure we have a parent
         if (!$this->isChild())
             throw new InvalidArgumentException(__('Not a Draft'), 'statusId');
@@ -2145,6 +2149,8 @@ class Layout implements \JsonSerializable
         // Add a layout history
         $this->addLayoutHistory();
 
+        // Always rebuild for a publish
+        $this->status = 3;
     }
 
     public function setPublishedDate($publishedDate)

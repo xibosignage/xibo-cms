@@ -291,8 +291,6 @@ class DisplayFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy, '`displaygroup`.permissionsFolderId');
-
         // Filter by Display ID?
         if ($parsedBody->getInt('displayId') !== null) {
             $body .= ' AND display.displayid = :displayId ';
@@ -508,6 +506,8 @@ class DisplayFactory extends BaseFactory
             $body .= ' AND displaygroup.folderId = :folderId ';
             $params['folderId'] = $parsedBody->getInt('folderId');
         }
+
+        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, 'displaygroup.displayGroupId', null, $filterBy, '`displaygroup`.permissionsFolderId');
 
         // Sorting?
         $order = '';

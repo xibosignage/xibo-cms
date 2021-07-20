@@ -304,9 +304,6 @@ class WidgetFactory extends BaseFactory
             $body .= ' AND playlist.regionId IS NULL ';
         }
 
-        // Permissions
-        $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy, 'playlist.permissionsFolderId');
-
         if ($sanitizedFilter->getInt('playlistId') !== null) {
             $body .= ' AND `widget`.playlistId = :playlistId';
             $params['playlistId'] = $sanitizedFilter->getInt('playlistId');
@@ -366,6 +363,9 @@ class WidgetFactory extends BaseFactory
             $terms = explode(',', $sanitizedFilter->getString('playlist'));
             $this->nameFilter('playlist', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
+
+        // Permissions
+        $this->viewPermissionSql('Xibo\Entity\Widget', $body, $params, 'widget.widgetId', 'widget.ownerId', $filterBy, 'playlist.permissionsFolderId');
 
         // Sorting?
         $order = '';

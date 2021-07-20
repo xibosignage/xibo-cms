@@ -95,13 +95,8 @@ $app->post('/access_token', function(Request $request, Response $response) use (
     $app->getContainer()->get('logService')->debug('Request for access token using grant_type: %s', $request->getParam('grant_type'));
     $server = $app->getContainer()->get('server');
 
-    try {
-        // Try to respond to the request
-        return $server->respondToAccessTokenRequest($request, $response);
-    } catch (\League\OAuth2\Server\Exception\OAuthServerException $exception) {
-        // All instances of OAuthServerException can be formatted into a HTTP response
-        return $exception->generateHttpResponse($response);
-    }
+    // Try to respond to the request
+    return $server->respondToAccessTokenRequest($request, $response);
 });
 
 // Run app
