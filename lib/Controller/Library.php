@@ -2559,7 +2559,7 @@ class Library extends Base
         }
 
         // Validate the URL
-        if (!v::url()->notEmpty()->validate(urldecode($url)) || !filter_var($url, FILTER_VALIDATE_URL)) {
+        if (!v::url()->notEmpty()->validate($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
             throw new InvalidArgumentException(__('Provided URL is invalid'), 'url');
         }
 
@@ -2571,7 +2571,8 @@ class Library extends Base
         }
 
         // remote file size
-        $size = $this->getRemoteFileSize($url);
+        $downloadInfo = $this->getDownloadInfo($url);
+        $size = $downloadInfo['size'];
 
         if (ByteFormatter::toBytes(Environment::getMaxUploadSize()) < $size) {
             throw new InvalidArgumentException(sprintf(__('This file size exceeds your environment Max Upload Size %s'), Environment::getMaxUploadSize()), 'size');
@@ -2583,7 +2584,7 @@ class Library extends Base
         if (!empty($extension)) {
             $ext = $extension;
         } else {
-            $ext = $this->getRemoteFileExtension($url);
+            $ext = $downloadInfo['extension'];
         }
 
         // check if we have type provided in the request (available via API), if not get the module type from the extension
@@ -2630,15 +2631,14 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * @param $url
-     * @return int
-     * @throws InvalidArgumentException
-     */
-    private function getRemoteFileSize($url)
+    private function getDownloadInfo($url)
     {
-        $size = -1;
+        $downloadInfo = [];
         $guzzle = new Client($this->getConfig()->getGuzzleProxy());
+
+        // first try to get the extension from pathinfo
+        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+        $size = -1;
 
         try {
             $head = $guzzle->head($url);
@@ -2648,52 +2648,28 @@ class Library extends Base
                 $size = $value;
             }
 
+            if ($extension == '') {
+                $contentType = $head->getHeaderLine('Content-Type');
+
+                $extension = $contentType;
+
+                if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
+                    $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
+                    $extension = $amazonContentType;
+                }
+
+                // get the extension corresponding to the mime type
+                $mimeTypes = new MimeTypes();
+                $extension = $mimeTypes->getExtension($extension);
+            }
         } catch (RequestException $e) {
             $this->getLog()->debug('Upload from url failed for URL ' . $url . ' with following message ' . $e->getMessage());
-            throw new InvalidArgumentException(('File not found'), 'url');
         }
 
-        if ($size <= 0) {
-            throw new InvalidArgumentException(('Cannot determine the file size'), 'size');
-        }
+        $downloadInfo['size'] = $size;
+        $downloadInfo['extension'] = $extension;
 
-        return (int)$size;
-    }
-
-    /**
-     * @param $url
-     * @return string
-     * @throws InvalidArgumentException
-     */
-    private function getRemoteFileExtension($url)
-    {
-        // first try to get the extension from pathinfo
-        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
-
-        // failing that get the extension from Content-Type header via Guzzle
-         if ($extension == '') {
-             $guzzle = new Client($this->getConfig()->getGuzzleProxy());
-             $head = $guzzle->head($url);
-             $contentType = $head->getHeaderLine('Content-Type');
-
-             $extension = $contentType;
-
-             if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
-                 $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
-                 $extension = $amazonContentType;
-             }
-
-             // get the extension corresponding to the mime type
-             $mimeTypes = new MimeTypes();
-             $extension = $mimeTypes->getExtension($extension);
-         }
-
-         // if we could not determine the file extension at this point, throw an error
-        if ($extension == '') {
-            throw new InvalidArgumentException(('Cannot determine the file extension'), 'extension');
-        }
-
-        return $extension;
+        return $downloadInfo;
     }
 
     /**
