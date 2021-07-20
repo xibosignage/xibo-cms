@@ -28,12 +28,12 @@
         <div class="widget-title">{% trans "Authorize Request" %}</div>
         <div class="widget-body">
             <h1>{{ authParams.client.getName() }}</h1>
-            <h5>{{ "would like access to the following scopes"|trans }} :</h5>
+            <h5>{{ "would like access to the following scopes"|trans }}:</h5>
 
             <ul>
-                {% for scope in authParams.scopes %}
+                {% for scope in scopes %}
                 <li>
-                    {{ scope.getIdentifier() }} : {{ scope.getDescription() }}
+                    {{ scope.description }}
                 </li>
                 {% endfor %}
             </ul>

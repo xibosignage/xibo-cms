@@ -173,14 +173,32 @@ class Applications extends Base
     public function authorizeRequest(Request $request, Response $response)
     {
         // Pull authorize params from our session
-        if (!$authParams = $this->session->get('authParams')) {
+        /** @var AuthorizationRequest $authParams */
+        $authParams = $this->session->get('authParams');
+        if (!$authParams) {
             throw new InvalidArgumentException(__('Authorisation Parameters missing from session.'), 'authParams');
+        }
+
+        // Process any scopes.
+        $scopes = [];
+        $authScopes = $authParams->getScopes();
+        if ($authScopes !== null) {
+            foreach ($authScopes as $scope) {
+                $this->getLog()->debug('Loading scope: ' . $scope->getIdentifier());
+                $scopes[] = $this->applicationScopeFactory->getById($scope->getIdentifier());
+            }
+        }
+
+        // `all` is the default scope
+        if (count($scopes) <= 0) {
+            $scopes[] = $this->applicationScopeFactory->getById('all');
         }
 
         // Get, show page
         $this->getState()->template = 'applications-authorize-page';
         $this->getState()->setData([
-            'authParams' => $authParams
+            'authParams' => $authParams,
+            'scopes' => $scopes
         ]);
 
        return $this->render($request, $response);
