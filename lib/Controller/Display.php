@@ -341,9 +341,9 @@ class Display extends Base
                 'sizeRemaining' => round((double)($totalSize - $completeSize) / (pow(1024, $base)), 2),
             ],
             'defaults' => [
-                'fromDate' => Carbon::now()->subSeconds(86400 * 35)->format(DateFormatHelper::getSystemFormat()),
-                'fromDateOneDay' => Carbon::now()->subSeconds(86400)->format(DateFormatHelper::getSystemFormat()),
-                'toDate' => Carbon::now()->format(DateFormatHelper::getSystemFormat())
+                'fromDate' => Carbon::now()->startOfMonth()->format(DateFormatHelper::getSystemFormat()),
+                'fromDateOneDay' => Carbon::now()->subDay()->format(DateFormatHelper::getSystemFormat()),
+                'toDate' => Carbon::now()->endOfMonth()->format(DateFormatHelper::getSystemFormat())
             ]
         ]);
 
