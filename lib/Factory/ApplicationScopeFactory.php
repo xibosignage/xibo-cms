@@ -10,6 +10,7 @@ namespace Xibo\Factory;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use Xibo\Entity\ApplicationScope;
+use Xibo\OAuth\ScopeEntity;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
