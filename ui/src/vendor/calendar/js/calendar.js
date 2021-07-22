@@ -783,7 +783,8 @@ if(!String.prototype.formatNum) {
 					layoutDisplayOrder: event.displayOrder,
 					eventPriority: event.isPriority,
 					itemClass: elementPriorityClass,
-					itemIcon: elementPriorityIcon
+					itemIcon: elementPriorityIcon,
+					shareOfVoice: event.shareOfVoice
 				});
 			}
 		}
