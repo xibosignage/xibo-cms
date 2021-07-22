@@ -256,7 +256,8 @@ class NotificationView extends ModuleWidget
                         break;
 
                     case '[Date]':
-                        $replace = Carbon::createFromTimestamp($notification->releaseDt)->format($dateFormat);
+                        Carbon::setLocale($this->getConfig()->getSetting('DEFAULT_LANGUAGE', 'en'));
+                        $replace = Carbon::createFromTimestamp($notification->releaseDt)->translatedFormat($dateFormat);
                         break;
                 }
 
