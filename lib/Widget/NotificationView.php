@@ -256,7 +256,7 @@ class NotificationView extends ModuleWidget
                         break;
 
                     case '[Date]':
-                        $replace = Carbon::createFromTimestamp($notification->releaseDt)->format($dateFormat);
+                        $replace = Carbon::createFromTimestamp($notification->releaseDt)->translatedFormat($dateFormat);
                         break;
                 }
 
