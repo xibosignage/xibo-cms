@@ -831,7 +831,6 @@ class Ticker extends ModuleWidget
                             break;
 
                         case '[Date]':
-                            Carbon::setLocale($this->getConfig()->getSetting('DEFAULT_LANGUAGE', 'en'));
                             $replace = Carbon::createFromTimestamp($item->getDate()->format('U'))->translatedFormat($dateFormat);
                             break;
 
