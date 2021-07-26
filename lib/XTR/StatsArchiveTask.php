@@ -135,53 +135,53 @@ class StatsArchiveTask implements TaskInterface
             'toDt' => $toDt,
         ]);
 
-        if ($resultSet->getTotalCount() > 0) {
+        $this->log->debug('Get stats');
 
-            $this->log->debug('Stats query run, create temporary file for export');
+        // Create a temporary file for this
+        $fileName = tempnam(sys_get_temp_dir(), 'stats');
 
-            // Create a temporary file for this
-            $fileName = tempnam(sys_get_temp_dir(), 'stats');
+        $out = fopen($fileName, 'w');
+        fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId', 'Engagements']);
 
-            $out = fopen($fileName, 'w');
-            fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId', 'Engagements']);
+        $hasStatsToArchive = false;
+        while ($row = $resultSet->getNextRow()) {
+            $hasStatsToArchive = true;
+            if ($this->timeSeriesStore->getEngine() == 'mongodb') {
 
-            while ($row = $resultSet->getNextRow()) {
+                $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
+                $start = $this->date->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $end = $this->date->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
+                $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
+            } else {
 
-                if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-
-                    $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s') : null;
-                    $start = $this->date->parse($row['start']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                    $end = $this->date->parse($row['end']->toDateTime()->format('U'), 'U')->format('Y-m-d H:i:s');
-                    $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
-                } else {
-
-                    $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
-                    $start = $this->date->parse($row['start'], 'U')->format('Y-m-d H:i:s');
-                    $end = $this->date->parse($row['end'], 'U')->format('Y-m-d H:i:s');
-                    $engagements = isset($row['engagements']) ? $row['engagements'] : '[]';
-                }
-
-                // Read the columns
-                fputcsv($out, [
-                    $statDate,
-                    $this->sanitizer->string($row['type']),
-                    $start,
-                    $end,
-                    isset($row['layout']) ? $this->sanitizer->string($row['layout']) : '',
-                    isset($row['display']) ? $this->sanitizer->string($row['display']) : '',
-                    isset($row['media']) ? $this->sanitizer->string($row['media']) : '',
-                    isset($row['tag']) ? $this->sanitizer->string($row['tag']) : '',
-                    $this->sanitizer->string($row['duration']),
-                    $this->sanitizer->string($row['count']),
-                    $this->sanitizer->int($row['displayId']),
-                    isset($row['layoutId']) ? $this->sanitizer->int($row['layoutId']) : '',
-                    isset($row['widgetId']) ? $this->sanitizer->int($row['widgetId']) : '',
-                    isset($row['mediaId']) ? $this->sanitizer->int($row['mediaId']) : '',
-                    $engagements
-                ]);
+                $statDate = isset($row['statDate']) ? $this->date->parse($row['statDate'], 'U')->format('Y-m-d H:i:s') : null;
+                $start = $this->date->parse($row['start'], 'U')->format('Y-m-d H:i:s');
+                $end = $this->date->parse($row['end'], 'U')->format('Y-m-d H:i:s');
+                $engagements = isset($row['engagements']) ? $row['engagements'] : '[]';
             }
 
-            fclose($out);
+            // Read the columns
+            fputcsv($out, [
+                $statDate,
+                $this->sanitizer->string($row['type']),
+                $start,
+                $end,
+                isset($row['layout']) ? $this->sanitizer->string($row['layout']) : '',
+                isset($row['display']) ? $this->sanitizer->string($row['display']) : '',
+                isset($row['media']) ? $this->sanitizer->string($row['media']) : '',
+                isset($row['tag']) ? $this->sanitizer->string($row['tag']) : '',
+                $this->sanitizer->string($row['duration']),
+                $this->sanitizer->string($row['count']),
+                $this->sanitizer->int($row['displayId']),
+                isset($row['layoutId']) ? $this->sanitizer->int($row['layoutId']) : '',
+                isset($row['widgetId']) ? $this->sanitizer->int($row['widgetId']) : '',
+                isset($row['mediaId']) ? $this->sanitizer->int($row['mediaId']) : '',
+                $engagements
+            ]);
+        }
+
+        fclose($out);
+        if ($hasStatsToArchive) {
             $this->log->debug('Temporary file written, zipping');
 
             // Create a ZIP file and add our temporary file
@@ -193,9 +193,6 @@ class StatsArchiveTask implements TaskInterface
 
             $zip->addFile($fileName, 'stats.csv');
             $zip->close();
-
-            // Remove the CSV file
-            unlink($fileName);
 
             $this->log->debug('Zipped to ' . $zipName);
 
@@ -240,6 +237,9 @@ class StatsArchiveTask implements TaskInterface
         } else {
             $this->log->debug('There are no stats to archive');
         }
+
+        // Remove the CSV file
+        unlink($fileName);
     }
 
     /**
