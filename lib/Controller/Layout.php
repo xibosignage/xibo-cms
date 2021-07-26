@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -235,11 +235,20 @@ class Layout extends Base
             $layout = $this->layoutFactory->getByParentId($id);
         }
 
-        // Work out our resolution
-        if ($layout->schemaVersion < 2)
-            $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
-        else
-            $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+        // Work out our resolution, if it does not exist, create it.
+        try {
+            if ($layout->schemaVersion < 2) {
+                $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
+            } else {
+                $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+            }
+        } catch (NotFoundException $notFoundException) {
+            $this->getLog()->info('Layout Designer with an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
+
+            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, (int)$layout->width, (int)$layout->height);
+            $resolution->userId = $this->userFactory->getSystemUser()->userId;
+            $resolution->save();
+        }
 
         $moduleFactory = $this->moduleFactory;
         $isTemplate = $layout->hasTag('template');

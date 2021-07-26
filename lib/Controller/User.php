@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -441,6 +441,7 @@ class User extends Base
 
             if ($this->getUser()->isSuperAdmin()
                 && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')
+                && $this->getUser()->userId !== $user->userId
             ) {
                 // Delete
                 $user->buttons[] = [
@@ -1030,6 +1031,7 @@ class User extends Base
     public function delete(Request $request, Response $response, $id)
     {
         $user = $this->userFactory->getById($id);
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // System User
         if ($user->userId == $this->getConfig()->getSetting('SYSTEM_USER')) {
@@ -1040,7 +1042,14 @@ class User extends Base
             throw new AccessDeniedException();
         }
 
-        $sanitizedParams = $this->getSanitizer($request->getParams());
+        if ($this->getUser()->userId === $user->userId) {
+            throw new InvalidArgumentException(__('Cannot delete your own User from the CMS.'));
+        }
+
+        if ($sanitizedParams->getCheckbox('deleteAllItems') && $user->isSuperAdmin()) {
+            throw new InvalidArgumentException(__('Cannot delete all items owned by a Super Admin, please reassign to a different User.'));
+        }
+
         $user->setChildAclDependencies($this->userGroupFactory);
         $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory, $this->dayPartFactory);
 
