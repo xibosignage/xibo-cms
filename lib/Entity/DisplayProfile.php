@@ -437,6 +437,10 @@ class DisplayProfile implements \JsonSerializable
             throw new InvalidArgumentException(__('This Display Profile is currently assigned to one or more Displays'), 'displayProfileId');
         }
 
+        if ($this->isDefault === 1) {
+            throw new InvalidArgumentException(__('Cannot delete default Display Profile.'), 'displayProfileId');
+        }
+
         $this->getStore()->update('DELETE FROM `displayprofile` WHERE displayprofileid = :displayProfileId', ['displayProfileId' => $this->displayProfileId]);
     }
 

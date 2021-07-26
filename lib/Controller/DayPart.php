@@ -540,6 +540,10 @@ class DayPart extends Base
     {
         $dayPart = $this->dayPartFactory->getById($dayPartId);
 
+        if ($dayPart->isSystemDayPart()) {
+            throw new \InvalidArgumentException('Cannot delete system dayPart', 'dayPartId');
+        }
+
         if (!$this->getUser()->checkDeleteable($dayPart))
             throw new AccessDeniedException();
 
