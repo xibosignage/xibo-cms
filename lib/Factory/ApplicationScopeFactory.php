@@ -10,6 +10,7 @@ namespace Xibo\Factory;
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use Xibo\Entity\ApplicationScope;
+use Xibo\OAuth\ScopeEntity;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -122,7 +123,10 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
         $this->getLog()->debug('getScopeEntityByIdentifier: ' . $scopeIdentifier);
 
         try {
-            return $this->getById($scopeIdentifier);
+            $applicationScope = $this->getById($scopeIdentifier);
+            $scope = new ScopeEntity();
+            $scope->setIdentifier($applicationScope->getId());
+            return $scope;
         } catch (NotFoundException $e) {
             return null;
         }
@@ -144,7 +148,7 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
             $found = false;
 
             /** @var \Xibo\Entity\Application $clientEntity */
-            foreach ($clientEntity->scopes as $validScope) {
+            foreach ($clientEntity->getScopes() as $validScope) {
                 if ($validScope->getIdentifier() === $scope->getIdentifier()) {
                     $found = true;
                     break;

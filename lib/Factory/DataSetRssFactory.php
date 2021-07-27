@@ -112,9 +112,6 @@ class DataSetRssFactory extends BaseFactory
              WHERE 1 = 1
         ';
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`datasetrss`.dataSetId', '`dataset`.userId', $filterBy);
-
         if ($sanitizedFilter->getInt('id') !== null) {
             $body .= ' AND `datasetrss`.id = :id ';
             $params['id'] = $sanitizedFilter->getInt('id');
@@ -134,6 +131,9 @@ class DataSetRssFactory extends BaseFactory
             $terms = explode(',', $sanitizedFilter->getString('title'));
             $this->nameFilter('datasetrss', 'title', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`datasetrss`.dataSetId', '`dataset`.userId', $filterBy);
 
         // Sorting?
         $order = '';

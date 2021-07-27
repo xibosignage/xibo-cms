@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -72,18 +72,25 @@
                         {% set helpText %}{% trans "Can this Application keep a secret?" %}{% endset %}
                         {{ forms.checkbox("isConfidential", title, client.isConfidential, helpText) }}
 
-                        {% set title %}{% trans "Redirect URI" %}{% endset %}
+                        {% set title %}{% trans "New Redirect URI" %}{% endset %}
                         {% set helpText %}{% trans "White listed redirect URI's that will be allowed, only application for Authorization Code Grants" %}{% endset %}
                         {{ forms.input("redirectUri[]", title, "", helpText) }}
+
+                        <div class="form-group row">
+                            <span class="control-label col-sm-2">{{ "Existing Redirect URI"|trans }}:</span>
+                        </div>
+
+                        {% for url in client.redirectUris %}
+                            {{ forms.input("redirectUri[]", "", url.redirectUri) }}
+                        {% endfor %}
                     </div>
                     <div class="tab-pane" id="scopes">
                         {% set message %}{% trans "Select sharing to grant to this application (scopes)." %}{% endset %}
                         {{ forms.message(message) }}
 
-                        {% for url in client.redirectUris %}
-                            {% set title %}{% trans "Redirect URI" %}{% endset %}
-                            {{ forms.input("redirectUri[]", title, url.redirectUri) }}
-                        {% endfor %}
+                        <div class="form-group row">
+                            <span class="control-label col-sm-2">{{ "Scopes"|trans }}:</span>
+                        </div>
 
                         {% for scope in scopes %}
                             {% set title %}{{ scope.description }}{% endset %}

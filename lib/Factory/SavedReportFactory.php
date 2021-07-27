@@ -150,9 +150,6 @@ class SavedReportFactory extends BaseFactory
 
         $body .= " WHERE 1 = 1 ";
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\SavedReport', $body, $params, '`saved_report`.savedReportId', '`saved_report`.userId', $filterBy);
-
         // Like
         if ($sanitizedFilter->getString('saveAs') != '') {
             $terms = explode(',', $sanitizedFilter->getString('saveAs'));
@@ -207,6 +204,9 @@ class SavedReportFactory extends BaseFactory
             $body .= ' AND `saved_report`.userId = :currentUserId ';
             $params['currentUserId'] = $this->getUser()->userId;
         }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\SavedReport', $body, $params, '`saved_report`.savedReportId', '`saved_report`.userId', $filterBy);
 
         // Sorting?
         $order = '';

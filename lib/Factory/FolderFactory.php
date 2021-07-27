@@ -109,9 +109,6 @@ class FolderFactory extends BaseFactory
           FROM `folder`
          WHERE 1 = 1 ';
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Folder', $body, $params, '`folder`.folderId', null, $filterBy, 'folder.permissionsFolderId');
-
         if ($sanitizedFilter->getInt('folderId') !== null) {
             $body .= ' AND folder.folderId = :folderId ';
             $params['folderId'] = $sanitizedFilter->getInt('folderId');
@@ -136,6 +133,9 @@ class FolderFactory extends BaseFactory
         if ($sanitizedFilter->getInt('includeRoot') === 1) {
             $body .= 'OR folder.isRoot = 1';
         }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\Folder', $body, $params, '`folder`.folderId', null, $filterBy, 'folder.permissionsFolderId');
 
         // Sorting?
         $order = '';

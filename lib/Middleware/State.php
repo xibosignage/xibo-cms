@@ -1080,6 +1080,11 @@ class State implements Middleware
                     $c->get('folderFactory')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+
+                if ($c->has('pool')) {
+                    $repository->usePool($c->get('pool'));
+                }
+
                 return $repository;
             },
             'logFactory' => function(ContainerInterface $c) {

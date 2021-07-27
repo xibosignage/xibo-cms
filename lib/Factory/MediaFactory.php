@@ -574,9 +574,6 @@ class MediaFactory extends BaseFactory
             $body .= ' AND media.type <> \'savedreport\' ';
         }
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy, '`media`.permissionsFolderId');
-
         if ($sanitizedFilter->getInt('allModules') == 0) {
             $body .= ' AND media.type <> \'module\' ';
         }
@@ -814,6 +811,9 @@ class MediaFactory extends BaseFactory
         if ($sanitizedFilter->getInt('noOrientation') === 1) {
             $body .= ' AND media.orientation IS NULL ';
         }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy, '`media`.permissionsFolderId');
 
         // Sorting?
         $order = '';

@@ -1,0 +1,7 @@
+{
+  "title": "Adspace Exchange",
+  "author": "Xibo Adspace",
+  "description": "Adspace Exchange facilitates advertising content delivered to your network via Adspace's demand partners",
+  "name": "xibo-adspaceexchange",
+  "class": "Xibo\\Widget\\AdspaceExchange"
+}

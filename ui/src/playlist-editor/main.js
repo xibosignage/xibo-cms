@@ -729,6 +729,7 @@ pE.refreshDesigner = function() {
         
         // If playlist is empty, open the widget tab
         if(this.toolbar.openedMenu == -1) {
+            this.toolbar.firstRun = false;
             this.toolbar.openMenu(2, true);
         }
     }

@@ -305,9 +305,6 @@ class PlaylistFactory extends BaseFactory
             $params['layoutId'] = $parsedFilter->getInt('layoutId', $filterBy);
         }
 
-        // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy, '`playlist`.permissionsFolderId');
-
         // Playlist Like
         if ($parsedFilter->getString('name') != '') {
             $terms = explode(',', $parsedFilter->getString('name'));
@@ -390,6 +387,9 @@ class PlaylistFactory extends BaseFactory
             $body .= " AND `playlist`.folderId = :folderId ";
             $params['folderId'] = $parsedFilter->getInt('folderId');
         }
+
+        // Logged in user view permissions
+        $this->viewPermissionSql('Xibo\Entity\Playlist', $body, $params, 'playlist.playlistId', 'playlist.ownerId', $filterBy, '`playlist`.permissionsFolderId');
 
         // Sorting?
         $order = '';
