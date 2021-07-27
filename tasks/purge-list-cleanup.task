@@ -1,0 +1,5 @@
+{
+  "name": "Purge List Cleanup",
+  "class": "\\Xibo\\XTR\\PurgeListCleanupTask",
+  "options": []
+}
