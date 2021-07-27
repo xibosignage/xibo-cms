@@ -44,11 +44,13 @@ class Soap6 extends Soap5
     public function reportFaults(string $serverKey, string $hardwareKey, string $fault): bool
     {
         $this->logProcessor->setRoute('ReportFault');
-        $this->logProcessor->setDisplay(0, 1);
+        //$this->logProcessor->setDisplay(0, 1);
+
         $sanitizer = $this->getSanitizer([
             'serverKey' => $serverKey,
             'hardwareKey' => $hardwareKey
         ]);
+        
         // Sanitize
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');

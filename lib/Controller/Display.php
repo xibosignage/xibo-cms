@@ -2544,11 +2544,43 @@ class Display extends Base
         return $this->render($request, $response);
     }
 
+
+    /**
+     * Purge All
+     *
+     * @SWG\Put(
+     *  summary="Purge All",
+     *  path="/display/purgeAll/{displayId}",
+     *  operationId="displayPurgeAll",
+     *  tags={"display"},
+     *  description="Ask this Player to purge all Media from its local storage and request fresh files from CMS.",
+     *  @SWG\Parameter(
+     *      name="displayId",
+     *      in="path",
+     *      description="The Display ID",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
     public function purgeAll(Request $request, Response $response, $id)
     {
         $display = $this->displayFactory->getById($id);
 
-        if (!$this->getUser()->checkViewable($display)) {
+        if (!$this->getUser()->checkViewable($display) || !$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 
