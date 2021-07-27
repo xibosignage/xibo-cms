@@ -1672,4 +1672,31 @@ class User implements \JsonSerializable, UserEntityInterface
 
         $this->getStore()->update($sql, $params);
     }
+
+    /**
+     * Triggered from Settings Controller when the SYSTEM_USER is changed
+     * following this change, we want to reassign some system objects to the new SYSTEM_USER
+     *
+     * @param int $newSystemUserId
+     */
+    public function adjustSystemObjects(int $newSystemUserId)
+    {
+        // Reassign Module files
+        $this->getStore()->update('UPDATE `media` SET userId = :userId WHERE userId = :oldUserId AND type = \'module\'', [
+            'userId' => $newSystemUserId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign Display specific Display Groups
+        $this->getStore()->update('UPDATE `displaygroup` SET userId = :userId WHERE userId = :oldUserId AND isDisplaySpecific = 1', [
+            'userId' => $newSystemUserId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign system dayparts
+        $this->getStore()->update('UPDATE `daypart` SET userId = :userId WHERE userId = :oldUserId AND (isCustom = 1 OR isAlways = 1)', [
+            'userId' => $newSystemUserId,
+            'oldUserId' => $this->userId
+        ]);
+    }
 }

@@ -757,6 +757,12 @@ class Settings extends Base
     private function handleChangedSettings($setting, $oldValue, $newValue, &$changedSettings)
     {
         if ($oldValue != $newValue) {
+
+            if ($setting === 'SYSTEM_USER') {
+                $oldSystemUser = $this->userFactory->getById($oldValue);
+                $oldSystemUser->adjustSystemObjects($newValue);
+            }
+
             if ($setting === 'ELEVATE_LOG_UNTIL') {
                 $changedSettings[$setting] = Carbon::createFromTimestamp($oldValue)->format(DateFormatHelper::getSystemFormat()) . ' > ' .  Carbon::createFromTimestamp($newValue)->format(DateFormatHelper::getSystemFormat());
             } else {
