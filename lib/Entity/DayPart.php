@@ -267,7 +267,7 @@ class DayPart implements \JsonSerializable
     public function delete()
     {
         if ($this->isSystemDayPart()) {
-            throw new \InvalidArgumentException('Cannot delete system dayParts');
+            throw new InvalidArgumentException(__('Cannot delete system dayParts'), 'dayPartId');
         }
 
         // Delete all events using this daypart

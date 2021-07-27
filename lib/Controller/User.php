@@ -867,11 +867,11 @@ class User extends Base
         }
 
         if ($this->getUser()->userId === $userId) {
-            throw new \InvalidArgumentException(__('Cannot delete your own User from the CMS.'));
+            throw new InvalidArgumentException(__('Cannot delete your own User from the CMS.'), 'userId');
         }
 
         if ($this->getSanitizer()->getCheckbox('deleteAllItems') && $user->isSuperAdmin()) {
-            throw new \InvalidArgumentException(__('Cannot delete all items owned by a Super Admin, please reassign to a different User.'));
+            throw new InvalidArgumentException(__('Cannot delete all items owned by a Super Admin, please reassign to a different User.'), 'userTypeId');
         }
 
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);

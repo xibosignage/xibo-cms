@@ -21,6 +21,7 @@
 namespace Xibo\Controller;
 
 use Xibo\Exception\AccessDeniedException;
+use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\DisplayFactory;
@@ -541,7 +542,7 @@ class DayPart extends Base
         $dayPart = $this->dayPartFactory->getById($dayPartId);
 
         if ($dayPart->isSystemDayPart()) {
-            throw new \InvalidArgumentException('Cannot delete system dayPart', 'dayPartId');
+            throw new InvalidArgumentException(__('Cannot delete system dayPart'), 'dayPartId');
         }
 
         if (!$this->getUser()->checkDeleteable($dayPart))
