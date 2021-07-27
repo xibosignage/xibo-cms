@@ -2752,7 +2752,10 @@ class Layout extends Base
     public function getLayoutCodes(Request $request, Response $response)
     {
         $parsedParams = $this->getSanitizer($request->getQueryParams());
-        $codes = $this->layoutFactory->getLayoutCodes($this->gridRenderFilter([], $parsedParams));
+
+        $codes = $this->layoutFactory->getLayoutCodes($this->gridRenderFilter([
+            'code' => $parsedParams->getString('code')
+        ], $parsedParams));
 
         // Store the table rows
         $this->getState()->template = 'grid';

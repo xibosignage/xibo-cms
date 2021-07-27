@@ -609,11 +609,26 @@ class DisplayProfile extends Base
         // Create a form out of the config object.
         $displayProfile = $this->displayProfileFactory->getById($id);
 
-        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId)
+        if ($this->getUser()->userTypeId != 1 && $this->getUser()->userId != $displayProfile->userId) {
             throw new AccessDeniedException(__('You do not have permission to delete this profile'));
+        }
 
+        // clear DisplayProfileId, commands and set isDefault to 0
         $new = clone $displayProfile;
         $new->name = $this->getSanitizer($request->getParams())->getString('name');
+
+        foreach ($displayProfile->commands as $command) {
+            /* @var \Xibo\Entity\Command $command */
+            if (!empty($command->commandStringDisplayProfile)) {
+                // if the original Display Profile has a commandString
+                // assign this command with the same commandString to new Display Profile
+                // commands with only default commandString are not directly assigned to Display profile
+                $command->commandString = $command->commandStringDisplayProfile;
+                $command->validationString = $command->validationStringDisplayProfile;
+                $new->assignCommand($command);
+            }
+        }
+
         $new->save();
 
         // Return
