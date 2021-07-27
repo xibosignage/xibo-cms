@@ -369,7 +369,6 @@
                 openUploadForm({
                     url: "{{ url_for("library.add") }}",
                     title: "{% trans "Upload media" %}",
-                    multi: false,
                     buttons: {
                         main: {
                             label: "{% trans "Done" %}",
@@ -381,6 +380,7 @@
                         }
                     },
                     templateOptions: {
+                        multi: false,
                         oldMediaId: mediaId,
                         oldFolderId: folderId,
                         updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %},

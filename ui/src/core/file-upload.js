@@ -27,14 +27,16 @@ var videoImageCovers = {};
  */
 function openUploadForm(options) {
 
-    options = $.extend({}, {
+    options = $.extend(true, {}, {
         templateId: "template-file-upload",
-        multi: true,
         videoImageCovers: true,
         className: "upload-modal",
         animateDialog: true,
         formOpenedEvent: null,
-        layoutImport: false
+        templateOptions : {
+            layoutImport: false,
+            multi: true
+        }
     }, options);
 
     // Keep a cache of the upload template (unless we are a non-standard form)
@@ -84,7 +86,7 @@ function openUploadForm(options) {
         }
 
         // If we are not a multi-upload, then limit to 1
-        if (!options.multi) {
+        if (!options.templateOptions.multi) {
             uploadOptions = $.extend({}, uploadOptions, {
                 maxNumberOfFiles: 1,
                 limitMultiFileUploads: 1
