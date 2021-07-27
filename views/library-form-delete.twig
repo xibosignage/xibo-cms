@@ -55,6 +55,10 @@
 
                 {% endif %}
 
+                {% set title %}{% trans "Add to Purge list?" %}{% endset %}
+                {% set helpText %}{% trans "When set, each Display that has this Media in its local storage, will be notified to remove it." %}{% endset %}
+                {{ forms.checkbox("purge", title, 0, helpText) }}
+
             </form>
         </div>
     </div>

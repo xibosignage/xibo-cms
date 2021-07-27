@@ -22,6 +22,7 @@
 
 namespace Xibo\Event;
 
+use phpDocumentor\Reflection\Types\Boolean;
 use Xibo\Entity\Media;
 
 class MediaDeleteEvent extends Event
@@ -35,14 +36,18 @@ class MediaDeleteEvent extends Event
      */
     private $parentMedia;
 
+    /** @var Boolean */
+    private $purge;
+
     /**
      * MediaDeleteEvent constructor.
      * @param $media
      */
-    public function __construct($media, $parentMedia = null)
+    public function __construct($media, $parentMedia = null, $purge = false)
     {
         $this->media = $media;
         $this->parentMedia = $parentMedia;
+        $this->purge = $purge;
     }
 
     /**
@@ -56,5 +61,10 @@ class MediaDeleteEvent extends Event
     public function getParentMedia()
     {
         return $this->parentMedia;
+    }
+
+    public function isSetToPurge()
+    {
+        return $this->purge;
     }
 }

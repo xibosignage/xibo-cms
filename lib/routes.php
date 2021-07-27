@@ -339,8 +339,10 @@ $app->get('/display', ['\Xibo\Controller\Display', 'grid'])->setName('display.se
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/display/requestscreenshot/{id}', ['\Xibo\Controller\Display','requestScreenShot'])->setName('display.requestscreenshot');
     $group->put('/display/licenceCheck/{id}', ['\Xibo\Controller\Display','checkLicence'])->setName('display.licencecheck');
+    $group->put('/display/purgeAll/{id}', ['\Xibo\Controller\Display','purgeAll'])->setName('display.purge.all');
     $group->get('/display/screenshot/{id}', ['\Xibo\Controller\Display','screenShot'])->setName('display.screenShot');
     $group->get('/display/status/{id}', ['\Xibo\Controller\Display','statusWindow'])->setName('display.statusWindow');
+    $group->get('/display/faults[/{displayId}]', ['\Xibo\Controller\PlayerFault','grid'])->setName('display.faults.search');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['displays.view']));
 
 $app->group('', function (RouteCollectorProxy $group) {

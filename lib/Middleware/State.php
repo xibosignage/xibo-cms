@@ -685,6 +685,13 @@ class State implements Middleware
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
+            '\Xibo\Controller\PlayerFault' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\PlayerFault(
+                    $c->get('playerFaultFactory')
+                );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
             '\Xibo\Controller\PlayerSoftware' => function(ContainerInterface $c) {
                 $controller = new \Xibo\Controller\PlayerSoftware(
                     $c->get('pool'),
@@ -1157,6 +1164,11 @@ class State implements Middleware
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
+            'playerFaultFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\PlayerFaultFactory();
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
             'playerVersionFactory' => function(ContainerInterface $c) {
                 $repository = new \Xibo\Factory\PlayerVersionFactory(
                     $c->get('user'),
@@ -1362,6 +1374,11 @@ class State implements Middleware
                 $dispatcher->addListener(MediaDeleteEvent::$NAME, (new OnMediaDelete\DisplayGroupListener(
                     $c->get('displayGroupFactory')
                 ))->useLogger($c->get('logger')));
+
+                $dispatcher->addListener(MediaDeleteEvent::$NAME, (new OnMediaDelete\PurgeListListener(
+                    $c->get('store'),
+                    $c->get('configService')
+                )));
 
                 // User Delete Events
                 $dispatcher->addListener(UserDeleteEvent::$NAME, (new OnUserDelete\CampaignListener(

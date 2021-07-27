@@ -306,6 +306,11 @@ class Settings extends Base
             $this->getConfig()->changeSetting('DATASET_HARD_ROW_LIMIT', $sanitizedParams->getInt('DATASET_HARD_ROW_LIMIT'));
         }
 
+        if ($this->getConfig()->isSettingEditable('DEFAULT_PURGE_LIST_TTL')) {
+            $this->handleChangedSettings('DEFAULT_PURGE_LIST_TTL', $this->getConfig()->getSetting('DEFAULT_PURGE_LIST_TTL'), $sanitizedParams->getInt('DEFAULT_PURGE_LIST_TTL'), $changedSettings);
+            $this->getConfig()->changeSetting('DEFAULT_PURGE_LIST_TTL', $sanitizedParams->getInt('DEFAULT_PURGE_LIST_TTL'));
+        }
+
         if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT')) {
             $this->handleChangedSettings('DEFAULT_LAYOUT', $this->getConfig()->getSetting('DEFAULT_LAYOUT'), $sanitizedParams->getInt('DEFAULT_LAYOUT'), $changedSettings);
             $this->getConfig()->changeSetting('DEFAULT_LAYOUT', $sanitizedParams->getInt('DEFAULT_LAYOUT'));

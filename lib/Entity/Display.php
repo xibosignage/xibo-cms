@@ -751,7 +751,7 @@ class Display implements \JsonSerializable
         $displayGroup->delete();
 
         // Delete the display
-        $this->getStore()->update('DELETE FROM `blacklist` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
+        $this->getStore()->update('DELETE FROM `player_faults` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
         $this->getStore()->update('DELETE FROM `display` WHERE displayId = :displayId', ['displayId' => $this->displayId]);
 
         $this->getLog()->audit('Display', $this->displayId, 'Display Deleted', ['displayId' => $this->displayId]);

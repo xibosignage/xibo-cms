@@ -266,6 +266,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/display/form/screenshot/{id}', ['\Xibo\Controller\Display','requestScreenShotForm'])->setName('display.screenshot.form');
     $group->get('/display/form/wol/{id}', ['\Xibo\Controller\Display','wakeOnLanForm'])->setName('display.wol.form');
     $group->get('/display/form/licenceCheck/{id}', ['\Xibo\Controller\Display','checkLicenceForm'])->setName('display.licencecheck.form');
+    $group->get('/display/form/purgeAll/{id}', ['\Xibo\Controller\Display','purgeAllForm'])->setName('display.purge.all.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['displays.view']));
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {

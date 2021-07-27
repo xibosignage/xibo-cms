@@ -56,6 +56,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\XMR\LicenceCheckAction;
+use Xibo\XMR\PurgeAllAction;
 use Xibo\XMR\RekeyAction;
 use Xibo\XMR\ScreenShotAction;
 
@@ -837,6 +838,14 @@ class Display extends Base
                         ['name' => 'form-callback', 'value' => 'triggerWebhookMultiSelectFormOpen']
                     ]
                 ];
+
+                if ($this->getUser()->isSuperAdmin()) {
+                    $display->buttons[] = [
+                        'id' => 'display_button_purgeAll',
+                        'url' => $this->urlFor($request, 'display.purge.all.form', ['id' => $display->displayId]),
+                        'text' => __('Purge All')
+                    ];
+                }
 
                 $display->buttons[] = ['divider' => true];
             }
@@ -2507,5 +2516,54 @@ class Display extends Base
         }
 
         return $response->withJson($display->getStatusWindow($this->pool));
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     */
+    public function purgeAllForm(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($display) || !$this->getUser()->isSuperAdmin()) {
+            throw new AccessDeniedException();
+        }
+
+        $this->getState()->template = 'display-form-purge-all';
+        $this->getState()->setData([
+            'display' => $display
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    public function purgeAll(Request $request, Response $response, $id)
+    {
+        $display = $this->displayFactory->getById($id);
+
+        if (!$this->getUser()->checkViewable($display)) {
+            throw new AccessDeniedException();
+        }
+
+        if (empty($display->xmrChannel)) {
+            throw new InvalidArgumentException(__('XMR is not configured for this Display'), 'xmrChannel');
+        }
+
+        $this->playerAction->sendAction($display, new PurgeAllAction());
+
+        // Return
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Request sent for %s'), $display->display),
+            'id' => $display->displayId
+        ]);
+
+        return $this->render($request, $response);
     }
 }

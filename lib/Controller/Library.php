@@ -785,6 +785,13 @@ class Library extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="purge",
+     *      in="formData",
+     *      description="Should this Media be added to the Purge List for all Displays?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -794,6 +801,7 @@ class Library extends Base
     public function delete(Request $request, Response $response, $id)
     {
         $media = $this->mediaFactory->getById($id);
+        $params = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkDeleteable($media)) {
             throw new AccessDeniedException();
@@ -803,11 +811,11 @@ class Library extends Base
         $this->getDispatcher()->dispatch(MediaFullLoadEvent::$NAME, new MediaFullLoadEvent($media));
         $media->load(['deleting' => true]);
 
-        if ($media->isUsed() && $this->getSanitizer($request->getParams())->getCheckbox('forceDelete') == 0) {
+        if ($media->isUsed() && $params->getCheckbox('forceDelete') == 0) {
             throw new InvalidArgumentException(__('This library item is in use.'));
         }
 
-        $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
+        $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media, null, $params->getCheckbox('purge')));
 
         // Delete
         $media->delete();

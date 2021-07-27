@@ -235,6 +235,17 @@
                                         {{ forms.disabled("DATASET_HARD_ROW_LIMIT", title, theme.getSetting("DATASET_HARD_ROW_LIMIT", 0), helpText) }}
                                     {% endif %}
                                 {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_PURGE_LIST_TTL") %}
+                                    {% set title %}{% trans "Default ttl, in days, for records in purge_list table" %}{% endset %}
+                                    {% set helpText %}{% trans "Entries in purge_list table with expiry date older than specified ttl will be removed." %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_PURGE_LIST_TTL") %}
+                                        {{ forms.number("DEFAULT_PURGE_LIST_TTL", title, theme.getSetting("DEFAULT_PURGE_LIST_TTL", 7), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_PURGE_LIST_TTL", title, theme.getSetting("DEFAULT_PURGE_LIST_TTL", 7), helpText) }}
+                                    {% endif %}
+                                {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_displays">
                                 <h3 class="section-heading">{% trans "Displays" %}</h3>

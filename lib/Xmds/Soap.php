@@ -19,10 +19,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Xmds;
 
-define('BLACKLIST_ALL', "All");
-define('BLACKLIST_SINGLE', "Single");
+namespace Xibo\Xmds;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
@@ -791,30 +789,29 @@ class Soap
             }
         }
 
-        // Add a blacklist node
-        $blackList = $requiredFilesXml->createElement("file");
-        $blackList->setAttribute("type", "blacklist");
-
-        $fileElements->appendChild($blackList);
+        // Add Purge List node
+        $purgeList = $requiredFilesXml->createElement("purge");
+        $fileElements->appendChild($purgeList);
 
         try {
             $dbh = $this->getStore()->getConnection();
 
-            $sth = $dbh->prepare('SELECT MediaID FROM blacklist WHERE DisplayID = :displayid AND isIgnored = 0');
-            $sth->execute(array(
-                'displayid' => $this->display->displayId
-            ));
+            // get list of mediaId/storedAs that should be purged from the Player storage
+            // records in that table older than provided expiryDate, should be removed by the task
+            $sth = $dbh->prepare('SELECT mediaId, storedAs FROM purge_list');
+            $sth->execute();
 
-            // Add a black list element for each file
+            // Add a purge list item for each file
             foreach ($sth->fetchAll() as $row) {
-                $file = $requiredFilesXml->createElement("file");
-                $file->setAttribute("id", $row['MediaID']);
+                $item = $requiredFilesXml->createElement("item");
+                $item->setAttribute("id", $row['mediaId']);
+                $item->setAttribute("storedAs", $row['storedAs']);
 
-                $blackList->appendChild($file);
+                $purgeList->appendChild($item);
             }
         } catch (\Exception $e) {
-            $this->getLog()->error('Unable to get a list of blacklisted files. ' . $e->getMessage());
-            return new \SoapFault('Sender', 'Unable to get a list of blacklisted files');
+            $this->getLog()->error('Unable to get a list of purge_list files. ' . $e->getMessage());
+            return new \SoapFault('Sender', 'Unable to get purge list files');
         }
 
         if ($this->display->isAuditing()) {
@@ -1251,92 +1248,6 @@ class Soap
      */
     protected function doBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
     {
-        $this->logProcessor->setRoute('BlackList');
-        $sanitized = $this->getSanitizer([
-            'serverKey' => $serverKey,
-            'hardwareKey' => $hardwareKey,
-            'mediaId' => $mediaId,
-            'type' => $type,
-            'reason' => $reason,
-        ]);
-
-        // Sanitize
-        $serverKey = $sanitized->getString('serverKey');
-        $hardwareKey = $sanitized->getString('hardwareKey');
-        $mediaId = $sanitized->getInt('mediaId');
-        $type = $sanitized->getString('type');
-        $reason = $sanitized->getString('reason');
-
-        // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-        }
-
-        // Authenticate this request...
-        if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This Display is not authorised.", $hardwareKey);
-        }
-
-        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
-        }
-
-        if ($this->display->isAuditing())
-            $this->getLog()->debug('Blacklisting ' . $mediaId . ' for ' . $reason);
-
-        try {
-            $dbh = $this->getStore()->getConnection();
-
-            // Check to see if this media / display is already blacklisted (and not ignored)
-            $sth = $dbh->prepare('SELECT BlackListID FROM blacklist WHERE MediaID = :mediaid AND isIgnored = 0 AND DisplayID = :displayid');
-            $sth->execute(array(
-                'mediaid' => $mediaId,
-                'displayid' => $this->display->displayId
-            ));
-
-            $results = $sth->fetchAll();
-
-            if (count($results) == 0) {
-
-                $insertSth = $dbh->prepare('
-                        INSERT INTO blacklist (MediaID, DisplayID, ReportingDisplayID, Reason)
-                            VALUES (:mediaid, :displayid, :reportingdisplayid, :reason)
-                    ');
-
-                // Insert the black list record
-                if ($type == BLACKLIST_SINGLE) {
-                    $insertSth->execute(array(
-                        'mediaid' => $mediaId,
-                        'displayid' => $this->display->displayId,
-                        'reportingdisplayid' => $this->display->displayId,
-                        'reason' => $reason
-                    ));
-                } else {
-                    $displaySth = $dbh->prepare('SELECT displayID FROM `display`');
-                    $displaySth->execute();
-
-                    foreach ($displaySth->fetchAll() as $row) {
-
-                        $insertSth->execute(array(
-                            'mediaid' => $mediaId,
-                            'displayid' => $row['displayID'],
-                            'reportingdisplayid' => $this->display->displayId,
-                            'reason' => $reason
-                        ));
-                    }
-                }
-            } else {
-                if ($this->display->isAuditing())
-                    $this->getLog()->debug($mediaId . ' already black listed');
-            }
-        } catch (\Exception $e) {
-            $this->getLog()->error('Unable to query for Blacklist records. ' . $e->getMessage());
-            return new \SoapFault('Sender', "Unable to query for BlackList records.");
-        }
-
-        $this->logBandwidth($this->display->displayId, Bandwidth::$BLACKLIST, strlen($reason));
-
         return true;
     }
 
