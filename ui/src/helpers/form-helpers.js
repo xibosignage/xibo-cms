@@ -897,8 +897,8 @@ let formHelpers = function() {
                     animateDialog: false,
                     initialisedBy: "library-upload",
                     className: self.namespace.getUploadDialogClassName(),
-                    multi: false,
                     templateOptions: {
+                        multi: false,
                         oldMediaId: mediaId,
                         widgetId: widgetId,
                         updateInAllChecked: uploadFormUpdateAllDefault,

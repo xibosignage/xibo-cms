@@ -224,7 +224,6 @@
                 openUploadForm({
                     url: $(e.target).data().addNewBackgroundUrl,
                     title: "{% trans "Add Background Image" %}",
-                    multi: false,
                     videoImageCovers: false,
                     buttons: {
                         main: {
@@ -236,6 +235,7 @@
                         }
                     },
                     templateOptions: {
+                        multi: false,
                         trans: {
                             addFiles: "{% trans "Browse/Add Image" %}",
                             startUpload: "{% trans "Start Upload" %}",
