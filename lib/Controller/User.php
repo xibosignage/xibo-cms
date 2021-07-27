@@ -329,7 +329,8 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser()->isSuperAdmin()) {
+            // show delete only for super admins and do NOT show it for your own user record.
+            if ($this->getUser()->isSuperAdmin() && $this->getUser()->userId !== $user->userId) {
                 // Delete
                 $user->buttons[] = [
                     'id' => 'user_button_delete',
@@ -861,8 +862,17 @@ class User extends Base
     {
         $user = $this->userFactory->getById($userId);
 
-        if (!$this->getUser()->checkDeleteable($user))
+        if (!$this->getUser()->checkDeleteable($user)) {
             throw new AccessDeniedException();
+        }
+
+        if ($this->getUser()->userId === $userId) {
+            throw new InvalidArgumentException(__('Cannot delete your own User from the CMS.'), 'userId');
+        }
+
+        if ($this->getSanitizer()->getCheckbox('deleteAllItems') && $user->isSuperAdmin()) {
+            throw new InvalidArgumentException(__('Cannot delete all items owned by a Super Admin, please reassign to a different User.'), 'userTypeId');
+        }
 
         $user->setChildAclDependencies($this->userGroupFactory, $this->pageFactory);
         $user->setChildObjectDependencies($this->campaignFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->displayFactory, $this->displayGroupFactory, $this->widgetFactory, $this->playerVersionFactory, $this->playlistFactory, $this->dataSetFactory, $this->dayPartFactory);

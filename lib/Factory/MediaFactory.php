@@ -421,9 +421,9 @@ class MediaFactory extends BaseFactory
      * @return array[Media]
      * @throws NotFoundException
      */
-    public function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId, $allModules = 0)
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'ownerId' => $ownerId, 'isEdited' => 1));
+        return $this->query(null, array('disableUserCheck' => 1, 'ownerId' => $ownerId, 'isEdited' => 1, 'allModules' => $allModules));
     }
 
     /**

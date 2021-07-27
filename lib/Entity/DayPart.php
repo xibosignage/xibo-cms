@@ -169,6 +169,11 @@ class DayPart implements \JsonSerializable
         return md5($hash);
     }
 
+    public function isSystemDayPart()
+    {
+        return ($this->isAlways || $this->isCustom);
+    }
+
     /**
      * @return int
      */
@@ -229,7 +234,8 @@ class DayPart implements \JsonSerializable
     public function save($options = [])
     {
         $options = array_merge([
-            'validate' => true
+            'validate' => true,
+            'recalculateHash' => true
         ], $options);
 
         if ($options['validate'])
@@ -241,11 +247,17 @@ class DayPart implements \JsonSerializable
             // Update
             $this->update();
 
-            // Compare the time hash with a new time hash to see if we need to update associated schedules
-            if ($this->timeHash != $this->calculateTimeHash())
-                $this->handleEffectedSchedules();
-            else
-                $this->getLog()->debug('Daypart hash identical, no need to update schedules. ' . $this->timeHash . ' vs ' . $this->calculateTimeHash());
+            // When we change user on reassignAllTo, we do save dayPart,
+            // however it will not have required childObjectDependencies to run the below checks
+            // it is also not needed to run them when we just changed the owner.
+            if ($options['recalculateHash']) {
+                // Compare the time hash with a new time hash to see if we need to update associated schedules
+                if ($this->timeHash != $this->calculateTimeHash()) {
+                    $this->handleEffectedSchedules();
+                } else {
+                    $this->getLog()->debug('Daypart hash identical, no need to update schedules. ' . $this->timeHash . ' vs ' . $this->calculateTimeHash());
+                }
+            }
         }
     }
 
@@ -254,6 +266,10 @@ class DayPart implements \JsonSerializable
      */
     public function delete()
     {
+        if ($this->isSystemDayPart()) {
+            throw new InvalidArgumentException(__('Cannot delete system dayParts'), 'dayPartId');
+        }
+
         // Delete all events using this daypart
         $schedules = $this->scheduleFactory->getByDayPartId($this->dayPartId);
 

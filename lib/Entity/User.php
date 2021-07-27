@@ -691,7 +691,7 @@ class User implements \JsonSerializable
 
             $this->campaigns = $this->campaignFactory->getByOwnerId($this->userId);
             $this->layouts = $this->layoutFactory->getByOwnerId($this->userId);
-            $this->media = $this->mediaFactory->getByOwnerId($this->userId);
+            $this->media = $this->mediaFactory->getByOwnerId($this->userId, 1);
             $this->events = $this->scheduleFactory->getByOwnerId($this->userId);
             $this->playlists = $this->playlistFactory->getByOwnerId($this->userId);
             $this->displayGroups = $this->displayGroupFactory->getByOwnerId($this->userId, -1);
@@ -713,8 +713,11 @@ class User implements \JsonSerializable
     public function countChildren()
     {
         $this->load(true);
+        $displayProfiles = intval($this->getStore()->select('SELECT COUNT(*) AS cnt FROM `displayprofile` WHERE userId = :userId', ['userId' => $this->userId])[0]['cnt']);
+        $commands = intval($this->getStore()->select('SELECT COUNT(*) AS cnt  FROM `command` WHERE userId = :userId', ['userId' => $this->userId])[0]['cnt']);
+        $savedReports = intval($this->getStore()->select('SELECT COUNT(*) AS cnt  FROM `saved_report` WHERE userId = :userId', ['userId' => $this->userId])[0]['cnt']);
 
-        $count = count($this->campaigns) + count($this->layouts) + count($this->media) + count($this->events) + count($this->playlists) + count($this->displayGroups) + count($this->dayParts);
+        $count = count($this->campaigns) + count($this->layouts) + count($this->media) + count($this->events) + count($this->playlists) + count($this->displayGroups) + count($this->dayParts) + $displayProfiles + $commands + $savedReports;
         $this->getLog()->debug('Counted Children on %d, there are %d', $this->userId, $count);
 
         return $count;
@@ -727,16 +730,21 @@ class User implements \JsonSerializable
      */
     public function reassignAllTo($user)
     {
-        $this->getLog()->debug('Reassign all to %s', $user->userName);
+        $this->getLog()->debug(sprintf('Reassign all to %s', $user->userName));
 
         $this->load(true);
 
-        $this->getLog()->debug('There are %d children', $this->countChildren());
+        $this->getLog()->debug(sprintf('There are %d children', $this->countChildren()));
+
+        // find another super admin that is NOT the user we are about to delete
+        // that is not necessarily the user we were asked to reassignAllTo
+        $systemUser = $this->userFactory->getSystemUser($this->userId);
 
         // Go through each item and reassign the owner to the provided user.
         foreach ($this->media as $media) {
             /* @var Media $media */
-            $media->setOwner($user->getOwnerId());
+            ($media->mediaType === 'module') ? $media->setOwner($systemUser->userId) : $media->setOwner($user->getOwnerId());
+
             $media->save();
         }
         foreach ($this->events as $event) {
@@ -761,13 +769,17 @@ class User implements \JsonSerializable
             $playlist->setOwner($user->getOwnerId());
             $playlist->save(['saveTags' => false]);
         }
-        foreach($this->displayGroups as $displayGroup) {
-            $displayGroup->setOwner($user->getOwnerId());
+        foreach ($this->displayGroups as $displayGroup) {
+            ($displayGroup->isDisplaySpecific === 1) ? $displayGroup->setOwner($systemUser->userId) : $displayGroup->setOwner($user->getOwnerId());
             $displayGroup->save(['saveTags' => false, 'manageDynamicDisplayLinks' => false]);
         }
-        foreach($this->dataSetFactory->getByOwnerId($this->userId) as $dataSet) {
+        foreach ($this->dataSetFactory->getByOwnerId($this->userId) as $dataSet) {
             $dataSet->setOwner($user->getOwnerId());
             $dataSet->save();
+        }
+        foreach ($this->dayParts as $dayPart) {
+            ($dayPart->isSystemDayPart()) ? $dayPart->setOwner($systemUser->userId) : $dayPart->setOwner($user->userId);
+            $dayPart->save(['validate' => false, 'recalculateHash' => false]);
         }
 
         // Reassign resolutions
@@ -776,17 +788,38 @@ class User implements \JsonSerializable
             'oldUserId' => $this->userId
         ]);
 
-        // Reassign Dayparts
-        $this->getStore()->update('UPDATE `daypart` SET userId = :userId WHERE userId = :oldUserId', [
+        // Reassign Saved Reports
+        $this->getStore()->update('UPDATE `saved_report` SET userId = :userId WHERE userId = :oldUserId', [
             'userId' => $user->userId,
             'oldUserId' => $this->userId
         ]);
+
+        // Reassign Report Schedule
+        $this->getStore()->update('UPDATE `reportschedule` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign Display Profiles
+        $this->getStore()->update('UPDATE `displayprofile` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Reassign Commands
+        $this->getStore()->update('UPDATE `command` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
+        // Delete oAuth Clients - security concern
+        $this->getStore()->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $user->userId]);
 
         // Load again
         $this->loaded = false;
         $this->load(true);
 
-        $this->getLog()->debug('Reassign and reload complete, there are %d children', $this->countChildren());
+        $this->getLog()->debug(sprintf('Reassign and reload complete, there are %d children', $this->countChildren()));
     }
 
     /**
@@ -882,8 +915,12 @@ class User implements \JsonSerializable
         $this->getLog()->debug('Deleting %d', $this->userId);
 
         // We must ensure everything is loaded before we delete
-        if ($this->hash == null)
+        if ($this->hash == null) {
             $this->load(true);
+        }
+
+        // get super admin, making sure it is NOT the user we are about to delete
+        $systemUser = $this->userFactory->getSystemUser($this->userId);
 
         // Remove the user specific group
         $group = $this->userGroupFactory->getById($this->groupId);
@@ -921,11 +958,23 @@ class User implements \JsonSerializable
             $event->delete();
         }
 
+        // this needs to happen before we delete media, otherwise we will get an error.
+        $this->getStore()->update('DELETE FROM `saved_report` WHERE userId = :userId', ['userId' => $this->userId]);
+        $this->getStore()->update('DELETE FROM `reportschedule` WHERE userId = :userId', ['userId' => $this->userId]);
+
         // Delete any media
         foreach ($this->media as $media) {
             /* @var Media $media */
-            $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
-            $media->delete();
+            if ($media->mediaType === 'module') {
+                // Modules files should be owned by a super admin,
+                // if we are deleting super admin, we would expect these to be reassigned already
+                // if that is not the case, due to changed userTypeId reassign them now instead of deleting.
+                $media->setOwner($systemUser->userId);
+                $media->save();
+            } else {
+                $media->setChildObjectDependencies($this->layoutFactory, $this->widgetFactory, $this->displayGroupFactory, $this->displayFactory, $this->scheduleFactory, $this->playerVersionFactory);
+                $media->delete();
+            }
         }
 
         // Delete Playlists owned by this user
@@ -935,19 +984,47 @@ class User implements \JsonSerializable
         }
 
         // Display Groups owned by this user
-        foreach($this->displayGroupFactory->getByOwnerId($this->userId) as $displayGroup) {
-            $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
-            $displayGroup->delete();
+        foreach ($this->displayGroups as $displayGroup) {
+            // Display specific Display Groups should be owned by a super admin,
+            // if we are deleting super admin, we would expect these to be reassigned already,
+            // if that is not the case, due to changed userTypeId reassign them now instead of deleting.
+            if ($displayGroup->isDisplaySpecific === 1) {
+                $displayGroup->setOwner($systemUser->userId);
+                $displayGroup->save(['saveTags' => false, 'manageDynamicDisplayLinks' => false]);
+            } else {
+                $displayGroup->setChildObjectDependencies($this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory);
+                $displayGroup->delete();
+            }
         }
 
-        foreach($this->dataSetFactory->getByOwnerId($this->userId) as $dataSet) {
+        foreach ($this->dataSetFactory->getByOwnerId($this->userId) as $dataSet) {
             $dataSet->delete();
+        }
+
+        foreach ($this->dayParts as $dayPart) {
+            // System DayParts should be owned by a super admin,
+            // if we are deleting super admin, we would expect these to be reassigned already
+            // if that is not the case, due to changed userTypeId reassign them now instead of deleting.
+            if ($dayPart->isSystemDayPart()) {
+                $dayPart->setOwner($systemUser->userId);
+                $dayPart->save(['validate' => false, 'recalculateHash' => false]);
+            } else {
+                $dayPart->setChildObjectDependencies($this->displayGroupFactory, $this->displayFactory, $this->layoutFactory, $this->mediaFactory, $this->scheduleFactory, $this->dayPartFactory);
+                $dayPart->delete();
+            }
         }
 
         // Delete user specific entities
         $this->getStore()->update('DELETE FROM `resolution` WHERE userId = :userId', ['userId' => $this->userId]);
-        $this->getStore()->update('DELETE FROM `daypart` WHERE userId = :userId', ['userId' => $this->userId]);
+        $this->getStore()->update('DELETE FROM `command` WHERE userId = :userId', ['userId' => $this->userId]);
+        // if there are any default Display Profiles owned by this user, reassign them instead of deleting.
+        $this->getStore()->update('UPDATE `displayprofile` SET userId = :userId WHERE userId = :oldUserId AND isDefault = 1', [
+            'userId' => $systemUser->userId,
+            'oldUserId' => $this->userId
+        ]);
+        $this->getStore()->update('DELETE FROM `displayprofile` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $this->userId]);
+        $this->getStore()->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
     }
 

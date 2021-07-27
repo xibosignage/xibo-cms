@@ -170,9 +170,9 @@ class UserFactory extends BaseFactory
      * Get Super Admins
      * @return User[]
      */
-    public function getSuperAdmins()
+    public function getSuperAdmins($notUserId = null)
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'userTypeId' => 1));
+        return $this->query(['userId'], ['disableUserCheck' => 1, 'userTypeId' => 1, 'notUserId' => $notUserId]);
     }
 
     /**
@@ -188,15 +188,9 @@ class UserFactory extends BaseFactory
      * Get system user
      * @return User
      */
-    public function getSystemUser()
+    public function getSystemUser($notUserId = null)
     {
-        $user = $this->create();
-        $user->userId = 1;
-        $user->userName = 'system';
-        $user->userTypeId = 1;
-        $user->email = $this->configService->getSetting('mail_to');
-
-        return $user;
+        return $this->getSuperAdmins($notUserId)[0];
     }
 
     /**
