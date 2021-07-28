@@ -124,7 +124,7 @@ class PermissionFactory extends BaseFactory
      * @param int $objectId
      * @param string $level
      * @param UserGroupFactory $userGroupFactory
-     * @return array[Permission]
+     * @return Permission[]
      */
     public function createForNewEntity($user, $entity, $objectId, $level, $userGroupFactory)
     {
@@ -172,7 +172,7 @@ class PermissionFactory extends BaseFactory
      * Get Permissions by Entity ObjectId
      * @param string $entity
      * @param int $objectId
-     * @return array[Permission]
+     * @return Permission[]
      */
     public function getByObjectId($entity, $objectId)
     {
@@ -213,7 +213,7 @@ class PermissionFactory extends BaseFactory
      * @param int $objectId
      * @param array[string] $sortOrder
      * @param array[mixed] $filterBy
-     * @return array[Permission]
+     * @return Permission[]
      * @throws NotFoundException
      */
     public function getAllByObjectId($user, $entity, $objectId, $sortOrder = null, $filterBy = null)
@@ -359,7 +359,7 @@ class PermissionFactory extends BaseFactory
      * Gets all permissions for a user group
      * @param string $entity
      * @param int $groupId
-     * @return array[Permission]
+     * @return Permission[]
      */
     public function getByGroupId($entity, $groupId)
     {
@@ -400,28 +400,48 @@ class PermissionFactory extends BaseFactory
      * Gets all permissions for a set of user groups
      * @param string $entity
      * @param int $userId
-     * @return array[Permission]
+     * @return Permission[]
      */
     public function getByUserId($entity, $userId)
     {
-        $permissions = array();
+        $permissions = [];
 
         $sql = '
-            SELECT `permission`.`permissionId`, `permission`.`groupId`, `permission`.`objectId`, `permission`.`view`, `permission`.`edit`, `permission`.`delete`, permissionentity.entityId
+            SELECT `permission`.`permissionId`, 
+                `permission`.`groupId`, 
+                `permission`.`objectId`, 
+                `permission`.`view`, 
+                `permission`.`edit`, 
+                `permission`.`delete`, 
+                `permissionentity`.entityId
               FROM `permission`
                 INNER JOIN `permissionentity`
                 ON `permissionentity`.entityId = permission.entityId
                 INNER JOIN `group`
                 ON `group`.groupId = `permission`.groupId
-                LEFT OUTER JOIN `lkusergroup`
+                INNER JOIN `lkusergroup`
                 ON `lkusergroup`.groupId = `group`.groupId
-                LEFT OUTER JOIN `user`
+                INNER JOIN `user`
                 ON lkusergroup.UserID = `user`.UserID
-                  AND `user`.userId = :userId
-             WHERE entity = :entity
-                AND (`user`.userId IS NOT NULL OR `group`.IsEveryone = 1)
+             WHERE `permissionentity`.entity = :entity 
+                AND `user`.userId = :userId
+            UNION
+            SELECT `permission`.`permissionId`, 
+                `permission`.`groupId`, 
+                `permission`.`objectId`, 
+                `permission`.`view`, 
+                `permission`.`edit`, 
+                `permission`.`delete`, 
+                `permissionentity`.entityId
+              FROM `permission`
+                INNER JOIN `permissionentity`
+                ON `permissionentity`.entityId = permission.entityId
+                INNER JOIN `group`
+                ON `group`.groupId = `permission`.groupId
+             WHERE `permissionentity`.entity = :entity 
+                AND `group`.IsEveryone = 1
         ';
-        $params = array('entity' => $entity, 'userId' => $userId);
+        $params = ['entity' => $entity, 'userId' => $userId];
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $permission = $this->createEmpty();
