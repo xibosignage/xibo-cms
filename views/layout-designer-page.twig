@@ -270,11 +270,11 @@
             }
 
             function uploadThumbnail(layoutId) {
-              html2canvas($('#layout-viewer .layout-player')[0]).then(function(canvas) {
+              htmlToImage.toPng($('#layout-viewer')[0]).then(function(dataUrl) {
                 $.ajax({
                   url: '{{ url_for("layout.thumbnail.add", {id: ":id"}) }}'.replace(':id', layoutId),
                   type: "POST",
-                  data: canvas.toDataURL()
+                  data: dataUrl
                 })
               });
             }

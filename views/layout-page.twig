@@ -246,7 +246,9 @@
                             return row.layoutId;
                           }
                           if (data) {
-                            return '<img class="img-fluid" src="' + data + '" alt="{{ "Thumbnail"|trans }}" />';
+                            return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' + data + '">' +
+                                '<img class="img-fluid img-thumbnail" src="' + data + '" alt="{{ "Thumbnail"|trans }}" />' +
+                                '</a>';
                           }
                           return '';
                         },
