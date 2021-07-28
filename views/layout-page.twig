@@ -6,7 +6,7 @@
 {% block actionMenu %}
     {% if currentUser.featureEnabled("layout.add") %}
     <div class="widget-action-menu pull-right">
-        <button class="btn btn-success XiboFormButton" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</button>
+        <button class="btn btn-success XiboFormButton" data-modal-size="extra-large" title="{% trans "Add a new Layout and jump to the layout designer." %}" href="{{ url_for("layout.add.form") }}"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Add Layout" %}</button>
         <button class="btn btn-info" id="layoutUploadForm" title="{% trans "Import a Layout from a ZIP file." %}" href="#"> <i class="fa fa-cloud-download" aria-hidden="true"></i> {% trans "Import" %}</button>
     </div>
     {% endif %}
@@ -239,10 +239,18 @@
                         "data": dataTableCreateTags
                     },{% endif %}
                     {
-                        "name": "layoutId",
                         responsivePriority: 5,
-                        "data": null,
-                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "layoutId"}
+                        data: 'thumbnail',
+                        render: function(data, type, row) {
+                          if (type !== 'display') {
+                            return row.layoutId;
+                          }
+                          if (data) {
+                            return '<img class="img-fluid" src="' + data + '" alt="{{ "Thumbnail"|trans }}" />';
+                          }
+                          return '';
+                        },
+                        sortable: false
                     },
                     {"data": "owner", responsivePriority: 4},
                     {
@@ -306,7 +314,7 @@
             });
 
             table.on('draw', dataTableDraw);
-            table.on('draw', { form: $("#layouts").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
+            table.on('draw', { form: $("#layouts").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#layouts_wrapper').find('.dataTables_buttons'));
         });
@@ -370,50 +378,125 @@
         });
 
         function layoutAddFormOpen() {
-            if ($('#folder-tree-form-modal').length === 0) {
-                // compile tree folder modal and append it to Form
-                var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-                var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
-                $("body").append(folderTreeModal(treeConfig));
+          if ($('#folder-tree-form-modal').length === 0) {
+            // compile tree folder modal and append it to Form
+            var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+            var treeConfig = {"container": "container-folder-form-tree", "modal": "folder-tree-form-modal"};
+            $("body").append(folderTreeModal(treeConfig));
 
-                $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
-                    // Fix for 2nd/overlay modal
-                    $('.modal:visible').length && $(document.body).addClass('modal-open');
-                    
-                    $(this).data('bs.modal', null);
-                });
-            }
+            $("#folder-tree-form-modal").on('hidden.bs.modal', function() {
+              // Fix for 2nd/overlay modal
+              $('.modal:visible').length && $(document.body).addClass('modal-open');
 
-            // select current working folder if one is selected in the grid
-            if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined) {
-                $('#layoutAddForm' + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
-            }
-
-            initJsTreeAjax($('#folder-tree-form-modal').find('#container-folder-form-tree'), 'layoutAddForm', true, 600);
-
-            $("#layoutAddForm").submit(function(e) {
-                e.preventDefault();
-                var form = $(this);
-
-                var url = $(this).data().redirect;
-
-                $.ajax({
-                    type: $(this).attr("method"),
-                    url: $(this).attr("action"),
-                    data: $(this).serialize(),
-                    cache: false,
-                    dataType:"json",
-                    success: function(xhr, textStatus, error) {
-
-                        XiboSubmitResponse(xhr, form);
-
-                        if (xhr.success) {
-                            // Reload the designer
-                            XiboRedirect(url.replace(":id", xhr.id));
-                        }
-                    }
-                });
+              $(this).data('bs.modal', null);
             });
+          }
+
+          // select current working folder if one is selected in the grid
+          if ($('#container-folder-tree').jstree("get_selected", true)[0] !== undefined) {
+            $('#layoutAddForm' + ' #folderId').val($('#container-folder-tree').jstree("get_selected", true)[0].id);
+          }
+
+          initJsTreeAjax($('#folder-tree-form-modal').find('#container-folder-form-tree'), 'layoutAddForm', true, 600);
+
+          // Add a template selector
+          var $templateSelect = $('#templateSelect');
+          var templateSelectTable = $templateSelect.DataTable({
+            language: dataTablesLanguage,
+            lengthChange: false,
+            lengthMenu: [6],
+            dom: dataTablesTemplate,
+            serverSide: false,
+            filter: false,
+            dataType: 'json',
+            order: [[1, 'asc']],
+            data: [
+              {
+                layout: 'Test',
+                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
+              },
+              {
+                layout: 'Test',
+                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
+              },
+              {
+                layout: 'Test',
+                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
+              },
+              {
+                layout: 'Test',
+                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
+              },
+              {
+                layout: 'Test',
+                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
+              },
+              {
+                layout: 'Test',
+                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
+              },
+              {
+                layout: 'Test',
+                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
+              },
+              {
+                layout: 'Test',
+                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
+              },
+              {
+                layout: 'Test',
+                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
+              },
+              {
+                layout: 'Test',
+                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
+              },
+              {
+                layout: 'Test',
+                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
+              }
+            ],
+            columns: [
+              {
+                data: 'thumbnail',
+                render: function (data, type, full, meta) {
+                    return '<img src="' + data + '" alt="' + full.layout + '" />';
+                }
+              },
+              {
+                data: 'layout',
+                render: dataTableSpacingPreformatted
+              }
+            ]
+          });
+
+          $templateSelect.find('tbody').on('click', 'tr', function () {
+            $templateSelect.find('tbody tr').removeClass('selected');
+            $(this).toggleClass('selected');
+
+            // Handle which row we have.
+            if ($(this).hasClass('selected')) {
+              var rowData = templateSelectTable.row($(this)[0]).data();
+              toastr.success(JSON.stringify(rowData));
+            } else {
+              // Clear
+            }
+          });
+
+          $templateSelect.find('thead').toggle();
+
+          // Add a submit handler
+          $('#layoutAddForm').submit(function(e) {
+            e.preventDefault();
+            var $form = $(this);
+            var url = $(this).data().redirect;
+            XiboFormSubmit($form, null, function(xhr, form) {
+              if (xhr.success) {
+                // Reload the designer
+                XiboRedirect(url.replace(":id", xhr.id));
+              }
+            });
+          });
         }
 
         function layoutExportFormSubmit() {

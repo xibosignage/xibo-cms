@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -36,51 +36,54 @@
 
 {% block callBack %}layoutAddFormOpen{% endblock %}
 
-{% block formFieldActions %}
-    [{
-    "field": "layoutId",
-    "trigger": "change",
-    "value": 0,
-    "operation": "equals",
-    "actions": {
-        ".resolution-group": { "display": "" }
-    }
-    },{
-    "field": "layoutId",
-    "trigger": "change",
-    "value": 0,
-    "operation": "not",
-    "actions": {
-        ".resolution-group": { "display": "none" }
-    }
-    }]
-{% endblock %}
-
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
-                <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li class="nav-item"><a class="nav-link" href="#description" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "Template" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#organiseTab" role="tab" data-toggle="tab"><span>{% trans "Organise" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#settingsTab" role="tab" data-toggle="tab"><span>{% trans "Settings" %}</span></a></li>
             </ul>
             <form id="layoutAddForm" class="form-horizontal" method="post" action="{{ url_for("layout.add") }}" data-redirect="{{ url_for("layout.designer", {id: ':id'}) }}" data-gettag="{{ url_for("tag.getByName") }}">
                 <div class="tab-content">
-                    <div class="tab-pane active" id="general">
+                    <div class="tab-pane active" id="generalTab">
+                        {{ forms.hidden("layoutId") }}
+                        {{ forms.hidden("resolutionId") }}
 
-                        {% if currentUser.featureEnabled('folder.view') %}
-                        <div class="form-group row">
-                            <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
-                            <div class="col-sm-10">
-                                <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
-                                <span id="selectedFormFolder"></span>
-                            </div>
-                        </div>
-                        {{ forms.hidden('folderId') }}
-                        {% endif %}
+                        <p class="text-muted">{{ "Please select a template to start from"|trans }}</p>
+
+                        <table id="templateSelect" class="table table-sm table-hover dt-cards">
+                            <thead>
+                                <tr>
+                                    <th>{% trans "Thumbnail" %}</th>
+                                    <th>{% trans "Name" %}</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+
+                            </tbody>
+                        </table>
 
                         {% set title %}{% trans "Name" %}{% endset %}
                         {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
                         {{ forms.input("name", title, "", helpText) }}
+                    </div>
+                    <div class="tab-pane" id="organiseTab">
+
+                        {% if currentUser.featureEnabled('folder.view') %}
+                            <div class="form-group row">
+                                <label class="col-sm-2 control-label">{% trans "Folder" %}</label>
+                                <div class="col-sm-10">
+                                    <button type="button" class="btn btn-info" id="select-folder-button" data-toggle="modal" data-target="#folder-tree-form-modal">{% trans "Select Folder" %}</button>
+                                    <span id="selectedFormFolder"></span>
+                                </div>
+                            </div>
+                            {{ forms.hidden('folderId') }}
+                        {% endif %}
+
+                        {% set title %}{% trans "Description" %}{% endset %}
+                        {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
+                        {{ forms.textarea("description", title, "", helpText, null, null, 5, true) }}
 
                         {% if currentUser.featureEnabled("tag.tagging") %}
                             {% set title %}{% trans "Tags" %}{% endset %}
@@ -102,16 +105,8 @@
                                 <p>{% trans "This tag requires a set value, please select one from the Tag value dropdown or provide Tag value in the dedicated field." %}</p>
                             </div>
                         {% endif %}
-
-                        {% set title %}{% trans "Template" %}{% endset %}
-                        {% set helpText %}{% trans "Optionally choose a template you have saved before." %}{% endset %}
-                        {% set layouts = [{layoutId: null, layout: ""}]|merge(layouts) %}
-                        {{ forms.dropdown("layoutId", "single", title, "", layouts, "layoutId", "layout", helpText) }}
-
-                        {% set title %}{% trans "Resolution" %}{% endset %}
-                        {% set helpText %}{% trans "Choose the resolution this Layout should be designed for." %}{% endset %}
-                        {{ forms.dropdown("resolutionId", "single", title, "", resolutions, "resolutionId", "resolution", helpText, "resolution-group") }}
-
+                    </div>
+                    <div class="tab-pane" id="settingsTab">
                         {% set title %}{% trans "Code Identifier" %}{% endset %}
                         {% set helpText %}{% trans "Enter a string to be used as the Code to identify this Layout when used with Interactive Actions." %}{% endset %}
                         {{ forms.input("code", title, "", helpText) }}
@@ -123,11 +118,6 @@
                         {% set title %}{% trans "Automatically apply Transitions?" %}{% endset %}
                         {% set helpText %}{% trans "When enabled, the default Transition type and duration will be applied to all widgets on this Layout." %}{% endset %}
                         {{ forms.checkbox("autoApplyTransitions", title, theme.getSetting("DEFAULT_TRANSITION_AUTO_APPLY"), helpText) }}
-                    </div>
-                    <div class="tab-pane" id="description">
-                        {% set title %}{% trans "Description" %}{% endset %}
-                        {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
-                        {{ forms.textarea("description", title, "", helpText) }}
                     </div>
                 </div>
             </form>

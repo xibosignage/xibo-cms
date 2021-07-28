@@ -1862,7 +1862,7 @@ function XiboFormRender(sourceObj, data) {
                         message: response.html,
                         title: dialogTitle,
                         animate: false,
-                        size: 'large'
+                        size: sourceObj.data().modalSize || 'large'
                     }).attr("id", id);
 
                 // Store the extra

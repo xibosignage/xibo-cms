@@ -56,6 +56,7 @@ use Xibo\Widget\ModuleWidget;
  * @SWG\Definition()
  *
  * @property $isLocked
+ * @property $thumbnail
  */
 class Layout implements \JsonSerializable
 {
@@ -1020,9 +1021,7 @@ class Layout implements \JsonSerializable
         $this->getLog()->audit('Layout', $this->layoutId, 'Layout Deleted', ['layoutId' => $this->layoutId]);
 
         // Delete the cached file (if there is one)
-        if (file_exists($this->getCachePath())) {
-            @unlink($this->getCachePath());
-        }
+        $this->deleteFiles();
 
         // Audit the Delete
         $this->audit($this->layoutId, 'Deleted' . (($this->parentId !== null) ? ' draft for ' . $this->parentId : ''));
@@ -2047,6 +2046,27 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Delete any cached files for this Layout.
+     */
+    private function deleteFiles()
+    {
+        if (file_exists($this->getCachePath())) {
+            @unlink($this->getCachePath());
+        }
+
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
+
+        // Delete any thumbs
+        if (file_exists($libraryLocation . $this->getId() . '_layout_thumb.png')) {
+            @unlink($libraryLocation . $this->getId() . '_layout_thumb.png');
+        }
+
+        if (file_exists($libraryLocation . $this->campaignId . '_campaign_thumb.png')) {
+            @unlink($libraryLocation . $this->campaignId . '_campaign_thumb.png');
+        }
+    }
+
+    /**
      * Publish the Draft
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -2711,6 +2731,19 @@ class Layout implements \JsonSerializable
                     $action->save();
                 }
             }
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getThumbnailUri(): string
+    {
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
+        if ($this->isEditable()) {
+            return $libraryLocation . $this->getId() . '_layout_thumb.png';
+        } else {
+            return $libraryLocation . $this->campaignId . '_campaign_thumb.png';
         }
     }
 }

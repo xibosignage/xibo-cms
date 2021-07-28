@@ -22,6 +22,8 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use GuzzleHttp\Psr7\Stream;
+use Mimey\MimeTypes;
 use Parsedown;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -219,6 +221,7 @@ class Layout extends Base
 
         // Set up any JavaScript translations
         $data = [
+            'publishedLayoutId' => $id,
             'layout' => $layout,
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
@@ -1356,13 +1359,11 @@ class Layout extends Base
             }
 
             $layout->includeProperty('buttons');
-            //$layout->excludeProperty('regions');
 
+            // Thumbnail
             $layout->thumbnail = '';
-
-            if ($layout->backgroundImageId != 0) {
-                $download = $this->urlFor($request,'layout.download.background', ['id' => $layout->layoutId]) . '?preview=1' . '&backgroundImageId=' . $layout->backgroundImageId;
-                $layout->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
+            if (file_exists($layout->getThumbnailUri())) {
+                $layout->thumbnail = $this->urlFor($request,'layout.download.thumbnail', ['id' => $layout->layoutId]);
             }
 
             // Fix up the description
@@ -2787,6 +2788,108 @@ class Layout extends Base
         $lock->set([]);
         $lock->save();
 
+        return $this->render($request, $response);
+    }
+
+    /**
+     * This is called when editing a layout.
+     * Saves provided base64 image to the library folder with the naming convention:
+     *  {layoutId}_layout_thumb.png for a draft
+     *  {campaignId}_campaign_thumb.png for a published layout
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response
+     * @throws \Xibo\Support\Exception\AccessDeniedException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function addThumbnail(Request $request, Response $response, $id): Response
+    {
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+        // Check the Layout
+        $layout = $this->layoutFactory->getById($id);
+
+        // Make sure we have edit permissions
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // Where would we save this to?
+        if ($layout->isChild()) {
+            // A draft
+            $saveTo = $libraryLocation . $layout->getId() . '_layout_thumb.png';
+        } else {
+            // Published
+            $saveTo = $libraryLocation . $layout->campaignId . '_campaign_thumb.png';
+        }
+
+        // Base64 encoded thumbnail image.
+        $image = $request->getBody()->getContents();
+
+        if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
+            $image = substr($image, strpos($image, ',') + 1);
+            $type = strtolower($type[1]);
+
+            if ($type !== 'png') {
+                throw new InvalidArgumentException(__('Please only upload PNG thumbnails.'));
+            }
+            $image = str_replace( ' ', '+', $image );
+            $image = base64_decode($image);
+
+            if ($image === false) {
+                throw new InvalidArgumentException(__('Image decoding failed.'));
+            }
+
+            // Save the file
+            file_put_contents($saveTo, $image);
+
+            return $response->withStatus(204);
+        } else {
+            throw new InvalidArgumentException(__('Incorrect image data'));
+        }
+    }
+
+    /**
+     * Download the Layout Thumbnail
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function downloadThumbnail(Request $request, Response $response, $id)
+    {
+        $this->getLog()->debug('Layout thumbnail request for layoutId ' . $id);
+
+        $layout = $this->layoutFactory->getById($id);
+        if (!$this->getUser()->checkViewable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // Get thumbnail uri
+        $uri = $layout->getThumbnailUri();
+
+        if (!file_exists($uri)) {
+            throw new NotFoundException(__('Thumbnail not found for Layout'));
+        }
+
+        $response = $response
+            ->withHeader('Content-Length', filesize($uri))
+            ->withHeader('Content-Type', (new MimeTypes())->getMimeType('png'));
+
+        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
+        if ($sendFileMode == 'Apache') {
+            $response = $response->withHeader('X-Sendfile', $uri);
+        } else if ($sendFileMode == 'Nginx') {
+            $response = $response->withHeader('X-Accel-Redirect', '/download/' . basename($uri));
+        } else {
+            // Return the file with PHP
+            $response = $response->withBody(new Stream(fopen($uri, 'r')));
+        }
+
+        $this->setNoOutput();
         return $this->render($request, $response);
     }
 }

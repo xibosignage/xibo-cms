@@ -157,6 +157,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/layout/discard/{id}', ['\Xibo\Controller\Layout','discard'])->setName('layout.discard');
     $group->put('/layout/retire/{id}', ['\Xibo\Controller\Layout','retire'])->setName('layout.retire');
     $group->put('/layout/unretire/{id}', ['\Xibo\Controller\Layout','unretire'])->setName('layout.unretire');
+    $group->post('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout','addThumbnail'])->setName('layout.thumbnail.add');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']))
     ->addMiddleware(new LayoutLock($app));
 

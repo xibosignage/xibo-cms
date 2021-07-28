@@ -134,3 +134,6 @@ require('corejs-typeahead/dist/typeahead.jquery.min.js');
 // jsTree
 require('jstree/dist/jstree.min.js');
 require('jstree/dist/themes/default/style.min.css');
+
+// html2canvas
+window.html2canvas = require('html2canvas/dist/html2canvas.min');
