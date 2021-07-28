@@ -831,8 +831,7 @@ class Ticker extends ModuleWidget
                             break;
 
                         case '[Date]':
-                            $replace = Carbon::createFromTimestamp($item->getDate()->format('U'))->format($dateFormat);
-
+                            $replace = Carbon::createFromTimestamp($item->getDate()->format('U'))->translatedFormat($dateFormat);
                             break;
 
                         case '[PermaLink]':
