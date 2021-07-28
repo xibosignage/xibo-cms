@@ -24,13 +24,17 @@
 
 {% block content %}
     {% set horizontalNav = currentUser.getOptionValue("navigationMenuPosition", theme.getSetting("NAVIGATION_MENU_POSITION", "vertical")) == "horizontal" %}
-    {% set hideNavigation = currentUser.getOptionValue("hideNavigation", "0") %}
+
+    {% if not hideNavigation %}
+        {% set hideNavigation = currentUser.getOptionValue("hideNavigation", "0") %}
+    {% endif %}
+
     <div {% if hideNavigation == "0" and not horizontalNav %}id="page-wrapper"{% endif %} class="active">
 
         {% if hideNavigation == "0" %}
             {% if horizontalNav %}
                 <nav class="navbar navbar-default navbar-expand-lg">
-                    <a class="navbar-brand" href="#">
+                    <a class="navbar-brand xibo-logo-container" href="#">
                         <img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}">
                     </a>
 
@@ -59,17 +63,20 @@
             {% endif %}
         {% endif %}
 
+
         <div id="content-wrapper">
             <div class="page-content">
                 {% if not horizontalNav or hideNavigation == "1" %}
                 <div class="row header header-side">
                     <div class="col-sm-12">
-                        <div class="meta pull-left">
+                        <div class="meta pull-left xibo-logo-container">
                             <div class="page"><img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}"></div>
                         </div>
-                        <button type="button" class="pull-right navbar-toggler navbar-toggler-side" data-toggle="collapse" data-target="#navbar-collapse-1" aria-controls="navbarNav" aria-expanded="false">
-                            <span class="fa fa-bars"></span>
-                        </button>
+                        {% if not hideNavigation == "1" %}
+                            <button type="button" class="pull-right navbar-toggler navbar-toggler-side" data-toggle="collapse" data-target="#navbar-collapse-1" aria-controls="navbarNav" aria-expanded="false">
+                                <span class="fa fa-bars"></span>
+                            </button>
+                        {% endif %}
                         <div class="user pull-right">
                             {% include "authed-user-menu.twig" %}
                         </div>

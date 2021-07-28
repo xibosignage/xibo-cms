@@ -38,6 +38,7 @@ const Drawer = require('../designer/drawer.js');
 const Manager = require('../core/manager.js');
 const Toolbar = require('../core/toolbar.js');
 const Topbar = require('../core/topbar.js');
+const Bottombar = require('../core/bottombar.js');
 
 // Common funtions/tools
 const Common = require('../core/common.js');
@@ -47,6 +48,7 @@ require('../style/common.scss');
 require('../style/designer.scss');
 require('../style/toolbar.scss');
 require('../style/topbar.scss');
+require('../style/bottombar.scss');
 
 // Create layout designer namespace (lD)
 window.lD = {
@@ -121,7 +123,7 @@ $(document).ready(function() {
 
             if(res.data != null && res.data.length > 0) {
                 // Append layout html to the main div
-                lD.editorContainer.html(designerMainTemplate());
+                lD.editorContainer.html(designerMainTemplate({trans: layoutDesignerTrans}));
 
                 // Create layout
                 lD.layout = new Layout(layoutId, res.data[0]);
@@ -249,6 +251,12 @@ $(document).ready(function() {
                     true // Show Options
                 );
 
+                // Initialize bottom topbar
+                lD.bottombar = new Bottombar(
+                    lD,
+                    lD.editorContainer.find('#layout-editor-bottombar'),
+                );
+
                 // Initialize properties panel
                 lD.propertiesPanel = new PropertiesPanel(
                     lD,
@@ -321,6 +329,13 @@ $(document).ready(function() {
             lD.renderContainer(lD.drawer);
         }
     }, 250));
+
+    // Handle back button
+    lD.editorContainer.on('click', '#backBtn', function() {
+        console.log('aaaa');
+        // Redirect to the layout grid
+        window.location.href = urlsForApi.layout.list.url;
+    });
 });
 
 /**
@@ -473,9 +488,9 @@ lD.refreshDesigner = function() {
     this.renderContainer(this.drawer);
     this.renderContainer(this.toolbar);
     this.renderContainer(this.topbar);
+    this.renderContainer(this.bottombar);
     this.renderContainer(this.manager);
     this.renderContainer(this.propertiesPanel, this.selectedObject);
-    
     this.renderContainer(this.viewer, this.selectedObject);
 };
 

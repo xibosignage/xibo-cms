@@ -3,9 +3,6 @@
 */
 
 /* Base */
-html {
-  overflow-y: scroll;
-}
 body {
   background: #f3f3f3;
   color: #333333 !important;

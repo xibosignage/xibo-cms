@@ -1,57 +1,73 @@
+<div id="back-button">
+    <button id="backBtn" class="btn btn-primary">
+        <i class="fa fa-angle-left"></i>
+        <span>{{trans.back}}</span>
+    </button>
+</div>
+
 <div id="layout-editor-topbar" class="editor-toolbar editor-top-bar">
     <!--TOPBAR-->
 </div>
 
-<div id="layout-editor-main">
-    <div id="layout-top-region" class="container-designer">
-        <div class="row">
-            <div class="col-md-6 col-lg-7 layout-module">
-                <div id="layout-viewer-container">
-                    <div id="layout-viewer">
-                        <!--VIEWER-->
-                    </div>
-                    <div id="layout-viewer-navbar">
-                        <!--VIEWER NAVBAR-->
-                    </div>
-                </div>
+<div class="layout-editor-flex">
+    <div id="layout-editor-toolbar" class="editor-toolbar editor-side-bar">
+        <!--TOOLBAR-->
+    </div>
 
-                <div id="layout-navigator">
-                    <div id="layout-navigator-content">
-                        <!--NAVIGATOR RENDER AREA-->
+    <div class="layout-editor-flex">
+        <div id="layout-editor-main" class="w-100">
+            <div id="layout-top-region" class="container-designer">
+                <div class="row">
+                    <div class="col-md-7 col-lg-8 layout-module">
+                        <div id="layout-viewer-container">
+                            <div id="layout-viewer">
+                                <!--VIEWER-->
+                            </div>
+                            <div id="layout-viewer-navbar">
+                                <!--VIEWER NAVBAR-->
+                            </div>
+                        </div>
+
+                        <div id="layout-navigator">
+                            <div id="layout-navigator-content">
+                                <!--NAVIGATOR RENDER AREA-->
+                            </div>
+                            <div id="layout-navigator-navbar">
+                                <!--NAVIGATOR NAVBAR-->
+                            </div>
+                        </div>
                     </div>
-                    <div id="layout-navigator-navbar">
-                        <!--NAVIGATOR NAVBAR-->
+                    <div id="properties-panel-parent" class="col-md-5 col-lg-4 layout-module">
+                        <div id="properties-panel" class="bootbox properties-panel">
+                            <!--PROPERTIES PANEL-->
+                        </div>
                     </div>
                 </div>
             </div>
-            <div id="properties-panel-parent" class="col-md-6 col-lg-5 layout-module">
-                <div id="properties-panel" class="bootbox properties-panel">
-                    <!--PROPERTIES PANEL-->
+
+            <div id="layout-center-region" class="container-designer">
+                <div class="row">
+                    <div class="col-md-12 layout-module">
+                        <div id="layout-timeline">
+                            <!--TIMELINE-->
+                        </div>
+
+                        <div id="actions-drawer" class="text-center">
+                            <!--ACTION DRAWER-->
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
 
-    <div id="layout-center-region" class="container-designer">
-        <div class="row">
-            <div class="col-md-12 layout-module">
-                <div id="layout-timeline">
-                    <!--TIMELINE-->
-                </div>
-
-                <div id="actions-drawer" class="text-center">
-                    <!--ACTION DRAWER-->
-                </div>
+        <div id="layout-editor-bottombar" class="editor-toolbar editor-bottom-bar">
+            <!--BOTTOMBAR-->
         </div>
     </div>
 </div>
 
 <div id="layout-manager">
     <!--MANAGER-->
-</div>
-
-<div id="layout-editor-toolbar" class="editor-toolbar editor-bottom-bar">
-    <!--TOOLBAR-->
 </div>
 
 <div class="custom-overlay"></div>
