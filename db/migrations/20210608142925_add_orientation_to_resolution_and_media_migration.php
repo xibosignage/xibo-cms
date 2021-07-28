@@ -37,7 +37,11 @@ class AddOrientationToResolutionAndMediaMigration extends AbstractMigration
                 'options' => '[]',
                 'schedule' => '*/5 * * * * *',
                 'isActive' => '1',
-                'configFile' => '/tasks/media-orientation.task'
+                'configFile' => '/tasks/media-orientation.task',
+                'pid' => null,
+                'lastRunDt' => 0,
+                'lastRunDuration' => 0,
+                'lastRunExitCode' => 0
             ],
         ])->save();
     }
