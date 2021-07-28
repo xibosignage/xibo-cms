@@ -349,7 +349,6 @@ class Layout extends Base
         if ($templateId != 0) {
             // Load the template
             $template = $this->layoutFactory->loadById($templateId);
-            $template->load();
 
             // Empty all of the ID's
             $layout = clone $template;
@@ -365,13 +364,7 @@ class Layout extends Base
             }
 
             // Set the owner
-            $layout->setOwner($this->getUser()->userId);
-
-            // Ensure we have Playlists for each region
-            foreach ($layout->regions as $region) {
-                // Set the ownership of this region to the user creating from template
-                $region->setOwner($this->getUser()->userId, true);
-            }
+            $layout->setOwner($this->getUser()->userId, true);
         } else {
             $layout = $this->layoutFactory->createFromResolution(
                 $resolutionId,
@@ -401,12 +394,13 @@ class Layout extends Base
             $layout->setOriginals();
         }
 
-        foreach ($layout->regions as $region) {
+        $allRegions = array_merge($layout->regions, $layout->drawers);
+        foreach ($allRegions as $region) {
             /* @var Region $region */
 
             if ($templateId != null && $template !== null) {
                 // Match our original region id to the id in the parent layout
-                $original = $template->getRegion($region->getOriginalValue('regionId'));
+                $original = $template->getRegionOrDrawer($region->getOriginalValue('regionId'));
 
                 // Make sure Playlist closure table from the published one are copied over
                 $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
