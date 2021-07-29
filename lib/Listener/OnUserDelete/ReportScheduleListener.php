@@ -25,24 +25,29 @@ namespace Xibo\Listener\OnUserDelete;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Event\UserDeleteEvent;
-use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Listener\ListenerLoggerTrait;
+use Xibo\Storage\StorageServiceInterface;
 
-class LayoutListener implements OnUserDeleteInterface
+class ReportScheduleListener implements OnUserDeleteInterface
 {
     use ListenerLoggerTrait;
 
-    /** @var LayoutFactory */
-    private $layoutFactory;
+    /**
+     * @var StorageServiceInterface
+     */
+    private $store;
+    /**
+     * @var ReportScheduleFactory
+     */
+    private $reportScheduleFactory;
 
-    public function __construct(LayoutFactory $layoutFactory)
+    public function __construct(StorageServiceInterface $store, ReportScheduleFactory $reportScheduleFactory)
     {
-        $this->layoutFactory = $layoutFactory;
+        $this->store = $store;
+        $this->reportScheduleFactory = $reportScheduleFactory;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function __invoke(UserDeleteEvent $event, $eventName, EventDispatcherInterface $dispatcher)
     {
         $user = $event->getUser();
@@ -59,45 +64,26 @@ class LayoutListener implements OnUserDeleteInterface
         }
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function deleteChildren($user, EventDispatcherInterface $dispatcher, User $systemUser)
+    public function deleteChildren(User $user, EventDispatcherInterface $dispatcher, User $systemUser)
     {
-        // Delete any layouts
-        foreach ($this->layoutFactory->getByOwnerId($user->userId) as $layout) {
-            $layout->delete();
+        foreach ($this->reportScheduleFactory->getByOwnerId($user->userId) as $reportSchedule) {
+            $reportSchedule->delete();
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public function reassignAllTo(User $user, User $newUser, User $systemUser)
     {
-        $this->getLogger()->debug(sprintf('Reassign all to %s', $newUser->userName));
-
-        $this->getLogger()->debug(sprintf('There are %d children', $this->countChildren($user)));
-
-        // Reassign layouts, regions, region Playlists and Widgets.
-        foreach ($this->layoutFactory->getByOwnerId($user->userId) as $layout) {
-            $layout->setOwner($newUser->userId, true);
-            $layout->save(['notify' => false, 'saveTags' => false, 'setBuildRequired' => false]);
-        }
-
-        $this->getLogger()->debug(sprintf('Finished reassign Layout, there are %d children', $this->countChildren($user)));
+        $this->store->update('UPDATE `reportschedule` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $newUser->userId,
+            'oldUserId' => $user->userId
+        ]);
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function countChildren($user)
+    public function countChildren(User $user)
     {
-        $layouts = $this->layoutFactory->getByOwnerId($user->userId);
+        $reportSchedules = $this->reportScheduleFactory->getByOwnerId($user->userId);
+        $this->getLogger()->debug(sprintf('Counted Children Report Schedules on User ID %d, there are %d', $user->userId, count($reportSchedules)));
 
-        $count = count($layouts);
-        $this->getLogger()->debug(sprintf('Counted Children Layouts on User ID %d, there are %d', $user->userId, $count));
-
-        return $count;
+        return count($reportSchedules);
     }
 }

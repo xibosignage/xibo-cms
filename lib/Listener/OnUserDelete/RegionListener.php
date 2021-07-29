@@ -25,24 +25,23 @@ namespace Xibo\Listener\OnUserDelete;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Event\UserDeleteEvent;
-use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\RegionFactory;
 use Xibo\Listener\ListenerLoggerTrait;
 
-class LayoutListener implements OnUserDeleteInterface
+class RegionListener implements OnUserDeleteInterface
 {
     use ListenerLoggerTrait;
 
-    /** @var LayoutFactory */
-    private $layoutFactory;
+    /**
+     * @var RegionFactory
+     */
+    private $regionFactory;
 
-    public function __construct(LayoutFactory $layoutFactory)
+    public function __construct(RegionFactory $regionFactory)
     {
-        $this->layoutFactory = $layoutFactory;
+        $this->regionFactory = $regionFactory;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function __invoke(UserDeleteEvent $event, $eventName, EventDispatcherInterface $dispatcher)
     {
         $user = $event->getUser();
@@ -59,45 +58,37 @@ class LayoutListener implements OnUserDeleteInterface
         }
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function deleteChildren($user, EventDispatcherInterface $dispatcher, User $systemUser)
+    public function deleteChildren(User $user, EventDispatcherInterface $dispatcher, User $systemUser)
     {
-        // Delete any layouts
-        foreach ($this->layoutFactory->getByOwnerId($user->userId) as $layout) {
-            $layout->delete();
+        foreach ($this->regionFactory->getbyOwnerId($user->userId) as $region) {
+            $region->delete();
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public function reassignAllTo(User $user, User $newUser, User $systemUser)
     {
-        $this->getLogger()->debug(sprintf('Reassign all to %s', $newUser->userName));
+        $regions = $this->regionFactory->getbyOwnerId($user->userId);
 
-        $this->getLogger()->debug(sprintf('There are %d children', $this->countChildren($user)));
+        $this->getLogger()->debug(sprintf('Counted Children Regions on User ID %d, there are %d', $user->userId, count($regions)));
 
-        // Reassign layouts, regions, region Playlists and Widgets.
-        foreach ($this->layoutFactory->getByOwnerId($user->userId) as $layout) {
-            $layout->setOwner($newUser->userId, true);
-            $layout->save(['notify' => false, 'saveTags' => false, 'setBuildRequired' => false]);
+        foreach ($regions as $region) {
+            $region->setOwner($newUser->userId, true);
+            $region->save([
+                'validate' => false,
+                'audit' => false,
+                'notify' => false
+            ]);
         }
 
-        $this->getLogger()->debug(sprintf('Finished reassign Layout, there are %d children', $this->countChildren($user)));
+        $this->getLogger()->debug(sprintf('Finished reassign Regions, there are %d children', $this->countChildren($user)));
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function countChildren($user)
+    public function countChildren(User $user)
     {
-        $layouts = $this->layoutFactory->getByOwnerId($user->userId);
+        $regions = $this->regionFactory->getbyOwnerId($user->userId);
 
-        $count = count($layouts);
-        $this->getLogger()->debug(sprintf('Counted Children Layouts on User ID %d, there are %d', $user->userId, $count));
+        $this->getLogger()->debug(sprintf('Counted Children Regions on User ID %d, there are %d', $user->userId, count($regions)));
 
-        return $count;
+        return count($regions);
     }
 }

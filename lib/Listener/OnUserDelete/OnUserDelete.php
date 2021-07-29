@@ -45,54 +45,20 @@ class OnUserDelete
     {
         $user = $event->getUser();
         $function = $event->getFunction();
-        $newUser = $event->getNewUser();
 
-        if ($function === 'delete') {
+        if ($function === 'delete' || $function === 'reassignAll') {
             $this->deleteChildren($user);
-        } elseif ($function === 'reassignAll') {
-            $this->reassignAllTo($user, $newUser);
         }
     }
 
+    // when we delete a User with or without reassign the session and oauth clients should always be removed
+    // other objects that can be owned by the user are deleted in their respective listeners.
     private function deleteChildren($user)
     {
-        // Delete Actions
-        $this->store->update('DELETE FROM `action` WHERE ownerId = :userId', ['userId' => $user->userId]);
+        // command (with onCommandDeleteEvent)
         // Delete oAuth clients
         $this->store->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $user->userId]);
-        // Delete user specific entities
-        $this->store->update('DELETE FROM `resolution` WHERE userId = :userId', ['userId' => $user->userId]);
 
         $this->store->update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $user->userId]);
-    }
-
-    private function reassignAllTo($user, $newUser)
-    {
-        // Reassign display profiles
-        $this->store->update('UPDATE `displayprofile` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $newUser->userId,
-            'oldUserId' => $user->userId
-        ]);
-
-        // Reassign resolutions
-        $this->store->update('UPDATE `resolution` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $newUser->userId,
-            'oldUserId' => $user->userId
-        ]);
-
-        // Reassign saved_resports
-        $this->store->update('UPDATE `saved_report` SET userId = :userId WHERE userId = :oldUserId', [
-            'userId' => $newUser->userId,
-            'oldUserId' => $user->userId
-        ]);
-
-        // Reassign Actions
-        $this->store->update('UPDATE `action` SET ownerId = :userId WHERE ownerId = :oldUserId', [
-            'userId' => $newUser->userId,
-            'oldUserId' => $user->userId
-        ]);
-
-        // Delete oAuth Clients - security concern
-        $this->store->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $user->userId]);
     }
 }

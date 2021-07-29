@@ -25,24 +25,23 @@ namespace Xibo\Listener\OnUserDelete;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Event\UserDeleteEvent;
-use Xibo\Factory\LayoutFactory;
+use Xibo\Factory\NotificationFactory;
 use Xibo\Listener\ListenerLoggerTrait;
 
-class LayoutListener implements OnUserDeleteInterface
+class NotificationListener implements OnUserDeleteInterface
 {
     use ListenerLoggerTrait;
 
-    /** @var LayoutFactory */
-    private $layoutFactory;
+    /**
+     * @var NotificationFactory
+     */
+    private $notificationFactory;
 
-    public function __construct(LayoutFactory $layoutFactory)
+    public function __construct(NotificationFactory $notificationFactory)
     {
-        $this->layoutFactory = $layoutFactory;
+        $this->notificationFactory = $notificationFactory;
     }
 
-    /**
-     * @inheritDoc
-     */
     public function __invoke(UserDeleteEvent $event, $eventName, EventDispatcherInterface $dispatcher)
     {
         $user = $event->getUser();
@@ -59,45 +58,28 @@ class LayoutListener implements OnUserDeleteInterface
         }
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function deleteChildren($user, EventDispatcherInterface $dispatcher, User $systemUser)
+    public function deleteChildren(User $user, EventDispatcherInterface $dispatcher, User $systemUser)
     {
-        // Delete any layouts
-        foreach ($this->layoutFactory->getByOwnerId($user->userId) as $layout) {
-            $layout->delete();
+        // Delete any Notifications
+        foreach ($this->notificationFactory->getByOwnerId($user->userId) as $notification) {
+            $notification->delete();
         }
     }
 
-    /**
-     * @inheritDoc
-     */
     public function reassignAllTo(User $user, User $newUser, User $systemUser)
     {
-        $this->getLogger()->debug(sprintf('Reassign all to %s', $newUser->userName));
-
-        $this->getLogger()->debug(sprintf('There are %d children', $this->countChildren($user)));
-
-        // Reassign layouts, regions, region Playlists and Widgets.
-        foreach ($this->layoutFactory->getByOwnerId($user->userId) as $layout) {
-            $layout->setOwner($newUser->userId, true);
-            $layout->save(['notify' => false, 'saveTags' => false, 'setBuildRequired' => false]);
+        foreach ($this->notificationFactory->getByOwnerId($user->userId) as $notification) {
+            $notification->load();
+            $notification->userId = $newUser->userId;
+            $notification->save();
         }
-
-        $this->getLogger()->debug(sprintf('Finished reassign Layout, there are %d children', $this->countChildren($user)));
     }
 
-    /**
-     * @inheritDoc
-     */
-    public function countChildren($user)
+    public function countChildren(User $user)
     {
-        $layouts = $this->layoutFactory->getByOwnerId($user->userId);
+        $notifications = $this->notificationFactory->getByOwnerId($user->userId);
+        $this->getLogger()->debug(sprintf('Counted Children Notifications on User ID %d, there are %d', $user->userId, count($notifications)));
 
-        $count = count($layouts);
-        $this->getLogger()->debug(sprintf('Counted Children Layouts on User ID %d, there are %d', $user->userId, $count));
-
-        return $count;
+        return count($notifications);
     }
 }
