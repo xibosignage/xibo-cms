@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
@@ -744,6 +745,11 @@ class Settings extends Base
     private function handleChangedSettings($setting, $oldValue, $newValue, &$changedSettings)
     {
         if ($oldValue != $newValue) {
+            if ($setting === 'SYSTEM_USER') {
+                $newSystemUser = $this->userFactory->getById($newValue);
+                $oldSystemUser = $this->userFactory->getById($oldValue);
+                $this->getDispatcher()->dispatch(SystemUserChangedEvent::$NAME, new SystemUserChangedEvent($oldSystemUser, $newSystemUser));
+            }
             if ($setting === 'ELEVATE_LOG_UNTIL') {
                 $changedSettings[$setting] = Carbon::createFromTimestamp($oldValue)->format(DateFormatHelper::getSystemFormat()) . ' > ' .  Carbon::createFromTimestamp($newValue)->format(DateFormatHelper::getSystemFormat());
             } else {

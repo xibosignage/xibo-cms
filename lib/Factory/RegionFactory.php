@@ -192,6 +192,15 @@ class RegionFactory extends BaseFactory
     }
 
     /**
+     * @param $ownerId
+     * @return Region[]
+     */
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
      * @return Region[]
@@ -240,6 +249,11 @@ class RegionFactory extends BaseFactory
         if ($sanitizedFilter->getInt('isDrawer') !== null) {
             $sql .= ' AND region.isDrawer = :isDrawer ';
             $params['isDrawer'] = $sanitizedFilter->getInt('isDrawer');
+        }
+
+        if ($sanitizedFilter->getInt('userId') !== null) {
+            $sql .= ' AND region.ownerId = :userId ';
+            $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
         // Order by Name

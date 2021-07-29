@@ -487,9 +487,8 @@ class Layout implements \JsonSerializable
      */
     public function setOwner($ownerId, $cascade = false)
     {
-        $this->ownerId = $ownerId;
-
         $this->load();
+        $this->ownerId = $ownerId;
 
         $allRegions = array_merge($this->regions, $this->drawers);
 

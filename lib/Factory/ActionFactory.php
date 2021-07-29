@@ -118,6 +118,15 @@ class ActionFactory  extends BaseFactory
     }
 
     /**
+     * @param int $ownerId
+     * @return Action[]
+     */
+    public function getByOwnerId(int $ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId]);
+    }
+
+    /**
      * @param int $targetId
      * @return Action[]
      * @throws NotFoundException

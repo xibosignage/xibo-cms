@@ -73,7 +73,7 @@ class CommandFactory extends BaseFactory
      * Get by Display Profile Id
      * @param int $displayProfileId
      * @param string $type
-     * @return array[Command]
+     * @return Command[]
      * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function getByDisplayProfileId($displayProfileId, $type)
@@ -85,9 +85,19 @@ class CommandFactory extends BaseFactory
     }
 
     /**
+     * @param $ownerId
+     * @return Command[]
+     * @throws NotFoundException
+     */
+    public function getByOwnerId($ownerId): array
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
+    }
+
+    /**
      * @param array $sortOrder
      * @param array $filterBy
-     * @return array
+     * @return Command[]
      * @throws NotFoundException
      */
     public function query($sortOrder = null, $filterBy = [])
@@ -162,12 +172,18 @@ class CommandFactory extends BaseFactory
             $params['type'] = '%' . $sanitizedFilter->getString('type') . '%';
         }
 
+        if ($sanitizedFilter->getInt('userId') !== null) {
+            $body .= ' AND `command`.userId = :userId ';
+            $params['userId'] = $sanitizedFilter->getInt('userId');
+        }
+
         $this->viewPermissionSql('Xibo\Entity\Command', $body, $params, 'command.commandId', 'command.userId', $filterBy);
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= ' ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
@@ -176,8 +192,6 @@ class CommandFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
-
-
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = (new Command($this->getStore(), $this->getLog()))->hydrate($row);
