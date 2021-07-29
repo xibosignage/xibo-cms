@@ -2148,6 +2148,9 @@ class Layout implements \JsonSerializable
         // Preserve the widget information
         $this->addWidgetHistory($parent);
 
+        // Publish thumbnails.
+        $this->publishThumbnail();
+
         // Delete the parent (make sure we set the parent to be a child of us, otherwise we will delete the linked
         // campaign
         $parent->parentId = $this->layoutId;
@@ -2741,9 +2744,23 @@ class Layout implements \JsonSerializable
     {
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
         if ($this->isEditable()) {
-            return $libraryLocation . $this->getId() . '_layout_thumb.png';
+            return $libraryLocation . 'thumbs/' . $this->campaignId . '_layout_thumb.png';
         } else {
-            return $libraryLocation . $this->campaignId . '_campaign_thumb.png';
+            return $libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png';
+        }
+    }
+
+    /**
+     * Publish the Layout thumbnail if it exists.
+     */
+    private function publishThumbnail()
+    {
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
+        if (file_exists($libraryLocation . 'thumbs/' . $this->campaignId . '_layout_thumb.png')) {
+            copy(
+                $libraryLocation . 'thumbs/' . $this->campaignId . '_layout_thumb.png',
+                $libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png'
+            );
         }
     }
 }

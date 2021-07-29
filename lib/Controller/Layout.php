@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
+use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Parsedown;
 use Slim\Http\Response as Response;
@@ -2803,10 +2804,12 @@ class Layout extends Base
      * @throws \Xibo\Support\Exception\AccessDeniedException
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\ConfigurationException
      */
     public function addThumbnail(Request $request, Response $response, $id): Response
     {
         $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        MediaService::ensureLibraryExists($libraryLocation);
 
         // Check the Layout
         $layout = $this->layoutFactory->getById($id);
@@ -2816,37 +2819,49 @@ class Layout extends Base
             throw new AccessDeniedException();
         }
 
+        // Do we want to trim?
+        $params = $this->getSanitizer($request->getParams());
+        $trim = $params->getString('trim');
+        if (!empty($trim)) {
+            $trim = explode(',', $trim);
+            $top = $trim[0];
+            $left = $trim[1];
+            $width = $trim[2];
+            $height = $trim[3];
+        } else {
+            $top = 0;
+            $left = 0;
+            $width = 0;
+            $height = 0;
+        }
+
         // Where would we save this to?
         if ($layout->isChild()) {
             // A draft
-            $saveTo = $libraryLocation . $layout->getId() . '_layout_thumb.png';
+            $saveTo = $libraryLocation . 'thumbs/' . $layout->campaignId . '_layout_thumb.png';
         } else {
             // Published
-            $saveTo = $libraryLocation . $layout->campaignId . '_campaign_thumb.png';
+            // we support uploading the a thumb for the published layout, although we would usually expect this to
+            // be copied over during the publish transaction.
+            $saveTo = $libraryLocation . 'thumbs/' . $layout->campaignId . '_campaign_thumb.png';
         }
 
         // Base64 encoded thumbnail image.
-        $image = $request->getBody()->getContents();
+        try {
+            Img::configure(['driver' => 'gd']);
+            $image = Img::make($request->getBody()->getContents());
 
-        if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
-            $image = substr($image, strpos($image, ',') + 1);
-            $type = strtolower($type[1]);
-
-            if ($type !== 'png') {
-                throw new InvalidArgumentException(__('Please only upload PNG thumbnails.'));
-            }
-            $image = str_replace( ' ', '+', $image );
-            $image = base64_decode($image);
-
-            if ($image === false) {
-                throw new InvalidArgumentException(__('Image decoding failed.'));
+            // Do we need to crop this image at all?
+            if ($width !== 0 && $height !== 0 && ($top !== 0 || $left !== 0)) {
+                $image->crop($width, $height, $left, $top);
             }
 
             // Save the file
-            file_put_contents($saveTo, $image);
+            $image->save($saveTo);
 
             return $response->withStatus(204);
-        } else {
+        } catch (\Exception $e) {
+            $this->getLog()->error('Exception adding thumbnail to Layout. e = ' . $e->getMessage());
             throw new InvalidArgumentException(__('Incorrect image data'));
         }
     }

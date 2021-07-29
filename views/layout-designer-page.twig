@@ -269,14 +269,9 @@
                 });
             }
 
-            function uploadThumbnail(layoutId) {
-              htmlToImage.toPng($('#layout-viewer')[0]).then(function(dataUrl) {
-                $.ajax({
-                  url: '{{ url_for("layout.thumbnail.add", {id: ":id"}) }}'.replace(':id', layoutId),
-                  type: "POST",
-                  data: dataUrl
-                })
-              });
+            function layoutPublishFormOpen() {
+              // We are about to publish, so save a thumbnail
+              lD.uploadThumbnail();
             }
         </script>
 

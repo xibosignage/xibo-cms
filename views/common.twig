@@ -115,6 +115,10 @@
                 saveDrawer: {
                     url: "{{ url_for("region.save.drawer", {id: ':id'}) }}",
                     type: 'PUT'
+                },
+                addThumbnail: {
+                  url: '{{ url_for("layout.thumbnail.add", {id: ":id"}) }}',
+                  type: 'POST'
                 }
             },
             region: {
