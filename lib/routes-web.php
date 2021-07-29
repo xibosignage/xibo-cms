@@ -358,6 +358,7 @@ $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
 //
 // template
 //
+$app->get('/template/search', ['\Xibo\Controller\Template', 'search'])->setName('template.search.all');
 $app->get('/template/view', ['\Xibo\Controller\Template','displayPage'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['template.view']))
     ->setName('template.view');

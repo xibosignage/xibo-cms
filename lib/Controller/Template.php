@@ -23,6 +23,9 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Connector\TemplateProviderEvent;
+use Xibo\Entity\SearchResult;
+use Xibo\Entity\SearchResults;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -137,11 +140,10 @@ class Template extends Base
 
             $template->includeProperty('buttons');
 
+            // Thumbnail
             $template->thumbnail = '';
-
-            if ($template->backgroundImageId != 0) {
-                $download = $this->urlFor($request,'layout.download.background', ['id' => $template->layoutId]) . '?preview=1';
-                $template->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
+            if (file_exists($template->getThumbnailUri())) {
+                $template->thumbnail = $this->urlFor($request,'layout.download.thumbnail', ['id' => $template->layoutId]);
             }
 
             // Parse down for description
@@ -255,6 +257,64 @@ class Template extends Base
         $this->getState()->setData($templates);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Data grid
+     *
+     * @SWG\Get(
+     *  path="/template/search",
+     *  operationId="templateSearchAll",
+     *  tags={"template"},
+     *  summary="Template Search All",
+     *  description="Search all templates from local and connectors",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/SearchResult")
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    function search(Request $request, Response $response)
+    {
+        $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
+
+        $templates = $this->layoutFactory->query(['layout'], $this->gridRenderFilter([
+            'excludeTemplates' => 0,
+            'layout' => $sanitizedQueryParams->getString('template'),
+            'folderId' => $sanitizedQueryParams->getInt('folderId')
+        ], $sanitizedQueryParams));
+
+        $searchResults = new SearchResults();
+        foreach ($templates as $template) {
+            $searchResult = new SearchResult();
+            $searchResult->id = $template->layoutId;
+            $searchResult->source = 'local';
+            $searchResult->title = $template->layout;
+            $searchResult->description = $template->description;
+
+            // Thumbnail
+            $searchResult->thumbnail = '';
+            if (file_exists($template->getThumbnailUri())) {
+                $searchResult->thumbnail = $this->urlFor($request,'layout.download.thumbnail', ['id' => $template->layoutId]);
+            }
+
+            $searchResults->data[] = $searchResult;
+        }
+
+        $this->getLog()->debug('Dispatching event.');
+
+        // Hand off to any other providers that may want to provide results.
+        $event = new TemplateProviderEvent($searchResults);
+        $this->getDispatcher()->dispatch($event->getName(), $event);
+        return $response->withJson($searchResults);
     }
 
     /**

@@ -113,7 +113,8 @@ class Resolution extends Base
         $filter = [
             'enabled' => $sanitizedQueryParams->getInt('enabled', ['default' => -1]),
             'resolutionId' => $sanitizedQueryParams->getInt('resolutionId'),
-            'resolution' => $sanitizedQueryParams->getString('resolution')
+            'resolution' => $sanitizedQueryParams->getString('resolution'),
+            'orientation' => $sanitizedQueryParams->getString('orientation')
         ];
 
         $resolutions = $this->resolutionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));

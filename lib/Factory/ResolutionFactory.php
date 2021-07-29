@@ -172,6 +172,14 @@ class ResolutionFactory extends BaseFactory
             $params['designerHeight'] = $parsedFilter->getDouble('designerHeight');
         }
 
+        if ($parsedFilter->getString('orientation') !== null) {
+            if ($parsedFilter->getString('orientation') === 'portrait') {
+                $body .= ' AND intended_width <= intended_height ';
+            } else {
+                $body .= ' AND intended_width > intended_height ';
+            }
+        }
+
         // Sorting?
         $order = '';
 

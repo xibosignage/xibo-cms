@@ -57,11 +57,11 @@ use Xibo\Listener\OnMediaDelete;
 use Xibo\Listener\OnMediaLoad\DisplayGroupListener;
 use Xibo\Listener\OnMediaLoad\LayoutListener;
 use Xibo\Listener\OnMediaLoad\WidgetListener;
+use Xibo\Listener\OnParsePermissions\PermissionsCampaignListener;
 use Xibo\Listener\OnParsePermissions\PermissionsCommandListener;
 use Xibo\Listener\OnParsePermissions\PermissionsDataSetListener;
 use Xibo\Listener\OnParsePermissions\PermissionsDayPartListener;
 use Xibo\Listener\OnParsePermissions\PermissionsDisplayGroupListener;
-use Xibo\Listener\OnParsePermissions\PermissionsCampaignListener;
 use Xibo\Listener\OnParsePermissions\PermissionsFolderListener;
 use Xibo\Listener\OnParsePermissions\PermissionsMediaListener;
 use Xibo\Listener\OnParsePermissions\PermissionsMenuBoardListener;
@@ -860,6 +860,7 @@ class State implements Middleware
                     $c->get('tagFactory'),
                     $c->get('resolutionFactory')
                 );
+                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },

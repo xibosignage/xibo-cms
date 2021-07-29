@@ -1858,11 +1858,15 @@ function XiboFormRender(sourceObj, data) {
                 var id = new Date().getTime();
                 
                 // Create the dialog with our parameters
+                var size = 'large';
+                if (sourceObj && typeof sourceObj === 'object') {
+                  size = sourceObj.data().modalSize || 'large';
+                }
                 var dialog = bootbox.dialog({
                         message: response.html,
                         title: dialogTitle,
                         animate: false,
-                        size: sourceObj.data().modalSize || 'large'
+                        size: size
                     }).attr("id", id);
 
                 // Store the extra

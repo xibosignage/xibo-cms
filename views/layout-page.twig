@@ -379,7 +379,117 @@
             });
         });
 
-        function layoutAddFormOpen() {
+        function layoutAddFormOpen(dialog) {
+          // Form
+          var $form = $('#layoutAddForm');
+
+          // Popovers
+          $(dialog).find('[data-toggle="popover"]').popover();
+
+          // Stepper
+          var navListItems = $(dialog).find('div.stepper-nav div a'),
+              allWells = $(dialog).find('.stepper-panel'),
+              stepWizard = $(dialog).find('.stepwizard');
+
+          navListItems.click(function (e) {
+            e.preventDefault();
+            var $target = $($(this).attr('href')),
+                $item = $(this);
+
+            if (!$item.attr('disabled')) {
+              // Set all step links to inactive
+              navListItems
+                .removeClass('btn-success')
+                .addClass('btn-default');
+
+              // Activate this specific one
+              $item.addClass('btn-success');
+
+              // Hide all the panels and show this specific one
+              allWells.hide();
+              $target.show();
+              $target.find('input:eq(0)').focus();
+
+              // Set the active panel on the links
+              stepWizard.data('active', $target.prop('id'))
+
+              // Is the next action to finish?
+              if ($target.data('next') === 'finished') {
+                $(dialog).find("#layout-create-stepper-next-button").html("{{ "Save"|trans }}");
+              } else {
+                $(dialog).find("#layout-create-stepper-next-button").html("{{ "Next"|trans }}")
+              }
+            }
+          });
+
+          // Add some buttons.
+          $(dialog).
+              find('.modal-footer').
+              append($('<a class="btn btn-white">').html("{{ "Help"|trans }}").click(function(e) {
+                e.preventDefault();
+                XiboHelpRender($form.data().helpUrl);
+              })).
+              append(
+                  $('<a class="btn btn-white">').html("{{ "Close"|trans }}").click(function(e) {
+                    e.preventDefault();
+                    XiboDialogClose();
+                  })).
+              append($('<a id="layout-create-stepper-next-button" class="btn btn-primary">').
+                  html("{{ "Next"|trans }}").
+                  click(function(e) {
+                    e.preventDefault();
+                    var steps = $(dialog).find('.stepwizard'),
+                        curStep = $(dialog).find('#' + steps.data('active')),
+                        curInputs = curStep.find('input[type=\'text\'],input[type=\'url\']'),
+                        isValid = true;
+
+                    // What is the next step?
+                    if (curStep.data('next') === 'finished') {
+                      // Submit the form thereby creating the user
+                      $('#layoutAddForm').trigger('submit');
+                    } else {
+                      var nextStepWizard = steps.find('a[href=\'#' + curStep.data('next') + '\']');
+
+                      $(dialog).find('.form-group').removeClass('has-error');
+                      for (var i = 0; i < curInputs.length; i++) {
+                        if (!curInputs[i].validity.valid) {
+                          isValid = false;
+                          $(curInputs[i]).closest('.form-group').addClass('has-error');
+                        }
+                      }
+
+                      if (isValid) {
+                        nextStepWizard.removeAttr('disabled').trigger('click');
+                      }
+                    }
+                  }));
+
+          // Card handling
+          // Get our template ready to roll.
+          var cardsTemplate = Handlebars.compile($('#template-layout-add-template-cards').html());
+          var cardColumn = $(dialog).find('#layout-add-templates');
+
+          // Make a request to get our templates.
+          $.ajax({
+            method: 'GET',
+            url: '{{ url_for("template.search.all") }}',
+            success: function(response) {
+              if (response && response.data) {
+                $.each(response.data, function(index, el) {
+                  cardColumn.append(cardsTemplate({
+                    title: el.title,
+                    imgSrc: el.thumbnail || '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png',
+                    imgAlt: el.title,
+                    description: el.description
+                  }));
+                });
+              } else {
+                toastr.error('Whoops');
+              }
+            }
+          })
+
+          // Folder selector.
           if ($('#folder-tree-form-modal').length === 0) {
             // compile tree folder modal and append it to Form
             var folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
@@ -400,92 +510,6 @@
           }
 
           initJsTreeAjax($('#folder-tree-form-modal').find('#container-folder-form-tree'), 'layoutAddForm', true, 600);
-
-          // Add a template selector
-          var $templateSelect = $('#templateSelect');
-          var templateSelectTable = $templateSelect.DataTable({
-            language: dataTablesLanguage,
-            lengthChange: false,
-            lengthMenu: [6],
-            dom: dataTablesTemplate,
-            serverSide: false,
-            filter: false,
-            dataType: 'json',
-            order: [[1, 'asc']],
-            data: [
-              {
-                layout: 'Test',
-                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
-              },
-              {
-                layout: 'Test',
-                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
-              },
-              {
-                layout: 'Test',
-                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
-              },
-              {
-                layout: 'Test',
-                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
-              },
-              {
-                layout: 'Test',
-                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
-              },
-              {
-                layout: 'Test',
-                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
-              },
-              {
-                layout: 'Test',
-                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
-              },
-              {
-                layout: 'Test',
-                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
-              },
-              {
-                layout: 'Test',
-                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
-              },
-              {
-                layout: 'Test',
-                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
-              },
-              {
-                layout: 'Test',
-                thumbnail: '{{ theme.rootUri() }}theme/default/img/dashboard/content.png'
-              }
-            ],
-            columns: [
-              {
-                data: 'thumbnail',
-                render: function (data, type, full, meta) {
-                    return '<img src="' + data + '" alt="' + full.layout + '" />';
-                }
-              },
-              {
-                data: 'layout',
-                render: dataTableSpacingPreformatted
-              }
-            ]
-          });
-
-          $templateSelect.find('tbody').on('click', 'tr', function () {
-            $templateSelect.find('tbody tr').removeClass('selected');
-            $(this).toggleClass('selected');
-
-            // Handle which row we have.
-            if ($(this).hasClass('selected')) {
-              var rowData = templateSelectTable.row($(this)[0]).data();
-              toastr.success(JSON.stringify(rowData));
-            } else {
-              // Clear
-            }
-          });
-
-          $templateSelect.find('thead').toggle();
 
           // Add a submit handler
           $('#layoutAddForm').submit(function(e) {
@@ -542,4 +566,20 @@
         }
 
     </script>
+{% endblock %}
+
+{% block javaScriptTemplates %}
+    {{ parent() }}
+
+    {% verbatim %}
+    <script type="text/x-handlebars-template" id="template-layout-add-template-cards">
+        <div class="card">
+            <img class="card-img-top" src="{{ imgSrc }}" alt="{{ imgAlt }}">
+            <div class="card-body">
+                <h5 class="card-title">{{ title }}</h5>
+                {{#if description}}<p class="card-text">{{ description }}</p>{{/if}}
+            </div>
+        </div>
+    </script>
+    {% endverbatim %}
 {% endblock %}
