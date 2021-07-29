@@ -470,24 +470,24 @@
           var cardColumn = $(dialog).find('#layout-add-templates');
 
           // Make a request to get our templates.
-          $.ajax({
-            method: 'GET',
-            url: '{{ url_for("template.search.all") }}',
-            success: function(response) {
-              if (response && response.data) {
-                $.each(response.data, function(index, el) {
-                  cardColumn.append(cardsTemplate({
-                    title: el.title,
-                    imgSrc: el.thumbnail || '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png',
-                    imgAlt: el.title,
-                    description: el.description
-                  }));
-                });
-              } else {
-                toastr.error('Whoops');
-              }
+          // track start/length
+          var start = 0;
+          var length = 15;
+          loadTemplates(cardsTemplate, cardColumn, start, length);
+
+          // Attach a scroll check to our container.
+          cardColumn.parent().on('scroll', function() {
+            var $that = $(this);
+            var scrollY = $that[0].scrollHeight - $that[0].scrollTop;
+            var height = $that[0].offsetHeight;
+            var offset = height - scrollY;
+
+            if (offset === 0 || offset === 1) {
+              // load more content here
+              start = start + length;
+              loadTemplates(cardsTemplate, cardColumn, start, length);
             }
-          })
+          });
 
           // Folder selector.
           if ($('#folder-tree-form-modal').length === 0) {
@@ -522,6 +522,31 @@
                 XiboRedirect(url.replace(":id", xhr.id));
               }
             });
+          });
+        }
+
+        function loadTemplates(cardsTemplate, cardColumn, start, length) {
+          $.ajax({
+            method: 'GET',
+            url: '{{ url_for("template.search.all") }}',
+            data: {
+              start: start,
+              length: length
+            },
+            success: function(response) {
+              if (response && response.data) {
+                $.each(response.data, function(index, el) {
+                  cardColumn.append(cardsTemplate({
+                    title: el.title,
+                    imgSrc: el.thumbnail || '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png',
+                    imgAlt: el.title,
+                    description: el.description
+                  }));
+                });
+              } else {
+                toastr.error('Whoops');
+              }
+            }
           });
         }
 
@@ -577,7 +602,7 @@
             <img class="card-img-top" src="{{ imgSrc }}" alt="{{ imgAlt }}">
             <div class="card-body">
                 <h5 class="card-title">{{ title }}</h5>
-                {{#if description}}<p class="card-text">{{ description }}</p>{{/if}}
+                {{#if description}}<p class="card-text"><span class="text-muted">{{ description }}</span></p>{{/if}}
             </div>
         </div>
     </script>

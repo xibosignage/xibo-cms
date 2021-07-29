@@ -30,6 +30,26 @@
 
 {% block callBack %}layoutAddFormOpen{% endblock %}
 
+{% block formFieldActions %}
+    [{
+    "field": "layoutId",
+    "trigger": "change",
+    "value": 0,
+    "operation": "equals",
+    "actions": {
+    ".resolution-group": { "display": "" }
+    }
+    },{
+    "field": "layoutId",
+    "trigger": "change",
+    "value": 0,
+    "operation": "not",
+    "actions": {
+    ".resolution-group": { "display": "none" }
+    }
+    }]
+{% endblock %}
+
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -51,63 +71,22 @@
                   data-gettag="{{ url_for("tag.getByName") }}"
                   data-help-url="{{ help }}"
                 >
-                {{ forms.hidden("resolutionId") }}
-                {{ forms.hidden("layoutId") }}
+                {{ forms.hidden("layoutId", 0) }}
 
                 <div class="panel panel-default stepper-panel" id="layout-create-step-1" data-next="layout-create-step-2">
                     <div class="panel-heading">
                         <p>{{ "Please select one of the options below." }}</p>
                     </div>
                     <div class="panel-body" style="overflow-y: scroll; height: 70vh;">
-                        <div class="row">
-                            <div class="col-6">
-                                <div class="card">
-                                    <img class="card-img-top" style="max-width: 8rem;" src="{{ theme.rootUri() }}theme/default/img/dashboard/presentations.png" alt="{{ "Empty Template"|trans }}">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ "Blank Landscape"|trans }}</h5>
-                                        <p class="card-text">
-                                            <span class="text-muted">{{ "Please select a Resolution"|trans }}</span>
-                                        </p>
-                                    </div>
-                                    <div class="card-footer">
-                                        <div class="pagedSelect">
-                                            <select class="form-control" name="landscapeResolutionId"
-                                                    data-width="200px"
-                                                    data-allow-clear="true"
-                                                    data-search-url="{{ url_for("resolution.search") }}?orientation=landscape"
-                                                    data-search-term="resolution"
-                                                    data-id-property="resolutionId"
-                                                    data-text-property="resolution"></select>
-                                        </div>
-                                    </div>
+                        <div id="layout-add-templates" class="card-columns">
+                            <div class="card">
+                                <img class="card-img-top" src="{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png" alt="{{ "Blank Template"|trans }}">
+                                <div class="card-body">
+                                    <h5 class="card-title">{{ "Blank"|trans }}</h5>
+                                    <p class="card-text">
+                                        <span class="text-muted">{{ "Start with a blank template, pick orientation on step 2."|trans }}</span>
+                                    </p>
                                 </div>
-                            </div>
-                            <div class="col-6">
-                                <div class="card">
-                                    <img class="card-img-top" style="max-width: 8rem;" src="{{ theme.rootUri() }}theme/default/img/dashboard/presentations.png" alt="{{ "Empty Template"|trans }}">
-                                    <div class="card-body">
-                                        <h5 class="card-title">{{ "Blank Portrait"|trans }}</h5>
-                                        <p class="card-text">
-                                            <span class="text-muted">{{ "Please select a Resolution"|trans }}</span>
-                                        </p>
-                                    </div>
-                                    <div class="card-footer">
-                                        <div class="pagedSelect">
-                                            <select class="form-control" name="portraitResolutionId"
-                                                    data-width="200px"
-                                                    data-allow-clear="true"
-                                                    data-search-url="{{ url_for("resolution.search") }}?orientation=portrait"
-                                                    data-search-term="resolution"
-                                                    data-id-property="resolutionId"
-                                                    data-text-property="resolution"></select>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-12">
-                                <div id="layout-add-templates" class="card-columns"></div>
                             </div>
                         </div>
                     </div>
@@ -135,6 +114,17 @@
                                     </div>
                                     {{ forms.hidden('folderId') }}
                                 {% endif %}
+
+                                {% set title %}{% trans "Resolution" %}{% endset %}
+                                {% set helpText %}{% trans "Choose the resolution this Layout should be designed for." %}{% endset %}
+                                {% set attributes = [
+                                    { name: "data-allow-clear", value: "true" },
+                                    { name: "data-search-url", value: url_for("resolution.search") },
+                                    { name: "data-search-term", value: "resolution" },
+                                    { name: "data-id-property", value: "resolutionId" },
+                                    { name: "data-text-property", value: "resolution" }
+                                ] %}
+                                {{ forms.dropdown("resolutionId", "single", title, "", resolutions, "resolutionId", "resolution", helpText, "pagedSelect resolution-group", "", "", "", attributes) }}
 
                                 {% set title %}{% trans "Description" %}{% endset %}
                                 {% set helpText %}{% trans "An optional description of the Layout. (1 - 250 characters)" %}{% endset %}
