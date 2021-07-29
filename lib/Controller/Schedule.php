@@ -332,6 +332,10 @@ class Schedule extends Base
                         $row->campaign = __('Private Item');
                 }
                 $title = __('%s scheduled on %s', $row->campaign, $displayGroupList);
+
+                if ($row->eventTypeId === \Xibo\Entity\Schedule::$INTERRUPT_EVENT) {
+                    $title .= __(' with Share of Voice %d seconds per hour', $row->shareOfVoice);
+                }
             }
 
             // Day diff from start date to end date

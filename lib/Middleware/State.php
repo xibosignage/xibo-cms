@@ -194,6 +194,9 @@ class State implements Middleware
         // Setup the translations for gettext
         Translate::InitLocale($container->get('configService'));
 
+        // Set Carbon locale
+        Carbon::setLocale(Translate::GetLocale(2));
+
         // Default timezone
         date_default_timezone_set($container->get('configService')->getSetting("defaultTimezone"));
 

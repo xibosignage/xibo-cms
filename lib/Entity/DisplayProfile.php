@@ -122,6 +122,7 @@ class DisplayProfile implements \JsonSerializable
     public function __clone()
     {
         $this->displayProfileId = null;
+        $this->commands = [];
         $this->isDefault = 0;
     }
 
