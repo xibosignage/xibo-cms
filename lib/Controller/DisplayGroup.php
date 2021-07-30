@@ -1900,8 +1900,11 @@ class DisplayGroup extends Base
                 // in this case we should build it and notify before we send the action
                 // notify should NOT collect now, as we will do that during our own action.
                 $layout = $this->layoutFactory->concurrentRequestLock($layout);
-                $layout->xlfToDisk(['notify' => true, 'collectNow' => false]);
-                $this->layoutFactory->concurrentRequestRelease($layout);
+                try {
+                    $layout->xlfToDisk(['notify' => true, 'collectNow' => false]);
+                } finally {
+                    $this->layoutFactory->concurrentRequestRelease($layout);
+                }
             }
         }
 
@@ -2092,8 +2095,11 @@ class DisplayGroup extends Base
                 // in this case we should build it and notify before we send the action
                 // notify should NOT collect now, as we will do that during our own action.
                 $layout = $this->layoutFactory->concurrentRequestLock($layout);
-                $layout->xlfToDisk(['notify' => true, 'collectNow' => false]);
-                $this->layoutFactory->concurrentRequestRelease($layout);
+                try {
+                    $layout->xlfToDisk(['notify' => true, 'collectNow' => false]);
+                } finally {
+                    $this->layoutFactory->concurrentRequestRelease($layout);
+                }
             }
         }
 

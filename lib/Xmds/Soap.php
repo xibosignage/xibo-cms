@@ -617,12 +617,14 @@ class Soap
 
                 // Load this layout
                 $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->loadById($layoutId));
-                $layout->loadPlaylists();
+                try {
+                    $layout->loadPlaylists();
 
-                // Make sure its XLF is up to date
-                $path = $layout->xlfToDisk(['notify' => false]);
-
-                $this->layoutFactory->concurrentRequestRelease($layout);
+                    // Make sure its XLF is up to date
+                    $path = $layout->xlfToDisk(['notify' => false]);
+                } finally {
+                    $this->layoutFactory->concurrentRequestRelease($layout);
+                }
 
                 // If the status is *still* 4, then we skip this layout as it cannot build
                 if ($layout->status === ModuleWidget::$STATUS_INVALID) {
