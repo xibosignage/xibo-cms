@@ -303,9 +303,9 @@ function saveVideoCoverImage(data) {
         delete videoImageCovers[results.name];
 
         // this calls function in library controller that decodes the image and
-        // saves it to library as  "/{$mediaId}_videocover.{$type}".
+        // saves it to library as  "{libraryLocation}/{$mediaId}_{mediaType}cover.png".
         $.ajax({
-            url: "/library/thumbnail",
+            url: addMediaThumbnailUrl,
             type: "POST",
             data: thumbnailData
         });
