@@ -2674,7 +2674,7 @@ class Layout extends Base
             Profiler::end('Layout::publish', $this->getLog());
         } finally {
             // Release lock
-            $this->layoutFactory->concurrentRequestRelease($layout);
+            $this->layoutFactory->concurrentRequestRelease($layout, true);
         }
 
         return $this->render($request, $response);

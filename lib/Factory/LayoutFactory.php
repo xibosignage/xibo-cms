@@ -2589,9 +2589,9 @@ class LayoutFactory extends BaseFactory
     /**
      * Release a lock on concurrent requests
      */
-    public function concurrentRequestRelease(Layout $layout)
+    public function concurrentRequestRelease(Layout $layout, bool $force = false)
     {
-        if (!$layout->hasBuilt()) {
+        if (!$force && !$layout->hasBuilt()) {
             return;
         }
 
