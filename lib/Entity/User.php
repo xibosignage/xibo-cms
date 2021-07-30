@@ -812,6 +812,12 @@ class User implements \JsonSerializable
             'oldUserId' => $this->userId
         ]);
 
+        // Reassign Notifications
+        $this->getStore()->update('UPDATE `notification` SET userId = :userId WHERE userId = :oldUserId', [
+            'userId' => $user->userId,
+            'oldUserId' => $this->userId
+        ]);
+
         // Delete oAuth Clients - security concern
         $this->getStore()->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $user->userId]);
 
@@ -1023,6 +1029,7 @@ class User implements \JsonSerializable
             'oldUserId' => $this->userId
         ]);
         $this->getStore()->update('DELETE FROM `displayprofile` WHERE userId = :userId', ['userId' => $this->userId]);
+        $this->getStore()->update('DELETE FROM `notification` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `session` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $this->userId]);
         $this->getStore()->update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
