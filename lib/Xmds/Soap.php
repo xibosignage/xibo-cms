@@ -794,7 +794,7 @@ class Soap
         }
 
         // Add Purge List node
-        $purgeList = $requiredFilesXml->createElement("purge");
+        $purgeList = $requiredFilesXml->createElement('purge');
         $fileElements->appendChild($purgeList);
 
         try {
@@ -807,9 +807,9 @@ class Soap
 
             // Add a purge list item for each file
             foreach ($sth->fetchAll() as $row) {
-                $item = $requiredFilesXml->createElement("item");
-                $item->setAttribute("id", $row['mediaId']);
-                $item->setAttribute("storedAs", $row['storedAs']);
+                $item = $requiredFilesXml->createElement('item');
+                $item->setAttribute('id', $row['mediaId']);
+                $item->setAttribute('storedAs', $row['storedAs']);
 
                 $purgeList->appendChild($item);
             }
