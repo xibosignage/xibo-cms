@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -441,6 +441,10 @@ class DisplayProfile implements \JsonSerializable
 
         if ($this->getStore()->exists('SELECT displayId FROM display WHERE displayProfileId = :displayProfileId', ['displayProfileId' => $this->displayProfileId]) ) {
             throw new InvalidArgumentException(__('This Display Profile is currently assigned to one or more Displays'), 'displayProfileId');
+        }
+
+        if ($this->isDefault === 1) {
+            throw new InvalidArgumentException(__('Cannot delete default Display Profile.'), 'isDefault');
         }
 
         $this->getStore()->update('DELETE FROM `displayprofile` WHERE displayprofileid = :displayProfileId', ['displayProfileId' => $this->displayProfileId]);

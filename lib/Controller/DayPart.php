@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -34,6 +34,7 @@ use Xibo\Helper\SanitizerService;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Class DayPart
@@ -627,6 +628,10 @@ class DayPart extends Base
     public function delete(Request $request, Response $response, $id)
     {
         $dayPart = $this->dayPartFactory->getById($id);
+
+        if ($dayPart->isSystemDayPart()) {
+            throw new InvalidArgumentException('Cannot delete system dayPart', 'dayPartId');
+        }
 
         if (!$this->getUser()->checkDeleteable($dayPart)) {
             throw new AccessDeniedException();

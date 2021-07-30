@@ -122,6 +122,7 @@
             var pingUrl = "{{ url_for("ping") }}";
             var foldersUrl = "{{ url_for("folders.search") }}";
             var permissionsUrl = "{{ url_for("user.set.permissions.multi", {entity: ":entity"}) }}";
+            var addMediaThumbnailUrl = "{{ url_for("library.thumbnail.add") }}";
 
             {% autoescape "js" %}
             var dataTablesLanguage = {

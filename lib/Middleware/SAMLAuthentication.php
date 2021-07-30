@@ -85,16 +85,11 @@ class SAMLAuthentication extends AuthenticationBase
         $app->post('/saml/acs', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
             // Log some interesting things
             $this->getLog()->debug('Arrived at the ACS route with own URL: ' . Utils::getSelfRoutedURLNoQuery());
-            $parsedRequest = $this->getSanitizer($request->getParsedBody());
-            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
 
             // Pull out the SAML settings
             $samlSettings = $this->getConfig()->samlSettings;
             $auth = new Auth($samlSettings);
             $auth->processResponse();
-
-            $priorRoute = ($parsedRequest->getString('priorRoute'));
-            $redirect = ($priorRoute == '' || $priorRoute == '/' || stripos($priorRoute, $routeParser->urlFor('login'))) ? $routeParser->urlFor('home') : $priorRoute;
 
             // Check for errors
             $errors = $auth->getErrors();
@@ -275,7 +270,10 @@ class SAMLAuthentication extends AuthenticationBase
                     ]);
                 }
 
-                // Redirect to User Homepage
+                // Redirect back to the originally-requested url
+                $params =  $request->getParams();
+                $redirect = $params['RelayState'] ?? $this->getRouteParser()->urlFor('home');
+
                 return $response->withRedirect($redirect);
             }
         });
