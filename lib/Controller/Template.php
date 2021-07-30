@@ -23,9 +23,9 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Connector\TemplateProviderEvent;
 use Xibo\Entity\SearchResult;
 use Xibo\Entity\SearchResults;
+use Xibo\Event\TemplateProviderEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Support\Exception\AccessDeniedException;

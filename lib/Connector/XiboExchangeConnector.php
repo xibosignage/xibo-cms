@@ -26,6 +26,7 @@ use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\SearchResult;
+use Xibo\Event\TemplateProviderEvent;
 
 /**
  * XiboExchangeConnector
@@ -65,6 +66,9 @@ class XiboExchangeConnector implements ConnectorInterface
         return $this->logger;
     }
 
+    /**
+     * @param \Xibo\Event\TemplateProviderEvent $event
+     */
     public function onTemplateProvider(TemplateProviderEvent $event)
     {
         $this->getLogger()->debug('onTemplateProvider');
@@ -78,8 +82,6 @@ class XiboExchangeConnector implements ConnectorInterface
             $searchResult->description = $i . 'desc';
             $event->addResult($searchResult);
         }
-
-        return $event;
     }
 
     public function getSourceName(): string

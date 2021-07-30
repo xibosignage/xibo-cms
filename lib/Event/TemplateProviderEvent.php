@@ -20,11 +20,10 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Connector;
+namespace Xibo\Event;
 
 use Xibo\Entity\SearchResult;
 use Xibo\Entity\SearchResults;
-use Xibo\Event\Event;
 
 /**
  * TemplateProviderEvent

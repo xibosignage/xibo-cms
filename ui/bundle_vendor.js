@@ -137,3 +137,11 @@ require('jstree/dist/themes/default/style.min.css');
 
 // html-to-image
 window.htmlToImage = require('html-to-image');
+
+// Masonry
+window.Masonry = require('masonry-layout');
+
+// images loaded
+var imagesLoaded = require('imagesloaded');
+// provide jQuery argument
+imagesLoaded.makeJQueryPlugin( window.$ );

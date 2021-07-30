@@ -30,26 +30,6 @@
 
 {% block callBack %}layoutAddFormOpen{% endblock %}
 
-{% block formFieldActions %}
-    [{
-    "field": "layoutId",
-    "trigger": "change",
-    "value": 0,
-    "operation": "equals",
-    "actions": {
-    ".resolution-group": { "display": "" }
-    }
-    },{
-    "field": "layoutId",
-    "trigger": "change",
-    "value": 0,
-    "operation": "not",
-    "actions": {
-    ".resolution-group": { "display": "none" }
-    }
-    }]
-{% endblock %}
-
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
@@ -72,23 +52,14 @@
                   data-help-url="{{ help }}"
                 >
                 {{ forms.hidden("layoutId", 0) }}
+                {{ forms.hidden("source") }}
 
                 <div class="panel panel-default stepper-panel" id="layout-create-step-1" data-next="layout-create-step-2">
                     <div class="panel-heading">
                         <p>{{ "Please select one of the options below." }}</p>
                     </div>
                     <div class="panel-body" style="overflow-y: scroll; height: 70vh;">
-                        <div id="layout-add-templates" class="card-columns">
-                            <div class="card">
-                                <img class="card-img-top" src="{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png" alt="{{ "Blank Template"|trans }}">
-                                <div class="card-body">
-                                    <h5 class="card-title">{{ "Blank"|trans }}</h5>
-                                    <p class="card-text">
-                                        <span class="text-muted">{{ "Start with a blank template, pick orientation on step 2."|trans }}</span>
-                                    </p>
-                                </div>
-                            </div>
-                        </div>
+                        <div id="layout-add-templates" class="row"></div>
                     </div>
                 </div>
                 <div class="panel panel-default stepper-panel" style="display:none;" id="layout-create-step-2" data-next="finished">

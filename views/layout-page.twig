@@ -415,9 +415,9 @@
 
               // Is the next action to finish?
               if ($target.data('next') === 'finished') {
-                $(dialog).find("#layout-create-stepper-next-button").html("{{ "Save"|trans }}");
+                $(dialog).find('#layout-create-stepper-next-button').html("{{ "Save"|trans }}");
               } else {
-                $(dialog).find("#layout-create-stepper-next-button").html("{{ "Next"|trans }}")
+                $(dialog).find('#layout-create-stepper-next-button').html("{{ "Next"|trans }}")
               }
             }
           });
@@ -425,6 +425,7 @@
           // Add some buttons.
           $(dialog).
               find('.modal-footer').
+              append($('<div class="spinner-grow d-none" role="status"><span class="sr-only">{{ "Loading..."|trans }}</span></div>')).
               append($('<a class="btn btn-white">').html("{{ "Help"|trans }}").click(function(e) {
                 e.preventDefault();
                 XiboHelpRender($form.data().helpUrl);
@@ -434,7 +435,7 @@
                     e.preventDefault();
                     XiboDialogClose();
                   })).
-              append($('<a id="layout-create-stepper-next-button" class="btn btn-primary">').
+              append($('<a id="layout-create-stepper-next-button" class="btn btn-primary disabled">').
                   html("{{ "Next"|trans }}").
                   click(function(e) {
                     e.preventDefault();
@@ -469,11 +470,25 @@
           var cardsTemplate = Handlebars.compile($('#template-layout-add-template-cards').html());
           var cardColumn = $(dialog).find('#layout-add-templates');
 
+          // Add our blank resolution
+          addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "Blank"|trans }}',
+            description: '{{ "Start with a blank template, pick orientation on step 2."|trans }}',
+            thumbnail: null,
+            source: 'local',
+            id: 0
+          });
+
+          // Initialise masonary - we do this after we've added our first card.
+          var masonry = new Masonry('#layout-add-templates', {
+            percentPosition: true
+          });
+
           // Make a request to get our templates.
           // track start/length
           var start = 0;
           var length = 15;
-          loadTemplates(cardsTemplate, cardColumn, start, length);
+          loadTemplates(cardsTemplate, cardColumn, masonry, start, length);
 
           // Attach a scroll check to our container.
           cardColumn.parent().on('scroll', function() {
@@ -485,7 +500,7 @@
             if (offset === 0 || offset === 1) {
               // load more content here
               start = start + length;
-              loadTemplates(cardsTemplate, cardColumn, start, length);
+              loadTemplates(cardsTemplate, cardColumn, masonry, start, length);
             }
           });
 
@@ -525,7 +540,9 @@
           });
         }
 
-        function loadTemplates(cardsTemplate, cardColumn, start, length) {
+        function loadTemplates(cardsTemplate, cardColumn, masonry, start, length) {
+          var spinner = cardColumn.closest('.modal').find('.modal-footer .spinner-grow');
+          spinner.removeClass('d-none');
           $.ajax({
             method: 'GET',
             url: '{{ url_for("template.search.all") }}',
@@ -536,18 +553,46 @@
             success: function(response) {
               if (response && response.data) {
                 $.each(response.data, function(index, el) {
-                  cardColumn.append(cardsTemplate({
-                    title: el.title,
-                    imgSrc: el.thumbnail || '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png',
-                    imgAlt: el.title,
-                    description: el.description
-                  }));
+                  var card = addTemplateCard(cardsTemplate, cardColumn, el);
+                  card.imagesLoaded(function() {
+                    masonry.appended(card);
+                  });
                 });
               } else {
-                toastr.error('Whoops');
+                toastr.info('{{ "You have reached the end"|trans }}');
               }
+              spinner.addClass('d-none');
             }
           });
+        }
+
+        function addTemplateCard(cardsTemplate, cardColumn, el) {
+          el.thumbnail = el.thumbnail || '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png';
+          var $element = $(cardsTemplate(el));
+          $element.on('click', function(e) {
+            e.preventDefault();
+            // Remove all selections.
+            cardColumn.find('.bg-success').removeClass('bg-success');
+
+            // Select this one.
+            var $that = $(this);
+            $that.addClass('bg-success');
+            $('#layout-create-stepper-next-button').removeClass('disabled');
+
+            // If source is local and layoutId is 0, then show the resolution filter otherwise don't
+            var layoutId = $(this).data('layout-id');
+            var source = $(this).data('source');
+            $that.closest('form').find('input[name="layoutId"]').val(layoutId);
+            $that.closest('form').find('input[name="source"]').val(source);
+
+            if (layoutId === 0 && source === 'local') {
+              $that.closest('form').find('.resolution-group').removeClass('d-none');
+            } else {
+              $that.closest('form').find('.resolution-group').addClass('d-none');
+            }
+          });
+          cardColumn.append($element);
+          return $element;
         }
 
         function layoutExportFormSubmit() {
@@ -598,8 +643,8 @@
 
     {% verbatim %}
     <script type="text/x-handlebars-template" id="template-layout-add-template-cards">
-        <div class="card">
-            <img class="card-img-top" src="{{ imgSrc }}" alt="{{ imgAlt }}">
+        <div class="card w-25 p-3 mb-0" data-layout-id="{{ id }}" data-source="{{ source }}">
+            <img class="card-img-top" src="{{ thumbnail }}" alt="{{ title }}">
             <div class="card-body">
                 <h5 class="card-title">{{ title }}</h5>
                 {{#if description}}<p class="card-text"><span class="text-muted">{{ description }}</span></p>{{/if}}
