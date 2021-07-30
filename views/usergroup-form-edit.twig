@@ -42,7 +42,7 @@
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item"><a class="nav-link active" href="#general-tab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
                 <li class="nav-item"><a class="nav-link" href="#description-tab" role="tab" data-toggle="tab"><span>{% trans "Description" %}</span></a></li>
-                <li class="nav-item"><a class="nav-link" href="#onboarding-tab" role="tab" data-toggle="tab"><span>{% trans "Onboarding Settings" %}</span></a></li>
+                {% if currentUser.userTypeId == 1 %}<li class="nav-item"><a class="nav-link" href="#onboarding-tab" role="tab" data-toggle="tab"><span>{% trans "Onboarding Settings" %}</span></a></li>{% endif %}
             </ul>
             <form id="userGroupEditForm" class="UserGroupForm form-horizontal" method="put" action="{{ url_for("group.edit", {"id": group.groupId}) }}">
                 <div class="tab-content">
