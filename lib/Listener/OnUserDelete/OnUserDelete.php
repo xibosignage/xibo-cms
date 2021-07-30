@@ -55,7 +55,6 @@ class OnUserDelete
     // other objects that can be owned by the user are deleted in their respective listeners.
     private function deleteChildren($user)
     {
-        // command (with onCommandDeleteEvent)
         // Delete oAuth clients
         $this->store->update('DELETE FROM `oauth_clients` WHERE userId = :userId', ['userId' => $user->userId]);
 
