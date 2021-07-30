@@ -1781,7 +1781,7 @@ class DisplayGroup extends Base
                 try {
                     $layout->xlfToDisk(['notify' => true, 'collectNow' => false]);
                 } finally {
-                    $this->layoutFactory->concurrentRequestLock($layout);
+                    $this->layoutFactory->concurrentRequestRelease($layout);
                 }
             }
         }

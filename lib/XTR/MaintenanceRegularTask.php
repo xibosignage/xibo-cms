@@ -398,7 +398,7 @@ class MaintenanceRegularTask implements TaskInterface
                                     'exceptionOnEmptyRegion' => false
                                 ]);
                             } finally {
-                                $this->layoutFactory->concurrentRequestRelease($layout);
+                                $this->layoutFactory->concurrentRequestRelease($layout, true);
                             }
                             $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
                         }
