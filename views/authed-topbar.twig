@@ -126,7 +126,7 @@
         {% endif %}
     {% endif %}
 
-    {% if currentUser.featureEnabled("user.view") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
+    {% if currentUser.featureEnabled("users.view") and (currentUser.isGroupAdmin() or currentUser.isSuperAdmin()) %}
         {% set userMenuViewable = true %}
     {% else %}
         {% set userMenuViewable = false %}

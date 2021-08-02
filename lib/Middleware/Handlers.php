@@ -23,6 +23,7 @@
 namespace Xibo\Middleware;
 
 use Illuminate\Support\Str;
+use League\OAuth2\Server\Exception\OAuthServerException;
 use Nyholm\Psr7\Factory\Psr17Factory;
 use Slim\Exception\HttpNotFoundException;
 use Slim\Exception\HttpSpecializedException;
@@ -62,7 +63,7 @@ class Handlers
             /** @var Response $response */
             $response = $decoratedResponseFactory->createResponse(500);
 
-            if ($exception instanceof GeneralException) {
+            if ($exception instanceof GeneralException || $exception instanceof OAuthServerException) {
                 return $exception->generateHttpResponse($response);
             } else if ($exception instanceof HttpSpecializedException) {
                 return $response->withJson([
@@ -252,6 +253,11 @@ class Handlers
 
             if ($logErrorDetails) {
                 $logger->debug($exception->getTraceAsString());
+
+                $previous = $exception->getPrevious();
+                if ($previous !== null) {
+                    $logger->debug(get_class($previous) . ': ' . $previous->getMessage());
+                }
             }
         }
     }

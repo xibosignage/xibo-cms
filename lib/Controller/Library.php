@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Stream;
+use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
@@ -2559,7 +2560,7 @@ class Library extends Base
         }
 
         // Validate the URL
-        if (!v::url()->notEmpty()->validate(urldecode($url)) || !filter_var($url, FILTER_VALIDATE_URL)) {
+        if (!v::url()->notEmpty()->validate($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
             throw new InvalidArgumentException(__('Provided URL is invalid'), 'url');
         }
 
@@ -2571,7 +2572,8 @@ class Library extends Base
         }
 
         // remote file size
-        $size = $this->getRemoteFileSize($url);
+        $downloadInfo = $this->getDownloadInfo($url);
+        $size = $downloadInfo['size'];
 
         if (ByteFormatter::toBytes(Environment::getMaxUploadSize()) < $size) {
             throw new InvalidArgumentException(sprintf(__('This file size exceeds your environment Max Upload Size %s'), Environment::getMaxUploadSize()), 'size');
@@ -2583,7 +2585,7 @@ class Library extends Base
         if (!empty($extension)) {
             $ext = $extension;
         } else {
-            $ext = $this->getRemoteFileExtension($url);
+            $ext = $downloadInfo['extension'];
         }
 
         // check if we have type provided in the request (available via API), if not get the module type from the extension
@@ -2630,15 +2632,14 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * @param $url
-     * @return int
-     * @throws InvalidArgumentException
-     */
-    private function getRemoteFileSize($url)
+    private function getDownloadInfo($url)
     {
-        $size = -1;
+        $downloadInfo = [];
         $guzzle = new Client($this->getConfig()->getGuzzleProxy());
+
+        // first try to get the extension from pathinfo
+        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+        $size = -1;
 
         try {
             $head = $guzzle->head($url);
@@ -2648,52 +2649,28 @@ class Library extends Base
                 $size = $value;
             }
 
+            if ($extension == '') {
+                $contentType = $head->getHeaderLine('Content-Type');
+
+                $extension = $contentType;
+
+                if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
+                    $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
+                    $extension = $amazonContentType;
+                }
+
+                // get the extension corresponding to the mime type
+                $mimeTypes = new MimeTypes();
+                $extension = $mimeTypes->getExtension($extension);
+            }
         } catch (RequestException $e) {
-            $this->getLog()->debug('Upload from url failed for URL ' . $url . ' with following message ' . $e->getMessage());
-            throw new InvalidArgumentException(('File not found'), 'url');
+            $this->getLog()->debug('Upload from url head request failed for URL ' . $url . ' with following message ' . $e->getMessage());
         }
 
-        if ($size <= 0) {
-            throw new InvalidArgumentException(('Cannot determine the file size'), 'size');
-        }
+        $downloadInfo['size'] = $size;
+        $downloadInfo['extension'] = $extension;
 
-        return (int)$size;
-    }
-
-    /**
-     * @param $url
-     * @return string
-     * @throws InvalidArgumentException
-     */
-    private function getRemoteFileExtension($url)
-    {
-        // first try to get the extension from pathinfo
-        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
-
-        // failing that get the extension from Content-Type header via Guzzle
-         if ($extension == '') {
-             $guzzle = new Client($this->getConfig()->getGuzzleProxy());
-             $head = $guzzle->head($url);
-             $contentType = $head->getHeaderLine('Content-Type');
-
-             $extension = $contentType;
-
-             if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
-                 $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
-                 $extension = $amazonContentType;
-             }
-
-             // get the extension corresponding to the mime type
-             $mimeTypes = new MimeTypes();
-             $extension = $mimeTypes->getExtension($extension);
-         }
-
-         // if we could not determine the file extension at this point, throw an error
-        if ($extension == '') {
-            throw new InvalidArgumentException(('Cannot determine the file extension'), 'extension');
-        }
-
-        return $extension;
+        return $downloadInfo;
     }
 
     /**
@@ -2704,6 +2681,8 @@ class Library extends Base
      * @param Response $response
      *
      * @return Response
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
@@ -2711,29 +2690,26 @@ class Library extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        self::ensureLibraryExists($libraryLocation);
 
-        $image = $request->getParam('image');
+        $imageData = $request->getParam('image');
         $mediaId = $sanitizedParams->getInt('mediaId');
         $media = $this->mediaFactory->getById($mediaId);
 
-        if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
-            $image = substr($image, strpos($image, ',') + 1);
-            $type = strtolower($type[1]);
-
-            if (!in_array($type, [ 'jpg', 'jpeg', 'gif', 'png' ])) {
-                throw new InvalidArgumentException(__('Provided base64 encoded image has incorrect file extension.'));
-            }
-            $image = str_replace( ' ', '+', $image );
-            $image = base64_decode($image);
-
-            if ($image === false) {
-                throw new InvalidArgumentException(__("Image decoding failed."));
-            }
-        } else {
-            throw new InvalidArgumentException(__('Incorrect image data'));
+        if (!$this->getUser()->checkEditable($media)) {
+            throw new AccessDeniedException();
         }
 
-        file_put_contents($libraryLocation . "{$mediaId}_{$media->mediaType}cover.{$type}", $image);
+        try {
+            Img::configure(['driver' => 'gd']);
+
+            // Load the image
+            $image = Img::make($imageData);
+            $image->save($libraryLocation . $mediaId . '_' . $media->mediaType . 'cover.png');
+        } catch (\Exception $exception) {
+            $this->getLog()->error('Exception adding Video cover image. e = ' . $exception->getMessage());
+            throw new InvalidArgumentException(__('Invalid image data'));
+        }
 
         return $response->withStatus(204);
     }

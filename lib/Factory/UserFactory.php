@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -179,7 +179,7 @@ class UserFactory extends BaseFactory
      */
     public function getSuperAdmins()
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'userTypeId' => 1));
+        return $this->query(['userId'], ['disableUserCheck' => 1, 'userTypeId' => 1]);
     }
 
     /**
@@ -198,9 +198,7 @@ class UserFactory extends BaseFactory
      */
     public function getSystemUser()
     {
-        $user = $this->getById($this->configService->getSetting('SYSTEM_USER'));
-
-        return $user;
+        return $this->getById($this->configService->getSetting('SYSTEM_USER'));
     }
 
     /**

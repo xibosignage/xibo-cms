@@ -26,6 +26,7 @@ use League\OAuth2\Server\Entities\ClientEntityInterface;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Helper\Random;
+use Xibo\OAuth\ScopeEntity;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 
@@ -186,7 +187,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
              * @var ApplicationScope $a
              * @var ApplicationScope $b
              */
-            return $a->getId() - $b->getId();
+            return $a->getId() !== $b->getId();
         });
     }
 
@@ -367,6 +368,20 @@ class Application implements \JsonSerializable, ClientEntityInterface
                 return $el->redirectUri;
             }, $this->redirectUris);
         }
+    }
+
+    /**
+     * @return \League\OAuth2\Server\Entities\ScopeEntityInterface[]
+     */
+    public function getScopes()
+    {
+        $scopes = [];
+        foreach ($this->scopes as $applicationScope) {
+            $scope = new ScopeEntity();
+            $scope->setIdentifier($applicationScope->getId());
+            $scopes[] = $scope;
+        }
+        return $scopes;
     }
 
     /** @inheritDoc */
