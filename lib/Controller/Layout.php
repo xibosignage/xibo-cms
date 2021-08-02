@@ -326,8 +326,6 @@ class Layout extends Base
 
         $name = $sanitizedParams->getString('name');
         $description = $sanitizedParams->getString('description');
-        $templateId = $sanitizedParams->getInt('layoutId');
-        $resolutionId = $sanitizedParams->getInt('resolutionId');
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
@@ -339,6 +337,13 @@ class Layout extends Base
             $tags = [];
         }
 
+        // Template or resolution?
+        // TODO: if we have selected an item from a non-local source, we need to process that here.
+        //  the connector would be expected to import the layout at this point and return us with a Layout
+        //  object we can then decorate with our other options.
+        $templateId = $sanitizedParams->getInt('layoutId');
+        $source = $sanitizedParams->getString('source');
+        $resolutionId = $sanitizedParams->getInt('resolutionId');
         $template = null;
 
         if ($templateId != 0) {
