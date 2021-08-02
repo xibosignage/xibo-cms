@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-07-14 16:07+0100\n"
+"POT-Creation-Date: 2021-08-02 10:29+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -3772,7 +3772,7 @@ msgstr ""
 #: cache/77/7706497b9b32c7de36827c213b2a8601711f0af41de2261b354b6b986d1c5049.php:181
 #: cache/21/21e7349348636e2320001b4071000dd442f65742ad810e150643b3f9794881cf.php:165
 #: cache/21/21e7349348636e2320001b4071000dd442f65742ad810e150643b3f9794881cf.php:294
-#: cache/94/94f9ceecb93c3316d3080d4aae46e60a999d6abef0ccb4af36413e5c7e83eb72.php:283
+#: cache/94/94f9ceecb93c3316d3080d4aae46e60a999d6abef0ccb4af36413e5c7e83eb72.php:292
 #: cache/d6/d672ce9ebb470acd8dc2a0cb66e2234b139381f1e3d5dbeb664c11e99bc60f3f.php:188
 #: cache/d6/d672ce9ebb470acd8dc2a0cb66e2234b139381f1e3d5dbeb664c11e99bc60f3f.php:319
 #: cache/e5/e54ea368150fb0e872396ad12cdd6097e072346898812d5cd64c42b733049904.php:129
@@ -6399,7 +6399,7 @@ msgstr ""
 #: cache/3a/3a57d968d2b3ea047a6cbc125d3ffeb5cc016ca022840d3b4002b22e1a0c869b.php:56
 #: cache/78/78e302e137cf151cd25aa928cf2056f410b12e070db936764c1ca5309902d112.php:73
 #: cache/d6/d672ce9ebb470acd8dc2a0cb66e2234b139381f1e3d5dbeb664c11e99bc60f3f.php:96
-#: lib/XTR/MaintenanceRegularTask.php:268
+#: lib/XTR/MaintenanceRegularTask.php:271
 msgid "Tidy Library"
 msgstr ""
 
@@ -8046,7 +8046,7 @@ msgstr ""
 #: cache/2a/2aee6043c3cda7e0b32dc764721ad7a9402be770bc2456a747cbc713a42ea0b3.php:218
 #: cache/63/6375875be8cd52bf7c309054babc8bde8599a27cf31c056351341a85ed859b16.php:265
 #: cache/d3/d3273d78dbc6bccc3d7f19def2a4bef341bd1b3a6390ef65db8cadb616cd4a06.php:113
-#: lib/Entity/Layout.php:2013 lib/Controller/Region.php:697
+#: lib/Entity/Layout.php:2034 lib/Controller/Region.php:697
 msgid "Empty Region"
 msgstr ""
 
@@ -10335,7 +10335,7 @@ msgid "An optional description of the Layout. (1 - 250 characters)"
 msgstr ""
 
 #: cache/77/77a605daa65ad15865fc7916d845912dc07f146330a2cab026798adb2856c351.php:53
-#: lib/Middleware/Handlers.php:139
+#: lib/Middleware/Handlers.php:140
 msgid "Sorry we could not find that page."
 msgstr ""
 
@@ -10823,8 +10823,7 @@ msgid "Can this Application keep a secret?"
 msgstr ""
 
 #: cache/94/94f9ceecb93c3316d3080d4aae46e60a999d6abef0ccb4af36413e5c7e83eb72.php:209
-#: cache/94/94f9ceecb93c3316d3080d4aae46e60a999d6abef0ccb4af36413e5c7e83eb72.php:240
-msgid "Redirect URI"
+msgid "New Redirect URI"
 msgstr ""
 
 #: cache/94/94f9ceecb93c3316d3080d4aae46e60a999d6abef0ccb4af36413e5c7e83eb72.php:214
@@ -10833,11 +10832,19 @@ msgid ""
 "Authorization Code Grants"
 msgstr ""
 
-#: cache/94/94f9ceecb93c3316d3080d4aae46e60a999d6abef0ccb4af36413e5c7e83eb72.php:225
+#: cache/94/94f9ceecb93c3316d3080d4aae46e60a999d6abef0ccb4af36413e5c7e83eb72.php:224
+msgid "Existing Redirect URI"
+msgstr ""
+
+#: cache/94/94f9ceecb93c3316d3080d4aae46e60a999d6abef0ccb4af36413e5c7e83eb72.php:248
 msgid "Select sharing to grant to this application (scopes)."
 msgstr ""
 
-#: cache/94/94f9ceecb93c3316d3080d4aae46e60a999d6abef0ccb4af36413e5c7e83eb72.php:288
+#: cache/94/94f9ceecb93c3316d3080d4aae46e60a999d6abef0ccb4af36413e5c7e83eb72.php:258
+msgid "Scopes"
+msgstr ""
+
+#: cache/94/94f9ceecb93c3316d3080d4aae46e60a999d6abef0ccb4af36413e5c7e83eb72.php:297
 msgid ""
 "Set the owner of this Application. If you are not an admin you will not be "
 "able to reverse this action."
@@ -14572,6 +14579,10 @@ msgstr ""
 msgid "Authorize Request"
 msgstr ""
 
+#: cache/51/519ed163d0b4033d1f84b24f4c2c3bf7bbd435d55f1432c273a058d772034ef5.php:65
+msgid "would like access to the following scopes"
+msgstr ""
+
 #: cache/51/51f7093cefb1adde75d1e7eb69243b2e5257a3697fb9238e024098b0ea0d12e2.php:56
 msgid "Run Task Now"
 msgstr ""
@@ -16931,7 +16942,7 @@ msgstr ""
 msgid "Please select at least 1 Playlist to embed"
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:288 lib/Entity/Layout.php:2385
+#: lib/Widget/SubPlaylist.php:288 lib/Entity/Layout.php:2415
 msgid "Cannot add the same SubPlaylist twice."
 msgstr ""
 
@@ -16983,7 +16994,7 @@ msgstr ""
 msgid "Please enter a display group name"
 msgstr ""
 
-#: lib/Entity/DisplayGroup.php:672 lib/Entity/Layout.php:1043
+#: lib/Entity/DisplayGroup.php:672 lib/Entity/Layout.php:1046
 #: lib/Entity/DataSet.php:730
 msgid "Description can not be longer than 254 characters"
 msgstr ""
@@ -17069,7 +17080,7 @@ msgstr ""
 msgid "Existing data is incompatible with your new configuration"
 msgstr ""
 
-#: lib/Entity/ApplicationScope.php:88
+#: lib/Entity/ApplicationScope.php:87
 msgid "Access to this route is denied for this scope"
 msgstr ""
 
@@ -17299,7 +17310,7 @@ msgstr ""
 msgid "The Region dimensions cannot be empty or negative"
 msgstr ""
 
-#: lib/Entity/Region.php:393 lib/Entity/Layout.php:1062
+#: lib/Entity/Region.php:393 lib/Entity/Layout.php:1065
 msgid "Layer must be 0 or a positive number"
 msgstr ""
 
@@ -17329,57 +17340,57 @@ msgstr ""
 msgid "Folder needs to have a name, between 1 and 254 characters."
 msgstr ""
 
-#: lib/Entity/Layout.php:527
+#: lib/Entity/Layout.php:530
 msgid "Cannot find region"
 msgstr ""
 
-#: lib/Entity/Layout.php:545
+#: lib/Entity/Layout.php:548
 msgid "Cannot find drawer region"
 msgstr ""
 
-#: lib/Entity/Layout.php:566
+#: lib/Entity/Layout.php:569
 msgid "Cannot find Region or Drawer"
 msgstr ""
 
-#: lib/Entity/Layout.php:937
+#: lib/Entity/Layout.php:940
 msgid "This layout is used as the global default and cannot be deleted"
 msgstr ""
 
-#: lib/Entity/Layout.php:1034
+#: lib/Entity/Layout.php:1037
 msgid "The layout dimensions cannot be empty"
 msgstr ""
 
-#: lib/Entity/Layout.php:1039
+#: lib/Entity/Layout.php:1042
 msgid "Layout Name must be between 1 and 50 characters"
 msgstr ""
 
-#: lib/Entity/Layout.php:1057
+#: lib/Entity/Layout.php:1060
 #, php-format
 msgid "You already own a Layout called '%s'. Please choose another name."
 msgstr ""
 
-#: lib/Entity/Layout.php:1068
+#: lib/Entity/Layout.php:1071
 msgid "Please use only alphanumeric characters in Layout Code identifier"
 msgstr ""
 
-#: lib/Entity/Layout.php:1080
+#: lib/Entity/Layout.php:1083
 msgid "Layout with provided code already exists"
 msgstr ""
 
-#: lib/Entity/Layout.php:1744 lib/Controller/Fault.php:122
+#: lib/Entity/Layout.php:1747 lib/Controller/Fault.php:122
 msgid "Can't create ZIP. Error Code: "
 msgstr ""
 
-#: lib/Entity/Layout.php:2005
+#: lib/Entity/Layout.php:2026
 #, php-format
 msgid "There is an error with this Layout: %s"
 msgstr ""
 
-#: lib/Entity/Layout.php:2052 lib/Entity/Layout.php:2169
+#: lib/Entity/Layout.php:2080 lib/Entity/Layout.php:2199
 msgid "Not a Draft"
 msgstr ""
 
-#: lib/Entity/Layout.php:2254
+#: lib/Entity/Layout.php:2284
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
@@ -17572,7 +17583,7 @@ msgid "Tidy Logs"
 msgstr ""
 
 #: lib/XTR/MaintenanceDailyTask.php:99 lib/XTR/StatsArchiveTask.php:137
-#: lib/XTR/StatsArchiveTask.php:329 lib/Controller/User.php:413
+#: lib/XTR/StatsArchiveTask.php:332 lib/Controller/User.php:413
 msgid "Disabled"
 msgstr ""
 
@@ -17605,7 +17616,7 @@ msgid "Run report results: %s."
 msgstr ""
 
 #: lib/XTR/ReportScheduleTask.php:163 lib/XTR/AuditLogArchiveTask.php:175
-#: lib/XTR/StatsArchiveTask.php:212 lib/Service/ReportService.php:341
+#: lib/XTR/StatsArchiveTask.php:215 lib/Service/ReportService.php:341
 #, php-format
 msgid "Can't create ZIP. Error Code: %s"
 msgstr ""
@@ -17669,13 +17680,13 @@ msgstr ""
 msgid "AuditLog Export %s to %s"
 msgstr ""
 
-#: lib/XTR/AuditLogArchiveTask.php:204 lib/XTR/StatsArchiveTask.php:277
+#: lib/XTR/AuditLogArchiveTask.php:204 lib/XTR/StatsArchiveTask.php:280
 msgid ""
 "No super admins to use as the archive owner, please set one in the "
 "configuration."
 msgstr ""
 
-#: lib/XTR/AuditLogArchiveTask.php:212 lib/XTR/StatsArchiveTask.php:285
+#: lib/XTR/AuditLogArchiveTask.php:212 lib/XTR/StatsArchiveTask.php:288
 msgid "Archive Owner not found"
 msgstr ""
 
@@ -17731,27 +17742,27 @@ msgstr ""
 msgid "Build Layouts"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:297
+#: lib/XTR/MaintenanceRegularTask.php:300
 msgid "Library allowance exceeded"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:346
+#: lib/XTR/MaintenanceRegularTask.php:349
 #, php-format
 msgid "%s is downloading %d files too many times"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:351
+#: lib/XTR/MaintenanceRegularTask.php:354
 #, php-format
 msgid ""
 "Please check the bandwidth graphs and display status for %s to investigate "
 "the issue."
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:378
+#: lib/XTR/MaintenanceRegularTask.php:381
 msgid "Playlist Duration Updates"
 msgstr ""
 
-#: lib/XTR/MaintenanceRegularTask.php:399
+#: lib/XTR/MaintenanceRegularTask.php:402
 msgid "Publishing layouts with set publish dates"
 msgstr ""
 
@@ -17764,16 +17775,16 @@ msgstr ""
 msgid "Stats Export %s to %s - %s"
 msgstr ""
 
-#: lib/XTR/StatsArchiveTask.php:297
+#: lib/XTR/StatsArchiveTask.php:300
 msgid "Tidy Stats"
 msgstr ""
 
-#: lib/XTR/StatsArchiveTask.php:323
+#: lib/XTR/StatsArchiveTask.php:326
 #, php-format
 msgid "Done - %d deleted."
 msgstr ""
 
-#: lib/XTR/StatsArchiveTask.php:326
+#: lib/XTR/StatsArchiveTask.php:329
 msgid "Error."
 msgstr ""
 
@@ -17814,7 +17825,7 @@ msgstr ""
 msgid "Sorry this account does not exist or cannot be authenticated."
 msgstr ""
 
-#: lib/Middleware/Handlers.php:148
+#: lib/Middleware/Handlers.php:149
 msgid "Unexpected Error, please contact support."
 msgstr ""
 
@@ -17979,10 +17990,10 @@ msgstr ""
 msgid "Assign Layouts"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:653 lib/Controller/DisplayGroup.php:2403
+#: lib/Controller/DisplayGroup.php:653 lib/Controller/DisplayGroup.php:2409
 #: lib/Controller/Template.php:404 lib/Controller/Help.php:204
-#: lib/Controller/DataSetColumn.php:370 lib/Controller/Applications.php:371
-#: lib/Controller/Applications.php:438 lib/Controller/DisplayProfile.php:308
+#: lib/Controller/DataSetColumn.php:370 lib/Controller/Applications.php:383
+#: lib/Controller/Applications.php:450 lib/Controller/DisplayProfile.php:308
 #: lib/Controller/DisplayProfile.php:635 lib/Controller/DayPart.php:418
 #: lib/Controller/User.php:709 lib/Controller/Campaign.php:466
 #: lib/Controller/Campaign.php:958 lib/Controller/Notification.php:589
@@ -17998,7 +18009,7 @@ msgstr ""
 
 #: lib/Controller/DisplayGroup.php:784 lib/Controller/Library.php:1272
 #: lib/Controller/Help.php:236 lib/Controller/DataSetColumn.php:547
-#: lib/Controller/Applications.php:542 lib/Controller/DisplayProfile.php:465
+#: lib/Controller/Applications.php:555 lib/Controller/DisplayProfile.php:465
 #: lib/Controller/DayPart.php:531 lib/Controller/User.php:971
 #: lib/Controller/Campaign.php:636 lib/Controller/Notification.php:719
 #: lib/Controller/Playlist.php:812 lib/Controller/Tag.php:521
@@ -18017,7 +18028,7 @@ msgstr ""
 
 #: lib/Controller/DisplayGroup.php:835 lib/Controller/Library.php:900
 #: lib/Controller/Help.php:261 lib/Controller/DataSetColumn.php:637
-#: lib/Controller/Applications.php:574 lib/Controller/DisplayProfile.php:545
+#: lib/Controller/Applications.php:587 lib/Controller/DisplayProfile.php:545
 #: lib/Controller/DayPart.php:642 lib/Controller/User.php:1070
 #: lib/Controller/Campaign.php:717 lib/Controller/Notification.php:778
 #: lib/Controller/Playlist.php:873 lib/Controller/Tag.php:649
@@ -18118,40 +18129,40 @@ msgid "Layouts unassigned from %s"
 msgstr ""
 
 #: lib/Controller/DisplayGroup.php:1718 lib/Controller/DisplayGroup.php:1767
-#: lib/Controller/DisplayGroup.php:1919 lib/Controller/DisplayGroup.php:1969
-#: lib/Controller/DisplayGroup.php:2109 lib/Controller/DisplayGroup.php:2211
-#: lib/Controller/DisplayGroup.php:2592
+#: lib/Controller/DisplayGroup.php:1922 lib/Controller/DisplayGroup.php:1972
+#: lib/Controller/DisplayGroup.php:2115 lib/Controller/DisplayGroup.php:2217
+#: lib/Controller/DisplayGroup.php:2598
 #, php-format
 msgid "Command Sent to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1854 lib/Controller/DisplayGroup.php:2049
+#: lib/Controller/DisplayGroup.php:1854 lib/Controller/DisplayGroup.php:2052
 msgid "Please provide a Layout ID or Campaign ID"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1864 lib/Controller/DisplayGroup.php:2059
+#: lib/Controller/DisplayGroup.php:1864 lib/Controller/DisplayGroup.php:2062
 msgid "Please provide Layout specific campaign ID"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1870 lib/Controller/DisplayGroup.php:2065
+#: lib/Controller/DisplayGroup.php:1870 lib/Controller/DisplayGroup.php:2068
 msgid "Cannot find layout by campaignId"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1875 lib/Controller/DisplayGroup.php:2070
+#: lib/Controller/DisplayGroup.php:1875 lib/Controller/DisplayGroup.php:2073
 msgid "Please provide Layout id or Campaign id"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:2234 lib/Controller/DisplayProfile.php:537
+#: lib/Controller/DisplayGroup.php:2240 lib/Controller/DisplayProfile.php:537
 #: lib/Controller/DisplayProfile.php:567 lib/Controller/DisplayProfile.php:626
 msgid "You do not have permission to delete this profile"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:2504
+#: lib/Controller/DisplayGroup.php:2510
 #, php-format
 msgid "Display %s moved to Folder %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:2584
+#: lib/Controller/DisplayGroup.php:2590
 msgid "Please provide a Trigger Code"
 msgstr ""
 
@@ -18290,35 +18301,35 @@ msgstr ""
 msgid "Your library is full. Library Limit: %s MB"
 msgstr ""
 
-#: lib/Controller/Library.php:2577
+#: lib/Controller/Library.php:2578
 #, php-format
 msgid "This file size exceeds your environment Max Upload Size %s"
 msgstr ""
 
-#: lib/Controller/Library.php:2609
+#: lib/Controller/Library.php:2610
 #, php-format
 msgid ""
 "Invalid Module type or extension. Module type %s does not allow for %s "
 "extension"
 msgstr ""
 
-#: lib/Controller/Library.php:2625
+#: lib/Controller/Library.php:2626
 msgid "Media upload from URL was successful"
 msgstr ""
 
-#: lib/Controller/Library.php:2724
+#: lib/Controller/Library.php:2700
 msgid "Provided base64 encoded image has incorrect file extension."
 msgstr ""
 
-#: lib/Controller/Library.php:2730
+#: lib/Controller/Library.php:2706
 msgid "Image decoding failed."
 msgstr ""
 
-#: lib/Controller/Library.php:2733
+#: lib/Controller/Library.php:2709
 msgid "Incorrect image data"
 msgstr ""
 
-#: lib/Controller/Library.php:2833
+#: lib/Controller/Library.php:2809
 #, php-format
 msgid "Media %s moved to Folder %s"
 msgstr ""
@@ -18348,23 +18359,23 @@ msgstr ""
 msgid "Latest news not enabled."
 msgstr ""
 
-#: lib/Controller/Applications.php:177 lib/Controller/Applications.php:200
+#: lib/Controller/Applications.php:179 lib/Controller/Applications.php:220
 msgid "Authorisation Parameters missing from session."
 msgstr ""
 
-#: lib/Controller/Applications.php:363 lib/Controller/Applications.php:415
+#: lib/Controller/Applications.php:375 lib/Controller/Applications.php:427
 msgid "Please enter Application name"
 msgstr ""
 
-#: lib/Controller/Applications.php:419
+#: lib/Controller/Applications.php:431
 msgid "Please select user"
 msgstr ""
 
-#: lib/Controller/Applications.php:423
+#: lib/Controller/Applications.php:435
 msgid "Invalid user type"
 msgstr ""
 
-#: lib/Controller/Applications.php:532
+#: lib/Controller/Applications.php:545
 msgid "You do not have permission to assign this user"
 msgstr ""
 
@@ -18380,7 +18391,7 @@ msgstr ""
 #: lib/Controller/Action.php:276 lib/Controller/Action.php:423
 #: lib/Controller/Action.php:485 lib/Controller/Action.php:614
 #: lib/Controller/Action.php:672 lib/Controller/Action.php:732
-#: lib/Controller/Layout.php:2751
+#: lib/Controller/Layout.php:2755
 msgid "Layout is not checked out"
 msgstr ""
 
@@ -18975,9 +18986,9 @@ msgstr ""
 #: lib/Controller/Layout.php:805 lib/Controller/Layout.php:910
 #: lib/Controller/Layout.php:958 lib/Controller/Layout.php:1008
 #: lib/Controller/Layout.php:1077 lib/Controller/Layout.php:1116
-#: lib/Controller/Layout.php:2479 lib/Controller/Layout.php:2530
-#: lib/Controller/Layout.php:2569 lib/Controller/Layout.php:2637
-#: lib/Controller/Layout.php:2696 lib/Controller/Layout.php:2746
+#: lib/Controller/Layout.php:2481 lib/Controller/Layout.php:2532
+#: lib/Controller/Layout.php:2571 lib/Controller/Layout.php:2640
+#: lib/Controller/Layout.php:2700 lib/Controller/Layout.php:2750
 msgid "You do not have permissions to edit this layout"
 msgstr ""
 
@@ -19009,19 +19020,19 @@ msgstr ""
 msgid "For Layout %s Enable Stats Collection is set to %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:1424 lib/Controller/Layout.php:2197
+#: lib/Controller/Layout.php:1424 lib/Controller/Layout.php:2202
 msgid "This Layout is ready to play"
 msgstr ""
 
-#: lib/Controller/Layout.php:1428 lib/Controller/Layout.php:2201
+#: lib/Controller/Layout.php:1428 lib/Controller/Layout.php:2206
 msgid "There are items on this Layout that can only be assessed by the Display"
 msgstr ""
 
-#: lib/Controller/Layout.php:1432 lib/Controller/Layout.php:2205
+#: lib/Controller/Layout.php:1432 lib/Controller/Layout.php:2210
 msgid "This Layout has not been built yet"
 msgstr ""
 
-#: lib/Controller/Layout.php:1436 lib/Controller/Layout.php:2209
+#: lib/Controller/Layout.php:1436 lib/Controller/Layout.php:2214
 msgid "This Layout is invalid and should not be scheduled"
 msgstr ""
 
@@ -19067,39 +19078,39 @@ msgid "Cannot copy a Draft Layout"
 msgstr ""
 
 #: lib/Controller/Layout.php:2058 lib/Controller/Layout.php:2134
-#: lib/Controller/Layout.php:2265 lib/Controller/Layout.php:2302
+#: lib/Controller/Layout.php:2267 lib/Controller/Layout.php:2304
 msgid "Cannot manage tags on a Draft Layout"
 msgstr ""
 
-#: lib/Controller/Layout.php:2422
+#: lib/Controller/Layout.php:2424
 msgid "Cannot download non-region specific module"
 msgstr ""
 
-#: lib/Controller/Layout.php:2535
+#: lib/Controller/Layout.php:2537
 msgid "Layout is already checked out"
 msgstr ""
 
-#: lib/Controller/Layout.php:2544
+#: lib/Controller/Layout.php:2546
 #, php-format
 msgid "Checked out %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2659
+#: lib/Controller/Layout.php:2662
 #, php-format
 msgid "Published %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2666
+#: lib/Controller/Layout.php:2669
 #, php-format
 msgid "Layout will be published on %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2763
+#: lib/Controller/Layout.php:2767
 #, php-format
 msgid "Discarded %s"
 msgstr ""
 
-#: lib/Controller/Layout.php:2806
+#: lib/Controller/Layout.php:2810
 msgid "This function is available only to Super Admins."
 msgstr ""
 
@@ -20512,41 +20523,41 @@ msgstr ""
 msgid "Failed to write to database after %d retries. Please try again later."
 msgstr ""
 
-#: lib/Xmds/Soap3.php:221 lib/Xmds/Soap4.php:396
+#: lib/Xmds/Soap3.php:224 lib/Xmds/Soap4.php:399
 msgid "Unknown FileType Requested."
 msgstr ""
 
-#: lib/Xmds/Soap.php:1701
+#: lib/Xmds/Soap.php:1703
 msgid "Dates are too far apart"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2077
+#: lib/Xmds/Soap.php:2079
 #, php-format
 msgid "Recovery for Display %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2078
+#: lib/Xmds/Soap.php:2080
 #, php-format
 msgid "Display ID %d is now back online %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2149
+#: lib/Xmds/Soap.php:2151
 msgid "Bandwidth allowance exceeded"
 msgstr ""
 
-#: lib/Xmds/Soap4.php:376
+#: lib/Xmds/Soap4.php:379
 msgid "Media exists but file missing from library. "
 msgstr ""
 
-#: lib/Xmds/Soap4.php:380
+#: lib/Xmds/Soap4.php:383
 msgid "Unable to get file pointer"
 msgstr ""
 
-#: lib/Xmds/Soap4.php:390
+#: lib/Xmds/Soap4.php:393
 msgid "Empty file"
 msgstr ""
 
-#: lib/Xmds/Soap4.php:733
+#: lib/Xmds/Soap4.php:736
 msgid "Incorrect Screen shot Format"
 msgstr ""
 
