@@ -73,6 +73,7 @@ $app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
 $app->addRoutingMiddleware();
+$app->add(new \Xibo\Middleware\TrailingSlashMiddleware($app));
 
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
