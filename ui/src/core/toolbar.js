@@ -331,20 +331,11 @@ Toolbar.prototype.render = function() {
         newToolbarTrans.trashBinActiveTitle = toolbarTrans.deleteObject.replace('%object%', app.selectedObject.type);
     }
 
-    // Check if there are some changes
-    let undoActive = app.manager.changeHistory.length > 0;
+    const checkHistory = app.checkHistory();
 
-    // Get last action text for popup
-    if(undoActive) {
-        let lastAction = app.manager.changeHistory[app.manager.changeHistory.length - 1];
-        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined) {
-            newToolbarTrans.undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
-        } else {
-            newToolbarTrans.undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
-        }
+    if(checkHistory) {
+        newToolbarTrans.undoActiveTitle = checkHistory.undoActiveTitle;
     }
-
-    console.log(this.openedMenu);
 
     const toolbarStretched = (this.openedMenu == 2);
 
@@ -355,7 +346,7 @@ Toolbar.prototype.render = function() {
         menuItems: this.menuItems,
         displayTooltips: app.common.displayTooltips,
         trashActive: trashBinActive,
-        undoActive: undoActive,
+        undoActive: checkHistory.undoActive,
         trans: newToolbarTrans,
         showOptions: self.showOptions,
         mainObjectType: app.mainObjectType
@@ -406,14 +397,14 @@ Toolbar.prototype.render = function() {
         }
 
         // Delete object
-        this.DOMObject.find('#trashContainer').click(function() {
+        this.DOMObject.find('.trash-container').click(function() {
             if($(this).hasClass('active')) {
-                self.customActions.deleteSelectedObjectAction();
+                app.deleteSelectedObject();
             }
         });
 
         // Revert last action
-        this.DOMObject.find('#undoContainer').click(function() {
+        this.DOMObject.find('.undo-container').click(function() {
             if($(this).hasClass('active')) {
                 app.undoLastAction();
             }
@@ -541,15 +532,16 @@ Toolbar.prototype.render = function() {
     // Save default tolbar nav z-index
     this.defaultZIndex = this.DOMObject.find('nav').css('z-index');
 
-    console.log(toolbarStretched);
-
     // If toolbar changes width, refresh containers
     if(this.stretched != toolbarStretched) {
 
         if(app.mainObjectType != 'playlist') {
             // Refresh main containers
-            app.renderContainer(app.viewer, app.selectedObject);
-            app.renderContainer(app.navigator, app.selectedObject);
+            if(app.navigatorMode) {
+                app.renderContainer(app.navigator, app.selectedObject);
+            } else {
+                app.renderContainer(app.viewer, app.selectedObject);
+            }
         }
         
         this.stretched = toolbarStretched;

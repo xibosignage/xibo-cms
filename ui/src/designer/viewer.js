@@ -32,7 +32,6 @@ let Viewer = function(parent, container, navbarContainer) {
  * @returns {object} Object containing dimensions for the object
  */
 Viewer.prototype.scaleElement = function(element, container) {
-    
     // Get container dimensions
     const containerDimensions = {
         width: container.width(),
@@ -427,6 +426,7 @@ Viewer.prototype.toggleFullscreen = function() {
     }
     
     this.DOMObject.parent().toggleClass('fullscreen');
+    this.parent.editorContainer.toggleClass('fullscreen-mode');
     this.render(lD.selectedObject, lD.layout);
 };
 

@@ -1,3 +1,7 @@
+<div id="actions-drawer-toggle" class="btn btn-toggle"
+    data-toggle="tooltip" data-container="#actions-drawer" data-title="{{ trans.toggleDrawer }}">
+    <i class="fa fa-inbox"></i>
+</div>
 
 <div id="actions-drawer-content" data-type="region" class="editable">
     {{#if drawer.isEmpty}}
@@ -23,9 +27,4 @@
             {{/each}}
         </div>
     {{/if}}
-</div>
-
-<div id="actions-drawer-toggle" class="btn btn-toggle"
-    data-toggle="tooltip" data-container="#actions-drawer" data-title="{{ trans.toggleDrawer }}">
-    <i class="fa fa-inbox"></i>
 </div>
