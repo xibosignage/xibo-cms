@@ -38,7 +38,6 @@ const Drawer = require('../designer/drawer.js');
 const Manager = require('../core/manager.js');
 const Toolbar = require('../core/toolbar.js');
 const Topbar = require('../core/topbar.js');
-const Bottombar = require('../core/bottombar.js');
 
 // Common funtions/tools
 const Common = require('../core/common.js');
@@ -97,6 +96,8 @@ window.lD = {
     drawer: {},
 
     folderId: '',
+
+    navigatorMode: false,
 };
 
 // Get Xibo app
@@ -151,7 +152,7 @@ $(document).ready(function() {
                 lD.viewer = new Viewer(
                     lD,
                     lD.editorContainer.find('#layout-viewer'),
-                    lD.editorContainer.find('#layout-viewer-navbar')
+                    lD.editorContainer.find('#layout-editor-bottombar')
                 );
 
                 // Initialise drawer
@@ -251,12 +252,6 @@ $(document).ready(function() {
                     true // Show Options
                 );
 
-                // Initialize bottom topbar
-                lD.bottombar = new Bottombar(
-                    lD,
-                    lD.editorContainer.find('#layout-editor-bottombar'),
-                );
-
                 // Initialize properties panel
                 lD.propertiesPanel = new PropertiesPanel(
                     lD,
@@ -322,9 +317,13 @@ $(document).ready(function() {
     $(window).on('resize.designer', _.debounce(function(e) {
         if(e.target === window) {
 
-            // Refresh navigators and viewer
-            lD.renderContainer(lD.navigator);
-            lD.renderContainer(lD.viewer, lD.selectedObject);
+            // Refresh navigators or viewer
+            if(lD.navigatorMode) {
+                lD.renderContainer(lD.viewer, lD.selectedObject);
+            } else {
+                lD.renderContainer(lD.viewer, lD.selectedObject);
+            }
+            
             lD.renderContainer(lD.timeline);
             lD.renderContainer(lD.drawer);
         }
@@ -332,7 +331,6 @@ $(document).ready(function() {
 
     // Handle back button
     lD.editorContainer.on('click', '#backBtn', function() {
-        console.log('aaaa');
         // Redirect to the layout grid
         window.location.href = urlsForApi.layout.list.url;
     });
@@ -483,15 +481,18 @@ lD.refreshDesigner = function() {
     this.clearTemporaryData();
 
     // Render containers with layout ( default )
-    this.renderContainer(this.navigator, this.selectedObject);
     this.renderContainer(this.timeline);
     this.renderContainer(this.drawer);
     this.renderContainer(this.toolbar);
     this.renderContainer(this.topbar);
-    this.renderContainer(this.bottombar);
     this.renderContainer(this.manager);
     this.renderContainer(this.propertiesPanel, this.selectedObject);
-    this.renderContainer(this.viewer, this.selectedObject);
+
+    if(this.navigatorMode) {
+        this.renderContainer(this.navigator, this.selectedObject);
+    } else {
+        this.renderContainer(this.viewer, this.selectedObject);
+    }
 };
 
 
@@ -806,12 +807,14 @@ lD.toggleNavigatorEditing = function(enable) {
     this.selectObject();
 
     if(enable) {
+        lD.navigatorMode = true;
+
         // Create a new navigator instance
         this.navigator = new Navigator(
             lD,
             this.editorContainer.find('#layout-navigator-content'),
             {
-                editNavbar: this.editorContainer.find('#layout-navigator-navbar')
+                editNavbar: this.editorContainer.find('#layout-editor-bottombar')
             }
         );
 
@@ -826,6 +829,7 @@ lD.toggleNavigatorEditing = function(enable) {
 
         toastr.info(layoutDesignerTrans.regionEditModeMessage);
     } else {
+        lD.navigatorMode = false;
 
         // Refresh designer
         this.reloadData(lD.layout);
@@ -1941,3 +1945,28 @@ lD.unlockLayout = function() {
         console.error(jqXHR, textStatus, errorThrown);
     });
 };
+
+/**
+ * Check history and return last step description
+ */
+ lD.checkHistory = function() {
+    // Check if there are some changes
+    let undoActive = lD.manager.changeHistory.length > 0;
+    let undoActiveTitle = '';
+
+    // Get last action text for popup
+    if(undoActive) {
+        let lastAction = lD.manager.changeHistory[lD.manager.changeHistory.length - 1];
+        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined) {
+            undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
+        } else {
+            undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
+        }
+    }
+
+    return {
+        undoActive: undoActive,
+        undoActiveTitle: undoActiveTitle
+    };
+};
+

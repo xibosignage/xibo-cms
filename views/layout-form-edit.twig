@@ -65,6 +65,14 @@
                         {% set helpText %}{% trans "The Name of the Layout - (1 - 50 characters)" %}{% endset %}
                         {{ forms.input("name", title, layout.layout, helpText) }}
 
+                         {% set title %}{% trans "Start Time" %}{% endset %}
+                        {% set helpText %}{% trans "Select the start time for this event" %}{% endset %}
+                        {{ forms.dateTime("fromDt", title, "", helpText, "starttime-control", "required") }}
+
+                        {% set title %}{% trans "End Time" %}{% endset %}
+                        {% set helpText %}{% trans "Select the end time for this event" %}{% endset %}
+                        {{ forms.dateTime("toDt", title, "", helpText, "endtime-control", "required") }}
+
                         {% if currentUser.featureEnabled("tag.tagging") %}
                             {% set title %}{% trans "Tags" %}{% endset %}
                             {% set helpText %}{% trans "Tags for this Layout - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}

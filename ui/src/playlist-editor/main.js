@@ -1016,3 +1016,27 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
         toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
     });
 };
+
+/**
+ * Check history and return last step description
+ */
+ pE.checkHistory = function() {
+    // Check if there are some changes
+    let undoActive = pE.manager.changeHistory.length > 0;
+    let undoActiveTitle = '';
+
+    // Get last action text for popup
+    if(undoActive) {
+        let lastAction = pE.manager.changeHistory[pE.manager.changeHistory.length - 1];
+        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined) {
+            undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
+        } else {
+            undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
+        }
+    }
+
+    return {
+        undoActive: undoActive,
+        undoActiveTitle: undoActiveTitle
+    };
+};
