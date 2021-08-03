@@ -310,6 +310,9 @@ class Layout implements \JsonSerializable
     // Handle empty regions
     private $hasEmptyRegion = false;
 
+    // Flag to indicate we've not built this layout this session.
+    private $hasBuilt = false;
+
     public static $loadOptionsMinimum = [
         'loadPlaylists' => false,
         'loadTags' => false,
@@ -487,9 +490,8 @@ class Layout implements \JsonSerializable
      */
     public function setOwner($ownerId, $cascade = false)
     {
-        $this->ownerId = $ownerId;
-
         $this->load();
+        $this->ownerId = $ownerId;
 
         $allRegions = array_merge($this->regions, $this->drawers);
 
@@ -1927,6 +1929,24 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Is a build of this layout required?
+     * @return bool
+     */
+    public function isBuildRequired(): bool
+    {
+        return $this->status == 3 || !file_exists($this->getCachePath());
+    }
+
+    /**
+     * Has this Layout built this session?
+     * @return bool
+     */
+    public function hasBuilt(): bool
+    {
+        return $this->hasBuilt;
+    }
+
+    /**
      * Save the XLF to disk if necessary
      * @param array $options
      * @return string the path
@@ -2029,8 +2049,11 @@ class Layout implements \JsonSerializable
                 'notify' => $options['notify'],
                 'collectNow' => $options['collectNow']
             ]);
+
+            $this->hasBuilt = true;
         } else {
             $this->getLog()->debug('xlfToDisk: no build required for layoutId: ' . $this->layoutId);
+            $this->hasBuilt = false;
         }
 
         Profiler::end('Layout::xlfToDisk', $this->getLog());

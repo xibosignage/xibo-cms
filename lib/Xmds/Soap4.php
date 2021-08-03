@@ -357,8 +357,11 @@ class Soap4 extends Soap
 
                 // Load the layout
                 $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($fileId));
-                $path = $layout->xlfToDisk();
-                $this->layoutFactory->concurrentRequestRelease($layout);
+                try {
+                    $path = $layout->xlfToDisk();
+                } finally {
+                    $this->layoutFactory->concurrentRequestRelease($layout);
+                }
 
                 $file = file_get_contents($path);
                 $chunkSize = filesize($path);

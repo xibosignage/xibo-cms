@@ -37,17 +37,21 @@ class UserDeleteEvent extends Event
     /** @var string */
     private $function;
 
+    /** @var User */
+    private $systemUser;
+
     public $returnValue;
 
     /**
-     * MediaDeleteEvent constructor.
+     * UserDeleteEvent constructor.
      * @param $user
      * @param $function
      */
-    public function __construct($user, $function, $newUser = null)
+    public function __construct($user, $function, $systemUser = null, $newUser = null)
     {
         $this->user = $user;
         $this->newUser = $newUser;
+        $this->systemUser = $systemUser;
         $this->function = $function;
     }
 
@@ -62,6 +66,11 @@ class UserDeleteEvent extends Event
     public function getNewUser()
     {
         return $this->newUser;
+    }
+
+    public function getSystemUser() : User
+    {
+        return $this->systemUser;
     }
 
     public function getFunction(): string

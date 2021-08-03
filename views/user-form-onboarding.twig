@@ -43,10 +43,12 @@
                         <a href="#onboarding-step-2" type="button" class="btn btn-default btn-circle" disabled="disabled">2</a>
                         <p><small>{{ "Credentials"|trans }}</small></p>
                     </div>
+                    {% if currentUser.featureEnabled("folder.view") %}
                     <div class="stepwizard-step col-xs-3">
                         <a href="#onboarding-step-3" type="button" class="btn btn-default btn-circle" disabled="disabled">3</a>
                         <p><small>{{ "Sharing"|trans }}</small></p>
                     </div>
+                    {% endif %}
                 </div>
             </div>
             <form id="userOnboardingForm" class="onboarding-form form-horizontal" role="form" method="post" action="{{ url_for("user.add") }}">
@@ -90,7 +92,7 @@
                     </div>
                 </div>
 
-                <div class="panel panel-default setup-content" style="display:none;" id="onboarding-step-2" data-next="onboarding-step-3">
+                <div class="panel panel-default setup-content" style="display:none;" id="onboarding-step-2" {% if currentUser.featureEnabled("folder.view") %}data-next="onboarding-step-3"{% else %}data-next="finished"{% endif %}>
                     <div class="panel-heading">
                         <h3 class="panel-title">{{ "Credentials"|trans }}</h3>
                     </div>
@@ -118,8 +120,10 @@
                         <h3 class="panel-title">{{ "Content"|trans }}</h3>
                     </div>
                     <div class="panel-body">
-                        <p>{{ "Select any folders the new user should have shared with them for viewing and editing."|trans }}</p>
-                        <div id="container-folder-tree" class="card card-body bg-light"></div>
+                        {% if currentUser.featureEnabled("folder.view") %}
+                            <p>{{ "Select any folders the new user should have shared with them for viewing and editing."|trans }}</p>
+                            <div id="container-folder-tree" class="card card-body bg-light"></div>
+                        {% endif %}
                     </div>
                 </div>
             </form>

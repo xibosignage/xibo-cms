@@ -146,7 +146,6 @@
             openUploadForm({
                 url: "{{ url_for("library.add") }}",
                 title: "{% trans "Upload Version" %}",
-                multi: false,
                 videoImageCovers: false,
                 buttons: {
                     main: {
@@ -159,6 +158,7 @@
                     }
                 },
                 templateOptions: {
+                    multi: false,
                     trans: {
                         addFiles: "{% trans "Add files" %}",
                         startUpload: "{% trans "Start upload" %}",

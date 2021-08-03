@@ -282,7 +282,9 @@
             $(dialog).find('[data-toggle="popover"]').popover();
 
             // Init the folder panel
+            {% if currentUser.featureEnabled("folder.view") %}
             initFolderPanel(dialog);
+            {% endif %}
 
             var navListItems = $(dialog).find('div.setup-panel div a'),
                 allWells = $(dialog).find('.setup-content'),
@@ -344,6 +346,7 @@
                             XiboFormSubmit($form, e, function(xhr) {
                                 // Callback
                                 if (xhr.success && xhr.id) {
+                                    {% if currentUser.featureEnabled("folder.view") %}
                                     // Submit the folder ownerships
                                     var selected = $(dialog).find("#container-folder-tree").jstree("get_selected");
                                     var groupIds = {};
@@ -361,6 +364,7 @@
                                             toastr.error("{{ "Problem saving folder sharing, please check the User created." }}");
                                         }
                                     });
+                                    {% endif %}
 
                                     XiboDialogClose();
                                 }

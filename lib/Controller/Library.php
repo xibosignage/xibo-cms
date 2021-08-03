@@ -25,6 +25,7 @@ use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Stream;
+use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
@@ -785,6 +786,13 @@ class Library extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="purge",
+     *      in="formData",
+     *      description="Should this Media be added to the Purge List for all Displays?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -794,6 +802,7 @@ class Library extends Base
     public function delete(Request $request, Response $response, $id)
     {
         $media = $this->mediaFactory->getById($id);
+        $params = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkDeleteable($media)) {
             throw new AccessDeniedException();
@@ -803,11 +812,11 @@ class Library extends Base
         $this->getDispatcher()->dispatch(MediaFullLoadEvent::$NAME, new MediaFullLoadEvent($media));
         $media->load(['deleting' => true]);
 
-        if ($media->isUsed() && $this->getSanitizer($request->getParams())->getCheckbox('forceDelete') == 0) {
+        if ($media->isUsed() && $params->getCheckbox('forceDelete') == 0) {
             throw new InvalidArgumentException(__('This library item is in use.'));
         }
 
-        $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
+        $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media, null, $params->getCheckbox('purge')));
 
         // Delete
         $media->delete();
@@ -2327,40 +2336,39 @@ class Library extends Base
      * @param Response $response
      *
      * @return Response
+     * @throws AccessDeniedException
+     * @throws ConfigurationException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\DuplicateEntityException
      */
     public function addThumbnail($request, $response)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
         $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        MediaService::ensureLibraryExists($libraryLocation);
 
-        $image = $request->getParam('image');
+        $imageData = $request->getParam('image');
         $mediaId = $sanitizedParams->getInt('mediaId');
         $media = $this->mediaFactory->getById($mediaId);
 
-        if (preg_match('/^data:image\/(\w+);base64,/', $image, $type)) {
-            $image = substr($image, strpos($image, ',') + 1);
-            $type = strtolower($type[1]);
-
-            if (!in_array($type, [ 'jpg', 'jpeg', 'gif', 'png' ])) {
-                throw new InvalidArgumentException(__('Provided base64 encoded image has incorrect file extension.'));
-            }
-            $image = str_replace( ' ', '+', $image );
-            $image = base64_decode($image);
-
-            if ($image === false) {
-                throw new InvalidArgumentException(__("Image decoding failed."));
-            }
-        } else {
-            throw new InvalidArgumentException(__('Incorrect image data'));
+        if (!$this->getUser()->checkEditable($media)) {
+            throw new AccessDeniedException();
         }
 
-        file_put_contents($libraryLocation . $mediaId . '_' . $media->mediaType . 'cover.' . $type, $image);
+        try {
+            Img::configure(array('driver' => 'gd'));
 
-        list($imgWidth, $imgHeight) = @getimagesize($libraryLocation . $mediaId . '_' . $media->mediaType . 'cover.' . $type);
+            // Load the image
+            $image = Img::make($imageData);
+            $image->save($libraryLocation . $mediaId . '_' . $media->mediaType . 'cover.png');
+        } catch (\Exception $exception) {
+            $this->getLog()->error('Exception adding Video cover image. e = ' . $exception->getMessage());
+            throw new InvalidArgumentException(__('Invalid image data'));
+        }
 
-        $media->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
+        $media->orientation = ($image->getWidth() >= $image->getHeight()) ? 'landscape' : 'portrait';
         $media->save(['saveTags' => false, 'validate' => false]);
 
         return $response->withStatus(204);

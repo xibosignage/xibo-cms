@@ -78,6 +78,11 @@ class ReportScheduleFactory extends BaseFactory
         return $reportSchedules[0];
     }
 
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
+    }
+
     /**
      * @param null $sortOrder
      * @param array $filterBy
@@ -114,9 +119,9 @@ class ReportScheduleFactory extends BaseFactory
 
         $body = ' FROM `reportschedule` ';
 
-        $body .= "   LEFT OUTER JOIN `user` ON `user`.userId = `reportschedule`.userId ";
+        $body .= '   LEFT OUTER JOIN `user` ON `user`.userId = `reportschedule`.userId ';
 
-        $body .= " WHERE 1 = 1 ";
+        $body .= ' WHERE 1 = 1 ';
 
         // Like
         if ($sanitizedFilter->getString('name') != '') {
@@ -126,29 +131,29 @@ class ReportScheduleFactory extends BaseFactory
 
         if ($sanitizedFilter->getInt('reportScheduleId', ['default' => 0]) != 0) {
             $params['reportScheduleId'] = $sanitizedFilter->getInt('reportScheduleId', ['default' => 0]);
-            $body .= " AND reportschedule.reportScheduleId = :reportScheduleId ";
+            $body .= ' AND reportschedule.reportScheduleId = :reportScheduleId ';
         }
 
         // Owner filter
         if ($sanitizedFilter->getInt('userId', ['default' => 0]) != 0) {
-            $body .= " AND reportschedule.userid = :userId ";
+            $body .= ' AND reportschedule.userid = :userId ';
             $params['userId'] = $sanitizedFilter->getInt('userId', ['default' => 0]);
         }
 
-        if ( $sanitizedFilter->getCheckbox('onlyMySchedules') == 1) {
+        if ($sanitizedFilter->getCheckbox('onlyMySchedules') == 1) {
             $body .= ' AND reportschedule.userid = :currentUserId ';
             $params['currentUserId'] = $this->getUser()->userId;
         }
 
         // Report Name
         if ($sanitizedFilter->getString('reportName') != '') {
-            $body .= " AND reportschedule.reportName = :reportName ";
+            $body .= ' AND reportschedule.reportName = :reportName ';
             $params['reportName'] = $sanitizedFilter->getString('reportName');
         }
 
         // isActive
         if ($sanitizedFilter->getInt('isActive') !== null) {
-            $body .= " AND reportschedule.isActive = :isActive ";
+            $body .= ' AND reportschedule.isActive = :isActive ';
             $params['isActive'] = $sanitizedFilter->getInt('isActive');
         }
 
@@ -159,8 +164,9 @@ class ReportScheduleFactory extends BaseFactory
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging

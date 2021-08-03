@@ -56,7 +56,6 @@ class SavedReportFactory extends BaseFactory
 
         $this->config = $config;
         $this->mediaFactory = $mediaFactory;
-
     }
 
     /**
@@ -100,10 +99,21 @@ class SavedReportFactory extends BaseFactory
     {
         $savedReports = $this->query(null, array('disableUserCheck' => 1, 'savedReportId' => $savedReportId));
 
-        if (count($savedReports) <= 0)
+        if (count($savedReports) <= 0) {
             throw new NotFoundException(__('Cannot find saved report'));
+        }
 
         return $savedReports[0];
+    }
+
+    /**
+     * @param $ownerId
+     * @return SavedReport[]
+     * @throws NotFoundException
+     */
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
     }
 
     /**
@@ -171,6 +181,7 @@ class SavedReportFactory extends BaseFactory
             $params['generatedOn'] = $sanitizedFilter->getInt('generatedOn');
         }
 
+        // Owner filter
         if ($sanitizedFilter->getInt('userId') !== null) {
             $body .= ' AND `saved_report`.userId = :userId ';
             $params['userId'] = $sanitizedFilter->getInt('userId');
@@ -185,22 +196,16 @@ class SavedReportFactory extends BaseFactory
         // User Group filter
         if ($sanitizedFilter->getInt('ownerUserGroupId', ['default' => 0]) != 0) {
             $body .= ' AND `saved_report`.userId IN (SELECT DISTINCT userId FROM `lkusergroup` WHERE groupId =  :ownerUserGroupId) ';
-            $params['ownerUserGroupId'] = $sanitizedFilter->getInt('ownerUserGroupId',  ['default' => 0]);
+            $params['ownerUserGroupId'] = $sanitizedFilter->getInt('ownerUserGroupId', ['default' => 0]);
         }
 
         // by media ID
-        if ($sanitizedFilter->getInt('mediaId',  ['default' => -1]) != -1) {
+        if ($sanitizedFilter->getInt('mediaId', ['default' => -1]) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
             $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
         }
 
-        // Owner filter
-        if ($sanitizedFilter->getInt('userId',  ['default' => 0]) != 0) {
-            $body .= " AND `saved_report`.userid = :userId ";
-            $params['userId'] = $sanitizedFilter->getInt('userId',  ['default' => 0]);
-        }
-
-        if ( $sanitizedFilter->getCheckbox('onlyMyReport') == 1) {
+        if ($sanitizedFilter->getCheckbox('onlyMyReport') == 1) {
             $body .= ' AND `saved_report`.userId = :currentUserId ';
             $params['currentUserId'] = $this->getUser()->userId;
         }
@@ -217,7 +222,7 @@ class SavedReportFactory extends BaseFactory
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length',  ['default' => 10]);
+            $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
