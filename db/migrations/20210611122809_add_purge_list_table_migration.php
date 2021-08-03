@@ -32,6 +32,7 @@ class AddPurgeListTableMigration extends AbstractMigration
         $this->table('player_faults', ['id' => 'playerFaultId'])
             ->addColumn('displayId', 'integer')
             ->addColumn('incidentDt', 'datetime', ['null' => true, 'default' => null])
+            ->addColumn('expires', 'datetime', ['null' => true, 'default' => null])
             ->addColumn('code', 'string', ['null' => true, 'default' => null])
             ->addColumn('reason', 'string', ['null' => true, 'default' => null])
             ->addColumn('scheduleId', 'integer', ['null' => true, 'default' => null])

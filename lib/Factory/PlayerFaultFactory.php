@@ -67,6 +67,7 @@ class PlayerFaultFactory extends BaseFactory
             SELECT player_faults.playerFaultId,
                player_faults.displayId,
                player_faults.incidentDt,
+               player_faults.expires,
                player_faults.code,
                player_faults.reason,
                player_faults.layoutId,

@@ -81,6 +81,7 @@ class Soap6 extends Soap5
             $sanitizedFaultAlert = $this->getSanitizer($faultAlert);
 
             $incidentDt = $sanitizedFaultAlert->getDate('date', ['default' => Carbon::now()])->format(DateFormatHelper::getSystemFormat());
+            $expires = $sanitizedFaultAlert->getDate('expires', ['default' => null]);
             $code = $sanitizedFaultAlert->getInt('code');
             $reason = $sanitizedFaultAlert->getString('reason');
             $scheduleId = $sanitizedFaultAlert->getInt('scheduleId');
@@ -93,13 +94,14 @@ class Soap6 extends Soap5
                 $dbh = $this->getStore()->getConnection();
 
                 $insertSth = $dbh->prepare('
-                        INSERT INTO player_faults (displayId, incidentDt, code, reason, scheduleId, layoutId, regionId, mediaId, widgetId)
-                            VALUES (:displayId, :incidentDt, :code, :reason, :scheduleId, :layoutId, :regionId, :mediaId, :widgetId)
+                        INSERT INTO player_faults (displayId, incidentDt, expires, code, reason, scheduleId, layoutId, regionId, mediaId, widgetId)
+                            VALUES (:displayId, :incidentDt, :expires, :code, :reason, :scheduleId, :layoutId, :regionId, :mediaId, :widgetId)
                     ');
 
                 $insertSth->execute([
                     'displayId' => $this->display->displayId,
                     'incidentDt' => $incidentDt,
+                    'expires' => $expires,
                     'code' => $code,
                     'reason' => $reason,
                     'scheduleId' => $scheduleId,

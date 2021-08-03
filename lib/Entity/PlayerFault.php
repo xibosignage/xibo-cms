@@ -48,6 +48,12 @@ class PlayerFault implements \JsonSerializable
     public $incidentDt;
 
     /**
+     * @SWG\Property(description="The Date the error expires")
+     * @var string
+     */
+    public $expires;
+
+    /**
      * @SWG\Property(description="The Code associated with the fault")
      * @var int
      */
