@@ -49,7 +49,7 @@ describe('Layout Designer (Populated)', function() {
     });
 
     // Open region form, change the name, dimensions and duration, save, and see the name change result
-    it('changes and saves region properties', () => {
+    it.skip('changes and saves region properties', () => {
 
         // Create and alias for reload region
         cy.server();
@@ -139,7 +139,7 @@ describe('Layout Designer (Populated)', function() {
         });
     });
 
-    it('should add a audio clip to a widget, and adds a link to open the form in the timeline', () => {
+    it.skip('should add a audio clip to a widget, and adds a link to open the form in the timeline', () => {
 
         cy.populateLibraryWithMedia();
 
@@ -175,7 +175,7 @@ describe('Layout Designer (Populated)', function() {
         });
     });
 
-    it('attaches expiry dates to a widget, and adds a link to open the form in the timeline', () => {
+    it.skip('attaches expiry dates to a widget, and adds a link to open the form in the timeline', () => {
 
         // Create and alias for reload layout
         cy.server();
@@ -247,7 +247,7 @@ describe('Layout Designer (Populated)', function() {
     });
 
     // Navigator
-    it('should change and save the region´s position', () => {
+    it.skip('should change and save the region´s position', () => {
 
         // Create and alias for position save and reload layout
         cy.server();
@@ -303,7 +303,7 @@ describe('Layout Designer (Populated)', function() {
         });
     });
 
-    it('should delete a widget using the toolbar bin', () => {
+    it.skip('should delete a widget using the toolbar bin', () => {
         cy.server();
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
@@ -363,7 +363,7 @@ describe('Layout Designer (Populated)', function() {
         });
     });
 
-    it('should publish a layout and go into a published state', () => {
+    it.skip('should publish a layout and go into a published state', () => {
 
         cy.server();
         cy.route('PUT', '/layout/publish/*').as('layoutPublish');
