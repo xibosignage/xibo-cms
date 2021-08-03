@@ -394,6 +394,12 @@ class Display implements \JsonSerializable
      */
     public $permissionsFolderId;
 
+    /**
+     * @SWG\Property(description="The count of Player reported faults")
+     * @var int
+     */
+    public $countFaults;
+
     /** @var array The configuration from the Display Profile  */
     private $profileConfig;
 
