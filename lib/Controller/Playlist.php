@@ -588,6 +588,9 @@ class Playlist extends Base
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
+            if (empty($nameFilter) && empty($tagFilter)) {
+                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
+            }
             $playlist->filterMediaName = $nameFilter;
             $playlist->filterMediaTags = $tagFilter;
         }
@@ -772,6 +775,9 @@ class Playlist extends Base
         // Do we have a tag or name filter?
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
+            if (empty($sanitizedParams->getString('filterMediaName')) && empty($sanitizedParams->getString('filterMediaTag'))) {
+                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
+            }
             $playlist->filterMediaName = $sanitizedParams->getString('filterMediaName');
 
             if ($this->getUser()->featureEnabled('tag.tagging')) {
