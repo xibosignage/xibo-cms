@@ -1,7 +1,56 @@
 {
   "title": "Twitter Module",
-  "author": "Spring Signage Ltd",
+  "author": "Xibo Signage Ltd",
   "description": "A module for displaying Tweets. Uses the Twitter API",
   "name": "twitter",
-  "class": "Xibo\\Widget\\Twitter"
+  "class": "Xibo\\Widget\\Twitter",
+  "elements": [
+    {
+      "element": "tweet-text",
+      "css": ".tweet { color: \"[Color]\", \"font-family\":\"[Font]\" }",
+      "html": "<div class=\"tweet\"><span>[ElementValue]</span></div>",
+      "properties": [
+        {
+          "name": "color",
+          "type": "color-picker",
+          "default": "#009809"
+        },
+        {
+          "name": "font",
+          "type": "font-picker",
+          "default": "Open sans;"
+        }
+      ]
+    },
+    {
+      "element": "user-profile",
+      "css": "",
+      "html": "<div class=\"user\"><span>[ElementValue]</span></div>"
+    },
+    {
+      "element": "user-profile-image",
+      "css": "",
+      "html": "<div class=\"profileimage\">[ElementValue]</div>"
+    },
+    {
+      "element": "tweet-date",
+      "css": "",
+      "html": "<div class=\"date\"><span>[ElementValue]</span></div>"
+    }
+  ],
+  "stencils": [
+    {
+      "stencil": "full-timeline",
+      "title": "Stencil 2 - text, profile image, photo",
+      "html": "<div class=\"twitter-container\"><user-profile-image /><div class=\"message-container\"><div class=\"message\"><user-profile /><tweet-date /><tweet-text /></div>\n</div>\n</div>\n",
+      "css": ""
+    }
+  ],
+  "settings": {
+    "apiKey": {
+      "title": "API Key",
+      "helpText": "Enter your API Key from Twitter.",
+      "defaultValue": ""
+    }
+  }
 }
