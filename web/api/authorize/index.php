@@ -45,7 +45,7 @@ try {
 }
 
 $container->set('logger', function () {
-    $logger = new Logger('API');
+    $logger = new Logger('AUTH');
 
     $uidProcessor = new UidProcessor();
     // db
@@ -59,6 +59,7 @@ $container->set('logger', function () {
 
 // Create a Slim application
 $app = \DI\Bridge\Slim\Bridge::create($container);
+$app->setBasePath($container->get('basePath'));
 
 // Config
 $app->config = $container->get('configService');
@@ -71,7 +72,7 @@ $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->addRoutingMiddleware();
-$app->setBasePath($container->get('basePath'));
+$app->add(new \Xibo\Middleware\TrailingSlashMiddleware($app));
 
 // Define Custom Error Handler
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
