@@ -198,6 +198,7 @@ class Applications extends Base
         // Get, show page
         $this->getState()->template = 'applications-authorize-page';
         $this->getState()->setData([
+            'forceHide' => true,
             'authParams' => $authParams,
             'scopes' => $scopes
         ]);
