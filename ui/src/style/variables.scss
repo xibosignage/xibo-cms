@@ -1,18 +1,24 @@
 // Global SASS variables 
 
 // Colour palette
-$xibo-color-primary: #30426a;
-$xibo-color-secondary: #337ab7;
+$xibo-color-primary: #273759;
+$xibo-color-secondary: #337AB7;
+$xibo-color-white: #F0F2F8;
+$xibo-color-pure-white: #fff;
+
+$xibo-color-lightest-purple: #DAE2FB;
+$xibo-color-purple: #8f2ac3;
+
 $xibo-color-red: #e64c4c;
 $xibo-color-yellow: #e1e732;
-$xibo-color-purple: #8f2ac3;
 $xibo-color-blue: #337ab7;
+$xibo-color-pastel-blue: #506098;
 $xibo-color-dark-blue: #273759;
 $xibo-color-light-blue: #c1e1fd;
 $xibo-color-green: #9fda5d;
 $xibo-color-orange: #efa662;
 $xibo-color-dark-orange: #f55106;
-$xibo-color-white: #f3f3f3;
+$xibo-color-light-gray: #DEE0E5;
 $xibo-color-gray: #888;
 $xibo-color-black: #333;
 $xibo-color-really-black: #181818;
@@ -43,19 +49,19 @@ $context-menu-shadow: darken($xibo-color-primary, 20%);
 $loading-overlay-z-index: 4000;
 
 // Variables
-$toolbar-height: 50px;
-$toolbar-tab-min-width: 80px;
+$toolbar-width: 60px;
 $toolbar-z-index: 1040;
 
-$toolbar-tools-card-width: 150px;
+$toolbar-tools-card-width: 140px;
 $toolbar-tools-card-height: 40px;
 
-$toolbar-widgets-card-width: 100px;
+$toolbar-widgets-card-width: 110px;
 $toolbar-widgets-card-margin: 2px;
-$toolbar-widgets-card-height: 40px;
+$toolbar-widgets-card-height: 50px;
 
 // Colours
-$toolbar-main-color: $xibo-color-secondary;
+$toolbar-main-color: $xibo-color-pastel-blue;
+$toolbar-selected-color: darken($xibo-color-green, 20%);
 $toolbar-secondary-color: $xibo-color-primary;
 $toolbar-blue: $xibo-color-secondary;
 $toolbar-light-blue: lighten($xibo-color-secondary, 20%);

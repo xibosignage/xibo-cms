@@ -3,6 +3,7 @@
 @import "mixins";
 
 // Colours
+$designer-color-background: $xibo-color-white;
 $designer-colour-layout: $xibo-color-light-blue;
 $designer-colour-region: $xibo-color-orange;
 $designer-colour-widget: $xibo-color-green; 
@@ -44,26 +45,17 @@ $timeline-transition-out-bg-color: darken($xibo-color-red, 30%);
 $timeline-transition-in-fg-color: $xibo-color-green;
 $timeline-transition-out-fg-color: $xibo-color-red;
 
+$timeline-height: 195px;
+
 $viewer-player-bg-colour: $xibo-color-black;
 $viewer-preview-text-colour: darken($xibo-color-white, 30%);
 $viewer-preview-text-shadow-colour: darken($xibo-color-white, 60%);
-
-$viewer-navbar-bg-colour: $xibo-color-dark-blue;
-$viewer-navbar-fg-colour: $xibo-color-white;
-$viewer-navbar-btn-bg-colour: $xibo-color-blue;
-$viewer-navbar-btn-fg-colour: $xibo-color-white;
-
 $viewer-inline-editor-shadow: $xibo-color-red;
 $viewer-inline-editor-overlay-fg-colour: $xibo-color-white;
 $viewer-inline-editor-overlay-bg-colour: $xibo-color-secondary;
 
 $navigator-shadow-colour: $xibo-color-white;
 $navigator-non-editable-shadow-colour: $xibo-color-gray;
-
-$navigator-navbar-bg-colour: $xibo-color-orange;
-$navigator-navbar-fg-colour: $xibo-color-white;
-$navigator-navbar-btn-bg-colour: $xibo-color-dark-blue;
-$navigator-navbar-btn-fg-colour: $xibo-color-white;
 
 $drawer-bg-color: #ccc;
 $drawer-fg-color: #797979;
@@ -72,7 +64,6 @@ $drawer-toggle-fg-color: #333333;
 $drawer-drop-bg-color: #ababab;
 $drawer-drop-fg-color: #333333;
 $drawer-hover-color:#337ab7;
-$drawer-height: 115px;
 
 $designer-overlay-z-index: 1050;
 
@@ -91,50 +82,178 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 }
 
 // CSS
-#layout-editor  {
+.page-content {
     overflow: hidden;
-    margin: 18px -15px 0 -15px;
+    height: 100vh;
 }
 
-#page-wrapper #layout-editor  {
-    margin-top: 25px;
+.layout-editor-flex {
+    display: flex;
+
+    .flex-h {
+        display: flex;
+        flex: 1;
+        flex-flow: row;
+        justify-content: space-between;
+    }
+    
+    .flex-v {
+        display: flex;
+        flex: 1;
+        flex-direction: column;
+    }
+
+    .rowspan2 {
+        flex: 1 1 100%;
+    }
+}
+
+.container-designer {
+    height: calc(100vh - 90px);
+}
+
+.main-panel {
+    flex: 1;
+
+    .main-panel-wrapper {
+        height: 100%;
+        padding: 8px;
+        background-color: $xibo-color-black;
+        border-width: 4px;
+        border-style: solid;
+        @include border-radius(4px);
+    }
+}
+
+.properties-panel-container {
+    flex: 0;
+    height: 100%;
+}
+
+.timeline-panel {
+    flex-basis: 100%;
+    margin-bottom: -$timeline-height;
+
+    .timeline-toggle-container {
+        background-color: $xibo-color-light-gray;
+        width: 100%;
+        height: 4px;
+
+        .timeline-toggle {
+            top: -13px;
+            width: 50px;
+            height: 13px;
+            background-color: $xibo-color-light-gray;
+            position: relative;
+            border-radius: 18px 18px 0px 0;
+            left: 50%;
+            transform: translateX(50%);
+            cursor: pointer;
+            font-size: 12px;
+        }
+    }
+
+    .hide-closed {
+        display: inline;
+    }
+
+    .hide-opened {
+        display: none;
+    }
+
+    &.opened {
+        margin-bottom: 0;
+
+        .hide-closed {
+            display: none;
+        }
+    
+        .hide-opened {
+            display: inline;
+        }
+    }
+}
+
+#content-wrapper .page-content > .row {
+    > div {
+        margin: 0;
+    }
+
+    &.header.header-side {
+        height: 50px;
+        margin-bottom: 0;
+
+        .navbar-toggler-side {
+            margin-top: 8px;
+            margin-right: 8px;
+        }
+
+        .user {
+            & > .item {
+                width: auto;
+                height: 50px;
+                padding-right: 16px;
+
+                & > a {
+                    padding: 7px 0;
+                }
+
+                img.nav-avatar {
+                    width: 36px;
+                    height: 36px;
+                    border-radius: 2px;
+                }
+            }
+        }
+
+        .xibo-logo-container {
+            margin-left: 50%;
+            transform: translateX(-50%);
+
+            .page {
+                width: auto;
+                padding: 0;
+
+                .xibo-logo {
+                    height: 30px;
+                    margin: 10px 0;
+                }
+            }
+        }
+
+        .user-notif > .item > a {
+            padding: 5px 0;
+        }
+    }
+}
+
+#layout-editor  {
+    overflow: hidden;
+    margin: 0 -15px -15px -15px;
+    background-color: $designer-color-background;
+}
+
+@media (max-width: 768px) {
+    #layout-editor {
+        margin-top: 50px;
+    } 
 }
 
 #layout-editor-main {
     overflow-x: hidden;
     overflow-y: auto;
-    padding-top: 8px;
-    height: calc(100vh - 95px - #{$toolbar-height});
+    padding-top: 16px;
 }
 
-#layout-editor .container-designer {
-    margin: 0 16px;
-}
+#layout-editor .back-button {
+    position: fixed;
+    left: 16px;
+    top: 8px;
 
-@media (max-width: 1200px) {
-    #layout-editor  {
-        margin-top: -20px;
+    span {
+        margin-left: 6px;
+        font-weight: bold;
     }
-}
-
-@media (max-width: 768px) {
-    #layout-editor-main {
-        padding-top: 15px;
-    }
-
-    #layout-editor {
-        margin-top: -20px;
-    } 
-    
-    #page-wrapper #layout-editor  {
-        margin-top: 0;
-    }
-}
-
-#layout-editor .layout-module {
-    padding-right: 2px;
-    padding-left: 2px;
-    margin-bottom: 8px;
 }
 
 #layout-editor .center-msg {
@@ -150,12 +269,17 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
 /* Layout timeline */
 #layout-editor #layout-timeline {
-    background: $designer-primary-color;
-    padding: 4px;
+    background: $xibo-color-light-gray;
+    padding: 3px;
+    padding-bottom: 0;
+    height: $timeline-height;
     overflow-y: auto;
-    @include border-radius(4px);
     scrollbar-width: thin; /* For firefox */
     scrollbar-color: $designer-secondary-color lighten($designer-secondary-color, 30%); /* For firefox */
+
+    #timeline-container {
+        display: flex;
+    }
 
     /* Custom scrollbar */
     /* width */
@@ -240,10 +364,9 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     #regions-info {
         float: left;
         width: $timeline-region-info-width;
-        margin-top: $timeline-timeruler-height;
 
         .designer-region-info {
-            background-color: $xibo-color-dark-blue;
+            background-color: $xibo-color-pastel-blue;
             color: $xibo-color-white;
             height: $timeline-region-height;
             margin: 4px 0;
@@ -289,7 +412,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
     /* Controls Container */
     #timeline-controls {
-        position: absolute;
+        position: relative;
         font-size: 1.15rem;
         line-height: 20px;
         width: $timeline-region-info-width;
@@ -340,11 +463,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             font-weight: bold;
             padding: 10px;
         }
-    }
-
-    #timeline-container {
-        float: left;
-        width: 100%;
     }
 
     .label-region {
@@ -546,304 +664,160 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
 /* Layout Viewer */
 #layout-editor #layout-viewer-container {
-    @include border-radius(4px);
-    border: 2px solid $designer-module-border-color;
-    background: $xibo-color-black;
-    min-height: calc(45vh + 46px); /* Fix for the reload of a viewer element */
-}
+    height: 100%;
+    padding: 16px 16px 24px 16px;
 
-#layout-editor #layout-viewer {
-    min-height: 45vh;
-    background: $viewer-player-bg-colour;
-
-    .layout-viewer-border {
-        @include set-transparent-color(background, $xibo-color-black, 0.9);
-        position: absolute;
+    .main-panel-wrapper {
+        border-color: $xibo-color-pastel-blue;
     }
 
-    .viewer-element {
-        position:relative;
-        overflow: hidden;
-    }
-
-    .viewer-element .module-preview-icon {
-        font-size: 4em;
-        margin-top: 10px;
-    }
-
-    .cke_textarea_inline {
-        display: none;
-    }
-
-    #viewer-preview iframe {
-        @include user-select-none();
-    }
-
-    #viewer-preview {
-        color: $viewer-preview-text-colour;
-        text-shadow: 0px 0px 2px $viewer-preview-text-shadow-colour;
-    }
-
-    .layout-player {
-        background: $viewer-player-bg-colour;
-        @include box-shadow(0 0 4px 0px $xibo-color-gray);
-    }
-
-    .play-btn-container {
-        position: relative;
-        width: 100%;
-        display: table;
+    #layout-viewer {
         height: 100%;
-        text-align: center;
-        @include set-transparent-color(background, $viewer-player-bg-colour, 0.2);
-    }
+        border: none;
+        background: $viewer-player-bg-colour;
 
-    .designer-region {
-
-        .module-preview-icon {
-            font-size: 2em;
-        }
-
-        @include set-transparent-color(background, $xibo-color-white, 0.3);
-        @include box-shadow(0 0 4px 0px $xibo-color-black);
-
-        .loading-icon {
-            font-size: inherit;
-        }
-
-        .center-msg {
-            font-size: 0.85rem;
-            overflow: visible;
+        .layout-viewer-border {
+            @include set-transparent-color(background, $xibo-color-black, 0.9);
             position: absolute;
-            left: 50%;
-            transform: translate(-50%, -50%);
         }
 
-        .preview-select {
-            cursor: pointer;
-            width: 100%;
-            height: 100%;
-            position: absolute;
-            z-index: 1;
-        }
-
-        .preview-paging {
-            position: absolute;
-            color: $xibo-color-white;
-            display: none;
-            position: absolute;
-            min-width: 100%;
-            width: max-content;
-            height: 20px;
-            bottom: 0;
-            z-index: 2;
-            @include set-transparent-color(background, $xibo-color-black, 0.5);
-            opacity: 0.2;
-            padding: 0 4px;
-            white-space: nowrap;
-            left: 50%;
-            transform: translate(-50%, 0);
-        }
-
-        .preview-paging.active {
-            display: block;
-        }
-
-        .preview-paging-message {
-            font-weight: bold;
-            font-size: 1rem;
-        }
-
-        .preview-paging-name {
-            font-weight: bold;
-            font-style: italic;
-            max-width: 150px;
-            white-space: nowrap;
+        .viewer-element {
+            position:relative;
             overflow: hidden;
-            text-overflow: ellipsis;
         }
 
-        .widget-arrow
-        {
-            display: none;
-            cursor: pointer;
-            padding: 2px 3px;
+        .viewer-element .module-preview-icon {
+            font-size: 4em;
+            margin-top: 10px;
         }
-        
-        &:hover {
-            @include set-transparent-color(background, $xibo-color-white, 0.5);
-            @include box-shadow(0 0 4px 2px $xibo-color-black);
+
+        .cke_textarea_inline {
+            display: none;
+        }
+
+        #viewer-preview iframe {
+            @include user-select-none();
+        }
+
+        #viewer-preview {
+            color: $viewer-preview-text-colour;
+            text-shadow: 0px 0px 2px $viewer-preview-text-shadow-colour;
+        }
+
+        .layout-player {
+            background: $viewer-player-bg-colour;
+        }
+
+        .play-btn-container {
+            position: relative;
+            width: 100%;
+            display: table;
+            height: 100%;
+            text-align: center;
+            @include set-transparent-color(background, $viewer-player-bg-colour, 0.2);
+        }
+
+        .designer-region {
+
+            .module-preview-icon {
+                font-size: 2em;
+            }
+
+            @include set-transparent-color(background, $xibo-color-white, 0.3);
+            @include box-shadow(0 0 4px 0px $xibo-color-black);
+
+            .loading-icon {
+                font-size: inherit;
+            }
+
+            .center-msg {
+                font-size: 0.85rem;
+                overflow: visible;
+                position: absolute;
+                left: 50%;
+                transform: translate(-50%, -50%);
+            }
+
+            .preview-select {
+                cursor: pointer;
+                width: 100%;
+                height: 100%;
+                position: absolute;
+                z-index: 1;
+            }
+
+            .preview-paging {
+                position: absolute;
+                color: $xibo-color-white;
+                display: none;
+                position: absolute;
+                min-width: 100%;
+                width: max-content;
+                height: 20px;
+                bottom: 0;
+                z-index: 2;
+                @include set-transparent-color(background, $xibo-color-black, 0.5);
+                opacity: 0.2;
+                padding: 0 4px;
+                white-space: nowrap;
+                left: 50%;
+                transform: translate(-50%, 0);
+            }
 
             .preview-paging.active {
-                opacity: 0.9;
-            }
-        }
-    }
-}
-
-/* Viewer navbar */
-#layout-editor #layout-viewer-navbar {
-    height: 42px;
-    
-    .viewer-navbar {
-        display: block;
-        background: $viewer-navbar-bg-colour;
-        color: $viewer-navbar-fg-colour;
-        min-height: 100%;
-        margin: 0;
-        padding: 4px;
-        border-width: 4px 0 0 0;
-        border-style: solid;
-        @include border-radius(0 0 2px 2px);
-
-        .btn {
-            background: $viewer-navbar-btn-bg-colour;
-            color: $viewer-navbar-btn-fg-colour;
-            font-size: 1.15rem;
-            padding: 4px 8px;
-            line-height: 1.3;
-        }
-
-        .paging {
-            padding: 0 4px;
-            display: inline-block;
-
-            .btn {
-                background: $viewer-navbar-btn-fg-colour;
-                color: $viewer-navbar-btn-bg-colour;
+                display: block;
             }
 
-            .label {
-                padding: 4px 2px;
-                display: inline-block;
+            .preview-paging-message {
+                font-weight: bold;
                 font-size: 1rem;
             }
-        }
 
-        .row > div {
-            margin: 0;
-            padding: 0;
-            white-space: nowrap;
-            overflow: hidden;
-        }
-
-        /* CKEditor controls */
-        .ckeditor_controls {
-            padding: 0 !important;
-
-            > div {
-                padding: 0 5px;
-                min-width: 220px;
-                float: right;
-            }
-
-            .form-group {
-                margin-bottom: 0 !important;
-            }
-
-            .select2-container--bootstrap .select2-selection--single {
-                height: 26px;
-                padding: 2px 24px 2px 4px;
-            }
-        }
-
-        .inline-editor-templates {
-            padding-right: 8px;
-
-            .control-label {
-                padding: 2px 4px;
-                text-align: right;
-            }
-
-            .ckeditor_select_container {
-                padding: 3px 0 0 0;
-            }
-        }
-
-        &.designer-layout {
-            border-color: $designer-colour-layout;
-        }
-
-        &.designer-region {
-            border-color: $designer-colour-region;
-        }
-
-        &.designer-widget {
-            border-color: $designer-colour-widget;
-        }
-
-        .info {
-            display: inline-block;
-
-            .label-name {
-                font-size: 1rem;
-                max-width: 290px;
-                display: inline-block;
-                text-overflow: ellipsis;
-                overflow: hidden;
+            .preview-paging-name {
+                font-weight: bold;
+                font-style: italic;
+                max-width: 150px;
                 white-space: nowrap;
-                line-height: 14px;
+                overflow: hidden;
+                text-overflow: ellipsis;
             }
 
-            .label-time {
-                background-color: $xibo-color-white;
-                color: $xibo-color-blue;
-                font-size: 1rem;
-                padding: 4px;
-            }
-        }
-
-        #inline-editor-save {
-            display: none;
-        }
-
-        .hide-on-fs {
-            display: inline-block;
-        }
-
-        .show-on-fs {
-            display: none;
-        }
-    }
-}
-
-/* Viewer fullscreen */
-#layout-editor #layout-viewer-container.fullscreen {
-    @include set-transparent-color(background-color, $xibo-color-black, 0.9);
-    position: fixed;
-    z-index: 1050;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
- 
-    #layout-viewer {
-        position: fixed; /* Stay in place */
-        z-index: $designer-overlay-z-index; /* Sit on top */
-        left: 0;
-        top: 5%;
-        width: 100%;
-        height: 90%;
-        @include set-transparent-color(background-color, $xibo-color-black, 0.9);
-    }
-
-    #layout-viewer-navbar {
-        position: fixed;
-        z-index: 2000;
-        width: 100%;
-        left: 0;
-        bottom: 0;
-
-        .viewer-navbar {
-            height: 100%;
-
-            .hide-on-fs {
+            .widget-arrow
+            {
                 display: none;
+                cursor: pointer;
+                padding: 2px 3px;
             }
+            
+            &:hover {
+                @include set-transparent-color(background, $xibo-color-white, 0.5);
+                @include box-shadow(0 0 4px 2px $xibo-color-black);
 
-            .show-on-fs {
-                display: inline-block;
+                .preview-paging.active {
+                    opacity: 0.9;
+                }
             }
+        }
+    }
+
+    /* Viewer fullscreen */
+    &.fullscreen {
+        @include set-transparent-color(background-color, $xibo-color-black, 0.9);
+        position: fixed;
+        z-index: 1050;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+    
+        #layout-viewer {
+            position: fixed; /* Stay in place */
+            z-index: $designer-overlay-z-index; /* Sit on top */
+            left: 8px;
+            top: 8px;
+            width: calc(100% - 16px);
+            height: calc(100% - 54px);
+            @include set-transparent-color(background-color, $xibo-color-black, 0.9);
         }
     }
 }
@@ -895,8 +869,24 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 /* Properties Panel */
 #layout-editor #properties-panel {
     padding: 0;
+    width: 380px;
+    height: 100%;
 
-    .form-title.unsuccessMessage {
+    .nav {
+        width: 100% !important;
+        border: none;
+
+        .nav-item {
+            flex: 1 1 auto;
+            text-align: center;
+        }
+    }
+
+    .hidden {
+        margin-right: -370px;
+    }
+
+    .unsuccessMessage {
         text-align: center;
         font-weight: bold;
         font-size: 1.2em;
@@ -906,10 +896,9 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     }
 
     .loading-container {
-        height: calc(45vh + 46px);
-        @include border-radius(4px);
-        background: $designer-module-bg-color;
-        border: 2px solid $xibo-color-dark-blue;
+        position: relative;
+        background: $xibo-color-white;
+        border: none;
 
         .loading-icon {
             color: $xibo-color-dark-blue;
@@ -917,42 +906,71 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     }
 
     #properties-panel-container {
-        background: $designer-module-bg-color;
-        height: calc(45vh + 46px);
+        background: $xibo-color-pure-white;
         position: relative;
-        border: 2px solid $xibo-color-dark-blue;
-        @include border-radius(4px);
+        height: 100%;
+
         /* Hide playlist editor only messages */
         .playlist-editor-message {
             display: none;
         }
 
         .form-title {
-            text-align: center;
-            font-weight: bold;
-            font-size: 1.2em;
-            color: $xibo-color-white;
-            background: $xibo-color-dark-blue;
-            border-width: 0 0 4px 0;
-            border-style: solid;
-
-            &.form-title-layout {
-                border-color: $layout-main-bg-color;
-            }
-
-            &.form-title-region {
-                border-color: $region-main-bg-color;
-            }
-
-            &.form-title-widget {
-                border-color: $widget-main-bg-color;
-            }
+            display: none;
         }
 
         .form-container {
             overflow-x: hidden;
             overflow-y: auto;
-            height: calc(45vh - 28px);
+            height: 100%;
+
+            & > .row {
+                height: 100%;
+
+                & > div {
+                    height: calc(100% - 35px);
+
+                    & > form {
+                        height: calc(100% - 40px);
+                        overflow-x: hidden;
+                        overflow-y: auto;
+
+                        .form-group {
+
+                            & > .label {
+                                max-width: 100%;
+                                text-align: left;
+                            }
+
+                            & > div {
+                                max-width: 100%;
+                            }
+                        }
+                    }
+                }
+            }
+
+            .nav > li > a {
+                color: $xibo-color-secondary;
+                background-color: $xibo-color-pure-white !important;
+                border-color: $xibo-color-secondary !important;
+                border-width: 0px 0px 2px 0px !important;
+                font-size: 0.9rem;
+                font-weight: bold;
+                opacity: 50%;
+                padding-bottom: 7px;
+                text-transform: uppercase;
+
+                &.active {
+                    opacity: 100%;
+                    border-width: 0px 0px 4px 0px !important;
+                    padding-bottom: 5px;
+                }
+            }
+
+            .card {
+                border: none;
+            }
 
             .row > div {
                 padding: 6px;
@@ -1142,9 +1160,12 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 /* Layout Navigator */
 #layout-editor #layout-navigator {
     display: none;
-    background: $designer-primary-color;
-    @include border-radius(4px);
-    border: 2px solid darken($navigator-navbar-bg-colour, 10%);
+    height: 100%;
+    padding: 16px 16px 24px 16px;
+
+    .main-panel-wrapper {
+        border-color: $xibo-color-dark-orange;
+    }
 
     .layout {
         overflow: hidden;
@@ -1173,38 +1194,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
     #layout-navigator-content {
         background: $xibo-color-black;
-        min-height: 45vh;
-    }
-
-    #layout-navigator-navbar {
-        .navigator-navbar {
-            display: block;
-            padding: 4px;
-            background: darken($navigator-navbar-bg-colour, 10%);
-            color: $navigator-navbar-fg-colour;
-            min-height: 40px;
-            margin: 0;
-            border-width: 4px 0 0 0;
-            border-style: solid;
-            border-color: darken($designer-secondary-color, 30%);
-            @include border-radius(0 0 2px 2px);
-
-            .btn {
-                background: $navigator-navbar-btn-bg-colour;
-                color: $navigator-navbar-btn-fg-colour;
-                font-size: 1.15rem;
-                padding: 4px 8px;
-                line-height: 1.3;
-            }
-
-            .hide-on-fs {
-                display: inline-block;
-            }
-
-            .show-on-fs {
-                display: none;
-            }
-        }
+        min-height: 100%;
     }
 }
 
@@ -1221,31 +1211,11 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     #layout-navigator-content {
         position: fixed; /* Stay in place */
         z-index: $designer-overlay-z-index; /* Sit on top */
-        left: 0;
-        top: 5%;
-        width: 100%;
-        height: 90%;
+        left: 8px;
+        top: 8px;
+        width: calc(100% - 16px);
+        height: calc(100% - 54px);
         @include set-transparent-color(background-color, $xibo-color-black, 0.9);
-    }
-
-    #layout-navigator-navbar {
-        position: fixed;
-        z-index: 2000;
-        width: 100%;
-        left: 0;
-        bottom: 0;
-
-        .navigator-navbar {
-            height: 100%;
-
-            .hide-on-fs {
-                display: none;
-            }
-
-            .show-on-fs {
-                display: inline-block;
-            }
-        }
     }
 }
 
@@ -1376,7 +1346,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
 /* Loading Container */
 #layout-editor .loading-container {
-    height: 100%;
+    height: calc(100vh - 130px);
     width: 100%;
     position: absolute;
 }
@@ -1387,7 +1357,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     top: 50%;
     transform: translateY(-50%);
     font-size: 5.35rem;
-    color: $xibo-color-white;
+    color: $xibo-color-primary;
     z-index: 0;
 }
 
@@ -1423,10 +1393,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     bottom: 0;
 }
 
-#page-wrapper #layout-editor #lockedLayoutMessage {
-    width: calc(90% - 180px);
-}
-
 /* Hide or show content based on the lock */
 #layout-editor.locked-for-user {
     .hide-on-lock {
@@ -1451,18 +1417,17 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 /* Action drawer */
 #layout-editor #actions-drawer {
     overflow: hidden;
+    display: flex;
+    flex-basis: 40px;
+    transition: flex-basis 600ms ease 0s;
 
     #actions-drawer-content {
         background-color: $drawer-bg-color;
-        transition: margin-top 1s ease 0s;
-        width: 98%;
-        height: $drawer-height;
-        border-width: 0 2px;
+        border-width: 2px;
         border-style: solid;
         border-color: $drawer-toggle-bg-color;
-        margin-left: 1%;
+        width: calc(100% - 40px);
         z-index: 1;
-        margin-top: -$drawer-height;
         
         &.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
@@ -1512,8 +1477,9 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             display: flex;
             display: -webkit-box;
             display: -moz-box;
-            padding: 8px 2px 0 2px;
-            height: 74px;
+            padding: 8px 6px;
+            height: calc(100% - 35px);
+            width: 100%;
             overflow-x: scroll;
             overflow-y: hidden;
             scrollbar-color: darken($xibo-color-gray, 20%) lighten($xibo-color-gray, 20%); /* For firefox */
@@ -1670,14 +1636,12 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     
     #actions-drawer-toggle {
         transition: background-color 1s ease 0s;
-        @include border-radius(0 0 4px 4px);
         background-color: $drawer-toggle-bg-color;
         color: $drawer-toggle-fg-color;
-        padding: 0px 20px;
         font-size: 1.3rem;
-        width: 98%;
+        height: 100%;
+        width: 40px;
         position: relative;
-        bottom: 4px;
     }
 
     #actions-drawer-empty-message {
@@ -1692,9 +1656,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     }
 
     &.drawed {
-        #actions-drawer-content {
-            margin-top: 0px;
-        }
+        flex-basis: 40%;
 
         #actions-drawer-toggle {
             background-color: $drawer-fg-color;

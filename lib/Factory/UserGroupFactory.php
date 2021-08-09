@@ -608,11 +608,6 @@ class UserGroupFactory extends BaseFactory
                     'group' => 'users-management',
                     'title' => __('Page which shows all User Groups that have been created')
                 ],
-                'usergroup.add' => [
-                    'feature' => 'usergroup.add',
-                    'group' => 'users-management',
-                    'title' => __('Include "Add User Group" button to allow for additional User Groups to be added')
-                ],
                 'usergroup.modify' => [
                     'feature' => 'usergroup.modify',
                     'group' => 'users-management',

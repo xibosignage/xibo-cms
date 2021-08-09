@@ -28,6 +28,9 @@ use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
 use Stash\Driver\Composite;
 use Stash\Pool;
+use Xibo\Dependencies\Controllers;
+use Xibo\Dependencies\DispatcherListeners;
+use Xibo\Dependencies\Factories;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\SanitizerService;
@@ -245,9 +248,9 @@ class ContainerFactory
             }
         ]);
 
-        $containerBuilder->addDefinitions(State::registerControllersWithDi());
-        $containerBuilder->addDefinitions(State::registerFactoriesWithDi());
-        $containerBuilder->addDefinitions(State::registerDispatcherWithDi());
+        $containerBuilder->addDefinitions(Controllers::registerControllersWithDi());
+        $containerBuilder->addDefinitions(Factories::registerFactoriesWithDi());
+        $containerBuilder->addDefinitions(DispatcherListeners::registerDispatcherWithDi());
 
         // Should we compile the container?
         /*if (!Environment::isDevMode()) {

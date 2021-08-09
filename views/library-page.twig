@@ -369,7 +369,6 @@
                 openUploadForm({
                     url: "{{ url_for("library.add") }}",
                     title: "{% trans "Upload media" %}",
-                    multi: false,
                     buttons: {
                         main: {
                             label: "{% trans "Done" %}",
@@ -381,6 +380,7 @@
                         }
                     },
                     templateOptions: {
+                        multi: false,
                         oldMediaId: mediaId,
                         oldFolderId: folderId,
                         updateInAllChecked: {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %},
@@ -472,12 +472,28 @@
 
         function setDefaultMultiSelectFormOpen(dialog) {
             {% set message = 'Force delete from any existing layouts, assignments, etc' %}
+            {% set message2 = 'Notify each Display that has this Media in its local storage to remove it immediately?' %}
 
-            var $input = $('<input type=checkbox id="forceDelete" name="forceDelete"> {{ message|trans|e }} </input>');
-            $input.on('change', function() {
-                dialog.data().commitData = {forceDelete: $(this).val()};
+            var $input = $(
+                '<div class="form-group">' +
+                 '<input type=checkbox id="forceDelete" name="forceDelete"> {{ message|trans|e }} </input>' +
+                '</div>'
+            );
+
+            var $input2 = $(
+                '<div class="form-group">' +
+                '<input type=checkbox id="purge" name="purge"> {{ message2|trans|e }} </input>' +
+                '</div>'
+            );
+
+            $(dialog).find('.modal-body').append($input, $input2);
+
+            $('#forceDelete, #purge').on('change', function() {
+                dialog.data().commitData = {
+                    forceDelete: $('#forceDelete').val(),
+                    purge: $('#purge').val()
+                };
             });
-            $(dialog).find('.modal-body').append($input);
         }
 
         function setEnableStatMultiSelectFormOpen(dialog) {

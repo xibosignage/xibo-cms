@@ -226,6 +226,7 @@
                                         <th>{% trans "Remote" %}</th>
                                         <th>{% trans "Created Date" %}</th>
                                         <th>{% trans "Modified Date" %}</th>
+                                        <th>{% trans "Faults?" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
@@ -522,6 +523,22 @@
                     },
                     {"data": "createdDt", "visible": false, responsivePriority: 6},
                     {"data": "modifiedDt", "visible": false, responsivePriority: 6},
+                    {
+                        "data": "countFaults",
+                        "name": "countFaults",
+                        responsivePriority: 5,
+                        "render": function (data, type, row) {
+                            if (type != "display") {
+                                return data;
+                            }
+                            
+                            if (data > 0) {
+                                return '<span class="fa fa-exclamation-circle" style="color:red; font-size:1.5em !important" title="' + (row.countFaults) + '"></span>';
+                            } else {
+                                return '';
+                            }
+                        }
+                    },
                     {
                         "orderable": false,
                         responsivePriority: 1,

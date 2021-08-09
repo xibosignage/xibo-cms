@@ -1,0 +1,66 @@
+@import "variables";
+
+#layout-editor-bottombar  {
+    flex: 1 100%;
+    height: 38px;
+    
+    nav {
+        border: none;
+        color: $xibo-color-pastel-blue;
+        padding: 0 16px;
+        min-height: 30px;
+        font-size: 0;
+        z-index: 2;
+        margin: 0;
+        background: $xibo-color-pure-white;
+        right: 0;
+        left: 0;
+        border-radius: 0;
+
+        span, .info {
+            font-size: 1rem;
+        }
+
+        .btn {
+            color: $xibo-color-pastel-blue;
+            height: 38px;
+            width: 38px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 0;
+
+            &:hover {
+                color: $xibo-color-white;
+                background-color: $xibo-color-pastel-blue;
+            }
+
+            &:disables, &.disabled {
+                opacity: 0.4;
+            }
+        }
+
+        .hide-on-fs {
+            display: inline-block;
+        }
+
+        .show-on-fs {
+            display: none;
+        }
+    }
+}
+
+#layout-editor.fullscreen-mode #layout-editor-bottombar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1060;
+
+    .hide-on-fs {
+        display: none;
+    }
+
+    .show-on-fs {
+        display: inline-block;
+    }
+}

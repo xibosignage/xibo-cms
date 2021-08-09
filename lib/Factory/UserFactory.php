@@ -185,9 +185,7 @@ class UserFactory extends BaseFactory
      */
     public function getSystemUser()
     {
-        $user = $this->getById($this->configService->getSetting('SYSTEM_USER'));
-
-        return $user;
+        return $this->getById($this->configService->getSetting('SYSTEM_USER'));
     }
 
     /**

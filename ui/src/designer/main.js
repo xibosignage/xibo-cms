@@ -47,6 +47,7 @@ require('../style/common.scss');
 require('../style/designer.scss');
 require('../style/toolbar.scss');
 require('../style/topbar.scss');
+require('../style/bottombar.scss');
 
 // Create layout designer namespace (lD)
 window.lD = {
@@ -95,6 +96,8 @@ window.lD = {
     drawer: {},
 
     folderId: '',
+
+    navigatorMode: false,
 };
 
 // Get Xibo app
@@ -121,7 +124,7 @@ $(document).ready(function() {
 
             if(res.data != null && res.data.length > 0) {
                 // Append layout html to the main div
-                lD.editorContainer.html(designerMainTemplate());
+                lD.editorContainer.html(designerMainTemplate({trans: layoutDesignerTrans}));
 
                 // Create layout
                 lD.layout = new Layout(layoutId, res.data[0]);
@@ -149,7 +152,7 @@ $(document).ready(function() {
                 lD.viewer = new Viewer(
                     lD,
                     lD.editorContainer.find('#layout-viewer'),
-                    lD.editorContainer.find('#layout-viewer-navbar')
+                    lD.editorContainer.find('#layout-editor-bottombar')
                 );
 
                 // Initialise drawer
@@ -314,13 +317,23 @@ $(document).ready(function() {
     $(window).on('resize.designer', _.debounce(function(e) {
         if(e.target === window) {
 
-            // Refresh navigators and viewer
-            lD.renderContainer(lD.navigator);
-            lD.renderContainer(lD.viewer, lD.selectedObject);
+            // Refresh navigators or viewer
+            if(lD.navigatorMode) {
+                lD.renderContainer(lD.viewer, lD.selectedObject);
+            } else {
+                lD.renderContainer(lD.viewer, lD.selectedObject);
+            }
+            
             lD.renderContainer(lD.timeline);
             lD.renderContainer(lD.drawer);
         }
     }, 250));
+
+    // Handle back button
+    lD.editorContainer.on('click', '#backBtn', function() {
+        // Redirect to the layout grid
+        window.location.href = urlsForApi.layout.list.url;
+    });
 });
 
 /**
@@ -468,15 +481,18 @@ lD.refreshDesigner = function() {
     this.clearTemporaryData();
 
     // Render containers with layout ( default )
-    this.renderContainer(this.navigator, this.selectedObject);
     this.renderContainer(this.timeline);
     this.renderContainer(this.drawer);
     this.renderContainer(this.toolbar);
     this.renderContainer(this.topbar);
     this.renderContainer(this.manager);
     this.renderContainer(this.propertiesPanel, this.selectedObject);
-    
-    this.renderContainer(this.viewer, this.selectedObject);
+
+    if(this.navigatorMode) {
+        this.renderContainer(this.navigator, this.selectedObject);
+    } else {
+        this.renderContainer(this.viewer, this.selectedObject);
+    }
 };
 
 
@@ -791,12 +807,14 @@ lD.toggleNavigatorEditing = function(enable) {
     this.selectObject();
 
     if(enable) {
+        lD.navigatorMode = true;
+
         // Create a new navigator instance
         this.navigator = new Navigator(
             lD,
             this.editorContainer.find('#layout-navigator-content'),
             {
-                editNavbar: this.editorContainer.find('#layout-navigator-navbar')
+                editNavbar: this.editorContainer.find('#layout-editor-bottombar')
             }
         );
 
@@ -811,6 +829,7 @@ lD.toggleNavigatorEditing = function(enable) {
 
         toastr.info(layoutDesignerTrans.regionEditModeMessage);
     } else {
+        lD.navigatorMode = false;
 
         // Refresh designer
         this.reloadData(lD.layout);
@@ -1926,3 +1945,28 @@ lD.unlockLayout = function() {
         console.error(jqXHR, textStatus, errorThrown);
     });
 };
+
+/**
+ * Check history and return last step description
+ */
+ lD.checkHistory = function() {
+    // Check if there are some changes
+    let undoActive = lD.manager.changeHistory.length > 0;
+    let undoActiveTitle = '';
+
+    // Get last action text for popup
+    if(undoActive) {
+        let lastAction = lD.manager.changeHistory[lD.manager.changeHistory.length - 1];
+        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined) {
+            undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
+        } else {
+            undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
+        }
+    }
+
+    return {
+        undoActive: undoActive,
+        undoActiveTitle: undoActiveTitle
+    };
+};
+

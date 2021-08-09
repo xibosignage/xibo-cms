@@ -595,7 +595,7 @@ class DayPart extends Base
             throw new AccessDeniedException();
         }
 
-        if ($dayPart->isAlways === 1 || $dayPart->isCustom === 1) {
+        if ($dayPart->isSystemDayPart()) {
             throw new InvalidArgumentException(__('Cannot Delete system specific DayParts'));
         }
 

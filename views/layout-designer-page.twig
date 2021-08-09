@@ -26,6 +26,8 @@
 
 {% block title %}{{ "Layout Designer"|trans }} | {% endblock %}
 
+{% set hideNavigation = "1" %}
+
 {% block pageContent %}
 
     <!-- Editor structure -->
@@ -49,6 +51,7 @@
             {% autoescape "js" %}
                 {# Insert custom translations here #}
                 var layoutDesignerTrans = {
+                    back: "{% trans "Back" %}",
                     publishTitle: "{% trans "Publish layout" %}",
                     discardTitle: "{% trans "Discard draft" %}",
                     publishMessage: "{% trans "Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed." %}",
@@ -224,7 +227,6 @@
                 openUploadForm({
                     url: $(e.target).data().addNewBackgroundUrl,
                     title: "{% trans "Add Background Image" %}",
-                    multi: false,
                     videoImageCovers: false,
                     buttons: {
                         main: {
@@ -236,6 +238,7 @@
                         }
                     },
                     templateOptions: {
+                        multi: false,
                         trans: {
                             addFiles: "{% trans "Browse/Add Image" %}",
                             startUpload: "{% trans "Start Upload" %}",

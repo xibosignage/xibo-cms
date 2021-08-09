@@ -1,57 +1,80 @@
+<div class="back-button">
+    <button id="backBtn" class="btn btn-primary">
+        <i class="fa fa-angle-left"></i>
+        <span>{{trans.back}}</span>
+    </button>
+</div>
+
 <div id="layout-editor-topbar" class="editor-toolbar editor-top-bar">
     <!--TOPBAR-->
 </div>
 
-<div id="layout-editor-main">
-    <div id="layout-top-region" class="container-designer">
-        <div class="row">
-            <div class="col-md-6 col-lg-7 layout-module">
+<div class="container-designer layout-editor-flex">
+    <div class="flex-h flex-grow-0">
+        <div id="layout-editor-toolbar" class="editor-toolbar editor-side-bar">
+            <!--TOOLBAR-->
+        </div>
+    </div>
+
+    <div class="flex-v justify-content-between">
+        <div class="flex-h overflow-auto">
+            <div class="main-panel">
                 <div id="layout-viewer-container">
-                    <div id="layout-viewer">
-                        <!--VIEWER-->
-                    </div>
-                    <div id="layout-viewer-navbar">
-                        <!--VIEWER NAVBAR-->
+                    <div class="main-panel-wrapper">
+                        <div id="layout-viewer">
+                            <!--VIEWER-->
+                        </div>
                     </div>
                 </div>
 
                 <div id="layout-navigator">
-                    <div id="layout-navigator-content">
-                        <!--NAVIGATOR RENDER AREA-->
-                    </div>
-                    <div id="layout-navigator-navbar">
-                        <!--NAVIGATOR NAVBAR-->
+                    <div class="main-panel-wrapper">
+                        <div id="layout-navigator-content">
+                            <!--NAVIGATOR RENDER AREA-->
+                        </div>
                     </div>
                 </div>
-            </div>
-            <div id="properties-panel-parent" class="col-md-6 col-lg-5 layout-module">
+            </div>  
+
+            <div class="properties-panel-container layout-module">
                 <div id="properties-panel" class="bootbox properties-panel">
                     <!--PROPERTIES PANEL-->
                 </div>
             </div>
         </div>
-    </div>
 
-    <div id="layout-center-region" class="container-designer">
-        <div class="row">
-            <div class="col-md-12 layout-module">
-                <div id="layout-timeline">
-                    <!--TIMELINE-->
-                </div>
+        <div class="flex-h flex-grow-0">
+            <div class="timeline-panel" class="rowspan2">
+                <div class="">
+                    <div class="timeline-toggle-container text-center">
+                        <div class="timeline-toggle">
+                            <i class="fa fa-chevron-up hide-closed"></i>
+                            <i class="fa fa-chevron-down hide-opened"></i>
+                        </div>
+                    </div>
+                    <div class="layout-module flex-h">
+                        <div id="layout-timeline" class="flex-grow-1">
+                            <!--TIMELINE-->
+                        </div>
 
-                <div id="actions-drawer" class="text-center">
-                    <!--ACTION DRAWER-->
+                        <div id="actions-drawer" class="text-center flex-grow-0">
+                            <!--ACTION DRAWER-->
+                        </div>
+                    </div>
                 </div>
+            </div>
+        </div>
+
+        <div class="flex-h flex-grow-0">
+            <div id="layout-editor-bottombar" class="editor-toolbar editor-bottom-bar">
+                <!--BOTTOMBAR-->
+            </div>
         </div>
     </div>
 </div>
 
 <div id="layout-manager">
     <!--MANAGER-->
-</div>
-
-<div id="layout-editor-toolbar" class="editor-toolbar editor-bottom-bar">
-    <!--TOOLBAR-->
 </div>
 
 <div class="custom-overlay"></div>

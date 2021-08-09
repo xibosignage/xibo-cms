@@ -196,6 +196,16 @@ class WidgetFactory extends BaseFactory
     }
 
     /**
+     * @param $ownerId
+     * @return Widget[]
+     * @throws NotFoundException
+     */
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
+    }
+
+    /**
      * Create a new widget
      * @param int $ownerId
      * @param int $playlistId
@@ -350,6 +360,11 @@ class WidgetFactory extends BaseFactory
                  WHERE media.name LIKE :media
             )';
             $params['media'] = '%' . $sanitizedFilter->getString('media') . '%';
+        }
+
+        if ($sanitizedFilter->getInt('userId') !== null) {
+            $body .= ' AND `widget`.ownerId = :userId';
+            $params['userId'] = $sanitizedFilter->getInt('userId');
         }
 
         // Playlist Like

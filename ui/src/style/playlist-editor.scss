@@ -45,6 +45,11 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         font-weight: bold;
         color: $playlist-editor-main-fb-color;
     }
+
+    &.stretchedBar {
+        margin-left: 140px;
+        width: calc(100% - 120px);
+    }
 }
 
 // Bootbox custom dialogs
@@ -263,10 +268,6 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         &.unsuccessMessage {
             margin: 20px 0;
             background-color: $playlist-editor-unsuccess-message-bg-color;
-        }
-
-        &.form-title-widget {
-            border-color: $playlist-editor-widget-bg-color;
         }
     }
 
