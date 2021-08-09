@@ -25,9 +25,9 @@
 {% block content %}
     {% set horizontalNav = currentUser.getOptionValue("navigationMenuPosition", theme.getSetting("NAVIGATION_MENU_POSITION", "vertical")) == "horizontal" %}
     {% set hideNavigation = currentUser.getOptionValue("hideNavigation", "0") %}
-    <div {% if hideNavigation == "0" and not horizontalNav %}id="page-wrapper"{% endif %} class="active">
+    <div {% if hideNavigation == "0" and not horizontalNav and not forceHide %}id="page-wrapper"{% endif %} class="active">
 
-        {% if hideNavigation == "0" %}
+        {% if hideNavigation == "0" and not forceHide %}
             {% if horizontalNav %}
                 <nav class="navbar navbar-default navbar-expand-lg">
                     <a class="navbar-brand" href="#">
@@ -61,24 +61,26 @@
 
         <div id="content-wrapper">
             <div class="page-content">
-                {% if not horizontalNav or hideNavigation == "1" %}
+                {% if not horizontalNav or hideNavigation == "1" or forceHide %}
                 <div class="row header header-side">
                     <div class="col-sm-12">
                         <div class="meta pull-left">
                             <div class="page"><img class="xibo-logo" src="{{ theme.uri("img/xibologo.png") }}"></div>
                         </div>
-                        <button type="button" class="pull-right navbar-toggler navbar-toggler-side" data-toggle="collapse" data-target="#navbar-collapse-1" aria-controls="navbarNav" aria-expanded="false">
-                            <span class="fa fa-bars"></span>
-                        </button>
-                        <div class="user pull-right">
-                            {% include "authed-user-menu.twig" %}
-                        </div>
-                        {% if currentUser.featureEnabled("drawer") %}
-                        <div class="user user-notif pull-right">
-                            {% include "authed-notification-drawer.twig" %}
-                        </div>
+                        {% if not forceHide %}
+                            <button type="button" class="pull-right navbar-toggler navbar-toggler-side" data-toggle="collapse" data-target="#navbar-collapse-1" aria-controls="navbarNav" aria-expanded="false">
+                                <span class="fa fa-bars"></span>
+                            </button>
+                            <div class="user pull-right">
+                                {% include "authed-user-menu.twig" %}
+                            </div>
+                            {% if currentUser.featureEnabled("drawer") %}
+                            <div class="user user-notif pull-right">
+                                {% include "authed-notification-drawer.twig" %}
+                            </div>
+                            {% endif %}
+                            {% include "authed-theme-topbar.twig" ignore missing %}
                         {% endif %}
-                        {% include "authed-theme-topbar.twig" ignore missing %}
                     </div>
                 </div>
                 {% endif %}
