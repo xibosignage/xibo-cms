@@ -3,6 +3,7 @@
 // Load templates
 const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarMediaSearchTemplate = require('../templates/toolbar-media-search.hbs');
+const ToolbarMediaSearchCardTemplate = require('../templates/toolbar-media-search-card.hbs');
 const ToolbarMediaQueueTemplate = require('../templates/toolbar-media-queue.hbs');
 const ToolbarMediaQueueElementTemplate = require('../templates/toolbar-media-queue-element.hbs');
 
@@ -1057,140 +1058,145 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
  * Media content populate table
  */
 Toolbar.prototype.mediaContentPopulateTable = function(menu) {
-    const self = this;
-    const tabIndex = self.menuItems[0].selectedTab;
-    const tabObj = self.menuItems[menu].content[self.menuItems[0].selectedTab];
+  const self = this;
+  const tabIndex = self.menuItems[0].selectedTab;
+  const tabObj = self.menuItems[menu].content[self.menuItems[0].selectedTab];
 
-    // Destroy previous table
-    self.DOMObject.find('#media-table-' + menu).DataTable().destroy();
+  // Destroy previous table
+  let mediaAssign = self.DOMObject.find('#media-assign-' + menu);
+  mediaAssign.empty();
 
-    var mediaTable = self.DOMObject.find('#media-table-' + menu).DataTable({
-        "language": dataTablesLanguage,
-        "lengthMenu": [5, 10],
-        "pageLength": 5,
-        "autoWidth": false,
-        serverSide: true, stateSave: true,
-        searchDelay: 3000,
-        "order": [[1, "asc"]],
-        "filter": false,
-        ajax: {
-            url: librarySearchUrl + '?assignable=1&retired=0',
-            "data": function(d) {
-                $.extend(d, self.DOMObject.find('#media-search-container-' + menu + ' #media-search-form-' + tabIndex).serializeObject());
-            }
-        },
-        "columns": [
-            {
-                "sortable": false,
-                "data": function(data, type, row, meta) {
-                    if(type !== "display")
-                        return "";
+  // Initialise masonry
+  let masonry = new Masonry('#media-assign-' + menu, {
+    percentPosition: true,
+  });
+  let start = 0;
+  let length = 15;
 
-                    // Create a click-able span
-                    return "<a href=\"#\" class=\"assignItem\"><span class=\"fa fa-plus\"></a>";
-                }
-            },
-            {"data": "mediaId"},
-            {"data": "name"},
-            {"data": "mediaType"},
-            {
-                "sortable": false,
-                "data": dataTableCreateTags
-            },
-            {
-                "name": "mediaId",
-                "data": null,
-                "render": function(data, type, row, meta) {
-                    if(type === "display") {
-                        // Return only the image part of the data
-                        if(data.thumbnailUrl === '')
-                            return '';
-                        else
-                            return '<img src="' + data.thumbnailUrl + '"/>';
-                        return data;
-                    } else {
-                        return row.mediaId;
-                    }
-                }
-            }
-        ]
-    });
+  // We want two requests to go off, a local and a remote
+  self.mediaContentLoadTemplates(mediaAssign, masonry, menu, tabIndex, start, length, 'local',
+      function() {
+        self.mediaContentLoadTemplates(mediaAssign, masonry, menu, tabIndex, start, length,
+            'remote');
+      });
 
-    mediaTable.on('draw', function(e, settings) {
-        dataTableDraw(e, settings);
+  // Refresh the table results
+  let filterRefresh = function(mediaTable, tabObj) {
+    // if the orientation filter does not exist on this tab, add it.
+    if (!tabObj.filters.orientation) {
+      tabObj.filters.orientation = {
+        name: toolbarTrans.searchFilters.orientation,
+        value: '',
+      };
+    }
 
-        // Clicky on the +spans
-        self.DOMObject.find(".assignItem").click(function() {
-            // Get the row that this is in.
-            var data = mediaTable.row($(this).closest("tr")).data();
+    // Save filter options
+    tabObj.filters.name.value = self.DOMObject.find(
+        '#media-search-form-' + tabIndex + ' #input-name-' + tabIndex).val();
+    tabObj.filters.tag.value = self.DOMObject.find(
+        '#media-search-form-' + tabIndex + ' #input-tag-' + tabIndex).val();
+    tabObj.filters.type.value = self.DOMObject.find(
+        '#media-search-form-' + tabIndex + ' #input-type-' + tabIndex).val();
+    tabObj.filters.owner.value = self.DOMObject.find(
+        '#media-search-form-' + tabIndex + ' #input-owner-' + tabIndex).val();
+    tabObj.filters.orientation.value = self.DOMObject.find(
+        '#media-search-form-' + tabIndex + ' #input-orientation-' + tabIndex).
+        val();
 
-            if(self.useQueue) {
-                self.addToQueue(menu, data);
-            } else {
-                self.selectMedia($(this).closest('tr'), data);
-            }
+    self.savePrefs();
+
+    self.updateTabNames(menu);
+
+    // Reload table
+    mediaTable.empty();
+    self.mediaContentLoadTemplates(mediaAssign, masonry, menu, tabIndex, start, length, 'local',
+        function() {
+          self.mediaContentLoadTemplates(mediaAssign, masonry, menu, tabIndex, start, length,
+              'remote');
         });
+  };
 
-        self.updateTabNames(menu);
-
-        self.tablePositionUpdate(self.DOMObject.find('#content-' + menu + '.library-content'));
-    });
-
-    mediaTable.on('processing.dt', dataTableProcessing);
-
-    // Refresh the table results
-    var filterRefresh = function(mediaTable, tabObj) {
-        // if the orientation filter does not exist on this tab, add it.
-        if (!tabObj.filters.orientation) {
-            tabObj.filters.orientation = {
-                name: toolbarTrans.searchFilters.orientation,
-                value: ''
-            }
-        }
-
-        // Save filter options
-        tabObj.filters.name.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-name-' + tabIndex).val();
-        tabObj.filters.tag.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-tag-' + tabIndex).val();
-        tabObj.filters.type.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-type-' + tabIndex).val();
-        tabObj.filters.owner.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-owner-' + tabIndex).val();
-        tabObj.filters.orientation.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-orientation-' + tabIndex).val();
-
-        self.savePrefs();
-
-        self.updateTabNames(menu);
-
-        // Reload table
-        mediaTable.ajax.reload();
-    };
-
-    // Prevent filter form submit and bind the change event to reload the table
-    self.DOMObject.find('#media-search-form-' + tabIndex).on('submit', function(e) {
+  // Prevent filter form submit and bind the change event to reload the table
+  self.DOMObject.find('#media-search-form-' + tabIndex).
+      on('submit', function(e) {
         e.preventDefault();
         return false;
-    });
+      });
 
-    // Bind seach action to refresh the results
-    self.DOMObject.find('#media-search-form-' + tabIndex + ' select, input[type="text"]').change(_.debounce(function() {
+  // Bind seach action to refresh the results
+  self.DOMObject.find(
+      '#media-search-form-' + tabIndex + ' select, input[type="text"]').
+      change(_.debounce(function() {
         filterRefresh(mediaTable, tabObj);
-    }, 500));
+      }, 500));
 
-    self.DOMObject.find('#media-search-form-' + tabIndex + ' input[type="text"]').on('input', _.debounce(function() {
+  self.DOMObject.find('#media-search-form-' + tabIndex + ' input[type="text"]').
+      on('input', _.debounce(function() {
         filterRefresh(mediaTable, tabObj);
-    }, 500));
+      }, 500));
 
-    // Initialize tagsinput
-    self.DOMObject.find('#media-search-form-' + tabIndex + ' input[data-role="tagsinput"]').tagsinput();
-
-    self.DOMObject.find('#media-table-' + menu).off('click').on('click', '#tagDiv .btn-tag', function() {
-
-        // See if its the first element, if not add comma
-        var tagText = $(this).text();
-
-        // Add text to form
-        self.DOMObject.find('#media-search-form-' + tabIndex + ' input[data-role="tagsinput"]').tagsinput('add', tagText, {allowDuplicates: false});
-    });
+  // Initialize tagsinput
+  self.DOMObject.find(
+      '#media-search-form-' + tabIndex + ' input[data-role="tagsinput"]').
+      tagsinput();
 };
 
+Toolbar.prototype.mediaContentLoadTemplates = function(cardColumn, masonry, menu, tabIndex, start, length, type, next) {
+  const self = this;
+  const spinner = cardColumn.closest('.panel').find('.panel-footer .spinner-grow');
+  const moreButton = cardColumn.closest('.panel').find('#media-assign-more-' + tabIndex);
+  spinner.removeClass('d-none');
+  moreButton.prop('disabled', true);
+
+  $.ajax({
+    method: 'GET',
+    url: librarySearchUrl,
+    data: $.extend({
+      start: start,
+      length: length,
+      type: type
+    }, self.DOMObject.find('#media-search-container-' + menu + ' #media-search-form-' + tabIndex).serializeObject()),
+    success: function(response) {
+      if (response && response.data && response.data.length > 0) {
+        $.each(response.data, function(index, el) {
+          let card = addTemplateCard(cardsTemplate, cardColumn, el);
+          card.imagesLoaded(function() {
+            masonry.appended(card);
+          });
+        });
+      } else {
+        toastr.info('You have reached the end');
+      }
+      spinner.addClass('d-none');
+      moreButton.prop('disabled', false);
+
+      // Next?
+      if (next !== undefined && next !== null) {
+        next();
+      }
+    }
+  });
+};
+
+Toolbar.prototype.mediaContentAddCard = function (cardColumn, el) {
+  const self = this;
+  el.thumbnail = el.thumbnail || defaultThumbnailUrl;
+  let $element = $(ToolbarMediaSearchCardTemplate(el));
+  $element.on('click', function(e) {
+    e.preventDefault();
+    // Get the row that this is in.
+    let data = $(this).data();
+
+    if (self.useQueue) {
+      self.addToQueue(menu, data);
+    } else {
+      self.selectMedia($(this), data);
+    }
+
+  });
+  cardColumn.append($element);
+  return $element;
+};
 
 /**
  * Update tab height

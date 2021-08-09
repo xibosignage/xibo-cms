@@ -32,7 +32,10 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
+use Xibo\Entity\SearchResult;
+use Xibo\Entity\SearchResults;
 use Xibo\Entity\Widget;
+use Xibo\Event\LibraryProviderEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Factory\DisplayFactory;
@@ -719,6 +722,71 @@ class Library extends Base
         $this->getState()->setData($mediaList);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/library/search",
+     *  operationId="librarySearchAll",
+     *  tags={"library"},
+     *  summary="Library Search All",
+     *  description="Search all library files from local and connectors",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/SearchResult")
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
+    function search(Request $request, Response $response)
+    {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+        $type = $parsedQueryParams->getString('type', ['default' => 'both']);
+
+        $searchResults = new SearchResults();
+        if ($type === 'both' || $type === 'local') {
+            // Construct the SQL
+            $mediaList = $this->mediaFactory->query(['media'], $this->gridRenderFilter([
+                'name' => $parsedQueryParams->getString('media'),
+                'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
+                'nameExact' => $parsedQueryParams->getString('nameExact'),
+                'type' => $parsedQueryParams->getString('type'),
+                'tags' => $parsedQueryParams->getString('tags'),
+                'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
+                'ownerId' => $parsedQueryParams->getInt('ownerId'),
+                'notPlayerSoftware' => 1,
+                'notSavedReport' => 1,
+                'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
+            ], $parsedQueryParams));
+
+            // Add some additional row content
+            foreach ($mediaList as $media) {
+                $searchResult = new SearchResult();
+                $searchResult->id = $media->mediaId;
+                $searchResult->source = 'local';
+                $searchResult->title = $media->name;
+                $searchResult->description = '';
+                $searchResults->data[] = $searchResult;
+            }
+        }
+
+        if ($type === 'both' || $type === 'remote') {
+            $this->getLog()->debug('Dispatching event.');
+
+            // Hand off to any other providers that may want to provide results.
+            $event = new LibraryProviderEvent($searchResults);
+            $this->getDispatcher()->dispatch($event->getName(), $event);
+        }
+
+        return $response->withJson($searchResults);
     }
 
     /**

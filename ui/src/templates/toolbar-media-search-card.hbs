@@ -1,0 +1,7 @@
+<div class="card w-25 p-3 mb-0" data-media-id="{{ id }}" data-source="{{ source }}" data-media-type="{{ type }}">
+    {{#if thumbnail}}<img class="card-img-top" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
+    <div class="card-body">
+        <h5 class="card-title">{{ title }}</h5>
+        {{#if description}}<p class="card-text"><span class="text-muted">{{ description }}</span></p>{{/if}}
+    </div>
+</div>

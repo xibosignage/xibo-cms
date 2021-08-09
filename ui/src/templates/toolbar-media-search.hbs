@@ -55,21 +55,15 @@
     </form>
 {{/each}}
 
-<div class="XiboGrid" id="media-table-container-{{menuIndex}}">
-    <div class="XiboData card pt-3">
-        <table id="media-table-{{menuIndex}}" class="table media-table table-striped">
-            <thead>
-                <tr>
-                    <th></th>
-                    <th>{{trans.tableHeader.id}}</th>
-                    <th>{{trans.tableHeader.name}}</th>
-                    <th>{{trans.tableHeader.type}}</th>
-                    <th>{{trans.tableHeader.tags}}</th>
-                    <th>{{trans.tableHeader.thumbnail}}</th>
-                </tr>
-            </thead>
-            <tbody>
-            </tbody>
-        </table>
+<div class="panel panel-default" id="media-assign-container-{{menuIndex}}">
+    <div class="panel-heading">
+        <p>Select</p>
+    </div>
+    <div class="panel-body" style="overflow-y: scroll; height: 65vh;">
+        <div id="media-assign-{{menuIndex}}" class="row"></div>
+    </div>
+    <div class="panel-footer">
+        <button class="btn btn-outline-primary float-right mt-2" disabled id="media-assign-more-{{menuIndex}}">More</button>
+        <div class="spinner-grow d-none float-right mt-2 mr-2" role="status"><span class="sr-only">Loading</span></div>
     </div>
 </div>
