@@ -73,6 +73,9 @@ class XiboExchangeConnector implements ConnectorInterface
     {
         $this->getLogger()->debug('onTemplateProvider');
 
+        // Mimic some network
+        sleep(2);
+
         // Add some random events.
         for ($i = 0; $i < 10; $i++) {
             $searchResult = new SearchResult();

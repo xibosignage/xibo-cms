@@ -425,7 +425,6 @@
           // Add some buttons.
           $(dialog).
               find('.modal-footer').
-              append($('<div class="spinner-grow d-none" role="status"><span class="sr-only">{{ "Loading..."|trans }}</span></div>')).
               append($('<a class="btn btn-white">').html("{{ "Help"|trans }}").click(function(e) {
                 e.preventDefault();
                 XiboHelpRender($form.data().helpUrl);
@@ -471,7 +470,7 @@
           var cardColumn = $(dialog).find('#layout-add-templates');
 
           // Add our blank resolution
-          addTemplateCard(cardsTemplate, cardColumn, {
+          var resolutionCard = addTemplateCard(cardsTemplate, cardColumn, {
             title: '{{ "Blank"|trans }}',
             description: '{{ "Start with a blank template, pick orientation on step 2."|trans }}',
             thumbnail: null,
@@ -479,29 +478,28 @@
             id: 0
           });
 
-          // Initialise masonary - we do this after we've added our first card.
-          var masonry = new Masonry('#layout-add-templates', {
-            percentPosition: true
-          });
-
-          // Make a request to get our templates.
           // track start/length
+          var masonry;
           var start = 0;
           var length = 15;
-          loadTemplates(cardsTemplate, cardColumn, masonry, start, length);
 
-          // Attach a scroll check to our container.
-          cardColumn.parent().on('scroll', function() {
-            var $that = $(this);
-            var scrollY = $that[0].scrollHeight - $that[0].scrollTop;
-            var height = $that[0].offsetHeight;
-            var offset = height - scrollY;
+          resolutionCard.imagesLoaded(function() {
+            // Initialise masonary - we do this after we've added our first card.
+            masonry = new Masonry('#layout-add-templates', {
+              percentPosition: true
+            });
 
-            if (offset === 0 || offset === 1) {
-              // load more content here
-              start = start + length;
-              loadTemplates(cardsTemplate, cardColumn, masonry, start, length);
-            }
+            // Make a request to get our templates.
+            loadTemplates(cardsTemplate, cardColumn, masonry, start, length, 'local', function() {
+              loadTemplates(cardsTemplate, cardColumn, masonry, start, length, 'remote');
+            });
+          });
+
+          // Add the more button
+          $(dialog).find('#layout-add-templates-more').on('click', function(e) {
+            e.preventDefault();
+            start = start + length;
+            loadTemplates(cardsTemplate, cardColumn, masonry, start, length, 'both');
           });
 
           // Folder selector.
@@ -540,18 +538,22 @@
           });
         }
 
-        function loadTemplates(cardsTemplate, cardColumn, masonry, start, length) {
-          var spinner = cardColumn.closest('.modal').find('.modal-footer .spinner-grow');
+        function loadTemplates(cardsTemplate, cardColumn, masonry, start, length, type, next) {
+          var spinner = cardColumn.closest('.modal').find('.panel-footer .spinner-grow');
+          var moreButton = cardColumn.closest('.modal').find('#layout-add-templates-more');
           spinner.removeClass('d-none');
+          moreButton.prop('disabled', true);
           $.ajax({
             method: 'GET',
             url: '{{ url_for("template.search.all") }}',
             data: {
               start: start,
-              length: length
+              length: length,
+              type: type
             },
             success: function(response) {
-              if (response && response.data) {
+              if (response && response.data && response.data.length > 0) {
+
                 $.each(response.data, function(index, el) {
                   var card = addTemplateCard(cardsTemplate, cardColumn, el);
                   card.imagesLoaded(function() {
@@ -562,6 +564,12 @@
                 toastr.info('{{ "You have reached the end"|trans }}');
               }
               spinner.addClass('d-none');
+              moreButton.prop('disabled', false);
+
+              // Next?
+              if (next !== undefined && next !== null) {
+                next();
+              }
             }
           });
         }
@@ -572,11 +580,11 @@
           $element.on('click', function(e) {
             e.preventDefault();
             // Remove all selections.
-            cardColumn.find('.bg-success').removeClass('bg-success');
+            cardColumn.find('.bg-info').removeClass('bg-info');
 
             // Select this one.
             var $that = $(this);
-            $that.addClass('bg-success');
+            $that.addClass('bg-info');
             $('#layout-create-stepper-next-button').removeClass('disabled');
 
             // If source is local and layoutId is 0, then show the resolution filter otherwise don't
@@ -644,7 +652,7 @@
     {% verbatim %}
     <script type="text/x-handlebars-template" id="template-layout-add-template-cards">
         <div class="card w-25 p-3 mb-0" data-layout-id="{{ id }}" data-source="{{ source }}">
-            <img class="card-img-top" src="{{ thumbnail }}" alt="{{ title }}">
+            {{#if thumbnail}}<img class="card-img-top" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
             <div class="card-body">
                 <h5 class="card-title">{{ title }}</h5>
                 {{#if description}}<p class="card-text"><span class="text-muted">{{ description }}</span></p>{{/if}}

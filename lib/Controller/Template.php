@@ -285,35 +285,41 @@ class Template extends Base
     function search(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
-
-        $templates = $this->layoutFactory->query(['layout'], $this->gridRenderFilter([
-            'excludeTemplates' => 0,
-            'layout' => $sanitizedQueryParams->getString('template'),
-            'folderId' => $sanitizedQueryParams->getInt('folderId')
-        ], $sanitizedQueryParams));
+        $type = $sanitizedQueryParams->getString('type', ['default' => 'both']);
 
         $searchResults = new SearchResults();
-        foreach ($templates as $template) {
-            $searchResult = new SearchResult();
-            $searchResult->id = $template->layoutId;
-            $searchResult->source = 'local';
-            $searchResult->title = $template->layout;
-            $searchResult->description = $template->description;
+        if ($type === 'both' || $type === 'local') {
+            $templates = $this->layoutFactory->query(['layout'], $this->gridRenderFilter([
+                'excludeTemplates' => 0,
+                'layout' => $sanitizedQueryParams->getString('template'),
+                'folderId' => $sanitizedQueryParams->getInt('folderId')
+            ], $sanitizedQueryParams));
 
-            // Thumbnail
-            $searchResult->thumbnail = '';
-            if (file_exists($template->getThumbnailUri())) {
-                $searchResult->thumbnail = $this->urlFor($request,'layout.download.thumbnail', ['id' => $template->layoutId]);
+            foreach ($templates as $template) {
+                $searchResult = new SearchResult();
+                $searchResult->id = $template->layoutId;
+                $searchResult->source = 'local';
+                $searchResult->title = $template->layout;
+                $searchResult->description = $template->description;
+
+                // Thumbnail
+                $searchResult->thumbnail = '';
+                if (file_exists($template->getThumbnailUri())) {
+                    $searchResult->thumbnail = $this->urlFor($request, 'layout.download.thumbnail',
+                        ['id' => $template->layoutId]);
+                }
+
+                $searchResults->data[] = $searchResult;
             }
-
-            $searchResults->data[] = $searchResult;
         }
 
-        $this->getLog()->debug('Dispatching event.');
+        if ($type === 'both' || $type === 'remote') {
+            $this->getLog()->debug('Dispatching event.');
 
-        // Hand off to any other providers that may want to provide results.
-        $event = new TemplateProviderEvent($searchResults);
-        $this->getDispatcher()->dispatch($event->getName(), $event);
+            // Hand off to any other providers that may want to provide results.
+            $event = new TemplateProviderEvent($searchResults);
+            $this->getDispatcher()->dispatch($event->getName(), $event);
+        }
         return $response->withJson($searchResults);
     }
 
