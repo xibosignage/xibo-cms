@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use League\OAuth2\Server\AuthorizationServer;
+use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
 use Slim\Http\Response as Response;
@@ -242,7 +243,15 @@ class Applications extends Base
         }
 
         // Redirect back to the specified redirect url
-        return $server->completeAuthorizationRequest($authRequest, $response);
+        try {
+            return $server->completeAuthorizationRequest($authRequest, $response);
+        } catch (OAuthServerException $exception) {
+            if ($exception->hasRedirect()) {
+                return $response->withRedirect($exception->getRedirectUri());
+            } else {
+                throw $exception;
+            }
+        }
     }
 
     /**
