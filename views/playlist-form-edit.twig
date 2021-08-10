@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -80,7 +80,7 @@
         <div class="col-md-12">
             <ul class="nav nav-tabs" role="tablist">
                 <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
-                <li class="nav-item"><a class="nav-link" href="#populate" role="tab" data-toggle="tab" id="filterTab"><span>{% trans "Filter" %}</span></a></li>
+                <li class="nav-item"><a class="nav-link" href="#populate" role="tab" data-toggle="tab"><span>{% trans "Filter" %}</span></a></li>
             </ul>
             <form id="playlistEditForm" class="XiboForm form-horizontal playlistForm" method="put" action="{{ url_for("playlist.edit", {id: playlist.playlistId}) }}" data-gettag="{{ url_for("tag.getByName") }}">
                 <div class="tab-content">
@@ -166,7 +166,7 @@
                                     {{ forms.number("maxNumberOfItems", title, playlist.maxNumberOfItems, helpText, 'dynamic-message', '', '', settings.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT) }}
 
                                     <div class="XiboData card pt-3">
-                                        <table id="playlistLibraryMedia" class="table table-striped">
+                                        <table id="playlistLibraryMedia" class="table table-striped" style="width:100%">
                                             <thead>
                                             <tr>
                                                 <th>{% trans "ID" %}</th>
