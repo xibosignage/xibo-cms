@@ -247,7 +247,7 @@ class WidgetFactory extends BaseFactory
               `widget`.createdDt, 
               `widget`.modifiedDt,
               `widget`.calculatedDuration,
-              `playlist`.name AS playlist
+              `playlist`.name AS playlist,
               `playlist`.isDynamic
         ';
 
