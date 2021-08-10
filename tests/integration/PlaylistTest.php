@@ -68,7 +68,7 @@ class PlaylistTest extends LocalWebTestCase
         return [
             'Normal add' => [200, Random::generateString(5, 'playlist'), null, 0, null, null],
             'Tags add' => [200, Random::generateString(5, 'playlist'), 'test', 0, null, null],
-            'Dynamic add' => [200, Random::generateString(5, 'playlist'), null, 1, null, null]
+            'Dynamic add' => [200, Random::generateString(5, 'playlist'), null, 1, 'test', null]
         ];
     }
 
@@ -82,8 +82,8 @@ class PlaylistTest extends LocalWebTestCase
             'name' => $name,
             'tags' => $tags,
             'isDynamic' => $isDynamic,
-            'nameFilter' => $nameFilter,
-            'tagFilter' => $tagFilter
+            'filterMediaName' => $nameFilter,
+            'filterMediaTag' => $tagFilter
         ]);
 
         // Check the response headers
