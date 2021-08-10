@@ -69,7 +69,18 @@ class PlaylistTest extends LocalWebTestCase
         return [
             'Normal add' => [200, Random::generateString(5, 'playlist'), null, 0, null, null],
             'Tags add' => [200, Random::generateString(5, 'playlist'), 'test', 0, null, null],
-            'Dynamic add' => [200, Random::generateString(5, 'playlist'), null, 1, null, null]
+            'Dynamic add' => [200, Random::generateString(5, 'playlist'), null, 1, 'test', null]
+        ];
+    }
+
+    /**
+     * @return array
+     */
+    public function addPlaylistFailureCases()
+    {
+        return [
+            'Dynamic without filter' => [422, Random::generateString(5, 'playlist'), null, 1, null, null],
+            'Without a name' => [422, null, null, 1, null, null]
         ];
     }
 
@@ -79,12 +90,12 @@ class PlaylistTest extends LocalWebTestCase
     public function testAddPlaylist($statusCode, $name, $tags, $isDynamic, $nameFilter, $tagFilter)
     {
         // Add this Playlist
-        $response = $this->sendRequest('POST','/playlist', [
+        $response = $this->sendRequest('POST', '/playlist', [
             'name' => $name,
             'tags' => $tags,
             'isDynamic' => $isDynamic,
-            'nameFilter' => $nameFilter,
-            'tagFilter' => $tagFilter
+            'filterMediaName' => $nameFilter,
+            'filterMediaTag' => $tagFilter
         ]);
 
         // Check the response headers
@@ -100,13 +111,34 @@ class PlaylistTest extends LocalWebTestCase
             $this->playlists[] = (new XiboPlaylist($this->getEntityProvider()))->hydrate((array)$object->data);
         }
 
-        //$this->getLogger()->debug('Getting ' . $object->id);
-
         // Get the Playlists back out from the API, to double check it has been created as we expected
         /** @var XiboPlaylist $playlistCheck */
         $playlistCheck = (new XiboPlaylist($this->getEntityProvider()))->hydrate($this->getEntityProvider()->get('/playlist', ['playlistId' => $object->id])[0]);
 
         $this->assertEquals($name, $playlistCheck->name, 'Names are not identical');
+    }
+
+    /**
+     * @dataProvider addPlaylistFailureCases
+     */
+    public function testAddPlaylistFailure($statusCode, $name, $tags, $isDynamic, $nameFilter, $tagFilter)
+    {
+        $response = $this->sendRequest('POST', '/playlist', [
+            'name' => $name,
+            'tags' => $tags,
+            'isDynamic' => $isDynamic,
+            'filterMediaName' => $nameFilter,
+            'filterMediaTag' => $tagFilter
+        ]);
+
+        // Check the response headers
+        $this->assertSame($statusCode, $response->getStatusCode(), "Not successful: " . $response->getStatusCode() . $response->getBody());
+
+        $object = json_decode($response->getBody());
+        $this->assertObjectHasAttribute('data', $object, 'Missing data');
+        $this->assertSame([], $object->data);
+        $this->assertObjectHasAttribute('error', $object, 'Missing error');
+        $this->assertObjectNotHasAttribute('id', $object);
     }
 
     /**
