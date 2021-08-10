@@ -44,7 +44,7 @@
 
                         {% set title %}{% trans "Make new copies of all media on this layout?" %}{% endset %}
                         {% set helpText %}{% trans "This will duplicate all media that is currently assigned to the Layout being copied." %}{% endset %}
-                        {% if config.LAYOUT_COPY_MEDIA_CHECKB == 1 %}
+                        {% if settings.LAYOUT_COPY_MEDIA_CHECKB == 1 %}
                             {% set checked = 1 %}
                         {% else %}
                             {% set checked = 0 %}
