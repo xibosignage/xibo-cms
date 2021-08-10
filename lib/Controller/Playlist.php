@@ -593,6 +593,7 @@ class Playlist extends Base
             }
             $playlist->filterMediaName = $nameFilter;
             $playlist->filterMediaTags = $tagFilter;
+            $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems', ['default' => $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')]);
         }
 
         $playlist->save();
@@ -629,6 +630,10 @@ class Playlist extends Base
 
                     // Add to a list of new widgets
                     $widgets[] = $widget;
+                    if ($playlist->isDynamic && count($widgets) >= $playlist->maxNumberOfItems) {
+                        $this->getLog()->debug(sprintf('Dynamic Playlist ID %d, has reached the maximum number of items %d, finishing assignments', $playlist->playlistId, $playlist->maxNumberOfItems));
+                        break;
+                    }
                 }
 
                 // Save the playlist
@@ -783,6 +788,7 @@ class Playlist extends Base
             if ($this->getUser()->featureEnabled('tag.tagging')) {
                 $playlist->filterMediaTags = $sanitizedParams->getString('filterMediaTag');
             }
+            $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems');
         }
 
         $playlist->save();

@@ -26,6 +26,7 @@ use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\PlaylistMaxNumberChangedEvent;
 use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TransitionFactory;
@@ -345,6 +346,16 @@ class Settings extends Base
             if (!v::longitude()->validate($value)) {
                 throw new InvalidArgumentException(__('The longitude entered is not valid.'), 'DEFAULT_LONG');
             }
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')) {
+            $this->handleChangedSettings('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER', $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER'), $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER'), $changedSettings);
+            $this->getConfig()->changeSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER', $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT')) {
+            $this->handleChangedSettings('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT', $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT'), $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT'), $changedSettings);
+            $this->getConfig()->changeSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT', $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT'));
         }
 
         if ($this->getConfig()->isSettingEditable('SHOW_DISPLAY_AS_VNCLINK')) {
@@ -749,6 +760,8 @@ class Settings extends Base
                 $newSystemUser = $this->userFactory->getById($newValue);
                 $oldSystemUser = $this->userFactory->getById($oldValue);
                 $this->getDispatcher()->dispatch(SystemUserChangedEvent::$NAME, new SystemUserChangedEvent($oldSystemUser, $newSystemUser));
+            } elseif ($setting === 'DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT') {
+                $this->getDispatcher()->dispatch(PlaylistMaxNumberChangedEvent::$NAME, new PlaylistMaxNumberChangedEvent($newValue));
             }
             if ($setting === 'ELEVATE_LOG_UNTIL') {
                 $changedSettings[$setting] = Carbon::createFromTimestamp($oldValue)->format(DateFormatHelper::getSystemFormat()) . ' > ' .  Carbon::createFromTimestamp($newValue)->format(DateFormatHelper::getSystemFormat());

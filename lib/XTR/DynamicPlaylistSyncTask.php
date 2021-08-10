@@ -131,7 +131,9 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 foreach ($this->mediaFactory->query(null, [
                     'name' => $playlist->filterMediaName,
                     'tags' => $playlist->filterMediaTags,
-                    'userCheckUserId' => $playlist->getOwnerId()
+                    'userCheckUserId' => $playlist->getOwnerId(),
+                    'start' => 0,
+                    'length' => $playlist->maxNumberOfItems
                 ]) as $item) {
                     $media[$item->mediaId] = $item;
                     $mediaIds[] = $item->mediaId;
@@ -142,7 +144,7 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 $different = (count($playlist->widgets) !== count($media));
 
                 $this->log->debug('There are ' . count($media) . ' that should be assigned and ' . count($playlist->widgets)
-                    . ' currently assigned. First check difference is ' . var_export($different, true));
+                    . ' currently assigned with max number of items set to ' . $playlist->maxNumberOfItems . ' First check difference is ' . var_export($different, true));
 
                 if (!$different) {
                     // Try a more complete check, using mediaIds
@@ -221,6 +223,10 @@ class DynamicPlaylistSyncTask implements TaskInterface
                     // Add the ones we have left
                     foreach ($media as $item) {
                         if (in_array($item->mediaId, $mediaIds)) {
+                            if (count($playlist->widgets) >= $playlist->maxNumberOfItems) {
+                                $this->log->debug(sprintf('Dynamic Playlist ID %d, has reached the maximum number of items %d, finishing assignments', $playlist->playlistId, $playlist->maxNumberOfItems));
+                                break;
+                            }
                             $assignmentMade = true;
                             $this->createAndAssign($playlist, $item, $count);
                         }
