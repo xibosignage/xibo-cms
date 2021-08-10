@@ -23,7 +23,7 @@ ul.sidebar {
 
 .editor-toolbar.editor-side-bar nav {
     width: $toolbar-width;
-    padding: 8px 0 !important;
+    padding: 20px 0 !important;
 
     &.stretch {
         margin-right: 120px;
@@ -711,8 +711,9 @@ ul.sidebar {
     & > a {
         padding: 10px;
         line-height: 20px;
+        color: $toolbar-secondary-color;
 
-        &.option-container {
+        &.option-container, &.undo-container, &.trash-container {
             width: 50px;
             text-align: center;
             font-size: 1.5rem;
@@ -724,11 +725,26 @@ ul.sidebar {
             }
         }
 
-        color: $toolbar-secondary-color;
-
         &:hover, &:focus {
             color: $xibo-color-white;
             background-color: $toolbar-main-color;
+        }
+
+        &.trash-container {
+            color: $xibo-color-red;
+
+            &:hover, &:focus {
+                color: $xibo-color-white;
+                background-color: $xibo-color-red;
+            }
+        }
+
+        &.undo-container:not(.active), &.undo-container:not(.active):hover, &.undo-container:not(.active):focus,
+        &.trash-container:not(.active), &.trash-container:not(.active):hover, &.trash-container:not(.active):focus {
+            color: $xibo-color-gray;
+            background-color: transparent;
+            opacity: 0.6;
+            cursor: unset;
         }
     }
 

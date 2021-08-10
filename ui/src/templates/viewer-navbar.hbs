@@ -20,42 +20,6 @@
                 <i class="fa fa-save"></i>
             </button>
         {{/if}}
-    </div>
-
-    {{!-- Paging controls --}}
-    {{#if pagingEnable}}
-        <span class="paging inline-editor-hide">
-            <button type="button" id="left-btn" class="btn btn-sm btn-primary" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="bottom" data-title="{{ trans.previousWidget }}">
-                <i class="fa fa-arrow-left"></i>
-            </button>
-            <span class="label">
-                {{currentItem}} / {{totalItems}}
-            </span>
-            <button type="button" id="right-btn" class="btn btn-sm btn-primary" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="bottom" data-title="{{ trans.nextWidget }}">
-                <i class="fa fa-arrow-right"></i>
-            </button>
-        </span>
-    {{/if}}
-
-    {{! Right region }}
-    <div class="pull-right">
-        {{! Element Info }}
-        {{#if extra}}
-            <span class="info inline-editor-hide">
-                <span class="label-name" title="{{extra.moduleName}}">
-                    "{{extra.moduleName}}" ({{extra.type}})
-                </span>
-                <span class="label label-time">
-                    {{extra.duration}} / {{extra.regionDuration}}
-                </span>
-            </span>
-        {{else}}
-            <span class="info inline-editor-hide">
-                <span class="label-name" title="{{name}}">
-                    "{{name}}" ({{type}})
-                </span>
-            </span>
-        {{/if}}
 
         {{!-- Full screen button --}}
         <button type="button" id="fs-btn" class="btn btn-sm tooltip-always-on" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="bottom"
@@ -63,6 +27,42 @@
             <i class="fas fa-arrows-alt hide-on-fs"></i>
             <i class="fas fa-compress-arrows-alt show-on-fs"></i>
         </button>
+    </div>
+
+    {{! Right region }}
+    <div class="pull-right">
+        {{! Element Info }}
+        {{#if extra}}
+            <div class="info inline-editor-hide d-inline">
+                <span class="label-name align-middle" title="{{extra.moduleName}}">
+                    "{{extra.moduleName}}" ({{extra.type}})
+                </span>
+                <span class="label label-time align-middle">
+                    {{extra.duration}} / {{extra.regionDuration}}
+                </span>
+            </div>
+        {{else}}
+            <div class="info inline-editor-hide d-inline">
+                <span class="label-name align-middle" title="{{name}}">
+                    "{{name}}" ({{type}})
+                </span>
+            </div>
+        {{/if}}
+
+        {{!-- Paging controls --}}
+        {{#if pagingEnable}}
+            <span class="paging inline-editor-hide pl-1">
+                <button type="button" id="left-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="bottom" data-title="{{ trans.previousWidget }}">
+                    <i class="fa fa-arrow-left"></i>
+                </button>
+                <span class="label align-middle">
+                    {{currentItem}} / {{totalItems}}
+                </span>
+                <button type="button" id="right-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-viewer-navbar" data-placement="bottom" data-title="{{ trans.nextWidget }}">
+                    <i class="fa fa-arrow-right"></i>
+                </button>
+            </span>
+        {{/if}}
     </div>
 
     {{! Inline Editor templates }}
