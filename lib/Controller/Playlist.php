@@ -531,6 +531,13 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="maxNumberOfItems",
+     *      in="formData",
+     *      description="Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -728,6 +735,13 @@ class Playlist extends Base
      *      in="formData",
      *      description="Add Library Media matching the tag filter provided",
      *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="maxNumberOfItems",
+     *      in="formData",
+     *      description="Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
+     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
