@@ -22,8 +22,6 @@
 
 namespace Xibo\Connector;
 
-use Psr\Log\LoggerInterface;
-use Psr\Log\NullLogger;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\SearchResult;
 use Xibo\Event\TemplateProviderEvent;
@@ -33,8 +31,7 @@ use Xibo\Event\TemplateProviderEvent;
  */
 class XiboExchangeConnector implements ConnectorInterface
 {
-    /** @var \Psr\Log\LoggerInterface */
-    private $logger;
+    use ConnectorTrait;
 
     /**
      * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
@@ -44,26 +41,6 @@ class XiboExchangeConnector implements ConnectorInterface
     {
         $dispatcher->addListener('connector.provider.template', [$this, 'onTemplateProvider']);
         return $this;
-    }
-
-    /**
-     * @param \Psr\Log\LoggerInterface $logger
-     * @return \Xibo\Connector\ConnectorInterface
-     */
-    public function useLogger(LoggerInterface $logger): ConnectorInterface
-    {
-        $this->logger = $logger;
-        return $this;
-    }
-
-    /**
-     * @return \Psr\Log\LoggerInterface|\Psr\Log\NullLogger
-     */
-    private function getLogger(): LoggerInterface {
-        if ($this->logger === null) {
-            $this->logger = new NullLogger();
-        }
-        return $this->logger;
     }
 
     /**

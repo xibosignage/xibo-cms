@@ -1,7 +1,20 @@
-<div class="card w-25 p-3 mb-0" data-media-id="{{ id }}" data-source="{{ source }}" data-media-type="{{ type }}" data-media-name="{{ title }}">
+<div class="card w-25 p-3 mb-0" data-media-id="{{ id }}" data-source="{{ source }}" data-media-type="{{ type }}" data-name="{{ title }}">
     {{#if thumbnail}}<img class="card-img-top" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
     <div class="card-body">
         <h5 class="card-title">{{ title }}</h5>
         {{#if description}}<p class="card-text"><span class="text-muted">{{ description }}</span></p>{{/if}}
     </div>
+    {{#if provider }}
+    <div class="card-footer p-0 m-0" {{#if provider.backgroundColor }}style="background-color: #53a853;"{{/if}}>
+        <div class="provided-by text-center">
+            {{#if provider.link }}<a href="{{ provider.link }}" target="_blank" title="{{ provider.message }}">{{/if}}
+                {{#if provider.logoUrl }}
+                    <img src="{{ provider.logoUrl }}" style="width: 100%;" alt="Logo">
+                {{else}}
+                    <span class="text-muted">{{ provider.message }}</span>
+                {{/if}}
+            {{#if provider.link }}</a>{{/if}}
+        </div>
+    </div>
+    {{/if}}
 </div>

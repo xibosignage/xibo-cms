@@ -35,12 +35,32 @@ class LibraryProviderEvent extends Event
     /** @var \Xibo\Entity\SearchResults */
     private $results;
 
+    /** @var int Record count to start from */
+    private $start = 0;
+
+    /** @var int Number of records to return */
+    private $length = 10;
+
+    /** @var string */
+    private $search;
+
+    /** @var string */
+    private $type;
+
+    /** @var string landspace|portrait or empty */
+    private $orientation;
+
     /**
      * @param \Xibo\Entity\SearchResults $results
      */
-    public function __construct(SearchResults $results)
+    public function __construct(SearchResults $results, $start, $length, $search, $type, $orientation)
     {
         $this->results = $results;
+        $this->start = $start;
+        $this->length = $length;
+        $this->search = $search;
+        $this->type = $type;
+        $this->orientation = $orientation;
     }
 
     public function addResult(SearchResult $result): LibraryProviderEvent
@@ -52,5 +72,47 @@ class LibraryProviderEvent extends Event
     public function getResults(): SearchResults
     {
         return $this->results;
+    }
+
+    /**
+     * Get starting record
+     * @return int
+     */
+    public function getStart(): int
+    {
+        return $this->start;
+    }
+
+    /**
+     * Get number of records to return
+     * @return int
+     */
+    public function getLength(): int
+    {
+        return $this->length;
+    }
+
+    /**
+     * @return string
+     */
+    public function getSearch()
+    {
+        return $this->search;
+    }
+
+    /**
+     * @return string
+     */
+    public function getType()
+    {
+        return $this->type;
+    }
+
+    /**
+     * @return string
+     */
+    public function getOrientation()
+    {
+        return $this->orientation;
     }
 }

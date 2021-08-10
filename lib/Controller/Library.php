@@ -794,8 +794,21 @@ class Library extends Base
             $this->getLog()->debug('Dispatching event.');
 
             // Hand off to any other providers that may want to provide results.
-            $event = new LibraryProviderEvent($searchResults);
-            $this->getDispatcher()->dispatch($event->getName(), $event);
+            $event = new LibraryProviderEvent(
+                $searchResults,
+                $parsedQueryParams->getInt('start'),
+                $parsedQueryParams->getInt('length'),
+                $parsedQueryParams->getString('media'),
+                $parsedQueryParams->getString('type'),
+                $parsedQueryParams->getString('orientation')
+            );
+
+            try {
+                $this->getDispatcher()->dispatch($event->getName(), $event);
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Library search: Exception in dispatched event: ' . $exception->getMessage());
+                $this->getLog()->debug($exception->getTraceAsString());
+            }
         }
 
         return $response->withJson($searchResults);

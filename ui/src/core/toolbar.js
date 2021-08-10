@@ -1112,6 +1112,7 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
 
     // Reload table
     mediaAssign.empty();
+    start = 0;
     masonry.reloadItems();
     self.mediaContentLoadTemplates(mediaAssign, masonry, menu, tabIndex, start, length, 'local',
         function() {
@@ -1166,14 +1167,11 @@ Toolbar.prototype.mediaContentLoadTemplates = function(cardColumn, masonry, menu
           masonry.addItems(self.mediaContentAddCard(menu, cardColumn, el));
         });
         cardColumn.imagesLoaded().progress(function() {
-          console.log('Calling masonry layout');
           masonry.layout();
         });
-      } else {
-        toastr.info('You have reached the end');
+        moreButton.prop('disabled', false);
       }
       spinner.addClass('d-none');
-      moreButton.prop('disabled', false);
 
       // Next?
       if (next !== undefined && next !== null) {
@@ -1186,6 +1184,9 @@ Toolbar.prototype.mediaContentLoadTemplates = function(cardColumn, masonry, menu
 Toolbar.prototype.mediaContentAddCard = function (menu, cardColumn, el) {
   const self = this;
   el.thumbnail = el.thumbnail || defaultThumbnailUrl;
+  if (el.provider && el.provider.logoUrl && !el.provider.logoUrl.startsWith('http')) {
+    el.provider.logoUrl = document.querySelector("meta[name='public-path']").content + el.provider.logoUrl;
+  }
   let $element = $(ToolbarMediaSearchCardTemplate(el));
   $element.on('click', function(e) {
     e.preventDefault();

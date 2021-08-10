@@ -23,7 +23,9 @@
 namespace Xibo\Connector;
 
 use Psr\Log\LoggerInterface;
+use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Connector Interface
@@ -32,5 +34,7 @@ interface ConnectorInterface
 {
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface;
     public function useLogger(LoggerInterface $logger): ConnectorInterface;
+    public function useSettings(SanitizerInterface $settings): ConnectorInterface;
+    public function usePool(PoolInterface $pool): ConnectorInterface;
     public function getSourceName(): string;
 }

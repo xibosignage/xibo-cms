@@ -81,6 +81,7 @@ class ConfigService implements ConfigServiceInterface
     public $timeSeriesStore = null;
     public $cacheNamespace = 'Xibo';
     private $apiKeyPaths = null;
+    private $connectorSettings = null;
 
     /**
      * Theme Specific Config
@@ -180,6 +181,20 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
+     * Get Connector settings
+     * @param string $connector The connector to return settings for.
+     * @return array
+     */
+    public function getConnectorSettings(string $connector): array
+    {
+        if ($this->connectorSettings !== null && array_key_exists($connector, $this->connectorSettings)) {
+            return $this->connectorSettings[$connector];
+        } else {
+            return [];
+        }
+    }
+
+    /**
      * Loads the settings from file.
      *  DO NOT CALL ANY STORE() METHODS IN HERE
      * @param \Psr\Container\ContainerInterface $container DI container which may be used in settings.php
@@ -240,6 +255,11 @@ class ConfigService implements ConfigServiceInterface
 
         if (isset($apiKeyPaths))
             $config->apiKeyPaths = $apiKeyPaths;
+
+        // Connector settings
+        if (isset($connectorSettings)) {
+            $config->connectorSettings = $connectorSettings;
+        }
 
         // Set this as the global config
         return $config;

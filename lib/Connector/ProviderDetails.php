@@ -19,32 +19,26 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Entity;
+
+namespace Xibo\Connector;
 
 /**
- * @SWG\Definition()
+ * Provider Details
  */
-class SearchResult implements \JsonSerializable
+class ProviderDetails implements \JsonSerializable
 {
-    public $title;
-    public $description;
-    public $thumbnail;
-    public $source;
-    public $type;
-    public $id;
-    public $provider;
+    public $message;
+    public $link;
+    public $logoUrl;
+    public $backgroundColor;
 
     public function jsonSerialize()
     {
         return [
-            'id' => $this->id,
-            'source' => $this->source,
-            'type' => $this->type,
-            'title' => $this->title,
-            'description' => $this->description,
-            'thumbnail' => $this->thumbnail,
-            'provider' => $this->provider
+            'message' => $this->message,
+            'link' => $this->link,
+            'logoUrl' => $this->logoUrl,
+            'backgroundColor' => $this->backgroundColor
         ];
     }
 }
-

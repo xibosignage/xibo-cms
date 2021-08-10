@@ -318,7 +318,11 @@ class Template extends Base
 
             // Hand off to any other providers that may want to provide results.
             $event = new TemplateProviderEvent($searchResults);
-            $this->getDispatcher()->dispatch($event->getName(), $event);
+            try {
+            $this->getDispatcher()->dispatch($event->getName(), $event);} catch (\Exception $exception) {
+                $this->getLog()->error('Template search: Exception in dispatched event: ' . $exception->getMessage());
+                $this->getLog()->debug($exception->getTraceAsString());
+            }
         }
         return $response->withJson($searchResults);
     }
