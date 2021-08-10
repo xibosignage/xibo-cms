@@ -552,9 +552,6 @@ class MediaFactory extends BaseFactory
             $body .= ' AND media.type <> \'savedreport\' ';
         }
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
-
         if ($this->getSanitizer()->getInt('allModules', $filterBy) == 0) {
             $body .= ' AND media.type <> \'module\' ';
         }
@@ -771,6 +768,9 @@ class MediaFactory extends BaseFactory
             $body .= ' AND `media`.duration ' . $duration['operator'] . ' :duration ';
             $params['duration'] = $duration['variable'];
         }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
 
         // Sorting?
         $order = '';
