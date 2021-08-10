@@ -1874,8 +1874,12 @@ class Layout extends Base
     {
         // Get the layout
         $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($layoutId));
-
-        $layout->xlfToDisk();
+        try {
+            $layout->xlfToDisk();
+        } finally {
+            // Release lock
+            $this->layoutFactory->concurrentRequestRelease($layout);
+        }
 
         switch ($layout->status) {
 
@@ -1917,9 +1921,6 @@ class Layout extends Base
             $this->getState()->success = true;
             $this->session->refreshExpiry = false;
         }
-
-        // Release lock
-        $this->layoutFactory->concurrentRequestRelease($layout);
     }
 
     /**
@@ -2317,50 +2318,52 @@ class Layout extends Base
     public function publish($layoutId)
     {
         Profiler::start('Layout::publish', $this->getLog());
-        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($layoutId));
-        $publishDate = $this->getSanitizer()->getDate('publishDate');
-        $publishNow = $this->getSanitizer()->getCheckbox('publishNow');
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($layoutId), true);
+        try {
+            $publishDate = $this->getSanitizer()->getDate('publishDate');
+            $publishNow = $this->getSanitizer()->getCheckbox('publishNow');
 
-        // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout)) {
-            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+            // Make sure we have permission
+            if (!$this->getUser()->checkEditable($layout)) {
+                throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+            }
+
+            // if we have publish date update it in database
+            if (isset($publishDate) && !$publishNow) {
+                $layout->setPublishedDate($publishDate);
+            }
+
+            // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
+            // parent.
+            if ($publishNow || (isset($publishDate) && $publishDate->format('U') < $this->getDate()->getLocalDate(null, 'U'))) {
+                $draft = $this->layoutFactory->getByParentId($layoutId);
+                $draft->publishDraft();
+                $draft->load();
+
+                // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
+                // error message
+                $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
+
+                // Return
+                $this->getState()->hydrate([
+                    'httpStatus' => 200,
+                    'message' => sprintf(__('Published %s'), $draft->layout),
+                    'data' => $draft
+                ]);
+            } else {
+                // Return
+                $this->getState()->hydrate([
+                    'httpStatus' => 200,
+                    'message' => sprintf(__('Layout will be published on %s'), $publishDate),
+                    'data' => $layout
+                ]);
+            }
+
+            Profiler::end('Layout::publish', $this->getLog());
+        } finally {
+            // Release lock
+            $this->layoutFactory->concurrentRequestRelease($layout, true);
         }
-
-        // if we have publish date update it in database
-        if (isset($publishDate) && !$publishNow) {
-            $layout->setPublishedDate($publishDate);
-        }
-
-        // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
-        // parent.
-        if ($publishNow || (isset($publishDate) && $publishDate->format('U') <  $this->getDate()->getLocalDate(null, 'U')) ) {
-            $draft = $this->layoutFactory->getByParentId($layoutId);
-            $draft->publishDraft();
-            $draft->load();
-
-            // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
-            // error message
-            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
-
-            // Return
-            $this->getState()->hydrate([
-                'httpStatus' => 200,
-                'message' => sprintf(__('Published %s'), $draft->layout),
-                'data' => $draft
-            ]);
-        } else {
-            // Return
-            $this->getState()->hydrate([
-                'httpStatus' => 200,
-                'message' => sprintf(__('Layout will be published on %s'), $publishDate),
-                'data' => $layout
-            ]);
-        }
-
-        Profiler::end('Layout::publish', $this->getLog());
-
-        // Release lock
-        $this->layoutFactory->concurrentRequestRelease($layout);
     }
 
     /**
