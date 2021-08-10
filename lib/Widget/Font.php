@@ -45,7 +45,7 @@ class Font extends ModuleWidget
 
             $filePath = $folder . DIRECTORY_SEPARATOR . $file;
 
-            $font = $this->mediaFactory->create($file, $filePath, 'font', 1);
+            $font = $this->mediaFactory->create($file, $filePath, 'font', $this->getApp()->container->get('userFactory')->getSystemUser()->userId);
             $font->alwaysCopy = true;
             $this->preProcess($font, $filePath);
 
