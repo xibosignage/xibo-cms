@@ -160,7 +160,7 @@ class XiboUploadHandler extends BlueImpUploadHandler
                 if ($updateInLayouts) {
                     $controller->getLog()->debug('Replace in all Layouts selected. Getting associated widgets');
 
-                    foreach ($controller->getWidgetFactory()->getByMediaId($oldMedia->mediaId) as $widget) {
+                    foreach ($controller->getWidgetFactory()->getByMediaId($oldMedia->mediaId, 0) as $widget) {
                         /* @var Widget $widget */
                         if (!$controller->getUser()->checkEditable($widget)) {
                             // Widget that we cannot update, this means we can't delete the original mediaId when it comes time to do so.

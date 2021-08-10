@@ -120,11 +120,12 @@ class WidgetFactory extends BaseFactory
     /**
      * Load widgets by MediaId
      * @param int $mediaId
+     * @param int|null $isDynamicPlaylist
      * @return array[Widget]
      */
-    public function getByMediaId($mediaId)
+    public function getByMediaId($mediaId, $isDynamicPlaylist = null)
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId));
+        return $this->query(null, ['disableUserCheck' => 1, 'mediaId' => $mediaId, 'isDynamicPlaylist' => $isDynamicPlaylist]);
     }
 
     /**
@@ -247,6 +248,7 @@ class WidgetFactory extends BaseFactory
               `widget`.modifiedDt,
               `widget`.calculatedDuration,
               `playlist`.name AS playlist
+              `playlist`.isDynamic
         ';
 
         if (is_array($sortOrder) && (in_array('`widget`', $sortOrder) || in_array('`widget` DESC', $sortOrder))) {
@@ -357,6 +359,11 @@ class WidgetFactory extends BaseFactory
         if ($this->getSanitizer()->getString('playlist', $filterBy) != '') {
             $terms = explode(',', $this->getSanitizer()->getString('playlist', $filterBy));
             $this->nameFilter('playlist', 'name', $terms, $body, $params, ($this->getSanitizer()->getCheckbox('useRegexForName', $filterBy) == 1));
+        }
+
+        if ($this->getSanitizer()->getInt('isDynamicPlaylist', $filterBy) !== null) {
+            $body .= ' AND `playlist`.isDynamic = :isDynamicPlaylist';
+            $params['isDynamicPlaylist'] = $this->getSanitizer()->getInt('isDynamicPlaylist', $filterBy);
         }
 
         // Sorting?
