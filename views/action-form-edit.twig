@@ -73,7 +73,7 @@
                 {{ forms.dropdown("actionType", "single", title,action.actionType, options, "typeid","type", helpText) }}
 
                 {% set title %}{% trans "Widget" %}{% endset %}
-                {% set helpText %}{% trans "Which Widget would you like to Navigate to? The Widget must be in the Interactive Draw for this Layout." %}{% endset %}
+                {% set helpText %}{% trans "Which Widget would you like to Navigate to? The Widget must be in the Interactive drawer for this Layout." %}{% endset %}
                 {{ forms.dropdown("widgetId", "single", title, action.widgetId, [{widgetId:null, name:""}]|merge(widgets), "widgetId", "name", helpText, "nav-control-widget") }}
 
                 {% set title %}{% trans "Layout Code" %}{% endset %}
