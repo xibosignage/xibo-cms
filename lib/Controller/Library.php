@@ -749,12 +749,12 @@ class Library extends Base
     function search(Request $request, Response $response)
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
-        $type = $parsedQueryParams->getString('type', ['default' => 'both']);
+        $provider = $parsedQueryParams->getString('provider', ['default' => 'both']);
 
         $searchResults = new SearchResults();
-        if ($type === 'both' || $type === 'local') {
+        if ($provider === 'both' || $provider === 'local') {
             // Construct the SQL
-            $mediaList = $this->mediaFactory->query(['media'], $this->gridRenderFilter([
+            $mediaList = $this->mediaFactory->query(['media.name'], $this->gridRenderFilter([
                 'name' => $parsedQueryParams->getString('media'),
                 'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
                 'nameExact' => $parsedQueryParams->getString('nameExact'),
@@ -764,6 +764,7 @@ class Library extends Base
                 'ownerId' => $parsedQueryParams->getInt('ownerId'),
                 'notPlayerSoftware' => 1,
                 'notSavedReport' => 1,
+                'assignable' => 1,
                 'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
             ], $parsedQueryParams));
 
@@ -772,13 +773,24 @@ class Library extends Base
                 $searchResult = new SearchResult();
                 $searchResult->id = $media->mediaId;
                 $searchResult->source = 'local';
+                $searchResult->type = $media->mediaType;
                 $searchResult->title = $media->name;
                 $searchResult->description = '';
+
+                // Thumbnail
+                $module = $this->moduleFactory->createWithMedia($media);
+
+                if ($module->hasThumbnail()) {
+                    $searchResult->thumbnail = $this->urlFor($request,'library.download', ['id' => $media->mediaId], ['preview' => 1])
+                        . '&width=250&height=250&cache=1';
+                }
+
+                // Add the result
                 $searchResults->data[] = $searchResult;
             }
         }
 
-        if ($type === 'both' || $type === 'remote') {
+        if ($provider === 'both' || $provider === 'remote') {
             $this->getLog()->debug('Dispatching event.');
 
             // Hand off to any other providers that may want to provide results.

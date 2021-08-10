@@ -345,8 +345,6 @@ Toolbar.prototype.render = function() {
         }
     }
 
-    console.log(this.openedMenu);
-
     const toolbarStretched = (this.openedMenu == 2);
 
     // Compile toolbar template with data
@@ -541,8 +539,6 @@ Toolbar.prototype.render = function() {
 
     // Save default tolbar nav z-index
     this.defaultZIndex = this.DOMObject.find('nav').css('z-index');
-
-    console.log(toolbarStretched);
 
     // If toolbar changes width, refresh containers
     if(this.stretched != toolbarStretched) {
@@ -1073,6 +1069,13 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
   let start = 0;
   let length = 15;
 
+  // Bind the more button
+  self.DOMObject.find('#media-assign-more-' + menu).on('click', function(e) {
+    e.preventDefault();
+    start = start + length;
+    self.mediaContentLoadTemplates(mediaAssign, masonry, menu, tabIndex, start, length, 'both');
+  });
+
   // We want two requests to go off, a local and a remote
   self.mediaContentLoadTemplates(mediaAssign, masonry, menu, tabIndex, start, length, 'local',
       function() {
@@ -1081,7 +1084,7 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
       });
 
   // Refresh the table results
-  let filterRefresh = function(mediaTable, tabObj) {
+  let filterRefresh = function(mediaAssign, tabObj) {
     // if the orientation filter does not exist on this tab, add it.
     if (!tabObj.filters.orientation) {
       tabObj.filters.orientation = {
@@ -1108,7 +1111,8 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
     self.updateTabNames(menu);
 
     // Reload table
-    mediaTable.empty();
+    mediaAssign.empty();
+    masonry.reloadItems();
     self.mediaContentLoadTemplates(mediaAssign, masonry, menu, tabIndex, start, length, 'local',
         function() {
           self.mediaContentLoadTemplates(mediaAssign, masonry, menu, tabIndex, start, length,
@@ -1127,12 +1131,12 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
   self.DOMObject.find(
       '#media-search-form-' + tabIndex + ' select, input[type="text"]').
       change(_.debounce(function() {
-        filterRefresh(mediaTable, tabObj);
+        filterRefresh(mediaAssign, tabObj);
       }, 500));
 
   self.DOMObject.find('#media-search-form-' + tabIndex + ' input[type="text"]').
       on('input', _.debounce(function() {
-        filterRefresh(mediaTable, tabObj);
+        filterRefresh(mediaAssign, tabObj);
       }, 500));
 
   // Initialize tagsinput
@@ -1141,7 +1145,7 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
       tagsinput();
 };
 
-Toolbar.prototype.mediaContentLoadTemplates = function(cardColumn, masonry, menu, tabIndex, start, length, type, next) {
+Toolbar.prototype.mediaContentLoadTemplates = function(cardColumn, masonry, menu, tabIndex, start, length, provider, next) {
   const self = this;
   const spinner = cardColumn.closest('.panel').find('.panel-footer .spinner-grow');
   const moreButton = cardColumn.closest('.panel').find('#media-assign-more-' + tabIndex);
@@ -1154,15 +1158,16 @@ Toolbar.prototype.mediaContentLoadTemplates = function(cardColumn, masonry, menu
     data: $.extend({
       start: start,
       length: length,
-      type: type
+      provider: provider
     }, self.DOMObject.find('#media-search-container-' + menu + ' #media-search-form-' + tabIndex).serializeObject()),
     success: function(response) {
       if (response && response.data && response.data.length > 0) {
         $.each(response.data, function(index, el) {
-          let card = addTemplateCard(cardsTemplate, cardColumn, el);
-          card.imagesLoaded(function() {
-            masonry.appended(card);
-          });
+          masonry.addItems(self.mediaContentAddCard(menu, cardColumn, el));
+        });
+        cardColumn.imagesLoaded().progress(function() {
+          console.log('Calling masonry layout');
+          masonry.layout();
         });
       } else {
         toastr.info('You have reached the end');
@@ -1178,7 +1183,7 @@ Toolbar.prototype.mediaContentLoadTemplates = function(cardColumn, masonry, menu
   });
 };
 
-Toolbar.prototype.mediaContentAddCard = function (cardColumn, el) {
+Toolbar.prototype.mediaContentAddCard = function (menu, cardColumn, el) {
   const self = this;
   el.thumbnail = el.thumbnail || defaultThumbnailUrl;
   let $element = $(ToolbarMediaSearchCardTemplate(el));
@@ -1203,10 +1208,12 @@ Toolbar.prototype.mediaContentAddCard = function (cardColumn, el) {
  */
 Toolbar.prototype.tablePositionUpdate = function(container) {
     // Calculate table container height
-    const tableContainerHeight = container.find('.media-search-controls').outerHeight() + container.find('.media-search-form:not(.hidden)').outerHeight() + container.find('.XiboGrid').outerHeight();
+    const tableContainerHeight = container.find('.media-search-controls').outerHeight()
+        + container.find('.media-search-form:not(.hidden)').outerHeight()
+        + container.find('.media-assign-container').outerHeight();
 
     // Set resizable min height
-    if(container.resizable('instance') != undefined) {
+    if(container.resizable('instance') !== undefined) {
         container.resizable('option', 'minHeight', tableContainerHeight);
     }
 

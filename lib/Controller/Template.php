@@ -285,10 +285,10 @@ class Template extends Base
     function search(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
-        $type = $sanitizedQueryParams->getString('type', ['default' => 'both']);
+        $provider = $sanitizedQueryParams->getString('provider', ['default' => 'both']);
 
         $searchResults = new SearchResults();
-        if ($type === 'both' || $type === 'local') {
+        if ($provider === 'both' || $provider === 'local') {
             $templates = $this->layoutFactory->query(['layout'], $this->gridRenderFilter([
                 'excludeTemplates' => 0,
                 'layout' => $sanitizedQueryParams->getString('template'),
@@ -313,7 +313,7 @@ class Template extends Base
             }
         }
 
-        if ($type === 'both' || $type === 'remote') {
+        if ($provider === 'both' || $provider === 'remote') {
             $this->getLog()->debug('Dispatching event.');
 
             // Hand off to any other providers that may want to provide results.

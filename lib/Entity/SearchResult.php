@@ -30,6 +30,7 @@ class SearchResult implements \JsonSerializable
     public $description;
     public $thumbnail;
     public $source;
+    public $type;
     public $id;
 
     public function jsonSerialize()

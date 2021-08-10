@@ -538,7 +538,7 @@
           });
         }
 
-        function loadTemplates(cardsTemplate, cardColumn, masonry, start, length, type, next) {
+        function loadTemplates(cardsTemplate, cardColumn, masonry, start, length, provider, next) {
           var spinner = cardColumn.closest('.modal').find('.panel-footer .spinner-grow');
           var moreButton = cardColumn.closest('.modal').find('#layout-add-templates-more');
           spinner.removeClass('d-none');
@@ -549,7 +549,7 @@
             data: {
               start: start,
               length: length,
-              type: type
+              provider: provider
             },
             success: function(response) {
               if (response && response.data && response.data.length > 0) {
