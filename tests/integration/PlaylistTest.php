@@ -99,7 +99,7 @@ class PlaylistTest extends LocalWebTestCase
         ]);
 
         // Check the response headers
-        $this->assertSame($statusCode, $response->getStatusCode(), "Not successful: " . $response->getStatusCode() . $response->getBody());
+        $this->assertSame($statusCode, $response->getStatusCode(), 'Not successful: ' . $response->getStatusCode() . $response->getBody());
 
         // Make sure we have a useful body
         $object = json_decode($response->getBody());
@@ -132,7 +132,7 @@ class PlaylistTest extends LocalWebTestCase
         ]);
 
         // Check the response headers
-        $this->assertSame($statusCode, $response->getStatusCode(), "Not successful: " . $response->getStatusCode() . $response->getBody());
+        $this->assertSame($statusCode, $response->getStatusCode(), 'Not successful: ' . $response->getStatusCode() . $response->getBody());
 
         $object = json_decode($response->getBody());
         $this->assertObjectHasAttribute('data', $object, 'Missing data');
