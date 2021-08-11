@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -426,6 +426,7 @@
                 stateSave: true, stateDuration: 0,
                 filter: false,
                 searchDelay: 3000,
+                responsive: true,
                 "order": [[1, "asc"]],
                 ajax: {
                     "url": "{{ url_for("library.usage", {id: ':id'}) }}".replace(":id", $("#usageReportTable").data().mediaId),
@@ -451,6 +452,7 @@
                 stateSave: true, stateDuration: 0,
                 filter: false,
                 searchDelay: 3000,
+                responsive: true,
                 "order": [[1, "asc"]],
                 ajax: {
                     "url": "{{ url_for("library.usage.layouts", {id: ':id'}) }}".replace(":id", $("#usageReportLayoutsTable").data().mediaId)

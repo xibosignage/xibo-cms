@@ -246,6 +246,28 @@
                                         {{ forms.disabled("DEFAULT_PURGE_LIST_TTL", title, theme.getSetting("DEFAULT_PURGE_LIST_TTL", 7), helpText) }}
                                     {% endif %}
                                 {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER") %}
+                                    {% set title %}{% trans "The default value for max number of items on a new dynamic Playlist" %}{% endset %}
+                                    {% set helpText %}{% trans "This value can be adjusted on a per dynamic Playlist basis, it cannot exceed value set in the Limit below" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER") %}
+                                        {{ forms.number("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER", title, theme.getSetting("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER", 30), helpText, "", "", "", theme.getSetting("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT", 100)) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER", title, theme.getSetting("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER", 30), helpText) }}
+                                    {% endif %}
+                                {% endif %}
+
+                                {% if theme.isSettingVisible("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT") %}
+                                    {% set title %}{% trans "The default upper limit of items that can be assigned to a dynamic Playlist" %}{% endset %}
+                                    {% set helpText %}{% trans "When matching Media by Tags and name to a dynamic Playlist, this is the maximum number of allowed items that can be assigned to a dynamic Playlist" %}{% endset %}
+
+                                    {% if theme.isSettingEditable("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT") %}
+                                        {{ forms.number("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT", title, theme.getSetting("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT", 100), helpText) }}
+                                    {% else %}
+                                        {{ forms.disabled("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT", title, theme.getSetting("DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT", 100), helpText) }}
+                                    {% endif %}
+                                {% endif %}
                             </div>
                             <div class="tab-pane" id="tab_displays">
                                 <h3 class="section-heading">{% trans "Displays" %}</h3>

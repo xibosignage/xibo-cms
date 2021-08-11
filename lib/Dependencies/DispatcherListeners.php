@@ -31,6 +31,7 @@ use Xibo\Event\LayoutOwnerChangeEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Event\ParsePermissionEntityEvent;
+use Xibo\Event\PlaylistMaxNumberChangedEvent;
 use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Event\UserDeleteEvent;
 
@@ -251,6 +252,11 @@ class DispatcherListeners
 
                 // On System User change event listener
                 $dispatcher->addListener(SystemUserChangedEvent::$NAME, (new \Xibo\Listener\OnSystemUserChange(
+                    $c->get('store')
+                )));
+
+                // On Playlist Max Number of Items limit change listener
+                $dispatcher->addListener(PlaylistMaxNumberChangedEvent::$NAME, (new \Xibo\Listener\OnPlaylistMaxNumberChange(
                     $c->get('store')
                 )));
 

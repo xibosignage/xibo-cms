@@ -20,21 +20,21 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\XMR;
+namespace Xibo\Event;
 
-/**
- * Class PurgeAllAction
- * @package Xibo\XMR
- */
-class PurgeAllAction extends PlayerAction
+class PlaylistMaxNumberChangedEvent extends Event
 {
-    /**
-     * @return mixed|string
-     */
-    public function getMessage()
-    {
-        $this->action = 'purgeAll';
+    public static $NAME = 'playlist.max.item.number.change.event';
+    /** @var int */
+    private $newLimit;
 
-        return $this->serializeToJson();
+    public function __construct(int $newLimit)
+    {
+        $this->newLimit = $newLimit;
+    }
+
+    public function getNewLimit(): int
+    {
+        return $this->newLimit;
     }
 }

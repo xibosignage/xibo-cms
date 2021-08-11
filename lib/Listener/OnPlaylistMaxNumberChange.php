@@ -20,21 +20,27 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\XMR;
+namespace Xibo\Listener;
 
-/**
- * Class PurgeAllAction
- * @package Xibo\XMR
- */
-class PurgeAllAction extends PlayerAction
+use Xibo\Event\PlaylistMaxNumberChangedEvent;
+use Xibo\Storage\StorageServiceInterface;
+
+class OnPlaylistMaxNumberChange
 {
     /**
-     * @return mixed|string
+     * @var StorageServiceInterface
      */
-    public function getMessage()
-    {
-        $this->action = 'purgeAll';
+    private $storageService;
 
-        return $this->serializeToJson();
+    public function __construct(StorageServiceInterface $storageService)
+    {
+        $this->storageService = $storageService;
+    }
+
+    public function __invoke(PlaylistMaxNumberChangedEvent $event)
+    {
+        $this->storageService->update('UPDATE `playlist` SET maxNumberOfItems = :newLimit WHERE isDynamic = 1 AND maxNumberOfItems > :newLimit', [
+            'newLimit' => $event->getNewLimit()
+        ]);
     }
 }

@@ -531,6 +531,13 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="maxNumberOfItems",
+     *      in="formData",
+     *      description="Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -588,8 +595,12 @@ class Playlist extends Base
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
+            if (empty($nameFilter) && empty($tagFilter)) {
+                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
+            }
             $playlist->filterMediaName = $nameFilter;
             $playlist->filterMediaTags = $tagFilter;
+            $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems', ['default' => $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')]);
         }
 
         $playlist->save();
@@ -626,6 +637,10 @@ class Playlist extends Base
 
                     // Add to a list of new widgets
                     $widgets[] = $widget;
+                    if ($playlist->isDynamic && count($widgets) >= $playlist->maxNumberOfItems) {
+                        $this->getLog()->debug(sprintf('Dynamic Playlist ID %d, has reached the maximum number of items %d, finishing assignments', $playlist->playlistId, $playlist->maxNumberOfItems));
+                        break;
+                    }
                 }
 
                 // Save the playlist
@@ -723,6 +738,13 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="maxNumberOfItems",
+     *      in="formData",
+     *      description="Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -772,11 +794,15 @@ class Playlist extends Base
         // Do we have a tag or name filter?
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
+            if (empty($sanitizedParams->getString('filterMediaName')) && empty($sanitizedParams->getString('filterMediaTag'))) {
+                throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
+            }
             $playlist->filterMediaName = $sanitizedParams->getString('filterMediaName');
 
             if ($this->getUser()->featureEnabled('tag.tagging')) {
                 $playlist->filterMediaTags = $sanitizedParams->getString('filterMediaTag');
             }
+            $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems');
         }
 
         $playlist->save();
