@@ -137,6 +137,10 @@ class Folder
         if (!v::stringType()->notEmpty()->length(1, 254)->validate($this->text)) {
             throw new InvalidArgumentException(__('Folder needs to have a name, between 1 and 254 characters.'), 'folderName');
         }
+
+        if (empty($this->parentId)) {
+            throw new InvalidArgumentException(__('Folder needs a specified parent Folder id'), 'parentId');
+        }
     }
 
     public function load()
