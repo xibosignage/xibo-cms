@@ -28,8 +28,8 @@ class AddNumberOfItemsToPlaylistMigration extends AbstractMigration
         $widgetCountData = $widgetCount->fetchAll(PDO::FETCH_ASSOC);
 
         // compare our proposed default values with the highest Widget count on dynamic Playlist in the system
-        $default = max($widgetCountData[0]['cnt'], 30);
-        $max = max($widgetCountData[0]['cnt'], 100);
+        $default = max($widgetCountData[0]['cnt'] ?? 0, 30);
+        $max = max($widgetCountData[0]['cnt'] ?? 0, 100);
 
         // set all dynamic Playlists maxNumberOfItems to the default value
         $this->execute('UPDATE `playlist` SET maxNumberOfItems = ' . $default. ' WHERE isDynamic = 1');
