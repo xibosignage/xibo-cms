@@ -80,7 +80,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         });
     });
 
-    it('shows the file upload form by using the Add button on a card with uploadable media from the toolbar to layout-timeline region', () => {
+    it.skip('shows the file upload form by using the Add button on a card with uploadable media from the toolbar to layout-timeline region', () => {
 
         cy.populateLibraryWithMedia();
 

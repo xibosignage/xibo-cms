@@ -378,7 +378,7 @@ Navigator.prototype.saveRegionPropertiesPanel = function() {
  * Toggle fullscreen
  */
 Navigator.prototype.toggleFullscreen = function() {
-    this.DOMObject.parent().toggleClass('fullscreen');
+    this.DOMObject.parents('#layout-navigator').toggleClass('fullscreen');
     this.parent.editorContainer.toggleClass('fullscreen-mode');
 
     this.render();

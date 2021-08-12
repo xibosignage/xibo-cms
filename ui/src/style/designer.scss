@@ -3,7 +3,7 @@
 @import "mixins";
 
 // Colours
-$designer-color-background: $xibo-color-white;
+$designer-color-background: $xibo-color-whitey-blue;
 $designer-colour-layout: $xibo-color-light-blue;
 $designer-colour-region: $xibo-color-orange;
 $designer-colour-widget: $xibo-color-green; 
@@ -46,6 +46,7 @@ $timeline-transition-in-fg-color: $xibo-color-green;
 $timeline-transition-out-fg-color: $xibo-color-red;
 
 $timeline-height: 195px;
+$properties-panel-width: 380px;
 
 $viewer-player-bg-colour: $xibo-color-black;
 $viewer-preview-text-colour: darken($xibo-color-white, 30%);
@@ -103,6 +104,10 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         flex-direction: column;
     }
 
+    .min-fix {
+        min-width: 0;
+    }
+
     .rowspan2 {
         flex: 1 1 100%;
     }
@@ -125,21 +130,14 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     }
 }
 
-.properties-panel-container {
-    flex: 0;
-    height: 100%;
-}
-
-.timeline-panel {
-    flex-basis: 100%;
-    margin-bottom: -$timeline-height;
-
-    .timeline-toggle-container {
+.toggle-panel {
+    .toggle-container {
         background-color: $xibo-color-light-gray;
         width: 100%;
-        height: 4px;
+        height: 8px;
 
-        .timeline-toggle {
+        .toggle {
+            color: $xibo-color-primary-lighter;
             top: -13px;
             width: 50px;
             height: 13px;
@@ -150,6 +148,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             transform: translateX(50%);
             cursor: pointer;
             font-size: 12px;
+            z-index: 1;
         }
     }
 
@@ -163,6 +162,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
     &.opened {
         margin-bottom: 0;
+        margin-right: 0;
 
         .hide-closed {
             display: none;
@@ -171,6 +171,48 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         .hide-opened {
             display: inline;
         }
+    }
+}
+
+.properties-panel-container {
+    flex: 0;
+    height: 100%;
+    display: flex;
+    margin-right: -$properties-panel-width;
+
+    .toggle-container {
+        background-color: $xibo-color-pure-white;
+        height: 100%;
+        width: 8px;
+
+        .toggle {
+            background-color: $xibo-color-pure-white;
+            left: -13px;
+            height: 50px;
+            width: 13px;
+            border-radius: 18px 0 0 18px;
+            top: 50%;
+            transform: translateY(-50%);
+
+            i {
+                top: 50%;
+                position: absolute;
+                transform: translateY(-50%);
+            }
+        }
+    }
+
+    &.opened .toggle-container {
+        width: 0;
+    }
+}
+
+.timeline-panel {
+    flex-basis: 100%;
+    margin-bottom: -$timeline-height;
+
+    &.opened .toggle-container {
+        height: 2px;
     }
 }
 
@@ -269,12 +311,12 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
 /* Layout timeline */
 #layout-editor #layout-timeline {
+    flex-basis: calc(100% - 40px);
     background: $xibo-color-light-gray;
     padding: 3px;
     padding-bottom: 0;
     height: $timeline-height;
     overflow-y: auto;
-    scrollbar-width: thin; /* For firefox */
     scrollbar-color: $designer-secondary-color lighten($designer-secondary-color, 30%); /* For firefox */
 
     #timeline-container {
@@ -283,28 +325,28 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
     /* Custom scrollbar */
     /* width */
-    #regions-container::-webkit-scrollbar {
+    &::-webkit-scrollbar, #regions-container::-webkit-scrollbar {
         width: 10px;
         height: 10px;
     }
 
     /* Track */
-    #regions-container::-webkit-scrollbar-track {
+    &::-webkit-scrollbar, #regions-container::-webkit-scrollbar-track {
         @include box-shadow(inset 0 0 5px $xibo-color-gray);
     }
     
     /* Handle */
-    #regions-container::-webkit-scrollbar-thumb {
+    &::-webkit-scrollbar, #regions-container::-webkit-scrollbar-thumb {
         background: $designer-secondary-color;
         @include border-radius(4px);
     }
 
     /* Handle on hover */
-    #regions-container::-webkit-scrollbar-thumb:hover {
+    &::-webkit-scrollbar, #regions-container::-webkit-scrollbar-thumb:hover {
         background: lighten($designer-secondary-color, 20%);
     }
 
-    #regions-container::-webkit-scrollbar-corner {
+    &::-webkit-scrollbar, #regions-container::-webkit-scrollbar-corner {
         @include box-shadow(inset 0 0 5px $xibo-color-gray);
     }
 
@@ -665,7 +707,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 /* Layout Viewer */
 #layout-editor #layout-viewer-container {
     height: 100%;
-    padding: 16px 16px 24px 16px;
+    padding: 16px 24px 24px 16px;
 
     .main-panel-wrapper {
         border-color: $xibo-color-pastel-blue;
@@ -807,8 +849,9 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         z-index: 1050;
         left: 0;
         top: 0;
+        padding: 0;
+        height: calc(100% - 38px);
         width: 100%;
-        height: 100%;
     
         #layout-viewer {
             position: fixed; /* Stay in place */
@@ -909,6 +952,8 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         background: $xibo-color-pure-white;
         position: relative;
         height: 100%;
+        display: flex;
+        flex-direction: column;
 
         /* Hide playlist editor only messages */
         .playlist-editor-message {
@@ -929,9 +974,10 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
                 & > div {
                     height: calc(100% - 35px);
+                    padding: 4px !important;
 
                     & > form {
-                        height: calc(100% - 40px);
+                        height: 100%;
                         overflow-x: hidden;
                         overflow-y: auto;
 
@@ -978,6 +1024,8 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
             }
 
             .row > div > form {
+                padding: 0 6px;
+
                 .row > div  {
                     padding: 4px 8px;
                 }
@@ -1144,14 +1192,15 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         }
 
         .button-container {
-            padding: 5px;
-            position: absolute;
+            display: flex;
+            flex-direction: column-reverse;
+            padding: 0 4px;
             bottom: 0;
             font-size: 0;
             width: 100%;
 
             & > button {
-                margin: 0 2px;
+                margin: 4px 0;
             }
         }
     }
@@ -1161,7 +1210,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 #layout-editor #layout-navigator {
     display: none;
     height: 100%;
-    padding: 16px 16px 24px 16px;
+    padding: 16px 24px 24px 16px;
 
     .main-panel-wrapper {
         border-color: $xibo-color-dark-orange;
@@ -1206,10 +1255,10 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     left: 0;
     top: 0;
     width: 100%;
-    height: 100%;
+    padding: 0;
+    height: calc(100% - 38px);
 
     #layout-navigator-content {
-        position: fixed; /* Stay in place */
         z-index: $designer-overlay-z-index; /* Sit on top */
         left: 8px;
         top: 8px;
@@ -1277,37 +1326,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
     background: $widget-selected-color !important;
 }
 
-#layout-editor  #layout-timeline .designer-widget.ui-droppable-active {
-    @include z-index-set($designer-z-index-select);
-    @include background-stripes(45deg, $widget-hover-color, lighten($widget-hover-color, 10%), 10px, 4px);
-    visibility: visible;
-}
-
-#layout-editor #layout-timeline .designer-widget.ui-droppable-active.ui-droppable-hover,
-#layout-editor #layout-timeline .designer-widget.ui-droppable-active:hover {
-    @include background-stripes(45deg, darken($widget-hover-color, 10%), $widget-hover-color, 10px, 4px);
-}
-
-#layout-editor  #layout-timeline .designer-region.to-sort .designer-widget {
-    background: $timeline-widget-to-sort-bg-color !important;
-}
-
-#layout-editor #layout-timeline .designer-region.ui-droppable-active {
-    @include z-index-set($designer-z-index-select);
-
-    .designer-region-overlay {
-        @include background-stripes(45deg, $region-hover-color, lighten($region-hover-color, 20%), 10px, 4px);
-        display: block;
-        opacity: 0.75;
-    }
-
-    &.ui-droppable-hover, &:hover {
-        .designer-region-overlay {
-            @include background-stripes(45deg, darken($region-hover-color, 20%), lighten($region-hover-color, 10%), 10px, 4px);
-        }
-    }
-}
-
 #layout-editor #layout-navigator .designer-region.ui-droppable-active {
     @include z-index-set($designer-z-index-select);
     @include background-stripes(45deg, $region-hover-color, lighten($region-hover-color, 20%), 10px, 4px);
@@ -1338,6 +1356,67 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
 #layout-editor .ui-droppable-active {
     @include box-shadow(inset 0 0 2px $xibo-color-white);
+}
+
+#layout-editor .timeline-panel.opened {
+
+     #layout-timeline .designer-widget.ui-droppable-active {
+        @include z-index-set($designer-z-index-select);
+        @include background-stripes(45deg, $widget-hover-color, lighten($widget-hover-color, 10%), 10px, 4px);
+        visibility: visible;
+    }
+    
+    #layout-timeline .designer-widget.ui-droppable-active.ui-droppable-hover,
+    #layout-timeline .designer-widget.ui-droppable-active:hover {
+        @include background-stripes(45deg, darken($widget-hover-color, 10%), $widget-hover-color, 10px, 4px);
+    }
+    
+     #layout-timeline .designer-region.to-sort .designer-widget {
+        background: $timeline-widget-to-sort-bg-color !important;
+    }
+    
+    #layout-timeline .designer-region.ui-droppable-active {
+        @include z-index-set($designer-z-index-select);
+    
+        .designer-region-overlay {
+            @include background-stripes(45deg, $region-hover-color, lighten($region-hover-color, 20%), 10px, 4px);
+            display: block;
+            opacity: 0.75;
+        }
+    
+        &.ui-droppable-hover, &:hover {
+            .designer-region-overlay {
+                @include background-stripes(45deg, darken($region-hover-color, 20%), lighten($region-hover-color, 10%), 10px, 4px);
+            }
+        }
+    }
+    #actions-drawer-content {
+        &.ui-droppable-active {
+            @include z-index-set($designer-z-index-select);
+            @include background-stripes(45deg, $drawer-hover-color, lighten($drawer-hover-color, 20%), 10px, 4px);
+
+            &.ui-droppable-hover,
+            &:hover {
+                @include background-stripes(45deg, darken($drawer-hover-color, 20%), lighten($drawer-hover-color, 10%), 10px, 4px);
+            }
+
+            * {
+                visibility: hidden;
+            }
+        }
+
+        .designer-widget {
+            &.ui-droppable-active {
+                @include z-index-set($designer-z-index-select);
+                @include background-stripes(45deg, $widget-hover-color, lighten($widget-hover-color, 10%), 10px, 4px);
+                visibility: visible;
+            }
+
+            &.ui-droppable-active:hover {
+                @include background-stripes(45deg, darken($widget-hover-color, 10%), $widget-hover-color, 10px, 4px);
+            }
+        }
+    }
 }
 
 #layout-editor .ui-droppable-hover {
@@ -1428,20 +1507,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
         border-color: $drawer-toggle-bg-color;
         width: calc(100% - 40px);
         z-index: 1;
-        
-        &.ui-droppable-active {
-            @include z-index-set($designer-z-index-select);
-            @include background-stripes(45deg, $drawer-hover-color, lighten($drawer-hover-color, 20%), 10px, 4px);
-
-            &.ui-droppable-hover,
-            &:hover {
-                @include background-stripes(45deg, darken($drawer-hover-color, 20%), lighten($drawer-hover-color, 10%), 10px, 4px);
-            }
-
-            * {
-                visibility: hidden;
-            }
-        }
 
         .actions-drawer-controls {
             background-color: $designer-module-bg-color;
@@ -1610,16 +1675,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 
                 &:hover {
                     background-color: $widget-hover-color;
-                }
-
-                &.ui-droppable-active {
-                    @include z-index-set($designer-z-index-select);
-                    @include background-stripes(45deg, $widget-hover-color, lighten($widget-hover-color, 10%), 10px, 4px);
-                    visibility: visible;
-                }
-
-                &.ui-droppable-active:hover {
-                    @include background-stripes(45deg, darken($widget-hover-color, 10%), $widget-hover-color, 10px, 4px);
                 }
             }
         }

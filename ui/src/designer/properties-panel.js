@@ -381,6 +381,19 @@ PropertiesPanel.prototype.render = function(element, step) {
                 $newOption.appendTo($selectOptionContainer);
             }
         }
+
+        // Toggler
+        self.DOMObject.parents('.toggle-panel').find('.toggle').off().click(function(e) {
+            e.stopPropagation();
+            $(this).parents('.toggle-panel').toggleClass('opened');
+
+            // Refresh navigator or viewer
+            if (lD.navigatorMode) {
+                lD.renderContainer(lD.navigator);
+            } else {
+                lD.renderContainer(lD.viewer, lD.selectedObject);
+            }
+        });
     }).fail(function(data) {
 
         // Clear request var after response

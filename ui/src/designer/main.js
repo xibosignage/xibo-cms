@@ -481,8 +481,6 @@ lD.refreshDesigner = function() {
     this.clearTemporaryData();
 
     // Render containers with layout ( default )
-    this.renderContainer(this.timeline);
-    this.renderContainer(this.drawer);
     this.renderContainer(this.toolbar);
     this.renderContainer(this.topbar);
     this.renderContainer(this.manager);
@@ -493,6 +491,9 @@ lD.refreshDesigner = function() {
     } else {
         this.renderContainer(this.viewer, this.selectedObject);
     }
+    
+    this.renderContainer(this.timeline);
+    this.renderContainer(this.drawer);
 };
 
 
