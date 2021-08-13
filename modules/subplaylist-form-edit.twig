@@ -102,7 +102,7 @@
                         {{ forms.checkbox("cyclePlaybackEnabled", title, module.getOption("cyclePlaybackEnabled"), helpText) }}
 
                         {% set title %}{% trans "Play count" %}{% endset %}
-                        {% set helpText %}{% trans "In cycle based playback, how many plays should each widget have before moving on?" %}{% endset %}
+                        {% set helpText %}{% trans "In cycle based playback, how many plays should each Widget have before moving on?" %}{% endset %}
                         {{ forms.number("playCount", title, module.getOption("playCount"), helpText, "cycle-based-playback") }}
 
                         {% set title %}{% trans "Random Widget each cycle?" %}{% endset %}
