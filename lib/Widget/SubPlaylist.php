@@ -187,6 +187,27 @@ class SubPlaylist extends ModuleWidget
      *          type="string"
      *      )
      *  ),
+     *  @SWG\Parameter(
+     *      name="cyclePlaybackEnabled",
+     *      in="formData",
+     *      description="Enable cycle based playback?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="playCount",
+     *      in="formData",
+     *      description="In cycle based playback, how many plays should each widget have before moving on?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="cycleRandomWidget",
+     *      in="formData",
+     *      description="In cycle based playback, a random Widget will be selected at the start of each cycle and shown until its play count has been met.",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -205,6 +226,15 @@ class SubPlaylist extends ModuleWidget
         // Options
         $this->setOption('arrangement', $sanitizedParams->getString('arrangement'));
         $this->setOption('remainder', $sanitizedParams->getString('remainder'));
+
+        // Cycle based playback options
+        $this->setOption('cyclePlaybackEnabled', $sanitizedParams->getCheckbox('cyclePlaybackEnabled'));
+        $this->setOption('playCount', $sanitizedParams->getCheckbox('cyclePlaybackEnabled') ? $sanitizedParams->getInt('playCount') : null);
+        $this->setOption('cycleRandomWidget', $sanitizedParams->getCheckbox('cyclePlaybackEnabled') ? $sanitizedParams->getCheckbox('cycleRandomWidget') : 0);
+
+        if ($sanitizedParams->getCheckbox('cyclePlaybackEnabled') && empty($sanitizedParams->getInt('playCount'))) {
+            throw new InvalidArgumentException(__('Please enter Play Count.'), 'playCount');
+        }
 
         // Get the list of playlists
         $subPlaylistId = $sanitizedParams->getIntArray('subPlaylistId', ['default' => []]);
