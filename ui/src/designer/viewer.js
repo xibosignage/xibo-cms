@@ -425,7 +425,7 @@ Viewer.prototype.toggleFullscreen = function() {
         this.closeInlineEditorContent();
     }
     
-    this.DOMObject.parent().toggleClass('fullscreen');
+    this.DOMObject.parents('#layout-viewer-container').toggleClass('fullscreen');
     this.parent.editorContainer.toggleClass('fullscreen-mode');
     this.render(lD.selectedObject, lD.layout);
 };

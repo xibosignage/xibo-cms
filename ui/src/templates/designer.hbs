@@ -16,8 +16,8 @@
         </div>
     </div>
 
-    <div class="flex-v justify-content-between">
-        <div class="flex-h overflow-auto">
+    <div class="flex-v justify-content-between min-fix">
+        <div class="flex-h overflow-hidden">
             <div class="main-panel">
                 <div id="layout-viewer-container">
                     <div class="main-panel-wrapper">
@@ -36,7 +36,13 @@
                 </div>
             </div>  
 
-            <div class="properties-panel-container layout-module">
+            <div class="properties-panel-container layout-module toggle-panel opened">
+                <div class="toggle-container text-center">
+                        <div class="toggle">
+                            <i class="fa fa-chevron-left hide-closed"></i>
+                            <i class="fa fa-chevron-right hide-opened"></i>
+                        </div>
+                    </div>
                 <div id="properties-panel" class="bootbox properties-panel">
                     <!--PROPERTIES PANEL-->
                 </div>
@@ -44,10 +50,10 @@
         </div>
 
         <div class="flex-h flex-grow-0">
-            <div class="timeline-panel" class="rowspan2">
+            <div class="timeline-panel toggle-panel min-fix">
                 <div class="">
-                    <div class="timeline-toggle-container text-center">
-                        <div class="timeline-toggle">
+                    <div class="toggle-container text-center">
+                        <div class="toggle">
                             <i class="fa fa-chevron-up hide-closed"></i>
                             <i class="fa fa-chevron-down hide-opened"></i>
                         </div>
