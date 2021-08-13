@@ -197,7 +197,7 @@ class SubPlaylist extends ModuleWidget
      *  @SWG\Parameter(
      *      name="playCount",
      *      in="formData",
-     *      description="In cycle based playback, how many plays should each widget have before moving on?",
+     *      description="In cycle based playback, how many plays should each Widget have before moving on?",
      *      type="integer",
      *      required=false
      *   ),
