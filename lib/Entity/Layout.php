@@ -1474,6 +1474,10 @@ class Layout implements \JsonSerializable
                     $mediaNode->setAttribute('playlist', $widget->playlist);
                     $mediaNode->setAttribute('displayOrder', $widget->displayOrder);
                     $mediaNode->setAttribute('parentWidgetId', $widget->tempId);
+                    $mediaNode->setAttribute('isRandom', $widget->getOptionValue('isRandom', 0));
+                    $mediaNode->setAttribute('playCount', $widget->getOptionValue('playCount', 0));
+                    $mediaNode->setAttribute('groupKey', $widget->playlistId);
+                    $mediaNode->setAttribute('cyclePlayback', $widget->getOptionValue('cyclePlayback', 0));
                 }
 
                 // Set the duration according to whether we are using widget duration or not

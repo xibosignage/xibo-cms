@@ -421,6 +421,9 @@ class SubPlaylist extends ModuleWidget
 
         $arrangement = $this->getOption('arrangement', 'none');
         $remainder = $this->getOption('remainder', 'none');
+        $cyclePlayback = $this->getOption('cyclePlaybackEnabled', 0);
+        $playCount = $this->getOption('playCount', 0);
+        $isRandom = $this->getOption('cycleRandomWidget', 0);
 
         $this->getLog()->debug('Resolve widgets for Sub-Playlist ' . $this->getWidgetId() . ' with arrangement ' . $arrangement . ' and remainder ' . $remainder);
 
@@ -461,6 +464,10 @@ class SubPlaylist extends ModuleWidget
                     $this->getLog()->debug('For widget ID ' . $subPlaylistWidget->widgetId . ' enableStat was Inherit, changed to Playlist enableStat value - ' . $playlistEnableStat);
                     $subPlaylistWidget->setOptionValue('enableStat', 'attrib', $playlistEnableStat);
                 }
+
+                $subPlaylistWidget->setOptionValue('cyclePlayback', 'attrib', $cyclePlayback);
+                $subPlaylistWidget->setOptionValue('playCount', 'attrib', $playCount);
+                $subPlaylistWidget->setOptionValue('isRandom', 'attrib', $isRandom);
             }
 
             // Do we have a number of spots set?
