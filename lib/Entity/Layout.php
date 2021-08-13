@@ -2261,6 +2261,7 @@ class Layout implements \JsonSerializable
             $campaign->isLayoutSpecific = 1;
             $campaign->ownerId = $this->getOwnerId();
             $campaign->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+            $campaign->cyclePlaybackEnabled = 0;
 
             // if user has disabled folder feature, presumably said user also has no permissions to folder
             // getById would fail here and prevent adding new Layout in web ui

@@ -590,7 +590,7 @@ class Campaign implements \JsonSerializable
             'campaign' => $this->campaign,
             'isLayoutSpecific' => $this->isLayoutSpecific,
             'userId' => $this->ownerId,
-            'cyclePlaybackEnabled' => $this->cyclePlaybackEnabled,
+            'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
             'playCount' => $this->playCount,
             'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
             'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
@@ -606,7 +606,7 @@ class Campaign implements \JsonSerializable
             'campaignId' => $this->campaignId,
             'campaign' => $this->campaign,
             'userId' => $this->ownerId,
-            'cyclePlaybackEnabled' => $this->cyclePlaybackEnabled,
+            'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
             'playCount' => $this->playCount,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId
