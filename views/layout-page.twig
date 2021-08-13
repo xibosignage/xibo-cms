@@ -469,30 +469,57 @@
           var cardsTemplate = Handlebars.compile($('#template-layout-add-template-cards').html());
           var cardColumn = $(dialog).find('#layout-add-templates');
 
-          // Add our blank resolution
-          var resolutionCard = addTemplateCard(cardsTemplate, cardColumn, {
-            title: '{{ "Blank"|trans }}',
-            description: '{{ "Start with a blank template, pick orientation on step 2."|trans }}',
-            thumbnail: null,
-            source: 'local',
-            id: 0
-          });
-
           // track start/length
           var masonry;
           var start = 0;
           var length = 15;
 
-          resolutionCard.imagesLoaded(function() {
-            // Initialise masonary - we do this after we've added our first card.
-            masonry = new Masonry('#layout-add-templates', {
-              percentPosition: true
-            });
+          // Initialise masonary - we do this after we've added our first card.
+          masonry = new Masonry('#layout-add-templates', {
+            percentPosition: true
+          });
 
+          // Add our blank resolution
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "Blank"|trans }}',
+            description: '{{ "Start with a blank layout, pick orientation on step 2."|trans }}',
+            thumbnail: null,
+            source: 'local',
+            id: '0|blank'
+          }));
+
+          // Add full screen, l-bar-right and l-bar-left
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "Full screen"|trans }}',
+            description: '{{ "Full screen content"|trans }}',
+            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/full-screen.png',
+            source: 'local',
+            id: '0|full-screen'
+          }));
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "L shape left"|trans }}',
+            description: '{{ "3 regions in an L shape, on the left"|trans }}',
+            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/l-bar-left.png',
+            source: 'local',
+            id: '0|l-bar-left'
+          }));
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "L shape right"|trans }}',
+            description: '{{ "3 regions in an L shape, on the right"|trans }}',
+            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/l-bar-right.png',
+            source: 'local',
+            id: '0|l-bar-right'
+          }));
+
+          cardColumn.imagesLoaded(function() {
+            // All images loaded
             // Make a request to get our templates.
             loadTemplates(cardsTemplate, cardColumn, masonry, start, length, 'local', function() {
               loadTemplates(cardsTemplate, cardColumn, masonry, start, length, 'remote');
             });
+          }).progress(function() {
+            // Layout the image card we've laoded
+            masonry.layout();
           });
 
           // Add the more button
@@ -555,11 +582,13 @@
               if (response && response.data && response.data.length > 0) {
 
                 $.each(response.data, function(index, el) {
-                  var card = addTemplateCard(cardsTemplate, cardColumn, el);
-                  card.imagesLoaded(function() {
-                    masonry.appended(card);
-                  });
+                  masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, el));
                 });
+
+                cardColumn.imagesLoaded().progress(function () {
+                  masonry.layout();
+                });
+
               } else {
                 toastr.info('{{ "You have reached the end"|trans }}');
               }
@@ -588,12 +617,12 @@
             $('#layout-create-stepper-next-button').removeClass('disabled');
 
             // If source is local and layoutId is 0, then show the resolution filter otherwise don't
-            var layoutId = $(this).data('layout-id');
+            var layoutId = $(this).data('layout-id') + "";
             var source = $(this).data('source');
             $that.closest('form').find('input[name="layoutId"]').val(layoutId);
             $that.closest('form').find('input[name="source"]').val(source);
 
-            if (layoutId === 0 && source === 'local') {
+            if (layoutId.startsWith("0|")) {
               $that.closest('form').find('.resolution-group').removeClass('d-none');
             } else {
               $that.closest('form').find('.resolution-group').addClass('d-none');

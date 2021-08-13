@@ -23,6 +23,7 @@ namespace Xibo\Controller;
 
 use Carbon\Carbon;
 use GuzzleHttp\Psr7\Stream;
+use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use Mimey\MimeTypes;
 use Parsedown;
@@ -341,12 +342,15 @@ class Layout extends Base
         // TODO: if we have selected an item from a non-local source, we need to process that here.
         //  the connector would be expected to import the layout at this point and return us with a Layout
         //  object we can then decorate with our other options.
-        $templateId = $sanitizedParams->getInt('layoutId');
+        $templateId = $sanitizedParams->getString('layoutId');
         $source = $sanitizedParams->getString('source');
         $resolutionId = $sanitizedParams->getInt('resolutionId');
         $template = null;
 
-        if ($templateId != 0) {
+        // Template or Resolution?
+        $isResolution = $templateId === '0' || Str::startsWith($templateId, '0|');
+
+        if (!$isResolution) {
             // Load the template
             $template = $this->layoutFactory->loadById($templateId);
             $template->load();
@@ -379,8 +383,30 @@ class Layout extends Base
                 $name,
                 $description,
                 $tags,
-                $code
+                $code,
+                false
             );
+
+            // Handle our various templateId's
+            // TODO
+            switch ($templateId) {
+                case '0|blank':
+                    // Do nothing
+                    break;
+
+                case '0|l-bar-left':
+
+                    break;
+
+                case '0|l-bar-right':
+
+                    break;
+
+                case '0|full-screen':
+                default:
+                    // Maintain backwards compatibility by creating an empty full screen region
+                    $this->layoutFactory->addRegion($layout, $layout->width, $layout->height, 0, 0);
+            }
         }
 
         // Set layout enableStat flag

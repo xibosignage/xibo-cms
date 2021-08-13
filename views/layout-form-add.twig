@@ -51,7 +51,7 @@
                   data-gettag="{{ url_for("tag.getByName") }}"
                   data-help-url="{{ help }}"
                 >
-                {{ forms.hidden("layoutId", 0) }}
+                {{ forms.hidden("layoutId", "0|blank") }}
                 {{ forms.hidden("source") }}
 
                 <div class="panel panel-default stepper-panel" id="layout-create-step-1" data-next="layout-create-step-2">
