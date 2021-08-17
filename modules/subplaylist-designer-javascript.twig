@@ -29,6 +29,9 @@
         // Get form object
         var $form = $(this);
 
+        // setup checkbox behaviour for cycle based playback
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#cyclePlaybackEnabled', '.cycle-based-playback');
+
         // Bind our tooltips
         $form.find('[data-toggle="tooltip"]').tooltip();
 

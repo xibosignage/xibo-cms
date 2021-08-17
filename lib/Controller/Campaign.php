@@ -188,6 +188,7 @@ class Campaign extends Base
             'retired' => $parsedParams->getInt('retired'),
             'folderId' => $parsedParams->getInt('folderId'),
             'totalDuration' => $parsedParams->getInt('totalDuration', ['default' => 1]),
+            'cyclePlaybackEnabled' => $parsedParams->getInt('cyclePlaybackEnabled'),
             'layoutId' => $parsedParams->getInt('layoutId')
         ];
 
@@ -385,6 +386,20 @@ class Campaign extends Base
      *      @SWG\Items(type="integer"),
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="cyclePlaybackEnabled",
+     *      in="formData",
+     *      description="When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="playCount",
+     *      in="formData",
+     *      description="In cycle based playback, how many plays should each Layout have before moving on?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -409,7 +424,12 @@ class Campaign extends Base
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $campaign = $this->campaignFactory->create($sanitizedParams->getString('name'), $this->getUser()->userId, $sanitizedParams->getString('tags'), $sanitizedParams->getInt('folderId', ['default' => 1]));
+        $campaign = $this->campaignFactory->create(
+            $sanitizedParams->getString('name'),
+            $this->getUser()->userId,
+            $sanitizedParams->getString('tags'),
+            $sanitizedParams->getInt('folderId', ['default' => 1])
+        );
 
         if ($this->getUser()->featureEnabled('folder.view')) {
             $folder = $this->folderFactory->getById($campaign->folderId);
@@ -417,6 +437,10 @@ class Campaign extends Base
         } else {
             $campaign->permissionsFolderId = 1;
         }
+
+        // Cycle based playback
+        $campaign->cyclePlaybackEnabled = $sanitizedParams->getCheckbox('cyclePlaybackEnabled');
+        $campaign->playCount = ($campaign->cyclePlaybackEnabled) ? $sanitizedParams->getInt('playCount') : null;
 
         // Assign layouts?
         foreach ($sanitizedParams->getIntArray('layoutIds', ['default' => []]) as $layoutId) {
@@ -545,6 +569,20 @@ class Campaign extends Base
      *      @SWG\Items(type="integer"),
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="cyclePlaybackEnabled",
+     *      in="formData",
+     *      description="When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="playCount",
+     *      in="formData",
+     *      description="In cycle based playback, how many plays should each Layout have before moving on?",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -568,6 +606,10 @@ class Campaign extends Base
             $folder = $this->folderFactory->getById($campaign->folderId);
             $campaign->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
         }
+
+        // Cycle based playback
+        $campaign->cyclePlaybackEnabled = $parsedRequestParams->getCheckbox('cyclePlaybackEnabled');
+        $campaign->playCount = $campaign->cyclePlaybackEnabled ? $parsedRequestParams->getInt('playCount') : null;
 
         // Assign layouts?
         if ($parsedRequestParams->getCheckbox('manageLayouts') === 1) {

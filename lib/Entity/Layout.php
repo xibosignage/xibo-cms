@@ -1473,7 +1473,14 @@ class Layout implements \JsonSerializable
                 if ($widget->tempId != $widget->widgetId) {
                     $mediaNode->setAttribute('playlist', $widget->playlist);
                     $mediaNode->setAttribute('displayOrder', $widget->displayOrder);
+                    // parentWidgetId is the Sub-playlist WidgetId,
+                    // which is used to group all Widgets belonging to the same Sub-playlist
                     $mediaNode->setAttribute('parentWidgetId', $widget->tempId);
+
+                    // These three attributes relate to cycle based playback
+                    $mediaNode->setAttribute('isRandom', $widget->getOptionValue('isRandom', 0));
+                    $mediaNode->setAttribute('playCount', $widget->getOptionValue('playCount', 0));
+                    $mediaNode->setAttribute('cyclePlayback', $widget->getOptionValue('cyclePlayback', 0));
                 }
 
                 // Set the duration according to whether we are using widget duration or not
@@ -2261,6 +2268,7 @@ class Layout implements \JsonSerializable
             $campaign->isLayoutSpecific = 1;
             $campaign->ownerId = $this->getOwnerId();
             $campaign->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+            $campaign->cyclePlaybackEnabled = 0;
 
             // if user has disabled folder feature, presumably said user also has no permissions to folder
             // getById would fail here and prevent adding new Layout in web ui

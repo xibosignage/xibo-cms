@@ -1077,6 +1077,9 @@ class Soap
                         $layout->setAttribute('duration', $row['duration'] ?? 0);
                         $layout->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
                         $layout->setAttribute("geoLocation", $row['geoLocation'] ?? null);
+                        $layout->setAttribute('cyclePlayback', $row['cyclePlayback'] ?? 0);
+                        $layout->setAttribute('groupKey', $row['groupKey'] ?? 0);
+                        $layout->setAttribute('playCount', $row['playCount'] ?? 0);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {

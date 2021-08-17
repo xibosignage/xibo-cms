@@ -232,6 +232,12 @@ class DataSet implements \JsonSerializable
     public $limitPolicy;
 
     /**
+     * @SWG\Property(description="Custom separator for CSV source, comma will be used by default")
+     * @var string
+     */
+    public $csvSeparator;
+
+    /**
      * @SWG\Property(description="The id of the Folder this DataSet belongs to")
      * @var int
      */
@@ -963,8 +969,8 @@ class DataSet implements \JsonSerializable
 
         // Insert the extra columns we expect for a remote DataSet
         if ($this->isRemote === 1) {
-            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `userAgent`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`';
-            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :userAgent, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy';
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `userAgent`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`, `csvSeparator`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :userAgent, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy, :csvSeparator';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -985,6 +991,7 @@ class DataSet implements \JsonSerializable
             $params['lastSync'] = 0;
             $params['rowLimit'] = $this->rowLimit;
             $params['limitPolicy'] = $this->limitPolicy;
+            $params['csvSeparator'] = $this->csvSeparator;
         }
 
         // Do the insert
@@ -1014,7 +1021,7 @@ class DataSet implements \JsonSerializable
         ];
 
         if ($this->isRemote) {
-            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, `userAgent` = :userAgent, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy ';
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, `userAgent` = :userAgent, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy, `csvSeparator` = :csvSeparator ';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -1034,6 +1041,7 @@ class DataSet implements \JsonSerializable
             $params['ignoreFirstRow'] = $this->ignoreFirstRow;
             $params['rowLimit'] = $this->rowLimit;
             $params['limitPolicy'] = $this->limitPolicy;
+            $params['csvSeparator'] = $this->csvSeparator;
         }
 
         $this->getStore()->update('UPDATE dataset SET ' . $sql . '  WHERE DataSetID = :dataSetId', $params);

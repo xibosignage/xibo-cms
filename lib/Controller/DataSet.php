@@ -488,6 +488,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="csvSeparator",
+     *      in="formData",
+     *      description="Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -553,6 +560,7 @@ class DataSet extends Base
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
             $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
             $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
+            $dataSet->csvSeparator = ($dataSet->sourceId === 2) ? $sanitizedParams->getString('csvSeparator') ?? ',' : null;
         }
 
         // Also add one column
@@ -792,6 +800,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="csvSeparator",
+     *      in="formData",
+     *      description="Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -844,6 +859,7 @@ class DataSet extends Base
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
             $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
             $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
+            $dataSet->csvSeparator = ($dataSet->sourceId === 2) ? $sanitizedParams->getString('csvSeparator') ?? ',' : null;
         }
 
         $dataSet->save();

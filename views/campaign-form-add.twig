@@ -77,6 +77,14 @@
                     </div>
                 {% endif %}
 
+                {% set title %}{% trans "Enable cycle based playback" %}{% endset %}
+                {% set helpText %}{% trans "When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved." %}{% endset %}
+                {{ forms.checkbox("cyclePlaybackEnabled", title, 0, helpText) }}
+
+                {% set title %}{% trans "Play count" %}{% endset %}
+                {% set helpText %}{% trans "In cycle based playback, how many plays should each Layout have before moving on?" %}{% endset %}
+                {{ forms.number("playCount", title, "", helpText, 'cycle-based-playback') }}
+
                 <div id="assignLayouts"></div>
             </form>
         </div>
