@@ -1473,10 +1473,13 @@ class Layout implements \JsonSerializable
                 if ($widget->tempId != $widget->widgetId) {
                     $mediaNode->setAttribute('playlist', $widget->playlist);
                     $mediaNode->setAttribute('displayOrder', $widget->displayOrder);
+                    // parentWidgetId is the Sub-playlist WidgetId,
+                    // which is used to group all Widgets belonging to the same Sub-playlist
                     $mediaNode->setAttribute('parentWidgetId', $widget->tempId);
+
+                    // These three attributes relate to cycle based playback
                     $mediaNode->setAttribute('isRandom', $widget->getOptionValue('isRandom', 0));
                     $mediaNode->setAttribute('playCount', $widget->getOptionValue('playCount', 0));
-                    $mediaNode->setAttribute('groupKey', $widget->playlistId);
                     $mediaNode->setAttribute('cyclePlayback', $widget->getOptionValue('cyclePlayback', 0));
                 }
 
