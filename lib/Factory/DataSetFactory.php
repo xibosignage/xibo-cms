@@ -209,6 +209,7 @@ class DataSetFactory extends BaseFactory
             dataset.`ignoreFirstRow`,
             dataset.`rowLimit`,
             dataset.`limitPolicy`,
+            dataset.`csvSeparator`,
             dataset.`folderId`,
             dataset.`permissionsFolderId`,
             user.userName AS owner,
@@ -481,7 +482,12 @@ class DataSetFactory extends BaseFactory
                     }
                 } else {
                     $csv = $request->getBody()->getContents();
-                    $array = array_map("str_getcsv", explode("\n", $csv));
+                    $array = array_map(
+                        function ($v) use ($dataSet) {
+                            return str_getcsv($v, $dataSet->csvSeparator ?? ',');
+                        },
+                        explode("\n", $csv)
+                    );
 
                     if ($dataSet->ignoreFirstRow == 1) {
                         array_shift($array);
