@@ -29,6 +29,8 @@ use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Helper\DataSetUploadHandler;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Random;
+use Xibo\Helper\SendFile;
 use Xibo\Service\MediaService;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -250,6 +252,13 @@ class DataSet extends Base
                         'url' => $this->urlFor($request,'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
                         'text' => __('Edit')
                     );
+
+                    $dataSet->buttons[] = [
+                        'id' => 'dataset_button_csv_export',
+                        'linkType' => '_self', 'external' => true,
+                        'url' => $this->urlFor($request,'dataSet.export.csv', ['id' => $dataSet->dataSetId]),
+                        'text' => __('Export (CSV)')
+                    ];
                 }
 
                 if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
@@ -1414,5 +1423,75 @@ class DataSet extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Export DataSet to csv
+     *
+     * @SWG\GET(
+     *  path="/dataset/export/csv/{dataSetId}",
+     *  operationId="dataSetExportCsv",
+     *  tags={"dataset"},
+     *  summary="Export to CSV",
+     *  description="Export DataSet data to a csv file",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID to export.",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
+    public function exportToCsv(Request $request, Response $response, $id)
+    {
+        $this->setNoOutput();
+        $i = 0;
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        // Create a CSV file
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . Random::generateString() .'.csv';
+
+        $out = fopen($tempFileName, 'w');
+
+        foreach ($dataSet->getData() as $row) {
+            $columnHeaders = [];
+            $rowData = [];
+
+            foreach ($dataSet->columns as $column) {
+                if ($i === 0) {
+                    $columnHeaders[] = $column->heading;
+                }
+
+                $rowData[] = $row[$column->heading];
+            }
+
+            if (!empty($columnHeaders)) {
+                fputcsv($out, $columnHeaders);
+            }
+
+            fputcsv($out, $rowData);
+            $i++;
+        }
+
+        fclose($out);
+        $this->getLog()->debug('Exported DataSet ' . $dataSet->dataSet . ' with ' . $i . ' rows of data');
+
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $tempFileName,
+            $dataSet->dataSet.'.csv'
+        )->withHeader('Content-Type', 'text/csv;charset=utf-8'));
     }
 }
