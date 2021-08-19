@@ -2266,8 +2266,9 @@ class Layout extends Base
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
-        if ($layout->isChild())
-            throw new InvalidArgumentException(__('Cannot manage tags on a Draft Layout'), 'layoutId');
+        if ($layout->isChild()) {
+            throw new InvalidArgumentException(__('Cannot export Draft Layout'), 'layoutId');
+        }
 
         // Render the form
         $this->getState()->template = 'layout-form-export';
@@ -2304,7 +2305,7 @@ class Layout extends Base
 
         // Make sure we're not a draft
         if ($layout->isChild()) {
-            throw new InvalidArgumentException(__('Cannot manage tags on a Draft Layout'), 'layoutId');
+            throw new InvalidArgumentException(__('Cannot export Draft Layout'), 'layoutId');
         }
 
         // Save As?
@@ -2800,7 +2801,8 @@ class Layout extends Base
     }
 
     /**
-     * Release the Layout Lock on specified layoutId, Super Admin only.
+     * Release the Layout Lock on specified layoutId
+     * Available only to the User that currently has the Layout locked.
      *
      * @param Request $request
      * @param Response $response
@@ -2812,12 +2814,14 @@ class Layout extends Base
      */
     public function releaseLock(Request $request, Response $response, $id)
     {
-        if (!$this->getUser()->isSuperAdmin()) {
-            throw new InvalidArgumentException(__('This function is available only to Super Admins.'));
-        }
-
         /** @var Item $lock */
         $lock = $this->container->get('pool')->getItem('locks/layout/' . $id);
+        $lockUserId = $lock->get()->userId;
+
+        if ($this->getUser()->userId !== $lockUserId) {
+            throw new InvalidArgumentException(__('This function is available only to User who originally locked this Layout.'));
+        }
+
         $lock->set([]);
         $lock->save();
 
