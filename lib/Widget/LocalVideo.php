@@ -35,7 +35,7 @@ class LocalVideo extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'localvideo-designer-javascript';
     }

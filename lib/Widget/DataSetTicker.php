@@ -52,7 +52,7 @@ class DataSetTicker extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         // We use the same javascript as the data set view designer
         return 'datasetticker-designer-javascript';

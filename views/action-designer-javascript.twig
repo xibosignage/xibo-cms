@@ -22,7 +22,7 @@
 #}
 
 <script type="text/javascript">
-    function reloadLayoutDesignerData() {
+    function reloadLayoutEditorData() {
         // Reload layout designer data and show the target action tab
         if(lD != undefined) {
             lD.reloadData(lD.layout);
@@ -60,12 +60,12 @@
         })
 
         // On modal close, reload layout designer data
-        $(dialog).on('hidden.bs.modal', reloadLayoutDesignerData);
+        $(dialog).on('hidden.bs.modal', reloadLayoutEditorData);
     }
 
     function actionFormDeleteOpen(dialog) {
         // On confirm deletion, reload layout designer data
-        $(dialog).find('.save-button').on('click', reloadLayoutDesignerData);
+        $(dialog).find('.save-button').on('click', reloadLayoutEditorData);
     }
 
     function onTargetChange(dialog) {

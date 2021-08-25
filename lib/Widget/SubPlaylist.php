@@ -65,7 +65,7 @@ class SubPlaylist extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'subplaylist-designer-javascript';
     }

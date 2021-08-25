@@ -94,7 +94,7 @@ class WorldClock extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'worldclock-designer-javascript';
     }

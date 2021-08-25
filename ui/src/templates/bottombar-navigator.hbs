@@ -1,0 +1,28 @@
+<nav class="navbar navigator-navbar">
+    {{! Left region }}
+    <div class="pull-left">
+        <button type="button" id="close-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
+            data-title="{{trans.closeDesc}}">
+            <i class="fa-arrow-alt-circle-left fas"></i>
+        </button>
+        
+        <button type="button" id="add-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
+            data-title="{{trans.addRegionDesc}}">
+            <i class="fa fa-plus"></i>
+        </button>
+
+        {{#if element.isPermissionsModifiable}}
+            <button type="button" id="persmissions-btn" class="btn btn-sm" data-type="tool" data-sub-type="permissions" 
+                data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="bottom" data-title="{{trans.tools.permissions.description}}">
+                <i class="fa tool-icon-permissions card-icon"></i>
+            </button>
+        {{/if}}
+
+        {{#if element.isDeletable}}
+            <button type="button" id="delete-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
+                data-title="{{trans.deleteRegion}}">
+                <i class="fa fa-trash"></i>
+            </button>
+        {{/if}}
+    </div>
+</nav>

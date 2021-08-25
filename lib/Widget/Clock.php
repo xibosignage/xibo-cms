@@ -47,7 +47,7 @@ class Clock extends ModuleWidget
     }
 
     /** @inheritDoc */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'clock-designer-javascript';
     }

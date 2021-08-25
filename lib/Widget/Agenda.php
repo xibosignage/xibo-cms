@@ -85,7 +85,7 @@ class Agenda extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'agenda-designer-javascript';
     }

@@ -6,13 +6,13 @@
     
     nav {
         border: none;
-        color: $xibo-color-pastel-blue;
-        padding: 0 16px;
+        color: $xibo-color-blue-pastel;
+        padding: 0 16px !important;
         min-height: 30px;
         font-size: 0;
         z-index: 2;
         margin: 0;
-        background: $xibo-color-pure-white;
+        background: $xibo-color-white-pure;
         right: 0;
         left: 0;
         border-radius: 0;
@@ -22,7 +22,7 @@
         }
 
         .btn {
-            color: $xibo-color-pastel-blue;
+            color: $xibo-color-blue-pastel;
             height: 38px;
             width: 38px;
             font-size: 1.2rem;
@@ -31,7 +31,7 @@
 
             &:hover {
                 color: $xibo-color-white;
-                background-color: $xibo-color-pastel-blue;
+                background-color: $xibo-color-blue-pastel;
             }
 
             &:disables, &.disabled {
@@ -47,6 +47,10 @@
             display: none;
         }
     }
+
+    #inline-editor-save {
+        display: none;
+    }
 }
 
 #layout-editor.fullscreen-mode #layout-editor-bottombar {
@@ -55,6 +59,12 @@
     left: 0;
     right: 0;
     z-index: 1060;
+
+    &.fs-edit {
+        #inline-editor-save {
+            display: inline-block;
+        }  
+    }
 
     .hide-on-fs {
         display: none;

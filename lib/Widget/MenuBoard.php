@@ -79,7 +79,7 @@ class MenuBoard extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'menuboard-designer-javascript';
     }

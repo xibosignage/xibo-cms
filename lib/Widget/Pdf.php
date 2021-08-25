@@ -36,7 +36,7 @@ class Pdf extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         // We use the same javascript as the data set view designer
         return 'pdf-designer-javascript';

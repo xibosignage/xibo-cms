@@ -50,7 +50,7 @@ class Text extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'text-designer-javascript';
     }

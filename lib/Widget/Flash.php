@@ -32,7 +32,7 @@ use Slim\Http\ServerRequest as Request;
 class Flash extends ModuleWidget
 {
     /** @inheritdoc */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         // We use the same javascript as the data set view designer
         return 'flash-designer-javascript';

@@ -51,7 +51,7 @@ class NotificationView extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'notificationview-designer-javascript';
     }

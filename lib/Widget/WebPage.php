@@ -33,7 +33,7 @@ use Xibo\Support\Exception\InvalidArgumentException;
 class WebPage extends ModuleWidget
 {
     /** @inheritdoc */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'webpage-designer-javascript';
     }

@@ -29,18 +29,19 @@ const contextMenuTemplate = require('../templates/context-menu.hbs');
 const deleteElementModalContentTemplate = require('../templates/delete-element-modal-content.hbs');
 
 // Include modules
-const Layout = require('../designer/layout.js');
-const Navigator = require('../designer/navigator.js');
-const Timeline = require('../designer/timeline.js');
-const Viewer = require('../designer/viewer.js');
-const PropertiesPanel = require('../designer/properties-panel.js');
-const Drawer = require('../designer/drawer.js');
-const Manager = require('../core/manager.js');
-const Toolbar = require('../core/toolbar.js');
-const Topbar = require('../core/topbar.js');
+const Layout = require('../layout-editor/layout.js');
+const Navigator = require('../layout-editor/navigator.js');
+const Timeline = require('../layout-editor/timeline.js');
+const Viewer = require('../layout-editor/viewer.js');
+const PropertiesPanel = require('../editor-core/properties-panel.js');
+const Drawer = require('../layout-editor/drawer.js');
+const Manager = require('../editor-core/manager.js');
+const Toolbar = require('../editor-core/toolbar.js');
+const Topbar = require('../editor-core/topbar.js');
+const Bottombar = require('../editor-core/bottombar.js');
 
 // Common funtions/tools
-const Common = require('../core/common.js');
+const Common = require('../editor-core/common.js');
 
 // Include CSS
 require('../style/common.scss');
@@ -124,7 +125,7 @@ $(document).ready(function() {
 
             if(res.data != null && res.data.length > 0) {
                 // Append layout html to the main div
-                lD.editorContainer.html(designerMainTemplate({trans: layoutDesignerTrans}));
+                lD.editorContainer.html(designerMainTemplate({trans: layoutEditorTrans}));
 
                 // Create layout
                 lD.layout = new Layout(layoutId, res.data[0]);
@@ -151,8 +152,7 @@ $(document).ready(function() {
                 // Initialize viewer
                 lD.viewer = new Viewer(
                     lD,
-                    lD.editorContainer.find('#layout-viewer'),
-                    lD.editorContainer.find('#layout-editor-bottombar')
+                    lD.editorContainer.find('#layout-viewer')
                 );
 
                 // Initialise drawer
@@ -181,7 +181,7 @@ $(document).ready(function() {
                     [
                         {
                             id: 'publishLayout',
-                            title: layoutDesignerTrans.publishTitle,
+                            title: layoutEditorTrans.publishTitle,
                             logo: 'fa-check-square-o',
                             class: 'btn-success',
                             action: lD.showPublishScreen,
@@ -192,7 +192,7 @@ $(document).ready(function() {
                         },
                         {
                             id: 'checkoutLayout',
-                            title: layoutDesignerTrans.checkoutTitle,
+                            title: layoutEditorTrans.checkoutTitle,
                             logo: 'fa-edit',
                             class: 'btn-success',
                             action: lD.checkoutLayout,
@@ -203,7 +203,7 @@ $(document).ready(function() {
                         },
                         {
                             id: 'discardLayout',
-                            title: layoutDesignerTrans.discardTitle,
+                            title: layoutEditorTrans.discardTitle,
                             logo: 'fa-times-circle-o',
                             action: lD.showDiscardScreen,
                             inactiveCheck: function() {
@@ -213,7 +213,7 @@ $(document).ready(function() {
                         },
                         {
                             id: 'scheduleLayout',
-                            title: layoutDesignerTrans.scheduleTitle,
+                            title: layoutEditorTrans.scheduleTitle,
                             logo: 'fa-clock-o',
                             action: lD.showScheduleScreen,
                             inactiveCheck: function() {
@@ -223,7 +223,7 @@ $(document).ready(function() {
                         },
                         {
                             id: 'saveTemplate',
-                            title: layoutDesignerTrans.saveTemplateTitle,
+                            title: layoutEditorTrans.saveTemplateTitle,
                             logo: 'fa-floppy-o',
                             action: lD.showSaveTemplateScreen,
                             inactiveCheck: function() {
@@ -233,7 +233,7 @@ $(document).ready(function() {
                         },
                         {
                             id: 'unlockLayout',
-                            title: layoutDesignerTrans.unlockTitle,
+                            title: layoutEditorTrans.unlockTitle,
                             logo: 'fa-unlock',
                             class: 'btn-info show-on-lock',
                             action: lD.showUnlockScreen
@@ -250,6 +250,12 @@ $(document).ready(function() {
                         callback: lD.reloadData
                     },
                     true // Show Options
+                );
+
+                // Initialize bottom toolbar ( with custom buttons )
+                lD.bottombar = new Bottombar(
+                    lD,
+                    lD.editorContainer.find('#layout-editor-bottombar')
                 );
 
                 // Initialize properties panel
@@ -455,6 +461,11 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                     this.selectedObject = this.layout.regions[newSelectedId];
                 }
             } else if(newSelectedType === 'widget') {
+                // Close navigator mode when selecting a widget
+                if(lD.navigatorMode) {
+                    lD.toggleNavigatorEditing(false);
+                }
+
                 if(newSelectedParentType == 'drawer') {
                     this.layout.drawer.widgets[newSelectedId].selected = true;
                     this.selectedObject = this.layout.drawer.widgets[newSelectedId];
@@ -483,15 +494,11 @@ lD.refreshDesigner = function() {
     // Render containers with layout ( default )
     this.renderContainer(this.toolbar);
     this.renderContainer(this.topbar);
+    (this.selectedObject.type === "layout") && this.renderContainer(this.bottombar, this.selectedObject);
     this.renderContainer(this.manager);
     this.renderContainer(this.propertiesPanel, this.selectedObject);
-
-    if(this.navigatorMode) {
-        this.renderContainer(this.navigator, this.selectedObject);
-    } else {
-        this.renderContainer(this.viewer, this.selectedObject);
-    }
-    
+    this.renderContainer(this.navigator, this.selectedObject);
+    this.renderContainer(this.viewer, this.selectedObject);
     this.renderContainer(this.timeline);
     this.renderContainer(this.drawer);
 };
@@ -736,13 +743,13 @@ lD.welcomeScreen = function() {
     lD.readOnlyMode = true;
 
     bootbox.dialog({
-        message: layoutDesignerTrans.welcomeModalMessage,
+        message: layoutEditorTrans.welcomeModalMessage,
         className: "welcome-screen-modal",
         size: 'large',
         closeButton: false,
         buttons: {
             checkout: {
-                label: layoutDesignerTrans.checkoutTitle,
+                label: layoutEditorTrans.checkoutTitle,
                 className: "btn-success btn-bb-checkout",
                 callback: function(res) {
 
@@ -758,7 +765,7 @@ lD.welcomeScreen = function() {
                 }
             },
             view: {
-                label: layoutDesignerTrans.viewModeTitle,
+                label: layoutEditorTrans.viewModeTitle,
                 className: "btn-white btn-bb-view",
                 callback: function(res) {
                     lD.enterReadOnlyMode();
@@ -813,10 +820,7 @@ lD.toggleNavigatorEditing = function(enable) {
         // Create a new navigator instance
         this.navigator = new Navigator(
             lD,
-            this.editorContainer.find('#layout-navigator-content'),
-            {
-                editNavbar: this.editorContainer.find('#layout-editor-bottombar')
-            }
+            this.editorContainer.find('#layout-navigator-content')
         );
 
         // Show navigator edit div
@@ -828,7 +832,10 @@ lD.toggleNavigatorEditing = function(enable) {
         // Render navigator
         this.renderContainer(this.navigator, this.selectedObject);
 
-        toastr.info(layoutDesignerTrans.regionEditModeMessage);
+        // Render bottombar
+        this.renderContainer(this.bottombar, this.selectedObject);
+
+        toastr.info(layoutEditorTrans.regionEditModeMessage);
     } else {
         lD.navigatorMode = false;
 
@@ -867,12 +874,12 @@ lD.showErrorMessage = function() {
 lD.showCheckoutScreen = function() {
     
     bootbox.dialog({
-        title: layoutDesignerTrans.checkoutTitle + ' ' + lD.layout.name,
-        message: layoutDesignerTrans.checkoutMessage,
+        title: layoutEditorTrans.checkoutTitle + ' ' + lD.layout.name,
+        message: layoutEditorTrans.checkoutMessage,
         size: 'large',
         buttons: {
             checkout: {
-                label: layoutDesignerTrans.checkoutTitle,
+                label: layoutEditorTrans.checkoutTitle,
                 className: "btn-success btn-bb-checkout",
                 callback: function(res) {
 
@@ -1267,82 +1274,6 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
         }
 
         lD.addModuleToPlaylist(playlistId, draggableSubType, moduleData, positionToAdd);
-    } else if(draggableType == 'tool') { // Add tool
-
-        if(droppableType == 'layout') { // Add to layout
-
-            // Select layout
-            lD.selectObject();
-
-            if(draggableSubType == 'region') { // Add region to layout
-
-                lD.common.showLoadingScreen('addRegionToLayout'); 
-
-                lD.manager.saveAllChanges().then((res) => {
-
-                    toastr.success(editorsTrans.allChangesSaved);
-
-                    lD.layout.addElement('region', positionToAdd).then((res) => { // Success
-                        // Behavior if successful 
-                        toastr.success(res.message);
-
-                        lD.selectedObject.id = 'region_' + res.data.regionId;
-                        lD.selectedObject.type = 'region';
-                        lD.reloadData(lD.layout, true);
-
-                        lD.common.hideLoadingScreen('addRegionToLayout'); 
-                    }).catch((error) => { // Fail/error
-
-                        lD.common.hideLoadingScreen('addRegionToLayout'); 
-
-                        // Show error returned or custom message to the user
-                        let errorMessage = '';
-
-                        if(typeof error == 'string') {
-                            errorMessage = error;
-                        } else {
-                            errorMessage = error.errorThrown;
-                        }
-
-                        toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
-                    });
-                }).catch((err) => {
-
-                    lD.common.hideLoadingScreen('addRegionToLayout'); 
-
-                    toastr.error(errorMessagesTrans.saveAllChangesFailed);
-                });
-
-            }
-        } else if(droppableType == 'widget') { // Add to widget
-
-            // Get widget
-            const widgetId = $(droppable).attr('id');
-            const widgetRegionId = $(droppable).data('widgetRegion');
-            const widget = lD.getElementByTypeAndId('widget', widgetId, widgetRegionId);
-
-            // Select widget ( and avoid deselect if region was already selected )
-            lD.selectObject($(droppable), true);
-
-            if(draggableSubType == 'audio') {
-                widget.editAttachedAudio();
-            } else if(draggableSubType == 'expiry') { 
-                widget.editExpiry();
-            } else if(draggableSubType == 'transitionIn') { 
-                widget.editTransition('in');
-            } else if(draggableSubType == 'transitionOut') { 
-                widget.editTransition('out');
-            } else if(draggableSubType == 'permissions') {
-                widget.editPermissions();
-            }
-        } else if(droppableType == 'region') { // Add to region
-
-            //Get region
-            const regionId = $(droppable).attr('id');
-            const region = lD.getElementByTypeAndId('region', regionId);
-
-            region.editPropertyForm('Permissions');
-        }
     }
 };
 
@@ -1563,6 +1494,9 @@ lD.clearTemporaryData = function() {
 
     // Fix for remaining ckeditor elements or colorpickers
     destroyColorPicker(lD.editorContainer.find('.colorpicker-element'));
+
+    // Clean and hide inline editor controls
+    lD.editorContainer.find('#inline-editor-templates').html('');
 
     // Hide open tooltips
     lD.editorContainer.find('.tooltip').remove();
@@ -1825,10 +1759,10 @@ lD.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
  */
 lD.resetTour = function() {
     if(localStorage.tour_playing == undefined) {
-        if(cmsTours.layoutDesignerTour.ended()) {
-            cmsTours.layoutDesignerTour.restart();
+        if(cmsTours.layoutEditorTour.ended()) {
+            cmsTours.layoutEditorTour.restart();
         } else {
-            cmsTours.layoutDesignerTour.start();
+            cmsTours.layoutEditorTour.start();
         }
     }
     toastr.info(editorsTrans.resetTourNotification);
@@ -1844,7 +1778,7 @@ lD.toggleLockedMode = function(enable = true, expiryDate = '') {
         let $customOverlay = lD.editorContainer.find('#lockedOverlay');
         let $lockedMessage = $customOverlay.find('#lockedLayoutMessage');
 
-        const lockedMainMessage = layoutDesignerTrans.lockedModeMessage.replace('[expiryDate]', expiryDate);
+        const lockedMainMessage = layoutEditorTrans.lockedModeMessage.replace('[expiryDate]', expiryDate);
 
         if($customOverlay.length == 0) {
             $customOverlay = $('.custom-overlay').clone();
@@ -1859,7 +1793,7 @@ lD.toggleLockedMode = function(enable = true, expiryDate = '') {
         }
         
         // Update locked overlay message content
-        $lockedMessage.html('<strong>' + layoutDesignerTrans.lockedModeTitle + '</strong>&nbsp;' + lockedMainMessage);
+        $lockedMessage.html('<strong>' + layoutEditorTrans.lockedModeTitle + '</strong>&nbsp;' + lockedMainMessage);
 
         // Add locked class to main container
         lD.editorContainer.addClass('locked-for-user');
@@ -1881,12 +1815,12 @@ lD.toggleLockedMode = function(enable = true, expiryDate = '') {
 lD.showUnlockScreen = function() {
 
     bootbox.dialog({
-        title: layoutDesignerTrans.unlockTitle,
-        message: layoutDesignerTrans.unlockMessage,
+        title: layoutEditorTrans.unlockTitle,
+        message: layoutEditorTrans.unlockMessage,
         size: 'large',
         buttons: {
             unlock: {
-                label: layoutDesignerTrans.unlockTitle,
+                label: layoutEditorTrans.unlockTitle,
                 className: "btn-info btn-bb-unlock",
                 callback: function(res) {
 

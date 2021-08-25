@@ -66,7 +66,7 @@ class ForecastIo extends ModuleWidget
     }
 
     /** @inheritDoc */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'forecastio-designer-javascript';
     }

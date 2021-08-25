@@ -134,8 +134,8 @@ describe('Layout Designer (Empty)', function() {
             cy.route('POST', '**/playlist/widget/clock/*').as('createWidget');
 
             // Open toolbar Widgets tab
+            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force:true});
             cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
-            cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click({force:true});
 
             cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="clock"]').should('be.visible').then(() => {
                 cy.dragToElement(
@@ -195,8 +195,8 @@ describe('Layout Designer (Empty)', function() {
             cy.populateLibraryWithMedia();
 
             // Open toolbar Widgets tab
+            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force:true});
             cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
-            cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click({force:true});
 
             cy.get('#layout-editor-bottombar #navigator-edit-btn').click();
 

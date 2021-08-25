@@ -83,7 +83,7 @@ class Stocks extends AlphaVantageBase
     /**
      * @inheritDoc
      */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'stocks-designer-javascript';
     }

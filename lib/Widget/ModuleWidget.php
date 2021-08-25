@@ -1073,7 +1073,7 @@ abstract class ModuleWidget implements ModuleInterface
      * Layout Designer JavaScript template
      * @return null
      */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return null;
     }

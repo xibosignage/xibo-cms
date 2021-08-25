@@ -104,7 +104,7 @@ class Chart extends ModuleWidget
     /**
      * @return string
      */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'chart-designer-javascript';
     }

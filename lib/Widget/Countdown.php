@@ -103,7 +103,7 @@ class Countdown extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutDesignerJavaScript()
+    public function layoutEditorJavaScript()
     {
         return 'countdown-designer-javascript';
     }
