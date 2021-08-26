@@ -50,7 +50,7 @@ class DataSetView extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         return 'datasetview-designer-javascript';
     }

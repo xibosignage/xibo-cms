@@ -34,7 +34,7 @@ class Embedded extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         return 'embedded-designer-javascript';
     }

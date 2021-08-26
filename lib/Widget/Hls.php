@@ -45,7 +45,7 @@ class Hls extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         return 'hls-designer-javascript';
     }

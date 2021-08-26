@@ -298,8 +298,8 @@
         </script>
 
         {% for module in modules %}
-            {% if module.layoutEditorJavaScript() != "" %}
-                {% include module.layoutEditorJavaScript() ~ ".twig" %}
+            {% if module.layoutDesignerJavaScript() != "" %}
+                {% include module.layoutDesignerJavaScript() ~ ".twig" %}
             {% endif %}
         {% endfor %}
 

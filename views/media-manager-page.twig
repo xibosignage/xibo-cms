@@ -300,8 +300,8 @@
     </script>
 
     {% for module in assignableModules %}
-        {% if module.layoutEditorJavaScript() != "" %}
-            {% include module.layoutEditorJavaScript() ~ ".twig" %}
+        {% if module.layoutDesignerJavaScript() != "" %}
+            {% include module.layoutDesignerJavaScript() ~ ".twig" %}
         {% endif %}
     {% endfor %}
 {% endblock %}

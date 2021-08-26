@@ -35,7 +35,7 @@ class VideoIn extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         return 'videoin-designer-javascript';
     }

@@ -45,7 +45,7 @@ class GoogleTraffic extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         return 'googletraffic-designer-javascript';
     }

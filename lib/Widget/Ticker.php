@@ -60,7 +60,7 @@ class Ticker extends ModuleWidget
     }
 
     /** @inheritdoc */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         // We use the same javascript as the data set view designer
         return 'ticker-designer-javascript';

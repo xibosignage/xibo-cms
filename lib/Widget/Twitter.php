@@ -117,7 +117,7 @@ class Twitter extends TwitterBase
     /**
      * @inheritDoc
      */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         return 'twitter-designer-javascript';
     }

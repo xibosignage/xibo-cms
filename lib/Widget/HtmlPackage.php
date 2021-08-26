@@ -107,7 +107,7 @@ class HtmlPackage extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         // We use the same javascript as the data set view designer
         return 'htmlpackage-designer-javascript';

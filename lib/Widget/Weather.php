@@ -162,7 +162,7 @@ class Weather extends ModuleWidget
     }
 
     /** @inheritDoc */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         return 'weather-designer-javascript';
     }

@@ -88,7 +88,7 @@ class Currencies extends AlphaVantageBase
     /**
      * @inheritDoc
      */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         return 'currencies-designer-javascript';
     }

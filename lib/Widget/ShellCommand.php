@@ -34,7 +34,7 @@ class ShellCommand extends ModuleWidget
     /**
      * @inheritDoc
      */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         return 'shellcommand-designer-javascript';
     }

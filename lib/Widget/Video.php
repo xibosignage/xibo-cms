@@ -36,7 +36,7 @@ class Video extends ModuleWidget
 {
 
     /** @inheritdoc */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         // We use the same javascript as the data set view designer
         return 'video-designer-javascript';

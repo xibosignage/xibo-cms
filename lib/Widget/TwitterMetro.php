@@ -115,7 +115,7 @@ class TwitterMetro extends TwitterBase
     /**
      * @inheritDoc
      */
-    public function layoutEditorJavaScript()
+    public function layoutDesignerJavaScript()
     {
         // We use the same javascript as the data set view designer
         return 'twittermetro-designer-javascript';
