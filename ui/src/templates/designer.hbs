@@ -24,6 +24,16 @@
                         <div id="layout-viewer">
                             <!--VIEWER-->
                         </div>
+
+                        {{! Inline Editor templates }}
+                        <div id="inline-editor-templates" class="inline-editor-opened"></div>
+
+                        {{!-- Full screen button --}}
+                        <button type="button" id="fullscreenBtn" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
+                            data-title="{{ trans.toggleFullscreen }}">
+                            <i class="fas fa-arrows-alt hide-on-fs"></i>
+                            <i class="fas fa-compress-arrows-alt show-on-fs"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -32,11 +42,18 @@
                         <div id="layout-navigator-content">
                             <!--NAVIGATOR RENDER AREA-->
                         </div>
+
+                        {{!-- Full screen button --}}
+                        <button type="button" id="fullscreenBtn" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
+                            data-title="{{ trans.toggleFullscreen }}">
+                            <i class="fas fa-arrows-alt hide-on-fs"></i>
+                            <i class="fas fa-compress-arrows-alt show-on-fs"></i>
+                        </button>
                     </div>
                 </div>
             </div>  
 
-            <div class="properties-panel-container layout-module toggle-panel opened">
+            <div class="properties-panel-container layout-module toggle-panel toggle-flex opened">
                 <div class="toggle-container text-center">
                         <div class="toggle">
                             <i class="fa fa-chevron-left hide-closed"></i>
@@ -49,7 +66,7 @@
             </div>
         </div>
 
-        <div class="flex-h flex-grow-0">
+        <div class="flex-h flex-grow-0 toggle-flex">
             <div class="timeline-panel toggle-panel min-fix">
                 <div class="">
                     <div class="toggle-container text-center">
@@ -58,7 +75,7 @@
                             <i class="fa fa-chevron-down hide-opened"></i>
                         </div>
                     </div>
-                    <div class="layout-module flex-h">
+                    <div class="flex-h">
                         <div id="layout-timeline" class="flex-grow-1">
                             <!--TIMELINE-->
                         </div>

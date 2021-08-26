@@ -1,5 +1,5 @@
 // PLAYLIST Module
-const Widget = require('../designer/widget.js');
+const Widget = require('../editor-core/widget.js');
 
 /**
  * Playlist contructor

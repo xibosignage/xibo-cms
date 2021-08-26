@@ -1,0 +1,100 @@
+<nav class="navbar viewer-navbar designer-{{element.type}}">
+    {{! Left region }}
+    <div class="pull-left">
+        {{#if renderLayout}}
+            <button type="button" id="play-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{ trans.playPreviewLayout }}">
+                <i class="fa fa-play-circle"></i>
+            </button>
+            {{#unless readOnlyModeOn}}
+                <button type="button" id="navigator-edit-btn" class="btn btn-sm hide-on-fs" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{ trans.editLayout }}">
+                    <i class="fa fa-edit"></i>
+                </button>
+            {{/unless}}
+        {{else}}
+            <button type="button" id="back-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{ trans.backToLayout }}">
+                <i class="fa-arrow-alt-circle-left fas"></i>
+            </button>
+        
+            <button type="button" id="inline-editor-save" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
+                data-title="{{ trans.saveEditorChanges }}">
+                <i class="fa fa-save"></i>
+            </button>
+        {{/if}}
+
+        {{#if element.isPermissionsModifiable}}
+            <button type="button" id="permissions-btn" class="properties-btn btn btn-sm" data-property="Permissions" 
+                data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{trans.tools.permissions.description}}">
+                <i class="fa tool-icon-permissions card-icon"></i>
+            </button>
+        {{/if}}
+
+        {{#eq element.type "widget"}}
+            {{#if element.isEditable}}
+                {{#if element.canAttachAudio}}
+                    <button type="button" id="audio-btn" class="properties-btn btn btn-sm" data-property="Audio" 
+                        data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{trans.tools.audio.description}}">
+                        <i class="fa tool-icon-audio card-icon"></i>
+                    </button>
+                {{/if}}
+
+                <button type="button" id="expiry-btn" class="properties-btn btn btn-sm" data-property="Expiry" 
+                    data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{trans.tools.expiry.description}}">
+                    <i class="fa tool-icon-expiry card-icon"></i>
+                </button>
+
+                <button type="button" id="transitionIn-btn" class="properties-btn btn btn-sm" data-property="Transition" data-property-type="in" 
+                    data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{trans.tools.transitionIn.description}}">
+                    <i class="fa tool-icon-transitionIn card-icon"></i>
+                </button>
+
+                <button type="button" id="transitionOut-btn" class="properties-btn btn btn-sm" data-property="Transition" data-property-type="out" 
+                    data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{trans.tools.transitionOut.description}}">
+                    <i class="fa tool-icon-transitionOut card-icon"></i>
+                </button>
+            {{/if}}
+        {{/eq}}
+                
+        {{#if element.isDeletable}}
+            <button type="button" id="delete-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
+                data-title="{{trans.deleteRegion}}">
+                <i class="fa fa-trash"></i>
+            </button>
+        {{/if}}
+    </div>
+
+    {{! Right region }}
+    <div class="pull-right">
+        {{! Element Info }}
+        {{#if extra}}
+            <div class="info d-inline">
+                <span class="label-name align-middle" title="{{extra.moduleName}}">
+                    "{{extra.moduleName}}" ({{extra.type}})
+                </span>
+                <span class="label label-time align-middle">
+                    {{extra.duration}} / {{extra.regionDuration}}
+                </span>
+            </div>
+        {{else}}
+            <div class="info d-inline">
+                <span class="label-name align-middle" title="{{element.name}}">
+                    "{{element.name}}" ({{element.type}})
+                </span>
+            </div>
+        {{/if}}
+
+        {{!-- Paging controls --}}
+        {{#if pagingEnable}}
+            <span class="paging pl-1">
+                <button type="button" id="left-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{ trans.previousWidget }}">
+                    <i class="fa fa-arrow-left"></i>
+                </button>
+                <span class="label align-middle">
+                    {{currentItem}} / {{totalItems}}
+                </span>
+                <button type="button" id="right-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{ trans.nextWidget }}">
+                    <i class="fa fa-arrow-right"></i>
+                </button>
+            </span>
+        {{/if}}
+    </div>
+</nav>

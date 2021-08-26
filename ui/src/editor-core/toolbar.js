@@ -6,39 +6,6 @@ const ToolbarMediaSearchTemplate = require('../templates/toolbar-media-search.hb
 const ToolbarMediaQueueTemplate = require('../templates/toolbar-media-queue.hbs');
 const ToolbarMediaQueueElementTemplate = require('../templates/toolbar-media-queue-element.hbs');
 
-const toolsList = [
-    {
-        name: toolbarTrans.tools.audio.name,
-        type: 'audio',
-        description: toolbarTrans.tools.audio.description,
-        dropTo: 'widget'
-    },
-    {
-        name: toolbarTrans.tools.expiry.name,
-        type: 'expiry',
-        description: toolbarTrans.tools.expiry.description,
-        dropTo: 'widget'
-    },
-    {
-        name: toolbarTrans.tools.transitionIn.name,
-        type: 'transitionIn',
-        description: toolbarTrans.tools.transitionIn.description,
-        dropTo: 'widget'
-    },
-    {
-        name: toolbarTrans.tools.transitionOut.name,
-        type: 'transitionOut',
-        description: toolbarTrans.tools.transitionOut.description,
-        dropTo: 'widget'
-    },
-    {
-        name: toolbarTrans.tools.permissions.name,
-        type: 'permissions',
-        description: toolbarTrans.tools.permissions.description,
-        dropTo: 'all'
-    }
-];
-
 const defaultMenuItems = [
     {
         name: 'library',
@@ -48,15 +15,6 @@ const defaultMenuItems = [
         selectedTab: 0,
         search: true,
         content: [], // Tabs and content
-        state: ''
-    },
-    {
-        name: 'tools',
-        itemName: toolbarTrans.menuItems.toolsName,
-        itemIcon: 'tools',
-        itemTitle: toolbarTrans.menuItems.toolsTitle,
-        tool: true,
-        content: [],
         state: ''
     },
     {
@@ -92,7 +50,7 @@ let Toolbar = function(parent, container, customActions = {}, showOptions = fals
 
     this.libraryMenuIndex = 0;
 
-    this.widgetMenuIndex = 2;
+    this.widgetMenuIndex = 1;
 
     this.contentDimentions = {
         width: 90 // In percentage
@@ -337,7 +295,7 @@ Toolbar.prototype.render = function() {
         newToolbarTrans.undoActiveTitle = checkHistory.undoActiveTitle;
     }
 
-    const toolbarStretched = (this.openedMenu == 2);
+    const toolbarStretched = (this.openedMenu == 1);
 
     // Compile toolbar template with data
     const html = ToolbarTemplate({
@@ -361,7 +319,7 @@ Toolbar.prototype.render = function() {
         this.DOMObject.find('.hide-on-read-only').hide();
         
         // Create the read only alert message
-        let $readOnlyMessage = $('<div id="read-only-message" class="alert alert-info btn text-center navbar-nav" data-container=".editor-bottom-bar" data-toggle="tooltip" data-placement="bottom" data-title="' + layoutDesignerTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutDesignerTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutDesignerTrans.readOnlyModeMessage + '</div>');
+        let $readOnlyMessage = $('<div id="read-only-message" class="alert alert-info btn text-center navbar-nav" data-container=".editor-bottom-bar" data-toggle="tooltip" data-placement="bottom" data-title="' + layoutEditorTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutEditorTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutEditorTrans.readOnlyModeMessage + '</div>');
 
         // Prepend the element to the bottom toolbar's content
         $readOnlyMessage.prependTo(this.DOMObject.find('.container-toolbar .navbar-collapse')).click(lD.checkoutLayout);
@@ -562,9 +520,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
     // Make menu state to be active
     this.menuItems[menu].state = 'active';
 
-    if(this.menuItems[menu].name === 'tools') {
-        this.menuItems[menu].content = toolsList;
-    } else if(this.menuItems[menu].name === 'widgets') {
+    if(this.menuItems[menu].name === 'widgets') {
         // Sort by favourites
         var favouriteModules = [];
         var otherModules = [];
@@ -611,7 +567,7 @@ Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
     this.deselectCardsAndDropZones();
 
     // Open specific menu
-    if(menu != -1) {
+    if(menu > -1 && menu < this.menuItems.length) {
         let active = (forceOpen) ? false : (this.menuItems[menu].state == 'active');
 
         // Close all menus
@@ -1260,7 +1216,7 @@ Toolbar.prototype.toggleFavourite = function(target) {
     this.savePrefs();
 
     // Reload toolbar widget content
-    this.loadContent(2);
+    this.loadContent(1);
 };
 
 /**

@@ -40,11 +40,7 @@
                                 {{#each content}}
                                     {{#unless hideElement}}
                                         {{!-- Load cards according to type searchItem/Widget --}}
-                                        {{#if ../tool}}
-                                            {{> toolbar-card-tool trans=../../trans mainObjectType=../../mainObjectType}}
-                                        {{else}}
-                                            {{> toolbar-card trans=../../trans mainObjectType=../../mainObjectType}}
-                                        {{/if}}
+                                        {{> toolbar-card trans=../../trans mainObjectType=../../mainObjectType}}
                                     {{/unless}}
                                 {{/each}}
                             </div>

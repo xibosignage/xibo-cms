@@ -148,7 +148,7 @@ describe('Layout Designer (Populated)', function() {
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Open toolbar Tools tab
-        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click({force:true});
+        cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force:true});
         cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
 
         // Open the audio form
@@ -182,7 +182,7 @@ describe('Layout Designer (Populated)', function() {
         cy.route('/layout?layoutId=*').as('reloadLayout');
 
         // Open toolbar Tools tab
-        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click({force:true});
+        cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force:true});
         cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
 
         // Open the audio form
@@ -313,7 +313,7 @@ describe('Layout Designer (Populated)', function() {
             const widgetId = $el.attr('id');
 
             // Click trash container
-            cy.get('#layout-editor-toolbar a#trashContainer').click();
+            cy.get('.editor-toolbar a#trashContainer').click();
 
             // Confirm delete on modal
             cy.get('[data-test="deleteObjectModal"] button.btn-bb-confirm').click();
