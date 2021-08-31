@@ -20,6 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+
 use Psr\Container\ContainerInterface;
 use RobThree\Auth\TwoFactorAuth;
 use Slim\Flash\Messages;
@@ -31,6 +32,7 @@ use Xibo\Entity\User;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
+use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
 use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Session;
@@ -51,6 +53,7 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Login extends Base
 {
+    use LogoutTrait;
     /** @var Session */
     private $session;
 
@@ -377,22 +380,12 @@ class Login extends Base
      */
     public function logout(Request $request, Response $response)
     {
-        $parsedRequestParams = $this->getSanitizer($request->getQueryParams());
         $redirect = true;
+        $this->completeLogoutFlow($this->getUser(), $this->session, $this->getLog(), $request);
 
         if ($request->getQueryParam('redirect') != null) {
             $redirect = $request->getQueryParam('redirect');
         }
-
-        $this->getUser()->touch();
-
-        // to log out a user we need only to clear out some session vars
-        unset($_SESSION['userid']);
-        unset($_SESSION['username']);
-        unset($_SESSION['password']);
-
-        $session = $this->session;
-        $session->setIsExpired(1);
 
         if ($redirect) {
             return $response->withRedirect('login');

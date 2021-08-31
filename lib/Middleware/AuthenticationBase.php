@@ -26,6 +26,7 @@ use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
+use Xibo\Helper\LogoutTrait;
 
 /**
  * Class AuthenticationBase
@@ -34,6 +35,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 abstract class AuthenticationBase implements Middleware, AuthenticationInterface
 {
     use AuthenticationTrait;
+    use LogoutTrait;
 
     /**
      * Uses a Hook to check every call for authorization
