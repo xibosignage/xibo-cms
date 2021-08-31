@@ -175,6 +175,16 @@ class DisplayFactory extends BaseFactory
                 $newSortOrder[] = '`clientVersion` DESC';
                 continue;
             }
+
+            if ($sort == '`isCmsTransferInProgress`') {
+                $newSortOrder[] = '`newCmsAddress`';
+                continue;
+            }
+
+            if ($sort == '`isCmsTransferInProgress` DESC') {
+                $newSortOrder[] = '`newCmsAddress` DESC';
+                continue;
+            }
             $newSortOrder[] = $sort;
         }
         $sortOrder = $newSortOrder;
