@@ -182,11 +182,20 @@ class PlayerSoftware extends Base
 
             if ($user->checkDeleteable($media)) {
                 // Delete Button
-                $version->buttons[] = array(
+                $version->buttons[] = [
                     'id' => 'content_button_delete',
                     'url' => $this->urlFor($request,'playersoftware.delete.form', ['id' => $version->versionId]),
-                    'text' => __('Delete')
-                );
+                    'text' => __('Delete'),
+                    'multi-select' => true,
+                    'dataAttributes' => [
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'playersoftware.delete', ['id' => $version->versionId])],
+                        ['name' => 'commit-method', 'value' => 'delete'],
+                        ['name' => 'id', 'value' => 'content_button_delete'],
+                        ['name' => 'text', 'value' => __('Delete')],
+                        ['name' => 'sort-group', 'value' => 1],
+                        ['name' => 'rowtitle', 'value' => $version->originalFileName]
+                    ]
+                ];
             }
 
             if ($user->checkPermissionsModifyable($media)) {
