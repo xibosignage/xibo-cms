@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -180,7 +180,10 @@
                     <div class="clearfix"></div>
                 </div>
                 <div class="widget-body medium no-padding">
-                    <canvas id="displayStatusChart" style="clear:both;" height="230"></canvas>
+                    <div style="text-align: center; height: 10px; margin-bottom: 5px"><span>{% trans "Click on the chart for a breakdown" %}</span></div>
+                    <div style="position: relative; height: 235px">
+                        <canvas id="displayStatusChart" style="clear:both;"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -192,7 +195,10 @@
                     <div class="clearfix"></div>
                 </div>
                 <div class="widget-body medium no-padding">
-                    <canvas id="displayContentChart" style="clear:both;" width="350" height="220"></canvas>
+                    <div style="text-align: center; height: 10px; margin-bottom: 5px"><span>{% trans "Click on the chart for a breakdown" %}</span></div>
+                    <div style="position: relative; height: 235px">
+                        <canvas id="displayContentChart" style="clear:both;"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -204,11 +210,14 @@
             <div class="widget">
                 <div class="widget-title">
                     <i class="fa fa-desktop"></i>
-                    {% trans "Display Groups Status" %}
+                    <span id="dGStatusTitle">{% trans "Display Groups Status" %}</span>
                     <div class="clearfix"></div>
                 </div>
                 <div class="widget-body medium no-padding">
-                    <canvas id="displayGroupStatusChart" style="clear:both;" height="230"></canvas>
+                    <div style="text-align: center; height: 10px; margin-bottom: 5px"><span>{% trans "Click on the chart to view Display information" %}</span></div>
+                    <div style="position: relative; height: 235px">
+                        <canvas id="displayGroupStatusChart" style="clear:both;"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -217,18 +226,25 @@
             <div class="widget">
                 <div class="widget-title">
                     <i class="fa fa-desktop"></i>
-                    {% trans "Display Groups Content Status" %}
+                    <span id="dGContentTitle"> {% trans "Display Groups Content Status" %}</span>
                     <div class="clearfix"></div>
                 </div>
                 <div class="widget-body medium no-padding">
-                    <canvas id="displayGroupContentStatusChart" style="clear:both;" width="350" height="220"></canvas>
+                    <div style="text-align: center; height: 10px; margin-bottom: 5px"><span>{% trans "Click on the chart to view Display information" %}</span></div>
+                    <div style="position: relative; height: 235px">
+                        <canvas id="displayGroupContentStatusChart" style="clear:both;"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 
     <div class="widget d-none" id="displaysGridTable">
-        <div class="widget-title">{% trans "Displays" %}</div>
+        <div class="widget-title">{% trans "Displays" %}
+            {% if currentUser.featureEnabled("displays.view") %}
+                <a class="pull-right" href="{{ url_for('display.view') }}">{% trans "Displays Page" %}</a>
+            {% endif %}
+        </div>
         <div class="widget-body">
             <div class="XiboGrid" id="{{ random() }}" data-grid-name="displayGridView">
                 <div class="XiboFilter card mb-3 bg-light d-none">
@@ -256,8 +272,9 @@
                             <th>{% trans "Storage Available" %}</th>
                             <th>{% trans "Storage Total" %}</th>
                             <th>{% trans "Storage Free %" %}</th>
-                            <th>{% trans "Description" %}</th>
-                            <th>{% trans "Tags" %}</th>
+                            <th>{% trans "Description" %}</th><th>{% trans "Orientation" %}</th>
+                            <th>{% trans "Resolution" %}</th>
+                            {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                             <th>{% trans "Default Layout" %}</th>
                             <th>{% trans "Interleave Default" %}</th>
                             <th>{% trans "Email Alert" %}</th>
@@ -269,11 +286,18 @@
                             <th>{% trans "IP Address" %}</th>
                             <th>{% trans "Mac Address" %}</th>
                             <th>{% trans "Timezone" %}</th>
+                            <th>{% trans "Latitude" %}</th>
+                            <th>{% trans "Longitude" %}</th>
                             <th>{% trans "Screen shot?" %}</th>
                             <th>{% trans "Thumbnail" %}</th>
+                            <th>{% trans "CMS Transfer?" %}</th>
+                            <th>{% trans "Bandwidth Limit" %}</th>
                             <th>{% trans "Last Command" %}</th>
                             <th>{% trans "XMR Registered" %}</th>
-                            <th></th>
+                            <th>{% trans "Commercial Licence" %}</th>
+                            <th>{% trans "Remote" %}</th>
+                            <th>{% trans "Created Date" %}</th>
+                            <th>{% trans "Modified Date" %}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -298,6 +322,7 @@
 
         var displayGroupIdsContent = [];
         var displayGroupIdsStatus = [];
+        var displayGridTable = null
 
         // Create our chart
         var bandwidthChart = new Chart($("#bandwidthChart"), {
@@ -417,7 +442,7 @@
                     data: displayData,
                     backgroundColor: ["rgb(0,255,0)", "rgb(255,0,0)"]
                 }],
-                labels: ["Online", "Offline"]
+                labels: [translations.online, translations.offline]
             },
             options: {
                 maintainAspectRatio: false
@@ -433,7 +458,7 @@
                     data: displayMediaStatusData,
                     backgroundColor: ["rgb(0,255,0)", "rgb(255,0,0)"]
                 }],
-                labels: ["Up to Date", "Not up to date"]
+                labels: [translations.upToDate, translations.notUpToDate]
             },
             options: {
                 maintainAspectRatio: false
@@ -449,10 +474,12 @@
 
                     var label = chartData.labels[index];
 
-                    if (label == "Online") {
+                    if (label == translations.online) {
                         loggedInStatus = 1;
+                        $('#dGStatusTitle').css('color', 'rgb(0,255,0)')
                     } else {
                         loggedInStatus = 0;
+                        $('#dGStatusTitle').css('color', 'rgb(255,0,0)')
                     }
 
                     if (displayGroupStatusChart !== undefined && displayGroupStatusChart !== null) {
@@ -489,10 +516,6 @@
                                     },
                                     options: {
                                         maintainAspectRatio: false,
-                                        title: {
-                                            display: true,
-                                            text: label
-                                        }
                                     }
                                 });
 
@@ -513,10 +536,12 @@
 
                     var label = chartData.labels[index];
 
-                    if (label == "Up to Date") {
+                    if (label == translations.upToDate) {
                         mediaInventoryStatus = 1;
+                        $('#dGContentTitle').css('color', 'rgb(0,255,0)')
                     } else {
                         mediaInventoryStatus = -1;
+                        $('#dGContentTitle').css('color', 'rgb(255,0,0)')
                     }
 
                     if (displayGroupContentStatusChart !== undefined && displayGroupContentStatusChart !== null) {
@@ -552,11 +577,7 @@
                                         labels: displayGroupNames
                                     },
                                     options: {
-                                        maintainAspectRatio: false,
-                                        title: {
-                                            display: true,
-                                            text: label
-                                        }
+                                        maintainAspectRatio: false
                                     }
                                 });
 
@@ -582,7 +603,7 @@
 
                     $('#displayGroupId').val(displayGroupId);
                     $('#loggedIn').val(loggedInStatus);
-                    table2.ajax.reload();
+                    handleDisplaysGrid();
 
                     $("#displaysGridTable").removeClass('d-none');
                 }
@@ -604,206 +625,298 @@
 
                     $('#displayGroupId').val(displayGroupId);
                     $('#mediaInventoryStatus').val(mediaInventoryStatus);
-                    table2.ajax.reload();
+                    handleDisplaysGrid();
 
                     $("#displaysGridTable").removeClass('d-none');
                 }
             }
         );
 
-        var table2 = $("#displaysGrid").DataTable({
-            "language": dataTablesLanguage,
-            serverSide: true,
-            stateSave: true,
-            stateDuration: 0,
-            stateLoadCallback: dataTableStateLoadCallback,
-            stateSaveCallback: dataTableStateSaveCallback,
-            filter: false,
-            searchDelay: 3000,
-            order: [[1, "asc"]],
-            ajax: {
-                "url": "{{ url_for("display.search") }}",
-                "data": function (dataToSend) {
-                    //make a new object so as not to destroy the input.
-                    var data = {};
-                    data.draw = dataToSend.draw;
-                    data.length = dataToSend.length;
-                    data.start = dataToSend.start;
-                    data.order = dataToSend.order;
-                    data.columns = [];
-                    $.each(dataToSend.columns, function (index, e) {
-                        var col = {};
-                        col.data = e.data;
-                        if (e.name != null && e.name != "")
-                            col.name = e.name;
-                        data.columns.push(col);
-                    });
+        function handleDisplaysGrid() {
+            if (displayGridTable != null) {
+                displayGridTable.ajax.reload();
+            } else {
+                displayGridTable = $("#displaysGrid").DataTable({
+                    "language": dataTablesLanguage,
+                    dom: dataTablesTemplate,
+                    serverSide: true,
+                    stateSave: true,
+                    stateDuration: 0,
+                    stateLoadCallback: dataTableStateLoadCallback,
+                    stateSaveCallback: dataTableStateSaveCallback,
+                    filter: false,
+                    searchDelay: 3000,
+                    responsive: true,
+                    order: [[1, "asc"]],
+                    ajax: {
+                        "url": "{{ url_for("display.search") }}",
+                        "data": function (dataToSend) {
+                            //make a new object so as not to destroy the input.
+                            var data = {};
+                            data.draw = dataToSend.draw;
+                            data.length = dataToSend.length;
+                            data.start = dataToSend.start;
+                            data.order = dataToSend.order;
+                            data.columns = [];
+                            // remove buttons column
+                            dataToSend.columns.pop();
+                            $.each(dataToSend.columns, function (index, e) {
+                                var col = {};
+                                col.data = e.data;
+                                if (e.name != null && e.name != "")
+                                    col.name = e.name;
+                                data.columns.push(col);
+                            });
 
-                    $.extend(data, $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                    return data;
-                }
-            },
-            createdRow: function (row, data, index) {
-                if (data.mediaInventoryStatus === 1) {
-                    $(row).addClass('table-success');
-                } else if (data.mediaInventoryStatus === 1) {
-                    $(row).addClass('table-danger');
-                } else {
-                    $(row).addClass('table-warning');
-                }
-            },
-            "columns": [
-                {"data": "displayId"},
-                {
-                    "name": "display",
-                    "data": function (data, type) {
-                        if (type != "display")
-                            return data.display;
-
-                        if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != null && data.clientAddress != "") {
-                            var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', data.clientAddress);
-                            return '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">' + data.display + '</a>';
-                        }
-                        else {
-                            return data.display;
-                        }
-                    }
-                },
-                {
-                    "data": "mediaInventoryStatus",
-                    "render": function (data, type, row) {
-                        if (type != "display")
+                            $.extend(data, $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                             return data;
-
-                        var icon = "";
-                        if (data == 1)
-                            icon = "fa-check";
-                        else if (data == 2)
-                            icon = "fa-times";
-                        else
-                            icon = "fa-cloud-download";
-
-                        return '<span class="fa ' + icon + '" title="' + (row.statusDescription) + '"></span>';
-                    }
-                },
-                {"data": "licensed", "render": dataTableTickCrossColumn},
-                {"data": "currentLayout", "visible": false, "sortable": false},
-                {
-                    "data": "storageAvailableSpace",
-                    "visible": false,
-                    "render": function (data, type, row) {
-                        if (type != "display")
-                            return data;
-
-                        return row.storageAvailableSpaceFormatted;
-                    }
-                },
-                {
-                    "data": "storageTotalSpace",
-                    "visible": false,
-                    "render": function (data, type, row) {
-                        if (type != "display")
-                            return data;
-
-                        return row.storageTotalSpaceFormatted;
-                    }
-                },
-                {"data": "storagePercentage", "visible": false, "sortable": false},
-                {"data": "description", "visible": false},
-                {
-                    "name": "tags",
-                    "sortable": false,
-                    "visible": false,
-                    "data": dataTableCreateTags
-                },
-                {"data": "defaultLayout", "visible": false},
-                {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false},
-                {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false},
-                {"data": "loggedIn", "render": dataTableTickCrossColumn},
-                {"data": "lastAccessed", "render": dataTableDateFromUnix},
-                {
-                    "name": "displayProfileId",
-                    "data": function (data, type) {
-                        return data.displayProfile;
-                    },
-                    "visible": false
-                },
-                {
-                    "name": "clientSort",
-                    "data": function (data) {
-                        return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
-                    },
-                    "visible": false
-                },
-                {"data": "deviceName", "visible": false},
-                {"data": "clientAddress", "visible": false},
-                {"data": "macAddress"},
-                {"data": "timeZone", "visible": false},
-                {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
-                {
-                    "name": "thumbnail",
-                    "orderable": false,
-                    "data": function (data, type) {
-                        if (type != "display")
-                            return data.thumbnail;
-
-                        if (data.thumbnail != "") {
-                            return '<a class="display-screenshot-container" data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
-                        }
-                        else {
-                            return "";
                         }
                     },
-                    "visible": false
-                },
-                {
-                    "data": "lastCommandSuccess",
-                    "render": function (data, type, row) {
-                        if (type != "display")
-                            return data;
-
-                        var icon = "";
-                        if (data == 1)
-                            icon = "fa-check";
-                        else if (data == 0)
-                            icon = "fa-times";
-                        else
-                            icon = "fa-question";
-
-                        return "<span class='fa " + icon + "'></span>";
-                    },
-                    "visible": false
-                },
-                {
-                    "data": "xmrChannel",
-                    "render": function (data, type, row) {
-                        if (type === "export") {
-                            return (data !== null && data !== "") ? 1 : 0;
+                    createdRow: function (row, data, index) {
+                        if (data.mediaInventoryStatus === 1) {
+                            $(row).addClass('table-success');
+                        } else if (data.mediaInventoryStatus === 1) {
+                            $(row).addClass('table-danger');
+                        } else {
+                            $(row).addClass('table-warning');
                         }
-
-                        if (type != "display")
-                            return data;
-
-                        var icon = "";
-                        if (data != null && data != "")
-                            icon = "fa-check";
-                        else
-                            icon = "fa-times";
-
-                        return "<span class='fa " + icon + "'></span>";
                     },
-                    "visible": false
-                },
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
-                }
-            ]
-        });
+                    "columns": [
+                        {"data": "displayId", responsivePriority: 2},
+                        {"data": "display", responsivePriority: 2},
+                        {
+                            "data": "mediaInventoryStatus",
+                            responsivePriority: 2,
+                            "render": function (data, type, row) {
+                                if (type != "display")
+                                    return data;
 
-        table2.on('draw', dataTableDraw);
-        table2.on('draw', { form: $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
-        table2.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table2, $('#displaysGrid_wrapper').find('.dataTables_buttons'));
+                                var icon = "";
+                                if (data == 1)
+                                    icon = "fa-check";
+                                else if (data == 2)
+                                    icon = "fa-times";
+                                else
+                                    icon = "fa-cloud-download";
+
+                                return '<span class="fa ' + icon + '" title="' + (row.statusDescription) + '"></span>';
+                            }
+                        },
+                        {"data": "licensed", "render": dataTableTickCrossColumn, responsivePriority: 3},
+                        {"data": "currentLayout", "visible": false, "sortable": false, responsivePriority: 5},
+                        {
+                            "data": "storageAvailableSpace",
+                            responsivePriority: 5,
+                            "visible": false,
+                            "render": function (data, type, row) {
+                                if (type != "display")
+                                    return data;
+
+                                return row.storageAvailableSpaceFormatted;
+                            }
+                        },
+                        {
+                            "data": "storageTotalSpace",
+                            responsivePriority: 5,
+                            "visible": false,
+                            "render": function (data, type, row) {
+                                if (type != "display")
+                                    return data;
+
+                                return row.storageTotalSpaceFormatted;
+                            }
+                        },
+                        {"data": "storagePercentage", "visible": false, "sortable": false, responsivePriority: 5},
+                        {"data": "description", "visible": false, responsivePriority: 4},
+                        {"data": "orientation", "visible": false, responsivePriority: 6},
+                        {"data": "resolution", "visible": false, responsivePriority: 6},
+                        {% if currentUser.featureEnabled("tag.tagging") %}
+                        {
+                            "name": "tags",
+                            responsivePriority: 3,
+                            "sortable": false,
+                            "visible": false,
+                            "data": dataTableCreateTags
+                        },
+                        {% endif %}
+                        {"data": "defaultLayout", "visible": false, responsivePriority: 4},
+                        {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false, responsivePriority: 5},
+                        {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false, responsivePriority: 5},
+                        {"data": "loggedIn", "render": dataTableTickCrossColumn, responsivePriority: 3},
+                        {"data": "lastAccessed", "render": dataTableDateFromUnix, responsivePriority: 4},
+                        {
+                            "name": "displayProfileId",
+                            responsivePriority: 5,
+                            "data": function (data, type) {
+                                return data.displayProfile;
+                            },
+                            "visible": false
+                        },
+                        {
+                            "name": "clientSort",
+                            responsivePriority: 4,
+                            "data": function (data) {
+                                if (data.clientType === 'lg') {
+                                    data.clientType = 'webOS'
+                                }
+
+                                return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
+                            },
+                            "visible": false
+                        },
+                        {"data": "deviceName", "visible": false, responsivePriority: 5},
+                        {"data": "clientAddress", "visible": false, responsivePriority: 6},
+                        {"data": "macAddress", responsivePriority: 5},
+                        {"data": "timeZone", "visible": false, responsivePriority: 5},
+                        {"data": "latitude", "visible": false, responsivePriority: 6},
+                        {"data": "longitude", "visible": false, responsivePriority: 6},
+                        {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested", responsivePriority: 7},
+                        {
+                            "name": "thumbnail",
+                            responsivePriority: 4,
+                            "orderable": false,
+                            "data": function (data, type) {
+                                if (type != "display")
+                                    return data.thumbnail;
+
+                                if (data.thumbnail != "") {
+                                    return '<a class="display-screenshot-container" data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" data-display-id="'+ data.displayId +'" data-type="'+ data.clientType +'" /></a>';
+                                }
+                                else {
+                                    return "";
+                                }
+                            },
+                            "visible": false
+                        },
+                        {
+                            "data": "isCmsTransferInProgress",
+                            "render": dataTableTickCrossColumn,
+                            "visible": false,
+                            "name": "isCmsTransferInProgress"
+                        },
+                        {
+                            "name": "bandwidthLimit",
+                            responsivePriority: 5,
+                            "data": null,
+                            "render": {"_": "bandwidthLimit", "display": "bandwidthLimitFormatted", "sort": "bandwidthLimit"},
+                            "visible": false
+                        },
+                        {
+                            "data": "lastCommandSuccess",
+                            responsivePriority: 6,
+                            "render": function (data, type, row) {
+                                if (type != "display")
+                                    return data;
+
+                                var icon = "";
+                                if (data == 1)
+                                    icon = "fa-check";
+                                else if (data == 0)
+                                    icon = "fa-times";
+                                else
+                                    icon = "fa-question";
+
+                                return "<span class='fa " + icon + "'></span>";
+                            },
+                            "visible": false
+                        },
+                        {
+                            "data": "xmrChannel",
+                            responsivePriority: 6,
+                            "render": function (data, type, row) {
+                                if (type === "export") {
+                                    return (data !== null && data !== "") ? 1 : 0;
+                                }
+
+                                if (type != "display")
+                                    return data;
+
+                                var icon = "";
+                                if (data != null && data != "")
+                                    icon = "fa-check";
+                                else
+                                    icon = "fa-times";
+
+                                return "<span class='fa " + icon + "'></span>";
+                            },
+                            "visible": false
+                        },
+                        {
+                            "data": "commercialLicence",
+                            "name": "commercialLicence",
+                            responsivePriority: 5,
+                            "render": function (data, type, row) {
+                                if (type != "display")
+                                    return data;
+
+                                var icon = "";
+                                if (data == 3) {
+                                    return "N/A";
+                                } else {
+                                    if (data == 1) {
+                                        icon = "fa-check";
+                                    } else if (data == 0) {
+                                        icon = "fa-times";
+                                    } else if (data == 2) {
+                                        icon = "fa-clock-o";
+                                    }
+
+                                    return '<span class="fa ' + icon + '" title="' + (row.commercialLicenceDescription) + '"></span>';
+                                }
+                            },
+                            "visible": false
+                        },
+                        {
+                            "name": "remote",
+                            "data": null,
+                            responsivePriority: 4,
+                            "render": function (data, type, row) {
+                                if (type === "display") {
+                                    var html = "<div class='remote-icons'>";
+                                    if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" !== "" && row.clientAddress != null && row.clientAddress !== "") {
+                                        var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', row.clientAddress);
+                                        html += '<a href="' + link + '" title="{{ "VNC to this Display"|trans }}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">'
+                                            + '<i class="fa fa-eye"></i></a>';
+                                    }
+
+                                    if (row.teamViewerLink !== "") {
+                                        html += '<a href="' + row.teamViewerLink + '" title="{{ "TeamViewer to this Display"|trans }}" target="_blank">'
+                                            + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/teamviewer.png" alt="TeamViewer Icon"></a>';
+                                    }
+
+                                    if (row.webkeyLink !== "") {
+                                        html += '<a href="' + row.webkeyLink + '" title="{{ "Webkey to this Display"|trans }}" target="_blank">'
+                                            + '<img src="{{ theme.rootUri() }}theme/default/img/remote_icons/webkey.png" alt="Webkey Icon"></a>';
+                                    }
+
+                                    return html + "</div>";
+
+                                } else if (type === "export") {
+                                    if (row.teamViewerLink !== "") {
+                                        return "TeamViewer: " + row.teamViewerLink;
+                                    }
+                                    if (row.webkeyLink !== "") {
+                                        return "Webkey: " + row.webkeyLink;
+                                    }
+                                    if (row.teamViewerLink === "" && row.webkeyLink === "") {
+                                        return "";
+                                    }
+                                } else {
+                                    return "";
+                                }
+                            },
+                            "visible": true,
+                            "orderable": false
+                        },
+                        {"data": "createdDt", "visible": false, responsivePriority: 6},
+                        {"data": "modifiedDt", "visible": false, responsivePriority: 6},
+                    ]
+                });
+
+                displayGridTable.on('draw', dataTableDraw);
+                displayGridTable.on('draw', { form: $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
+                displayGridTable.on('processing.dt', dataTableProcessing);
+                dataTableAddButtons(displayGridTable, $('#displaysGrid_wrapper').find('.dataTables_buttons'))}
+        }
     </script>
 {% endblock %}
