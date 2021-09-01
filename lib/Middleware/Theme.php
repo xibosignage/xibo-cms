@@ -68,7 +68,13 @@ class Theme extends Middleware
 
         // Resolve the current route name
         $routeName = ($app->router()->getCurrentRoute() == null) ? 'notfound' : $app->router()->getCurrentRoute()->getName();
-
+        $samlSettings = $app->configService->samlSettings;
+        $hideLogout = false;
+        if (isset($samlSettings['workflow'])
+            && isset($samlSettings['workflow']['slo'])
+            && $samlSettings['workflow']['slo'] == false) {
+            $hideLogout = true;
+        }
         $app->view()->appendData(array(
             'baseUrl' => $app->urlFor('home'),
             'logoutUrl' => $app->urlFor((empty($app->logoutRoute)) ? 'logout' : $app->logoutRoute),
@@ -89,7 +95,8 @@ class Theme extends Middleware
                 'validImageExt' => implode('|', $app->moduleFactory->getValidExtensions(['type' => 'image']))
             ],
             'ckeditorConfig' => $app->container->get('\Xibo\Controller\Library')->setApp($app, false)->fontCKEditorConfig(),
-            'version' => Environment::$WEBSITE_VERSION_NAME
+            'version' => Environment::$WEBSITE_VERSION_NAME,
+            'hideLogout' => $hideLogout
         ));
     }
 }

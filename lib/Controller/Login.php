@@ -29,6 +29,7 @@ use Xibo\Exception\XiboException;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
+use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
 use Xibo\Helper\Session;
 use Xibo\Service\ConfigServiceInterface;
@@ -43,6 +44,7 @@ use Xibo\Storage\StorageServiceInterface;
  */
 class Login extends Base
 {
+    use LogoutTrait;
     /**
      * @var Session
      */
@@ -341,18 +343,11 @@ class Login extends Base
      */
     public function logout($redirect = true)
     {
-        $this->getUser()->touch();
+        $this->completeLogoutFlow($this->getUser(), $this->session, $this->getLog(), $this->getApp());
 
-        // to log out a user we need only to clear out some session vars
-        unset($_SESSION['userid']);
-        unset($_SESSION['username']);
-        unset($_SESSION['password']);
-
-        $session = $this->session;
-        $session->setIsExpired(1);
-
-        if ($redirect)
+        if ($redirect) {
             $this->getApp()->redirectTo('login');
+        }
     }
 
     /**

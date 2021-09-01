@@ -32,6 +32,7 @@ use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
 
 /**
@@ -42,6 +43,8 @@ use Xibo\Helper\Random;
  */
 class SAMLAuthentication extends Middleware
 {
+    use LogoutTrait;
+
     public static function samlRoutes()
     {
         return array(
@@ -321,16 +324,15 @@ class SAMLAuthentication extends Middleware
 
             $auth = new Auth($this->app->configService->samlSettings);
             $auth->processSLO(false, null, false, function() use ($app) {
-                // Grab a login controller
-                /** @var \Xibo\Controller\Login $loginController */
-                $loginController = $app->container->get('\Xibo\Controller\Login');
-                $loginController->logout(false);
+                $user = $app->userFactory->getById($_SESSION['userid']);
+                $app->logService->setUserId($user->userId);
+                $this->completeLogoutFlow($user, $app->session, $app->logService, $app);
             });
 
             $errors = $auth->getErrors();
 
             if (empty($errors)) {
-                $this->app->redirect($this->app->urlFor('logout'));
+                $this->app->redirect($this->app->urlFor('home'));
             } else {
                 throw new AccessDeniedException("SLO failed. ".implode(', ', $errors));
             }
