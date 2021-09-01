@@ -280,7 +280,6 @@
                             <th>{% trans "Thumbnail" %}</th>
                             <th>{% trans "Last Command" %}</th>
                             <th>{% trans "XMR Registered" %}</th>
-                            <th></th>
                         </tr>
                         </thead>
                         <tbody>
@@ -305,6 +304,7 @@
 
         let displayGroupIdsContent = [];
         let displayGroupIdsStatus = [];
+        var displayGridTable = null
 
         // Create our chart
         var bandwidthChart = new Chart($("#bandwidthChart"), {
@@ -618,7 +618,7 @@
 
                     $('#displayGroupId').val(displayGroupId);
                     $('#loggedIn').val(loggedInStatus);
-                    table2.ajax.reload();
+                    handleDisplaysGrid();
 
                     $("#displaysGridTable").removeClass('hidden');
                 }
@@ -640,236 +640,239 @@
 
                     $('#displayGroupId').val(displayGroupId);
                     $('#mediaInventoryStatus').val(mediaInventoryStatus);
-                    table2.ajax.reload();
+                    handleDisplaysGrid();
 
                     $("#displaysGridTable").removeClass('hidden');
                 }
             }
         );
 
-        let table2 = $("#displaysGrid").DataTable({
-            "language": dataTablesLanguage,
-            serverSide: true,
-            stateSave: true, stateDuration: 0,
-            stateLoadCallback: function (settings, callback) {
-                var data = {};
-                $.ajax({
-                    type: "GET",
-                    async: false,
-                    url: "{{ urlFor("user.pref") }}?preference=displaysGrid",
-                    dataType: 'json',
-                    success: function (json) {
-                        try {
-                            if (json.success) {
-                                data = JSON.parse(json.data.value);
+        function handleDisplaysGrid() {
+            if (displayGridTable != null) {
+                displayGridTable.ajax.reload();
+            } else {
+                displayGridTable = $("#displaysGrid").DataTable({
+                    "language": dataTablesLanguage,
+                    serverSide: true,
+                    stateSave: true, stateDuration: 0,
+                    stateLoadCallback: function (settings, callback) {
+                        var data = {};
+                        $.ajax({
+                            type: "GET",
+                            async: false,
+                            url: "{{ urlFor("user.pref") }}?preference=displaysGrid",
+                            dataType: 'json',
+                            success: function (json) {
+                                try {
+                                    if (json.success) {
+                                        data = JSON.parse(json.data.value);
+                                    }
+                                } catch (e) {
+                                    // Do nothing
+                                }
                             }
-                        } catch (e) {
-                            // Do nothing
+                        });
+                        return data;
+                    },
+                    stateSaveCallback: function (settings, data) {
+                        $.ajax({
+                            type: "POST",
+                            url: "{{ urlFor("user.pref") }}",
+                            data: {
+                                preference: [{
+                                    option: "displaysGrid",
+                                    value: JSON.stringify(data)
+                                }]
+                            }
+                        });
+                    },
+                    filter: false,
+                    searchDelay: 3000,
+                    order: [[1, "asc"]],
+                    ajax: {
+                        "url": "{{ urlFor("display.search") }}",
+                        "data": function (dataToSend) {
+                            //make a new object so as not to destroy the input.
+                            var data = {};
+                            data.draw = dataToSend.draw;
+                            data.length = dataToSend.length;
+                            data.start = dataToSend.start;
+                            data.order = dataToSend.order;
+                            data.columns = [];
+                            // remove buttons column
+                            dataToSend.columns.pop();
+
+                            $.each(dataToSend.columns, function (index, e) {
+                                var col = {};
+                                col.data = e.data;
+                                if (e.name != null && e.name != "")
+                                    col.name = e.name;
+                                data.columns.push(col);
+                            });
+
+                            $.extend(data, $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
+
+                            return data;
                         }
-                    }
+                    },
+                    createdRow: function (row, data, index) {
+                        if (data.mediaInventoryStatus === 1) {
+                            $(row).addClass('success');
+                        } else if (data.mediaInventoryStatus === 1) {
+                            $(row).addClass('danger');
+                        } else {
+                            $(row).addClass('warning');
+                        }
+                    },
+                    "columns": [
+                        {"data": "displayId"},
+                        {
+                            "name": "display",
+                            "data": function (data, type) {
+                                if (type != "display")
+                                    return data.display;
+
+                                if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != null && data.clientAddress != "") {
+                                    var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', data.clientAddress);
+                                    return '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">' + data.display + '</a>';
+                                }
+                                else {
+                                    return data.display;
+                                }
+                            }
+                        },
+                        {
+                            "data": "mediaInventoryStatus",
+                            "render": function (data, type, row) {
+                                if (type != "display")
+                                    return data;
+
+                                var icon = "";
+                                if (data == 1)
+                                    icon = "fa-check";
+                                else if (data == 2)
+                                    icon = "fa-times";
+                                else
+                                    icon = "fa-cloud-download";
+
+                                return "<span class='fa " + icon + "' title='" + (row.statusDescription) + "'></span>";
+                            }
+                        },
+                        {"data": "licensed", "render": dataTableTickCrossColumn},
+                        {"data": "currentLayout", "visible": false, "sortable": false},
+                        {
+                            "data": "storageAvailableSpace",
+                            "visible": false,
+                            "render": function (data, type, row) {
+                                if (type != "display")
+                                    return data;
+
+                                return row.storageAvailableSpaceFormatted;
+                            }
+                        },
+                        {
+                            "data": "storageTotalSpace",
+                            "visible": false,
+                            "render": function (data, type, row) {
+                                if (type != "display")
+                                    return data;
+
+                                return row.storageTotalSpaceFormatted;
+                            }
+                        },
+                        {"data": "storagePercentage", "visible": false, "sortable": false},
+                        {"data": "description", "visible": false},
+                        {
+                            "name": "tags",
+                            "sortable": false,
+                            "visible": false,
+                            "data": dataTableCreateTags
+                        },
+                        {"data": "defaultLayout", "visible": false},
+                        {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false},
+                        {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false},
+                        {"data": "loggedIn", "render": dataTableTickCrossColumn},
+                        {"data": "lastAccessed", "render": dataTableDateFromUnix},
+                        {
+                            "name": "displayProfileId",
+                            "data": function (data, type) {
+                                return data.displayProfile;
+                            },
+                            "visible": false
+                        },
+                        {
+                            "name": "clientSort",
+                            "data": function (data) {
+                                return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
+                            },
+                            "visible": false
+                        },
+                        {"data": "deviceName", "visible": false},
+                        {"data": "clientAddress", "visible": false},
+                        {"data": "macAddress"},
+                        {"data": "timeZone", "visible": false},
+                        {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
+                        {
+                            "name": "thumbnail",
+                            "orderable": false,
+                            "data": function (data, type) {
+                                if (type != "display")
+                                    return data.thumbnail;
+
+                                if (data.thumbnail != "") {
+                                    return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
+                                }
+                                else {
+                                    return "";
+                                }
+                            },
+                            "visible": false
+                        },
+                        {
+                            "data": "lastCommandSuccess",
+                            "render": function (data, type, row) {
+                                if (type != "display")
+                                    return data;
+
+                                var icon = "";
+                                if (data == 1)
+                                    icon = "fa-check";
+                                else if (data == 0)
+                                    icon = "fa-times";
+                                else
+                                    icon = "fa-question";
+
+                                return "<span class='fa " + icon + "'></span>";
+                            },
+                            "visible": false
+                        },
+                        {
+                            "data": "xmrChannel",
+                            "render": function (data, type, row) {
+                                if (type === "export") {
+                                    return (data !== null && data !== "") ? 1 : 0;
+                                }
+
+                                if (type != "display")
+                                    return data;
+
+                                var icon = "";
+                                if (data != null && data != "")
+                                    icon = "fa-check";
+                                else
+                                    icon = "fa-times";
+
+                                return "<span class='fa " + icon + "'></span>";
+                            },
+                            "visible": false
+                        }
+                    ]
                 });
-                return data;
-            },
-            stateSaveCallback: function (settings, data) {
-                $.ajax({
-                    type: "POST",
-                    url: "{{ urlFor("user.pref") }}",
-                    data: {
-                        preference: [{
-                            option: "displaysGrid",
-                            value: JSON.stringify(data)
-                        }]
-                    }
-                });
-            },
-            filter: false,
-            searchDelay: 3000,
-            order: [[1, "asc"]],
-            ajax: {
-                "url": "{{ urlFor("display.search") }}",
-                "data": function (dataToSend) {
-                    //make a new object so as not to destroy the input.
-                    var data = {};
-                    data.draw = dataToSend.draw;
-                    data.length = dataToSend.length;
-                    data.start = dataToSend.start;
-                    data.order = dataToSend.order;
-                    data.columns = [];
-
-                    $.each(dataToSend.columns, function (index, e) {
-                        var col = {};
-                        col.data = e.data;
-                        if (e.name != null && e.name != "")
-                            col.name = e.name;
-                        data.columns.push(col);
-                    });
-
-                    $.extend(data, $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-
-                    return data;
-                }
-            },
-            createdRow: function (row, data, index) {
-                if (data.mediaInventoryStatus === 1) {
-                    $(row).addClass('success');
-                } else if (data.mediaInventoryStatus === 1) {
-                    $(row).addClass('danger');
-                } else {
-                    $(row).addClass('warning');
-                }
-            },
-            "columns": [
-                {"data": "displayId"},
-                {
-                    "name": "display",
-                    "data": function (data, type) {
-                        if (type != "display")
-                            return data.display;
-
-                        if ("{{ settings.SHOW_DISPLAY_AS_VNCLINK }}" != "" && data.clientAddress != null && data.clientAddress != "") {
-                            var link = "{{ settings.SHOW_DISPLAY_AS_VNCLINK }}".replace('%s', data.clientAddress);
-                            return '<a href="' + link + '" title="{% trans "VNC to this Display" %}" target="{{ settings.SHOW_DISPLAY_AS_VNC_TGT }}">' + data.display + '</a>';
-                        }
-                        else {
-                            return data.display;
-                        }
-                    }
-                },
-                {
-                    "data": "mediaInventoryStatus",
-                    "render": function (data, type, row) {
-                        if (type != "display")
-                            return data;
-
-                        var icon = "";
-                        if (data == 1)
-                            icon = "fa-check";
-                        else if (data == 2)
-                            icon = "fa-times";
-                        else
-                            icon = "fa-cloud-download";
-
-                        return "<span class='fa " + icon + "' title='" + (row.statusDescription) + "'></span>";
-                    }
-                },
-                {"data": "licensed", "render": dataTableTickCrossColumn},
-                {"data": "currentLayout", "visible": false, "sortable": false},
-                {
-                    "data": "storageAvailableSpace",
-                    "visible": false,
-                    "render": function (data, type, row) {
-                        if (type != "display")
-                            return data;
-
-                        return row.storageAvailableSpaceFormatted;
-                    }
-                },
-                {
-                    "data": "storageTotalSpace",
-                    "visible": false,
-                    "render": function (data, type, row) {
-                        if (type != "display")
-                            return data;
-
-                        return row.storageTotalSpaceFormatted;
-                    }
-                },
-                {"data": "storagePercentage", "visible": false, "sortable": false},
-                {"data": "description", "visible": false},
-                {
-                    "name": "tags",
-                    "sortable": false,
-                    "visible": false,
-                    "data": dataTableCreateTags
-                },
-                {"data": "defaultLayout", "visible": false},
-                {"data": "incSchedule", "render": dataTableTickCrossColumn, "visible": false},
-                {"data": "emailAlert", "render": dataTableTickCrossColumn, "visible": false},
-                {"data": "loggedIn", "render": dataTableTickCrossColumn},
-                {"data": "lastAccessed", "render": dataTableDateFromUnix},
-                {
-                    "name": "displayProfileId",
-                    "data": function (data, type) {
-                        return data.displayProfile;
-                    },
-                    "visible": false
-                },
-                {
-                    "name": "clientSort",
-                    "data": function (data) {
-                        return data.clientType + ' ' + data.clientVersion + '-' + data.clientCode;
-                    },
-                    "visible": false
-                },
-                {"data": "deviceName", "visible": false},
-                {"data": "clientAddress", "visible": false},
-                {"data": "macAddress"},
-                {"data": "timeZone", "visible": false},
-                {"data": "screenShotRequested", "render": dataTableTickCrossColumn, "visible": false, "name": "screenShotRequested"},
-                {
-                    "name": "thumbnail",
-                    "orderable": false,
-                    "data": function (data, type) {
-                        if (type != "display")
-                            return data.thumbnail;
-
-                        if (data.thumbnail != "") {
-                            return '<a data-toggle="lightbox" data-type="image" href="' + data.thumbnail + '"><img class="display-screenshot" src="' + data.thumbnail + '" /></a>';
-                        }
-                        else {
-                            return "";
-                        }
-                    },
-                    "visible": false
-                },
-                {
-                    "data": "lastCommandSuccess",
-                    "render": function (data, type, row) {
-                        if (type != "display")
-                            return data;
-
-                        var icon = "";
-                        if (data == 1)
-                            icon = "fa-check";
-                        else if (data == 0)
-                            icon = "fa-times";
-                        else
-                            icon = "fa-question";
-
-                        return "<span class='fa " + icon + "'></span>";
-                    },
-                    "visible": false
-                },
-                {
-                    "data": "xmrChannel",
-                    "render": function (data, type, row) {
-                        if (type === "export") {
-                            return (data !== null && data !== "") ? 1 : 0;
-                        }
-
-                        if (type != "display")
-                            return data;
-
-                        var icon = "";
-                        if (data != null && data != "")
-                            icon = "fa-check";
-                        else
-                            icon = "fa-times";
-
-                        return "<span class='fa " + icon + "'></span>";
-                    },
-                    "visible": false
-                },
-                {
-                    "orderable": false,
-                    "data": dataTableButtonsColumn
-                }
-            ]
-        });
-
-        table2.on('draw', dataTableDraw);
-        table2.on('draw', { form: $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
-        table2.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table2, $('#displaysGrid_wrapper').find('.col-sm-6').eq(1));
+                displayGridTable.on('draw', dataTableDraw);
+                displayGridTable.on('draw', { form: $("#displaysGrid").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
+                displayGridTable.on('processing.dt', dataTableProcessing);
+                dataTableAddButtons(displayGridTable, $('#displaysGrid_wrapper').find('.col-sm-6').eq(1));
+            }
+        }
     </script>
 {% endblock %}
