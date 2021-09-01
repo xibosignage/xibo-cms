@@ -1,6 +1,6 @@
 <?php
 /**
- * Add new columns to Schedule table
+ * Add new column ipAddress to Audit Log table
  * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
  */
 
