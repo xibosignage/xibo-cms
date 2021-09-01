@@ -56,6 +56,7 @@ class Schedule implements \JsonSerializable
     public static $OVERLAY_EVENT = 3;
     public static $INTERRUPT_EVENT = 4;
     public static $CAMPAIGN_EVENT = 5;
+    public static $ACTION_EVENT = 6;
     public static $DATE_MIN = 0;
     public static $DATE_MAX = 2147483647;
 
@@ -261,6 +262,24 @@ class Schedule implements \JsonSerializable
      * @var string
      */
     public $geoLocation;
+
+    /**
+     * @SWG\Property(description="For Action event type, Action trigger code")
+     * @var string
+     */
+    public $actionTriggerCode;
+
+    /**
+     * @SWG\Property(description="For Action event type, the type of the Action (navigate to Layout or Command)")
+     * @var string
+     */
+    public $actionType;
+
+    /**
+     * @SWG\Property(description="For Action event type and navigate to Layout Action type, the Layout code")
+     * @var string
+     */
+    public $actionLayoutCode;
 
     /**
      * @var ScheduleEvent[]
@@ -535,26 +554,48 @@ class Schedule implements \JsonSerializable
             $this->campaignId = null;
             $this->toDt = null;
 
+        } elseif ($this->eventTypeId == Schedule::$ACTION_EVENT) {
+            if (!v::stringType()->notEmpty()->validate($this->actionType)) {
+                throw new InvalidArgumentException(__('Please select a Action Type for this event.'), 'actionType');
+            }
+
+            if (!v::stringType()->notEmpty()->validate($this->actionTriggerCode)) {
+                throw new InvalidArgumentException(__('Please select a Action trigger code for this event.'), 'actionTriggerCode');
+            }
+
+            if ($this->actionType === 'command') {
+                if (!v::intType()->notEmpty()->validate($this->commandId)) {
+                    throw new InvalidArgumentException(__('Please select a Command for this event.'), 'commandId');
+                }
+
+            } elseif ($this->actionType === 'navToLayout') {
+                if (!v::stringType()->notEmpty()->validate($this->actionLayoutCode)) {
+                    throw new InvalidArgumentException(__('Please select a Layout code for this event.'), 'actionLayoutCode');
+                }
+                $this->commandId = null;
+            }
+            $this->campaignId = null;
         } else {
             // No event type selected
             throw new InvalidArgumentException(__('Please select the Event Type'), 'eventTypeId');
         }
 
         // Make sure we have a sensible recurrence setting
-        if (!$this->isCustomDayPart() && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour'))
+        if (!$this->isCustomDayPart() && ($this->recurrenceType == 'Minute' || $this->recurrenceType == 'Hour')) {
             throw new InvalidArgumentException(__('Repeats selection is invalid for Always or Daypart events'), 'recurrencyType');
-
+        }
         // Check display order is positive
-        if ($this->displayOrder < 0)
+        if ($this->displayOrder < 0) {
             throw new InvalidArgumentException(__('Display Order must be 0 or a positive number'), 'displayOrder');
-
+        }
         // Check priority is positive
-        if ($this->isPriority < 0)
+        if ($this->isPriority < 0) {
             throw new InvalidArgumentException(__('Priority must be 0 or a positive number'), 'isPriority');
-
+        }
         // Check recurrenceDetail every is positive
-        if ($this->recurrenceType != '' && ($this->recurrenceDetail === null || $this->recurrenceDetail <= 0))
+        if ($this->recurrenceType != '' && ($this->recurrenceDetail === null || $this->recurrenceDetail <= 0)) {
             throw new InvalidArgumentException(__('Repeat every must be a positive number'), 'recurrenceDetail');
+        }
     }
 
     /**
@@ -571,8 +612,9 @@ class Schedule implements \JsonSerializable
             'notify' => true
         ], $options);
 
-        if ($options['validate'])
+        if ($options['validate']) {
             $this->validate();
+        }
 
         // Handle "always" day parts
         if ($this->isAlwaysDayPart()) {
@@ -585,8 +627,7 @@ class Schedule implements \JsonSerializable
             $auditMessage = 'Added';
             $this->loaded = true;
             $isEdit = false;
-        }
-        else {
+        } else {
             // If this save action means there aren't any display groups assigned
             // and if we're set to deleteOrphaned, then delete
             if ($options['deleteOrphaned'] && count($this->displayGroups) <= 0) {
@@ -684,8 +725,8 @@ class Schedule implements \JsonSerializable
     private function add()
     {
         $this->eventId = $this->getStore()->insert('
-          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `recurrenceMonthlyRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`, `shareOfVoice`, `isGeoAware`, `geoLocation`)
-            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :recurrenceMonthlyRepeatsOn, :dayPartId, :syncTimezone, :syncEvent, :shareOfVoice, :isGeoAware, :geoLocation)
+          INSERT INTO `schedule` (eventTypeId, CampaignId, commandId, userID, is_priority, FromDT, ToDT, DisplayOrder, recurrence_type, recurrence_detail, recurrence_range, `recurrenceRepeatsOn`, `recurrenceMonthlyRepeatsOn`, `dayPartId`, `syncTimezone`, `syncEvent`, `shareOfVoice`, `isGeoAware`, `geoLocation`, `actionType`, `actionTriggerCode`, `actionLayoutCode`)
+            VALUES (:eventTypeId, :campaignId, :commandId, :userId, :isPriority, :fromDt, :toDt, :displayOrder, :recurrenceType, :recurrenceDetail, :recurrenceRange, :recurrenceRepeatsOn, :recurrenceMonthlyRepeatsOn, :dayPartId, :syncTimezone, :syncEvent, :shareOfVoice, :isGeoAware, :geoLocation, :actionType, :actionTriggerCode, :actionLayoutCode)
         ', [
             'eventTypeId' => $this->eventTypeId,
             'campaignId' => $this->campaignId,
@@ -705,7 +746,10 @@ class Schedule implements \JsonSerializable
             'syncEvent' => $this->syncEvent,
             'shareOfVoice' => $this->shareOfVoice,
             'isGeoAware' => $this->isGeoAware,
-            'geoLocation' => $this->geoLocation
+            'geoLocation' => $this->geoLocation,
+            'actionType' => $this->actionType,
+            'actionTriggerCode' => $this->actionTriggerCode,
+            'actionLayoutCode' => $this->actionLayoutCode
         ]);
     }
 
@@ -734,7 +778,10 @@ class Schedule implements \JsonSerializable
             `syncEvent` = :syncEvent,
             `shareOfVoice` = :shareOfVoice,
             `isGeoAware` = :isGeoAware,
-            `geoLocation` = :geoLocation
+            `geoLocation` = :geoLocation,
+            `actionType` = :actionType,
+            `actionTriggerCode` = :actionTriggerCode,
+            `actionLayoutCode` = :actionLayoutCode
           WHERE eventId = :eventId
         ', [
             'eventTypeId' => $this->eventTypeId,
@@ -756,6 +803,9 @@ class Schedule implements \JsonSerializable
             'shareOfVoice' => $this->shareOfVoice,
             'isGeoAware' => $this->isGeoAware,
             'geoLocation' => $this->geoLocation,
+            'actionType' => $this->actionType,
+            'actionTriggerCode' => $this->actionTriggerCode,
+            'actionLayoutCode' => $this->actionLayoutCode,
             'eventId' => $this->eventId
         ]);
     }
