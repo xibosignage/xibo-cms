@@ -553,7 +553,6 @@ class StatusDashboard extends Base
                 $displayGroupNames[] = $row['displayGroup'];
                 $displayGroupIds[] = $row['DisplayGroupID'];
                 $displaysAssigned[] = count($this->displayFactory->query(['displayGroup'], ['displayGroupId' => $row['DisplayGroupID'], 'mediaInventoryStatus' => $inventoryStatus, 'loggedIn' => $status]));
-                $displaysAssigned[] = 0;
             }
 
             $data['displayGroupNames'] = json_encode($displayGroupNames);
