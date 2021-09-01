@@ -56,6 +56,9 @@
                             {% set title %}{% trans "Entity ID" %}{% endset %}
                             {{ inline.input("entityId", title) }}
 
+                            {% set title %}{% trans "IP Address" %}{% endset %}
+                            {{ inline.input("ipAddress", title) }}
+
                             {% set title %}{% trans "Message" %}{% endset %}
                             {{ inline.input("message", title) }}
                         </form>
@@ -70,6 +73,7 @@
                                 <th>{% trans "User" %}</th>
                                 <th>{% trans "Entity" %}</th>
                                 <th>{% trans "Entity ID" %}</th>
+                                <th>{% trans "IP Address" %}</th>
                                 <th>{% trans "Message" %}</th>
                                 <th>{% trans "Object" %}</th>
                             </tr>
@@ -145,6 +149,7 @@
                             return data.entityId;
                         }
                     },
+                    {"data": "ipAddress", responsivePriority: 2},
                     {"data": "message", responsivePriority: 1},
                     {
                         "data": function (data, type, row, meta) {
