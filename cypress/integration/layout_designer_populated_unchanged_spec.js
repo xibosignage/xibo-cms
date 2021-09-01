@@ -85,8 +85,8 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         cy.populateLibraryWithMedia();
 
         // Open toolbar Widgets tab
+        cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force:true});
         cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
-        cy.get('#layout-editor-toolbar #btn-menu-2').should('be.visible').click({force:true});
 
         // Activate the Add button
         cy.get('#layout-editor-toolbar #content-2 .toolbar-pane-content [data-sub-type="audio"] .add-area').invoke('show').click({force:true});
@@ -148,7 +148,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
     it.skip('should play a preview in the viewer, in fullscreen mode', () => {
 
         // Click fullscreen button
-        cy.get('#layout-viewer-navbar #fs-btn').click();
+        cy.get('#main-panel #fullscreenBtn').click();
 
         // Viewer should have a fullscreen class, and click play
         cy.get('#layout-viewer-container.fullscreen #layout-viewer-navbar #play-btn').click();

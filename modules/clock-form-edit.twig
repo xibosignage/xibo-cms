@@ -124,11 +124,11 @@
                             {{ forms.message(simpleTextEditorMessage, 'ta_text-advanced-editor-hide inline-editor-hide') }}
 
                             {# Layout Designer messages #}
-                            {% set layoutDesignerMessage %}
+                            {% set layoutEditorMessage %}
                                 {% trans "Enter text to display using the inline editor which can be opened by clicking in the preview on the left." %}
                                 {% trans "When using the inline editor Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
                             {% endset %}
-                            {{ forms.message(layoutDesignerMessage, 'layout-designer-message inline-editor-show') }}
+                            {{ forms.message(layoutEditorMessage, 'layout-designer-message inline-editor-show') }}
 
                             {# Playlist Editor messages #}
                             {% set playlistEditorMessage %}

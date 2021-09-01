@@ -1,6 +1,6 @@
 // LAYOUT Module
-const Region = require('../designer/region.js');
-const Widget = require('../designer/widget.js');
+const Region = require('../layout-editor/region.js');
+const Widget = require('../editor-core/widget.js');
 
 /**
  * Layout contructor
