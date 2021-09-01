@@ -283,8 +283,8 @@ class SAMLAuthentication extends AuthenticationBase
 
         // Single Logout Service
         $app->get('/saml/sls', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) use ($app) {
-            $auth = new Auth( $app->getContainer()->get('configService')->samlSettings);
-            $auth->processSLO(false, null, false, function() use ($request) {
+            $auth = new Auth($app->getContainer()->get('configService')->samlSettings);
+            $auth->processSLO(false, null, false, function () use ($request) {
                 $this->completeLogoutFlow($this->getUser($_SESSION['userid']), $this->getSession(), $this->getLog(), $request);
             });
             $errors = $auth->getErrors();
