@@ -30,6 +30,7 @@ use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
 
 /**
@@ -40,6 +41,7 @@ use Xibo\Helper\Random;
  */
 class CASAuthentication extends Middleware
 {
+    use LogoutTrait;
     public static function casRoutes()
     {
         return array(
@@ -117,8 +119,9 @@ class CASAuthentication extends Middleware
         $app->get('/cas/logout', function () use ($app) {
             // The order is first: local session to destroy, second the cas session
             // because phpCAS::logout() redirects to CAS server
-            $loginController = $app->container->get('\Xibo\Controller\Login');
-            $loginController->logout(false);
+            $user = $app->userFactory->getById($_SESSION['userid']);
+            $app->logService->setUserId($user->userId);
+            $this->completeLogoutFlow($user, $app->session, $app->logService, $app);
             $sso_host = $app->configService->casSettings['config']['server'];
             $sso_port = $app->configService->casSettings['config']['port'];
             $sso_uri = $app->configService->casSettings['config']['uri'];
