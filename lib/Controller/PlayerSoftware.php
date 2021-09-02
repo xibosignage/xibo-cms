@@ -126,8 +126,9 @@ class PlayerSoftware extends Base
 
         // add row buttons
         foreach ($versions as $version) {
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 break;
+            }
 
             $media = $this->mediaFactory->getById($version->mediaId);
             $version->includeProperty('buttons');
@@ -138,7 +139,7 @@ class PlayerSoftware extends Base
                 // Edit
                 $version->buttons[] = [
                     'id' => 'content_button_edit',
-                    'url' => $this->urlFor($request,'playersoftware.edit.form', ['id' => $version->versionId]),
+                    'url' => $this->urlFor($request, 'playersoftware.edit.form', ['id' => $version->versionId]),
                     'text' => __('Edit')
                 ];
             }
@@ -147,11 +148,11 @@ class PlayerSoftware extends Base
                 // Delete Button
                 $version->buttons[] = [
                     'id' => 'content_button_delete',
-                    'url' => $this->urlFor($request,'playersoftware.delete.form', ['id' => $version->versionId]),
+                    'url' => $this->urlFor($request, 'playersoftware.delete.form', ['id' => $version->versionId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'playersoftware.delete', ['id' => $version->versionId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'playersoftware.delete', ['id' => $version->versionId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'content_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
@@ -165,18 +166,18 @@ class PlayerSoftware extends Base
                 // Permissions
                 $version->buttons[] = [
                     'id' => 'content_button_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
+                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'Media', 'id' => $media->mediaId]),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Media', 'id' => $media->mediaId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'Media', 'id' => $media->mediaId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'content_button_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $media->name],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Media'])],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'Media'])],
                         ['name' => 'content-id-name', 'value' => 'mediaId']
                     ]
                 ];
@@ -186,7 +187,7 @@ class PlayerSoftware extends Base
             $version->buttons[] = array(
                 'id' => 'content_button_download',
                 'linkType' => '_self', 'external' => true,
-                'url' => $this->urlFor($request,'library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
+                'url' => $this->urlFor($request, 'library.download', ['id' => $media->mediaId]) . '?attachment=' . $media->fileName,
                 'text' => __('Download')
             );
         }

@@ -186,8 +186,9 @@ class DataSet extends Base
             if (in_array('columns', $embed)) {
                 $dataSet->load();
             }
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 break;
+            }
 
             $dataSet->includeProperty('buttons');
             $dataSet->buttons = [];
@@ -206,12 +207,11 @@ class DataSet extends Base
             }
 
             if ($this->getUser()->featureEnabled('dataset.modify')) {
-
                 if ($user->checkEditable($dataSet)) {
                     // View Columns
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_viewcolumns',
-                        'url' => $this->urlFor($request,'dataSet.column.view', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request, 'dataSet.column.view', ['id' => $dataSet->dataSetId]),
                         'class' => 'XiboRedirectButton',
                         'text' => __('View Columns')
                     );
@@ -219,7 +219,7 @@ class DataSet extends Base
                     // View RSS
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_viewrss',
-                        'url' => $this->urlFor($request,'dataSet.rss.view', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request, 'dataSet.rss.view', ['id' => $dataSet->dataSetId]),
                         'class' => 'XiboRedirectButton',
                         'text' => __('View RSS')
                     );
@@ -239,7 +239,7 @@ class DataSet extends Base
                     // Copy
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_copy',
-                        'url' => $this->urlFor($request,'dataSet.copy.form', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request, 'dataSet.copy.form', ['id' => $dataSet->dataSetId]),
                         'text' => __('Copy')
                     );
 
@@ -249,14 +249,14 @@ class DataSet extends Base
                     // Edit DataSet
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_edit',
-                        'url' => $this->urlFor($request,'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request, 'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
                         'text' => __('Edit')
                     );
 
                     $dataSet->buttons[] = [
                         'id' => 'dataset_button_csv_export',
                         'linkType' => '_self', 'external' => true,
-                        'url' => $this->urlFor($request,'dataSet.export.csv', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request, 'dataSet.export.csv', ['id' => $dataSet->dataSetId]),
                         'text' => __('Export (CSV)')
                     ];
                 }
@@ -265,11 +265,11 @@ class DataSet extends Base
                     // Delete DataSet
                     $dataSet->buttons[] = [
                         'id' => 'dataset_button_delete',
-                        'url' => $this->urlFor($request,'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request, 'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'dataSet.delete', ['id' => $dataSet->dataSetId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'dataSet.delete', ['id' => $dataSet->dataSetId])],
                             ['name' => 'commit-method', 'value' => 'delete'],
                             ['name' => 'id', 'value' => 'dataset_button_delete'],
                             ['name' => 'text', 'value' => __('Delete')],

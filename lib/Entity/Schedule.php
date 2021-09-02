@@ -527,8 +527,9 @@ class Schedule implements \JsonSerializable
             $this->eventTypeId == Schedule::$INTERRUPT_EVENT
         ) {
             // Validate layout
-            if (!v::intType()->notEmpty()->validate($this->campaignId))
+            if (!v::intType()->notEmpty()->validate($this->campaignId)) {
                 throw new InvalidArgumentException(__('Please select a Campaign/Layout for this event.'), 'campaignId');
+            }
 
             if ($this->isCustomDayPart()) {
                 // validate the dates
@@ -540,7 +541,6 @@ class Schedule implements \JsonSerializable
 
             // additional validation for Interrupt Layout event type
             if ($this->eventTypeId == Schedule::$INTERRUPT_EVENT) {
-
                 if (!v::intType()->notEmpty()->min(0)->max(3600)->validate($this->shareOfVoice)) {
                     throw new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice');
                 }
@@ -548,12 +548,11 @@ class Schedule implements \JsonSerializable
 
         } else if ($this->eventTypeId == Schedule::$COMMAND_EVENT) {
             // Validate command
-            if (!v::intType()->notEmpty()->validate($this->commandId))
+            if (!v::intType()->notEmpty()->validate($this->commandId)) {
                 throw new InvalidArgumentException(__('Please select a Command for this event.'), 'command');
-
+            }
             $this->campaignId = null;
             $this->toDt = null;
-
         } elseif ($this->eventTypeId == Schedule::$ACTION_EVENT) {
             if (!v::stringType()->notEmpty()->validate($this->actionType)) {
                 throw new InvalidArgumentException(__('Please select a Action Type for this event.'), 'actionType');
@@ -567,7 +566,6 @@ class Schedule implements \JsonSerializable
                 if (!v::intType()->notEmpty()->validate($this->commandId)) {
                     throw new InvalidArgumentException(__('Please select a Command for this event.'), 'commandId');
                 }
-
             } elseif ($this->actionType === 'navToLayout') {
                 if (!v::stringType()->notEmpty()->validate($this->actionLayoutCode)) {
                     throw new InvalidArgumentException(__('Please select a Layout code for this event.'), 'actionLayoutCode');

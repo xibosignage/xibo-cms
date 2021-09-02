@@ -1082,17 +1082,17 @@ class Soap
                         }
 
                         // Add a layout node to the schedule
-                        $layout = $scheduleXml->createElement("layout");
-                        $layout->setAttribute("file", $layoutId);
-                        $layout->setAttribute("fromdt", $fromDt);
-                        $layout->setAttribute("todt", $toDt);
-                        $layout->setAttribute("scheduleid", $scheduleId);
-                        $layout->setAttribute("priority", $is_priority);
-                        $layout->setAttribute("syncEvent", $syncKey);
-                        $layout->setAttribute("shareOfVoice", $row['shareOfVoice'] ?? 0);
+                        $layout = $scheduleXml->createElement('layout');
+                        $layout->setAttribute('file', $layoutId);
+                        $layout->setAttribute('fromdt', $fromDt);
+                        $layout->setAttribute('todt', $toDt);
+                        $layout->setAttribute('scheduleid', $scheduleId);
+                        $layout->setAttribute('priority', $is_priority);
+                        $layout->setAttribute('syncEvent', $syncKey);
+                        $layout->setAttribute('shareOfVoice', $row['shareOfVoice'] ?? 0);
                         $layout->setAttribute('duration', $row['duration'] ?? 0);
-                        $layout->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
-                        $layout->setAttribute("geoLocation", $row['geoLocation'] ?? null);
+                        $layout->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
+                        $layout->setAttribute('geoLocation', $row['geoLocation'] ?? null);
                         $layout->setAttribute('cyclePlayback', $row['cyclePlayback'] ?? 0);
                         $layout->setAttribute('groupKey', $row['groupKey'] ?? 0);
                         $layout->setAttribute('playCount', $row['playCount'] ?? 0);
@@ -1101,10 +1101,10 @@ class Soap
                         if (array_key_exists($layoutId, $layoutDependents)) {
                             if ($options['dependentsAsNodes']) {
                                 // Add the dependents to the layout as new nodes
-                                $dependentNode = $scheduleXml->createElement("dependents");
+                                $dependentNode = $scheduleXml->createElement('dependents');
 
                                 foreach ($layoutDependents[$layoutId] as $storedAs) {
-                                    $fileNode = $scheduleXml->createElement("file", $storedAs);
+                                    $fileNode = $scheduleXml->createElement('file', $storedAs);
 
                                     $dependentNode->appendChild($fileNode);
                                 }
@@ -1112,16 +1112,16 @@ class Soap
                                 $layout->appendChild($dependentNode);
                             } else {
                                 // Add the dependents to the layout as an attribute
-                                $layout->setAttribute("dependents", implode(',', $layoutDependents[$layoutId]));
+                                $layout->setAttribute('dependents', implode(',', $layoutDependents[$layoutId]));
                             }
                         }
 
                         $layoutElements->appendChild($layout);
                     } elseif ($eventTypeId == Schedule::$COMMAND_EVENT) {
                         // Add a command node to the schedule
-                        $command = $scheduleXml->createElement("command");
-                        $command->setAttribute("date", $fromDt);
-                        $command->setAttribute("scheduleid", $scheduleId);
+                        $command = $scheduleXml->createElement('command');
+                        $command->setAttribute('date', $fromDt);
+                        $command->setAttribute('scheduleid', $scheduleId);
                         $command->setAttribute('code', $commandCode);
                         $layoutElements->appendChild($command);
                     } elseif ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
@@ -1144,14 +1144,14 @@ class Soap
                         }
 
                         $overlay = $scheduleXml->createElement('overlay');
-                        $overlay->setAttribute("file", $layoutId);
-                        $overlay->setAttribute("fromdt", $fromDt);
-                        $overlay->setAttribute("todt", $toDt);
-                        $overlay->setAttribute("scheduleid", $scheduleId);
-                        $overlay->setAttribute("priority", $is_priority);
+                        $overlay->setAttribute('file', $layoutId);
+                        $overlay->setAttribute('fromdt', $fromDt);
+                        $overlay->setAttribute('todt', $toDt);
+                        $overlay->setAttribute('scheduleid', $scheduleId);
+                        $overlay->setAttribute('priority', $is_priority);
                         $overlay->setAttribute('duration', $row['duration'] ?? 0);
-                        $overlay->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
-                        $overlay->setAttribute("geoLocation", $row['geoLocation'] ?? null);
+                        $overlay->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
+                        $overlay->setAttribute('geoLocation', $row['geoLocation'] ?? null);
 
                         // Add to the overlays node list
                         $overlayNodes->appendChild($overlay);
@@ -1160,14 +1160,14 @@ class Soap
                             $actionNodes = $scheduleXml->createElement('actions');
                         }
                         $action = $scheduleXml->createElement('action');
-                        $action->setAttribute("fromdt", $fromDt);
-                        $action->setAttribute("todt", $toDt);
-                        $action->setAttribute("scheduleid", $scheduleId);
-                        $action->setAttribute("priority", $is_priority);
+                        $action->setAttribute('fromdt', $fromDt);
+                        $action->setAttribute('todt', $toDt);
+                        $action->setAttribute('scheduleid', $scheduleId);
+                        $action->setAttribute('priority', $is_priority);
                         $action->setAttribute('duration', $row['duration'] ?? 0);
-                        $action->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
-                        $action->setAttribute("geoLocation", $row['geoLocation'] ?? null);
-                        $action->setAttribute("syncEvent", $syncKey);
+                        $action->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
+                        $action->setAttribute('geoLocation', $row['geoLocation'] ?? null);
+                        $action->setAttribute('syncEvent', $syncKey);
                         $action->setAttribute('triggerCode', $row['actionTriggerCode']);
                         $action->setAttribute('actionType', $row['actionType']);
                         $action->setAttribute('layoutCode', $row['actionLayoutCode']);
@@ -1187,7 +1187,6 @@ class Soap
             if ($actionNodes != null) {
                 $layoutElements->appendChild($actionNodes);
             }
-
         } catch (\Exception $e) {
             $this->getLog()->error('Error getting the schedule. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get the schedule');
