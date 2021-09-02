@@ -776,9 +776,6 @@ class Soap
                             $resourceFile->setAttribute('mediaid', $widget->widgetId);
                             $resourceFile->setAttribute('updated', $updatedDt->format('U'));
                             $fileElements->appendChild($resourceFile);
-                        } else if ($widget->type === 'adspaceexchange') {
-                            // Append an attribute to the Layout indicating that an AdspaceExchange widget is present
-                            $file->setAttribute('adspaceExchange', 1);
                         }
                     }
                 }

@@ -83,6 +83,8 @@ require PROJECT_ROOT . '/lib/routes.php';
 
 $app->get('/', ['\Xibo\Controller\Login','About']);
 $app->post('/library/mcaas/{id}', ['\Xibo\Controller\Library','mcaas']);
+    $app->post('/admin/configureAdspace', ['\Xibo\Controller\Settings', 'configureAdspace'])
+    ->addMiddleware(new \Xibo\Middleware\SuperAdminAuth($app->getContainer()));
 
 // Run app
 $app->run();
