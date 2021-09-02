@@ -188,7 +188,7 @@ class PlayerSoftware extends Base
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'playersoftware.delete', ['id' => $version->versionId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'playersoftware.delete', ['id' => $version->versionId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'content_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],

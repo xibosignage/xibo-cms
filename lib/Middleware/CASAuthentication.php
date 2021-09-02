@@ -46,7 +46,7 @@ class CASAuthentication extends AuthenticationBase
         $app = $this->app;
         $app->getContainer()->logoutRoute = 'cas.logout';
 
-        $app->map(['GET', 'POST'],'/cas/login', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) use ($app) {
+        $app->map(['GET', 'POST'], '/cas/login', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) use ($app) {
 
             // Initiate CAS SSO
             $this->initCasClient();
