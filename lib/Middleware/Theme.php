@@ -133,5 +133,11 @@ class Theme implements Middleware
         $view['ckeditorConfig'] = $container->get('\Xibo\Controller\Library')->fontCKEditorConfig(RouteContext::fromRequest($request)->getRouteParser());
         $view['version'] = Environment::$WEBSITE_VERSION_NAME;
         $view['revision'] = Environment::getGitCommit();
+        $samlSettings = $container->get('configService')->samlSettings;
+        if (isset($samlSettings['workflow'])
+            && isset($samlSettings['workflow']['slo'])
+            && $samlSettings['workflow']['slo'] == false) {
+            $view['hideLogout'] = true;
+        }
     }
 }
