@@ -122,13 +122,12 @@ class Handlers
 
             // We have translated error/not-found
             Translate::InitLocale($configService);
-            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
             // Build up our own params to pass to Twig
             $viewParams = [
                 'theme' => $configService,
-                'homeUrl' => $routeParser->urlFor('home'),
-                'aboutUrl' => $routeParser->urlFor('about'),
-                'loginUrl' => $routeParser->urlFor('login'),
+                'homeUrl' => $configService->rootUri(),
+                'aboutUrl' => $configService->rootUri() . 'about',
+                'loginUrl' => $configService->rootUri() . 'login',
                 'version' => Environment::$WEBSITE_VERSION_NAME
             ];
 
