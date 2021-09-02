@@ -172,7 +172,8 @@
                     {% for attribute in dataAttributes %}
                         {{ attribute.name }}="{{ attribute.value }}"
                     {% endfor %}
-                {% endif %}>
+                {% endif %}
+            {{ validation }}>
 
             {% set hasGroups = optionGroups|length > 0 %}
             {% if not hasGroups %}

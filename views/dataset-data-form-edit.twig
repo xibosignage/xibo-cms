@@ -42,12 +42,17 @@
                     {% if col.dataSetColumnTypeId == 1 %}
                         {% set fieldId = "dataSetColumnId_#{col.dataSetColumnId}" %}
                         {% set heading = attribute(row, col.heading) %}
+                        {% if col.isRequired == 1 %}
+                            {% set validation = "required" %}
+                        {% else %}
+                            {% set validation = "" %}
+                        {% endif %}
 
                         {# Field depending on what data type we have #}
                         {% if col.dataTypeId == 2 %}
-                            {{ forms.number(fieldId, col.heading, heading) }}
+                            {{ forms.number(fieldId, col.heading, heading, col.tooltip, "", validation) }}
                         {% elseif col.dataTypeId == 3 %}
-                            {{ forms.dateTime(fieldId, col.heading, heading) }}
+                            {{ forms.dateTime(fieldId, col.heading, heading, col.tooltip, "", validation) }}
                         {% elseif col.dataTypeId == 5 %}
                             {% set attributes = [
                                 { name: "data-search-url", value: url_for("library.search") },
@@ -61,11 +66,11 @@
                             ] %}
                             {% set images = attribute(row, "__images") %}
                             {% set images = attribute(images, col.dataSetColumnId) %}
-                            {{ forms.dropdown(fieldId, "single", col.heading, heading, [images], "mediaId", "name", "", "pagedSelect", "", "", "", attributes) }}
+                            {{ forms.dropdown(fieldId, "single", col.heading, heading, [images], "mediaId", "name", col.tooltip, "pagedSelect", validation, "", "", attributes) }}
                         {% elseif col.listContent != "" %}
-                            {{ forms.dropdown(fieldId, "single", col.heading, heading, [""]|merge(col.listContentArray())) }}
+                            {{ forms.dropdown(fieldId, "single", col.heading, heading, [""]|merge(col.listContentArray()), "", "", col.tooltip, "", validation) }}
                         {% else %}
-                            {{ forms.input(fieldId, col.heading, heading) }}
+                            {{ forms.input(fieldId, col.heading, heading, col.tooltip, "", validation) }}
                         {% endif %}
                     {% endif %}
                 {% endfor %}

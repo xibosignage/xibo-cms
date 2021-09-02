@@ -442,6 +442,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->post('/dataset/import/{id}', ['\Xibo\Controller\DataSet','import'])->setName('dataSet.import');
     $group->post('/dataset/importjson/{id}', ['\Xibo\Controller\DataSet','importJson'])->setName('dataSet.import.json');
     $group->post('/dataset/remote/test', ['\Xibo\Controller\DataSet','testRemoteRequest'])->setName('dataSet.test.remote');
+    $group->get('/dataset/export/csv/{id}', ['\Xibo\Controller\DataSet', 'exportToCsv'])->setName('dataSet.export.csv');
 
     // Columns
     $group->get('/dataset/{id}/column', ['\Xibo\Controller\DataSetColumn','grid'])->setName('dataSet.column.search');

@@ -52,7 +52,7 @@ class AuditLogFactory extends BaseFactory
         $entries = [];
         $params = [];
 
-        $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId ';
+        $select = ' SELECT logId, logDate, user.userName, message, objectAfter, entity, entityId, auditlog.userId, auditlog.ipAddress ';
         $body = 'FROM `auditlog` LEFT OUTER JOIN user ON user.userId = auditlog.userId WHERE 1 = 1 ';
 
         if ($sanitizedFilter->getInt('fromTimeStamp') !== null) {
@@ -78,6 +78,11 @@ class AuditLogFactory extends BaseFactory
         if ($sanitizedFilter->getString('message') != null) {
             $body .= ' AND `auditlog`.message LIKE :message ';
             $params['message'] = '%' . $sanitizedFilter->getString('message') . '%';
+        }
+
+        if ($sanitizedFilter->getString('ipAddress') != null) {
+            $body .= ' AND `auditlog`.ipAddress LIKE :ipAddress ';
+            $params['ipAddress'] = '%' . $sanitizedFilter->getString('ipAddress') . '%';
         }
 
         if ($sanitizedFilter->getInt('entityId') !== null) {
