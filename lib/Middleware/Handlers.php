@@ -30,6 +30,7 @@ use Slim\Exception\HttpSpecializedException;
 use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Slim\Routing\RouteContext;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Translate;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -121,13 +122,13 @@ class Handlers
 
             // We have translated error/not-found
             Translate::InitLocale($configService);
-
+            $routeParser = RouteContext::fromRequest($request)->getRouteParser();
             // Build up our own params to pass to Twig
             $viewParams = [
                 'theme' => $configService,
-                'homeUrl' => '/',
-                'aboutUrl' => '/about',
-                'loginUrl' => '/login',
+                'homeUrl' => $routeParser->urlFor('home'),
+                'aboutUrl' => $routeParser->urlFor('about'),
+                'loginUrl' => $routeParser->urlFor('login'),
                 'version' => Environment::$WEBSITE_VERSION_NAME
             ];
 
