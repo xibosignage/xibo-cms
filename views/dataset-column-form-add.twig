@@ -31,7 +31,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
-    {% trans "Save" %}, $("#dataSetColumnAddForm").submit()    
+    {% trans "Save" %}, $("#dataSetColumnAddForm").submit()
 {% endblock %}
 
 {% block formFieldActions %}
@@ -39,29 +39,29 @@
     {
       "field": "dataSetColumnTypeId", "trigger": "init",
       "operation": "equals", "value": "1",
-      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "" }, ".remoteField": { "display": "none" } }
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "" }, ".remoteField": { "display": "none" }, ".helperFields": { "display": "" } }
     },{
       "field": "dataSetColumnTypeId", "trigger": "change",
       "operation": "equals", "value": "1",
-      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "" }, ".remoteField": { "display": "none" } }
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "" }, ".remoteField": { "display": "none" }, ".helperFields": { "display": "" } }
     },
     {
       "field": "dataSetColumnTypeId", "trigger": "init",
       "operation": "equals", "value": "2",
-      "actions": { ".formula": { "display": "" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "none" } }
+      "actions": { ".formula": { "display": "" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "none" }, ".helperFields": { "display": "none" } }
     },{
       "field": "dataSetColumnTypeId", "trigger": "change",
       "operation": "equals", "value": "2",
-      "actions": { ".formula": { "display": "" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "none" } }
+      "actions": { ".formula": { "display": "" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "none" }, ".helperFields": { "display": "none" } }
     },
     {
       "field": "dataSetColumnTypeId", "trigger": "init",
       "operation": "equals", "value": "3",
-      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "" } }
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "" }, ".helperFields": { "display": "none" } }
     },{
       "field": "dataSetColumnTypeId", "trigger": "change",
       "operation": "equals", "value": "3",
-      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "" } }
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "none" }, ".remoteField": { "display": "" }, ".helperFields": { "display": "none" } }
     }
 ]
 {% endblock %}
@@ -70,48 +70,59 @@
     <div class="row">
         <div class="col-md-12">
             <form id="dataSetColumnAddForm" class="XiboForm form-horizontal" method="post" action="{{ url_for("dataSet.column.add", {id: dataSet.dataSetId}) }}">
-                    {% set title %}{% trans "Heading" %}{% endset %}
-                    {% set helpText %}{% trans "The heading for this Column" %}{% endset %}
-                    {{ forms.input("heading", title, "", helpText, "", "required") }}
+                {% set title %}{% trans "Heading" %}{% endset %}
+                {% set helpText %}{% trans "The heading for this Column" %}{% endset %}
+                {{ forms.input("heading", title, "", helpText, "", "required") }}
 
-                    {% set title %}{% trans "Column Type" %}{% endset %}
-                    {% set helpText %}{% trans "Select the Column Type" %}{% endset %}
-                    {{ forms.dropdown("dataSetColumnTypeId", "single", title, "", dataSetColumnTypes, "dataSetColumnTypeId", "dataSetColumnType", helpText) }}
+                {% set title %}{% trans "Column Type" %}{% endset %}
+                {% set helpText %}{% trans "Select the Column Type" %}{% endset %}
+                {{ forms.dropdown("dataSetColumnTypeId", "single", title, "", dataSetColumnTypes, "dataSetColumnTypeId", "dataSetColumnType", helpText) }}
 
-                    {% set title %}{% trans "Data Type" %}{% endset %}
-                    {% set helpText %}{% trans "The DataType of the Intended Data" %}{% endset %}
-                    {{ forms.dropdown("dataTypeId", "single", title, "", dataTypes, "dataTypeId", "dataType", helpText) }}
+                {% set title %}{% trans "Data Type" %}{% endset %}
+                {% set helpText %}{% trans "The DataType of the Intended Data" %}{% endset %}
+                {{ forms.dropdown("dataTypeId", "single", title, "", dataTypes, "dataTypeId", "dataType", helpText) }}
 
-                    {% set title %}{% trans "List Content" %}{% endset %}
-                    {% set helpText %}{% trans "A comma separated list of items to present in a combo box" %}{% endset %}
-                    {{ forms.input("listContent", title, "", helpText, "listContent") }}
-                    
-                    {% set title %}{% trans "Remote Data Path" %}{% endset %}
-                    {% if dataSet.sourceId == 1 %}
-                        {% set helpText %}{% trans "Give the JSON-path in the remote data for the value that you want to fill this column. This path should be relative to the DataRoot configured on the DataSet." %}{% endset %}
-                    {% else %}
-                        {% set helpText %}{% trans "Provide Column number relative to the spreadsheet, numeration starts from 0 ie to get values from Column A from spreadsheet to this column enter 0" %}{% endset %}
-                    {% endif %}
-                    {{ forms.input("remoteField", title, dataSetColumn.remoteField, helpText, "remoteField") }}
+                {% set title %}{% trans "List Content" %}{% endset %}
+                {% set helpText %}{% trans "A comma separated list of items to present in a combo box" %}{% endset %}
+                {{ forms.input("listContent", title, "", helpText, "listContent") }}
 
-                    {% set title %}{% trans "Column Order" %}{% endset %}
-                    {% set helpText %}{% trans "The order this column should be displayed in when entering data" %}{% endset %}
-                    {{ forms.number("columnOrder", title, "", helpText) }}
+                {% set title %}{% trans "Remote Data Path" %}{% endset %}
+                {% if dataSet.sourceId == 1 %}
+                    {% set helpText %}{% trans "Give the JSON-path in the remote data for the value that you want to fill this column. This path should be relative to the DataRoot configured on the DataSet." %}{% endset %}
+                {% else %}
+                    {% set helpText %}{% trans "Provide Column number relative to the spreadsheet, numeration starts from 0 ie to get values from Column A from spreadsheet to this column enter 0" %}{% endset %}
+                {% endif %}
+                {{ forms.input("remoteField", title, dataSetColumn.remoteField, helpText, "remoteField") }}
 
-                    {% set title %}{% trans "Formula" %}{% endset %}
-                    {% set helpText %}{% trans "A formula to use as a calculation for formula column types" %}{% endset %}
-                    {{ forms.input("formula", title, "", helpText, "formula") }}
+                {% set title %}{% trans "Column Order" %}{% endset %}
+                {% set helpText %}{% trans "The order this column should be displayed in when entering data" %}{% endset %}
+                {{ forms.number("columnOrder", title, "", helpText) }}
 
-                    {% set title %}{% trans "Filter?" %}{% endset %}
-                    {% set helpText %}{% trans "Show as a filter option on the Data Entry Page?" %}{% endset %}
-                    {{ forms.checkbox("showFilter", title, "", helpText) }}
+                {% set title %}{% trans "Tooltip" %}{% endset %}
+                {% set helpText %}{% trans "Optional message to be displayed under the input when entering data for this column" %}{% endset %}
+                {{ forms.input("tooltip", title, "", helpText, 'helperFields') }}
 
-                    {% set title %}{% trans "Sort?" %}{% endset %}
-                    {% set helpText %}{% trans "Enable sorting on the Data Entry Page? We recommend that the number of sortable columns is kept to a minimum." %}{% endset %}
-                    {{ forms.checkbox("showSort", title, "", helpText) }}
+                {% set title %}{% trans "Formula" %}{% endset %}
+                {% set helpText %}{% trans "Enter a MySQL statement suitable to use in a 'SELECT' statement" %}{% endset %}
+                {{ forms.input("formula", title, "", helpText, "formula") }}
 
-                    {% set message %}{% trans "Two substitutions are available for Formula columns: [DisplayId] and [DisplayGeoLocation]. They will be substituted at run time with the Display ID / Display Geo Location (MySQL GEOMETRY)." %}{% endset %}
-                    {{ forms.message(message, "alert alert-info formula") }}
+                {% set title %}{% trans "Filter?" %}{% endset %}
+                {% set helpText %}{% trans "Show as a filter option on the Data Entry Page?" %}{% endset %}
+                {{ forms.checkbox("showFilter", title, "", helpText) }}
+
+                {% set title %}{% trans "Sort?" %}{% endset %}
+                {% set helpText %}{% trans "Enable sorting on the Data Entry Page? We recommend that the number of sortable columns is kept to a minimum." %}{% endset %}
+                {{ forms.checkbox("showSort", title, "", helpText) }}
+
+                {% set title %}{% trans "Required?" %}{% endset %}
+                {% set helpText %}{% trans "Should the value for this Column be required?" %}{% endset %}
+                {{ forms.checkbox("isRequired", title, "", helpText, 'helperFields') }}
+
+                {% set message %}{% trans "Two substitutions are available for Formula columns: [DisplayId] and [DisplayGeoLocation]. They will be substituted at run time with the Display ID / Display Geo Location (MySQL GEOMETRY)." %}{% endset %}
+                {% set message2 %}{% trans "Client side formula is also available for Formula columns : $dateFormat(columnName,format,language), for example $dateFormat(date,l,de), would return textual representation of a day in German language from the full date in date column" %}{% endset %}
+
+                {{ forms.message(message, "alert alert-info formula") }}
+                {{ forms.message(message2, "alert alert-info formula") }}
             </form>
         </div>
     </div>

@@ -536,13 +536,13 @@ Timeline.prototype.render = function(layout) {
     regionsContainer.scrollTop(this.properties.scrollVerticalPosition);
 
     // Timeline toggler
-    this.DOMObject.parents('.timeline-panel').find('.timeline-toggle').off().click(function(e) {
+    this.DOMObject.parents('.toggle-panel').find('.toggle').off().click(function(e) {
         e.stopPropagation();
-        $(this).parents('.timeline-panel').toggleClass('opened');
+        $(this).parents('.toggle-panel').toggleClass('opened');
 
-        // Refresh navigators or viewer
+        // Refresh navigators and viewer
         if (lD.navigatorMode) {
-            lD.renderContainer(lD.viewer, lD.selectedObject);
+            lD.renderContainer(lD.navigator);
         } else {
             lD.renderContainer(lD.viewer, lD.selectedObject);
         }

@@ -23,7 +23,7 @@
 namespace Xibo\XMR;
 
 /**
- * Class PurgeAllCommand
+ * Class PurgeAllAction
  * @package Xibo\XMR
  */
 class PurgeAllAction extends PlayerAction

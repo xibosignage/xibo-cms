@@ -161,6 +161,7 @@
                     <li class="event-command"><span class="fa fa-wrench"></span> {% trans "Command" %}</li>
                     <li class="event-interrupt"><span class="fa fa-hand-paper"></span> {% trans "Interrupt" %}</li>
                     <li class="event-geo-location"><span class="fa fa-map-marker"></span> {% trans "Geo Location" %}</li>
+                    <li class="event-action"><span class="fa fa-paper-plane "></span> {% trans "Interactive Action" %}</li>
                 </ul>
             </div>
         </div>
@@ -312,6 +313,10 @@
                         eventIcon = "fa-map-marker";
                     }
 
+                    if (event.event.eventTypeId == 6) {
+                        eventIcon = "fa-paper-plane";
+                    }
+
                     if (!event.editable) {
                     event.url = null;
                     eventIcon = "fa-lock";
@@ -414,6 +419,10 @@
                         eventIcon = "fa-map-marker";
                     }
 
+                    if (event.event.eventTypeId == 6) {
+                        eventIcon = "fa-paper-plane";
+                    }
+
                     if (!event.editable) {
                     event.url = null;
                     eventIcon = "fa-lock";
@@ -499,6 +508,10 @@
 
             if (event.event.isGeoAware === 1) {
                 eventIcon = "fa-map-marker";
+            }
+
+            if (event.event.eventTypeId == 6) {
+                eventIcon = "fa-paper-plane";
             }
 
             if (!event.editable) {

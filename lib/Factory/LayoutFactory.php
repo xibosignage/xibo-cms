@@ -917,13 +917,10 @@ class LayoutFactory extends BaseFactory
                         continue;
                     }
 
-                    $audioMediaId = implode(',', $audioNode);
-
                     $widgetAudio = $this->widgetAudioFactory->createEmpty();
-                    $widgetAudio->mediaId = $audioMediaId;
-                    $widgetAudio->volume = $mediaNode['volume'];;
-                    $widgetAudio->loop = $mediaNode['loop'];;
-
+                    $widgetAudio->mediaId = $audioNode['mediaId'];
+                    $widgetAudio->volume = $audioNode['volume'];
+                    $widgetAudio->loop = $audioNode['loop'];
                     $widget->assignAudio($widgetAudio);
                 }
 

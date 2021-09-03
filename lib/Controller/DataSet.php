@@ -29,6 +29,8 @@ use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Helper\DataSetUploadHandler;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Random;
+use Xibo\Helper\SendFile;
 use Xibo\Service\MediaService;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -184,8 +186,9 @@ class DataSet extends Base
             if (in_array('columns', $embed)) {
                 $dataSet->load();
             }
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 break;
+            }
 
             $dataSet->includeProperty('buttons');
             $dataSet->buttons = [];
@@ -204,12 +207,11 @@ class DataSet extends Base
             }
 
             if ($this->getUser()->featureEnabled('dataset.modify')) {
-
                 if ($user->checkEditable($dataSet)) {
                     // View Columns
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_viewcolumns',
-                        'url' => $this->urlFor($request,'dataSet.column.view', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request, 'dataSet.column.view', ['id' => $dataSet->dataSetId]),
                         'class' => 'XiboRedirectButton',
                         'text' => __('View Columns')
                     );
@@ -217,7 +219,7 @@ class DataSet extends Base
                     // View RSS
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_viewrss',
-                        'url' => $this->urlFor($request,'dataSet.rss.view', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request, 'dataSet.rss.view', ['id' => $dataSet->dataSetId]),
                         'class' => 'XiboRedirectButton',
                         'text' => __('View RSS')
                     );
@@ -237,7 +239,7 @@ class DataSet extends Base
                     // Copy
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_copy',
-                        'url' => $this->urlFor($request,'dataSet.copy.form', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request, 'dataSet.copy.form', ['id' => $dataSet->dataSetId]),
                         'text' => __('Copy')
                     );
 
@@ -247,20 +249,27 @@ class DataSet extends Base
                     // Edit DataSet
                     $dataSet->buttons[] = array(
                         'id' => 'dataset_button_edit',
-                        'url' => $this->urlFor($request,'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request, 'dataSet.edit.form', ['id' => $dataSet->dataSetId]),
                         'text' => __('Edit')
                     );
+
+                    $dataSet->buttons[] = [
+                        'id' => 'dataset_button_csv_export',
+                        'linkType' => '_self', 'external' => true,
+                        'url' => $this->urlFor($request, 'dataSet.export.csv', ['id' => $dataSet->dataSetId]),
+                        'text' => __('Export (CSV)')
+                    ];
                 }
 
                 if ($user->checkDeleteable($dataSet) && $dataSet->isLookup == 0) {
                     // Delete DataSet
                     $dataSet->buttons[] = [
                         'id' => 'dataset_button_delete',
-                        'url' => $this->urlFor($request,'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
+                        'url' => $this->urlFor($request, 'dataSet.delete.form', ['id' => $dataSet->dataSetId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'dataSet.delete', ['id' => $dataSet->dataSetId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'dataSet.delete', ['id' => $dataSet->dataSetId])],
                             ['name' => 'commit-method', 'value' => 'delete'],
                             ['name' => 'id', 'value' => 'dataset_button_delete'],
                             ['name' => 'text', 'value' => __('Delete')],
@@ -488,6 +497,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="csvSeparator",
+     *      in="formData",
+     *      description="Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -553,6 +569,7 @@ class DataSet extends Base
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
             $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
             $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
+            $dataSet->csvSeparator = ($dataSet->sourceId === 2) ? $sanitizedParams->getString('csvSeparator') ?? ',' : null;
         }
 
         // Also add one column
@@ -792,6 +809,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="csvSeparator",
+     *      in="formData",
+     *      description="Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -844,6 +868,7 @@ class DataSet extends Base
             $dataSet->ignoreFirstRow = $sanitizedParams->getCheckbox('ignoreFirstRow');
             $dataSet->rowLimit = $sanitizedParams->getInt('rowLimit');
             $dataSet->limitPolicy = $sanitizedParams->getString('limitPolicy') ?? 'stop';
+            $dataSet->csvSeparator = ($dataSet->sourceId === 2) ? $sanitizedParams->getString('csvSeparator') ?? ',' : null;
         }
 
         $dataSet->save();
@@ -1398,5 +1423,75 @@ class DataSet extends Base
         ]);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * Export DataSet to csv
+     *
+     * @SWG\GET(
+     *  path="/dataset/export/csv/{dataSetId}",
+     *  operationId="dataSetExportCsv",
+     *  tags={"dataset"},
+     *  summary="Export to CSV",
+     *  description="Export DataSet data to a csv file",
+     *  @SWG\Parameter(
+     *      name="dataSetId",
+     *      in="path",
+     *      description="The DataSet ID to export.",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation"
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
+    public function exportToCsv(Request $request, Response $response, $id)
+    {
+        $this->setNoOutput();
+        $i = 0;
+        $dataSet = $this->dataSetFactory->getById($id);
+
+        // Create a CSV file
+        $tempFileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . Random::generateString() .'.csv';
+
+        $out = fopen($tempFileName, 'w');
+
+        foreach ($dataSet->getData() as $row) {
+            $columnHeaders = [];
+            $rowData = [];
+
+            foreach ($dataSet->columns as $column) {
+                if ($i === 0) {
+                    $columnHeaders[] = $column->heading;
+                }
+
+                $rowData[] = $row[$column->heading];
+            }
+
+            if (!empty($columnHeaders)) {
+                fputcsv($out, $columnHeaders);
+            }
+
+            fputcsv($out, $rowData);
+            $i++;
+        }
+
+        fclose($out);
+        $this->getLog()->debug('Exported DataSet ' . $dataSet->dataSet . ' with ' . $i . ' rows of data');
+
+        return $this->render($request, SendFile::decorateResponse(
+            $response,
+            $this->getConfig()->getSetting('SENDFILE_MODE'),
+            $tempFileName,
+            $dataSet->dataSet.'.csv'
+        )->withHeader('Content-Type', 'text/csv;charset=utf-8'));
     }
 }

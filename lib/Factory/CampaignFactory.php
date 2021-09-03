@@ -163,7 +163,7 @@ class CampaignFactory extends BaseFactory
         $params = [];
 
         $select = '
-        SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId, `campaign`.folderId, campaign.permissionsFolderId,
+        SELECT `campaign`.campaignId, `campaign`.campaign, `campaign`.isLayoutSpecific, `campaign`.userId AS ownerId, `campaign`.folderId, campaign.permissionsFolderId, campaign.cyclePlaybackEnabled, campaign.playCount,
             (
                 SELECT COUNT(*)
                 FROM lkcampaignlayout
@@ -293,6 +293,11 @@ class CampaignFactory extends BaseFactory
             }
         }
 
+        if ($sanitizedFilter->getInt('cyclePlaybackEnabled') != null) {
+            $body .= ' AND `campaign`.cyclePlaybackEnabled = :cyclePlaybackEnabled ';
+            $params['cyclePlaybackEnabled'] = $sanitizedFilter->getInt('cyclePlaybackEnabled');
+        }
+
         // Sorting?
         $order = '';
         if (is_array($sortOrder))
@@ -309,7 +314,7 @@ class CampaignFactory extends BaseFactory
         // Layout durations
         if ($sanitizedFilter->getInt('totalDuration', ['default' => 0]) != 0) {
             $select .= ", SUM(`layout`.duration) AS totalDuration";
-            $intProperties = ['intProperties' => ['numberLayouts', 'totalDuration', 'displayOrder']];
+            $intProperties = ['intProperties' => ['numberLayouts', 'totalDuration', 'displayOrder', 'cyclePlaybackEnabled', 'playCount']];
         }
 
         $sql = $select . $body . $group . $order . $limit;

@@ -4,7 +4,7 @@
     {% set horizontalNav = currentUser.getOptionValue("navigationMenuPosition", theme.getSetting("NAVIGATION_MENU_POSITION", "vertical")) == "horizontal" %}
 
     $(document).ready(function () {
-        var layoutDesignerTour, mainTour, authDisplayTour, schedulingTour, no_nav_template, next_template, final_template, end_tour_message;
+        var layoutEditorTour, mainTour, authDisplayTour, schedulingTour, no_nav_template, next_template, final_template, end_tour_message;
         final_template = "<div class='popover final_template popover-double-width tour' role='tooltip'><div class='arrow'></div><h3 class='popover-header'></h3><div class='popover-body'></div><div class='popover-navigation'><button class='btn btn-primary' data-role='backToWelcome'>{% trans "Go back to Welcome Page!" %}</button><button class='btn btn-secondary' data-role='end'>{% trans "Close" %}</button></div></div>";
         final_template_2 = "<div class='popover final_template_2 popover-double-width tour' role='tooltip'><div class='arrow'></div><h3 class='popover-header'></h3><div class='popover-body'></div><div class='popover-navigation'><button class='btn btn-secondary' data-role='end'>{% trans "End Tour" %}</button></div></div>";
         next_template = "<div class='popover next_template popover-normal-width tour' role='tooltip'><div class='arrow'></div><button type='button' data-role='end' class='close padminus'>&times;</button><h3 class='popover-header'></h3><div class='popover-body'></div><div class='popover-navigation'><button class='btn btn-primary pull-right' data-role='next'>{% trans "Next" %}</button></div></div>";
@@ -15,7 +15,7 @@
             mainTour: mainTour,
             authDisplayTour: authDisplayTour,
             schedulingTour: schedulingTour,
-            layoutDesignerTour: layoutDesignerTour
+            layoutEditorTour: layoutEditorTour
         };
 
         /* 1 [mainTour] : Create contend tour that goes through the layout designer */
@@ -274,14 +274,14 @@
                 },
                 { // 25
                     content: "{% trans "Let's add some content! Click the Widgets button on the bottom toolbar to open." %}",
-                    element: "#layout-editor-toolbar #btn-menu-2",
+                    element: "#layout-editor-toolbar #btn-menu-1",
                     delay: 500,
                     placement: "top",
                     reflex: true,
                     template: no_nav_template,
                     onShown: function (tour) {
                         // If widgets are selected already, go to next step
-                        if ($('#layout-editor-toolbar #btn-menu-2.active').length > 0) {
+                        if ($('#layout-editor-toolbar #btn-menu-1.active').length > 0) {
                             tour.goTo(26);
                             return false;
                         }
@@ -787,10 +787,10 @@
             ]
         });
 
-        /* 4 [layoutDesignerTour] : Tour that runs within the layout designer tool */
-        cmsTours.layoutDesignerTour = new Tour({
+        /* 4 [layoutEditorTour] : Tour that runs within the layout designer tool */
+        cmsTours.layoutEditorTour = new Tour({
             debug: false,
-            name: 'layoutDesignerTour',
+            name: 'layoutEditorTour',
             steps: [
                 {
                     orphan: true,
@@ -860,13 +860,13 @@
                 },
                 { // 9
                     content: "{% trans "Use the Toolbar tabs to select <b>Widgets</b>" %}",
-                    element: "#layout-editor-toolbar #btn-menu-2",
+                    element: "#layout-editor-toolbar #btn-menu-1",
                     placement: "top",
                     reflex: true,
                     template: no_nav_template,
                     onShown: function (tour) {
                         // If widgets are selected already, go to next step
-                        if ($('#layout-editor-toolbar #btn-menu-2.active').length > 0) {
+                        if ($('#layout-editor-toolbar #btn-menu-1.active').length > 0) {
                             tour.goTo(12);
                             return false;
                         }

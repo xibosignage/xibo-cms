@@ -95,6 +95,19 @@ class Campaign implements \JsonSerializable
     public $permissionsFolderId;
 
     /**
+     * @SWG\Property(description="Flag indicating whether this Campaign has cycle based playback enabled")
+     * @var int
+     */
+    public $cyclePlaybackEnabled;
+
+
+    /**
+     * @SWG\Property(description="In cycle based playback, how many plays should each Layout have before moving on?")
+     * @var int
+     */
+    public $playCount;
+
+    /**
      * @var Layout[]
      */
     public $layouts = [];
@@ -238,6 +251,10 @@ class Campaign implements \JsonSerializable
     {
         if (!v::stringType()->notEmpty()->validate($this->campaign)) {
             throw new InvalidArgumentException(__('Name cannot be empty'), 'name');
+        }
+
+        if ($this->cyclePlaybackEnabled === 1 && empty($this->playCount)) {
+            throw new InvalidArgumentException(__('Please enter play count'), 'playCount');
         }
     }
     
@@ -569,10 +586,12 @@ class Campaign implements \JsonSerializable
      */
     private function add()
     {
-        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId, folderId, permissionsFolderId) VALUES (:campaign, :isLayoutSpecific, :userId, :folderId, :permissionsFolderId)', array(
+        $this->campaignId = $this->getStore()->insert('INSERT INTO `campaign` (Campaign, IsLayoutSpecific, UserId, cyclePlaybackEnabled, playCount, folderId, permissionsFolderId) VALUES (:campaign, :isLayoutSpecific, :userId, :cyclePlaybackEnabled, :playCount, :folderId, :permissionsFolderId)', array(
             'campaign' => $this->campaign,
             'isLayoutSpecific' => $this->isLayoutSpecific,
             'userId' => $this->ownerId,
+            'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
+            'playCount' => $this->playCount,
             'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
             'permissionsFolderId' => ($this->permissionsFolderId == null) ? 1 : $this->permissionsFolderId
         ));
@@ -583,10 +602,12 @@ class Campaign implements \JsonSerializable
      */
     private function update()
     {
-        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE CampaignID = :campaignId', [
+        $this->getStore()->update('UPDATE `campaign` SET campaign = :campaign, userId = :userId, cyclePlaybackEnabled = :cyclePlaybackEnabled, playCount = :playCount, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE CampaignID = :campaignId', [
             'campaignId' => $this->campaignId,
             'campaign' => $this->campaign,
             'userId' => $this->ownerId,
+            'cyclePlaybackEnabled' => ($this->cyclePlaybackEnabled == null) ? 0 : $this->cyclePlaybackEnabled,
+            'playCount' => $this->playCount,
             'folderId' => $this->folderId,
             'permissionsFolderId' => $this->permissionsFolderId
         ]);

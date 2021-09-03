@@ -740,6 +740,7 @@ class Schedule extends Base
         $this->getState()->setData([
             'commands' => $this->commandFactory->query(),
             'dayParts' => $this->dayPartFactory->allWithSystem(),
+            'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
             'displayGroupIds' => $displayGroupIds,
             'displayGroups' => $displayGroups,
             'help' => $this->getHelp()->link('Schedule', 'Add'),
@@ -958,6 +959,9 @@ class Schedule extends Base
         $schedule->dayPartId = $sanitizedParams->getInt('dayPartId', ['default' => $customDayPart->dayPartId]);
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice', ['throw' => new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice')]) : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
+        $schedule->actionType = $sanitizedParams->getString('actionType');
+        $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
+        $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
         if ($this->isApi($request) && $schedule->isGeoAware === 1) {
@@ -1173,6 +1177,7 @@ class Schedule extends Base
             'displayGroupIds' => array_map(function($element) {
                 return $element->displayGroupId;
             }, $schedule->displayGroups),
+            'layoutCodes' => $this->layoutFactory->getLayoutCodes(),
             'help' => $this->getHelp()->link('Schedule', 'Edit'),
             'reminders' => $scheduleReminders,
             'defaultLat' => $defaultLat,
@@ -1475,6 +1480,9 @@ class Schedule extends Base
         $schedule->displayGroups = [];
         $schedule->shareOfVoice = ($schedule->eventTypeId == 4) ? $sanitizedParams->getInt('shareOfVoice', ['throw' => new InvalidArgumentException(__('Share of Voice must be a whole number between 0 and 3600'), 'shareOfVoice')]) : null;
         $schedule->isGeoAware = $sanitizedParams->getCheckbox('isGeoAware');
+        $schedule->actionType = $sanitizedParams->getString('actionType');
+        $schedule->actionTriggerCode = $sanitizedParams->getString('actionTriggerCode');
+        $schedule->actionLayoutCode = $sanitizedParams->getString('actionLayoutCode');
 
         // API request can provide an array of coordinates or valid GeoJSON, handle both cases here.
         if ($this->isApi($request) && $schedule->isGeoAware === 1) {

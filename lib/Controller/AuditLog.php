@@ -20,6 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 namespace Xibo\Controller;
+
 use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -80,6 +81,7 @@ class AuditLog extends Base
         $filterEntity = $sanitizedParams->getString('entity');
         $filterEntityId = $sanitizedParams->getString('entityId');
         $filterMessage = $sanitizedParams->getString('message');
+        $filterIpAddress = $sanitizedParams->getString('ipAddress');
 
         $search = [];
 
@@ -113,6 +115,10 @@ class AuditLog extends Base
 
         if ($filterMessage != '') {
             $search['message'] = $filterMessage;
+        }
+
+        if ($filterIpAddress != '') {
+            $search['ipAddress'] = $filterIpAddress;
         }
 
         $rows = $this->auditLogFactory->query($this->gridRenderSort($sanitizedParams), $this->gridRenderFilter($search, $sanitizedParams));

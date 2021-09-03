@@ -743,7 +743,7 @@ class MediaFactory extends BaseFactory
                 AND media.type <> \'module\'
             ';
 
-            if ($sanitizedFilter->getInt('includeLayoutBackgroundImage', $filterBy) === 1) {
+            if ($sanitizedFilter->getInt('includeLayoutBackgroundImage') === 1) {
                 $body .= ' OR media.mediaId IN ( SELECT `layout`.backgroundImageId FROM `layout` WHERE `layout`.layoutId = :layoutId ) ';
             }
 

@@ -30,6 +30,7 @@ use Xibo\Entity\User;
 use Xibo\Factory\UserFactory;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
+use Xibo\Helper\LogoutTrait;
 use Xibo\Helper\Random;
 use Xibo\Helper\Session;
 use Xibo\Support\Exception\AccessDeniedException;
@@ -45,6 +46,8 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Login extends Base
 {
+    use LogoutTrait;
+
     /** @var Session */
     private $session;
 
@@ -137,6 +140,7 @@ class Login extends Base
 
                     // Set the userId on the log object
                     $this->getLog()->setUserId($user->userId);
+                    $this->getLog()->setIpAddress($request->getAttribute('ip_address'));
 
                     // Expire all sessions
                     $session = $this->session;
@@ -152,7 +156,6 @@ class Login extends Base
 
                     // Audit Log
                     $this->getLog()->audit('User', $user->userId, 'Login Granted via token', [
-                        'IPAddress' => $request->getAttribute('ip_address'),
                         'UserAgent' => $request->getHeader('User-Agent')
                     ]);
 
@@ -322,8 +325,9 @@ class Login extends Base
             $mail->From = $mailFrom;
             $msgFromName = $this->getConfig()->getSetting('mail_from_name');
 
-            if ($msgFromName != null)
+            if ($msgFromName != null) {
                 $mail->FromName = $msgFromName;
+            }
 
             $mail->Subject = __('Password Reset');
             $mail->addAddress($user->email);
@@ -340,10 +344,8 @@ class Login extends Base
 
             // Audit Log
             $this->getLog()->audit('User', $user->userId, 'Password Reset Link Granted', [
-                'IPAddress' => $request->getAttribute('ip_address'),
                 'UserAgent' => $request->getHeader('User-Agent')
             ]);
-
         } catch (GeneralException $xiboException) {
             $this->getLog()->debug($xiboException->getMessage());
             $this->getFlash()->addMessage('login_message', __('User not found'));
@@ -361,25 +363,16 @@ class Login extends Base
      */
     public function logout(Request $request, Response $response)
     {
-        $parsedRequestParams = $this->getSanitizer($request->getQueryParams());
         $redirect = true;
 
         if ($request->getQueryParam('redirect') != null) {
             $redirect = $request->getQueryParam('redirect');
         }
 
-        $this->getUser()->touch();
-
-        // to log out a user we need only to clear out some session vars
-        unset($_SESSION['userid']);
-        unset($_SESSION['username']);
-        unset($_SESSION['password']);
-
-        $session = $this->session;
-        $session->setIsExpired(1);
+        $this->completeLogoutFlow($this->getUser(), $this->session, $this->getLog(), $request);
 
         if ($redirect) {
-            return $response->withRedirect('login');
+            return $response->withRedirect($this->urlFor($request, 'home'));
         }
 
         return $response->withStatus(200);
@@ -555,7 +548,6 @@ class Login extends Base
 
                 // Audit Log
                 $this->getLog()->audit('User', $user->userId, 'Two Factor Code email sent', [
-                    'IPAddress' => $request->getAttribute('ip_address'),
                     'UserAgent' => $request->getHeader('User-Agent')
                 ]);
             }
@@ -654,7 +646,7 @@ class Login extends Base
 
         // Set the userId on the log object
         $this->getLog()->setUserId($user->userId);
-
+        $this->getLog()->setIpAddress($request->getAttribute('ip_address'));
 
         // Switch Session ID's
         $session = $this->session;
@@ -664,7 +656,6 @@ class Login extends Base
 
         // Audit Log
         $this->getLog()->audit('User', $user->userId, 'Login Granted', [
-                'IPAddress' => $request->getAttribute('ip_address'),
                 'UserAgent' => $request->getHeader('User-Agent')
         ]);
     }

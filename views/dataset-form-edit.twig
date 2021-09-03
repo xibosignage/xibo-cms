@@ -165,6 +165,22 @@
                         {% set helpText %}{% trans "Please enter the element in your remote data which we should use as the starting point when we match the remote Columns. This should be an array or an object. You can use the test button below to see the structure that is returned." %}{% endset %}
                         {{ forms.input("dataRoot", title, dataSet.dataRoot, helpText, "json-source-field", "") }}
 
+                        {% set title %}{% trans "CSV separator" %}{% endset %}
+                        {% set helpText %}{% trans "What separator should be used for CSV source?" %}{% endset %}
+                        {% set comma %}{% trans "Comma" %} (,){% endset %}
+                        {% set semicolon %}{% trans "Semicolon" %} (;){% endset %}
+                        {% set space %}{% trans "Space" %} ( ){% endset %}
+                        {% set tab %}{% trans "Tab" %} (\t){% endset %}
+                        {% set pipe %}{% trans "Pipe" %} (|){% endset %}
+                        {% set options = [
+                            { separatorId: ',', separator: comma },
+                            { separatorId: ';', separator: semicolon },
+                            { separatorId: ' ', separator: space },
+                            { separatorId: '\t', separator: tab },
+                            { separatorId: '|', separator: pipe },
+                        ] %}
+                        {{ forms.dropdown("csvSeparator", "single", title, dataSet.csvSeparator, options, "separatorId", "separator", helpText, "csv-source-field") }}
+
                         {% set title %}{% trans "Ignore first row?" %}{% endset %}
                         {% set helpText %}{% trans "For CSV source, should the first row be ignored?" %}{% endset %}
                         {{ forms.checkbox("ignoreFirstRow", title, dataSet.ignoreFirstRow, helpText, 'csv-source-field') }}

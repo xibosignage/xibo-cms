@@ -27,6 +27,7 @@ namespace Xibo\Middleware;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\LogoutTrait;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\NotFoundException;
 
@@ -38,6 +39,8 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class CASAuthentication extends AuthenticationBase
 {
+    use LogoutTrait;
+
     /**
      * @return $this
      */
@@ -46,8 +49,7 @@ class CASAuthentication extends AuthenticationBase
         $app = $this->app;
         $app->getContainer()->logoutRoute = 'cas.logout';
 
-        $app->map(['GET', 'POST'],'/cas/login', function (Request $request, Response $response) use ($app) {
-
+        $app->map(['GET', 'POST'], '/cas/login', function (Request $request, Response $response) use ($app) {
             // Initiate CAS SSO
             $this->initCasClient();
             \phpCAS::setNoCasServerValidation();
@@ -65,7 +67,7 @@ class CASAuthentication extends AuthenticationBase
 
             if (isset($user) && $user->userId > 0) {
                 // Load User
-                $this->getUser($user->userId);
+                $this->getUser($user->userId, $request->getAttribute('ip_address'));
 
                 // Overwrite our stored user with this new object.
                 $this->setUserForRequest($user);
@@ -78,13 +80,11 @@ class CASAuthentication extends AuthenticationBase
                 // Audit Log
                 // Set the userId on the log object
                 $this->getLog()->audit('User', $user->userId, 'Login Granted via CAS', [
-                    'IPAddress' => $request->getAttribute('ip_address'),
                     'UserAgent' => $request->getHeader('User-Agent')
                 ]);
             }
 
             return $response->withRedirect($this->getRouteParser()->urlFor('home'));
-
         })->setName('cas.login');
 
         // Service for the logout of the user.
@@ -92,12 +92,10 @@ class CASAuthentication extends AuthenticationBase
         $app->get('/cas/logout', function (Request $request, Response $response) use ($app) {
             // The order is first: local session to destroy, second the cas session
             // because phpCAS::logout() redirects to CAS server
-            $loginController = $app->getContainer()->get('\Xibo\Controller\Login');
-            $loginController->logout($request, $response);
+            $this->completeLogoutFlow($this->getUser($_SESSION['userid'], $request->getAttribute('ip_address')), $this->getSession(), $this->getLog(), $request);
 
             $this->initCasClient();
             \phpCAS::logout();
-
         })->setName('cas.logout');
 
         return $this;
