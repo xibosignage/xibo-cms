@@ -840,7 +840,7 @@ class InstallMigration extends AbstractMigration
             ->addColumn('name', 'string', ['limit' => 254])
             ->addColumn('class', 'string', ['limit' => 254])
             ->addColumn('status', 'integer', ['default' => 2, 'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY])
-            ->addColumn('pid', 'integer', ['null' => true])
+            ->addColumn('pid', 'integer', ['default' => null, 'null' => true])
             ->addColumn('options', 'text', ['default' => null, 'null' => true])
             ->addColumn('schedule', 'string', ['limit' => 254])
             ->addColumn('lastRunDt', 'integer', ['default' => 0])
