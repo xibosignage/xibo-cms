@@ -1383,17 +1383,33 @@ function setFeatureGroupCheckboxState(triggerElement) {
     var $featureGroup = triggerElement.closest("tbody.feature-group");
     var countChecked = $featureGroup.find("input[name='features[]']:checked").length;
     var countTotal = $featureGroup.find("input[name='features[]']").length;
+    setCheckboxState(countChecked, countTotal, $featureGroup, '.feature-select-all')
 
-    if (countChecked <= 0) {
-        $featureGroup.find(".feature-select-all")
+    // collect up the inherit checkboxes belonging to the same group
+    var countInheritChecked = $featureGroup.find("input.inherit-group:checked").length;
+    var countInheritTotal = $featureGroup.find("input.inherit-group").length;
+    setCheckboxState(countInheritChecked, countInheritTotal, $featureGroup, '.inherit-group-all')
+}
+
+/**
+ * Set checkbox state helper function
+ * @param count
+ * @param countTotal
+ * @param $selector
+ * @param checkboxClass
+ */
+function setCheckboxState(count, countTotal, $selector, checkboxClass)
+{
+    if (count <= 0) {
+        $selector.find(checkboxClass)
             .prop("checked", false)
             .prop("indeterminate", false);
-    } else if (countChecked === countTotal) {
-        $featureGroup.find(".feature-select-all")
+    } else if (count === countTotal) {
+        $selector.find(checkboxClass)
             .prop("checked", true)
             .prop("indeterminate", false);
     } else {
-        $featureGroup.find(".feature-select-all")
+        $selector.find(checkboxClass)
             .prop("checked", false)
             .prop("indeterminate", true);
     }

@@ -73,6 +73,7 @@ $app->add(new \Xibo\Middleware\Log($app));
 $app->add(new \Xibo\Middleware\Storage($app));
 $app->add(new \Xibo\Middleware\Xmr($app));
 $app->addRoutingMiddleware();
+$app->add(new \Xibo\Middleware\TrailingSlashMiddleware($app));
 
 // Add Error Middleware
 $errorMiddleware = $app->addErrorMiddleware(true, true, true);
@@ -83,6 +84,8 @@ require PROJECT_ROOT . '/lib/routes.php';
 
 $app->get('/', ['\Xibo\Controller\Login','About']);
 $app->post('/library/mcaas/{id}', ['\Xibo\Controller\Library','mcaas']);
+    $app->post('/admin/configureAdspace', ['\Xibo\Controller\Settings', 'configureAdspace'])
+    ->addMiddleware(new \Xibo\Middleware\SuperAdminAuth($app->getContainer()));
 
 // Run app
 $app->run();

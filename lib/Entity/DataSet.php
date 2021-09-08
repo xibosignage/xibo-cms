@@ -453,7 +453,7 @@ class DataSet implements \JsonSerializable
 
         $start = $sanitizer->getInt('start', ['default' => 0]);
         $size = $sanitizer->getInt('size', ['default' => 0]);
-        $filter = $sanitizer->getString('filter');
+        $filter = $filterBy['filter'] ?? '';
         $ordering = $sanitizer->getString('order');
         $displayId = $sanitizer->getInt('displayId', ['default' => 0]);
 

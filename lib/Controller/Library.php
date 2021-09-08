@@ -1253,7 +1253,7 @@ class Library extends Base
 
         // Should we update the media in all layouts?
         if ($sanitizedParams->getCheckbox('updateInLayouts') == 1 || $media->hasPropertyChanged('enableStat')) {
-            foreach ($this->widgetFactory->getByMediaId($media->mediaId) as $widget) {
+            foreach ($this->widgetFactory->getByMediaId($media->mediaId, 0) as $widget) {
                 /* @var Widget $widget */
                 $widget->duration = $media->duration;
                 $widget->save();

@@ -3744,6 +3744,124 @@
                 }
             }
         },
+        "/folders": {
+            "get": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Search Folders",
+                "description": "Returns JSON representation of the Folder tree",
+                "operationId": "folderSearch",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Folder"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Add Folder",
+                "description": "Add a new Folder to the specified parent Folder",
+                "operationId": "folderAdd",
+                "parameters": [
+                    {
+                        "name": "text",
+                        "in": "formData",
+                        "description": "Folder Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "parentId",
+                        "in": "formData",
+                        "description": "The ID of the parent Folder, if not provided, Folder will be added under Root Folder",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Folder"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/folders/{folderId}": {
+            "put": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Edit Folder",
+                "description": "Edit existing Folder",
+                "operationId": "folderEdit",
+                "parameters": [
+                    {
+                        "name": "folderId",
+                        "in": "path",
+                        "description": "Folder ID to edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "text",
+                        "in": "formData",
+                        "description": "Folder Name",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Folder"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Delete Folder",
+                "description": "Delete existing Folder",
+                "operationId": "folderDelete",
+                "parameters": [
+                    {
+                        "name": "folderId",
+                        "in": "path",
+                        "description": "Folder ID to edit",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Folder"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/layout": {
             "get": {
                 "tags": [

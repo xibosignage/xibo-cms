@@ -63,6 +63,23 @@ class Folder extends Base
     }
 
     /**
+     * Returns JSON representation of the Folder tree
+     *
+     * @SWG\Get(
+     *  path="/folders",
+     *  operationId="folderSearch",
+     *  tags={"folder"},
+     *  summary="Search Folders",
+     *  description="Returns JSON representation of the Folder tree",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/Folder")
+     *      )
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -125,7 +142,36 @@ class Folder extends Base
     }
 
     /**
-     * Adds a Folder
+     * Add a new Folder
+     *
+     * @SWG\Post(
+     *  path="/folders",
+     *  operationId="folderAdd",
+     *  tags={"folder"},
+     *  summary="Add Folder",
+     *  description="Add a new Folder to the specified parent Folder",
+     *  @SWG\Parameter(
+     *      name="text",
+     *      in="formData",
+     *      description="Folder Name",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="parentId",
+     *      in="formData",
+     *      description="The ID of the parent Folder, if not provided, Folder will be added under Root Folder",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          @SWG\Items(ref="#/definitions/Folder")
+     *      )
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @return \Psr\Http\Message\ResponseInterface|Response
@@ -139,7 +185,7 @@ class Folder extends Base
 
         $folder = $this->folderFactory->createEmpty();
         $folder->text = $sanitizedParams->getString('text');
-        $folder->parentId = $sanitizedParams->getString('parentId');
+        $folder->parentId = $sanitizedParams->getString('parentId', ['default' => 1]);
 
         $folder->save();
 
@@ -154,7 +200,36 @@ class Folder extends Base
     }
 
     /**
-     * Edits a help link
+     * Edit existing Folder
+     *
+     * @SWG\Put(
+     *  path="/folders/{folderId}",
+     *  operationId="folderEdit",
+     *  tags={"folder"},
+     *  summary="Edit Folder",
+     *  description="Edit existing Folder",
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="path",
+     *      description="Folder ID to edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="text",
+     *      in="formData",
+     *      description="Folder Name",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          @SWG\Items(ref="#/definitions/Folder")
+     *      )
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @param $folderId
@@ -179,7 +254,6 @@ class Folder extends Base
         }
 
         $folder->text = $sanitizedParams->getString('text');
-        $folder->parentId = $sanitizedParams->getString('parentId', ['default' => $folder->parentId]);
 
         $folder->save();
 
@@ -194,7 +268,29 @@ class Folder extends Base
     }
 
     /**
-     * Delete
+     * Delete existing Folder
+     *
+     * @SWG\Delete(
+     *  path="/folders/{folderId}",
+     *  operationId="folderDelete",
+     *  tags={"folder"},
+     *  summary="Delete Folder",
+     *  description="Delete existing Folder",
+     *  @SWG\Parameter(
+     *      name="folderId",
+     *      in="path",
+     *      description="Folder ID to edit",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          @SWG\Items(ref="#/definitions/Folder")
+     *      )
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @param $folderId
@@ -216,7 +312,12 @@ class Folder extends Base
             throw new AccessDeniedException();
         }
 
-        $folder->delete();
+        try {
+            $folder->delete();
+        } catch (\Exception $exception) {
+            $this->getLog()->debug('Folder delete failed with message: ' . $exception->getMessage());
+            throw new InvalidArgumentException(__('Cannot remove Folder with content'), 'folderId', __('Reassign objects from this Folder before deleting.'));
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -259,5 +360,4 @@ class Folder extends Base
 
         return $response->withJson($buttons);
     }
-
 }

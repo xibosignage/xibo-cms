@@ -851,7 +851,7 @@ function dataTableDraw(e, settings) {
     // Check to see if we have a folder system for this table
     var $folderController = target.closest(".XiboGrid").find('.folder-controller');
 
-    if (enabledButtons.length > 0 || $tagsElement.length > 0) {
+    if (enabledButtons.length > 0) {
 
         var searchByKey = function(array, item, key) {
             // return Object from array where array[object].item matches key

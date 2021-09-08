@@ -272,7 +272,10 @@ class SAMLAuthentication extends AuthenticationBase
 
                 // Redirect back to the originally-requested url
                 $params =  $request->getParams();
-                $redirect = $params['RelayState'] ?? $this->getRouteParser()->urlFor('home');
+
+                $redirect = !isset($params['RelayState']) || (isset($params['RelayState']) && basename($params['RelayState']) == 'login')
+                    ? $this->getRouteParser()->urlFor('home')
+                    : $params['RelayState'];
 
                 return $response->withRedirect($redirect);
             }
@@ -280,19 +283,14 @@ class SAMLAuthentication extends AuthenticationBase
 
         // Single Logout Service
         $app->get('/saml/sls', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) use ($app) {
-
-            $auth = new Auth( $app->getContainer()->get('configService')->samlSettings);
-            $auth->processSLO(false, null, false, function() use ($app, $request, $response) {
-                // Grab a login controller
-                /** @var \Xibo\Controller\Login $loginController */
-                $loginController = $app->getContainer()->get('\Xibo\Controller\Login');
-                $loginController->logout($request, $response);
+            $auth = new Auth($app->getContainer()->get('configService')->samlSettings);
+            $auth->processSLO(false, null, false, function () use ($request) {
+                $this->completeLogoutFlow($this->getUser($_SESSION['userid']), $this->getSession(), $this->getLog(), $request);
             });
-
             $errors = $auth->getErrors();
 
             if (empty($errors)) {
-                return $response->withRedirect($this->getRouteParser()->urlFor('logout'));
+                return $response->withRedirect($this->getRouteParser()->urlFor('home'));
             } else {
                 throw new AccessDeniedException("SLO failed. " . implode(', ', $errors));
             }
