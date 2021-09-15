@@ -262,7 +262,7 @@ class UserFactory extends BaseFactory
         if ($parsedFilter->getCheckbox('disableUserCheck') == 0) {
             // Normal users can only see themselves
             if ($this->getUser()->userTypeId == 3) {
-                $filterBy['userId'] = $this->getUser()->userId;
+                $params['userId'] = $this->getUser()->userId;
             }
             // Group admins can only see users from their groups.
             else if ($this->getUser()->userTypeId == 2) {
@@ -288,7 +288,9 @@ class UserFactory extends BaseFactory
         }
 
         // User Id Provided?
-        if ($parsedFilter->getInt('userId') !== null) {
+        if (isset($params['userId'])) {
+            $body .= ' AND user.userId = :userId ';
+        } else if ($parsedFilter->getInt('userId') !== null) {
             $body .= " AND user.userId = :userId ";
             $params['userId'] = $parsedFilter->getInt('userId');
         }
