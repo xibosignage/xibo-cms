@@ -1,7 +1,7 @@
 <?php
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  * Author: Emmanuel Blindauer
  * Based on SAMLAuthentication.php
  *
@@ -49,7 +49,8 @@ class CASAuthentication extends AuthenticationBase
         $app = $this->app;
         $app->getContainer()->logoutRoute = 'cas.logout';
 
-        $app->map(['GET', 'POST'], '/cas/login', function (Request $request, Response $response) use ($app) {
+        $app->map(['GET', 'POST'], '/cas/login', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
+
             // Initiate CAS SSO
             $this->initCasClient();
             \phpCAS::setNoCasServerValidation();
@@ -89,7 +90,7 @@ class CASAuthentication extends AuthenticationBase
 
         // Service for the logout of the user.
         // End the CAS session and the application session
-        $app->get('/cas/logout', function (Request $request, Response $response) use ($app) {
+        $app->get('/cas/logout', function (\Slim\Http\ServerRequest $request, \Slim\Http\Response $response) {
             // The order is first: local session to destroy, second the cas session
             // because phpCAS::logout() redirects to CAS server
             $this->completeLogoutFlow($this->getUser($_SESSION['userid'], $request->getAttribute('ip_address')), $this->getSession(), $this->getLog(), $request);
@@ -110,7 +111,7 @@ class CASAuthentication extends AuthenticationBase
         \phpCAS::client(
             CAS_VERSION_2_0,
             $settings['server'],
-            $settings['port'],
+            intval($settings['port']),
             $settings['uri'],
             true
         );
