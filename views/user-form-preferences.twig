@@ -44,11 +44,11 @@
                     {% set horizontalOption %}{% trans "Horizontal along the top" %}{% endset %}
                     {% set verticalOption %}{% trans "Vertically on the left" %}{% endset %}
                     {% set options = [
-                        { id: null, value: defaultOption },
+                        { id: "", value: defaultOption },
                         { id: "horizontal", value: horizontalOption },
                         { id: "vertical", value: verticalOption }
                     ] %}
-                    {{ forms.dropdown("navigationMenuPosition", "single", title, currentUser.getOptionValue("navigationMenuPosition", "default"), options, "id", "value", helpText) }}
+                    {{ forms.dropdown("navigationMenuPosition", "single", title, currentUser.getOptionValue("navigationMenuPosition", ""), options, "id", "value", helpText) }}
                 {% endif %}
 
                 {% if currentUser.isSuperAdmin() %}
