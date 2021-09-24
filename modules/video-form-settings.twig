@@ -28,4 +28,14 @@
     {% set title %}{% trans "Default Mute?" %}{% endset %}
     {% set helpText %}{% trans "Should new Video Widgets default to Muted?" %}{% endset %}
     {{ forms.checkbox("defaultMute", title, module.getSetting("defaultMute", 0), helpText) }}
+
+    {% set title %}{% trans "Default Scale type" %}{% endset %}
+    {% set helpText = "How should new Video Widgets be scaled by default?"|trans %}
+    {% set aspect %}{% trans "Aspect" %}{% endset %}
+    {% set stretch %}{% trans "Stretch" %}{% endset %}
+    {% set options = [
+        { scaleTypeId: "aspect", scaleType: aspect },
+        { scaleTypeId: "stretch", scaleType: stretch }
+    ] %}
+    {{ forms.dropdown("defaultScaleType", "single", title, module.getSetting("defaultScaleType", 'aspect'), options, "scaleTypeId", "scaleType", helpText) }}
 {% endblock %}
