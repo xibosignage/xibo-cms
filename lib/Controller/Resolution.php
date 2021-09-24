@@ -91,6 +91,20 @@ class Resolution extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="width",
+     *      in="query",
+     *      description="Filter by Resolution width",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="height",
+     *      in="query",
+     *      description="Filter by Resolution height",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -113,7 +127,9 @@ class Resolution extends Base
         $filter = [
             'enabled' => $sanitizedQueryParams->getInt('enabled', ['default' => -1]),
             'resolutionId' => $sanitizedQueryParams->getInt('resolutionId'),
-            'resolution' => $sanitizedQueryParams->getString('resolution')
+            'resolution' => $sanitizedQueryParams->getString('resolution'),
+            'width' => $sanitizedQueryParams->getInt('width'),
+            'height' => $sanitizedQueryParams->getInt('height')
         ];
 
         $resolutions = $this->resolutionFactory->query($this->gridRenderSort($sanitizedQueryParams), $this->gridRenderFilter($filter, $sanitizedQueryParams));
