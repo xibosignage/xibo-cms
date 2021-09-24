@@ -3010,6 +3010,13 @@ function initJsTreeAjax(container, id, isForm, ttl)
         });
 
         $(container).on('ready.jstree', function(e, data) {
+            // depending on the state of folder tree, hide/show as needed when we load the grid page
+            if (localStorage.getItem("hideFolderTree") !== undefined &&
+                localStorage.getItem("hideFolderTree") !== null &&
+                JSON.parse(localStorage.getItem("hideFolderTree")) !== $('#grid-folder-filter').is(":hidden")
+            ) {
+                $('#folder-tree-select-folder-button').click();
+            }
             // if node has children and User does not have suitable permissions, disable the node
             // If node does NOT have children and User does not have suitable permissions, hide the node completely
             $.each(data.instance._model.data, function(index, e) {
@@ -3208,6 +3215,9 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     $("#breadcrumbs").hide('slow');
                     $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
                 }
+                // set current state of the folder tree visibility to local storage,
+                // this is then used to hide/show the tree when User navigates to a different grid or reloads this page
+                localStorage.setItem("hideFolderTree", JSON.stringify($('#grid-folder-filter').is(":hidden")));
             });
         })
     }
