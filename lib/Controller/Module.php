@@ -581,7 +581,7 @@ class Module extends Base
         $playlist = $this->playlistFactory->getById($id);
 
         if (!$this->getUser()->checkEditable($playlist)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Playlist is not shared with you with edit permission'));
         }
 
         // Check we have a permission factory
@@ -657,7 +657,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkEditable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Media file?
@@ -716,7 +716,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkEditable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -762,7 +762,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkDeleteable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with delete permission'));
         }
 
         // Pass to view
@@ -812,7 +812,7 @@ class Module extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkDeleteable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with delete permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -875,7 +875,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkEditable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Pass to view
@@ -974,7 +974,7 @@ class Module extends Base
         $widget = $this->widgetFactory->getById($id);
 
         if (!$this->getUser()->checkEditable($widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -1035,7 +1035,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkEditable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Are we allowed to do this?
@@ -1126,7 +1126,7 @@ class Module extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkEditable($widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -1211,7 +1211,7 @@ class Module extends Base
         $widget = $this->widgetFactory->getById($id);
 
         if (!$this->getUser()->checkEditable($widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -1257,7 +1257,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkViewable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you'));
         }
 
         $module
@@ -1334,7 +1334,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id), $this->regionFactory->getById($regionId));
 
         if (!$this->getUser()->checkViewable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you'));
         }
 
         $params = $this->getSanitizer($request->getParams());
@@ -1549,7 +1549,7 @@ class Module extends Base
         $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
 
         if (!$this->getUser()->checkEditable($module->widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Pass to view
@@ -1628,7 +1628,7 @@ class Module extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkEditable($widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
@@ -1754,7 +1754,7 @@ class Module extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         if (!$this->getUser()->checkEditable($widget)) {
-            throw new AccessDeniedException();
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
