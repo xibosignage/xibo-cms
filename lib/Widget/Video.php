@@ -53,6 +53,7 @@ class Video extends ModuleWidget
     {
         // Process any module settings you asked for.
         $this->module->settings['defaultMute'] = $this->getSanitizer($request->getParams())->getCheckbox('defaultMute');
+        $this->module->settings['defaultScaleType'] = $this->getSanitizer($request->getParams())->getString('defaultScaleType');
 
         if ($this->getModule()->defaultDuration !== 0) {
             throw new InvalidArgumentException(__('The Video Module must have a default duration of 0 to detect the end of videos.'));
@@ -229,6 +230,7 @@ class Video extends ModuleWidget
     {
         parent::setDefaultWidgetOptions();
         $this->setOption('mute', $this->getSetting('defaultMute', 0));
+        $this->setOption('scaleType', $this->getSetting('defaultScaleType', 'aspect'));
     }
 
     /** @inheritdoc */
