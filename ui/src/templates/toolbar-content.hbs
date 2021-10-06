@@ -1,0 +1,45 @@
+<div id="content-{{menuIndex}}"
+    class="toolbar-pane toolbar-{{name}}-pane {{state}} {{#if search}}toolbar-library-pane{{/if}}">
+    {{#if search}}
+        {{!-- Show search container --}}
+        <div id="media-container-{{menuIndex}}" class="toolbar-pane-container"></div>
+    {{else if content}}
+        <form id="module-search-form" class="module-search-form">
+            <div class="form-group">
+                <label for="module-name">{{trans.searchFilters.name}}</label>
+                <input id="module-name" name="module-name" type="text" class="form-control input-name" value="{{ filters }}">
+            </div>
+        </form>
+
+        <div class="toolbar-pane-container">
+            <div class="toolbar-pane-content">
+                {{!-- Show content elements if not marked as hidden --}}
+                {{#if content.modulesFav}}
+                    <div class="toolbar-header">{{trans.favourites}}</div>
+                {{/if}}
+                {{#each content.modulesFav}}
+                    {{#unless hideElement}}
+                        {{!-- Load cards according to type searchItem/Widget --}}
+                        {{> toolbar-card trans=../trans}}
+                    {{/unless}}
+                {{/each}}
+
+                {{#if content.modules}}
+                    <div class="toolbar-header">{{trans.widgets}}</div>
+                {{/if}}
+                {{#each content.modules}}
+                    {{#unless hideElement}}
+                        {{!-- Load cards according to type searchItem/Widget --}}
+                        {{> toolbar-card trans=../trans}}
+                    {{/unless}}
+                {{/each}}
+
+                {{#unless content.modulesFav}}
+                    {{#unless content.modules}}
+                        <div class="no-results-message">{{ trans.noWidgetsToShow }}</div>
+                    {{/unless}}
+                {{/unless}}
+            </div>
+        </div>
+    {{/if}}
+</div>

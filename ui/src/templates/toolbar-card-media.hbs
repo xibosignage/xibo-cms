@@ -1,0 +1,24 @@
+<div class="toolbar-card {{#if selected}}card-selected{{/if}} {{#eq thumbnailUrl ''}}no-thumbnail{{thumbnailUrl}}{{else}}hide-content{{/eq}}" 
+    data-type="media" 
+    data-media-id="{{mediaId}}"
+    data-sub-type="{{mediaType}}"
+    data-created="{{createdDt}}"
+    data-size="{{fileSizeFormatted}}"
+    drop-to="region">
+    {{!-- {{#neq thumbnailUrl ''}}style="background-image:url({{thumbnailUrl}});"{{/neq}}> --}}
+
+    {{#neq thumbnailUrl ''}}
+        <img class="thumb" src="{{thumbnailUrl}}" alt="">
+    {{/neq}}
+
+    <div class="select-button">
+        <i class="fa fa-plus selectedHide" data-title="{{trans.select}}" data-toggle="tooltip" data-placement="top"></i>
+        <i class="fa fa-check selectedShow" data-title="{{trans.deselect}}" data-toggle="tooltip" data-placement="top"></i>
+    </div>
+
+    {{#eq thumbnailUrl ''}}
+        <i class="fa media-icon-{{mediaType}} card-icon"></i>
+    {{/eq}}
+    
+    <span class="media-title tooltip-always-on" data-toggle="tooltip" data-title="{{name}}" data-placement="right">{{name}}</span>
+</div>

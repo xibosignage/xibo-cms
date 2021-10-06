@@ -134,3 +134,11 @@ require('corejs-typeahead/dist/typeahead.jquery.min.js');
 // jsTree
 require('jstree/dist/jstree.min.js');
 require('jstree/dist/themes/default/style.min.css');
+
+// Masonry
+window.Masonry = require('masonry-layout');
+
+// images loaded
+var imagesLoaded = require('imagesloaded');
+// provide jQuery argument
+imagesLoaded.makeJQueryPlugin( window.$ );

@@ -32,6 +32,14 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     overflow: auto;
     @include set-transparent-color(background, $xibo-color-black, 0.6);
 
+    &.toolbar-opened {
+        margin-left: 280px;
+
+        &.wide {
+            margin-left: 350px;
+        }
+    }
+
     .editor-modal-content {
         background: $playlist-editor-main-background-color;
         margin-bottom: 60px;
@@ -45,11 +53,6 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         line-height: 1;
         font-weight: bold;
         color: $playlist-editor-main-fb-color;
-    }
-
-    &.stretchedBar {
-        margin-left: 140px;
-        width: calc(100% - 120px);
     }
 }
 

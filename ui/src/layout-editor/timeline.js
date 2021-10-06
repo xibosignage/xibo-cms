@@ -538,14 +538,7 @@ Timeline.prototype.render = function(layout) {
     // Timeline toggler
     this.DOMObject.parents('.toggle-panel').find('.toggle').off().click(function(e) {
         e.stopPropagation();
-        $(this).parents('.toggle-panel').toggleClass('opened');
-
-        // Refresh navigators and viewer
-        if (lD.navigatorMode) {
-            lD.renderContainer(lD.navigator);
-        } else {
-            lD.renderContainer(lD.viewer, lD.selectedObject);
-        }
+        lD.togglePanel($(this).parents('.toggle-panel'));
     });
 
     // Enable hover and select for each layout/region

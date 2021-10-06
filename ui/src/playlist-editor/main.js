@@ -207,7 +207,7 @@ pE.loadEditor = function() {
                 // Login Form needed?
                 if(res.login) {
                     window.location.href = window.location.href;
-                    location.reload(false);
+                    location.reload();
                 } else {
                     pE.showErrorMessage();
                 }
@@ -234,7 +234,6 @@ window.getXiboApp = function() {
  * @param {number=} [options.positionToAdd = null] - Order position for widget
  */
 pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = null} = {}) {
-
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
@@ -250,20 +249,10 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
             this.dropItemAdd(obj, card, {positionToAdd: positionToAdd});
         }
 
-    } else if(!$.isEmptyObject(this.toolbar.selectedQueue) && $(this.toolbar.selectedQueue).data('to-add')) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
+    } else if(!$.isEmptyObject(this.toolbar.selectedQueue)) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
         if(obj.data('type') == 'region') {
-            let mediaQueueArray = [];
-
-            // Get queue elements
-            this.toolbar.selectedQueue.find('.queue-element').each(function() {
-                mediaQueueArray.push($(this).attr('id'));
-            });
-
             // Add media queue to playlist
-            this.playlist.addMedia(mediaQueueArray, positionToAdd);
-
-            // Destroy queue
-            this.toolbar.destroyQueue(this.toolbar.openedMenu);
+            this.playlist.addMedia(this.toolbar.selectedQueue, positionToAdd);
         }
 
         // Deselect cards and drop zones
@@ -283,7 +272,6 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
 
         // If there's no selected object, select a default one ( or nothing if widgets are empty)
         if(obj == null || typeof obj.data('type') == 'undefined') {
-
             if($.isEmptyObject(pE.playlist.widgets) || forceUnselect) {
                 this.selectedObject = {};
             } else {
@@ -293,7 +281,6 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
                 this.playlist.widgets[newId].selected = true;
                 this.selectedObject.type = 'widget';
                 this.selectedObject = this.playlist.widgets[newId];
-
             }
         } else {
 
@@ -311,7 +298,7 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
         }
 
         // Refresh the designer containers
-        this.refreshDesigner();
+        pE.refreshDesigner(true);
     }
 };
 
@@ -474,7 +461,7 @@ pE.deleteObject = function(objectType, objectId) {
                     } else {
                         if(res.login) {
                             window.location.href = window.location.href;
-                            location.reload(false);
+                            location.reload();
                         } else {
                             toastr.error(res.message);
                         }
@@ -665,7 +652,7 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
                         } else {
                             if(res.login) {
                                 window.location.href = window.location.href;
-                                location.reload(false);
+                                location.reload();
                             } else {
                                 toastr.error(res.message);
                             }
@@ -687,14 +674,14 @@ pE.deleteMultipleObjects = function(objectsType, objectIds) {
 
 /**
  * Refresh designer
+ * @param {boolean} [renderToolbar=false] - Render toolbar
  */
-pE.refreshDesigner = function() {
-
+ pE.refreshDesigner = function(renderToolbar = false) {
     // Remove temporary data
     this.clearTemporaryData();
 
     // Render containers
-    this.renderContainer(this.toolbar);
+    (renderToolbar) && this.renderContainer(this.toolbar);
     this.renderContainer(this.manager);
 
     // If there was a opened menu in the toolbar, open that tab
@@ -704,7 +691,6 @@ pE.refreshDesigner = function() {
 
     // Render widgets container only if there are widgets on the playlist, if not draw drop area
     if(!$.isEmptyObject(pE.playlist.widgets)) {
-
         // Render timeline
         this.renderContainer(this.timeline);
 
@@ -730,7 +716,7 @@ pE.refreshDesigner = function() {
         // If playlist is empty, open the widget tab
         if(this.toolbar.openedMenu == -1) {
             this.toolbar.firstRun = false;
-            this.toolbar.openMenu(1, true);
+            this.toolbar.openMenu(0, true);
         }
     }
 };
@@ -772,7 +758,7 @@ pE.reloadData = function() {
             } else {
                 if(res.login) {
                     window.location.href = window.location.href;
-                    location.reload(false);
+                    location.reload();
                 } else {
                     pE.showErrorMessage();
                 }
@@ -984,7 +970,7 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
     const linkToAPI = urlsForApi.user.getPref;
 
     // Request elements based on filters
-    let self = this;
+    const self = this;
     $.ajax({
         url: linkToAPI.url + '?preference=' + prefToLoad,
         type: linkToAPI.type
@@ -1000,7 +986,7 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
                 // Just an error we dont know about
                 if(res.message == undefined) {

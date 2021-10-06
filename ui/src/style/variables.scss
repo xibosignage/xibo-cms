@@ -14,7 +14,8 @@ $xibo-color-blue-darker: #42528A;
 $xibo-color-blue-lighter: #c1e1fd;
 $xibo-color-blue-lightest: #ebeff7;
 $xibo-color-green: #82E59E;
-$xibo-color-yellow: #e1e732;
+$xibo-color-green-highlight: #6af367;
+$xibo-color-yellow: #E7EA6E;
 $xibo-color-purple-lighter: #DAE2FB;
 $xibo-color-purple: #8f2ac3;
 $xibo-color-purple-darker: #9197AC;
@@ -56,12 +57,13 @@ $loading-overlay-z-index: 4000;
 $toolbar-width: 60px;
 $toolbar-z-index: 1040;
 
-$toolbar-tools-card-width: 140px;
-$toolbar-tools-card-height: 40px;
+$toolbar-card-width: 96px;
+$toolbar-card-height: 96px;
+$toolbar-card-margin: 4px;
 
-$toolbar-widgets-card-width: 110px;
-$toolbar-widgets-card-margin: 2px;
-$toolbar-widgets-card-height: 50px;
+$toolbar-media-card-height: 60px;
+
+$toolbar-widgets-card-height: 60px;
 
 // Colours
 $toolbar-main-color: $xibo-color-blue-pastel;
@@ -70,10 +72,10 @@ $toolbar-secondary-color: $xibo-color-primary;
 $toolbar-blue: $xibo-color-secondary;
 $toolbar-light-blue: lighten($xibo-color-secondary, 20%);
 $toolbar-green: darken($xibo-color-green, 20%);
-$toolbar-orange: $xibo-color-orange;
+$toolbar-purple: $xibo-color-purple;
 $toolbar-light-green: $xibo-color-green;
 $toolbar-dark-blue: $xibo-color-primary;
-$toolbar-card-color: $xibo-color-secondary;
+$toolbar-card-color: $xibo-color-primary;
 $toolbar-menu-content-bg-color: $xibo-color-white;
 $toolbar-disabled-color: $xibo-color-gray-dark;
 

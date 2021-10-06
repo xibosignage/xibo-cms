@@ -289,7 +289,7 @@
                 },
                 {
                     content: "{% trans "Use the buttons to scroll through the Widgets and find the 'Text' Widget." %}",
-                    element: "#layout-editor-toolbar #content-2 .toolbar-pane-content-container",
+                    element: "#layout-editor-toolbar #content-2 .toolbar-pane-container",
                     placement: "top",
                     template: next_template,
                     boundary: "window",
@@ -314,7 +314,7 @@
                         }
 
                         // Go back if the element isn't still visible
-                        if (!isScrolledIntoView('#layout-editor-toolbar .toolbar-card[data-sub-type="text"]', '.toolbar-pane-content-container')){
+                        if (!isScrolledIntoView('#layout-editor-toolbar .toolbar-card[data-sub-type="text"]', '.toolbar-pane-container')){
                             tour.goTo(26);
                             return false;
                         }
@@ -874,7 +874,7 @@
                 },
                 {
                     content: "{% trans "These are the widgets you can add." %}",
-                    element: "#layout-editor-toolbar #content-2 .toolbar-pane-content-container",
+                    element: "#layout-editor-toolbar #content-2 .toolbar-pane-container",
                     placement: "top",
                     delayOnElement: {
                         delayElement: "element",
