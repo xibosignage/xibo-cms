@@ -34,71 +34,42 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
         cy.openPlaylistEditorAndLoadPrefs(this.testPlaylistId);
     });
 
-    it('creates a new tab in the toolbar and searches for items', () => {
+    it('opens a media tab in the toolbar and searches for items', () => {
 
         cy.server();
-        cy.route('/library?assignable=1&retired=0&draw=2&*').as('mediaLoad');
+        cy.route('/library?assignable=1&retired=0&*').as('mediaLoad');
 
         cy.populateLibraryWithMedia();
 
         // Open library search tab
-        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
         cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
-
-        // Select and search image items
-        cy.get('.toolbar-pane.active .input-type').select('audio');
+        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
 
         cy.wait('@mediaLoad');
 
         // Check if there are audio items in the search content
-        cy.get('#playlist-editor-toolbar .media-table tbody tr:first').should('be.visible').contains('audio');
-    });
-
-    it('creates multiple tabs', () => {
-
-        // Open library search tab
-        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
-
-        cy.get('#playlist-editor-toolbar .media-tab-name').then(($el) => {
-
-            const numTabs = $el.length;
-
-            // Create 3 tabs
-            cy.get('#playlist-editor-toolbar .btn-window-new-tab').click();
-            cy.get('#playlist-editor-toolbar .btn-window-new-tab').click();
-            cy.get('#playlist-editor-toolbar .btn-window-new-tab').click();
-
-            // Check if there are 4 tabs in the toolbar ( widgets default one and the 3 created )
-            cy.get('#playlist-editor-toolbar .media-tab-name').should('be.visible').should('have.length', numTabs + 3);
-        });
+        cy.get('#playlist-editor-toolbar #content-2 .toolbar-card').should('be.visible');
     });
 
     it('creates a new widget by selecting a searched media from the toolbar to the editor, and then reverts the change', () => {
-
         cy.populateLibraryWithMedia();
 
         // Create and alias for reload playlist
         cy.server();
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
         cy.route('DELETE', '/playlist/widget/*').as('deleteWidget');
-        cy.route('/library?assignable=1&retired=0&draw=2&*').as('mediaLoad');
+        cy.route('/library?assignable=1&retired=0&*').as('mediaLoad');
 
         // Open library search tab
-        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
         cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
-
-        // Open a new tab
-        cy.get('#playlist-editor-toolbar .btn-window-new-tab').click();
-
-        // Select and search image items
-        cy.get('.media-search-form:not(.d-none) .input-type:last').select('image');
+        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
 
         cy.wait('@mediaLoad');
+        cy.wait(1000);
 
         // Get a table row, select it and add to the dropzone
-        cy.get('#playlist-editor-toolbar .media-table .assignItem:first').click().then(() => {
-            cy.get('#dropzone-container').click({force: true}).then(() => {
+        cy.get('#playlist-editor-toolbar .toolbar-card .select-button:first').click({force: true}).then(() => {
+            cy.get('#timeline-overlay-container').click({force: true}).then(() => {
 
                 // Wait for the layout to reload
                 cy.wait('@reloadPlaylist');

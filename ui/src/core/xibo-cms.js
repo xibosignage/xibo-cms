@@ -2902,7 +2902,7 @@ function LoginBox(message) {
 
     // Reload the page (appending the message)
     window.location.href = window.location.href;
-    location.reload(false);
+    location.reload();
 }
 
 /**

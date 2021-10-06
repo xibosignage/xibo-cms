@@ -1,11 +1,11 @@
-<nav class="navbar navbar-dark navbar-expand-md flex-column {{#if stretchBar}}stretch{{/if}}">
+<nav class="navbar navbar-dark navbar-expand-md flex-column {{#if opened}}opened{{/if}} {{#if wide}}wide{{/if}}">
     <div class="container-toolbar container-fluid flex-column flex-column justify-content-between">
         {{!-- Menu buttons --}}
         <ul class="navbar-nav navbar-buttons flex-column toolbar-menu-left hide-on-read-only hide-on-lock">
             {{#each menuItems}}
                 <li>
-                    <a id="btn-menu-{{@index}}" class="btn-menu-option {{state}}" data-container=".editor-side-bar" data-toggle="tooltip" data-title="{{itemTitle}}"
-                        data-test="toolbarTabs">
+                    <a id="btn-menu-{{@index}}" class="btn-menu-option {{state}}" data-container=".editor-side-bar"
+                        data-toggle="tooltip" data-title="{{itemTitle}}" data-test="toolbarTabs">
                         <i class="fas fa-{{itemIcon}}"></i>
                     </a>
                 </li>
@@ -15,103 +15,65 @@
         <ul class="navbar-nav flex-column toolbar-menu-content hide-on-read-only hide-on-lock">
             {{!-- Menu items/tabs --}}
             {{#each menuItems}}
-                <div id="content-{{@index}}" class="toolbar-pane toolbar-{{name}}-pane {{state}} {{#if search}}library-content{{/if}}">
-                    {{#if search}}
-                        {{!-- Show search container --}}
-                        <div id="media-search-container-{{@index}}" class="media-search-container drag-handle"></div>
-                    {{else if content}}
-                        {{!-- Paging button --}}
-                        {{#if paging}}
-                            <a id="pag-btn-top-left-{{@index}}" {{pagBtnStepTopLeftDisabled}}
-                                class="btn btn-primary pagination-btn pag-btn-top-left"
-                                data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{../trans.moduleNavStart}}">
-                                <i class="fa fa-step-backward"></i>
-                            </a>
-                            <a id="pag-btn-left-{{@index}}" {{pagBtnStepLeftDisabled}} 
-                                class="btn btn-primary pagination-btn pag-btn-left"
-                                data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{../trans.moduleNavLeft}}">
-                                <i class="fa fa-caret-left"></i>
-                            </a>
-                        {{/if}}
-
-                        <div class="toolbar-pane-content-container">
-                            <div class="toolbar-pane-content">
-                                {{!-- Show content elements if not marked as hidden --}}
-                                {{#each content}}
-                                    {{#unless hideElement}}
-                                        {{!-- Load cards according to type searchItem/Widget --}}
-                                        {{> toolbar-card trans=../../trans mainObjectType=../../mainObjectType}}
-                                    {{/unless}}
-                                {{/each}}
-                            </div>
-                        </div>
-
-                        {{#if paging}}
-                            <a id="pag-btn-right-{{@index}}" {{pagBtnStepRightDisabled}} 
-                                class="btn btn-primary pagination-btn pag-btn-right"
-                                data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{../trans.moduleNavRight}}">
-                                <i class="fa fa-caret-right"></i>
-                            </a>
-                            <a id="pag-btn-top-right-{{@index}}" {{pagBtnStepTopRightDisabled}}
-                                class="btn btn-primary pagination-btn pag-btn-top-right"
-                                data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{../trans.moduleNavEnd}}">
-                                <i class="fa fa-step-forward"></i>
-                            </a>
-                        {{/if}}
-                    {{/if}}
-                </div>
+                <div id="content-{{@index}}"></div>
             {{/each}}
         </ul>
 
-        {{!-- Right buttons --}}
-        <ul class="navbar-nav flex-column navbar-right toolbar-menu-right hide-on-read-only hide-on-lock">            
+        {{!-- Bottom buttons --}}
+        <ul class="navbar-nav flex-column navbar-right toolbar-menu-right hide-on-read-only hide-on-lock">
             {{#if showOptions}}
                 <li>
-                    <a id="undoContainer" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{trans.undoActiveTitle}}"
+                    <a id="undoContainer" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top"
+                        data-title="{{trans.undoActiveTitle}}"
                         class="navbar-peek-button tooltip-always-on undo-container navbar-undo {{#if undoActive}}active{{/if}}">
                         <i class="fa fa-undo"></i>
                     </a>
                 </li>
-            
+
                 <li>
-                    <a id="multiSelectContainer" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{trans.selectMultipleWidgets}}"
+                    <a id="multiSelectContainer" data-toggle="tooltip" data-container=".editor-side-bar"
+                        data-placement="top" data-title="{{trans.selectMultipleWidgets}}"
                         class="navbar-peek-button navbar-multiselect active">
                         <i class="fa fa-object-group"></i>
                     </a>
                 </li>
 
                 <li>
-                    <a id="trashContainer" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{trans.trashBinActiveTitle}}"
+                    <a id="trashContainer" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top"
+                        data-title="{{trans.trashBinActiveTitle}}"
                         class="navbar-peek-button navbar-bin trash-container {{#if trashActive}}active{{/if}}">
                         <i class="fa fa-trash"></i>
                     </a>
                 </li>
 
-                <li class="dropright navbar-submenu navbar-submenu-options" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top"
-                    data-title="{{trans.options}}">
-                    <a id="optionsContainer" class="dropdown-toggle btn-menu-option option-container" data-toggle="dropdown" role="button" aria-haspopup="true"
-                        aria-expanded="false">
+                <li class="dropright navbar-submenu navbar-submenu-options" data-toggle="tooltip"
+                    data-container=".editor-side-bar" data-placement="top" data-title="{{trans.options}}">
+                    <a id="optionsContainer" class="dropdown-toggle btn-menu-option option-container"
+                        data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">
                         <i class="fa fa-bars"></i>
                     </a>
-                
-                    <div class="dropdown-menu dropdown-menu-right navbar-submenu-container navbar-submenu-options-container" aria-labelledby="optionsContainer">
+
+                    <div class="dropdown-menu dropdown-menu-right navbar-submenu-container navbar-submenu-options-container"
+                        aria-labelledby="optionsContainer">
                         <a class="dropdown-item">
-                            <label class="navbar-submenu-item navbar-submenu-item-options displayTooltips-container tooltip-always-on"
-                                for="displayTooltips" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="left" data-title="{{trans.displayTooltipsTitle}}"
-                                accesskey="">
-                                <input type="checkbox" id="displayTooltips" name="displayTooltips"
-                                    {{#if displayTooltips}}checked{{/if}}>
+                            <label
+                                class="navbar-submenu-item navbar-submenu-item-options displayTooltips-container tooltip-always-on"
+                                for="displayTooltips" data-toggle="tooltip" data-container=".editor-side-bar"
+                                data-placement="left" data-title="{{trans.displayTooltipsTitle}}" accesskey="">
+                                <input type="checkbox" id="displayTooltips" name="displayTooltips" {{#if
+                                    displayTooltips}}checked{{/if}}>
                                 <span>{{trans.displayTooltipsName}}</span>
                             </label>
                         </a>
                         <a class="dropdown-item">
-                            <div id="resetTour" class="navbar-submenu-item navbar-submenu-item-options tooltip-always-on d-none"
-                                data-toggle="tooltip" data-container=".editor-side-bar" data-placement="bottom" data-title="{{trans.resetTourTitle}}" href="#">
+                            <div id="resetTour"
+                                class="navbar-submenu-item navbar-submenu-item-options tooltip-always-on d-none"
+                                data-toggle="tooltip" data-container=".editor-side-bar" data-placement="bottom"
+                                data-title="{{trans.resetTourTitle}}" href="#">
                                 <i class="fa fa-repeat"></i>
                                 <span>{{trans.resetTour}}</span>
                             </div>
-                        </a
-                    </div>
+                        </a </div>
                 </li>
             {{/if}}
         </ul>

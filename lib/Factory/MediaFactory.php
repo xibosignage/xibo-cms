@@ -675,6 +675,20 @@ class MediaFactory extends BaseFactory
             $params['type'] = $sanitizedFilter->getString('type');
         }
 
+        if (!empty($sanitizedFilter->getArray('types'))) {
+            $body .= 'AND (';
+            foreach ($sanitizedFilter->getArray('types') as $key => $type) {
+                $body .= 'media.type = :types' . $key . ' ';
+
+                if ($key !== array_key_last($sanitizedFilter->getArray('types'))) {
+                    $body .= ' OR ';
+                }
+
+                $params['types' .  $key] = $type;
+            }
+            $body .= ') ';
+        }
+
         if ($sanitizedFilter->getInt('imageProcessing') !== null) {
             $body .= 'AND ( media.type = \'image\' OR (media.type = \'module\' AND media.moduleSystemFile = 0) ) ';
         }
@@ -827,6 +841,9 @@ class MediaFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
+
+        $this->getLog()->debug('--- BODY');
+        $this->getLog()->debug($sql);
         
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $media = $this->createEmpty()->hydrate($row, [

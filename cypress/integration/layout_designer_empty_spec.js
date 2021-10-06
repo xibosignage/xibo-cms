@@ -176,7 +176,7 @@ describe('Layout Designer (Empty)', function() {
             cy.get('#layout-editor-bottombar #navigator-edit-btn').click({force:true});
 
             // Get a table row, select it and add to the region
-            cy.get('#layout-editor-toolbar .media-table .assignItem:first').click({force:true}).then(() => {
+            cy.get('#layout-editor-toolbar .media-content .select-item:first').click({force:true}).then(() => {
                 cy.get('#layout-navigator [data-type="region"]:first-child').click({force:true}).then(() => {
 
                     // Wait for the layout to reload

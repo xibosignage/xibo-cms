@@ -239,7 +239,7 @@ Region.prototype.editPropertyForm = function(property) {
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
 
                 toastr.error(errorMessagesTrans.formLoadFailed);

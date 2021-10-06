@@ -12,15 +12,6 @@
     border: none;
     padding: 0 !important;
 
-    /* SCROLLBAR */
-    scrollbar-width: thin; /* For firefox */
-    scrollbar-color: lighten($xibo-color-black, 40%) lighten($xibo-color-gray-dark, 40%); /* For firefox */
-
-    /* width */
-    ::-webkit-scrollbar {
-        width: 7px !important;
-    }
-
     .container-toolbar {
         padding: 0;
         height: 100%;
@@ -79,212 +70,6 @@
         }
     }
 
-    .library-content {
-        position: fixed;
-        bottom: 50px;
-        right: 0px;
-        height: fit-content;
-        opacity: 0.95;
-        border: 3px solid $xibo-color-blue-pastel;
-
-        &.hide-mode {
-            width: 0 !important;
-            height: 0 !important;
-
-            .media-search-container {
-                display: none;
-            }
-        }
-
-        .media-search-container {
-            background: $xibo-color-white;
-            height: 100%;
-        }
-
-        .btn-window {
-            cursor: pointer;
-            color: $toolbar-tab-hover-color;
-            font-size: 1.3rem;
-            padding: 0 4px;
-
-            &:hover {
-                color: $toolbar-tab-fg-color;
-
-                &.btn-window-close {
-                    color: $bin-bg-color;
-                }
-                
-            }
-        }
-
-        .btn-window-close {
-            position: absolute;
-            top: 2px;
-            right: 1px;
-        }
-
-        .btn-window-new-tab {
-            position: relative;
-            font-size: 1.15rem;
-        }
-
-        .media-search-controls {
-            color: $xibo-color-white;
-            background-color: $toolbar-secondary-color;
-            font-size: 0;
-            padding: 4px 25px 0 4px;
-
-            .media-search-tab {
-                display: inline-block;
-                font-size: 1.1rem;
-                height: 24px;
-                background-color: darken($xibo-color-gray-dark, 20%);
-                @include border-radius(0 4px 0 0);
-                border-style: solid;
-                border-width: 1px 1px 0 1px;
-                border-color: darken($xibo-color-gray-dark, 10%);
-
-                &.active {
-                    background-color: $toolbar-main-color;
-                    border-color: darken($toolbar-main-color, 15%);
-
-                    &:hover {
-                        background-color: $toolbar-main-color;
-                    }
-                }
-
-                .media-tab-close {
-                    padding: 4px;
-                    opacity: 0.6;
-                    text-decoration: none;
-
-                    &:hover {
-                        opacity: 1;
-                    }
-                }
-
-                .media-tab-name {
-                    padding: 0 6px;
-                    text-decoration: none;
-                }
-
-                &:hover {
-                    background-color: $xibo-color-gray-dark;
-
-                    .media-tab-close {
-                        display: inline-block;
-                    }
-                }
-            }
-        }
-
-        .media-search-form {
-            input[type="text"] {
-                max-width: 140px;
-            }
-
-            .search-form-group {
-                width: 100%;
-
-                & > * {
-                    margin-bottom: 6px;
-                }
-            }
-        }
-
-        .media-add-queue {
-            display: none;
-            position: absolute;
-            top: 0;
-            border: 2px solid $xibo-color-blue;
-            width: 180px;
-            color: $toolbar-secondary-color;
-            background-color: $xibo-color-white;
-            
-
-            .btn-queue-close {
-                @extend .btn-window-close;
-                top: 0;
-            }
-
-            .media-add-queue-header {
-                height: 28px;
-                line-height: 28px;
-                padding: 0 5px;
-                color: $xibo-color-white;
-                background-color: $toolbar-secondary-color;
-            }
-
-            .media-add-queue-buttons {
-                padding: 2px;
-
-                .btn {
-                    display: none;
-
-                    &.active {
-                        display: block;
-                    }
-                }
-            }
-
-            .queue-element {
-                background-color: $xibo-color-blue;
-                cursor: row-resize;
-                color: $xibo-color-white;
-                margin: 2px;
-                padding: 2px 4px;
-
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-
-                .queue-element-name {
-                    white-space: nowrap;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    max-width: 145px;
-                    display: inline-block;
-                }
-                        
-                .queue-element-remove {
-                    cursor: pointer;
-                }
-            }
-        }
-
-        .dataTables_length {
-            margin-top: 5px;
-        }
-
-        .media-table {
-
-            width: 100% !important;
-
-            td {
-                white-space: nowrap;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                max-width: 150px;
-            }
-
-            tr.media-selected {
-                background-color: $toolbar-tab-hover-color;
-            }
-            
-            .assignItem {
-                color: $toolbar-main-color;
-                font-size: 1.15rem;
-            }
-
-            tbody>tr>td {
-                padding: 4px;
-                img {
-                    height: 50px;
-                }
-            }
-        }
-    }
-
     .toolbar-pane {
         display: none;
         flex-direction: column !important;
@@ -294,262 +79,60 @@
         }
 
         form {
-            background: $xibo-color-blue-pastel;
-            padding: 6px;
+            margin: 6px 10px 10px;
+
+            .form-group {
+
+                label {
+                    font-weight: bold;
+                }
+
+                margin-bottom: 0;
+            }
         }
     }
 
     /* Toolbar - button content */
     .toolbar-menu-content {
-
-        /* Toolbar card */
-        .toolbar-card {
-            display: block;
-            background: $toolbar-card-color;
-            color: $xibo-color-white;
-            width: $toolbar-tools-card-width;
-            height: $toolbar-tools-card-height;
-            @include border-radius(4px);
-
-            .card-title {
-                display: block;
-                position: relative;
-                line-height: 30px;
-                height: $toolbar-width;
-                padding: 5px 2px;
-                margin-left: 40px;
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-            }
-
-            .card-icon {
-                line-height: 30px;
-                font-size: 1.5rem;
-                padding: 5px 10px;
-                position: absolute;
-            }
-
-            .action-area {
-                display: none;
-                z-index: 2;
-                position: absolute;
-                text-align: center;
-                width: calc(#{$toolbar-tools-card-width} / 2);
-                height: $toolbar-tools-card-height;
-                @include set-transparent-color(background-color, $xibo-color-black, 0.7);
-
-                i {
-                    line-height: $toolbar-tools-card-height;
-                    font-size: 1.65rem;
-                }
-            }
-
-            .add-area {
-                @include border-radius(4px 0 0 4px);
-            }
-
-            &[data-one-click-add] .action-area {
-                width: $toolbar-tools-card-width;
-            }
-
-            &.card-selected .add-area {
-                display: block;
-                width: $toolbar-tools-card-width;
-                @include set-transparent-color(background-color, $toolbar-light-green, 0.9);
-                @include border-radius(4px);
-                font-size: 1.55rem;
-            }
-
-            .drag-area {
-                cursor: move;
-                margin-left: calc(#{$toolbar-tools-card-width} / 2);
-                @include border-radius(0 4px 4px 0);
-            }
-
-            &.card-dragged .drag-area {
-                display: block;
-                margin-left: 0;
-                width: $toolbar-tools-card-width;
-                @include set-transparent-color(background-color, $toolbar-orange, 0.9);
-                @include border-radius(4px);
-                font-size: 1.55rem;
-            }
-
-            &:not(.card-selected):hover {
-                .add-area {
-                    display: block;
-
-                    &:hover {
-                        @include set-transparent-color(background-color, $toolbar-green, 0.7);
-                    }
-                }
-
-                &:not([data-one-click-add]) .drag-area {
-                    display: block;
-
-                    &:hover {
-                        @include set-transparent-color(background-color, $toolbar-orange, 0.7);
-                    }
-                }
-            }
-        }
-
-        a {
-            &.pagination-btn {
-                width: 120px;
-                font-size: 1.4rem;
-                height: 24px;
-                border: none;
-                line-height: 24px;
-                padding: 0;
-                @include border-radius(0);
-                background-color: $xibo-color-black;
-
-                i {
-                    transform: rotate(90deg);
-                }
-
-                &.pag-btn-top-right, &.pag-btn-top-left {
-                    font-size: 0.8rem;
-                }
-
-                &:hover {
-                    background-color: lighten($xibo-color-black, 30%);
-                }
-            }
-
-            &.pagination-btn[disabled] {
-                background: $toolbar-disabled-color;
-            }
-
-            &.pagination-btn[disabled]:hover {
-                opacity: 1;
-            }
-        }
-
-        /* Tools Pane */
-        .toolbar-tools-pane {
-            position: absolute;
-            padding: 4px;
-            top: 54px;
-            left: $toolbar-width;
-            background: $toolbar-menu-content-bg-color;
-            border-width: 4px 4px 4px 0px;
-            border-color: $toolbar-main-color;
-            border-style: solid;
-
-            .toolbar-card {
-                height: 38px;
-                margin: 2px 0;
-            }
-
-            .toolbar-pane-content.selected .toolbar-card:not(.card-dragged):not(.card-selected):not(.ui-draggable-dragging) {
-                display: none;
-            }
-        }
-
-        /* Widget Pane */
-        .toolbar-widgets-pane {
+        .toolbar-pane {
             position: absolute;
             left: $toolbar-width;
             top: 0;
             bottom: 0;
-            background: $toolbar-disabled-color;
-            font-size: 0;
+            background: $xibo-color-blue-darker;
             border-width: 4px 4px 4px 0;
             border-style: solid;
-            border-color: $toolbar-main-color;
+            border-color: $xibo-color-blue-darker;
+            color: $xibo-color-gray-light;
 
-            .toolbar-card {
-                margin: $toolbar-widgets-card-margin;
-                width: $toolbar-widgets-card-width;
-                height: $toolbar-widgets-card-height;
-                background: $xibo-color-primary;
-                @include border-radius(4px);
-                font-size: 0.95rem;
-
-                .card-title {
-                    position: relative;
-                    line-height: 15px;
-                    padding: 0 3px;
-                    text-align: center;
-                    overflow: hidden;
-                    margin: 4px 0 0 0;
-                    width: $toolbar-widgets-card-width;
-                    height: auto;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                }
-
-                .card-icon {
-                    line-height: 25px;
-                    font-size: 1.25rem;
-                    transform: translate(-50%);
-                    padding: 0;
-                    position: relative;
-                    left: 50%;
-                    top: 3px;
-                }
-
-                .action-area {
-                    width: calc(#{$toolbar-widgets-card-width} / 2);
-                    height: $toolbar-widgets-card-height;
-
-                    i {
-                        line-height: $toolbar-widgets-card-height;
-                    }
-                }
-
-                &.card-selected .add-area {
-                    width: $toolbar-widgets-card-width;
-                    @include border-radius(0 0 0 4px);
-                }
-
-                &[data-one-click-add] .action-area {
-                    width: $toolbar-widgets-card-width;
-                }
-
-                .drag-area {
-                    margin-left: calc(#{$toolbar-widgets-card-width} / 2);
-                    @include border-radius(0 0 4px 0);
-                }
-
-                &.card-dragged .drag-area {
-                    margin-left: 0;
-                    width: $toolbar-widgets-card-width;
-                }
-
-                .btn-favourite {
-                    display: none;
-                    color: $xibo-color-yellow;
-                    position: absolute;
-                    z-index: 3;
-                    background: $xibo-color-primary;
-                    width: 14px;
-                    @include border-radius(0px 0 4px 4px);
-                    margin: 0;
-                    height: 14px;
-                    text-align: center;
-                    font-size: 0.65rem;
-                }
-
-                &:not(.card-selected):hover, &.favourited {
-                    .btn-favourite {
-                        display: block;
-                    }
-                }
-            }
-
-            .toolbar-pane-content-container {
+            .toolbar-pane-container {
                 float: left;
                 scroll-behavior: smooth;
                 overflow-x: hidden;
-                overflow-y: scroll;
-                background: $xibo-color-white;
-                width: 120px;
-                height: calc(100% - 96px);
+                overflow-y: auto;
+                width: 240px;
+                margin: 6px 10px;
+
+                /* SCROLLBAR */
+                scrollbar-color: $xibo-color-primary lighten($xibo-color-primary, 40%); /* For firefox */
+
+                /* width */
+                ::-webkit-scrollbar {
+                    width: 7px !important;
+                }
+
+                &::-webkit-scrollbar-thumb {
+                    background: $xibo-color-primary !important;
+                }
+
+                &::-webkit-scrollbar-thumb:hover {
+                    background: lighten($xibo-color-primary, 5%) !important;
+                }
+
+                &::-webkit-scrollbar-track {
+                    background: lighten($xibo-color-primary, 40%) !important;
+                    border-radius: 0 !important;
+                }
 
                 /* Internet explorer fix */
                 @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
@@ -557,21 +140,332 @@
                         -ms-overflow-style: -ms-autohiding-scrollbar;
                     }
                 }
-            }
+    
+                .toolbar-pane-content {
+                    display: flex;
+                    flex-direction: row;
+                    width: auto;
+                    margin: 4px 10px;
+                    white-space: nowrap;
+                    flex-wrap: wrap;
 
-            .toolbar-pane-content {
-                display: flex;
-                flex-direction: column !important;
-                align-items: center;
-                max-width: 120px;
-                width: auto;
-                white-space: nowrap;
+                    .toolbar-header {
+                        flex-basis: 100%;
+                        margin: 6px 0 4px 0;
+                        text-transform: uppercase;
+                    }
+
+                    .no-results-message {
+                        font-size: 1.2rem;
+                        white-space: normal;
+                        margin-top: 1rem;
+                        font-weight: bold;
+                        width: 100%;
+                        text-align: center;
+                    }
+                }
             }
 
             .toolbar-card {
-                display: inline-block;
-                white-space: normal;
                 position: relative;
+                overflow: hidden;
+                background: $toolbar-card-color;
+                height: auto !important;
+                min-height: 45px;
+                color: $xibo-color-white;
+                width: calc(calc(100% / 3) - 8px);
+                width: $toolbar-card-width;
+                height: $toolbar-card-height;
+                @include border-radius(4px);
+                font-size: 0.95rem;
+
+
+                .thumb {
+                    width: 100%;
+                }
+
+                .card-title {
+                    display: block;
+                    position: relative;
+                    line-height: 30px;
+                    height: $toolbar-width;
+                    padding: 5px 2px;
+                    margin-left: 40px;
+                    overflow: hidden;
+                    text-overflow: ellipsis;
+                    white-space: nowrap;
+                }
+
+                .card-icon {
+                    position: relative;
+                }
+
+                .action-area {
+                    display: none;
+                    z-index: 2;
+                    position: absolute;
+                    text-align: center;
+                    @include set-transparent-color(background-color, $xibo-color-black, 0.7);
+
+                    i {
+                        line-height: $toolbar-card-height;
+                        font-size: 1.65rem;
+                    }
+                }
+            }
+
+            &.toolbar-library-pane {
+                .toolbar-pane-content {
+                    width: 310px;
+                }
+
+                .media-search-form {
+                    width: 310px;
+                }
+
+                .toolbar-pane-container {
+                    width: 334px;
+                    margin: 6px -2px 6px 6px;
+                    min-height: calc(100% - 10px);
+                }
+
+                .loading-container {
+                    .loading {
+                        font-size: 3rem;
+                        opacity: 0.6;
+                        margin: 15px;
+                    }
+                }
+
+                .toolbar-card {
+                    cursor: grab;
+                    background-position: center;
+                    background-repeat: no-repeat;
+                    background-size: cover;
+                    margin: 0 0 11px 0;
+
+                    & > * {
+                        transition: 0.25s 0.25s opacity ease-in-out;
+                        opacity: 1;
+                    }
+
+                    &.hide-content {
+                        animation: animateBg 1.5s linear infinite;
+                        background-image: linear-gradient(0deg, $xibo-color-primary,lighten($xibo-color-primary, 10%),$xibo-color-primary);
+                        background-size: 100% 1100%;
+
+                        & > * {
+                            opacity: 0;
+                        }
+                    }
+                    @keyframes animateBg {
+                        0% { background-position: 0% 0%; }
+                        100% { background-position: 0% 100%; }
+                    }
+
+                    &.ui-draggable-dragging {
+                        cursor: grabbing;
+
+                        .select-button {
+                            display: none !important;
+                        }
+                    }
+
+                    &.no-thumbnail {
+                        min-height: 85px;
+                    }
+
+                    .media-title {
+                        display: block;
+                        background-color: $xibo-color-gray;
+                        color: $xibo-color-primary;
+                        padding: 0 4px;
+                        width: 100%;
+                        overflow: hidden;
+                        text-overflow: ellipsis;
+                        white-space: nowrap;
+                    }
+
+                    .card-icon {
+                        font-size: 2.5rem;
+                        color: $xibo-color-gray;
+                        margin: 20px 0;
+                        left: 50%;
+                        transform: translateX(-50%);
+                    }
+
+                    .select-button {
+                        display: none;
+                        cursor: pointer;
+                        position: absolute;
+                        background-color: $xibo-color-white;
+                        color: darken($xibo-color-gray-darker, 20%);
+                        @include box-shadow(0px 0px 2px 1px $xibo-color-gray-darker);
+                        top: 6px;
+                        left: 4px;
+                        border-radius: 50%;
+                        width: 17px;
+                        height: 17px;
+
+                        i {
+                            cursor: pointer;
+                            font-size: 14px;
+                            line-height: 14px;
+                            position: absolute;
+                            top: 2px;
+                            left: 3px;
+
+                            &.fa-check {
+                                left: 2px;
+                                font-size: 13px;
+                            }
+                        }
+
+                        .selectedHide {
+                            display: block;
+                        }
+
+                        .selectedShow {
+                            display: none;
+                        }
+                    }
+
+                    &:hover {
+                        @include box-shadow(0px 0px 0px 2px $xibo-color-white);
+
+                        .select-button, .media-title {
+                            display: block;
+                            background-color: $xibo-color-white;
+                        }
+
+                        .card-icon {
+                            color: $xibo-color-white;
+                        }
+                    }
+
+                    &.card-selected {
+                        @include box-shadow(0px 0px 0px 2px $xibo-color-green-highlight);
+                        .select-button {
+                            display: block;
+                            background-color: $xibo-color-green-highlight !important;
+                        }
+
+                        .selectedHide {
+                            display: none;
+                        }
+
+                        .selectedShow {
+                            display: block;
+                        }
+                    }
+                }
+
+                .show-more {
+                    margin: 6px 10px;
+                    width: 310px;
+                }
+            }
+
+            &.toolbar-widgets-pane {
+                .toolbar-card {
+                    width: calc(calc(100% / 2) - 8px);
+                    min-height: $toolbar-widgets-card-height;
+                    height: $toolbar-widgets-card-height;
+                    margin: 4px;
+    
+                    .card-title {
+                        line-height: 15px;
+                        padding: 0 3px;
+                        text-align: center;
+                        margin: 9px 0 0 0;
+                        width: 100%;
+                        height: auto;
+                    }
+    
+                    .card-icon {
+                        line-height: 25px;
+                        font-size: 1.25rem;
+                        transform: translate(-50%);
+                        padding: 0;
+                        left: 50%;
+                        top: 10px;
+                    }
+    
+                    .action-area {
+                        width: calc(100% / 2);
+                        height: $toolbar-widgets-card-height;
+    
+                        i {
+                            line-height: $toolbar-widgets-card-height;
+                        }
+                    }
+
+                    .add-area {
+                        @include border-radius(4px 0 0 4px);
+                    }
+    
+                    &.card-selected .add-area {
+                        display: block;
+                        width: 100%;
+                        @include set-transparent-color(background-color, $toolbar-light-green, 0.9);
+                        @include border-radius(4px);
+                        font-size: 1.55rem;
+                    }
+    
+                    .drag-area {
+                        cursor: move;
+                        margin-left: calc(100% / 2);
+                        @include border-radius(0 0 4px 0);
+                    }
+    
+                    &.card-dragged .drag-area {
+                        display: block;
+                        margin-left: 0;
+                        width: 100%;
+                        @include set-transparent-color(background-color, $toolbar-purple, 0.6);
+                        @include border-radius(4px);
+                        font-size: 1.55rem;
+                    }
+    
+                    &:not(.card-selected):hover {
+                        .add-area {
+                            display: block;
+    
+                            &:hover {
+                                @include set-transparent-color(background-color, $toolbar-green, 0.6);
+                            }
+                        }
+    
+                        .drag-area {
+                            display: block;
+    
+                            &:hover {
+                                @include set-transparent-color(background-color, $toolbar-purple, 0.6);
+                            }
+                        }
+                    }
+
+                    .btn-favourite {
+                        display: none;
+                        cursor: pointer;
+                        color: $xibo-color-yellow;
+                        position: absolute;
+                        z-index: 3;
+                        background: $xibo-color-primary;
+                        width: 16px;
+                        @include border-radius(4px 0 4px 0);
+                        margin: 0;
+                        height: 16px;
+                        text-align: center;
+                        font-size: 0.85rem;
+                    }
+    
+                    &:not(.card-selected):hover, &.favourited {
+                        .btn-favourite {
+                            display: block;
+                        }
+                    }
+                }
             }
         }
     }
@@ -583,8 +477,8 @@
     }
 
     .navbar-buttons a.active {
-        background: $xibo-color-white;
-        color: #444;
+        background: $xibo-color-blue-darker;
+        color: $xibo-color-white-pure;
     }
 
     .navbar-submenu-container {
@@ -620,8 +514,8 @@
         }
 
         &:hover {
-            color: $xibo-color-blue;
-            background: $xibo-color-white;
+            background: darken($xibo-color-blue-darker, 10%);
+            color: $xibo-color-white-pure;
         }
     }
 
@@ -642,11 +536,7 @@
     }
 
     .bootstrap-tagsinput {
-        line-height: 24px;
-    }
-
-    .bootstrap-tagsinput .label {
-        font-size: 95%;
+        width: 100%;
     }
 
     .navbar-submenu {
@@ -705,16 +595,19 @@
             }
         }
     }
-
 }
 
 /* Side bar */
 .editor-toolbar.editor-side-bar nav {
     width: $toolbar-width;
-    padding: 20px 0 !important;
+    padding: 16px 0 !important;
 
-    &.stretch {
-        margin-right: 120px;
+    &.opened {
+        margin-right: 260px;
+
+        &.wide {
+            margin-right: 340px;
+        }
     }
 }
 

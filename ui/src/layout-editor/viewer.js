@@ -254,8 +254,29 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                 }
             }
 
+            this.DOMObject.find('.designer-region').droppable({
+                greedy: true,
+                accept: function(el) {
+                    return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region');
+                },
+                drop: function(event, ui) {
+                    if(ui.helper.hasClass('dropped')) {
+                        return false;
+                    }
+                    lD.dropItemAdd(event.target, ui.draggable[0]);
+                    ui.helper.addClass('dropped');
+                }
+            });
+
+            // Enable select for each layout/region
+            this.DOMObject.find('.designer-region.editable').off('click').on('click', function(e) {
+                e.stopPropagation();
+                // Select object
+                lD.selectObject($(this));
+            });
+
             // Click element to select it
-            container.find('.preview-select').off().on('click', function() {
+            container.find('.preview-select').off('click').on('click', function() {
 
                 if(res.extra.number_items > 1) {
                     // Select paged widget

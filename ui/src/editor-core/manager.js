@@ -194,7 +194,7 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
                 if(data.login) {
 
                     window.location.href = window.location.href;
-                    location.reload(false);
+                    location.reload();
                 } else {
                     // Just an error we dont know about
                     if(data.message == undefined) {
@@ -326,7 +326,7 @@ Manager.prototype.revertChange = function() {
                         if(data.login) {
 
                             window.location.href = window.location.href;
-                            location.reload(false);
+                            location.reload();
                         } else {
                             // Just an error we dont know about
                             if(data.message == undefined) {
