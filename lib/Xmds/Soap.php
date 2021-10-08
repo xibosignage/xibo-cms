@@ -776,9 +776,6 @@ class Soap
                             $resourceFile->setAttribute('mediaid', $widget->widgetId);
                             $resourceFile->setAttribute('updated', $updatedDt->format('U'));
                             $fileElements->appendChild($resourceFile);
-                        } else if ($widget->type === 'adspaceexchange') {
-                            // Append an attribute to the Layout indicating that an AdspaceExchange widget is present
-                            $file->setAttribute('adspaceExchange', 1);
                         }
                     }
                 }
@@ -1746,6 +1743,17 @@ class Soap
                 // Protect against the date format being unreadable
                 $this->getLog()->error('Stat with a from or to date that cannot be understood. fromDt: ' . $fromdt . ', toDt: ' . $todt . '. E = ' . $e->getMessage());
                 continue;
+            }
+
+            // check maximum retention period against stat date, do not record if it's older than max stat age
+            $maxAge = intval($this->getConfig()->getSetting('MAINTENANCE_STAT_MAXAGE'));
+            if ($maxAge != 0) {
+                $maxAgeDate = Carbon::now()->subDays($maxAge);
+
+                if ($todt->isBefore($maxAgeDate)) {
+                    $this->getLog()->debug('Stat older than max retention period, skipping.');
+                    continue;
+                }
             }
 
             // Important - stats will now send display entity instead of displayId

@@ -222,11 +222,13 @@ class NotificationView extends ModuleWidget
         if ($isPreview)
             $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
+                'onlyReleased' => 1,
                 'userId' => $this->getUser()->userId
             ]);
         else
             $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC', 'subject'], [
                 'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
+                'onlyReleased' => 1,
                 'displayId' => $displayId
             ]);
 
@@ -254,7 +256,7 @@ class NotificationView extends ModuleWidget
                         break;
 
                     case '[Date]':
-                        $replace = Carbon::createFromTimestamp($notification->releaseDt)->format($dateFormat);
+                        $replace = Carbon::createFromTimestamp($notification->releaseDt)->translatedFormat($dateFormat);
                         break;
                 }
 
@@ -358,6 +360,7 @@ class NotificationView extends ModuleWidget
         $notifications = $this->getNotificationFactory()->query(['releaseDt DESC', 'createDt DESC'], [
             'releaseDt' => ($age === 0) ? null : Carbon::now()->subMinutes($age)->format('U'),
             'displayId' => $displayId,
+            'onlyReleased' => 1,
             'length' => 1
         ]);
 

@@ -157,8 +157,6 @@ class NotificationFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        self::viewPermissionSql('Xibo\Entity\Notification', $body, $params, '`notification`.notificationId', '`notification`.userId', $filterBy);
-
         if ($sanitizedFilter->getInt('notificationId') !== null) {
             $body .= ' AND `notification`.notificationId = :notificationId ';
             $params['notificationId'] = $sanitizedFilter->getInt('notificationId');
@@ -184,6 +182,11 @@ class NotificationFactory extends BaseFactory
             $params['createToDt'] = $sanitizedFilter->getInt('createToDt');
         }
 
+        if ($sanitizedFilter->getInt('onlyReleased') === 1) {
+            $body .= ' AND `notification`.releaseDt <= :now ';
+            $params['now'] = Carbon::now()->format('U');
+        }
+
         // User Id?
         if ($sanitizedFilter->getInt('userId') !== null) {
             $body .= ' AND `notification`.notificationId IN (
@@ -207,6 +210,8 @@ class NotificationFactory extends BaseFactory
             )';
             $params['displayId'] = $sanitizedFilter->getInt('displayId');
         }
+
+        self::viewPermissionSql('Xibo\Entity\Notification', $body, $params, '`notification`.notificationId', '`notification`.userId', $filterBy);
 
         // Sorting?
         $order = '';

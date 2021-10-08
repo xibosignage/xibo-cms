@@ -660,7 +660,11 @@
             <table class="table agenda-table agenda-table-layouts" data-type="layouts" style="width: 100%;">
                 <thead>
                     <tr class="table-title">
+                     <% if (layouts.type == 4) { %>
+                        <th colspan="11" class="pr-2">
+                     <% } else { %>
                         <th colspan="10" class="pr-2">
+                     <% } %>
                             <% if (layouts.type == 1) { %>
                                 {% endverbatim %}{% trans "Layouts" %}{% verbatim %}</span>
                             <% } else if (layouts.type == 3) { %>
@@ -685,6 +689,9 @@
                         <th>{% trans "From Date" %}</th>
                         <th>{% trans "To Date" %}</th>
                         <th>{% trans "Layout Duration" %}</th>
+                        {%  verbatim %}<% if (layouts.type == 4) { %>{% endverbatim %}
+                        <th>{% trans "Share of Voice" %}</th>
+                        {% verbatim %}<% } %>{% endverbatim %}
                         <th>{% trans "Display Order" %}</th>
                         <th>{% trans "Priority" %}</th>
                         <th>{% trans "Visible" %}</th>
@@ -726,6 +733,9 @@
                             <% } %> 
                             
                             <td><%= layout.layoutDuration %></td>
+                            <% if (layout.shareOfVoice) { %>
+                            <td><%= layout.shareOfVoice %></td>
+                            <% } %>
                             <td><%= layout.layoutDisplayOrder %></td>
                             <td><%= layout.eventPriority %></td>
                             <%

@@ -1,6 +1,6 @@
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Daniel Garner
+ * Copyright (C) 2006-2021 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -275,6 +275,9 @@ $(document).ready(function() {
                         // Enter welcome screen
                         lD.welcomeScreen();
                     }
+                } else {
+                  // Already a draft, refresh our thumbnail.
+                  setTimeout(lD.uploadThumbnail, 1000 * 5);
                 }
 
                 // Setup helpers
@@ -601,6 +604,9 @@ lD.checkoutLayout = function() {
             */
 
             lD.selectObject();
+
+            // Add thumbnail
+            setTimeout(lD.uploadThumbnail, 1000 * 5);
         } else {
             // Login Form needed?
             if(res.login) {
@@ -1909,4 +1915,33 @@ lD.unlockLayout = function() {
     } else {
         lD.renderContainer(lD.viewer, lD.selectedObject);
     }
+}
+
+/**
+ * Take and upload a thumbnail
+ */
+lD.uploadThumbnail = function() {
+  const linkToAPI = urlsForApi.layout.addThumbnail;
+  const $viewer = lD.editorContainer.find('#layout-viewer');
+  const $player = $viewer.find('.layout-player');
+  if ($player.length > 0) {
+    const top = Math.floor($player.offset().top - $viewer.offset().top);
+    const left = Math.floor($player.offset().left - $viewer.offset().left);
+    let requestPath = linkToAPI.url.replace(':id', lD.layout.layoutId);
+    requestPath += '?trim=' + [
+      top,
+      left,
+      Math.ceil($player.width()),
+      Math.ceil($player.height())].join();
+
+    htmlToImage.toPng($viewer[0]).then(function(dataUrl) {
+      $.ajax({
+        url: requestPath,
+        type: "POST",
+        data: dataUrl
+      })
+    });
+  } else {
+    console.log("Viewer not ready");
+  }
 };

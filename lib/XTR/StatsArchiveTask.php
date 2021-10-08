@@ -157,7 +157,7 @@ class StatsArchiveTask implements TaskInterface
             'toDt'=> $toDt,
         ]);
 
-        $this->log->debug('Stats query run, create temporary file for export');
+        $this->log->debug('Get stats');
 
         // Create a temporary file for this
         $fileName = tempnam(sys_get_temp_dir(), 'stats');
@@ -165,18 +165,17 @@ class StatsArchiveTask implements TaskInterface
         $out = fopen($fileName, 'w');
         fputcsv($out, ['Stat Date', 'Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'Duration', 'Count', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId', 'Engagements']);
 
-        while ($row = $resultSet->getNextRow() ) {
-
+        $hasStatsToArchive = false;
+        while ($row = $resultSet->getNextRow()) {
+            $hasStatsToArchive = true;
             $sanitizedRow = $this->getSanitizer($row);
 
             if ($this->timeSeriesStore->getEngine() == 'mongodb') {
-
                 $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()) : null;
                 $start = Carbon::createFromTimestamp($row['start']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
                 $end = Carbon::createFromTimestamp($row['end']->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat());
                 $engagements = isset($row['engagements']) ? json_encode($row['engagements']) : '[]';
             } else {
-
                 $statDate = isset($row['statDate']) ? Carbon::createFromTimestamp($row['statDate'])->format(DateFormatHelper::getSystemFormat()) : null;
                 $start = Carbon::createFromTimestamp($row['start'])->format(DateFormatHelper::getSystemFormat());
                 $end = Carbon::createFromTimestamp($row['end'])->format(DateFormatHelper::getSystemFormat());
@@ -204,61 +203,66 @@ class StatsArchiveTask implements TaskInterface
         }
 
         fclose($out);
-        $this->log->debug('Temporary file written, zipping');
 
-        // Create a ZIP file and add our temporary file
-        $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/stats.csv.zip';
-        $zip = new \ZipArchive();
-        $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        if ($result !== true) {
-            throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+        if ($hasStatsToArchive) {
+            $this->log->debug('Temporary file written, zipping');
+
+            // Create a ZIP file and add our temporary file
+            $zipName = $this->config->getSetting('LIBRARY_LOCATION') . 'temp/stats.csv.zip';
+            $zip = new \ZipArchive();
+            $result = $zip->open($zipName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
+            if ($result !== true) {
+                throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: %s', $result));
+            }
+
+            $zip->addFile($fileName, 'stats.csv');
+            $zip->close();
+
+            $this->log->debug('Zipped to ' . $zipName);
+
+            // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
+            $this->store->select('SELECT 1', [], null, true);
+
+            $this->log->debug('MySQL connection refreshed if necessary');
+
+            // Upload to the library
+            $media = $this->mediaFactory->create(
+                __('Stats Export %s to %s - %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d'), Random::generateString(5)),
+                'stats.csv.zip',
+                'genericfile',
+                $this->archiveOwner->getId()
+            );
+            $media->save();
+
+            $this->log->debug('Media saved as ' . $media->name);
+
+            // Commit before the delete (the delete might take a long time)
+            $this->store->commitIfNecessary();
+
+            // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported
+            $options = [
+                'maxAttempts' => -1,
+                'statsDeleteSleep' => 1,
+                'limit' => 1000
+            ];
+
+            $this->log->debug('Delete stats for period: ' . $fromDt->toAtomString() . ' - ' . $toDt->toAtomString());
+
+            // Delete the stats, incrementally
+            $this->timeSeriesStore->deleteStats($toDt, $fromDt, $options);
+
+            // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
+            $this->store->select('SELECT 1', [], null, true);
+
+            $this->log->debug('MySQL connection refreshed if necessary');
+
+            $this->log->debug('Delete stats completed, export period completed.');
+        } else {
+            $this->log->debug('There are no stats to archive');
         }
-
-        $zip->addFile($fileName, 'stats.csv');
-        $zip->close();
 
         // Remove the CSV file
         unlink($fileName);
-
-        $this->log->debug('Zipped to ' . $zipName);
-
-        // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
-        $this->store->select('SELECT 1', [], null, true);
-
-        $this->log->debug('MySQL connection refreshed if necessary');
-
-        // Upload to the library
-        $media = $this->mediaFactory->create(
-            __('Stats Export %s to %s - %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d'), Random::generateString(5)),
-            'stats.csv.zip',
-            'genericfile',
-            $this->archiveOwner->getId()
-        );
-        $media->save();
-
-        $this->log->debug('Media saved as ' . $media->name);
-
-        // Commit before the delete (the delete might take a long time)
-        $this->store->commitIfNecessary();
-
-        // Set max attempts to -1 so that we continue deleting until we've removed all of the stats that we've exported
-        $options = [
-            'maxAttempts' => -1,
-            'statsDeleteSleep' => 1,
-            'limit' => 1000
-        ];
-
-        $this->log->debug('Delete stats for period: ' . $fromDt->toAtomString() . ' - ' . $toDt->toAtomString());
-
-        // Delete the stats, incrementally
-        $this->timeSeriesStore->deleteStats($toDt, $fromDt, $options);
-
-        // This all might have taken a long time indeed, so lets see if we need to reconnect MySQL
-        $this->store->select('SELECT 1', [], null, true);
-
-        $this->log->debug('MySQL connection refreshed if necessary');
-
-        $this->log->debug('Delete stats completed, export period completed.');
     }
 
     /**
@@ -272,11 +276,11 @@ class StatsArchiveTask implements TaskInterface
         if ($archiveOwner == null) {
             $admins = $this->userFactory->getSuperAdmins();
 
-            if (count($admins) <= 0)
+            if (count($admins) <= 0) {
                 throw new TaskRunException(__('No super admins to use as the archive owner, please set one in the configuration.'));
+            }
 
             $this->archiveOwner = $admins[0];
-
         } else {
             try {
                 $this->archiveOwner = $this->userFactory->getByName($archiveOwner);

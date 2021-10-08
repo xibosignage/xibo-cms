@@ -32,7 +32,10 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Media;
+use Xibo\Entity\SearchResult;
+use Xibo\Entity\SearchResults;
 use Xibo\Entity\Widget;
+use Xibo\Event\LibraryProviderEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Factory\DisplayFactory;
@@ -720,6 +723,96 @@ class Library extends Base
         $this->getState()->setData($mediaList);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/library/search",
+     *  operationId="librarySearchAll",
+     *  tags={"library"},
+     *  summary="Library Search All",
+     *  description="Search all library files from local and connectors",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/SearchResult")
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
+    function search(Request $request, Response $response)
+    {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+        $provider = $parsedQueryParams->getString('provider', ['default' => 'both']);
+
+        $searchResults = new SearchResults();
+        if ($provider === 'both' || $provider === 'local') {
+            // Construct the SQL
+            $mediaList = $this->mediaFactory->query(['media.name'], $this->gridRenderFilter([
+                'name' => $parsedQueryParams->getString('media'),
+                'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
+                'nameExact' => $parsedQueryParams->getString('nameExact'),
+                'type' => $parsedQueryParams->getString('type'),
+                'tags' => $parsedQueryParams->getString('tags'),
+                'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
+                'ownerId' => $parsedQueryParams->getInt('ownerId'),
+                'notPlayerSoftware' => 1,
+                'notSavedReport' => 1,
+                'assignable' => 1,
+                'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
+            ], $parsedQueryParams));
+
+            // Add some additional row content
+            foreach ($mediaList as $media) {
+                $searchResult = new SearchResult();
+                $searchResult->id = $media->mediaId;
+                $searchResult->source = 'local';
+                $searchResult->type = $media->mediaType;
+                $searchResult->title = $media->name;
+                $searchResult->description = '';
+
+                // Thumbnail
+                $module = $this->moduleFactory->createWithMedia($media);
+
+                if ($module->hasThumbnail()) {
+                    $searchResult->thumbnail = $this->urlFor($request,'library.download', ['id' => $media->mediaId], ['preview' => 1])
+                        . '&width=250&height=250&cache=1';
+                }
+
+                // Add the result
+                $searchResults->data[] = $searchResult;
+            }
+        }
+
+        if ($provider === 'both' || $provider === 'remote') {
+            $this->getLog()->debug('Dispatching event.');
+
+            // Hand off to any other providers that may want to provide results.
+            $event = new LibraryProviderEvent(
+                $searchResults,
+                $parsedQueryParams->getInt('start'),
+                $parsedQueryParams->getInt('length'),
+                $parsedQueryParams->getString('media'),
+                $parsedQueryParams->getString('type'),
+                $parsedQueryParams->getString('orientation')
+            );
+
+            try {
+                $this->getDispatcher()->dispatch($event->getName(), $event);
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Library search: Exception in dispatched event: ' . $exception->getMessage());
+                $this->getLog()->debug($exception->getTraceAsString());
+            }
+        }
+
+        return $response->withJson($searchResults);
     }
 
     /**
@@ -2207,7 +2300,7 @@ class Library extends Base
         }
 
         // Validate the URL
-        if (!v::url()->notEmpty()->validate(urldecode($url)) || !filter_var($url, FILTER_VALIDATE_URL)) {
+        if (!v::url()->notEmpty()->validate($url) || !filter_var($url, FILTER_VALIDATE_URL)) {
             throw new InvalidArgumentException(__('Provided URL is invalid'), 'url');
         }
 
@@ -2219,7 +2312,8 @@ class Library extends Base
         }
 
         // remote file size
-        $size = $this->getRemoteFileSize($url);
+        $downloadInfo = $this->getDownloadInfo($url);
+        $size = $downloadInfo['size'];
 
         if (ByteFormatter::toBytes(Environment::getMaxUploadSize()) < $size) {
             throw new InvalidArgumentException(sprintf(__('This file size exceeds your environment Max Upload Size %s'), Environment::getMaxUploadSize()), 'size');
@@ -2231,7 +2325,7 @@ class Library extends Base
         if (!empty($extension)) {
             $ext = $extension;
         } else {
-            $ext = $this->getRemoteFileExtension($url);
+            $ext = $downloadInfo['extension'];
         }
 
         // check if we have type provided in the request (available via API), if not get the module type from the extension
@@ -2278,15 +2372,14 @@ class Library extends Base
         return $this->render($request, $response);
     }
 
-    /**
-     * @param $url
-     * @return int
-     * @throws InvalidArgumentException
-     */
-    private function getRemoteFileSize($url)
+    private function getDownloadInfo($url)
     {
-        $size = -1;
+        $downloadInfo = [];
         $guzzle = new Client($this->getConfig()->getGuzzleProxy());
+
+        // first try to get the extension from pathinfo
+        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
+        $size = -1;
 
         try {
             $head = $guzzle->head($url);
@@ -2296,52 +2389,28 @@ class Library extends Base
                 $size = $value;
             }
 
+            if ($extension == '') {
+                $contentType = $head->getHeaderLine('Content-Type');
+
+                $extension = $contentType;
+
+                if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
+                    $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
+                    $extension = $amazonContentType;
+                }
+
+                // get the extension corresponding to the mime type
+                $mimeTypes = new MimeTypes();
+                $extension = $mimeTypes->getExtension($extension);
+            }
         } catch (RequestException $e) {
-            $this->getLog()->debug('Upload from url failed for URL ' . $url . ' with following message ' . $e->getMessage());
-            throw new InvalidArgumentException(('File not found'), 'url');
+            $this->getLog()->debug('Upload from url head request failed for URL ' . $url . ' with following message ' . $e->getMessage());
         }
 
-        if ($size <= 0) {
-            throw new InvalidArgumentException(('Cannot determine the file size'), 'size');
-        }
+        $downloadInfo['size'] = $size;
+        $downloadInfo['extension'] = $extension;
 
-        return (int)$size;
-    }
-
-    /**
-     * @param $url
-     * @return string
-     * @throws InvalidArgumentException
-     */
-    private function getRemoteFileExtension($url)
-    {
-        // first try to get the extension from pathinfo
-        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
-
-        // failing that get the extension from Content-Type header via Guzzle
-         if ($extension == '') {
-             $guzzle = new Client($this->getConfig()->getGuzzleProxy());
-             $head = $guzzle->head($url);
-             $contentType = $head->getHeaderLine('Content-Type');
-
-             $extension = $contentType;
-
-             if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
-                 $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
-                 $extension = $amazonContentType;
-             }
-
-             // get the extension corresponding to the mime type
-             $mimeTypes = new MimeTypes();
-             $extension = $mimeTypes->getExtension($extension);
-         }
-
-         // if we could not determine the file extension at this point, throw an error
-        if ($extension == '') {
-            throw new InvalidArgumentException(('Cannot determine the file extension'), 'extension');
-        }
-
-        return $extension;
+        return $downloadInfo;
     }
 
     /**

@@ -232,9 +232,6 @@ class DataSetFactory extends BaseFactory
              WHERE 1 = 1
         ';
 
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy, '`dataset`.permissionsFolderId');
-
         if ($parsedFilter->getInt('dataSetId') !== null) {
             $body .= ' AND dataset.dataSetId = :dataSetId ';
             $params['dataSetId'] = $parsedFilter->getInt('dataSetId');
@@ -269,6 +266,9 @@ class DataSetFactory extends BaseFactory
             $body .= ' AND dataset.folderId = :folderId ';
             $params['folderId'] = $parsedFilter->getInt('folderId');
         }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\DataSet', $body, $params, '`dataset`.dataSetId', '`dataset`.userId', $filterBy, '`dataset`.permissionsFolderId');
 
         // Sorting?
         $order = '';

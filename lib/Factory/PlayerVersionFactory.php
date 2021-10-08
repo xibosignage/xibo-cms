@@ -184,10 +184,6 @@ class PlayerVersionFactory extends BaseFactory
                   WHERE 1 = 1 
             ';
 
-
-        // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
-
         // by media ID
         if ($sanitizedFilter->getInt('mediaId', ['default' => -1]) != -1) {
             $body .= " AND media.mediaId = :mediaId ";
@@ -218,6 +214,9 @@ class PlayerVersionFactory extends BaseFactory
             $terms = explode(',', $sanitizedFilter->getString('playerShowVersion'));
             $this->nameFilter('player_software', 'playerShowVersion', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
         }
+
+        // View Permissions
+        $this->viewPermissionSql('Xibo\Entity\Media', $body, $params, '`media`.mediaId', '`media`.userId', $filterBy);
 
         // Sorting?
         $order = '';

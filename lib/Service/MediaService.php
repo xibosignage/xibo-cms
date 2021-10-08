@@ -274,6 +274,10 @@ class MediaService implements MediaServiceInterface
             mkdir($libraryFolder . '/attachment', 0777, true);
         }
 
+        if (!file_exists($libraryFolder . '/thumbs')) {
+            mkdir($libraryFolder . '/thumbs', 0777, true);
+        }
+
         // Check that we are now writable - if not then error
         if (!is_writable($libraryFolder)) {
             throw new ConfigurationException(__('Library not writable'));

@@ -865,6 +865,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "userAgent",
+                        "in": "formData",
+                        "description": "Custom user Agent value",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "refreshRate",
                         "in": "formData",
                         "description": "How often in seconds should this remote DataSet be refreshed",
@@ -1048,6 +1055,13 @@
                         "name": "customHeaders",
                         "in": "formData",
                         "description": "Comma separated string of custom HTTP headers",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "userAgent",
+                        "in": "formData",
+                        "description": "Custom user Agent value",
                         "required": false,
                         "type": "string"
                     },
@@ -12811,6 +12825,10 @@
                 },
                 "customHeaders": {
                     "description": "Comma separated string of custom HTTP headers",
+                    "type": "string"
+                },
+                "userAgent": {
+                    "description": "Custom User agent",
                     "type": "string"
                 },
                 "refreshRate": {

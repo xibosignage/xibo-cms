@@ -220,8 +220,11 @@ class Bandwidth implements ReportInterface
             $SQL .= ', bandwidthtype.name AS type ';
         }
 
-        $SQL .= ' FROM `bandwidth`
-                LEFT OUTER JOIN `display`
+        // For user with limited access, return only data for displays this user has permissions to.
+        $joinType = ($this->userFactory->getById($this->getUserId())->isSuperAdmin()) ? 'LEFT OUTER JOIN' : 'INNER JOIN';
+
+        $SQL .= ' FROM `bandwidth` ' .
+                $joinType . ' `display`
                 ON display.displayid = bandwidth.displayid AND display.displayId IN (' . implode(',', $displayIds) . ') ';
 
         if ($displayId != 0) {

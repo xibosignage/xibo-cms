@@ -195,13 +195,14 @@ class LayoutFactory extends BaseFactory
      * @param string $description
      * @param string|array $tags
      * @param string $code
+     * @param bool $addRegion
      * @return Layout
      *
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags, $code)
+    public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags, $code, $addRegion = true)
     {
         $resolution = $this->resolutionFactory->getById($resolutionId);
 
@@ -229,7 +230,33 @@ class LayoutFactory extends BaseFactory
         }
 
         // Add a blank, full screen region
-        $layout->regions[] = $this->regionFactory->create($ownerId, $name . '-1', $layout->width, $layout->height, 0, 0);
+        if ($addRegion) {
+            $layout->regions[] = $this->regionFactory->create($ownerId, $name . '-1', $layout->width, $layout->height,
+                0, 0);
+        }
+
+        return $layout;
+    }
+
+    /**
+     * @param \Xibo\Entity\Layout $layout
+     * @param int $width
+     * @param int $height
+     * @param int $top
+     * @param int $left
+     * @return \Xibo\Entity\Layout
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function addRegion(Layout $layout, int $width, int $height, int $top, int $left): Layout
+    {
+        $layout->regions[] = $this->regionFactory->create(
+            $layout->ownerId,
+            $layout->layout . '-' . count($layout->regions),
+            $layout->width,
+            $layout->height,
+            0,
+            0
+        );
 
         return $layout;
     }
@@ -1775,12 +1802,20 @@ class LayoutFactory extends BaseFactory
      * @param array $filterBy
      * @return array
      */
-    public function getLayoutCodes($filterBy = [])
+    public function getLayoutCodes($filterBy = []): array
     {
         $parsedFilter = $this->getSanitizer($filterBy);
         $params = [];
         $select = 'SELECT DISTINCT code ';
-        $body = ' FROM layout WHERE code IS NOT NULL ORDER BY code';
+        $body = ' FROM layout WHERE code IS NOT NULL ';
+
+        // get by Code
+        if ($parsedFilter->getString('code') != '') {
+            $body.= ' AND layout.code LIKE :code ';
+            $params['code'] = '%' . $parsedFilter->getString('code') . '%';
+        }
+
+        $order = ' ORDER BY code';
 
         // Paging
         $limit = '';
@@ -1788,8 +1823,8 @@ class LayoutFactory extends BaseFactory
             $limit = ' LIMIT ' . intval($parsedFilter->getInt('start'), 0) . ', ' . $parsedFilter->getInt('length', ['default' => 10]);
         }
 
-        $sql = $select . $body . $limit;
-        $entries = $this->getStore()->select($sql, []);
+        $sql = $select . $body . $order . $limit;
+        $entries = $this->getStore()->select($sql, $params);
 
         // Paging
         if ($limit != '' && count($entries) > 0) {
@@ -1976,16 +2011,13 @@ class LayoutFactory extends BaseFactory
 
         $body .= " WHERE 1 = 1 ";
 
-        // Logged in user view permissions
-        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
-
         // Layout Like
         if ($parsedFilter->getString('layout') != '') {
             $terms = explode(',', $parsedFilter->getString('layout'));
             $this->nameFilter('layout', 'layout', $terms, $body, $params, ($parsedFilter->getCheckbox('useRegexForName') == 1));
         }
 
-        if ($parsedFilter->getString('layoutExact', $filterBy) != '') {
+        if ($parsedFilter->getString('layoutExact') != '') {
             $body.= " AND layout.layout = :exact ";
             $params['exact'] = $parsedFilter->getString('layoutExact');
         }
@@ -2083,12 +2115,12 @@ class LayoutFactory extends BaseFactory
         }
 
         // get by Code
-        if ($parsedFilter->getString('code', $filterBy) != '') {
+        if ($parsedFilter->getString('code') != '') {
             $body.= " AND layout.code = :code ";
             $params['code'] = $parsedFilter->getString('code');
         }
 
-        if ($parsedFilter->getString('codeLike', $filterBy) != '') {
+        if ($parsedFilter->getString('codeLike') != '') {
             $body.= ' AND layout.code LIKE :codeLike ';
             $params['codeLike'] = '%' . $parsedFilter->getString('codeLike') . '%';
         }
@@ -2193,6 +2225,9 @@ class LayoutFactory extends BaseFactory
             $body .= ' AND layout.orientation = :orientation ';
             $params['orientation'] = $parsedFilter->getString('orientation');
         }
+
+        // Logged in user view permissions
+        $this->viewPermissionSql('Xibo\Entity\Campaign', $body, $params, 'campaign.campaignId', 'layout.userId', $filterBy, 'campaign.permissionsFolderId');
 
         // Sorting?
         $order = '';
