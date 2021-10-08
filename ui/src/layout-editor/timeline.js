@@ -486,7 +486,6 @@ Timeline.prototype.moveWidgetInRegion = function(regionId, widgetId, moveType) {
  * @param {Object} layout - the layout object to be rendered
  */
 Timeline.prototype.render = function(layout) {
-
     const app = this.parent;
     const self = this;
     const readOnlyModeOn = (app.readOnlyMode != undefined && app.readOnlyMode === true);
@@ -535,6 +534,19 @@ Timeline.prototype.render = function(layout) {
     // Maintain the previous scroll position
     regionsContainer.scrollLeft(this.properties.scrollPosition * regionsContainer.find("#regions").width());
     regionsContainer.scrollTop(this.properties.scrollVerticalPosition);
+
+    // Timeline toggler
+    this.DOMObject.parents('.toggle-panel').find('.toggle').off().click(function(e) {
+        e.stopPropagation();
+        $(this).parents('.toggle-panel').toggleClass('opened');
+
+        // Refresh navigators and viewer
+        if (lD.navigatorMode) {
+            lD.renderContainer(lD.navigator);
+        } else {
+            lD.renderContainer(lD.viewer, lD.selectedObject);
+        }
+    });
 
     // Enable hover and select for each layout/region
     this.DOMObject.find('.selectable:not(.ui-draggable-dragging)').click(function(e) {
@@ -693,7 +705,7 @@ Timeline.prototype.render = function(layout) {
                 self.beingSorted = true;
 
                 // Hide the trash container
-                lD.topbar.DOMObject.find('#trashContainer').removeClass('active');
+                lD.toolbar.DOMObject.find('#trashContainer').removeClass('active');
 
                 // Get element width and timeline zoom/scale
                 let zoom = self.DOMObject.find('#regions').data('zoom') / 100;

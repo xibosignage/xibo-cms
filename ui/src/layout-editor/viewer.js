@@ -2,19 +2,16 @@
 
 // Load templates
 const viewerTemplate = require('../templates/viewer.hbs');
-const viewerNavbarTemplate = require('../templates/viewer-navbar.hbs');
 const viewerLayoutPreview = require('../templates/viewer-layout-preview.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 
 /**
  * Viewer contructor
  * @param {object} container - the container to render the viewer to
- * @param {object} navbarContainer - the container to render the navbar to
  */
-let Viewer = function(parent, container, navbarContainer) {
+let Viewer = function(parent, container) {
     this.parent = parent;
     this.DOMObject = container;
-    this.navbarContainer = navbarContainer;
 
     // Element dimensions inside the viewer container
     this.containerElementDimensions = null;
@@ -32,7 +29,6 @@ let Viewer = function(parent, container, navbarContainer) {
  * @returns {object} Object containing dimensions for the object
  */
 Viewer.prototype.scaleElement = function(element, container) {
-    
     // Get container dimensions
     const containerDimensions = {
         width: container.width(),
@@ -90,12 +86,6 @@ Viewer.prototype.render = function(element) {
     // Reset container properties
     this.DOMObject.css('background', '#111');
     this.DOMObject.css('border', 'none');
-
-    // Reset Navbar if exists
-    if(this.navbarContainer != null && this.navbarContainer != undefined) {
-        this.navbarContainer.removeClass();
-        this.navbarContainer.html('');
-    }
     
     // Render layout or region
     if(element.type === 'layout') {
@@ -103,18 +93,17 @@ Viewer.prototype.render = function(element) {
     } else { // Render Widgets or empty region
         this.renderRegion(element, this.DOMObject);
     }
+
+    // Handle fullscreen button
+    this.DOMObject.parent().find('#fullscreenBtn').off().click(function() {
+        this.toggleFullscreen();
+    }.bind(this));
 };
 
 /**
  * Render region/widget in container
  */
 Viewer.prototype.renderLayout = function(layout, container) {
-
-    const app = this.parent;
-
-    let requestPath = urlsForApi.layout.preview.url;
-    requestPath = requestPath.replace(':id', layout[layout.type + 'Id']);
-
     // Apply viewer scale to the layout
     this.containerElementDimensions = this.scaleElement(layout, container);
 
@@ -131,11 +120,6 @@ Viewer.prototype.renderLayout = function(layout, container) {
 
     // Replace container html
     container.html(html);
-
-    // Render navbar
-    this.renderNavbar(layout, {
-        requestPath: requestPath
-    });
 
     // Render background image or color to the preview
     if(layout.backgroundImage === null) {
@@ -163,9 +147,7 @@ Viewer.prototype.renderLayout = function(layout, container) {
  * Render region/widget in container
  */
 Viewer.prototype.renderRegion = function(element, container, smallPreview = false, widgetIndex = 1) {
-
     const self = this;
-    const app = this.parent;
     
     // If there was still a render request, abort it
     if(this.renderRequest != undefined && !smallPreview) {
@@ -285,8 +267,8 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
             });
         } else {
 
-            // Render navbar
-            this.renderNavbar(element, res);
+            //Update navbar
+            lD.bottombar.render(lD.selectedObject, res);
 
             // Calculate and render background image or color to the preview
             this.calculateBackground(containerElementDimensions, targetElement, lD.layout);
@@ -306,98 +288,6 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
             container.html(errorMessagesTrans.previewFailed);
         }
 
-    }.bind(this));
-};
-
-/**
- * Render Navbar
- */
-Viewer.prototype.renderNavbar = function(element, data) {
-
-    const app = this.parent;
-    const readOnlyModeOn = (app.readOnlyMode != undefined && app.readOnlyMode === true);
-    
-    // Stop if navbar container does not exist
-    if(this.navbarContainer === null || this.navbarContainer === undefined || (element.type == 'widget' && data.extra.empty)) {
-        return;
-    }
-
-    if(element.type == 'widget') {
-
-        const currentItem = element.index;
-        const parentRegion = (element.drawerWidget) ? lD.getElementByTypeAndId('drawer') : lD.getElementByTypeAndId('region', element.regionId);
-        const totalItems = (parentRegion != undefined && parentRegion.numWidgets != undefined) ? parentRegion.numWidgets : 1;
-
-        // Render widget toolbar
-        this.navbarContainer.html(viewerNavbarTemplate(
-            {
-                currentItem: currentItem,
-                totalItems: totalItems,
-                extra: data.extra,
-                type: element.type,
-                pagingEnable: (totalItems > 1),
-                readOnlyModeOn: readOnlyModeOn,
-                trans: viewerTrans
-            }
-        ));
-
-        // Paging controls
-        if(data.extra && totalItems > 1) {
-            this.navbarContainer.find('#left-btn').prop('disabled', (currentItem <= 1)).click(function() {
-                lD.selectObject($('#' + element.getNextWidget(true).id));
-            }.bind(this));
-
-            this.navbarContainer.find('#right-btn').prop('disabled', (currentItem >= totalItems)).click(function() {
-                lD.selectObject($('#' + element.getNextWidget().id));
-            }.bind(this));
-        }
-    } else if(element.type == 'layout') {
-        // Render layout  toolbar
-        this.navbarContainer.html(viewerNavbarTemplate(
-            {
-                type: element.type,
-                name: element.name,
-                trans: viewerTrans,
-                readOnlyModeOn: readOnlyModeOn,
-                renderLayout: true
-            }
-        ));
-
-        // Handle play button ( play or pause )
-        this.navbarContainer.find('#play-btn').click(function() {
-            if(this.previewPlaying) {
-                app.renderContainer(app.viewer, app.layout);
-            } else {
-                this.playPreview(data.requestPath, this.containerElementDimensions);
-                this.navbarContainer.find('#play-btn i').removeClass('fa-play-circle').addClass('fa-stop-circle').attr('title', layoutDesignerTrans.stopPreviewLayout);
-                this.previewPlaying = true;
-            }
-        }.bind(this));
-
-        // Handle navigator toggle button
-        this.navbarContainer.find('#navigator-edit-btn').click(function() {
-            app.toggleNavigatorEditing(true);
-        }.bind(this));
-    } else if(element.type == 'region') {
-        // Render region toolbar
-        this.navbarContainer.html(viewerNavbarTemplate(
-            {
-                type: element.type,
-                name: element.name,
-                readOnlyModeOn: readOnlyModeOn,
-                trans: viewerTrans
-            }
-        ));
-    }
-
-    // Handle fullscreen button
-    this.navbarContainer.find('#fs-btn').click(function() {
-        this.toggleFullscreen();
-    }.bind(this));
-
-    // Handle back button
-    this.navbarContainer.find('#back-btn').click(function() {
-        lD.selectObject();
     }.bind(this));
 };
 
@@ -426,7 +316,8 @@ Viewer.prototype.toggleFullscreen = function() {
         this.closeInlineEditorContent();
     }
     
-    this.DOMObject.parent().toggleClass('fullscreen');
+    this.DOMObject.parents('#layout-viewer-container').toggleClass('fullscreen');
+    this.parent.editorContainer.toggleClass('fullscreen-mode');
     this.render(lD.selectedObject, lD.layout);
 };
 
@@ -460,13 +351,13 @@ Viewer.prototype.setupInlineEditor = function(textAreaId, show = true, customNoD
 Viewer.prototype.showInlineEditor = function() {
 
     // Show closed editor controls
-    this.DOMObject.parent().find('.inline-editor-closed').show();
+    lD.editorContainer.find('.inline-editor-closed').show();
 
     // Show form elements
-    lD.propertiesPanel.DOMObject.find('.inline-editor-show').show();
+    lD.editorContainer.find('.inline-editor-show').show();
 
     // Hide form editor
-    lD.propertiesPanel.DOMObject.find('.inline-editor-hide').hide();
+    lD.editorContainer.find('.inline-editor-hide').hide();
 
     // Handle click to open editor
     this.DOMObject.find('#inline-editor-overlay').off().click(function() {
@@ -482,18 +373,15 @@ Viewer.prototype.showInlineEditor = function() {
  */
 Viewer.prototype.hideInlineEditor = function() {
     // Hide inline editor controls
-    this.DOMObject.parent().find(
+    lD.editorContainer.find(
         '.inline-editor-opened, ' +
         '.inline-editor-closed').hide();
-    
-    // Show widget info
-    this.DOMObject.parent().find('.inline-editor-hide').show();
 
     // Hide form elements
-    lD.propertiesPanel.DOMObject.find('.inline-editor-show').hide();
+    lD.editorContainer.find('.inline-editor-show').hide();
 
     // Show inline editor message
-    lD.propertiesPanel.DOMObject.find('.inline-editor-hide').show();
+    lD.editorContainer.find('.inline-editor-hide').show();
 
     // If opened, needs to be saved/closed
     if(this.inlineEditorState == 2) {
@@ -513,9 +401,9 @@ Viewer.prototype.hideInlineEditor = function() {
  */
 Viewer.prototype.editInlineEditorToggle = function(show = true) {
     // Toggle open/close inline editor classes
-    this.DOMObject.parent().find('.inline-editor-opened').toggle(show);
-    this.DOMObject.parent().find('.inline-editor-hide').toggle(!show);
-    this.navbarContainer.parent().find('.inline-editor-closed').toggle(!show);
+    lD.editorContainer.find('.inline-editor-opened').toggle(show);
+    lD.editorContainer.find('.inline-editor-hide').toggle(!show);
+    lD.editorContainer.find('.inline-editor-closed').toggle(!show);
 
     // Load content if editor is toggled on
     if(show) {
@@ -558,15 +446,14 @@ Viewer.prototype.openInlineEditorContent = function() {
     controlClones.show();
 
     // Show fullscreen editor save button
-    const $saveEditorButton = this.DOMObject.parents('#layout-viewer-container.fullscreen').find('#inline-editor-save').show();
-    this.navbarContainer.addClass('fs-edit');
+    lD.bottombar.DOMObject.addClass('fs-edit');
 
-    $saveEditorButton.off().click(function() {
+    lD.bottombar.DOMObject.find('#inline-editor-save').off().click(function() {
         lD.propertiesPanel.DOMObject.find('button[data-action="save"]').trigger('click');
     });
 
-    // Append controls to navbar
-    this.navbarContainer.find('.inline-editor-templates').empty().append(controlClones);
+    // Append controls to viewer
+    this.DOMObject.parents('#layout-viewer-container').find('#inline-editor-templates').empty().append(controlClones);
 
     // Setup inline CKEditor
     formHelpers.setupCKEditor(this.DOMObject.parent(), null, 'viewer_' + lD.propertiesPanel.inlineEditorId, true, lD.propertiesPanel.customNoDataMessage, true);
@@ -593,7 +480,7 @@ Viewer.prototype.closeInlineEditorContent = function() {
     // Copy data back to properties panel text area
     lD.propertiesPanel.DOMObject.find('#' + lD.propertiesPanel.inlineEditorId).val(data);
 
-    this.navbarContainer.removeClass('fs-edit');
+    lD.bottombar.DOMObject.removeClass('fs-edit');
 
     // Update state
     this.inlineEditorState = 1;

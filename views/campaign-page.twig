@@ -72,6 +72,16 @@
 
                             {% set title %}{% trans "Layout ID" %}{% endset %}
                             {{ inline.number("layoutId", title, layoutId) }}
+
+                            {% set title %}{% trans "Cycle Based Playback" %}{% endset %}
+                            {% set enabled %}{% trans "Enabled" %}{% endset %}
+                            {% set disabled %}{% trans "Disabled" %}{% endset %}
+                            {% set options = [
+                                { optionid: "", option: "" },
+                                { optionid: 0, option: disabled},
+                                { optionid: 1, option: enabled}
+                            ] %}
+                            {{ inline.dropdown("cyclePlaybackEnabled", "single", title, "", options, "optionid", "option") }}
                         </form>
                     </div>
                 </div>
@@ -97,6 +107,8 @@
                                         <th>{% trans "# Layouts" %}</th>
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
                                         <th>{% trans "Duration" %}</th>
+                                        <th>{% trans "Cycle based Playback" %}</th>
+                                        <th>{% trans "Play Count" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
                                 </thead>
@@ -156,6 +168,39 @@
                         "render": dataTableTimeFromSeconds
                     },
                     {
+                        "name": "cyclePlaybackEnabled",
+                        responsivePriority: 3,
+                        "data": function (data, type) {
+                            if (type != "display") {
+                                return data.cyclePlaybackEnabled;
+                            }
+
+                            var icon = "";
+                            if (data.cyclePlaybackEnabled == 1) {
+                                icon = "fa-check";
+                            } else {
+                                icon = "fa-times";
+                            }
+
+                            return '<span class="fa ' + icon + '"></span>';
+                        },
+                    },
+                    {
+                        "name": "playCount",
+                        responsivePriority: 3,
+                        "data": function (data, type) {
+                            if (type != 'display') {
+                                return data.playCount;
+                            }
+
+                            if (!data.playCount) {
+                                return "";
+                            } else {
+                               return data.playCount;
+                            }
+                        }
+                    },
+                    {
                         "orderable": false,
                         responsivePriority: 1,
                         "data": dataTableButtonsColumn
@@ -173,6 +218,9 @@
         // Callback for the media form
         // Fired when the media form opens
         function campaignAssignLayoutsFormOpen(dialog) {
+            // setup checkbox behaviour for cycle based playback
+            formHelpers.setupCheckboxInputFields($(dialog).find('form:not(.form-inline)'), '#cyclePlaybackEnabled', '.cycle-based-playback');
+
             // Layout element template
             var layoutElementTemplate = Handlebars.compile($("#campaign-assign-layout").html());
 

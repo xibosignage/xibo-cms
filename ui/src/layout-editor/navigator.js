@@ -2,7 +2,6 @@
 
 // Load templates
 const navigatorLayoutTemplate = require('../templates/navigator-layout.hbs');
-const navigatorLayoutNavbarTemplate = require('../templates/navigator-layout-navbar.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 
 const regionDefaultValues = {
@@ -49,10 +48,7 @@ Navigator.prototype.render = function() {
     // Append layout html to the main div
     this.DOMObject.html(navigatorLayoutTemplate(Object.assign(
         {},
-        scaledLayout, 
-        {
-            trans: navigatorTrans
-        }
+        scaledLayout
     )));
 
     // Make regions draggable and resizable if navigator's on edit mode
@@ -187,133 +183,10 @@ Navigator.prototype.render = function() {
         }
     }.bind(this));
 
-    // Render navbar
-    this.renderNavbar();
-};
-
-/**
- * Render Navbar
- */
-Navigator.prototype.renderNavbar = function() {
-
-    const self = this;
-    const app = this.parent;
-
-    // Return if navbar does not exist
-    if(this.navbarContainer === null) {
-        return;
-    }
-
-    // Check if trash bin is active
-    let trashBinActive = lD.selectedObject.isDeletable && lD.selectedObject.type == 'region' && (lD.readOnlyMode === undefined || lD.readOnlyMode === false);
-
-
-    this.navbarContainer.html(navigatorLayoutNavbarTemplate(
-        {
-            trans: navigatorTrans,
-            trashBinActive: trashBinActive
-        }
-    ));
-
-    // Navbar buttons
-    this.navbarContainer.find('#close-btn').click(function() {
-        if (self.DOMObject.parent().remove('fullscreen')) {
-            self.DOMObject.parent().removeClass('fullscreen')
-        }
-        lD.toggleNavigatorEditing(false);
-    });
-
     // Handle fullscreen button
-    this.navbarContainer.find('#fs-btn').click(function() {
+    this.DOMObject.parent().find('#fullscreenBtn').off().click(function() {
         this.toggleFullscreen();
     }.bind(this));
-
-    this.navbarContainer.find('#add-btn').click(function() {
-        lD.common.showLoadingScreen();
-
-        if(lD.selectedObject.type == 'region') {
-            self.saveRegionPropertiesPanel();
-            lD.selectObject();
-        }
-
-        lD.layout.addElement('region').then((res) => { // Success
-
-            lD.common.hideLoadingScreen(); 
-
-            // Behavior if successful 
-            toastr.success(res.message);
-
-            // Reload with the new added element
-            lD.selectedObject.id = 'region_' + res.data.regionId;
-            lD.selectedObject.type = 'region';
-            lD.reloadData(lD.layout, true);
-        }).catch((error) => { // Fail/error
-
-            lD.common.hideLoadingScreen(); 
-            // Show error returned or custom message to the user
-            let errorMessage = '';
-
-            if(typeof error == 'string') {
-                errorMessage = error;
-            } else {
-                errorMessage = error.errorThrown;
-            }
-
-            toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
-        });
-    });
-
-
-    this.navbarContainer.find('#delete-btn').click(function() {
-
-        if(lD.selectedObject.isDeletable) {
-
-            bootbox.confirm({
-                title: editorsTrans.deleteTitle.replace('%obj%', 'region'),
-                message: editorsTrans.deleteConfirm,
-                buttons: {
-                    confirm: {
-                        label: editorsTrans.yes,
-                        className: 'btn-danger btn-bb-confirm'
-                    },
-                    cancel: {
-                        label: editorsTrans.no,
-                        className: 'btn-white btn-bb-cancel'
-                    }
-                },
-                callback: function(result) {
-                    if(result) {
-
-                        lD.common.showLoadingScreen();
-
-                        // Delete element from the layout
-                        lD.layout.deleteElement(lD.selectedObject.type, lD.selectedObject.regionId).then((res) => { // Success
-
-                            lD.common.hideLoadingScreen();
-
-                            // Behavior if successful 
-                            toastr.success(res.message);
-                            lD.reloadData(lD.layout);
-                        }).catch((error) => { // Fail/error
-
-                            lD.common.hideLoadingScreen();
-
-                            // Show error returned or custom message to the user
-                            let errorMessage = '';
-
-                            if(typeof error == 'string') {
-                                errorMessage = error;
-                            } else {
-                                errorMessage = error.errorThrown;
-                            }
-
-                            toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
-                        });
-                    }
-                }
-            }).attr('data-test', 'deleteRegionModal');
-        }
-    });
 };
 
 Navigator.prototype.saveRegionPropertiesPanel = function() {
@@ -378,7 +251,9 @@ Navigator.prototype.saveRegionPropertiesPanel = function() {
  * Toggle fullscreen
  */
 Navigator.prototype.toggleFullscreen = function() {
-    this.DOMObject.parent().toggleClass('fullscreen');
+    this.DOMObject.parents('#layout-navigator').toggleClass('fullscreen');
+    this.parent.editorContainer.toggleClass('fullscreen-mode');
+
     this.render();
 };
 

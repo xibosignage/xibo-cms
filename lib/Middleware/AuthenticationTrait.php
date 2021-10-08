@@ -116,7 +116,7 @@ trait AuthenticationTrait
      * @param int $userId
      * @return \Xibo\Entity\User
      */
-    protected function getUser($userId)
+    protected function getUser($userId, $ip)
     {
         $container = $this->app->getContainer();
         $user = $container->get('userFactory')->getById($userId);
@@ -129,6 +129,7 @@ trait AuthenticationTrait
 
         // Configure the log service with the logged in user id
         $container->get('logService')->setUserId($user->userId);
+        $container->get('logService')->setIpAddress($ip);
 
         return $user;
     }

@@ -1,18 +1,76 @@
 @import "variables";
 
-#layout-editor-bottombar {
-    display: none; // Hidden for now
+#layout-editor-bottombar  {
     flex: 1 100%;
+    height: 38px;
     
     nav {
         border: none;
+        color: $xibo-color-blue-pastel;
+        padding: 0 16px !important;
         min-height: 30px;
+        font-size: 0;
         z-index: 2;
         margin: 0;
-        background: $xibo-color-pure-white;
-        color: $xibo-color-primary;
+        background: $xibo-color-white-pure;
         right: 0;
         left: 0;
         border-radius: 0;
+
+        span, .info {
+            font-size: 1rem;
+        }
+
+        .btn {
+            color: $xibo-color-blue-pastel;
+            height: 38px;
+            width: 38px;
+            font-size: 1.2rem;
+            border: none;
+            border-radius: 0;
+
+            &:hover {
+                color: $xibo-color-white;
+                background-color: $xibo-color-blue-pastel;
+            }
+
+            &:disables, &.disabled {
+                opacity: 0.4;
+            }
+        }
+
+        .hide-on-fs {
+            display: inline-block;
+        }
+
+        .show-on-fs {
+            display: none;
+        }
+    }
+
+    #inline-editor-save {
+        display: none;
+    }
+}
+
+#layout-editor.fullscreen-mode #layout-editor-bottombar {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    z-index: 1060;
+
+    &.fs-edit {
+        #inline-editor-save {
+            display: inline-block;
+        }  
+    }
+
+    .hide-on-fs {
+        display: none;
+    }
+
+    .show-on-fs {
+        display: inline-block;
     }
 }

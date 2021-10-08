@@ -92,6 +92,11 @@ class ResolutionFactory extends BaseFactory
         return $resolutions[0];
     }
 
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
+    }
+
     /**
      * Get Resolution by Dimensions
      * @param double $width
@@ -178,6 +183,11 @@ class ResolutionFactory extends BaseFactory
             } else {
                 $body .= ' AND intended_width > intended_height ';
             }
+        }
+
+        if ($parsedFilter->getInt('userId') !== null) {
+            $body .= ' AND `resolution`.userId = :userId ';
+            $params['userId'] = $parsedFilter->getInt('userId');
         }
 
         // Sorting?

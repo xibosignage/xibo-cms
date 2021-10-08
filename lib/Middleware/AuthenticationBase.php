@@ -67,7 +67,7 @@ abstract class AuthenticationBase implements Middleware, AuthenticationInterface
             // Need to check
             if ($user->hasIdentity() && !$this->getSession()->isExpired()) {
                 // Replace our user with a fully loaded one
-                $user = $this->getUser($user->userId);
+                $user = $this->getUser($user->userId, $request->getAttribute('ip_address'));
 
                 // We are authenticated, override with the populated user object
                 $this->setUserForRequest($user);

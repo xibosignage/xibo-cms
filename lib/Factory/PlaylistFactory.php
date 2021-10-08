@@ -176,6 +176,7 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.isDynamic,
                 `playlist`.filterMediaName,
                 `playlist`.filterMediaTags,
+                `playlist`.maxNumberOfItems,
                 `playlist`.requiresDurationUpdate,
                 `playlist`.enableStat,
                 `playlist`.folderId,
@@ -408,7 +409,7 @@ class PlaylistFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic']]);
+            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic', 'maxNumberOfItems']]);
             $entries[] = $playlist;
         }
 

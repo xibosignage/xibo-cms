@@ -45,7 +45,7 @@ class Bandwidth
     public static $NOTIFYSTATUS = 7;
     public static $SUBMITSTATS = 8;
     public static $SUBMITLOG = 9;
-    public static $BLACKLIST = 10;
+    public static $REPORTFAULT = 10;
     public static $SCREENSHOT = 11;
 
     public $displayId;

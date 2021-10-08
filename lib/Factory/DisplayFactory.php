@@ -168,6 +168,16 @@ class DisplayFactory extends BaseFactory
                 $newSortOrder[] = '`clientVersion` DESC';
                 continue;
             }
+
+            if ($sort == '`isCmsTransferInProgress`') {
+                $newSortOrder[] = '`newCmsAddress`';
+                continue;
+            }
+
+            if ($sort == '`isCmsTransferInProgress` DESC') {
+                $newSortOrder[] = '`newCmsAddress` DESC';
+                continue;
+            }
             $newSortOrder[] = $sort;
         }
         $sortOrder = $newSortOrder;
@@ -233,7 +243,8 @@ class DisplayFactory extends BaseFactory
                   `display`.resolution,
                   `display`.commercialLicence,
                   `display`.teamViewerSerial,
-                  `display`.webkeySerial
+                  `display`.webkeySerial,
+                  (SELECT COUNT(*) FROM player_faults WHERE player_faults.displayId = display.displayId) AS countFaults
               ';
 
         if ($parsedBody->getCheckbox('showTags') === 1) {
@@ -549,7 +560,8 @@ class DisplayFactory extends BaseFactory
                     'clientCode',
                     'screenShotRequested',
                     'lastCommandSuccess',
-                    'bandwidthLimit'
+                    'bandwidthLimit',
+                    'countFaults'
                 ]
             ]);
             $display->overrideConfig = ($display->overrideConfig == '') ? [] : json_decode($display->overrideConfig, true);

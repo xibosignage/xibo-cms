@@ -5,7 +5,7 @@
     min-height: 40px;
     z-index: 2;
     margin: 0;
-    background: $xibo-color-pure-white;
+    background: $xibo-color-white-pure;
     color: $xibo-color-primary;
     right: 0;
     left: 0;
@@ -53,7 +53,6 @@
 
         #layout-info-status {
             float: left;
-            margin: 0 6px;
             padding: 0 5px;
             min-width: 24px;
 

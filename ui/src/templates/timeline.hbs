@@ -1,29 +1,30 @@
 <div id="timeline-container">
-
-    {{!-- Controls --}}
-    <div id="timeline-controls">
-        <a id="zoomInBtn" {{properties.zoomInDisable}} data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomIn}}">
-            <i class="fas fa-search-plus"></i>
-        </a>
-        <a id="findSelectedBtn" {{properties.zoomFindWidgetDisabled}} data-toggle="tooltip" data-container="#layout-timeline" data-container="#layout-editor"
-            data-title="{{trans.zoomFindSelected}}">
-            <i class="fas fa-search-location"></i>
-        </a>
-        <a id="zoomReset" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.resetZoom}}">
-            <i class="fas fa-search"></i>
-        </a>
-        <a id="zoomOutBtn" {{properties.zoomOutDisable}} data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomOut}}">
-            <i class="fas fa-search-minus"></i>
-        </a>
-        <span id="zoomTimeSpan" class="pull-right" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomDelta}}">
-            <i class="fa fa-hourglass-o"></i>&nbsp;{{properties.deltaTimeFormatted}}
-        </span>
-    </div>
-    {{!-- Regions info --}}
-    <div id="regions-info">
-        {{#each layout.regions}}
-            {{> timeline-region-info trans=../trans readOnlyModeOn=../readOnlyModeOn}}
-        {{/each}}
+    <div class="timeline-left-panel">
+        {{!-- Controls --}}
+        <div id="timeline-controls">
+            <a id="zoomInBtn" {{properties.zoomInDisable}} data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomIn}}">
+                <i class="fas fa-search-plus"></i>
+            </a>
+            <a id="findSelectedBtn" {{properties.zoomFindWidgetDisabled}} data-toggle="tooltip" data-container="#layout-timeline" 
+                data-title="{{trans.zoomFindSelected}}">
+                <i class="fas fa-search-location"></i>
+            </a>
+            <a id="zoomReset" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.resetZoom}}">
+                <i class="fas fa-search"></i>
+            </a>
+            <a id="zoomOutBtn" {{properties.zoomOutDisable}} data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomOut}}">
+                <i class="fas fa-search-minus"></i>
+            </a>
+            <span id="zoomTimeSpan" class="pull-right" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomDelta}}">
+                <i class="fa fa-hourglass-o"></i>&nbsp;{{properties.deltaTimeFormatted}}
+            </span>
+        </div>
+        {{!-- Regions info --}}
+        <div id="regions-info">
+            {{#each layout.regions}}
+                {{> timeline-region-info trans=../trans readOnlyModeOn=../readOnlyModeOn}}
+            {{/each}}
+        </div>
     </div>
 
     <div id="regions-container">

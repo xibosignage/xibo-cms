@@ -21,7 +21,6 @@
  */
 namespace Xibo\Entity;
 
-
 use Carbon\Carbon;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -90,6 +89,12 @@ class Playlist implements \JsonSerializable
      * @var string
      */
     public $filterMediaTags;
+
+    /**
+     * @SWG\Property(description="Maximum number of Media items matching dynamic Playlist filters")
+     * @var int
+     */
+    public $maxNumberOfItems;
 
     /**
      * @var string
@@ -336,6 +341,10 @@ class Playlist implements \JsonSerializable
             if (count($duplicates) > 0) {
                 throw new DuplicateEntityException(sprintf(__("You already own a Playlist called '%s'. Please choose another name."), $this->name));
             }
+        }
+
+        if ($this->isDynamic === 1 && $this->maxNumberOfItems > $this->config->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT')) {
+            throw new InvalidArgumentException(__('Maximum number of items cannot exceed the limit set in CMS Settings'), 'maxNumberOfItems');
         }
     }
 
@@ -807,8 +816,8 @@ class Playlist implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $sql = '
-        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`, `folderId`, `permissionsFolderId`) 
-          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat, :folderId, :permissionsFolderId)
+        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `maxNumberOfItems`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`, `folderId`, `permissionsFolderId`) 
+          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :maxNumberOfItems, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat, :folderId, :permissionsFolderId)
         ';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
@@ -817,6 +826,7 @@ class Playlist implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'filterMediaName' => $this->filterMediaName,
             'filterMediaTags' => $this->filterMediaTags,
+            'maxNumberOfItems' => $this->isDynamic == 0 ? null : $this->maxNumberOfItems,
             'createdDt' => $time,
             'modifiedDt' => $time,
             'requiresDurationUpdate' => ($this->requiresDurationUpdate === null) ? 0 : $this->requiresDurationUpdate,
@@ -849,6 +859,7 @@ class Playlist implements \JsonSerializable
                 `isDynamic` = :isDynamic,
                 `filterMediaName` = :filterMediaName,
                 `filterMediaTags` = :filterMediaTags,
+                `maxNumberOfItems` = :maxNumberOfItems,
                 `requiresDurationUpdate` = :requiresDurationUpdate,
                 `enableStat` = :enableStat,
                 `folderId` = :folderId,
@@ -865,6 +876,7 @@ class Playlist implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'filterMediaName' => $this->filterMediaName,
             'filterMediaTags' => $this->filterMediaTags,
+            'maxNumberOfItems' => $this->maxNumberOfItems,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'requiresDurationUpdate' => $this->requiresDurationUpdate,
             'enableStat' => $this->enableStat,

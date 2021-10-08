@@ -101,7 +101,7 @@ describe('Playlist Editor (Populated)', function() {
         });
     });
 
-    it('should delete a widget using the toolbar bin', () => {
+    it.skip('should delete a widget using the toolbar bin', () => {
         cy.server();
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
@@ -127,7 +127,7 @@ describe('Playlist Editor (Populated)', function() {
         });
     });
 
-    it('should add an audio clip to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
+    it.skip('should add an audio clip to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
         
         cy.populateLibraryWithMedia();
 
@@ -136,7 +136,7 @@ describe('Playlist Editor (Populated)', function() {
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
         // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
         cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         // Open the audio form
@@ -169,7 +169,7 @@ describe('Playlist Editor (Populated)', function() {
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
         
         // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
         cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         // Open the expiry form
@@ -207,7 +207,7 @@ describe('Playlist Editor (Populated)', function() {
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
         // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
         cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         // Open the transition form
@@ -234,13 +234,13 @@ describe('Playlist Editor (Populated)', function() {
         });
     });
 
-    it('check if the form to attach a transition to a widget by click to add appears', () => {
+    it.skip('check if the form to attach a transition to a widget by click to add appears', () => {
         // Create and alias for reload playlist
         cy.server();
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
         // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
         cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         // Activate the Add button

@@ -40,11 +40,7 @@
                                 {{#each content}}
                                     {{#unless hideElement}}
                                         {{!-- Load cards according to type searchItem/Widget --}}
-                                        {{#if ../tool}}
-                                            {{> toolbar-card-tool trans=../../trans mainObjectType=../../mainObjectType}}
-                                        {{else}}
-                                            {{> toolbar-card trans=../../trans mainObjectType=../../mainObjectType}}
-                                        {{/if}}
+                                        {{> toolbar-card trans=../../trans mainObjectType=../../mainObjectType}}
                                     {{/unless}}
                                 {{/each}}
                             </div>
@@ -68,32 +64,29 @@
         </ul>
 
         {{!-- Right buttons --}}
-        <ul class="navbar-nav flex-column navbar-right toolbar-menu-right hide-on-read-only hide-on-lock">
-            <li>
-                <a id="undoContainer" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{trans.undoActiveTitle}}"
-                    class="navbar-peek-button tooltip-always-on navbar-undo {{#if undoActive}}active{{/if}}">
-                    <i class="fa fa-undo"></i>
-                </a>
-            </li>
-            
+        <ul class="navbar-nav flex-column navbar-right toolbar-menu-right hide-on-read-only hide-on-lock">            
             {{#if showOptions}}
+                <li>
+                    <a id="undoContainer" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{trans.undoActiveTitle}}"
+                        class="navbar-peek-button tooltip-always-on undo-container navbar-undo {{#if undoActive}}active{{/if}}">
+                        <i class="fa fa-undo"></i>
+                    </a>
+                </li>
+            
                 <li>
                     <a id="multiSelectContainer" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{trans.selectMultipleWidgets}}"
                         class="navbar-peek-button navbar-multiselect active">
                         <i class="fa fa-object-group"></i>
                     </a>
                 </li>
-            {{/if}}
 
-            <li>
-                <a id="trashContainer" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{trans.trashBinActiveTitle}}"
-                    class="navbar-peek-button navbar-bin {{#if trashActive}}active{{/if}}">
-                    <i class="fa fa-trash"></i>
-                </a>
-            </li>
+                <li>
+                    <a id="trashContainer" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top" data-title="{{trans.trashBinActiveTitle}}"
+                        class="navbar-peek-button navbar-bin trash-container {{#if trashActive}}active{{/if}}">
+                        <i class="fa fa-trash"></i>
+                    </a>
+                </li>
 
-            {{!-- Options menu --}}
-            {{#if showOptions}}
                 <li class="dropright navbar-submenu navbar-submenu-options" data-toggle="tooltip" data-container=".editor-side-bar" data-placement="top"
                     data-title="{{trans.options}}">
                     <a id="optionsContainer" class="dropdown-toggle btn-menu-option option-container" data-toggle="dropdown" role="button" aria-haspopup="true"

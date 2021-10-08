@@ -166,6 +166,10 @@
                                         {% set title %}{% trans "Tag filter" %}{% endset %}
                                         {{ forms.inputWithTags("filterMediaTag", title) }}
                                     {% endif %}
+
+                                    {% set title %}{% trans "Max number of Items" %}{% endset %}
+                                    {% set helpText %}{% trans "The upper limit on number of Media items that can be dynamically assigned to this Playlist" %}{% endset %}
+                                    {{ forms.number("maxNumberOfItems", title, settings.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER, helpText, 'dynamic-message', '', '', settings.DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT) }}
                                 </div>
 
                                 <div class="XiboData card pt-3">

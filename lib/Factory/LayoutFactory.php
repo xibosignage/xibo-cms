@@ -944,13 +944,10 @@ class LayoutFactory extends BaseFactory
                         continue;
                     }
 
-                    $audioMediaId = implode(',', $audioNode);
-
                     $widgetAudio = $this->widgetAudioFactory->createEmpty();
-                    $widgetAudio->mediaId = $audioMediaId;
-                    $widgetAudio->volume = $mediaNode['volume'];;
-                    $widgetAudio->loop = $mediaNode['loop'];;
-
+                    $widgetAudio->mediaId = $audioNode['mediaId'];
+                    $widgetAudio->volume = $audioNode['volume'];
+                    $widgetAudio->loop = $audioNode['loop'];
                     $widget->assignAudio($widgetAudio);
                 }
 
@@ -1199,7 +1196,7 @@ class LayoutFactory extends BaseFactory
         } catch (NotFoundException $notFoundException) {
             $this->getLog()->info('Import is for an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
 
-            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, $layout->width, $layout->height);
+            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, (int)$layout->width, (int)$layout->height);
             $resolution->userId = $userId;
             $resolution->save();
         }
@@ -2578,8 +2575,13 @@ class LayoutFactory extends BaseFactory
      * @param int $tries
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function concurrentRequestLock(Layout $layout, $pass = 1, $ttl = 300, $wait = 6, $tries = 10): Layout
+    public function concurrentRequestLock(Layout $layout, $force = false, $pass = 1, $ttl = 300, $wait = 6, $tries = 10): Layout
     {
+        // Does this layout require building?
+        if (!$force && !$layout->isBuildRequired()) {
+            return $layout;
+        }
+
         $lock = $this->getPool()->getItem('locks/layout_build/' . $layout->campaignId);
 
         // Set the invalidation method to simply return the value (not that we use it, but it gets us a miss on expiry)
@@ -2626,7 +2628,7 @@ class LayoutFactory extends BaseFactory
 
                 // Recursive request (we've decremented the number of tries)
                 $pass++;
-                return $this->concurrentRequestLock($layout, $pass, $ttl, $wait, $tries);
+                return $this->concurrentRequestLock($layout, $force, $pass, $ttl, $wait, $tries);
             }
         }
     }
@@ -2634,8 +2636,12 @@ class LayoutFactory extends BaseFactory
     /**
      * Release a lock on concurrent requests
      */
-    public function concurrentRequestRelease(Layout $layout)
+    public function concurrentRequestRelease(Layout $layout, bool $force = false)
     {
+        if (!$force && !$layout->hasBuilt()) {
+            return;
+        }
+
         $this->getLog()->debug('Releasing lock ' . $layout->campaignId);
 
         $lock = $this->getPool()->getItem('locks/layout_build/' . $layout->campaignId);

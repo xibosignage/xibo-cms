@@ -84,6 +84,12 @@ class AuditLog implements \JsonSerializable
     public $userName;
 
     /**
+     * @SWG\Property(description="The IP Address of the User that took this action")
+     * @var string
+     */
+    public $ipAddress;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log

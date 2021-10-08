@@ -2,32 +2,37 @@
 
 // Colour palette
 $xibo-color-primary: #273759;
+$xibo-color-primary-lighter: #3D507A;
 $xibo-color-secondary: #337AB7;
 $xibo-color-white: #F0F2F8;
-$xibo-color-pure-white: #fff;
-
-$xibo-color-lightest-purple: #DAE2FB;
-$xibo-color-purple: #8f2ac3;
+$xibo-color-white-pure: #fff;
 
 $xibo-color-red: #e64c4c;
+$xibo-color-blue: #506098;
+$xibo-color-blue-pastel: #506098;
+$xibo-color-blue-darker: #42528A;
+$xibo-color-blue-lighter: #c1e1fd;
+$xibo-color-blue-lightest: #ebeff7;
+$xibo-color-green: #82E59E;
 $xibo-color-yellow: #e1e732;
-$xibo-color-blue: #337ab7;
-$xibo-color-pastel-blue: #506098;
-$xibo-color-dark-blue: #273759;
-$xibo-color-light-blue: #c1e1fd;
-$xibo-color-green: #9fda5d;
-$xibo-color-orange: #efa662;
-$xibo-color-dark-orange: #f55106;
-$xibo-color-gray: #888;
+$xibo-color-purple-lighter: #DAE2FB;
+$xibo-color-purple: #8f2ac3;
+$xibo-color-purple-darker: #9197AC;
+$xibo-color-orange: #FFC582;
+$xibo-color-orange-darker: #FB6C05;
+$xibo-color-gray-light: #CAD0D6;
+$xibo-color-gray: #C4C4C4;
+$xibo-color-gray-dark: #888;
+$xibo-color-gray-darker: #666;
 $xibo-color-black: #333;
-$xibo-color-really-black: #181818;
+$xibo-color-black-pure: #181818;
 
 // Variables
 $form-editor-controls-bg-color: $xibo-color-black;
 $form-editor-controls-fg-color: $xibo-color-white;
 
 $properties-panel-nav-bg-color: $xibo-color-white;
-$properties-panel-nav-fg-color: $xibo-color-gray;
+$properties-panel-nav-fg-color: $xibo-color-gray-dark;
 $properties-panel-nav-active-bg-color: $xibo-color-white;
 $properties-panel-nav-active-fg-color: $xibo-color-secondary;
 
@@ -59,7 +64,7 @@ $toolbar-widgets-card-margin: 2px;
 $toolbar-widgets-card-height: 50px;
 
 // Colours
-$toolbar-main-color: $xibo-color-pastel-blue;
+$toolbar-main-color: $xibo-color-blue-pastel;
 $toolbar-selected-color: darken($xibo-color-green, 20%);
 $toolbar-secondary-color: $xibo-color-primary;
 $toolbar-blue: $xibo-color-secondary;
@@ -70,11 +75,11 @@ $toolbar-light-green: $xibo-color-green;
 $toolbar-dark-blue: $xibo-color-primary;
 $toolbar-card-color: $xibo-color-secondary;
 $toolbar-menu-content-bg-color: $xibo-color-white;
-$toolbar-disabled-color: $xibo-color-gray;
+$toolbar-disabled-color: $xibo-color-gray-dark;
 
 $toolbar-tab-bg-color: $xibo-color-primary;
 $toolbar-tab-fg-color: $xibo-color-white;
-$toolbar-tab-hover-color: $xibo-color-light-blue;
+$toolbar-tab-hover-color: $xibo-color-blue-lighter;
 $toolbar-tab-border-color: $xibo-color-secondary;
 
 $bin-bg-color: $xibo-color-red;

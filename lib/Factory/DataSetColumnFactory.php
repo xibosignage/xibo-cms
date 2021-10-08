@@ -112,7 +112,9 @@ class DataSetColumnFactory extends BaseFactory
                 formula,
                 remoteField, 
                 showFilter, 
-                showSort
+                showSort,
+                tooltip,
+                isRequired
             ';
 
         $body = '

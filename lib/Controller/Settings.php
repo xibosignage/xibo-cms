@@ -26,6 +26,8 @@ use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Event\PlaylistMaxNumberChangedEvent;
+use Xibo\Event\SystemUserChangedEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
@@ -306,6 +308,11 @@ class Settings extends Base
             $this->getConfig()->changeSetting('DATASET_HARD_ROW_LIMIT', $sanitizedParams->getInt('DATASET_HARD_ROW_LIMIT'));
         }
 
+        if ($this->getConfig()->isSettingEditable('DEFAULT_PURGE_LIST_TTL')) {
+            $this->handleChangedSettings('DEFAULT_PURGE_LIST_TTL', $this->getConfig()->getSetting('DEFAULT_PURGE_LIST_TTL'), $sanitizedParams->getInt('DEFAULT_PURGE_LIST_TTL'), $changedSettings);
+            $this->getConfig()->changeSetting('DEFAULT_PURGE_LIST_TTL', $sanitizedParams->getInt('DEFAULT_PURGE_LIST_TTL'));
+        }
+
         if ($this->getConfig()->isSettingEditable('DEFAULT_LAYOUT')) {
             $this->handleChangedSettings('DEFAULT_LAYOUT', $this->getConfig()->getSetting('DEFAULT_LAYOUT'), $sanitizedParams->getInt('DEFAULT_LAYOUT'), $changedSettings);
             $this->getConfig()->changeSetting('DEFAULT_LAYOUT', $sanitizedParams->getInt('DEFAULT_LAYOUT'));
@@ -339,6 +346,16 @@ class Settings extends Base
             if (!v::longitude()->validate($value)) {
                 throw new InvalidArgumentException(__('The longitude entered is not valid.'), 'DEFAULT_LONG');
             }
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')) {
+            $this->handleChangedSettings('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER', $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER'), $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER'), $changedSettings);
+            $this->getConfig()->changeSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER', $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER'));
+        }
+
+        if ($this->getConfig()->isSettingEditable('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT')) {
+            $this->handleChangedSettings('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT', $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT'), $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT'), $changedSettings);
+            $this->getConfig()->changeSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT', $sanitizedParams->getInt('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT'));
         }
 
         if ($this->getConfig()->isSettingEditable('SHOW_DISPLAY_AS_VNCLINK')) {
@@ -739,6 +756,13 @@ class Settings extends Base
     private function handleChangedSettings($setting, $oldValue, $newValue, &$changedSettings)
     {
         if ($oldValue != $newValue) {
+            if ($setting === 'SYSTEM_USER') {
+                $newSystemUser = $this->userFactory->getById($newValue);
+                $oldSystemUser = $this->userFactory->getById($oldValue);
+                $this->getDispatcher()->dispatch(SystemUserChangedEvent::$NAME, new SystemUserChangedEvent($oldSystemUser, $newSystemUser));
+            } elseif ($setting === 'DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER_LIMIT') {
+                $this->getDispatcher()->dispatch(PlaylistMaxNumberChangedEvent::$NAME, new PlaylistMaxNumberChangedEvent($newValue));
+            }
             if ($setting === 'ELEVATE_LOG_UNTIL') {
                 $changedSettings[$setting] = Carbon::createFromTimestamp($oldValue)->format(DateFormatHelper::getSystemFormat()) . ' > ' .  Carbon::createFromTimestamp($newValue)->format(DateFormatHelper::getSystemFormat());
             } else {

@@ -43,15 +43,16 @@
         {# Add common file #}
         {% include "common.twig" %}
 
-        <script src="{{ theme.rootUri() }}dist/layoutDesigner.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
+        <script src="{{ theme.rootUri() }}dist/layoutEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
         <script src="{{ theme.rootUri() }}dist/playlistEditor.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
         <script type="text/javascript">
 
             {# Custom translations #}
             {% autoescape "js" %}
                 {# Insert custom translations here #}
-                var layoutDesignerTrans = {
+                var layoutEditorTrans = {
                     back: "{% trans "Back" %}",
+                    toggleFullscreen: "{% trans "Toggle Fullscreen Mode" %}",
                     publishTitle: "{% trans "Publish layout" %}",
                     discardTitle: "{% trans "Discard draft" %}",
                     publishMessage: "{% trans "Are you sure you want to publish this Layout? If it is already in use the update will automatically get pushed." %}",
@@ -72,12 +73,6 @@
 
                 var viewerTrans = {
                     inlineEditor: "{% trans "Inline Editor" %}",
-                    toggleFullscreen: "{% trans "Toggle Fullscreen Mode" %}",
-                    backToLayout: "{% trans "Go back to Layout view" %}",
-                    saveEditorChanges: "{% trans "Save editor changes" %}",
-                    playPreviewLayout: "{% trans "Play Layout preview" %}",
-                    editLayout: "{% trans "Edit Layout" %}",
-                    stopPreviewLayout: "{% trans "Stop Layout preview" %}",
                     nextWidget: "{% trans "Next widget" %}",
                     previousWidget: "{% trans "Previous widget" %}"
                 };
@@ -100,18 +95,50 @@
                     widgetActions: "{% trans "Widget Actions:" %}"
                 };
 
-                var navigatorTrans = {
+                var bottombarTrans = {
                     edit: "{% trans "Edit layout regions" %}",
                     addRegion: "{% trans "Add" %}",
                     addRegionDesc: "{% trans "Add a new region" %}",
                     deleteRegion: "{% trans "Delete region" %}",
-                    toggleFullscreen: "{% trans "Toggle Fullscreen Mode" %}",
                     undo: "{% trans "Undo" %}",
                     undoDesc: "{% trans "Revert last change" %}",
                     close: "{% trans "Close" %}",
                     closeDesc: "{% trans "Return to Layout View" %}",
                     save: "{% trans "Save" %}",
-                    saveDesc: "{% trans "Save changes" %}"
+                    saveDesc: "{% trans "Save changes" %}",
+                    backToLayout: "{% trans "Go back to Layout view" %}",
+                    saveEditorChanges: "{% trans "Save editor changes" %}",
+                    playPreviewLayout: "{% trans "Play Layout preview" %}",
+                    editLayout: "{% trans "Edit Layout" %}",
+                    stopPreviewLayout: "{% trans "Stop Layout preview" %}",
+                    nextWidget: "{% trans "Next widget" %}",
+                    previousWidget: "{% trans "Previous widget" %}",
+                    tools: {
+                        region: {
+                            name: "{{ "Region" |trans }}",
+                            description: "{{ "Add a Region"|trans }}"
+                        },
+                        audio: {
+                            name: "{{ "Audio" |trans }}",
+                            description: "{{ "Upload Audio files to assign to Widgets"|trans }}"
+                        },
+                        expiry: {
+                            name: "{{ "Expiry Dates" |trans }}",
+                            description: "{{ "Enter start and end times for Widgets"|trans }}"
+                        },
+                        transitionIn: {
+                            name: "{{ "Transition In" |trans }}",
+                            description: "{{ "Apply a Transition type for the start of a media item"|trans }}"
+                        },
+                        transitionOut: {
+                            name: "{{ "Transition Out" |trans }}",
+                            description: "{{ "Apply a Transition type for the end of a media item"|trans }}"
+                        },
+                        permissions: {
+                            name: "{{ "Sharing" |trans }}",
+                            description: "{{ "Set View, Edit and Delete Sharing for Widgets and Regions"|trans }}"
+                        }
+                    }
                 };
 
                 var drawerTrans = {
@@ -227,7 +254,6 @@
                 openUploadForm({
                     url: $(e.target).data().addNewBackgroundUrl,
                     title: "{% trans "Add Background Image" %}",
-                    multi: false,
                     videoImageCovers: false,
                     buttons: {
                         main: {
@@ -239,6 +265,7 @@
                         }
                     },
                     templateOptions: {
+                        multi: false,
                         trans: {
                             addFiles: "{% trans "Browse/Add Image" %}",
                             startUpload: "{% trans "Start Upload" %}",

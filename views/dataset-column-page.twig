@@ -55,7 +55,9 @@
                                 <th>{% trans "DataType" %}</th>
                                 <th>{% trans "Column Type" %}</th>
                                 <th>{% trans "List Content" %}</th>
+                                <th>{% trans "Tooltip" %}</th>
                                 <th>{% trans "Order" %}</th>
+                                <th>{% trans "Required?" %}</th>
                                 <th></th>
                             </tr>
                         </thead>
@@ -94,7 +96,14 @@
                 { "data": "dataType" },
                 { "data": "dataSetColumnType" },
                 { "data": "listContent" },
+                { "data": "tooltip" },
                 { "data": "columnOrder" },
+                {
+                    "data": "isRequired",
+                    "render": dataTableTickCrossColumn,
+                    "visible": false,
+                    "name": "isRequired"
+                },
                 {
                     "orderable": false,
                     responsivePriority: 1,

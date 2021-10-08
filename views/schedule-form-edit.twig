@@ -62,12 +62,14 @@
                         {% set commandEventType %}{% trans "Command" %}{% endset %}
                         {% set overlayEventType %}{% trans "Overlay Layout" %}{% endset %}
                         {% set interruptEventType %}{% trans "Interrupt Layout" %}{% endset %}
+                        {% set actionEventType %}{% trans "Action" %}{% endset %}
                         {% set eventTypes = [
                             {id: 1, label: layoutEventType},
                             {id: 5, label: campaignEventType},
                             {id: 2, label: commandEventType},
                             {id: 3, label: overlayEventType},
-                            {id: 4, label: interruptEventType}
+                            {id: 4, label: interruptEventType},
+                            {id: 6, label: actionEventType}
                         ] %}
                         {{ forms.dropdown("eventTypeId", "single", title, event.eventTypeId, eventTypes, "id", "label", helpText) }}
 
@@ -139,6 +141,32 @@
                             </div>
                         </div>
 
+                        {% set title %}{% trans "Action Type" %}{% endset %}
+                        {% set helpText %}{% trans "Please select action Type" %}{% endset %}
+                        {% set navLayout %}{% trans "Navigate to Layout" %}{% endset %}
+                        {% set command %}{% trans "Command" %}{% endset %}
+                        {% set options = [
+                            { typeid: "navToLayout", type: navLayout },
+                            { typeid: "command", type: command },
+                        ] %}
+                        {{ forms.dropdown("actionType", "single", title, event.actionType, options, "typeid","type", helpText, 'action-control') }}
+
+                        {% set title %}{% trans "Trigger Code" %}{% endset %}
+                        {% set helpText %}{% trans "Web hook trigger code for this Action" %}{% endset %}
+                        {{ forms.input("actionTriggerCode", title, event.actionTriggerCode, helpText, 'action-control') }}
+
+                        {% set title %}{% trans "Layout Code" %}{% endset %}
+                        {% set helpText %}{% trans "Please select the Code identifier for the Layout that Player should navigate to when this Action is triggered." %}{% endset %}
+
+                        {% set attributes = [
+                            { name: "data-width", value: "100%" },
+                            { name: "data-search-url", value: url_for("layout.code.search") },
+                            { name: "data-search-term", value: "code" },
+                            { name: "data-id-property", value: "code" },
+                            { name: "data-text-property", value: "code" }
+                        ] %}
+                        {{ forms.dropdown("actionLayoutCode", "single", title, event.actionLayoutCode, layoutCodes, "code", "code", helpText, "pagedSelect action-control layout-code-control", "", "", "", attributes) }}
+
                         {% set title %}{% trans "Command" %}{% endset %}
                         {% set helpText %}{% trans "Please select a command for this Event." %}{% endset %}
                         {{ forms.dropdown("commandId", "single", title, event.commandId, [{commandId: "", command: ""}]|merge(commands), "commandId", "command", helpText, "command-control") }}
@@ -189,13 +217,13 @@
                         {% set monthly %}{% trans "Monthly" %}{% endset %}
                         {% set yearly %}{% trans "Yearly" %}{% endset %}
                         {% set options = [
-                        { id: "", name: noneOption },
-                        { id: "Minute", name: minute },
-                        { id: "Hour", name: hourly},
-                        { id: "Day", name: daily},
-                        { id: "Week", name: weekly},
-                        { id: "Month", name: monthly},
-                        { id: "Year", name: yearly}
+                            { id: "", name: noneOption },
+                            { id: "Minute", name: minute },
+                            { id: "Hour", name: hourly},
+                            { id: "Day", name: daily},
+                            { id: "Week", name: weekly},
+                            { id: "Month", name: monthly},
+                            { id: "Year", name: yearly}
                         ] %}
                         {{ forms.dropdown("recurrenceType", "single", title, event.recurrenceType, options, "id", "name", helpText) }}
 
@@ -208,13 +236,13 @@
                         {% set saturday %}{% trans "Saturday" %}{% endset %}
                         {% set sunday %}{% trans "Sunday" %}{% endset %}
                         {% set options = [
-                        { id: 1, name: monday },
-                        { id: 2, name: tuesday },
-                        { id: 3, name: wednesday },
-                        { id: 4, name: thursday },
-                        { id: 5, name: friday },
-                        { id: 6, name: saturday },
-                        { id: 7, name: sunday },
+                            { id: 1, name: monday },
+                            { id: 2, name: tuesday },
+                            { id: 3, name: wednesday },
+                            { id: 4, name: thursday },
+                            { id: 5, name: friday },
+                            { id: 6, name: saturday },
+                            { id: 7, name: sunday },
                         ] %}
                         {{ forms.dropdown("recurrenceRepeatsOn[]", "dropdownmulti", "", event.recurrenceRepeatsOn, options, "id", "name", helpText, "repeat-weekly-control-group") }}
 

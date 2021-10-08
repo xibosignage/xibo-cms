@@ -32,9 +32,9 @@ const deleteMultiElementModalContentTemplate = require('../templates/delete-mult
 // Include modules
 const Playlist = require('../playlist-editor/playlist.js');
 const PlaylistTimeline = require('../playlist-editor/playlist-timeline.js');
-const Toolbar = require('../core/toolbar.js');
-const PropertiesPanel = require('../designer/properties-panel.js');
-const Manager = require('../core/manager.js');
+const Toolbar = require('../editor-core/toolbar.js');
+const PropertiesPanel = require('../editor-core/properties-panel.js');
+const Manager = require('../editor-core/manager.js');
 
 // Include CSS
 if(typeof lD == 'undefined') {
@@ -48,7 +48,7 @@ if(typeof lD == 'undefined') {
 require('../style/playlist-editor.scss');
 
 // Common funtions/tools
-const Common = require('../core/common.js');
+const Common = require('../editor-core/common.js');
 
 // Create layout designer namespace (pE)
 window.pE = {
@@ -730,7 +730,7 @@ pE.refreshDesigner = function() {
         // If playlist is empty, open the widget tab
         if(this.toolbar.openedMenu == -1) {
             this.toolbar.firstRun = false;
-            this.toolbar.openMenu(2, true);
+            this.toolbar.openMenu(1, true);
         }
     }
 };
@@ -1015,4 +1015,28 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
         console.error(jqXHR, textStatus, errorThrown);
         toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
     });
+};
+
+/**
+ * Check history and return last step description
+ */
+ pE.checkHistory = function() {
+    // Check if there are some changes
+    let undoActive = pE.manager.changeHistory.length > 0;
+    let undoActiveTitle = '';
+
+    // Get last action text for popup
+    if(undoActive) {
+        let lastAction = pE.manager.changeHistory[pE.manager.changeHistory.length - 1];
+        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined) {
+            undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
+        } else {
+            undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
+        }
+    }
+
+    return {
+        undoActive: undoActive,
+        undoActiveTitle: undoActiveTitle
+    };
 };

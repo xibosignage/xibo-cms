@@ -116,7 +116,7 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         let trans = {};
         let widgetDurationInMs = this.getDuration() * 1000;
 
-        if (this.transitionIn != null && this.transitionIn != undefined) {
+        if (this.transitionIn != null && this.transitionIn != '' && this.transitionIn != undefined) {
             trans.in = {
                 name: 'transitionIn',
                 type: this.transitionIn,
@@ -126,7 +126,7 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
             };
         }
 
-        if (this.transitionOut != null && this.transitionOut != undefined) {
+        if (this.transitionOut != null && this.transitionOut != '' && this.transitionOut != undefined) {
             trans.out = {
                 name: 'transitionOut',
                 type: this.transitionOut,

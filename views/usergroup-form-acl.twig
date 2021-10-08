@@ -53,7 +53,9 @@
         </td>
         <td><input class="feature-select-all" type="checkbox" /></td>
         {% if isUserSpecific == 1 %}
-            <td></td>
+            <td>
+                <input type="checkbox" class="inherit-group-all" disabled>
+            </td>
         {% endif %}
     </tr>
 {% endmacro %}
@@ -66,7 +68,7 @@
         </td>
         {% if isUserSpecific == 1 %}
             <td>
-                <input type="checkbox" disabled {{ flow.hasFeature(inheritedFeatures, feature) }}>
+                <input type="checkbox" class="inherit-group" disabled {{ flow.hasFeature(inheritedFeatures, feature) }}>
             </td>
         {% endif %}
     </tr>

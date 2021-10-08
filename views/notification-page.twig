@@ -213,7 +213,6 @@
             var upload = openUploadForm({
                 url: "{{ url_for("notification.addattachment") }}",
                 title: "{% trans "Browse/Add attachment" %}",
-                multi: false,
                 videoImageCovers: false,
                 animateDialog: false,
                 className: "second-dialog",
@@ -227,6 +226,7 @@
                     }
                 },
                 templateOptions: {
+                    multi: false,
                     trans: {
                         addFiles: "{% trans "Browse/Add Attachment" %}",
                         startUpload: "{% trans "Start Upload" %}",

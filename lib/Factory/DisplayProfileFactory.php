@@ -132,6 +132,11 @@ class DisplayProfileFactory extends BaseFactory
         return $this->query(null, ['disableUserCheck' => 1, 'commandId' => $commandId]);
     }
 
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
+    }
+
     /**
      * @param array $sortOrder
      * @param array $filterBy
@@ -183,6 +188,11 @@ class DisplayProfileFactory extends BaseFactory
                 ';
 
                 $params['commandId'] = $parsedFilter->getInt('commandId');
+            }
+
+            if ($parsedFilter->getInt('userId') !== null) {
+                $body .= ' AND `displayprofile`.userId = :userId ';
+                $params['userId'] = $parsedFilter->getInt('userId');
             }
 
             // Sorting?
