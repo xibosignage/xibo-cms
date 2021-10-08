@@ -8,20 +8,28 @@ module.exports = {
      * Show loading screen
      */
     showLoadingScreen: function(cloneName = 'genericLoadingScreen') {
+        let bumpVal = $('.loading-overlay.loading').data('bump') || 0;
+        bumpVal++;
         
-        // Create a loading overlay clone, gave it a ID and append it to the same DOM object as the original
-        let clone = $('.loading-overlay').clone();
-        clone.attr('id', cloneName).addClass('loading').show();
-        clone.appendTo($('.loading-overlay').parent());
+        if(bumpVal <= 1) {
+            $('.loading-overlay').addClass('loading').show();
+        }
+
+        $('.loading-overlay').data('bump', bumpVal++);
     },
 
     /**
      * Hide loading screen
      */
     hideLoadingScreen: function(cloneName = 'genericLoadingScreen') {
+        let bumpVal = $('.loading-overlay.loading').data('bump') || 1;
+        bumpVal--;
 
-        // Remove generic or named clone
-        $('.loading-overlay#' + cloneName).remove();
+        if(bumpVal <= 0) {
+            $('.loading-overlay.loading').removeClass('loading');
+        }
+
+        $('.loading-overlay').data('bump', bumpVal);
     },
 
     /**

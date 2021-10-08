@@ -28,23 +28,13 @@ let Topbar = function(parent, container, customDropdownOptions = null, customAct
 
     // Options menu
     this.showOptions = showOptions;
-
-    // Flag to mark if the topbar has been rendered at least one time
-    this.firstRun = true;
 };
 
 /**
  * Render topbar
  */
 Topbar.prototype.render = function() {
-
-    // Load preferences when the topbar is rendered for the first time
-    if(this.firstRun) {
-        // Mark topbar as loaded
-        this.firstRun = false;
-    }
-
-    let self = this;
+    const self = this;
     const app = this.parent;
 
     // Get main object 

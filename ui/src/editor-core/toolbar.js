@@ -2,59 +2,123 @@
 
 // Load templates
 const ToolbarTemplate = require('../templates/toolbar.hbs');
-const ToolbarMediaSearchTemplate = require('../templates/toolbar-media-search.hbs');
-const ToolbarMediaQueueTemplate = require('../templates/toolbar-media-queue.hbs');
-const ToolbarMediaQueueElementTemplate = require('../templates/toolbar-media-queue-element.hbs');
+const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
+const ToolbarContentTemplate = require('../templates/toolbar-content.hbs');
+const ToolbarContentMedia = require('../templates/toolbar-content-media.hbs');
+
+const moduleListFiltered = [];
+const usersListFiltered = [];
+
+// Filter module list to create the types for the filter
+modulesList.forEach((element) => {
+    if (element.assignable == 1 && element.regionSpecific == 0 && ['image', 'audio', 'video'].indexOf(element.type) == -1) {
+        moduleListFiltered.push({
+            type: element.type,
+            name: element.name,
+        });
+    }
+});
+
+usersList.forEach((element) => {
+    usersListFiltered.push({
+        userId: element.userId.toString(),
+        name: element.userName,
+    });
+});
+
+const baseFilters = {
+    name: {
+        name: toolbarTrans.searchFilters.name,
+        value: '',
+    },
+    tag: {
+        name: toolbarTrans.searchFilters.tag,
+        value: '',
+    },
+    type: {
+        name: toolbarTrans.searchFilters.type,
+        values: moduleListFiltered,
+    },
+    owner: {
+        name: toolbarTrans.searchFilters.owner,
+        values: usersListFiltered,
+    },
+    orientation: {
+        name: toolbarTrans.searchFilters.orientation,
+        value: '',
+    },
+};
 
 const defaultMenuItems = [
-    {
-        name: 'library',
-        itemName: toolbarTrans.menuItems.libraryName,
-        itemIcon: 'photo-video',
-        itemTitle: toolbarTrans.menuItems.libraryTitle,
-        selectedTab: 0,
-        search: true,
-        content: [], // Tabs and content
-        state: ''
-    },
     {
         name: 'widgets',
         itemName: toolbarTrans.menuItems.widgetsName,
         itemTitle: toolbarTrans.menuItems.widgetsTitle,
         itemIcon: 'th-large',
         content: [],
-        paging: true,
         state: '',
-        oneClickAdd: [],
-        favouriteModules: []
-    }
+        itemCount: 0,
+        favouriteModules: [],
+    },
+    {
+        name: 'images',
+        itemName: toolbarTrans.menuItems.imagesName,
+        itemIcon: 'images',
+        itemTitle: toolbarTrans.menuItems.imagesTitle,
+        search: true,
+        content: [$.extend({}, baseFilters, {type: {value: 'image', locked: true}})],
+        state: '',
+        itemCount: 0,
+    },
+    {
+        name: 'audio',
+        itemName: toolbarTrans.menuItems.audioName,
+        itemIcon: 'volume-up',
+        itemTitle: toolbarTrans.menuItems.audioTitle,
+        search: true,
+        content: [$.extend({}, baseFilters, {type: {value: 'audio', locked: true}})],
+        state: '',
+        itemCount: 0,
+    },
+    {
+        name: 'video',
+        itemName: toolbarTrans.menuItems.videoName,
+        itemIcon: 'video',
+        itemTitle: toolbarTrans.menuItems.videoTitle,
+        search: true,
+        content: [$.extend({}, baseFilters, {type: {value: 'video', locked: true}})],
+        state: '',
+        itemCount: 0,
+    },
+    {
+        name: 'library',
+        itemName: toolbarTrans.menuItems.libraryName,
+        itemIcon: 'archive',
+        itemTitle: toolbarTrans.menuItems.libraryTitle,
+        search: true,
+        content: [baseFilters],
+        state: '',
+        itemCount: 0,
+    },
 ];
 
 /**
  * Bottom toolbar contructor
+ * @param {object} parent - parent container
  * @param {object} container - the container to render the navigator to
  * @param {object} [customActions] - customized actions
  * @param {boolean=} [showOptions] - show options menu
  */
-let Toolbar = function(parent, container, customActions = {}, showOptions = false) {
-
+const Toolbar = function(parent, container, customActions = {}, showOptions = false) {
     this.parent = parent;
-    
+
     this.DOMObject = container;
     this.openedMenu = -1;
 
-    // Number of tabs that are fixed ( not removable and always defaulted )
-    this.fixedTabs = 3;
-
     this.menuItems = defaultMenuItems;
 
-    this.libraryMenuIndex = 0;
-
-    this.widgetMenuIndex = 1;
-
-    this.contentDimentions = {
-        width: 90 // In percentage
-    };
+    this.widgetMenuIndex = 0;
+    this.libraryMenuIndex = 4;
 
     this.selectedCard = {};
 
@@ -64,34 +128,17 @@ let Toolbar = function(parent, container, customActions = {}, showOptions = fals
     // Flag to mark if the toolbar has been rendered at least one time
     this.firstRun = true;
 
-    // Flag to mark if the toolbar is stretched
-    this.stretched = true;
+    // Flag to mark if the toolbar is opened
+    this.opened = false;
 
     // Use queue to add media
     this.useQueue = true;
 
     // Media queue
-    this.selectedQueue = {};
+    this.selectedQueue = [];
 
     // Options menu
     this.showOptions = showOptions;
-
-    // Refresh opened menu and clear selections on window resize
-    const self = this;
-    $(window).on('resize.toolbar-' + self.parent.mainObjectType, _.debounce(function(e) {
-        if(e.target === window) {
-            // Resize only if toolbar is visible
-            if(self.DOMObject.is(':visible')) {
-                // Deselect previous selections
-                self.deselectCardsAndDropZones();
-
-                // If there was a opened menu in the toolbar, open that tab
-                if(self.openedMenu != undefined && self.openedMenu != -1) {
-                    self.openMenu(self.openedMenu, true);
-                }
-            }
-        }
-    }, 250));
 
     this.customModuleList = modulesList;
 };
@@ -106,24 +153,25 @@ Toolbar.prototype.loadPrefs = function() {
     const app = this.parent;
 
     // Request elements based on filters
-    let self = this;
+    const self = this;
     $.ajax({
         url: linkToAPI.url + '?preference=toolbar',
-        type: linkToAPI.type
+        type: linkToAPI.type,
     }).done(function(res) {
-
-        if(res.success) {
-
-            let loadedData = JSON.parse(res.data.value);
-
-            // Populate the toolbar with the returned data
-            self.menuItems[self.libraryMenuIndex].content = (loadedData.libraryContent != undefined) ? loadedData.libraryContent : [];
-            self.menuItems[self.libraryMenuIndex].searchPosition = loadedData.searchPosition;
+        if (res.success) {
+            const loadedData = JSON.parse(res.data.value);
 
             self.openedMenu = (loadedData.openedMenu != undefined) ? loadedData.openedMenu : -1;
 
             // Load favourites
             self.menuItems[self.widgetMenuIndex].favouriteModules = (loadedData.favouriteModules != undefined) ? loadedData.favouriteModules : [];
+
+            // Load filters
+            if (loadedData.filters) {
+                self.menuItems.forEach((el, idx) => {
+                    el.filters = loadedData.filters[idx];
+                });
+            }
 
             // Tooltip options
             app.common.displayTooltips = (loadedData.displayTooltips == 1 || loadedData.displayTooltips == undefined);
@@ -131,46 +179,25 @@ Toolbar.prototype.loadPrefs = function() {
             // Reload tooltips
             app.common.reloadTooltips(app.editorContainer);
 
-            // If there was a opened menu, load content for that one
-            if(self.openedMenu != -1 && self.firstRun == true) {
-                self.openMenu(self.openedMenu, true);
-            } else {
-                // Render to reflect the loaded toolbar
-                self.render();
-            }
-
-            // Reload topbar if exists
-            if(app.topbar != undefined) {
-                app.topbar.render();
-            }
+            // Refresh designer to reflect the changes
+            app.refreshDesigner(true);
         } else {
             // Login Form needed?
-            if(res.login) {
-
+            if (res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
                 // Just an error we dont know about
-                if(res.message == undefined) {
+                if (res.message == undefined) {
                     console.error(res);
                 } else {
                     console.error(res.message);
                 }
-
-                // Render toolbar even if the user prefs load fail
-                self.render();
             }
         }
-
-        // Mark toolbar as loaded
-        self.firstRun = false;
     }).catch(function(jqXHR, textStatus, errorThrown) {
-
         console.error(jqXHR, textStatus, errorThrown);
         toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
-
-        // Mark toolbar as loaded
-        self.firstRun = false;
     });
 };
 
@@ -182,188 +209,158 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
     const app = this.parent;
 
     // Save only some of the tab menu data
-    let libraryContent = [];
-    let searchPosition;
     let openedMenu = this.openedMenu;
     let displayTooltips = (app.common.displayTooltips) ? 1 : 0;
     let favouriteModules = [];
+    const filters = [];
 
-    if(clearPrefs) {
-        libraryContent = [];
+    if (clearPrefs) {
         openedMenu = -1;
         displayTooltips = 1;
     } else {
-        // Get library content
-        libraryContent = this.menuItems[this.libraryMenuIndex].content;
-
-        // Get library window position
-        searchPosition = this.menuItems[this.libraryMenuIndex].searchPosition;
-
         // Save favourite
         favouriteModules = this.menuItems[this.widgetMenuIndex].favouriteModules;
+
+        // Save filters
+        this.menuItems.forEach((el, idx) => {
+            filters[idx] = el.filters;
+        });
     }
 
-    let dataToSave = {
+    const dataToSave = {
         preference: [
             {
                 option: 'toolbar',
                 value: JSON.stringify({
-                    libraryContent: libraryContent,
-                    searchPosition: searchPosition,
+                    filters: filters,
                     openedMenu: openedMenu,
                     displayTooltips: displayTooltips,
-                    favouriteModules: favouriteModules
-                })
-            }
-        ]
+                    favouriteModules: favouriteModules,
+                }),
+            },
+        ],
     };
 
     // Save using the API
     const linkToAPI = urlsForApi.user.savePref;
 
     // Request elements based on filters
-    let self = this;
     $.ajax({
         url: linkToAPI.url,
         type: linkToAPI.type,
-        data: dataToSave
+        data: dataToSave,
     }).done(function(res) {
-
-        if(!res.success) {
+        if (!res.success) {
             // Login Form needed?
-            if(res.login) {
-
+            if (res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
-
                 toastr.error(errorMessagesTrans.userSavePreferencesFailed);
 
                 // Just an error we dont know about
-                if(res.message == undefined) {
+                if (res.message == undefined) {
                     console.error(res);
                 } else {
                     console.error(res.message);
                 }
-
-                // Render toolbar even if the user prefs load fail
-                self.render();
             }
         }
-
     }).catch(function(jqXHR, textStatus, errorThrown) {
-
         console.error(jqXHR, textStatus, errorThrown);
         toastr.error(errorMessagesTrans.userSavePreferencesFailed);
     });
-
 };
 
 /**
  * Render toolbar
  */
 Toolbar.prototype.render = function() {
-
     // Load preferences when the toolbar is rendered for the first time
-    if(this.firstRun) {
+    if (this.firstRun) {
+        this.firstRun = false;
+
         // Load user preferences
         this.loadPrefs();
-
-        return;
     }
 
-    let self = this;
+    const self = this;
     const app = this.parent;
 
     // Deselect selected card on render
     this.selectedCard = {};
 
     // Get toolbar trans
-    let newToolbarTrans = Object.assign({}, toolbarTrans);
+    const newToolbarTrans = Object.assign({}, toolbarTrans);
 
     // Check if trash bin is active
-    let trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
+    const trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
 
     // Get text for bin tooltip
-    if(trashBinActive) {
+    if (trashBinActive) {
         newToolbarTrans.trashBinActiveTitle = toolbarTrans.deleteObject.replace('%object%', app.selectedObject.type);
     }
 
     const checkHistory = app.checkHistory();
 
-    if(checkHistory) {
+    if (checkHistory) {
         newToolbarTrans.undoActiveTitle = checkHistory.undoActiveTitle;
     }
 
-    const toolbarStretched = (this.openedMenu == 1);
+    const toolbarOpened = (this.openedMenu != -1) && (app.readOnlyMode === undefined || app.readOnlyMode === false);
 
     // Compile toolbar template with data
     const html = ToolbarTemplate({
-        opened: (this.openedMenu != -1),
-        stretchBar: toolbarStretched,
+        opened: toolbarOpened,
         menuItems: this.menuItems,
         displayTooltips: app.common.displayTooltips,
         trashActive: trashBinActive,
         undoActive: checkHistory.undoActive,
         trans: newToolbarTrans,
         showOptions: self.showOptions,
-        mainObjectType: app.mainObjectType
+        mainObjectType: app.mainObjectType,
     });
 
     // Append toolbar html to the main div
     this.DOMObject.html(html);
 
     // If read only mode is enabled
-    if(app.readOnlyMode != undefined && app.readOnlyMode === true) {
+    if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
         // Hide edit mode fields
         this.DOMObject.find('.hide-on-read-only').hide();
-        
+
+        // Hide toolbar
+        this.DOMObject.hide();
+
         // Create the read only alert message
-        let $readOnlyMessage = $('<div id="read-only-message" class="alert alert-info btn text-center navbar-nav" data-container=".editor-bottom-bar" data-toggle="tooltip" data-placement="bottom" data-title="' + layoutEditorTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutEditorTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutEditorTrans.readOnlyModeMessage + '</div>');
+        const $readOnlyMessage = $('<div id="read-only-message" class="alert alert-info btn text-center navbar-nav" data-container=".editor-bottom-bar" data-toggle="tooltip" data-placement="bottom" data-title="' + layoutEditorTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutEditorTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutEditorTrans.readOnlyModeMessage + '</div>');
 
         // Prepend the element to the bottom toolbar's content
         $readOnlyMessage.prependTo(this.DOMObject.find('.container-toolbar .navbar-collapse')).click(lD.checkoutLayout);
     } else {
+        // Show toolbar
+        this.DOMObject.show();
 
         // Handle menus
-        for(let i = 0;i < this.menuItems.length;i++) {
-
+        for (let i = 0; i < this.menuItems.length; i++) {
             const toolbar = self;
             const index = i;
-            const $scrollArea = toolbar.DOMObject.find('#content-' + index + ' .toolbar-pane-content-container');
-            const scrollStepSpeed = 200;
 
             this.DOMObject.find('#btn-menu-' + index).click(function() {
                 toolbar.openMenu(index);
-            });
-
-            this.DOMObject.find('#content-' + index + ' #pag-btn-left-' + index).click(function() {
-                $scrollArea.scrollTop($scrollArea.scrollTop() - scrollStepSpeed);
-            });
-
-            this.DOMObject.find('#content-' + index + ' #pag-btn-right-' + index).click(function() {
-                $scrollArea.scrollTop($scrollArea.scrollTop() + scrollStepSpeed);
-            });
-
-            this.DOMObject.find('#content-' + index + ' #pag-btn-top-left-' + index).click(function() {
-                $scrollArea.scrollTop(0);
-            });
-
-            this.DOMObject.find('#content-' + index + ' #pag-btn-top-right-' + index).click(function() {
-                $scrollArea.scrollTop(9999);
             });
         }
 
         // Delete object
         this.DOMObject.find('.trash-container').click(function() {
-            if($(this).hasClass('active')) {
+            if ($(this).hasClass('active')) {
                 app.deleteSelectedObject();
             }
         });
 
         // Revert last action
         this.DOMObject.find('.undo-container').click(function() {
-            if($(this).hasClass('active')) {
+            if ($(this).hasClass('active')) {
                 app.undoLastAction();
             }
         });
@@ -374,37 +371,620 @@ Toolbar.prototype.render = function() {
         });
     }
 
-    const setButtonActionAndState = function(button) {
-        let buttonInactive = false;
+    // Options menu
+    if (self.showOptions) {
+        self.DOMObject.find('.navbar-submenu-options-container').off().click(function(e) {
+            e.stopPropagation();
+        });
 
-        // Bind action to button
-        self.DOMObject.find('#' + button.id).click(
-            button.action
-        );
+        // Toggle tooltips
+        self.DOMObject.find('#displayTooltips').off().click(function() {
+            app.common.displayTooltips = self.DOMObject.find('#displayTooltips').prop('checked');
 
-        // If there is a inactiveCheck, use that function to switch button state
-        if(button.inactiveCheck != undefined) {
-            const inactiveClass = (button.inactiveCheckClass != undefined) ? button.inactiveCheckClass : 'disabled';
-            const toggleValue = button.inactiveCheck();
-            self.DOMObject.find('#' + button.id).toggleClass(inactiveClass, toggleValue);
-            buttonInactive = toggleValue;
+            if (app.common.displayTooltips) {
+                toastr.success(editorsTrans.tooltipsEnabled);
+            } else {
+                toastr.error(editorsTrans.tooltipsDisabled);
+            }
+
+            self.savePrefs();
+
+            app.common.reloadTooltips(app.editorContainer);
+        });
+
+        // Reset tour
+        if (typeof app.resetTour === 'function') {
+            self.DOMObject.find('#resetTour').removeClass('d-none').off().click(function() {
+                app.resetTour();
+            });
+        }
+    }
+
+    // Save default tolbar nav z-index
+    this.defaultZIndex = this.DOMObject.find('nav').css('z-index');
+
+    // If there was a opened menu in the toolbar, open that tab
+    if (this.openedMenu != undefined && this.openedMenu != -1) {
+        this.openMenu(this.openedMenu, true);
+    }
+};
+
+/**
+ * Load content
+ * @param {number} menu - menu to load content for
+ */
+Toolbar.prototype.loadContent = function(menu = -1) {
+    // Make menu state to be active
+    this.menuItems[menu].state = 'active';
+
+    if (this.menuItems[menu].name === 'widgets') {
+        // Sort by favourites
+        const favouriteModules = [];
+        const otherModules = [];
+
+        for (let index = 0; index < this.customModuleList.length; index++) {
+            const element = this.customModuleList[index];
+
+            element.maxSize = libraryUpload.maxSize;
+            element.maxSizeMessage = libraryUpload.maxSizeMessage;
+
+            // Filter elements
+            if (this.menuItems[menu].filters && !element.name.toLowerCase().includes(this.menuItems[menu].filters.toLowerCase())) {
+                continue;
+            }
+
+            if ($.inArray(element.type, this.menuItems[menu].favouriteModules) > -1) {
+                element.favourited = true;
+                favouriteModules.push(element);
+            } else {
+                element.favourited = false;
+                otherModules.push(element);
+            }
         }
 
-        return buttonInactive;
+        // Add elements to menu content
+        this.menuItems[menu].content = {
+            modulesFav: favouriteModules,
+            modules: otherModules,
+        };
+    }
+
+    this.DOMObject.find('#content-' + menu + ', #btn-menu-' + menu).addClass('active');
+
+    // Save user preferences and render
+    this.savePrefs();
+
+    // Create content
+    this.createContent(menu);
+};
+
+/**
+ * Create content
+ * @param {number} menu - menu to load content for
+ */
+Toolbar.prototype.createContent = function(menu = -1) {
+    const content = $.extend({}, this.menuItems[menu], {menuIndex: menu, trans: toolbarTrans, filters: this.menuItems[menu].filters});
+    const self = this;
+
+    // Render template
+    const html = ToolbarContentTemplate(content);
+
+    // Append template to the search main div
+    this.DOMObject.find('#content-' + menu).replaceWith(html);
+
+    if (content.search) {
+        this.mediaContentCreateWindow(menu);
+    } else {
+        this.handleCardsBehaviour();
+
+        // Bind search action to refresh the results
+        this.DOMObject.find('#module-search-form input[type="text"]').on('input', _.debounce(function(e) {
+            self.menuItems[menu].filters = $(this).val();
+            self.menuItems[menu].focus = e.target.selectionStart;
+            self.loadContent(menu);
+        }, 500));
+
+        // Focus with cursor position
+        const focusPosition = self.menuItems[menu].focus;
+        if (focusPosition != undefined) {
+            $('#module-search-form input[type="text"]').focus();
+            $('#module-search-form input[type="text"]')[0].setSelectionRange(focusPosition, focusPosition);
+        }
+    }
+};
+
+/**
+ * Open menu
+ * @param {number} menu - menu to open index, -1 by default and to toggle
+ * @param {bool} forceOpen - force tab open ( even if opened before )
+ */
+Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
+    let active = false;
+    const oldStatusOpened = this.opened;
+    const app = this.parent;
+
+    // Deselect previous selections
+    this.deselectCardsAndDropZones();
+
+    // Open specific menu
+    if (menu > -1 && menu < this.menuItems.length) {
+        active = (forceOpen) ? false : (this.menuItems[menu].state == 'active');
+
+        // Close all menus
+        for (let index = this.menuItems.length - 1; index >= 0; index--) {
+            this.menuItems[index].state = '';
+            this.DOMObject.find('#content-' + index + ', #btn-menu-' + index).removeClass('active');
+        }
+
+        if (active) {
+            this.openedMenu = -1;
+            this.opened = false;
+        } else {
+            this.openedMenu = menu;
+
+            // If menu is the default/widget/tools, load content
+            if (menu > -1) {
+                this.loadContent(menu);
+            }
+
+            this.opened = true;
+        }
+    } else {
+        active = true;
+        this.openedMenu = -1;
+        this.opened = false;
+    }
+
+    // If toolbar changes width, refresh containers
+    if (this.opened != oldStatusOpened) {
+        // Update navbar and editor modal
+        this.DOMObject.find('nav.navbar').toggleClass('opened', this.opened);
+        this.DOMObject.parents('.editor-modal').toggleClass('toolbar-opened', this.opened);
+        
+        if (app.mainObjectType != 'playlist') {
+            // Refresh main containers
+            if (app.navigatorMode) {
+                app.renderContainer(app.navigator, app.selectedObject);
+            } else {
+                app.renderContainer(app.viewer, app.selectedObject);
+            }
+        }
+    }
+
+    // Save user preferences
+    this.savePrefs();
+};
+
+/**
+ * Select toolbar card so it can be used
+ * @param {object} card - DOM card to select/activate
+ */
+Toolbar.prototype.selectCard = function(card) {
+    // Deselect previous selections
+    this.deselectCardsAndDropZones();
+
+    const previouslySelected = this.selectedCard;
+
+    if (previouslySelected[0] != card[0]) {
+        // Get card info
+        const dropTo = $(card).attr('drop-to');
+        const subType = $(card).attr('data-sub-type');
+
+        // Select new card
+        $(card).addClass('card-selected');
+        $(card).parent('.toolbar-pane-content').addClass('selected');
+
+        // Save selected card data
+        this.selectedCard = card;
+
+        // Show designer overlay
+        $('.custom-overlay').show().unbind().click(() => {
+            this.deselectCardsAndDropZones();
+        });
+
+        // Set droppable areas as active
+        if (dropTo === 'all' && subType === 'permissions') {
+            $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
+        } else {
+            // Prevent adding audio to subplaylist
+            let selectorAppend = '';
+            if (subType == 'audio') {
+                selectorAppend = ':not([data-widget-type="subplaylist"])';
+            }
+
+            $('[data-type="' + dropTo + '"].ui-droppable.editable' + selectorAppend).addClass('ui-droppable-active');
+        }
+    }
+};
+
+/**
+ * Deselect all the cards and remove the overlay on the drop zones
+ */
+Toolbar.prototype.deselectCardsAndDropZones = function() {
+    // Deselect other cards
+    this.DOMObject.find('.toolbar-card.card-selected').removeClass('card-selected');
+
+    // Deselect other media
+    this.DOMObject.find('.media-content .media-selected').removeClass('media-selected');
+
+    // Remove content selected class
+    this.DOMObject.find('.toolbar-pane-content.selected').removeClass('selected');
+
+    // Remove media queue data
+    this.DOMObject.find('.toolbar-pane-content').removeData('mediaQueue');
+
+    // Remove drop class from droppable elements
+    $('.ui-droppable').removeClass('ui-droppable-active');
+
+    // Disable multi-select mode
+    if (this.parent.editorContainer.hasClass('multi-select')) {
+        this.toggleMultiselectMode(false);
+    }
+
+    // Hide designer overlay
+    $('.custom-overlay').hide().unbind();
+
+    // Deselect card
+    this.selectedCard = {};
+
+    // Empty queue
+    this.selectedQueue = [];
+};
+
+/**
+ * Media form callback
+ */
+Toolbar.prototype.mediaContentCreateWindow = function(menu) {
+    const self = this;
+
+    // Deselect previous selections
+    self.deselectCardsAndDropZones();
+
+    // Render template
+    const html = ToolbarContentMedia({
+        menuIndex: menu,
+        filters: this.menuItems[menu].content[0],
+        trans: toolbarTrans,
+    });
+
+    // Append template to the search main div
+    self.DOMObject.find('#media-container-' + menu).html(html);
+
+    // Populate selected tab
+    self.mediaContentPopulate(menu);
+};
+
+/**
+ * Media content populate table
+ * @param {number} menu - menu id
+ */
+Toolbar.prototype.mediaContentPopulate = function(menu) {
+    const self = this;
+    const content = self.menuItems[menu].content[0];
+    const requestURL = librarySearchUrl + '?assignable=1&retired=0';
+
+    // Request elements based on filters
+    const loadData = function(clear = true) {
+        const $mediaContent = self.DOMObject.find('#media-content-' + menu);
+        
+        // Remove show more button
+        self.DOMObject.find('.show-more').remove();
+
+        // Empty content and reset item count
+        if(clear) {
+            // Clear selection
+            self.deselectCardsAndDropZones();
+
+            // Empty content
+            $mediaContent.empty();
+            self.menuItems[menu].itemCount = 0;
+        }
+
+        // Show loading
+        $mediaContent.after('<div class="loading-container w-100 text-center"><span class="loading fa fa-cog fa-spin"></span></div>');
+
+        // Get filter data
+        const filter = self.DOMObject.find('#media-container-' + menu + ' #media-search-form').serializeObject();
+
+        if(menu == self.libraryMenuIndex && filter.type == '') {
+            filter.types = moduleListFiltered.map(el => el.type);
+        }
+
+        // Manage request length
+        filter.length = 15;
+
+        // Filter start
+        filter.start = self.menuItems[menu].itemCount;
+
+        $.ajax({
+            url: requestURL,
+            type: 'GET',
+            data: filter,
+        }).done(function(res) {
+            // Remove loading
+            $mediaContent.parent().find('.loading-container').remove();
+            if(res.data.length == 0) {
+                // Show no results message
+                $mediaContent.append('<div class="no-results-message">' + toolbarTrans.noMediaToShow + '</div>');
+            } else {
+                // Init masonry
+                $mediaContent.masonry({
+                    itemSelector: '.toolbar-card',
+                    columnWidth: 96,
+                    gutter: 11,
+                });
+
+                for (let index = 0; index < res.data.length; index++) {
+                    const element = res.data[index];
+                    element.trans = toolbarTrans;
+
+                    // Use template
+                    const $card = $(ToolbarCardMediaTemplate(element));
+                    
+                    // Append to container
+                    $mediaContent.append($card).masonry('appended', $card);;
+
+                    self.menuItems[menu].itemCount++;
+                }
+
+                // Layout masonry after images are loaded
+                $mediaContent.imagesLoaded(function() {
+                    // Recalculate masonry layout
+                    $mediaContent.masonry('layout');
+
+                    // Show content in widgets
+                    $mediaContent.find('.toolbar-card').removeClass('hide-content');
+
+                    // Show more button
+                    if(res.recordsTotal > filter.length + filter.start) {
+                        const $showMoreBtn = $('<button class="btn btn-block btn-white show-more">' + toolbarTrans.showMore + '</button>');
+                        $mediaContent.after($showMoreBtn);
+
+                        $showMoreBtn.off('click').on('click', function() {
+                            loadData(false);
+                        });
+                    }
+
+                    // Fix for scrollbar
+                    const $parent = $mediaContent.parent();
+                    $parent.toggleClass('scroll', ($parent.width() < $parent[0].scrollHeight));
+
+                    // Handle card behaviour
+                    self.handleCardsBehaviour();
+                });
+            }
+        }).catch(function(jqXHR, textStatus, errorThrown) {
+            // Login Form needed?
+            if (res.login) {
+                window.location.href = window.location.href;
+                location.reload();
+            } else {
+                // Just an error we dont know about
+                if (res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+            }
+        });
     };
 
+    // Refresh the table results
+    const filterRefresh = function(content) {
+        // if the orientation filter does not exist on this tab, add it.
+        if (!content.orientation) {
+            content.orientation = {
+                name: toolbarTrans.searc.orientation,
+                value: '',
+            };
+        }
+
+        // Save filter options
+        content.name.value = self.DOMObject.find('#media-search-form #input-name').val();
+        content.tag.value = self.DOMObject.find('#media-search-form #input-tag').val();
+        content.type.value = self.DOMObject.find('#media-search-form #input-type').val();
+        content.owner.value = self.DOMObject.find('#media-search-form #input-owner').val();
+        content.orientation.value = self.DOMObject.find('#media-search-form #input-orientation').val();
+
+        self.savePrefs();
+
+        // Reload data
+        loadData();
+    };
+
+    // Prevent filter form submit and bind the change event to reload the table
+    self.DOMObject.find('#media-search-form').on('submit', function(e) {
+        e.preventDefault();
+        return false;
+    });
+
+    // Bind seach action to refresh the results
+    self.DOMObject.find('#media-search-form select, #media-search-form input[type="text"].input-tag').change(_.debounce(function() {
+        filterRefresh(content);
+    }, 200));
+
+    self.DOMObject.find('#media-search-form input[type="text"]').on('input', _.debounce(function() {
+        filterRefresh(content);
+    }, 500));
+
+    // Initialize tagsinput
+    self.DOMObject.find('#media-search-form input[data-role="tagsinput"]').tagsinput();
+
+    self.DOMObject.find('#media-' + menu).off('click').on('click', '#tagDiv .btn-tag', function() {
+        // See if its the first element, if not add comma
+        const tagText = $(this).text();
+
+        // Add text to form
+        self.DOMObject.find('#media-search-form input[data-role="tagsinput"]').tagsinput('add', tagText, {allowDuplicates: false});
+    });
+
+    // Load data
+    loadData();
+};
+
+/**
+ * Mark/Unmark as favourite
+ */
+Toolbar.prototype.toggleFavourite = function(target) {
+    const favouriteModulesArray = this.menuItems[this.widgetMenuIndex].favouriteModules;
+    let markAsFav = false;
+
+    const $card = $(target).parent('.toolbar-card[data-type="module"]');
+    const cardType = $card.data().subType;
+    const positionInArray = $.inArray(cardType, favouriteModulesArray);
+
+    // Add/remove from the fav array
+    if (positionInArray > -1) {
+        // Remove from favourites
+        favouriteModulesArray.splice(positionInArray, 1);
+    } else {
+        // Add to favourites
+        markAsFav = true;
+        favouriteModulesArray.push(cardType);
+    }
+
+    // Show notification
+    toastr.success((markAsFav) ? toolbarTrans.addedToFavourites : toolbarTrans.removedFromFavourites, '', {positionClass: 'toast-bottom-right'});
+
+    // Save user preferences
+    this.savePrefs();
+
+    // Reload toolbar widget content
+    this.loadContent(0);
+};
+
+Toolbar.prototype.updateQueue = function(menu, mediaQueue) {
+    const $mediaPane = this.DOMObject.find('#content-' + menu + ' .toolbar-pane-content');
+
+    // Show drop overlay if queue has elements
+    if(mediaQueue.length > 0) {
+        this.queueToggleOverlays(menu);
+    } else {
+        this.queueToggleOverlays(menu, false);
+    }
+
+    $mediaPane.data('mediaQueue', mediaQueue)
+
+    // Save backup
+    this.selectedQueue = mediaQueue;
+};
+
+Toolbar.prototype.addToQueue = function(menu, target) {
+    const $mediaPane = this.DOMObject.find('#content-' + menu + ' .toolbar-pane-content');
+    let mediaQueue = $mediaPane.data('mediaQueue') ?? [];
+
+    // Add to queue
+    mediaQueue.push(target.data('mediaId'));
+    target.addClass('card-selected');
+    
+    // Update queue positions
+    this.updateQueue(menu, mediaQueue);
+};
+
+Toolbar.prototype.removeFromQueue = function(menu, target) {
+    const $mediaPane = this.DOMObject.find('#content-' + menu + ' .toolbar-pane-content');
+    let mediaQueue = $mediaPane.data('mediaQueue');
+
+    // Remove element
+    mediaQueue.splice(mediaQueue.indexOf(target.data('mediaId')), 1);
+    target.removeClass('card-selected');
+
+    // Update queue position
+    this.updateQueue(menu, mediaQueue);
+};
+
+Toolbar.prototype.queueToggleOverlays = function(menu, enable = true) {
+    const self = this;
+    const $mediaQueue = this.DOMObject.find('#content-' + menu + ' .media-add-queue');
+
+    // Mark queue as add enabled/disabled
+    $mediaQueue.data('toAdd', enable);
+
+    if(enable) {
+        // Show designer overlay
+        $('.custom-overlay').show().unbind().click(() => {
+            self.deselectCardsAndDropZones();
+        });
+
+        // Set droppable areas as active
+        $('[data-type="region"].ui-droppable.editable').addClass('ui-droppable-active');
+    } else {
+        self.deselectCardsAndDropZones();
+    }
+};
+
+/**
+ * Toggle multiple element select mode
+ */
+Toolbar.prototype.toggleMultiselectMode = function(forceSelect = null) {
+    const self = this;
+    const app = this.parent;
+    const timeline = app.timeline;
+    const editorContainer = app.editorContainer;
+
+    const updateTrashContainer = function() {
+        // Upate trash container status
+        self.DOMObject.find('#trashContainer').toggleClass('active', (timeline.DOMObject.find('.playlist-widget.multi-selected').length > 0));
+    };
+
+    // Check if needs to be selected or unselected
+    const multiSelectFlag = (forceSelect != null) ? forceSelect : !editorContainer.hasClass('multi-select');
+
+    // Toggle multi select class on container
+    editorContainer.toggleClass('multi-select', multiSelectFlag);
+
+    // Toggle class on button
+    this.DOMObject.find('#multiSelectContainer').toggleClass('multiselect-active', multiSelectFlag);
+
+    if (multiSelectFlag) {
+        // Show overlay
+        $('.custom-overlay').show().unbind().click(() => {
+            self.deselectCardsAndDropZones();
+        });
+
+        // Disable timeline sort
+        timeline.DOMObject.find('#timeline-container').sortable('disable');
+
+        // Enable select for each widget
+        timeline.DOMObject.find('.playlist-widget.deletable')
+            .removeClass('selected').unbind().click(function(e) {
+                e.stopPropagation();
+                $(this).toggleClass('multi-selected');
+
+                updateTrashContainer();
+            }
+            );
+
+        updateTrashContainer();
+    } else {
+        // Hide designer overlay
+        $('.custom-overlay').hide().unbind();
+
+        // Re-render timeline
+        app.renderContainer(timeline);
+
+        // Re-render toolbar
+        app.renderContainer(this);
+    }
+};
+
+/**
+ * Handle toolbar cards behaviour
+ */
+Toolbar.prototype.handleCardsBehaviour = function() {
+    const app = this.parent;
+    const self = this;
+
     // If in edit mode
-    if(app.readOnlyMode === undefined || app.readOnlyMode === false) {
-        // Set cards width/margin and draggable properties
+    if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
         this.DOMObject.find('.toolbar-card').each(function() {
-            
             $(this).draggable({
                 cursor: 'crosshair',
                 appendTo: $(this).parents('.toolbar-pane:first'),
-                handle: '.drag-area',
+                handle: (self.openedMenu == self.widgetMenuIndex) ? '.drag-area' : false,
                 cursorAt: {
                     top: ($(this).height() + ($(this).outerWidth(true) - $(this).outerWidth()) / 2) / 2,
-                    left: ($(this).width() + ($(this).outerWidth(true) - $(this).outerWidth()) / 2) / 2
+                    left: ($(this).width() + ($(this).outerWidth(true) - $(this).outerWidth()) / 2) / 2,
                 },
                 opacity: 0.3,
                 helper: 'clone',
@@ -420,12 +1000,11 @@ Toolbar.prototype.render = function() {
 
                     // Mark content as selected
                     $(this).parent('.toolbar-pane-content').addClass('selected');
-                    
+
                     // Reload tooltips to avoid floating detached elements
                     app.common.reloadTooltips(app.editorContainer);
                 },
                 stop: function() {
-
                     // Hide overlay
                     $('.custom-overlay').hide();
 
@@ -434,10 +1013,10 @@ Toolbar.prototype.render = function() {
 
                     // Mark content as unselected
                     $(this).parent('.toolbar-pane-content').removeClass('selected');
-                    
+
                     // Reload tooltips to avoid floating detached elements
                     app.common.reloadTooltips(app.editorContainer);
-                }
+                },
             });
         });
 
@@ -448,1037 +1027,20 @@ Toolbar.prototype.render = function() {
 
         // Select card clicking in the Add button
         this.DOMObject.find('.toolbar-card:not(.card-selected) .btn-favourite').click((e) => {
-            this.toggleFavourite(e.currentTarget);
+            self.toggleFavourite(e.currentTarget);
         });
-
-        // If library meny is selected, open media content window
-        if(this.openedMenu != -1 && this.menuItems[this.openedMenu].name === 'library') {
-            this.mediaContentCreateWindow(this.openedMenu);
-        }
-    }
-
-    // Options menu
-    if(self.showOptions) {
-        self.DOMObject.find('.navbar-submenu-options-container').off().click(function(e) {
-            e.stopPropagation();
-        });
-
-        // Toggle tooltips
-        self.DOMObject.find('#displayTooltips').off().click(function() {
-
-            app.common.displayTooltips = $('#displayTooltips').prop('checked');
-
-            if(app.common.displayTooltips) {
-                toastr.success(editorsTrans.tooltipsEnabled);
-            } else {
-                toastr.error(editorsTrans.tooltipsDisabled);
-            }
-
-            self.savePrefs();
-
-            app.common.reloadTooltips(app.editorContainer);
-        });
-
-        // Reset tour
-        if(typeof app.resetTour === 'function') {
-            self.DOMObject.find('#resetTour').removeClass('d-none').off().click(function() {
-                app.resetTour();
-            });
-        }
-    }
-
-    // Save default tolbar nav z-index
-    this.defaultZIndex = this.DOMObject.find('nav').css('z-index');
-
-    // If toolbar changes width, refresh containers
-    if(this.stretched != toolbarStretched) {
-
-        if(app.mainObjectType != 'playlist') {
-            // Refresh main containers
-            if(app.navigatorMode) {
-                app.renderContainer(app.navigator, app.selectedObject);
-            } else {
-                app.renderContainer(app.viewer, app.selectedObject);
-            }
-        }
-        
-        this.stretched = toolbarStretched;
-    }
-
-    if(app.mainObjectType == 'playlist') {
-        app.editorContainer.parents('.editor-modal').toggleClass('stretchedBar', toolbarStretched);
-    }
-};
-
-/**
- * Load content
- * @param {number} menu - menu to load content for
- */
-Toolbar.prototype.loadContent = function(menu = -1) {
-    const app = this.parent;
-
-    // Make menu state to be active
-    this.menuItems[menu].state = 'active';
-
-    if(this.menuItems[menu].name === 'widgets') {
-        // Sort by favourites
-        var favouriteModules = [];
-        var otherModules = [];
-
-        for(let index = 0;index < this.customModuleList.length;index++) {
-            const element = this.customModuleList[index];
-
-            element.maxSize = libraryUpload.maxSize;
-            element.maxSizeMessage = libraryUpload.maxSizeMessage;
-
-            if($.inArray(element.type, this.menuItems[menu].favouriteModules) > -1) {
-                element.favourited = true;
-                favouriteModules.push(element);
-            } else {
-                element.favourited = false;
-                otherModules.push(element);
-            }
-
-            element.oneClickAdd = this.menuItems[menu].oneClickAdd;
-        }
-
-        // Add elements to menu content
-        this.menuItems[menu].content = favouriteModules.concat(otherModules);
-    }
-
-    // Check if content needs to be hidden on this editor
-    for(let index = 0;index < this.menuItems[menu].content.length;index++) {
-        const element = this.menuItems[menu].content[index];
-        element.hideElement = element.hideOn != undefined && element.hideOn.indexOf(app.mainObjectType) != -1;
-    }
-
-    // Save user preferences and render
-    this.savePrefs();
-    this.render();
-};
-
-/**
- * Open menu
- * @param {number} menu - menu to open index, -1 by default and to toggle
- * @param {bool} forceOpen - force tab open ( even if opened before )
- */
-Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
-    // Deselect previous selections
-    this.deselectCardsAndDropZones();
-
-    // Open specific menu
-    if(menu > -1 && menu < this.menuItems.length) {
-        let active = (forceOpen) ? false : (this.menuItems[menu].state == 'active');
-
-        // Close all menus
-        for(let index = this.menuItems.length - 1;index >= 0;index--) {
-            this.menuItems[index].state = '';
-        }
-
-        if(active){
-            this.openedMenu = -1;
-        } else {
-            this.openedMenu = menu;
-
-            // If menu is the default/widget/tools, load content
-            if(menu > -1) {
-                this.loadContent(menu);
-                return; // To avoid double save and render
-            }
-        }
-    } else {
-        this.openedMenu = -1;
-    }
-
-    // Save user preferences
-    this.savePrefs();
-
-    // Render toolbar
-    this.render();
-};
-
-/**
- * Select toolbar card so it can be used
- * @param {object} card - DOM card to select/activate
- */
-Toolbar.prototype.selectCard = function(card) {
-
-    const app = this.parent;
-
-    // Deselect previous selections
-    this.deselectCardsAndDropZones();
-
-    const previouslySelected = this.selectedCard;
-
-    if(previouslySelected[0] != card[0]) {
-
-        // Get card info
-        const dropTo = $(card).attr('drop-to');
-        const subType = $(card).attr('data-sub-type');
-        const oneClickAdd = $(card).attr('data-one-click-add');
-
-        if(oneClickAdd != undefined && oneClickAdd.split(',').indexOf(app.mainObjectType) != -1) {
-            // Simulate drop item add
-            if($('[data-type="' + dropTo + '"]').length > 0) {
-                app.dropItemAdd($('[data-type="' + dropTo + '"]'), card);
-            } else if(dropTo == 'layout') {
-                // Create temporary object simulating the layout object
-                let $tempLayoutObj = $('<div>').data({
-                    'id': app.mainObjectId,
-                    'type': 'layout'
-                });
-
-                app.dropItemAdd($tempLayoutObj, card);
-            }
-        } else {
-            // Select new card
-            $(card).addClass('card-selected');
-            $(card).parent('.toolbar-pane-content').addClass('selected');
-
-            // Save selected card data
-            this.selectedCard = card;
-
-            // Show designer overlay
-            $('.custom-overlay').show().unbind().click(() => {
-                this.deselectCardsAndDropZones();
-            });
-
-            // Set droppable areas as active
-            if(dropTo === 'all' && subType === 'permissions') {
-                $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
-            } else {
-                // Prevent adding audio to subplaylist
-                let selectorAppend = '';
-                if(subType == 'audio'){
-                    selectorAppend = ':not([data-widget-type="subplaylist"])';
-                }
-
-                $('[data-type="' + dropTo + '"].ui-droppable.editable' + selectorAppend).addClass('ui-droppable-active');
-            }
-        }
-    }
-};
-
-/**
- * Select media so it can be used
- * @param {object} media - DOM card to select/activate
- */
-Toolbar.prototype.selectMedia = function(media, data) {
-
-    const alreadySelected = $(media).hasClass('media-selected');
-
-    // Deselect previous selections
-    this.deselectCardsAndDropZones();
-
-    if(!alreadySelected) {
-
-        // Select row in the table
-        $(media).addClass('media-selected');
-        $(media).parent('.toolbar-pane-content').addClass('selected');
-
-        // Create temp object to simulate a card and use it as the selected card
-        this.selectedCard = $('<div drop-to="region">').data({
-            type: 'media',
-            mediaId: data.mediaId,
-            subType: data.mediaType
-        });
-
-        // Show designer overlay
-        $('.custom-overlay').show().unbind().click(() => {
-            this.deselectCardsAndDropZones();
-        });
-
-        // Set droppable regions as active
-        $('[data-type="region"].ui-droppable.editable').addClass('ui-droppable-active');
-    }
-};
-
-/**
- * Deselect all the cards and remove the overlay on the drop zones
- */
-Toolbar.prototype.deselectCardsAndDropZones = function() {
-    // Deselect other cards
-    this.DOMObject.find('.toolbar-card.card-selected').removeClass('card-selected');
-
-    // Deselect other media
-    this.DOMObject.find('.media-table tr.media-selected').removeClass('media-selected');
-
-    // Remove content selected class
-    this.DOMObject.find('.toolbar-pane-content.selected').removeClass('selected');
-
-    // Remove drop class from droppable elements
-    $('.ui-droppable').removeClass('ui-droppable-active');
-
-    // Disable multi-select mode
-    if(this.parent.editorContainer.hasClass('multi-select')) {
-        this.toggleMultiselectMode(false);
-    }
-
-    // Hide designer overlay
-    $('.custom-overlay').hide().unbind();
-
-    // Deselect card
-    this.selectedCard = {};
-};
-
-/**
- * Create new tab
- */
-Toolbar.prototype.createNewTab = function(menu) {
-
-    let moduleListFiltered = [];
-    let usersListFiltered = [];
-
-    const self = this;
-
-    // Filter module list to create the types for the filter
-    modulesList.forEach(element => {
-        if(element.assignable == 1 && element.regionSpecific == 0) {
-            moduleListFiltered.push({
-                type: element.type,
-                name: element.name
-            });
-        }
-    });
-
-    usersList.forEach(element => {
-        usersListFiltered.push({
-            userId: element.userId.toString(),
-            name: element.userName
-        });
-    });
-
-    this.menuItems[menu].content.push({
-        name: toolbarTrans.tabName.replace('%tagId%', self.menuItems[menu].content.length),
-        filters: {
-            name: {
-                name: toolbarTrans.searchFilters.name,
-                value: ''
-            },
-            tag: {
-                name: toolbarTrans.searchFilters.tag,
-                value: ''
-            },
-            type: {
-                name: toolbarTrans.searchFilters.type,
-                values: moduleListFiltered
-            },
-            owner: {
-                name: toolbarTrans.searchFilters.owner,
-                values: usersListFiltered
-            },
-            orientation: {
-                name: toolbarTrans.searchFilters.orientation,
-                value: ''
-            },
-        }
-    });
-
-    this.menuItems[menu].selectedTab = this.menuItems[menu].content.length - 1;
-
-    self.savePrefs();
-};
-
-/**
- * Delete tab
- * @param {number} menu
- */
-Toolbar.prototype.deleteTab = function(menu) {
-
-    // Remove menu option from the array
-    this.menuItems.splice(menu, 1);
-
-    if(this.openedMenu == menu) {
-        // Deselect menu if we're closing the selected one
-        this.openedMenu = -1;
-    } else if(this.openedMenu < menu) {
-        // If the deleted menu is lower than the selected, update the selected index
-        this.openedMenu -= 1;
-    }
-
-    // Deselect previous selections
-    this.deselectCardsAndDropZones();
-
-    // Save user preferences
-    this.savePrefs();
-    this.render();
-};
-
-/**
- * Delete all tabs
- */
-Toolbar.prototype.deleteAllTabs = function() {
-
-    for(let index = this.menuItems.length - 1;index >= this.fixedTabs;index--) {
-        this.menuItems.splice(index, 1);
-    }
-
-    if(this.openedMenu >= this.fixedTabs) {
-        this.openedMenu = -1;
-    }
-
-    // Deselect previous selections
-    this.deselectCardsAndDropZones();
-
-    // Save user preferences
-    this.savePrefs();
-    this.render();
-};
-
-/**
- * Opens a new tab and search for the given media type
- * @param {string} type - Type of media
- */
-Toolbar.prototype.openNewTabAndSearch = function(type) {
-    // Open library library window
-    this.openMenu(this.libraryMenuIndex);
-    
-    // Create a new tab
-    this.createNewTab(this.libraryMenuIndex);
-
-    // Switch the selected tab's Type select box to the type we want
-    this.menuItems[this.libraryMenuIndex].content[this.menuItems[this.libraryMenuIndex].selectedTab].filters.type.value = type;
-    //this.DOMObject.find('#media-search-form-' + this.openedMenu + ' #input-type-' + this.openedMenu).val(type);
-
-    // Search/Load Content
-    this.loadContent(this.openedMenu);
-};
-
-/**
- * Media form callback
- */
-Toolbar.prototype.mediaContentCreateWindow = function(menu) {
-    const self = this;
-    const app = this.parent;
-
-    // Deselect previous selections
-    self.deselectCardsAndDropZones();
-
-    // Get search window Jquery object
-    const $libraryWindowContent = self.DOMObject.find('#content-' + menu + '.library-content');
-
-    if(this.menuItems[menu].content.length === 0) {
-        this.createNewTab(menu);
-    }
-
-    // Render template
-    const html = ToolbarMediaSearchTemplate({
-        menuIndex: menu,
-        menuObj: this.menuItems[menu],
-        trans: toolbarTrans,
-        closeTabs: this.menuItems[menu].content.length > 1
-    });
-
-    // Append template to the search main div
-    self.DOMObject.find('#media-search-container-' + menu).html(html);
-
-    // Set paging max to 5
-    $.fn.DataTable.ext.pager.numbers_length = 5;
-    
-    // Make search window to be draggable and resizable
-    $libraryWindowContent
-        .appendTo('.editor-side-bar > nav')
-        .draggable({
-            containment: 'window',
-            scroll: false,
-            handle: '.drag-handle'
-        })
-        .resizable({
-            minWidth: 640
-        }).off('dragstart dragstart resizestart resizestop dragstop').on('dragstart',
-            function() {
-                // Remove right sticky css
-                $(this).css('right', 'auto');
-        }).on('resizestart',
-            function() {
-                self.tablePositionUpdate($libraryWindowContent);
-            }
-        ).on('resizestop dragstop',
-            function(event, ui) {
-                // Save only if we're not in hide mode
-                if(!$(this).hasClass('hide-mode')) {
-                    // Save window positioning
-                    self.menuItems[menu].searchPosition = {
-                        width: $(this).width(),
-                        height: $(this).height(),
-                        top: $(this).position().top,
-                        left: $(this).position().left
-                    };
-
-                    self.savePrefs();
-
-                    self.tablePositionUpdate($libraryWindowContent);
-                }
-            }
-        );
-
-    // If we have set positions, set them on load
-    if(self.menuItems[menu].searchPosition != undefined) {
-        const position = self.menuItems[menu].searchPosition;
-
-        if(position.left + position.width > $(window).width()){
-            position.left = $(window).width() - position.width;
-        }
-
-        if(position.top + position.height > $(window).height()) {
-            position.top = $(window).height() - position.height;
-        }
-
-        if(position.left < 0) {
-            position.left = 0;
-        }
-
-        if(position.top < 0) {
-            position.top = 0;
-        }
-
-        $libraryWindowContent.width(position.width);
-        $libraryWindowContent.height(position.height);
-        $libraryWindowContent.css({top: position.top});
-        $libraryWindowContent.css({left: position.left});
-    }
-
-    // Search content window buttons handling
-    $libraryWindowContent.find('.btn-window-close').off().click(function() {
-        self.openMenu($(this).data('menu'));
-    });
-
-    $libraryWindowContent.find('.btn-window-new-tab').off().click(function() {
-        // Get menu index
-        const menu = $(this).data('menu');
-
-        // Create new tab
-        self.createNewTab(menu);
-
-        // Populate selected tab
-        self.mediaContentCreateWindow(menu);
-    });
-
-    $libraryWindowContent.find('.media-search-tab:not(.active):not(.media-tab-close)').off().click(function(ev) {
-        ev.stopPropagation();
-
-        // Get tab index
-        const tab = $(this).data('tab');
-
-        // Change selected tav
-        self.menuItems[menu].selectedTab = tab;
-
-        // Populate selected tab
-        self.mediaContentCreateWindow(menu);
-    });
-
-    $libraryWindowContent.find('.media-tab-close').off().click(function(ev) {
-        ev.stopPropagation();
-
-        // Get tab index
-        const tabToDelete = $(this).parent().data('tab');
-        let selectedTab = self.menuItems[menu].selectedTab;
-
-        // Select another tab
-        if(selectedTab >= tabToDelete && selectedTab > 0) {
-            selectedTab--;
-        }
-
-        // Delete tab and content
-        self.menuItems[menu].content.splice(tabToDelete, 1);
-        
-        // Select new tab
-        self.menuItems[menu].selectedTab = selectedTab;
-
-        // Update tab names
-        self.updateTabNames(menu);
-
-         // Populate selected tab
-        self.mediaContentCreateWindow(menu);
-    });
-
-    // Populate selected tab
-    self.mediaContentPopulateTable(menu);
-
-    // Create media queue if in backup
-    if(!$.isEmptyObject(self.selectedQueue)){
-        self.createQueue(menu);
-    }
-};
-
-/**
- * Media content populate table
- */
-Toolbar.prototype.mediaContentPopulateTable = function(menu) {
-    const self = this;
-    const tabIndex = self.menuItems[0].selectedTab;
-    const tabObj = self.menuItems[menu].content[self.menuItems[0].selectedTab];
-
-    // Destroy previous table
-    self.DOMObject.find('#media-table-' + menu).DataTable().destroy();
-
-    var mediaTable = self.DOMObject.find('#media-table-' + menu).DataTable({
-        "language": dataTablesLanguage,
-        "lengthMenu": [5, 10],
-        "pageLength": 5,
-        "autoWidth": false,
-        serverSide: true, stateSave: true,
-        searchDelay: 3000,
-        "order": [[1, "asc"]],
-        "filter": false,
-        ajax: {
-            url: librarySearchUrl + '?assignable=1&retired=0',
-            "data": function(d) {
-                $.extend(d, self.DOMObject.find('#media-search-container-' + menu + ' #media-search-form-' + tabIndex).serializeObject());
-            }
-        },
-        "columns": [
-            {
-                "sortable": false,
-                "data": function(data, type, row, meta) {
-                    if(type !== "display")
-                        return "";
-
-                    // Create a click-able span
-                    return "<a href=\"#\" class=\"assignItem\"><span class=\"fa fa-plus\"></a>";
-                }
-            },
-            {"data": "mediaId"},
-            {"data": "name"},
-            {"data": "mediaType"},
-            {
-                "sortable": false,
-                "data": dataTableCreateTags
-            },
-            {
-                "name": "mediaId",
-                "data": null,
-                "render": function(data, type, row, meta) {
-                    if(type === "display") {
-                        // Return only the image part of the data
-                        if(data.thumbnailUrl === '')
-                            return '';
-                        else
-                            return '<img src="' + data.thumbnailUrl + '"/>';
-                        return data;
-                    } else {
-                        return row.mediaId;
-                    }
-                }
-            }
-        ]
-    });
-
-    mediaTable.on('draw', function(e, settings) {
-        dataTableDraw(e, settings);
 
         // Clicky on the +spans
-        self.DOMObject.find(".assignItem").click(function() {
+        this.DOMObject.find('#media-content-' + this.openedMenu + ' .select-button').off('click').click(function() {
             // Get the row that this is in.
-            var data = mediaTable.row($(this).closest("tr")).data();
+            const $card = $(this).parent();
 
-            if(self.useQueue) {
-                self.addToQueue(menu, data);
+            if($card.hasClass('card-selected')) {
+                self.removeFromQueue(self.openedMenu, $card);
             } else {
-                self.selectMedia($(this).closest('tr'), data);
+                self.addToQueue(self.openedMenu, $card);
             }
         });
-
-        self.updateTabNames(menu);
-
-        self.tablePositionUpdate(self.DOMObject.find('#content-' + menu + '.library-content'));
-    });
-
-    mediaTable.on('processing.dt', dataTableProcessing);
-
-    // Refresh the table results
-    var filterRefresh = function(mediaTable, tabObj) {
-        // if the orientation filter does not exist on this tab, add it.
-        if (!tabObj.filters.orientation) {
-            tabObj.filters.orientation = {
-                name: toolbarTrans.searchFilters.orientation,
-                value: ''
-            }
-        }
-
-        // Save filter options
-        tabObj.filters.name.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-name-' + tabIndex).val();
-        tabObj.filters.tag.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-tag-' + tabIndex).val();
-        tabObj.filters.type.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-type-' + tabIndex).val();
-        tabObj.filters.owner.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-owner-' + tabIndex).val();
-        tabObj.filters.orientation.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-orientation-' + tabIndex).val();
-
-        self.savePrefs();
-
-        self.updateTabNames(menu);
-
-        // Reload table
-        mediaTable.ajax.reload();
-    };
-
-    // Prevent filter form submit and bind the change event to reload the table
-    self.DOMObject.find('#media-search-form-' + tabIndex).on('submit', function(e) {
-        e.preventDefault();
-        return false;
-    });
-
-    // Bind seach action to refresh the results
-    self.DOMObject.find('#media-search-form-' + tabIndex + ' select, input[type="text"]').change(_.debounce(function() {
-        filterRefresh(mediaTable, tabObj);
-    }, 500));
-
-    self.DOMObject.find('#media-search-form-' + tabIndex + ' input[type="text"]').on('input', _.debounce(function() {
-        filterRefresh(mediaTable, tabObj);
-    }, 500));
-
-    // Initialize tagsinput
-    self.DOMObject.find('#media-search-form-' + tabIndex + ' input[data-role="tagsinput"]').tagsinput();
-
-    self.DOMObject.find('#media-table-' + menu).off('click').on('click', '#tagDiv .btn-tag', function() {
-
-        // See if its the first element, if not add comma
-        var tagText = $(this).text();
-
-        // Add text to form
-        self.DOMObject.find('#media-search-form-' + tabIndex + ' input[data-role="tagsinput"]').tagsinput('add', tagText, {allowDuplicates: false});
-    });
-};
-
-
-/**
- * Update tab height
- */
-Toolbar.prototype.tablePositionUpdate = function(container) {
-    // Calculate table container height
-    const tableContainerHeight = container.find('.media-search-controls').outerHeight() + container.find('.media-search-form:not(.hidden)').outerHeight() + container.find('.XiboGrid').outerHeight();
-
-    // Set resizable min height
-    if(container.resizable('instance') != undefined) {
-        container.resizable('option', 'minHeight', tableContainerHeight);
-    }
-
-    // Fix height if bigger than the min
-    if(container.height() < tableContainerHeight) {
-        container.height(tableContainerHeight);
-    }
-};
-
-/**
- * Update tab name
- */
-Toolbar.prototype.updateTabNames = function(menu) {
-    for(let tab = 0;tab < this.menuItems[menu].content.length;tab++) {
-
-        const tabContent = this.menuItems[menu].content[tab];
-        const customFilter = tabContent.filters;
-
-        // Change tab name to reflect the search query
-        if(customFilter.name.value != '' && customFilter.name.value != undefined) {
-            tabContent.name = '"' + customFilter.name.value + '"';
-        } else {
-            tabContent.name = toolbarTrans.tabName.replace('%tagId%', tab);
-        }
-
-        if(customFilter.tag.value != '' && customFilter.tag.value != undefined) {
-            tabContent.name += ' {' + customFilter.tag.value + '} ';
-        }
-
-        if(customFilter.type.value != '' && customFilter.type.value != undefined) {
-            tabContent.name += ' [' + customFilter.type.value + '] ';
-        }
-
-        // Change 
-        this.DOMObject.find('#content-' + menu + ' #tab-name-' + tab).html(tabContent.name);
-    }
-};
-
-/**
- * Mark/Unmark as favourite
- */
-Toolbar.prototype.toggleFavourite = function(target) {
-
-    let favouriteModulesArray = this.menuItems[this.widgetMenuIndex].favouriteModules;
-    let markAsFav = false;
-
-    const $card = $(target).parent('.toolbar-card[data-type="module"]');
-    const cardType = $card.data().subType;
-    const positionInArray = $.inArray(cardType, favouriteModulesArray);
-
-    // Add/remove from the fav array
-    if(positionInArray > -1) {
-        // Remove from favourites
-        favouriteModulesArray.splice(positionInArray, 1);
-    } else {
-        // Add to favourites
-        markAsFav = true;
-        favouriteModulesArray.push(cardType);
-    }
-
-    // Show notification
-    toastr.success((markAsFav) ? toolbarTrans.addedToFavourites : toolbarTrans.removedFromFavourites, '', { positionClass: 'toast-bottom-right' });
-
-    // Save user preferences
-    this.savePrefs();
-
-    // Reload toolbar widget content
-    this.loadContent(1);
-};
-
-/**
- * Queue
- */
-Toolbar.prototype.createQueue = function(menu, target = null) {
-    const self = this;
-
-    let html = '';
-
-    if(this.selectedQueue != undefined && !$.isEmptyObject(this.selectedQueue)) {
-        // Get html from backup
-        html = $(this.selectedQueue)[0].outerHTML;
-
-        // Remove previous queue
-        this.destroyQueue(menu);
-    } else {
-        html = ToolbarMediaQueueTemplate({
-            trans: toolbarTrans
-        });
-    }
-    // Append the queue to the library search window
-    this.DOMObject.find('#content-' + menu).append(html);
-
-    // Handle destroy queue button
-    this.DOMObject.find('#content-' + menu + ' .btn-queue-close').click(function() {
-        self.destroyQueue(menu);
-    });
-    
-    // Update queue position
-    this.updateQueue(menu);
-
-    // Add element to queue
-    if(target){
-        this.addToQueue(menu, target);
-    }
-    
-    // Make queue sortable
-    this.DOMObject.find('#content-' + menu + ' .media-add-queue-list').sortable();
-
-    // Handle buttons
-    const $mediaQueue = this.DOMObject.find('#content-' + menu + ' .media-add-queue');
-    $mediaQueue.find('.media-add-queue-buttons').on('click', '.btn.active', function() {
-
-        const buttonType = $(this).data('type');
-
-        if(buttonType == 'toRegion' || buttonType == 'toPlaylist') {
-            self.queueAddToRegionPlaylist(menu);
-        } else if(buttonType == 'selectRegion') {
-            self.queueToggleToAddMode(menu);
-        } else if(buttonType == 'cancel') {
-            self.queueToggleToAddMode(menu, false);
-        }
-    });
-
-    // Handle remove queue button
-    $mediaQueue.on('click', '.queue-element-remove', function() {
-        self.removeFromQueue(menu, $(this));
-    });
-};
-
-Toolbar.prototype.updateQueue = function(menu) {
-    const $mediaQueue = this.DOMObject.find('#content-' + menu + ' .media-add-queue');
-    const app = this.parent;
-
-    // Position queue
-    $mediaQueue.css('left', - $mediaQueue.outerWidth()).show();
-
-    // Update queue button status
-    $mediaQueue.find('.media-add-queue-buttons .btn').removeClass('active'); // Remove active from all buttons
-    
-    if($mediaQueue.parent().hasClass('hide-mode')) {
-        $mediaQueue.find('.btn-queue-close').hide();
-        $mediaQueue.find('.media-add-queue-buttons button[data-type="cancel"]').addClass('active'); 
-    } else {
-        $mediaQueue.find('.btn-queue-close').show();
-
-        if(app.mainObjectType == 'playlist') {
-            $mediaQueue.find('.media-add-queue-buttons button[data-type="toPlaylist"]').addClass('active');  
-        } else if(app.selectedObject.type === 'region') {
-            $mediaQueue.find('.media-add-queue-buttons button[data-type="toRegion"]').addClass('active');  
-        } else {
-            $mediaQueue.find('.media-add-queue-buttons button[data-type="selectRegion"]').addClass('active'); 
-        }
-    }
-
-    // Show drop overlay if queue has elements
-    if($mediaQueue.find('.queue-element').length > 0) {
-        this.queueToggleOverlays(menu);
-    } else {
-        this.queueToggleOverlays(menu, false);
-    }
-
-    // Save backup
-    this.selectedQueue = $mediaQueue;
-};
-
-Toolbar.prototype.destroyQueue = function(menu) {
-    // Destroy queue element
-    $(this.DOMObject.find('.media-add-queue')).remove();
-
-    // Hide drop overlay
-    this.queueToggleOverlays(menu, false);
-
-    // Clear media backup
-    this.selectedQueue = {};
-};
-
-Toolbar.prototype.addToQueue = function(menu, target) {
-    const self = this;
-
-    if(this.DOMObject.find('.media-add-queue').length == 0) {
-        this.createQueue(menu, target);
-    } else {
-        // Create a new element with a template
-        const newElementHTML = ToolbarMediaQueueElementTemplate({
-            target: target,
-            trans: toolbarTrans
-        });
-
-        // Add data to the new element and create a jquery object
-        const $newElement = $(newElementHTML).data(target);
-
-        // Add new element to the list
-        this.DOMObject.find('#content-' + menu + ' .media-add-queue-list').append(
-            $newElement
-        );
-
-        // Update queue position
-        this.updateQueue(menu);
-    }
-};
-
-Toolbar.prototype.removeFromQueue = function(menu, target) {
-    const $mediaList = $(target).parents('.media-add-queue-list');
-    
-    // Remove element
-    $(target).parent().remove();
-
-    // If the list is empty, remove it
-    if($mediaList.find('div').length == 0) {
-        this.destroyQueue(menu);
-    } else {
-        // Update queue position
-        this.updateQueue(menu);
-    }
-};
-
-Toolbar.prototype.queueToggleOverlays = function(menu, enable = true) {
-    const $mediaQueue = this.DOMObject.find('#content-' + menu + ' .media-add-queue');
-
-    // Mark queue as add enabled/disabled
-    $mediaQueue.data('toAdd', enable);
-
-    if(enable) {
-        // Show designer overlay
-        $('.custom-overlay').show();
-
-        // Set droppable areas as active
-        $('[data-type="region"].ui-droppable.editable').addClass('ui-droppable-active');
-    } else {
-        this.deselectCardsAndDropZones();
-    }
-};
-
-Toolbar.prototype.queueToggleToAddMode = function(menu, enable = true) {
-    const $mediaQueue = this.DOMObject.find('#content-' + menu + ' .media-add-queue');
-    const self = this;
-
-    // Show/hide table container
-    $mediaQueue.parent().toggleClass('hide-mode', enable);
-
-    // Enable/disable drag
-    $mediaQueue.parent().resizable(enable ? 'disable' : 'enable');
-
-    if(enable) {
-
-        // Click on overlay do toggle add mode
-        $('.custom-overlay').unbind().click(() => {
-            self.queueToggleToAddMode(menu, false);
-        });
-    }
-
-    // Update queue position
-    this.updateQueue(menu);
-};
-
-Toolbar.prototype.queueAddToRegionPlaylist = function(menu) {
-    const app = this.parent;
-
-    let mediaQueueArray = [];
-
-    this.selectedQueue.find('.queue-element').each(function() {
-        mediaQueueArray.push($(this).attr('id'));
-    });
-
-    let playlistId = null;
-
-    // Get playlist id
-    if(app.selectedObject.type == 'region') {
-        playlistId = app.getElementByTypeAndId('region', app.selectedObject.id).playlists.playlistId;
-
-        // Add media queue to playlist
-        app.addMediaToPlaylist(playlistId, mediaQueueArray);
-    } else if(app.mainObjectType == 'playlist' && app.playlist != undefined) {
-        app.playlist.addMedia(mediaQueueArray);
-    }
-
-    // Destroy queue
-    this.destroyQueue(menu);
-};
-
-/**
- * Revert last action
- */
-Toolbar.prototype.toggleMultiselectMode = function(forceSelect = null) {
-    const self = this;
-    const app = this.parent;
-    const timeline = app.timeline;
-    const editorContainer = app.editorContainer;
-
-    const updateTrashContainer = function() {
-        // Upate trash container status
-        self.DOMObject.find('#trashContainer').toggleClass('active', (timeline.DOMObject.find('.playlist-widget.multi-selected').length > 0));
-    };
-
-    // Check if needs to be selected or unselected
-    let multiSelectFlag = (forceSelect != null) ? forceSelect : !editorContainer.hasClass('multi-select');
-
-    // Toggle multi select class on container
-    editorContainer.toggleClass('multi-select', multiSelectFlag);
-
-    // Toggle class on button
-    this.DOMObject.find('#multiSelectContainer').toggleClass('multiselect-active', multiSelectFlag);
-
-    if(multiSelectFlag) {
-        // Show overlay
-        $('.custom-overlay').show().unbind().click(() => {
-            self.deselectCardsAndDropZones();
-        });
-
-        // Disable timeline sort
-        timeline.DOMObject.find('#timeline-container').sortable('disable');
-        
-        // Enable select for each widget
-        timeline.DOMObject.find('.playlist-widget.deletable').removeClass('selected').unbind().click(function(e) {
-            e.stopPropagation();
-            $(this).toggleClass('multi-selected');
-            
-            updateTrashContainer();
-        });
-
-        updateTrashContainer();
-    } else {
-        // Hide designer overlay
-        $('.custom-overlay').hide().unbind();
-        
-        // Re-render timeline
-        app.renderContainer(timeline);
-
-        // Re-render toolbar
-        app.renderContainer(this);
     }
 };
 

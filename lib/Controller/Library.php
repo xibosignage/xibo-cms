@@ -511,6 +511,7 @@ class Library extends Base
             'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
             'nameExact' => $parsedQueryParams->getString('nameExact'),
             'type' => $parsedQueryParams->getString('type'),
+            'types' => $parsedQueryParams->getArray('types'),
             'tags' => $parsedQueryParams->getString('tags'),
             'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
             'ownerId' => $parsedQueryParams->getInt('ownerId'),
