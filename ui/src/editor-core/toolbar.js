@@ -130,7 +130,6 @@ const Toolbar = function(parent, container, customActions = {}, showOptions = fa
 
     // Flag to mark if the toolbar is opened
     this.opened = false;
-    this.wide = false;
 
     // Use queue to add media
     this.useQueue = true;
@@ -404,21 +403,6 @@ Toolbar.prototype.render = function() {
     // Save default tolbar nav z-index
     this.defaultZIndex = this.DOMObject.find('nav').css('z-index');
 
-    // If toolbar changes width, refresh containers
-    if (this.opened != toolbarOpened) {
-        if (app.mainObjectType != 'playlist') {
-            // Refresh main containers
-            if (app.navigatorMode) {
-                app.renderContainer(app.navigator, app.selectedObject);
-            } else {
-                app.renderContainer(app.viewer, app.selectedObject);
-            }
-        }
-
-        this.opened = toolbarOpened;
-        (this.openedMenu > this.widgetMenuIndex) && (this.wide = true);
-    }
-
     // If there was a opened menu in the toolbar, open that tab
     if (this.openedMenu != undefined && this.openedMenu != -1) {
         this.openMenu(this.openedMenu, true);
@@ -516,6 +500,7 @@ Toolbar.prototype.createContent = function(menu = -1) {
  */
 Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
     let active = false;
+    const oldStatusOpened = this.opened;
     const app = this.parent;
 
     // Deselect previous selections
@@ -533,6 +518,7 @@ Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
 
         if (active) {
             this.openedMenu = -1;
+            this.opened = false;
         } else {
             this.openedMenu = menu;
 
@@ -540,26 +526,30 @@ Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
             if (menu > -1) {
                 this.loadContent(menu);
             }
+
+            this.opened = true;
         }
     } else {
         active = true;
         this.openedMenu = -1;
+        this.opened = false;
     }
 
-    // Update navbar class
-    const toolbarOpened = !active;
-    const toolbarOpenedWide = (toolbarOpened && (this.openedMenu > this.widgetMenuIndex));
-    this.DOMObject.find('nav.navbar').toggleClass('opened', toolbarOpened);
-    this.DOMObject.find('nav.navbar').toggleClass('wide', toolbarOpenedWide);
-
-    const $editorModal = this.DOMObject.parents('.editor-modal');
-    if($editorModal.length > 0 ) {
-        $editorModal.toggleClass('toolbar-opened', toolbarOpened);
-        $editorModal.toggleClass('wide', toolbarOpenedWide);
+    // If toolbar changes width, refresh containers
+    if (this.opened != oldStatusOpened) {
+        // Update navbar and editor modal
+        this.DOMObject.find('nav.navbar').toggleClass('opened', this.opened);
+        this.DOMObject.parents('.editor-modal').toggleClass('toolbar-opened', this.opened);
+        
+        if (app.mainObjectType != 'playlist') {
+            // Refresh main containers
+            if (app.navigatorMode) {
+                app.renderContainer(app.navigator, app.selectedObject);
+            } else {
+                app.renderContainer(app.viewer, app.selectedObject);
+            }
+        }
     }
-
-    // Reload viewer
-    app.renderContainer(app.viewer, app.selectedObject);
 
     // Save user preferences
     this.savePrefs();

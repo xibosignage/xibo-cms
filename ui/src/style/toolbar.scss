@@ -79,7 +79,7 @@
         }
 
         form {
-            margin: 6px 10px 10px;
+            margin: 12px 12px 6px 16px;
 
             .form-group {
 
@@ -110,8 +110,8 @@
                 scroll-behavior: smooth;
                 overflow-x: hidden;
                 overflow-y: auto;
-                width: 240px;
-                margin: 6px 10px;
+                width: 334px;
+                margin: 6px -2px 6px 6px;
 
                 /* SCROLLBAR */
                 scrollbar-color: $xibo-color-primary lighten($xibo-color-primary, 40%); /* For firefox */
@@ -145,7 +145,7 @@
                     display: flex;
                     flex-direction: row;
                     width: auto;
-                    margin: 4px 10px;
+                    margin: 4px 6px;
                     white-space: nowrap;
                     flex-wrap: wrap;
 
@@ -173,7 +173,6 @@
                 height: auto !important;
                 min-height: 45px;
                 color: $xibo-color-white;
-                width: calc(calc(100% / 3) - 8px);
                 width: $toolbar-card-width;
                 height: $toolbar-card-height;
                 @include border-radius(4px);
@@ -221,6 +220,7 @@
 
                 .media-search-form {
                     width: 310px;
+                    margin: 6px 10px 10px;
                 }
 
                 .toolbar-pane-container {
@@ -368,7 +368,6 @@
 
             &.toolbar-widgets-pane {
                 .toolbar-card {
-                    width: calc(calc(100% / 2) - 8px);
                     min-height: $toolbar-widgets-card-height;
                     height: $toolbar-widgets-card-height;
                     margin: 4px;
@@ -603,11 +602,7 @@
     padding: 16px 0 !important;
 
     &.opened {
-        margin-right: 260px;
-
-        &.wide {
-            margin-right: 340px;
-        }
+        margin-right: 340px;
     }
 }
 
