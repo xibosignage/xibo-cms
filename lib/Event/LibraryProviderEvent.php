@@ -44,8 +44,8 @@ class LibraryProviderEvent extends Event
     /** @var string */
     private $search;
 
-    /** @var string */
-    private $type;
+    /** @var array */
+    private $types = [];
 
     /** @var string landspace|portrait or empty */
     private $orientation;
@@ -53,13 +53,13 @@ class LibraryProviderEvent extends Event
     /**
      * @param \Xibo\Entity\SearchResults $results
      */
-    public function __construct(SearchResults $results, $start, $length, $search, $type, $orientation)
+    public function __construct(SearchResults $results, $start, $length, $search, $types, $orientation)
     {
         $this->results = $results;
         $this->start = $start;
         $this->length = $length;
         $this->search = $search;
-        $this->type = $type;
+        $this->types = $types;
         $this->orientation = $orientation;
     }
 
@@ -101,11 +101,11 @@ class LibraryProviderEvent extends Event
     }
 
     /**
-     * @return string
+     * @return array
      */
-    public function getType()
+    public function getTypes()
     {
-        return $this->type;
+        return $this->types;
     }
 
     /**

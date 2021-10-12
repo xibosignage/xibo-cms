@@ -795,13 +795,20 @@ class Library extends Base
         if ($provider === 'both' || $provider === 'remote') {
             $this->getLog()->debug('Dispatching event.');
 
+            // Do we have a type filter
+            $types = $parsedQueryParams->getArray('types');
+            $type = $parsedQueryParams->getString('type');
+            if ($type !== null) {
+                $types[] = $type;
+            }
+
             // Hand off to any other providers that may want to provide results.
             $event = new LibraryProviderEvent(
                 $searchResults,
                 $parsedQueryParams->getInt('start', ['default' => 0]),
                 $parsedQueryParams->getInt('length', ['default' => 10]),
                 $parsedQueryParams->getString('media'),
-                $parsedQueryParams->getString('type'),
+                $types,
                 $parsedQueryParams->getString('orientation')
             );
 

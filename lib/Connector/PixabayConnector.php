@@ -62,6 +62,11 @@ class PixabayConnector implements ConnectorInterface
             return;
         }
 
+        // Have we filtered for a compatible type?
+        if (count($event->getTypes()) > 0 && !in_array('image', $event->getTypes())) {
+            return;
+        }
+
         // We do! Let's get some results from Pixabay
         // first we look at paging
         $start = $event->getStart();
