@@ -57,7 +57,7 @@ trait ConnectorTrait
      */
     private function getLogger(): LoggerInterface {
         if ($this->logger === null) {
-            $this->logger = new NullLogger();
+            return new NullLogger();
         }
         return $this->logger;
     }

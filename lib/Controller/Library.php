@@ -798,8 +798,8 @@ class Library extends Base
             // Hand off to any other providers that may want to provide results.
             $event = new LibraryProviderEvent(
                 $searchResults,
-                $parsedQueryParams->getInt('start'),
-                $parsedQueryParams->getInt('length'),
+                $parsedQueryParams->getInt('start', ['default' => 0]),
+                $parsedQueryParams->getInt('length', ['default' => 10]),
                 $parsedQueryParams->getString('media'),
                 $parsedQueryParams->getString('type'),
                 $parsedQueryParams->getString('orientation')
