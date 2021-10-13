@@ -19,21 +19,31 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-
 namespace Xibo\Service;
 
 use Carbon\Carbon;
+use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
+use Mimey\MimeTypes;
+use Slim\Routing\RouteParser;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Factory\MediaFactory;
+use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Environment;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\ConfigurationException;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\LibraryFullException;
 
+/**
+ * MediaService
+ */
 class MediaService implements MediaServiceInterface
 {
     /** @var ConfigServiceInterface */
@@ -56,9 +66,8 @@ class MediaService implements MediaServiceInterface
 
     /** @var User */
     private $user;
-    /**
-     * @var EventDispatcherInterface
-     */
+
+    /** @var EventDispatcherInterface */
     private $dispatcher;
 
     /** @inheritDoc */
@@ -79,7 +88,7 @@ class MediaService implements MediaServiceInterface
     }
 
     /** @inheritDoc */
-    public function setUser($user) : MediaService
+    public function setUser(User $user) : MediaServiceInterface
     {
         $this->user = $user;
         return $this;
@@ -91,18 +100,15 @@ class MediaService implements MediaServiceInterface
         return $this->user;
     }
 
-    public function setDispatcher(EventDispatcherInterface $dispatcher)
+    /** @inheritDoc */
+    public function setDispatcher(EventDispatcherInterface $dispatcher): MediaServiceInterface
     {
         $this->dispatcher = $dispatcher;
-    }
-
-    public function getDispatcher(): EventDispatcherInterface
-    {
-        return $this->dispatcher;
+        return $this;
     }
 
     /** @inheritDoc */
-    public function fontCKEditorConfig($routeParser) :string
+    public function fontCKEditorConfig(RouteParser $routeParser): string
     {
         // Regenerate the CSS for fonts
         $css = $this->installFonts($routeParser, ['invalidateCache' => false]);
@@ -111,15 +117,95 @@ class MediaService implements MediaServiceInterface
     }
 
     /** @inheritDoc */
-    public function libraryUsage() : int
+    public function libraryUsage(): int
     {
-        $results = $this->store->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', array());
+        $results = $this->store->select('SELECT IFNULL(SUM(FileSize), 0) AS SumSize FROM media', []);
 
         return $this->sanitizerService->getSanitizer($results[0])->getInt('SumSize');
     }
 
     /** @inheritDoc */
-    public function installFonts($routeParser, $options = [])
+    public function initLibrary(): MediaServiceInterface
+    {
+        MediaService::ensureLibraryExists($this->configService->getSetting('LIBRARY_LOCATION'));
+        return $this;
+    }
+
+    /** @inheritDoc */
+    public function checkLibraryOrQuotaFull($isCheckUser = false): MediaServiceInterface
+    {
+        // Check that we have some space in our library
+        $librarySizeLimit = $this->configService->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
+        $librarySizeLimitMB = round(($librarySizeLimit / 1024) / 1024, 2);
+
+        if ($librarySizeLimit > 0 && $this->libraryUsage() > $librarySizeLimit) {
+            throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s MB'), $librarySizeLimitMB));
+        }
+
+        if ($isCheckUser) {
+            $this->getUser()->isQuotaFullByUser();
+        }
+
+        return $this;
+    }
+
+    /** @inheritDoc */
+    public function checkMaxUploadSize($size): MediaServiceInterface
+    {
+        if (ByteFormatter::toBytes(Environment::getMaxUploadSize()) < $size) {
+            throw new InvalidArgumentException(
+                sprintf(__('This file size exceeds your environment Max Upload Size %s'), Environment::getMaxUploadSize()),
+                'size');
+        }
+        return $this;
+    }
+
+    /** @inheritDoc */
+    public function getDownloadInfo($url): array
+    {
+        $downloadInfo = [];
+        $guzzle = new Client($this->configService->getGuzzleProxy());
+
+        // first try to get the extension from pathinfo
+        $info = pathinfo(parse_url($url, PHP_URL_PATH));
+        $extension = $info['extension'];
+        $size = -1;
+
+        try {
+            $head = $guzzle->head($url);
+            $contentLength = $head->getHeader('Content-Length');
+
+            foreach ($contentLength as $value) {
+                $size = $value;
+            }
+
+            if (empty($extension)) {
+                $contentType = $head->getHeaderLine('Content-Type');
+
+                $extension = $contentType;
+
+                if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
+                    $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
+                    $extension = $amazonContentType;
+                }
+
+                // get the extension corresponding to the mime type
+                $mimeTypes = new MimeTypes();
+                $extension = $mimeTypes->getExtension($extension);
+            }
+        } catch (RequestException $e) {
+            $this->log->debug('Upload from url head request failed for URL ' . $url . ' with following message ' . $e->getMessage());
+        }
+
+        $downloadInfo['size'] = $size;
+        $downloadInfo['extension'] = $extension;
+        $downloadInfo['filename'] = $info['filename'];
+
+        return $downloadInfo;
+    }
+
+    /** @inheritDoc */
+    public function installFonts(RouteParser $routeParser, $options = [])
     {
         $options = array_merge([
             'invalidateCache' => true
@@ -321,7 +407,6 @@ class MediaService implements MediaServiceInterface
                 'length' => 100
             ]
         ) as $entry) {
-            /* @var \Xibo\Entity\Media $entry */
             // If the media type is a module, then pretend its a generic file
             $this->log->info(sprintf('Removing Expired File %s', $entry->name));
             $this->log->audit(
@@ -335,7 +420,7 @@ class MediaService implements MediaServiceInterface
                         ->format(DateFormatHelper::getSystemFormat())
                 ]
             );
-            $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($entry));
+            $this->dispatcher->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($entry));
             $entry->delete();
         }
     }

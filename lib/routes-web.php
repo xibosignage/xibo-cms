@@ -245,6 +245,10 @@ $app->get('/library/form/uploadUrl', ['\Xibo\Controller\Library','uploadFromUrlF
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.add']))
     ->setName('library.uploadUrl.form');
 
+$app->post('/library/connector/import', ['\Xibo\Controller\Library', 'connectorImport'])
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.add']))
+    ->setName('library.connector.import');
+
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/library/form/edit/{id}', ['\Xibo\Controller\Library', 'editForm'])->setName('library.edit.form');
     $group->get('/library/form/delete/{id}', ['\Xibo\Controller\Library', 'deleteForm'])->setName('library.delete.form');

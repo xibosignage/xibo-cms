@@ -19,28 +19,30 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Event;
 
-namespace Xibo\Connector;
+use Xibo\Connector\ProviderImport;
 
 /**
- * Provider Details
+ * Event raised when one or more provider search results have been chosen for importing on a layout
  */
-class ProviderDetails implements \JsonSerializable
+class LibraryProviderImportEvent extends Event
 {
-    public $id;
-    public $message;
-    public $link;
-    public $logoUrl;
-    public $backgroundColor;
+    protected static $NAME = 'connector.provider.library.import';
 
-    public function jsonSerialize()
+    /** @var ProviderImport[] */
+    private $ids;
+
+    /**
+     * @param ProviderImport[] $ids
+     */
+    public function __construct(array $ids)
     {
-        return [
-            'id' => $this->id,
-            'message' => $this->message,
-            'link' => $this->link,
-            'logoUrl' => $this->logoUrl,
-            'backgroundColor' => $this->backgroundColor
-        ];
+        $this->ids = $ids;
+    }
+
+    public function getItems(): array
+    {
+        return $this->ids;
     }
 }

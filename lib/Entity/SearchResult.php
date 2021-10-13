@@ -21,6 +21,8 @@
  */
 namespace Xibo\Entity;
 
+use Xibo\Connector\ProviderDetails;
+
 /**
  * @SWG\Definition()
  */
@@ -32,6 +34,9 @@ class SearchResult implements \JsonSerializable
     public $source;
     public $type;
     public $id;
+    public $download;
+
+    /** @var ProviderDetails */
     public $provider;
 
     public function jsonSerialize()
@@ -43,6 +48,7 @@ class SearchResult implements \JsonSerializable
             'title' => $this->title,
             'description' => $this->description,
             'thumbnail' => $this->thumbnail,
+            'download' => $this->download,
             'provider' => $this->provider
         ];
     }

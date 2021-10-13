@@ -27,6 +27,7 @@ use GuzzleHttp\Client;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\SearchResult;
 use Xibo\Event\LibraryProviderEvent;
+use Xibo\Event\LibraryProviderImportEvent;
 
 /**
  * Pixabay Connector
@@ -39,6 +40,7 @@ class PixabayConnector implements ConnectorInterface
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
         $dispatcher->addListener('connector.provider.library', [$this, 'onLibraryProvider']);
+        $dispatcher->addListener('connector.provider.library.import', [$this, 'onLibraryImport']);
         return $this;
     }
 
@@ -59,11 +61,6 @@ class PixabayConnector implements ConnectorInterface
         $apiKey = $this->getSetting('apiKey');
         if (empty($apiKey)) {
             $this->getLogger()->debug('onLibraryProvider: No api key');
-            return;
-        }
-
-        // Have we filtered for a compatible type?
-        if (count($event->getTypes()) > 0 && !in_array('image', $event->getTypes())) {
             return;
         }
 
@@ -94,8 +91,18 @@ class PixabayConnector implements ConnectorInterface
             $query['q'] = urlencode($event->getSearch());
         }
 
+        // Pixabay either returns images or videos, not both.
+        if (count($event->getTypes()) !== 1) {
+            return;
+        }
+
+        $type = $event->getTypes()[0];
+        if (!in_array($type, ['image', 'video'])) {
+            return;
+        }
+
         // Pixabay require a 24-hour cache of each result set.
-        $key = md5(json_encode($query));
+        $key = md5($type . '_' . json_encode($query));
         $cache = $this->getPool()->getItem($key);
         $body = $cache->get();
 
@@ -104,7 +111,8 @@ class PixabayConnector implements ConnectorInterface
 
             // Make the request
             $client = new Client();
-            $request = $client->request('GET', 'https://pixabay.com/api/', [
+            $uri = $type === 'video' ? 'https://pixabay.com/api/videos' : 'https://pixabay.com/api/';
+            $request = $client->request('GET', $uri, [
                 'query' => $query
             ]);
 
@@ -129,20 +137,46 @@ class PixabayConnector implements ConnectorInterface
         }
 
         $providerDetails = new ProviderDetails();
+        $providerDetails->id = 'pixabay';
         $providerDetails->link = 'https://pixabay.com';
         $providerDetails->logoUrl = 'theme/default/img/connectors/pixabay_logo.png';
         $providerDetails->backgroundColor = '';
 
-        // Add some random events.
-        foreach ($body->hits as $image) {
+        // Process each hit into a search result and add it to the overall results we've been given.
+        foreach ($body->hits as $result) {
             $searchResult = new SearchResult();
             $searchResult->source = $this->getSourceName();
-            $searchResult->id = $image->id;
-            $searchResult->title = $image->tags;
-            $searchResult->type = 'image';
-            $searchResult->thumbnail = $image->previewURL;
+            $searchResult->id = $result->id;
+            $searchResult->title = $result->tags;
             $searchResult->provider = $providerDetails;
+
+            if ($type === 'video') {
+                $searchResult->type = 'video';
+                $searchResult->thumbnail = $result->videos->tiny->url;
+                if (!empty($result->videos->large)) {
+                    $searchResult->download = $result->videos->large->url;
+                } else {
+                    $searchResult->download = $result->videos->medium->url;
+                }
+            } else {
+                $searchResult->type = 'image';
+                $searchResult->thumbnail = $result->previewURL;
+                $searchResult->download = $result->fullHDURL ?? $result->largeImageURL;
+            }
             $event->addResult($searchResult);
+        }
+    }
+
+    /**
+     * @param \Xibo\Event\LibraryProviderImportEvent $event
+     */
+    public function onLibraryImport(LibraryProviderImportEvent $event)
+    {
+        foreach ($event->getItems() as $providerImport) {
+            if ($providerImport->searchResult->provider->id === $this->getSourceName()) {
+                // Configure this import, setting the URL, etc.
+                $providerImport->configureDownload($providerImport->searchResult->id);
+            }
         }
     }
 }

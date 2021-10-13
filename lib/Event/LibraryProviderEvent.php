@@ -36,22 +36,27 @@ class LibraryProviderEvent extends Event
     private $results;
 
     /** @var int Record count to start from */
-    private $start = 0;
+    private $start;
 
     /** @var int Number of records to return */
-    private $length = 10;
+    private $length;
 
     /** @var string */
     private $search;
 
     /** @var array */
-    private $types = [];
+    private $types;
 
     /** @var string landspace|portrait or empty */
     private $orientation;
 
     /**
      * @param \Xibo\Entity\SearchResults $results
+     * @param $start
+     * @param $length
+     * @param $search
+     * @param $types
+     * @param $orientation
      */
     public function __construct(SearchResults $results, $start, $length, $search, $types, $orientation)
     {
