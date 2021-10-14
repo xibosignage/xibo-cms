@@ -330,6 +330,15 @@
                         }
                     }
 
+                    .provider {
+                        display: block;
+                        background-color: $xibo-color-white-pure;
+                        img {
+                            width: 100%;
+                            padding: 2px 6px;
+                        }
+                    }
+
                     &:hover {
                         @include box-shadow(0px 0px 0px 2px $xibo-color-white);
 

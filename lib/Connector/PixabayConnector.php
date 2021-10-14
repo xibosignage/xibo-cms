@@ -125,7 +125,7 @@ class PixabayConnector implements ConnectorInterface
 
         $providerDetails = new ProviderDetails();
         $providerDetails->link = 'https://pixabay.com';
-        $providerDetails->logoUrl = 'theme/default/img/connectors/pixabay_logo.png';
+        $providerDetails->logoUrl = '/theme/default/img/connectors/pixabay_logo.svg';
         $providerDetails->backgroundColor = '';
 
         // Add some random events.

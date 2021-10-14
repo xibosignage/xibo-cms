@@ -72,7 +72,7 @@ $designer-overlay-z-index: 1050;
 $designer-z-index-select: 10;
 
 // CSS
-.page-content {
+body, .page-content {
     overflow: hidden;
     height: 100vh;
 }

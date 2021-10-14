@@ -26,27 +26,25 @@ usersList.forEach((element) => {
     });
 });
 
-const baseFilters = {
+const defaultFilters = {
     name: {
-        name: toolbarTrans.searchFilters.name,
         value: '',
     },
     tag: {
-        name: toolbarTrans.searchFilters.tag,
         value: '',
     },
     type: {
-        name: toolbarTrans.searchFilters.type,
-        values: moduleListFiltered,
-    },
-    owner: {
-        name: toolbarTrans.searchFilters.owner,
-        values: usersListFiltered,
-    },
-    orientation: {
-        name: toolbarTrans.searchFilters.orientation,
         value: '',
     },
+    owner: {
+        value: '',
+    },
+    orientation: {
+        value: '',
+    },
+    provider: {
+        value: 'both'
+    }
 };
 
 const defaultMenuItems = [
@@ -56,6 +54,11 @@ const defaultMenuItems = [
         itemTitle: toolbarTrans.menuItems.widgetsTitle,
         itemIcon: 'th-large',
         content: [],
+        filters: {
+            name: {
+                value: '',
+            },
+        },
         state: '',
         itemCount: 0,
         favouriteModules: [],
@@ -66,7 +69,28 @@ const defaultMenuItems = [
         itemIcon: 'images',
         itemTitle: toolbarTrans.menuItems.imagesTitle,
         search: true,
-        content: [$.extend({}, baseFilters, {type: {value: 'image', locked: true}})],
+        filters: {
+            name: {
+                value: '',
+            },
+            tag: {
+                value: '',
+            },
+            type: {
+                value: 'image',
+                locked: true,
+            },
+            owner: {
+                value: '',
+                values: usersListFiltered,
+            },
+            orientation: {
+                value: '',
+            },
+            provider: {
+                value: 'both',
+            },
+        },
         state: '',
         itemCount: 0,
     },
@@ -76,7 +100,25 @@ const defaultMenuItems = [
         itemIcon: 'volume-up',
         itemTitle: toolbarTrans.menuItems.audioTitle,
         search: true,
-        content: [$.extend({}, baseFilters, {type: {value: 'audio', locked: true}})],
+        filters: {
+            name: {
+                value: '',
+            },
+            tag: {
+                value: '',
+            },
+            type: {
+                value: 'audio',
+                locked: true,
+            },
+            owner: {
+                value: '',
+                values: usersListFiltered,
+            },
+            provider: {
+                value: 'both',
+            },
+        },
         state: '',
         itemCount: 0,
     },
@@ -86,7 +128,28 @@ const defaultMenuItems = [
         itemIcon: 'video',
         itemTitle: toolbarTrans.menuItems.videoTitle,
         search: true,
-        content: [$.extend({}, baseFilters, {type: {value: 'video', locked: true}})],
+        filters: {
+            name: {
+                value: '',
+            },
+            tag: {
+                value: '',
+            },
+            type: {
+                value: 'video',
+                locked: true,
+            },
+            owner: {
+                value: '',
+                values: usersListFiltered,
+            },
+            orientation: {
+                value: '',
+            },
+            provider: {
+                value: 'both',
+            },
+        },
         state: '',
         itemCount: 0,
     },
@@ -96,7 +159,25 @@ const defaultMenuItems = [
         itemIcon: 'archive',
         itemTitle: toolbarTrans.menuItems.libraryTitle,
         search: true,
-        content: [baseFilters],
+        filters: {
+            name: {
+                value: '',
+            },
+            tag: {
+                value: '',
+            },
+            type: {
+                value: '',
+                values: moduleListFiltered,
+            },
+            owner: {
+                value: '',
+                values: usersListFiltered,
+            },
+            provider: {
+                value: 'both',
+            },
+        },
         state: '',
         itemCount: 0,
     },
@@ -168,8 +249,10 @@ Toolbar.prototype.loadPrefs = function() {
 
             // Load filters
             if (loadedData.filters) {
-                self.menuItems.forEach((el, idx) => {
-                    el.filters = loadedData.filters[idx];
+                loadedData.filters.forEach((menu, menuIdx) => {
+                    for (let filter in menu) {
+                        self.menuItems[menuIdx].filters[filter].value = menu[filter];
+                    }
                 });
             }
 
@@ -222,8 +305,13 @@ Toolbar.prototype.savePrefs = function(clearPrefs = false) {
         favouriteModules = this.menuItems[this.widgetMenuIndex].favouriteModules;
 
         // Save filters
-        this.menuItems.forEach((el, idx) => {
-            filters[idx] = el.filters;
+        this.menuItems.forEach((menu, menuIdx) => {
+            filters[menuIdx] = {};
+            for (let filter in menu.filters) {
+                if(defaultFilters[filter].value != menu.filters[filter].value && menu.filters[filter].locked != true) {
+                    filters[menuIdx][filter] = menu.filters[filter].value;
+                }
+            }
         });
     }
 
@@ -412,8 +500,9 @@ Toolbar.prototype.render = function() {
 /**
  * Load content
  * @param {number} menu - menu to load content for
+ * @param {boolean} forceReload - force content to be reloaded even if exists
  */
-Toolbar.prototype.loadContent = function(menu = -1) {
+Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
     // Make menu state to be active
     this.menuItems[menu].state = 'active';
 
@@ -429,7 +518,7 @@ Toolbar.prototype.loadContent = function(menu = -1) {
             element.maxSizeMessage = libraryUpload.maxSizeMessage;
 
             // Filter elements
-            if (this.menuItems[menu].filters && !element.name.toLowerCase().includes(this.menuItems[menu].filters.toLowerCase())) {
+            if (this.menuItems[menu].filters.name.value && !element.name.toLowerCase().includes(this.menuItems[menu].filters.name.value.toLowerCase())) {
                 continue;
             }
 
@@ -451,20 +540,26 @@ Toolbar.prototype.loadContent = function(menu = -1) {
 
     this.DOMObject.find('#content-' + menu + ', #btn-menu-' + menu).addClass('active');
 
-    // Save user preferences and render
-    this.savePrefs();
-
     // Create content
-    this.createContent(menu);
+    this.createContent(menu, forceReload);
+
+    // Save user preferences
+    this.savePrefs();
 };
 
 /**
  * Create content
  * @param {number} menu - menu to load content for
+ * @param {boolean} forceReload - force content to be reloaded even if exists
  */
-Toolbar.prototype.createContent = function(menu = -1) {
+Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
     const content = $.extend({}, this.menuItems[menu], {menuIndex: menu, trans: toolbarTrans, filters: this.menuItems[menu].filters});
     const self = this;
+
+    // Create content only if it's not rendered yet ( if force reload is true, skip this step)
+    if(!forceReload && this.DOMObject.find('#content-' + menu + ' .toolbar-pane-container').length > 0) {
+        return;
+    }
 
     // Render template
     const html = ToolbarContentTemplate(content);
@@ -479,7 +574,7 @@ Toolbar.prototype.createContent = function(menu = -1) {
 
         // Bind search action to refresh the results
         this.DOMObject.find('#module-search-form input[type="text"]').on('input', _.debounce(function(e) {
-            self.menuItems[menu].filters = $(this).val();
+            self.menuItems[menu].filters.name.value = $(this).val();
             self.menuItems[menu].focus = e.target.selectionStart;
             self.loadContent(menu);
         }, 500));
@@ -551,8 +646,11 @@ Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
         }
     }
 
-    // Save user preferences
-    this.savePrefs();
+    // if menu was closed, save preferences and clean content
+    if(!this.opened) {
+        // Save user preferences
+        this.savePrefs();
+    }
 };
 
 /**
@@ -643,7 +741,7 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
     // Render template
     const html = ToolbarContentMedia({
         menuIndex: menu,
-        filters: this.menuItems[menu].content[0],
+        filters: this.menuItems[menu].filters,
         trans: toolbarTrans,
     });
 
@@ -660,8 +758,9 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
  */
 Toolbar.prototype.mediaContentPopulate = function(menu) {
     const self = this;
-    const content = self.menuItems[menu].content[0];
+    const filters = self.menuItems[menu].filters;
     const requestURL = librarySearchUrl + '?assignable=1&retired=0';
+    const $mediaContainer = self.DOMObject.find('#media-container-' + menu);
 
     // Request elements based on filters
     const loadData = function(clear = true) {
@@ -691,19 +790,23 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         }
 
         // Manage request length
-        filter.length = 15;
+        const requestLength = 15;
 
         // Filter start
-        filter.start = self.menuItems[menu].itemCount;
+        const start = self.menuItems[menu].itemCount;
 
         $.ajax({
             url: requestURL,
             type: 'GET',
-            data: filter,
+            data: $.extend({
+                start: start,
+                length: requestLength,
+                provider: 'both'
+            }, filter),
         }).done(function(res) {
             // Remove loading
             $mediaContent.parent().find('.loading-container').remove();
-            if(res.data.length == 0) {
+            if(!res.data || res.data.length == 0) {
                 // Show no results message
                 $mediaContent.append('<div class="no-results-message">' + toolbarTrans.noMediaToShow + '</div>');
             } else {
@@ -736,7 +839,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
                     $mediaContent.find('.toolbar-card').removeClass('hide-content');
 
                     // Show more button
-                    if(res.recordsTotal > filter.length + filter.start) {
+                    if(res.data.length == requestLength) {
                         const $showMoreBtn = $('<button class="btn btn-block btn-white show-more">' + toolbarTrans.showMore + '</button>');
                         $mediaContent.after($showMoreBtn);
 
@@ -770,52 +873,40 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     };
 
     // Refresh the table results
-    const filterRefresh = function(content) {
-        // if the orientation filter does not exist on this tab, add it.
-        if (!content.orientation) {
-            content.orientation = {
-                name: toolbarTrans.searc.orientation,
-                value: '',
-            };
-        }
-
+    const filterRefresh = function(filters) {
         // Save filter options
-        content.name.value = self.DOMObject.find('#media-search-form #input-name').val();
-        content.tag.value = self.DOMObject.find('#media-search-form #input-tag').val();
-        content.type.value = self.DOMObject.find('#media-search-form #input-type').val();
-        content.owner.value = self.DOMObject.find('#media-search-form #input-owner').val();
-        content.orientation.value = self.DOMObject.find('#media-search-form #input-orientation').val();
-
-        self.savePrefs();
+        for (let filter in filters) {
+            filters[filter].value = self.DOMObject.find('#content-' + menu + ' #media-search-form #input-' + filter).val();
+        }
 
         // Reload data
         loadData();
+
+        self.savePrefs();
     };
 
     // Prevent filter form submit and bind the change event to reload the table
-    self.DOMObject.find('#media-search-form').on('submit', function(e) {
+    $mediaContainer.find('#media-search-form').on('submit', function(e) {
         e.preventDefault();
         return false;
     });
 
     // Bind seach action to refresh the results
-    self.DOMObject.find('#media-search-form select, #media-search-form input[type="text"].input-tag').change(_.debounce(function() {
-        filterRefresh(content);
+    $mediaContainer.find('#media-search-form select, #media-search-form input[type="text"].input-tag').change(_.debounce(function() {
+        filterRefresh(filters);
     }, 200));
 
-    self.DOMObject.find('#media-search-form input[type="text"]').on('input', _.debounce(function() {
-        filterRefresh(content);
+    $mediaContainer.find('#media-search-form input[type="text"]').on('input', _.debounce(function() {
+        filterRefresh(filters);
     }, 500));
 
     // Initialize tagsinput
-    self.DOMObject.find('#media-search-form input[data-role="tagsinput"]').tagsinput();
+    const $tags = $mediaContainer.find('#media-search-form input[data-role="tagsinput"]');
+    $tags.tagsinput();
 
-    self.DOMObject.find('#media-' + menu).off('click').on('click', '#tagDiv .btn-tag', function() {
-        // See if its the first element, if not add comma
-        const tagText = $(this).text();
-
+    $mediaContainer.find('#media-' + menu).off('click').on('click', '#tagDiv .btn-tag', function() {
         // Add text to form
-        self.DOMObject.find('#media-search-form input[data-role="tagsinput"]').tagsinput('add', tagText, {allowDuplicates: false});
+        $tags.tagsinput('add', $(this).text(), {allowDuplicates: false});
     });
 
     // Load data
@@ -846,11 +937,8 @@ Toolbar.prototype.toggleFavourite = function(target) {
     // Show notification
     toastr.success((markAsFav) ? toolbarTrans.addedToFavourites : toolbarTrans.removedFromFavourites, '', {positionClass: 'toast-bottom-right'});
 
-    // Save user preferences
-    this.savePrefs();
-
-    // Reload toolbar widget content
-    this.loadContent(0);
+    // Reload toolbar widget content with reload
+    this.loadContent(0, true);
 };
 
 Toolbar.prototype.updateQueue = function(menu, mediaQueue) {
