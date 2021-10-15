@@ -125,13 +125,14 @@ class Actions implements Middleware
                     ->getSanitizer($container->get('configService')->getConnectorSettings($connector->getSourceName()))
             )
             ->registerWithDispatcher($container->get('dispatcher'));
+
         $connector = new PixabayConnector();
         $connector
             ->useLogger($container->get('logger'))
             ->usePool($container->get('pool'))
             ->useSettings(
                 $container->get('sanitizerService')
-                    ->getSanitizer($container->get('configService')->getConnectorSettings($connector->getSourceName()   ))
+                    ->getSanitizer($container->get('configService')->getConnectorSettings($connector->getSourceName()))
             )
             ->registerWithDispatcher($container->get('dispatcher'));
 

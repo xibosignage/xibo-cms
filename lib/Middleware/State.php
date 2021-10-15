@@ -32,16 +32,7 @@ use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
-use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Entity\User;
-use Xibo\Event\CampaignLoadEvent;
-use Xibo\Event\CommandDeleteEvent;
-use Xibo\Event\DisplayGroupLoadEvent;
-use Xibo\Event\LayoutOwnerChangeEvent;
-use Xibo\Event\MediaDeleteEvent;
-use Xibo\Event\MediaFullLoadEvent;
-use Xibo\Event\ParsePermissionEntityEvent;
-use Xibo\Event\UserDeleteEvent;
 use Xibo\Helper\Environment;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
@@ -194,7 +185,7 @@ class State implements Middleware
         }
 
         // Register the report service
-        $container->set('reportService', function(ContainerInterface $container) {
+        $container->set('reportService', function (ContainerInterface $container) {
             return new ReportService(
                 $container,
                 $container->get('state'),
@@ -233,7 +224,7 @@ class State implements Middleware
         // Default timezone
         date_default_timezone_set($container->get('configService')->getSetting("defaultTimezone"));
 
-        $container->set('session', function(ContainerInterface $container) use ($app) {
+        $container->set('session', function (ContainerInterface $container) use ($app) {
             if ($container->get('name') == 'web' || $container->get('name') == 'auth') {
                 return new Session($container->get('logService'));
             } else {

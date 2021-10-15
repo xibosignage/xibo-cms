@@ -245,6 +245,10 @@ $app->get('/library/form/uploadUrl', ['\Xibo\Controller\Library','uploadFromUrlF
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.add']))
     ->setName('library.uploadUrl.form');
 
+$app->post('/library/connector/import', ['\Xibo\Controller\Library', 'connectorImport'])
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.add']))
+    ->setName('library.connector.import');
+
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/library/form/edit/{id}', ['\Xibo\Controller\Library', 'editForm'])->setName('library.edit.form');
     $group->get('/library/form/delete/{id}', ['\Xibo\Controller\Library', 'deleteForm'])->setName('library.delete.form');
@@ -270,6 +274,7 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/display/form/screenshot/{id}', ['\Xibo\Controller\Display','requestScreenShotForm'])->setName('display.screenshot.form');
     $group->get('/display/form/wol/{id}', ['\Xibo\Controller\Display','wakeOnLanForm'])->setName('display.wol.form');
     $group->get('/display/form/licenceCheck/{id}', ['\Xibo\Controller\Display','checkLicenceForm'])->setName('display.licencecheck.form');
+    $group->get('/display/form/purgeAll/{id}', ['\Xibo\Controller\Display','purgeAllForm'])->setName('display.purge.all.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['displays.view']));
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
@@ -475,9 +480,7 @@ $app->get('/group/view', ['\Xibo\Controller\UserGroup','displayPage'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['usergroup.view']))
     ->setName('group.view');
 
-$app->get('/group/form/add', ['\Xibo\Controller\UserGroup','addForm'])
-    ->addMiddleware(new FeatureAuth($app->getContainer(), ['usergroup.add']))
-    ->setName('group.add.form');
+$app->get('/group/form/add', ['\Xibo\Controller\UserGroup','addForm'])->setName('group.add.form');
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/group/form/edit/{id}', ['\Xibo\Controller\UserGroup','editForm'])->setName('group.edit.form');

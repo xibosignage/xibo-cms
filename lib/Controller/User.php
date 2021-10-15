@@ -338,6 +338,7 @@ class User extends Base
 
             if ($this->getUser()->isSuperAdmin()
                 && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')
+                && $this->getUser()->userId !== $user->userId
             ) {
                 // Delete
                 $user->buttons[] = [
@@ -927,7 +928,7 @@ class User extends Base
     public function delete(Request $request, Response $response, $id)
     {
         $user = $this->userFactory->getById($id);
-
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         // System User
         if ($user->userId == $this->getConfig()->getSetting('SYSTEM_USER')) {
             throw new InvalidArgumentException(__('This User is set as System User and cannot be deleted.'), 'userId');
@@ -937,20 +938,34 @@ class User extends Base
             throw new AccessDeniedException();
         }
 
-        $sanitizedParams = $this->getSanitizer($request->getParams());
+        if ($this->getUser()->userId === $user->userId) {
+            throw new InvalidArgumentException(__('Cannot delete your own User from the CMS.'));
+        }
+
+        if ($sanitizedParams->getCheckbox('deleteAllItems') && $user->isSuperAdmin()) {
+            throw new InvalidArgumentException(__('Cannot delete all items owned by a Super Admin, please reassign to a different User.'));
+        }
+
         $user->setChildAclDependencies($this->userGroupFactory);
 
         if ($sanitizedParams->getCheckbox('deleteAllItems') != 1) {
-
             // Do we have a userId to reassign content to?
             if ($sanitizedParams->getInt('reassignUserId') != null) {
                 // Reassign all content owned by this user to the provided user
                 $this->getLog()->debug(sprintf('Reassigning content to new userId: %d', $sanitizedParams->getInt('reassignUserId')));
-                $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user, 'reassignAll', $this->userFactory->getById($sanitizedParams->getInt('reassignUserId'))));
+                $this->getDispatcher()->dispatch(
+                    UserDeleteEvent::$NAME,
+                    new UserDeleteEvent(
+                        $user,
+                        'reassignAll',
+                        $this->userFactory->getSystemUser(),
+                        $this->userFactory->getById($sanitizedParams->getInt('reassignUserId'))
+                    )
+                );
             } else {
                 // Check to see if we have any child data that would prevent us from deleting
                 /** @var UserDeleteEvent $countChildren */
-                $countChildren = $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user, 'countChildren'));
+                $countChildren = $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user, 'countChildren', $this->userFactory->getSystemUser()));
 
                 if ($countChildren->getReturnValue() > 0) {
                     throw new InvalidArgumentException(sprintf(__('This user cannot be deleted as it has %d child items'), $countChildren->getReturnValue()));
@@ -958,7 +973,7 @@ class User extends Base
             }
         }
 
-        $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user, 'delete'));
+        $this->getDispatcher()->dispatch(UserDeleteEvent::$NAME, new UserDeleteEvent($user, 'delete', $this->userFactory->getSystemUser()));
         // Delete the user
         $user->delete();
 

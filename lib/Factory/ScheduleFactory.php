@@ -206,7 +206,13 @@ class ScheduleFactory extends BaseFactory
                 schedule.shareOfVoice,
                 schedule.isGeoAware,
                 schedule.geoLocation,
+                schedule.actionTriggerCode,
+                schedule.actionType,
+                schedule.actionLayoutCode,
                 `campaign`.campaign,
+                `campaign`.campaignId as groupKey,
+                `campaign`.cyclePlaybackEnabled as cyclePlayback,
+                `campaign`.playCount,
                 `command`.command,
                 `lkscheduledisplaygroup`.displayGroupId,
                 `daypart`.isAlways,
@@ -304,6 +310,9 @@ class ScheduleFactory extends BaseFactory
             `schedule`.shareOfVoice,
             `schedule`.isGeoAware,
             `schedule`.geoLocation,
+            `schedule`.actionTriggerCode,
+            `schedule`.actionType,
+            `schedule`.actionLayoutCode,
             `daypart`.isAlways,
             `daypart`.isCustom
           FROM `schedule`

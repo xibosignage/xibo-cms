@@ -19,10 +19,8 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Xmds;
 
-define('BLACKLIST_ALL', "All");
-define('BLACKLIST_SINGLE', "Single");
+namespace Xibo\Xmds;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
@@ -461,18 +459,34 @@ class Soap
                     continue;
                 }
 
-                if (count($scheduleEvents) <= 0)
+                if (count($scheduleEvents) <= 0) {
                     continue;
+                }
 
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
                 $layoutId = $parsedRow->getInt('layoutId');
-
-                if ($layoutId != null && ($schedule->eventTypeId == Schedule::$LAYOUT_EVENT || $schedule->eventTypeId == Schedule::$OVERLAY_EVENT || $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT || $schedule->eventTypeId == Schedule::$CAMPAIGN_EVENT)) {
+                $layoutCode = $parsedRow->getString('actionLayoutCode');
+                if ($layoutId != null &&
+                    (
+                        $schedule->eventTypeId == Schedule::$LAYOUT_EVENT ||
+                        $schedule->eventTypeId == Schedule::$OVERLAY_EVENT ||
+                        $schedule->eventTypeId == Schedule::$INTERRUPT_EVENT ||
+                        $schedule->eventTypeId == Schedule::$CAMPAIGN_EVENT
+                    )
+                ) {
                     $layouts[] = $layoutId;
                 }
-            }
 
+                if (!empty($layoutCode) && $schedule->eventTypeId == Schedule::$ACTION_EVENT) {
+                    $actionEventLayout = $this->layoutFactory->getByCode($layoutCode);
+                    if ($actionEventLayout->status <= 3) {
+                        $layouts[] = $actionEventLayout->layoutId;
+                    } else {
+                        $this->getLog()->error(sprintf(__('Scheduled Action Event ID %d contains an invalid Layout linked to it by the Layout code.'), $schedule->eventId));
+                    }
+                }
+            }
         } catch (\Exception $e) {
             $this->getLog()->error('Unable to get a list of layouts. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get a list of layouts');
@@ -657,12 +671,14 @@ class Soap
 
                 // Load this layout
                 $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->loadById($layoutId));
-                $layout->loadPlaylists();
+                try {
+                    $layout->loadPlaylists();
 
-                // Make sure its XLF is up to date
-                $path = $layout->xlfToDisk(['notify' => false]);
-
-                $this->layoutFactory->concurrentRequestRelease($layout);
+                    // Make sure its XLF is up to date
+                    $path = $layout->xlfToDisk(['notify' => false]);
+                } finally {
+                    $this->layoutFactory->concurrentRequestRelease($layout);
+                }
 
                 // If the status is *still* 4, then we skip this layout as it cannot build
                 if ($layout->status === ModuleWidget::$STATUS_INVALID) {
@@ -792,30 +808,29 @@ class Soap
             }
         }
 
-        // Add a blacklist node
-        $blackList = $requiredFilesXml->createElement("file");
-        $blackList->setAttribute("type", "blacklist");
-
-        $fileElements->appendChild($blackList);
+        // Add Purge List node
+        $purgeList = $requiredFilesXml->createElement('purge');
+        $fileElements->appendChild($purgeList);
 
         try {
             $dbh = $this->getStore()->getConnection();
 
-            $sth = $dbh->prepare('SELECT MediaID FROM blacklist WHERE DisplayID = :displayid AND isIgnored = 0');
-            $sth->execute(array(
-                'displayid' => $this->display->displayId
-            ));
+            // get list of mediaId/storedAs that should be purged from the Player storage
+            // records in that table older than provided expiryDate, should be removed by the task
+            $sth = $dbh->prepare('SELECT mediaId, storedAs FROM purge_list');
+            $sth->execute();
 
-            // Add a black list element for each file
+            // Add a purge list item for each file
             foreach ($sth->fetchAll() as $row) {
-                $file = $requiredFilesXml->createElement("file");
-                $file->setAttribute("id", $row['MediaID']);
+                $item = $requiredFilesXml->createElement('item');
+                $item->setAttribute('id', $row['mediaId']);
+                $item->setAttribute('storedAs', $row['storedAs']);
 
-                $blackList->appendChild($file);
+                $purgeList->appendChild($item);
             }
         } catch (\Exception $e) {
-            $this->getLog()->error('Unable to get a list of blacklisted files. ' . $e->getMessage());
-            return new \SoapFault('Sender', 'Unable to get a list of blacklisted files');
+            $this->getLog()->error('Unable to get a list of purge_list files. ' . $e->getMessage());
+            return new \SoapFault('Sender', 'Unable to get purge list files');
         }
 
         if ($this->display->isAuditing()) {
@@ -1005,6 +1020,7 @@ class Soap
             $this->getLog()->debug(sprintf('Resolved dependents for Schedule: %s.', json_encode($layoutDependents, JSON_PRETTY_PRINT)));
 
             $overlayNodes = null;
+            $actionNodes = null;
 
             // We must have some results in here by this point
             foreach ($events as $row) {
@@ -1029,7 +1045,6 @@ class Soap
                 $this->getLog()->debug(count($scheduleEvents) . ' events for eventId ' . $schedule->eventId);
 
                 foreach ($scheduleEvents as $scheduleEvent) {
-
                     $eventTypeId = $row['eventTypeId'];
                     $layoutId = $row['layoutId'];
                     $commandCode = $row['code'];
@@ -1039,17 +1054,17 @@ class Soap
                     // Does the Display have a timezone?
                     if ($isSyncTimezone) {
                         $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
-                        $toDt =  Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
+                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt, $this->display->timeZone)->format(DateFormatHelper::getSystemFormat());
                     } else {
                         $fromDt = Carbon::createFromTimestamp($scheduleEvent->fromDt)->format(DateFormatHelper::getSystemFormat());
-                        $toDt =  Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
+                        $toDt = Carbon::createFromTimestamp($scheduleEvent->toDt)->format(DateFormatHelper::getSystemFormat());
                     }
 
                     $scheduleId = $row['eventId'];
                     $is_priority = $parsedRow->getInt('isPriority');
 
-                     if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$INTERRUPT_EVENT || $eventTypeId == Schedule::$CAMPAIGN_EVENT) {
-                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
+                    if ($eventTypeId == Schedule::$LAYOUT_EVENT || $eventTypeId == Schedule::$INTERRUPT_EVENT || $eventTypeId == Schedule::$CAMPAIGN_EVENT) {
+                        // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
                             $this->getLog()->info(sprintf('Player has empty event scheduled. Display = %s, EventId = %d', $this->display->display, $scheduleId));
@@ -1064,26 +1079,29 @@ class Soap
                         }
 
                         // Add a layout node to the schedule
-                        $layout = $scheduleXml->createElement("layout");
-                        $layout->setAttribute("file", $layoutId);
-                        $layout->setAttribute("fromdt", $fromDt);
-                        $layout->setAttribute("todt", $toDt);
-                        $layout->setAttribute("scheduleid", $scheduleId);
-                        $layout->setAttribute("priority", $is_priority);
-                        $layout->setAttribute("syncEvent", $syncKey);
-                        $layout->setAttribute("shareOfVoice", $row['shareOfVoice'] ?? 0);
+                        $layout = $scheduleXml->createElement('layout');
+                        $layout->setAttribute('file', $layoutId);
+                        $layout->setAttribute('fromdt', $fromDt);
+                        $layout->setAttribute('todt', $toDt);
+                        $layout->setAttribute('scheduleid', $scheduleId);
+                        $layout->setAttribute('priority', $is_priority);
+                        $layout->setAttribute('syncEvent', $syncKey);
+                        $layout->setAttribute('shareOfVoice', $row['shareOfVoice'] ?? 0);
                         $layout->setAttribute('duration', $row['duration'] ?? 0);
-                        $layout->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
-                        $layout->setAttribute("geoLocation", $row['geoLocation'] ?? null);
+                        $layout->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
+                        $layout->setAttribute('geoLocation', $row['geoLocation'] ?? null);
+                        $layout->setAttribute('cyclePlayback', $row['cyclePlayback'] ?? 0);
+                        $layout->setAttribute('groupKey', $row['groupKey'] ?? 0);
+                        $layout->setAttribute('playCount', $row['playCount'] ?? 0);
 
                         // Handle dependents
                         if (array_key_exists($layoutId, $layoutDependents)) {
                             if ($options['dependentsAsNodes']) {
                                 // Add the dependents to the layout as new nodes
-                                $dependentNode = $scheduleXml->createElement("dependents");
+                                $dependentNode = $scheduleXml->createElement('dependents');
 
                                 foreach ($layoutDependents[$layoutId] as $storedAs) {
-                                    $fileNode = $scheduleXml->createElement("file", $storedAs);
+                                    $fileNode = $scheduleXml->createElement('file', $storedAs);
 
                                     $dependentNode->appendChild($fileNode);
                                 }
@@ -1091,20 +1109,19 @@ class Soap
                                 $layout->appendChild($dependentNode);
                             } else {
                                 // Add the dependents to the layout as an attribute
-                                $layout->setAttribute("dependents", implode(',', $layoutDependents[$layoutId]));
+                                $layout->setAttribute('dependents', implode(',', $layoutDependents[$layoutId]));
                             }
                         }
 
                         $layoutElements->appendChild($layout);
-
-                    } else if ($eventTypeId == Schedule::$COMMAND_EVENT) {
+                    } elseif ($eventTypeId == Schedule::$COMMAND_EVENT) {
                         // Add a command node to the schedule
-                        $command = $scheduleXml->createElement("command");
-                        $command->setAttribute("date", $fromDt);
-                        $command->setAttribute("scheduleid", $scheduleId);
+                        $command = $scheduleXml->createElement('command');
+                        $command->setAttribute('date', $fromDt);
+                        $command->setAttribute('scheduleid', $scheduleId);
                         $command->setAttribute('code', $commandCode);
                         $layoutElements->appendChild($command);
-                    } else if ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
+                    } elseif ($eventTypeId == Schedule::$OVERLAY_EVENT && $options['includeOverlays']) {
                         // Ensure we have a layoutId (we may not if an empty campaign is assigned)
                         // https://github.com/xibosignage/xibo/issues/894
                         if ($layoutId == 0 || empty($layoutId)) {
@@ -1124,17 +1141,36 @@ class Soap
                         }
 
                         $overlay = $scheduleXml->createElement('overlay');
-                        $overlay->setAttribute("file", $layoutId);
-                        $overlay->setAttribute("fromdt", $fromDt);
-                        $overlay->setAttribute("todt", $toDt);
-                        $overlay->setAttribute("scheduleid", $scheduleId);
-                        $overlay->setAttribute("priority", $is_priority);
+                        $overlay->setAttribute('file', $layoutId);
+                        $overlay->setAttribute('fromdt', $fromDt);
+                        $overlay->setAttribute('todt', $toDt);
+                        $overlay->setAttribute('scheduleid', $scheduleId);
+                        $overlay->setAttribute('priority', $is_priority);
                         $overlay->setAttribute('duration', $row['duration'] ?? 0);
-                        $overlay->setAttribute("isGeoAware", $row['isGeoAware'] ?? 0);
-                        $overlay->setAttribute("geoLocation", $row['geoLocation'] ?? null);
+                        $overlay->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
+                        $overlay->setAttribute('geoLocation', $row['geoLocation'] ?? null);
 
                         // Add to the overlays node list
                         $overlayNodes->appendChild($overlay);
+                    } elseif ($eventTypeId == Schedule::$ACTION_EVENT) {
+                        if ($actionNodes == null) {
+                            $actionNodes = $scheduleXml->createElement('actions');
+                        }
+                        $action = $scheduleXml->createElement('action');
+                        $action->setAttribute('fromdt', $fromDt);
+                        $action->setAttribute('todt', $toDt);
+                        $action->setAttribute('scheduleid', $scheduleId);
+                        $action->setAttribute('priority', $is_priority);
+                        $action->setAttribute('duration', $row['duration'] ?? 0);
+                        $action->setAttribute('isGeoAware', $row['isGeoAware'] ?? 0);
+                        $action->setAttribute('geoLocation', $row['geoLocation'] ?? null);
+                        $action->setAttribute('syncEvent', $syncKey);
+                        $action->setAttribute('triggerCode', $row['actionTriggerCode']);
+                        $action->setAttribute('actionType', $row['actionType']);
+                        $action->setAttribute('layoutCode', $row['actionLayoutCode']);
+                        $action->setAttribute('commandCode', $commandCode);
+
+                        $actionNodes->appendChild($action);
                     }
                 }
             }
@@ -1144,6 +1180,10 @@ class Soap
                 $layoutElements->appendChild($overlayNodes);
             }
 
+            // Add Actions nodes if we had any
+            if ($actionNodes != null) {
+                $layoutElements->appendChild($actionNodes);
+            }
         } catch (\Exception $e) {
             $this->getLog()->error('Error getting the schedule. ' . $e->getMessage());
             return new \SoapFault('Sender', 'Unable to get the schedule');
@@ -1252,92 +1292,6 @@ class Soap
      */
     protected function doBlackList($serverKey, $hardwareKey, $mediaId, $type, $reason)
     {
-        $this->logProcessor->setRoute('BlackList');
-        $sanitized = $this->getSanitizer([
-            'serverKey' => $serverKey,
-            'hardwareKey' => $hardwareKey,
-            'mediaId' => $mediaId,
-            'type' => $type,
-            'reason' => $reason,
-        ]);
-
-        // Sanitize
-        $serverKey = $sanitized->getString('serverKey');
-        $hardwareKey = $sanitized->getString('hardwareKey');
-        $mediaId = $sanitized->getInt('mediaId');
-        $type = $sanitized->getString('type');
-        $reason = $sanitized->getString('reason');
-
-        // Check the serverKey matches
-        if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
-        }
-
-        // Authenticate this request...
-        if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This Display is not authorised.", $hardwareKey);
-        }
-
-        // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
-        if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
-        }
-
-        if ($this->display->isAuditing())
-            $this->getLog()->debug('Blacklisting ' . $mediaId . ' for ' . $reason);
-
-        try {
-            $dbh = $this->getStore()->getConnection();
-
-            // Check to see if this media / display is already blacklisted (and not ignored)
-            $sth = $dbh->prepare('SELECT BlackListID FROM blacklist WHERE MediaID = :mediaid AND isIgnored = 0 AND DisplayID = :displayid');
-            $sth->execute(array(
-                'mediaid' => $mediaId,
-                'displayid' => $this->display->displayId
-            ));
-
-            $results = $sth->fetchAll();
-
-            if (count($results) == 0) {
-
-                $insertSth = $dbh->prepare('
-                        INSERT INTO blacklist (MediaID, DisplayID, ReportingDisplayID, Reason)
-                            VALUES (:mediaid, :displayid, :reportingdisplayid, :reason)
-                    ');
-
-                // Insert the black list record
-                if ($type == BLACKLIST_SINGLE) {
-                    $insertSth->execute(array(
-                        'mediaid' => $mediaId,
-                        'displayid' => $this->display->displayId,
-                        'reportingdisplayid' => $this->display->displayId,
-                        'reason' => $reason
-                    ));
-                } else {
-                    $displaySth = $dbh->prepare('SELECT displayID FROM `display`');
-                    $displaySth->execute();
-
-                    foreach ($displaySth->fetchAll() as $row) {
-
-                        $insertSth->execute(array(
-                            'mediaid' => $mediaId,
-                            'displayid' => $row['displayID'],
-                            'reportingdisplayid' => $this->display->displayId,
-                            'reason' => $reason
-                        ));
-                    }
-                }
-            } else {
-                if ($this->display->isAuditing())
-                    $this->getLog()->debug($mediaId . ' already black listed');
-            }
-        } catch (\Exception $e) {
-            $this->getLog()->error('Unable to query for Blacklist records. ' . $e->getMessage());
-            return new \SoapFault('Sender', "Unable to query for BlackList records.");
-        }
-
-        $this->logBandwidth($this->display->displayId, Bandwidth::$BLACKLIST, strlen($reason));
-
         return true;
     }
 

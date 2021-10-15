@@ -314,12 +314,13 @@ class Template extends Base
         }
 
         if ($provider === 'both' || $provider === 'remote') {
-            $this->getLog()->debug('Dispatching event.');
-
             // Hand off to any other providers that may want to provide results.
             $event = new TemplateProviderEvent($searchResults);
+
+            $this->getLog()->debug('Dispatching event. ' . $event->getName());
             try {
-            $this->getDispatcher()->dispatch($event->getName(), $event);} catch (\Exception $exception) {
+                $this->getDispatcher()->dispatch($event->getName(), $event);
+            } catch (\Exception $exception) {
                 $this->getLog()->error('Template search: Exception in dispatched event: ' . $exception->getMessage());
                 $this->getLog()->debug($exception->getTraceAsString());
             }

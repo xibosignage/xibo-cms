@@ -26,7 +26,7 @@ namespace Xibo\Entity;
  */
 class SearchResults implements \JsonSerializable
 {
-    public $data;
+    public $data = [];
 
     public function jsonSerialize()
     {

@@ -212,11 +212,20 @@ class Layout extends Base
             $layout = $this->layoutFactory->getByParentId($id);
         }
 
-        // Work out our resolution
-        if ($layout->schemaVersion < 2)
-            $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
-        else
-            $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+        // Work out our resolution, if it does not exist, create it.
+        try {
+            if ($layout->schemaVersion < 2) {
+                $resolution = $this->resolutionFactory->getByDesignerDimensions($layout->width, $layout->height);
+            } else {
+                $resolution = $this->resolutionFactory->getByDimensions($layout->width, $layout->height);
+            }
+        } catch (NotFoundException $notFoundException) {
+            $this->getLog()->info('Layout Designer with an unknown resolution, we will create it with name: ' . $layout->width . ' x ' . $layout->height);
+
+            $resolution = $this->resolutionFactory->create($layout->width . ' x ' . $layout->height, (int)$layout->width, (int)$layout->height);
+            $resolution->userId = $this->userFactory->getSystemUser()->userId;
+            $resolution->save();
+        }
 
         $moduleFactory = $this->moduleFactory;
         $isTemplate = $layout->hasTag('template');
@@ -353,7 +362,6 @@ class Layout extends Base
         if (!$isResolution) {
             // Load the template
             $template = $this->layoutFactory->loadById($templateId);
-            $template->load();
 
             // Empty all of the ID's
             $layout = clone $template;
@@ -369,13 +377,7 @@ class Layout extends Base
             }
 
             // Set the owner
-            $layout->setOwner($this->getUser()->userId);
-
-            // Ensure we have Playlists for each region
-            foreach ($layout->regions as $region) {
-                // Set the ownership of this region to the user creating from template
-                $region->setOwner($this->getUser()->userId, true);
-            }
+            $layout->setOwner($this->getUser()->userId, true);
         } else {
             $layout = $this->layoutFactory->createFromResolution(
                 $resolutionId,
@@ -427,12 +429,13 @@ class Layout extends Base
             $layout->setOriginals();
         }
 
-        foreach ($layout->regions as $region) {
+        $allRegions = array_merge($layout->regions, $layout->drawers);
+        foreach ($allRegions as $region) {
             /* @var Region $region */
 
             if ($templateId != null && $template !== null) {
                 // Match our original region id to the id in the parent layout
-                $original = $template->getRegion($region->getOriginalValue('regionId'));
+                $original = $template->getRegionOrDrawer($region->getOriginalValue('regionId'));
 
                 // Make sure Playlist closure table from the published one are copied over
                 $original->getPlaylist()->cloneClosureTable($region->getPlaylist()->playlistId);
@@ -2193,8 +2196,13 @@ class Layout extends Base
     {
         // Get the layout
         $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
-        $layout = $this->layoutFactory->decorateLockedProperties($layout);
-        $layout->xlfToDisk();
+        try {
+            $layout = $this->layoutFactory->decorateLockedProperties($layout);
+            $layout->xlfToDisk();
+        } finally {
+            // Release lock
+            $this->layoutFactory->concurrentRequestRelease($layout);
+        }
 
         switch ($layout->status) {
 
@@ -2238,9 +2246,6 @@ class Layout extends Base
             $this->session->refreshExpiry = false;
         }
 
-        // Release lock
-        $this->layoutFactory->concurrentRequestRelease($layout);
-
         return $this->render($request, $response);
     }
 
@@ -2266,8 +2271,9 @@ class Layout extends Base
             throw new AccessDeniedException();
 
         // Make sure we're not a draft
-        if ($layout->isChild())
-            throw new InvalidArgumentException(__('Cannot manage tags on a Draft Layout'), 'layoutId');
+        if ($layout->isChild()) {
+            throw new InvalidArgumentException(__('Cannot export Draft Layout'), 'layoutId');
+        }
 
         // Render the form
         $this->getState()->template = 'layout-form-export';
@@ -2304,7 +2310,7 @@ class Layout extends Base
 
         // Make sure we're not a draft
         if ($layout->isChild()) {
-            throw new InvalidArgumentException(__('Cannot manage tags on a Draft Layout'), 'layoutId');
+            throw new InvalidArgumentException(__('Cannot export Draft Layout'), 'layoutId');
         }
 
         // Save As?
@@ -2631,51 +2637,53 @@ class Layout extends Base
     public function publish(Request $request, Response $response, $id)
     {
         Profiler::start('Layout::publish', $this->getLog());
-        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id));
-        $sanitizedParams = $this->getSanitizer($request->getParams());
-        $publishDate = $sanitizedParams->getDate('publishDate');
-        $publishNow = $sanitizedParams->getCheckbox('publishNow');
+        $layout = $this->layoutFactory->concurrentRequestLock($this->layoutFactory->getById($id), true);
+        try {
+            $sanitizedParams = $this->getSanitizer($request->getParams());
+            $publishDate = $sanitizedParams->getDate('publishDate');
+            $publishNow = $sanitizedParams->getCheckbox('publishNow');
 
-        // Make sure we have permission
-        if (!$this->getUser()->checkEditable($layout)) {
-            throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+            // Make sure we have permission
+            if (!$this->getUser()->checkEditable($layout)) {
+                throw new AccessDeniedException(__('You do not have permissions to edit this layout'));
+            }
+
+            // if we have publish date update it in database
+            if (isset($publishDate) && !$publishNow) {
+                $layout->setPublishedDate($publishDate);
+            }
+
+            // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
+            // parent.
+            if ($publishNow || (isset($publishDate) && $publishDate->format('U') < Carbon::now()->format('U'))) {
+                $draft = $this->layoutFactory->getByParentId($id);
+                $draft->publishDraft();
+                $draft->load();
+
+                // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
+                // error message
+                $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
+
+                // Return
+                $this->getState()->hydrate([
+                    'httpStatus' => 200,
+                    'message' => sprintf(__('Published %s'), $draft->layout),
+                    'data' => $draft
+                ]);
+            } else {
+                // Return
+                $this->getState()->hydrate([
+                    'httpStatus' => 200,
+                    'message' => sprintf(__('Layout will be published on %s'), $publishDate),
+                    'data' => $layout
+                ]);
+            }
+
+            Profiler::end('Layout::publish', $this->getLog());
+        } finally {
+            // Release lock
+            $this->layoutFactory->concurrentRequestRelease($layout, true);
         }
-
-        // if we have publish date update it in database
-        if (isset($publishDate) && !$publishNow) {
-            $layout->setPublishedDate($publishDate);
-        }
-
-        // We want to take the draft layout, and update the campaign links to point to the draft, then remove the
-        // parent.
-        if ($publishNow || (isset($publishDate) && $publishDate->format('U') <  Carbon::now()->format('U')) ) {
-            $draft = $this->layoutFactory->getByParentId($id);
-            $draft->publishDraft();
-            $draft->load();
-
-            // We also build the XLF at this point, and if we have a problem we prevent publishing and raise as an
-            // error message
-            $draft->xlfToDisk(['notify' => true, 'exceptionOnError' => true, 'exceptionOnEmptyRegion' => false]);
-
-            // Return
-            $this->getState()->hydrate([
-                'httpStatus' => 200,
-                'message' => sprintf(__('Published %s'), $draft->layout),
-                'data' => $draft
-            ]);
-        } else {
-            // Return
-            $this->getState()->hydrate([
-                'httpStatus' => 200,
-                'message' => sprintf(__('Layout will be published on %s'), $publishDate),
-                'data' => $layout
-            ]);
-        }
-
-        Profiler::end('Layout::publish', $this->getLog());
-
-        // Release lock
-        $this->layoutFactory->concurrentRequestRelease($layout);
 
         return $this->render($request, $response);
     }
@@ -2797,7 +2805,8 @@ class Layout extends Base
     }
 
     /**
-     * Release the Layout Lock on specified layoutId, Super Admin only.
+     * Release the Layout Lock on specified layoutId
+     * Available only to the User that currently has the Layout locked.
      *
      * @param Request $request
      * @param Response $response
@@ -2809,12 +2818,14 @@ class Layout extends Base
      */
     public function releaseLock(Request $request, Response $response, $id)
     {
-        if (!$this->getUser()->isSuperAdmin()) {
-            throw new InvalidArgumentException(__('This function is available only to Super Admins.'));
-        }
-
         /** @var Item $lock */
         $lock = $this->pool->getItem('locks/layout/' . $id);
+        $lockUserId = $lock->get()->userId;
+
+        if ($this->getUser()->userId !== $lockUserId) {
+            throw new InvalidArgumentException(__('This function is available only to User who originally locked this Layout.'));
+        }
+
         $lock->set([]);
         $lock->save();
 

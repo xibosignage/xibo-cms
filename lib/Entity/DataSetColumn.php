@@ -119,6 +119,18 @@ class DataSetColumn implements \JsonSerializable
      */
     public $dataSetColumnType;
 
+    /**
+     * @SWG\Property(description="Help text that should be displayed when entering data for this Column.")
+     * @var string
+     */
+    public $tooltip;
+
+    /**
+     * @SWG\Property(description="Flag indicating whether value must be provided for this Column.")
+     * @var int
+     */
+    public $isRequired;
+
     /** @var  DataSetColumnFactory */
     private $dataSetColumnFactory;
 
@@ -302,8 +314,8 @@ class DataSetColumn implements \JsonSerializable
     private function add()
     {
         $this->dataSetColumnId = $this->getStore()->insert('
-        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula, RemoteField, `showFilter`, `showSort`)
-          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula, :remoteField, :showFilter, :showSort)
+        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula, RemoteField, `showFilter`, `showSort`, `tooltip`, `isRequired`)
+          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula, :remoteField, :showFilter, :showSort, :tooltip, :isRequired)
         ', [
             'dataSetId' => $this->dataSetId,
             'heading' => $this->heading,
@@ -314,7 +326,9 @@ class DataSetColumn implements \JsonSerializable
             'formula' => $this->formula,
             'remoteField' => $this->remoteField,
             'showFilter' => $this->showFilter,
-            'showSort' => $this->showSort
+            'showSort' => $this->showSort,
+            'tooltip' => $this->tooltip,
+            'isRequired' => $this->isRequired
         ]);
 
         // Add Column to Underlying Table
@@ -342,7 +356,9 @@ class DataSetColumn implements \JsonSerializable
             'dataSetColumnId' => $this->dataSetColumnId,
             'remoteField' => $this->remoteField,
             'showFilter' => $this->showFilter,
-            'showSort' => $this->showSort
+            'showSort' => $this->showSort,
+            'tooltip' => $this->tooltip,
+            'isRequired' => $this->isRequired
         ];
 
         $sql = '
@@ -356,7 +372,9 @@ class DataSetColumn implements \JsonSerializable
             Formula = :formula,
             RemoteField = :remoteField, 
             `showFilter` = :showFilter, 
-            `showSort` = :showSort
+            `showSort` = :showSort,
+            `tooltip` = :tooltip,
+            `isRequired` = :isRequired
          WHERE dataSetColumnId = :dataSetColumnId 
         ';
 

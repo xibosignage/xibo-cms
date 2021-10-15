@@ -125,6 +125,11 @@ class NotificationFactory extends BaseFactory
         return $this->query(null, ['subject' => $subject, 'createFromDt' => $fromDt, 'createToDt' => $toDt]);
     }
 
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['ownerId' => $ownerId, 'disableUserCheck' => 1]);
+    }
+
     /**
      * @param null $sortOrder
      * @param array $filterBy
@@ -185,6 +190,11 @@ class NotificationFactory extends BaseFactory
         if ($sanitizedFilter->getInt('onlyReleased') === 1) {
             $body .= ' AND `notification`.releaseDt <= :now ';
             $params['now'] = Carbon::now()->format('U');
+        }
+
+        if ($sanitizedFilter->getInt('ownerId') !== null) {
+            $body .= ' AND `notification`.userId = :ownerId ';
+            $params['ownerId'] = $sanitizedFilter->getInt('ownerId');
         }
 
         // User Id?

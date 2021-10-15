@@ -609,9 +609,10 @@ var setupScheduleForm = function(dialog) {
     processScheduleFormElements($("#recurrenceType", dialog));
     processScheduleFormElements($("#eventTypeId", dialog));
     processScheduleFormElements($("#campaignId", dialog));
+    processScheduleFormElements($("#actionType", dialog));
 
     // Events on change
-    $("#recurrenceType, #eventTypeId, #dayPartId, #campaignId", dialog).on("change", function() { processScheduleFormElements($(this)) });
+    $("#recurrenceType, #eventTypeId, #dayPartId, #campaignId, #actionType", dialog).on("change", function() { processScheduleFormElements($(this)) });
 
     // Handle the repeating monthly selector
     // Run when the tab changes
@@ -796,14 +797,14 @@ var processScheduleFormElements = function(el) {
         case 'eventTypeId':
             console.log('Process: eventTypeId, val = ' + fieldVal);
             
-            var layoutControlDisplay = (fieldVal == 2) ? "none" : "";
+            var layoutControlDisplay = (fieldVal == 2 || fieldVal == 6) ? "none" : "";
             var endTimeControlDisplay = (fieldVal == 2) ? "none" : "";
             var startTimeControlDisplay = (fieldVal == 2) ? "" : "";
             var dayPartControlDisplay = (fieldVal == 2) ? "none" : "";
             var commandControlDisplay = (fieldVal == 2) ? "" : "none";
             var scheduleSyncControlDisplay = (fieldVal == 1) ? "" : "none";
             var interruptControlDisplay = (fieldVal == 4) ? "" : "none";
-
+            var actionControlDisplay = (fieldVal == 6) ? "" : "none";
 
             $(".layout-control").css('display', layoutControlDisplay);
             $(".endtime-control").css('display', endTimeControlDisplay);
@@ -812,6 +813,12 @@ var processScheduleFormElements = function(el) {
             $(".command-control").css('display', commandControlDisplay);
             $(".sync-schedule-control").css('display', scheduleSyncControlDisplay);
             $(".interrupt-control").css('display', interruptControlDisplay);
+            $(".action-control").css('display', actionControlDisplay);
+
+            // action event type
+            if (fieldVal === 6) {
+                $(".displayOrder-control").css('display', 'none');
+            }
 
             // If the fieldVal is 2 (command), then we should set the dayPartId to be 0 (custom)
             if (fieldVal == 2) {
@@ -836,7 +843,7 @@ var processScheduleFormElements = function(el) {
                 $("li.reminders").css("display", "block");
             }
             
-            // Call funtion for the daypart ID 
+            // Call function for the daypart ID
             processScheduleFormElements($('#dayPartId'));
 
             // Change the help text and label of the campaignId dropdown
@@ -916,6 +923,15 @@ var processScheduleFormElements = function(el) {
             }
 
             break;
+
+        case 'actionType' :
+            console.log('Action type changed');
+            var layoutCodeControl = (fieldVal == 'navToLayout' && el.is(":visible")) ? "" : "none";
+            commandControlDisplay = (fieldVal == 'command') ? "" : "none";
+
+            $('.layout-code-control').css('display', layoutCodeControl);
+            $('.command-control').css('display', commandControlDisplay);
+
     }
 };
 

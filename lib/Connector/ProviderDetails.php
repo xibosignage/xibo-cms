@@ -27,6 +27,7 @@ namespace Xibo\Connector;
  */
 class ProviderDetails implements \JsonSerializable
 {
+    public $id;
     public $message;
     public $link;
     public $logoUrl;
@@ -35,6 +36,7 @@ class ProviderDetails implements \JsonSerializable
     public function jsonSerialize()
     {
         return [
+            'id' => $this->id,
             'message' => $this->message,
             'link' => $this->link,
             'logoUrl' => $this->logoUrl,

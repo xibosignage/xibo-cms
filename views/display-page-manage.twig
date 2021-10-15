@@ -60,15 +60,21 @@
             <div class="widget">
                 <div class="widget-title">
                     <button id="refreshLog" class="btn btn-sm pull-right"><span class="fa fa-refresh"></span></button>
-                    {% trans "Errors in the Last 12 hours" %}
+                    {% trans "Reported Player Faults" %}
                 </div>
                 <div class="widget-body medium no-padding">
-                    <table id="logs" class="table table-striped">
+                    <table id="playerFaults" class="table table-striped" data-url="{{ url_for("display.faults.search", {"displayId": display.displayId}) }}">
                         <thead>
                         <tr>
-                            <th>{% trans "ID" %}</th>
+                            <th>{% trans "Code" %}</th>
+                            <th>{% trans "Reason" %}</th>
                             <th>{% trans "Date" %}</th>
-                            <th>{% trans "Message" %}</th>
+                            <th>{% trans "Expires" %}</th>
+                            <th>{% trans "Schedule ID" %}</th>
+                            <th>{% trans "Layout ID" %}</th>
+                            <th>{% trans "Region ID" %}</th>
+                            <th>{% trans "Widget ID" %}</th>
+                            <th>{% trans "Media ID" %}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -215,21 +221,30 @@
     <script type="text/javascript">
 
         $(document).ready(function() {
-            var table = $("#logs").DataTable({
+            const $playerFaults = $('#playerFaults');
+            var table = $playerFaults.DataTable({
                 "language": dataTablesLanguage,
                 dom: dataTablesTemplate,
                 serverSide: true, stateSave: true, stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
                 filter: false,
                 responsive: true,
                 searchDelay: 3000,
-                "order": [[0, "desc"]],
+                order: [[2, "desc"]],
                 ajax: {
-                    url: "{{ url_for("log.search") }}?{{ errorSearch|raw }}",
+                    url: $playerFaults.data().url,
                 },
                 "columns": [
-                    {"data": "logId"},
-                    {"data": "logDate", "render": dataTableDateFromIso},
-                    {"data": "message"}
+                    {"data": "code", responsivePriority: 1, className: 'all'},
+                    {"data": "reason", responsivePriority: 1, className: 'all'},
+                    {"data": "incidentDt", responsivePriority: 1, className: 'all'},
+                    {"data": "expires", responsivePriority: 1, className: 'all'},
+                    {"data": "scheduleId", responsivePriority: 99, className: 'none'},
+                    {"data": "layoutId", responsivePriority: 99, className: 'none'},
+                    {"data": "regionId", responsivePriority: 99, className: 'none'},
+                    {"data": "widgetId", responsivePriority: 99, className: 'none'},
+                    {"data": "mediaId", responsivePriority: 99, className: 'none'}
                 ]
             });
 

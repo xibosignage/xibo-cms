@@ -1009,7 +1009,7 @@ class InstallMigration extends AbstractMigration
                 ['bandwidthTypeId' => 7, 'name' => 'Notify Status'],
                 ['bandwidthTypeId' => 8, 'name' => 'Submit Stats'],
                 ['bandwidthTypeId' => 9, 'name' => 'Submit Log'],
-                ['bandwidthTypeId' => 10, 'name' => 'Blacklist'],
+                ['bandwidthTypeId' => 10, 'name' => 'Report Fault'],
                 ['bandwidthTypeId' => 11, 'name' => 'Screen Shot'],
             ])
             ->save();
@@ -1020,19 +1020,6 @@ class InstallMigration extends AbstractMigration
             ->addColumn('month', 'integer')
             ->addColumn('size', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_BIG])
             ->addForeignKey('type', 'bandwidthtype', 'bandwidthTypeId')
-            ->save();
-
-        // Blacklist
-        $blacklist = $this->table('blacklist', ['id' => 'blacklistId']);
-        $blacklist
-            ->addColumn('mediaId', 'integer')
-            ->addColumn('displayId', 'integer')
-            ->addColumn('userId', 'integer', ['null' => true])
-            ->addColumn('reportingDisplayId', 'integer', ['null' => true])
-            ->addColumn('reason', 'text')
-            ->addColumn('isIgnored', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
-            ->addForeignKey('mediaId', 'media', 'mediaId')
-            ->addForeignKey('displayId', 'display', 'displayId')
             ->save();
 
         // Help

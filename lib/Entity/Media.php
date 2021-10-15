@@ -40,6 +40,7 @@ use Xibo\Support\Exception\InvalidArgumentException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
+ * @property $extension
  */
 class Media implements \JsonSerializable
 {
@@ -617,7 +618,7 @@ class Media implements \JsonSerializable
         // if the filename basename that we are about to save is still over the limit, attempt to strip query string
         // we cannot make any operations directly on $this->fileName, as that might be still needed to processDownloads
         $fileName = basename($this->fileName);
-        if (strpos(basename($fileName), '?') && $this->mediaType == 'module') {
+        if (strpos(basename($fileName), '?')) {
             $fileName = substr(basename($fileName), 0, strpos(basename($fileName), '?'));
         }
 

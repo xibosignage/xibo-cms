@@ -27,14 +27,16 @@ var videoImageCovers = {};
  */
 function openUploadForm(options) {
 
-    options = $.extend({}, {
+    options = $.extend(true, {}, {
         templateId: "template-file-upload",
-        multi: true,
         videoImageCovers: true,
         className: "upload-modal",
         animateDialog: true,
         formOpenedEvent: null,
-        layoutImport: false
+        templateOptions : {
+            layoutImport: false,
+            multi: true
+        }
     }, options);
 
     // Keep a cache of the upload template (unless we are a non-standard form)
@@ -84,7 +86,7 @@ function openUploadForm(options) {
         }
 
         // If we are not a multi-upload, then limit to 1
-        if (!options.multi) {
+        if (!options.templateOptions.multi) {
             uploadOptions = $.extend({}, uploadOptions, {
                 maxNumberOfFiles: 1,
                 limitMultiFileUploads: 1
@@ -301,9 +303,9 @@ function saveVideoCoverImage(data) {
         delete videoImageCovers[results.name];
 
         // this calls function in library controller that decodes the image and
-        // saves it to library as  "/{$mediaId}_videocover.{$type}".
+        // saves it to library as  "{libraryLocation}/{$mediaId}_{mediaType}cover.png".
         $.ajax({
-            url: "/library/thumbnail",
+            url: addMediaThumbnailUrl,
             type: "POST",
             data: thumbnailData
         });

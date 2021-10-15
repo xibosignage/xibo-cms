@@ -424,9 +424,9 @@ class MediaFactory extends BaseFactory
      * @return Media[]
      * @throws NotFoundException
      */
-    public function getByOwnerId($ownerId)
+    public function getByOwnerId($ownerId, $allModules = 0)
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'ownerId' => $ownerId, 'isEdited' => 1));
+        return $this->query(null, ['disableUserCheck' => 1, 'ownerId' => $ownerId, 'isEdited' => 1, 'allModules' => $allModules]);
     }
 
     /**
@@ -757,7 +757,7 @@ class MediaFactory extends BaseFactory
                 AND media.type <> \'module\'
             ';
 
-            if ($sanitizedFilter->getInt('includeLayoutBackgroundImage', $filterBy) === 1) {
+            if ($sanitizedFilter->getInt('includeLayoutBackgroundImage') === 1) {
                 $body .= ' OR media.mediaId IN ( SELECT `layout`.backgroundImageId FROM `layout` WHERE `layout`.layoutId = :layoutId ) ';
             }
 

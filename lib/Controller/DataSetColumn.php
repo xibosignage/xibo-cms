@@ -304,6 +304,20 @@ class DataSetColumn extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="tooltip",
+     *      in="formData",
+     *      description="Help text that should be displayed when entering data for this Column.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isRequired",
+     *      in="formData",
+     *      description="Flag indicating whether value must be provided for this Column.",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -334,8 +348,10 @@ class DataSetColumn extends Base
         $column->dataSetColumnTypeId = $sanitizedParams->getInt('dataSetColumnTypeId');
         $column->formula = $request->getParam('formula', null);
         $column->remoteField = $request->getParam('remoteField', null);
-        $column->showFilter =$sanitizedParams->getCheckbox('showFilter');
+        $column->showFilter = $sanitizedParams->getCheckbox('showFilter');
         $column->showSort = $sanitizedParams->getCheckbox('showSort');
+        $column->tooltip = $sanitizedParams->getString('tooltip');
+        $column->isRequired = $sanitizedParams->getCheckbox('isRequired');
 
         if ($column->dataSetColumnTypeId == 3){
             $this->pool->deleteItem('/dataset/cache/' . $dataSet->dataSetId);
@@ -489,6 +505,20 @@ class DataSetColumn extends Base
      *      type="integer",
      *      required=true
      *   ),
+     *  @SWG\Parameter(
+     *      name="tooltip",
+     *      in="formData",
+     *      description="Help text that should be displayed when entering data for this Column.",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="isRequired",
+     *      in="formData",
+     *      description="Flag indicating whether value must be provided for this Column.",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -506,8 +536,9 @@ class DataSetColumn extends Base
         $dataSet = $this->dataSetFactory->getById($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkEditable($dataSet))
+        if (!$this->getUser()->checkEditable($dataSet)) {
             throw new AccessDeniedException();
+        }
 
         // Column
         $column = $this->dataSetColumnFactory->getById($colId);
@@ -520,6 +551,8 @@ class DataSetColumn extends Base
         $column->remoteField = $request->getParam('remoteField', null);
         $column->showFilter = $sanitizedParams->getCheckbox('showFilter');
         $column->showSort = $sanitizedParams->getCheckbox('showSort');
+        $column->tooltip = $sanitizedParams->getString('tooltip');
+        $column->isRequired = $sanitizedParams->getCheckbox('isRequired');
         $column->save();
 
         if ($column->dataSetColumnTypeId == 3 && $column->hasPropertyChanged('remoteField')){

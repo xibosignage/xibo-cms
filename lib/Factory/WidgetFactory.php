@@ -114,12 +114,13 @@ class WidgetFactory extends BaseFactory
     /**
      * Load widgets by MediaId
      * @param int $mediaId
+     * @param int|null $isDynamicPlaylist
      * @return array[Widget]
      * @throws NotFoundException
      */
-    public function getByMediaId($mediaId)
+    public function getByMediaId($mediaId, $isDynamicPlaylist = null)
     {
-        return $this->query(null, array('disableUserCheck' => 1, 'mediaId' => $mediaId));
+        return $this->query(null, ['disableUserCheck' => 1, 'mediaId' => $mediaId, 'isDynamicPlaylist' => $isDynamicPlaylist]);
     }
 
     /**
@@ -196,6 +197,16 @@ class WidgetFactory extends BaseFactory
     }
 
     /**
+     * @param $ownerId
+     * @return Widget[]
+     * @throws NotFoundException
+     */
+    public function getByOwnerId($ownerId)
+    {
+        return $this->query(null, ['disableUserCheck' => 1, 'userId' => $ownerId]);
+    }
+
+    /**
      * Create a new widget
      * @param int $ownerId
      * @param int $playlistId
@@ -248,7 +259,8 @@ class WidgetFactory extends BaseFactory
               `widget`.calculatedDuration,
               `playlist`.name AS playlist,
               `playlist`.folderId,
-              `playlist`.permissionsFolderId
+              `playlist`.permissionsFolderId,
+              `playlist`.isDynamic
         ';
 
         if (is_array($sortOrder) && (in_array('`widget`', $sortOrder) || in_array('`widget` DESC', $sortOrder))) {
@@ -352,10 +364,20 @@ class WidgetFactory extends BaseFactory
             $params['media'] = '%' . $sanitizedFilter->getString('media') . '%';
         }
 
+        if ($sanitizedFilter->getInt('userId') !== null) {
+            $body .= ' AND `widget`.ownerId = :userId';
+            $params['userId'] = $sanitizedFilter->getInt('userId');
+        }
+
         // Playlist Like
         if ($sanitizedFilter->getString('playlist') != '') {
             $terms = explode(',', $sanitizedFilter->getString('playlist'));
             $this->nameFilter('playlist', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+        }
+
+        if ($sanitizedFilter->getInt('isDynamicPlaylist') !== null) {
+            $body .= ' AND `playlist`.isDynamic = :isDynamicPlaylist';
+            $params['isDynamicPlaylist'] = $sanitizedFilter->getInt('isDynamicPlaylist');
         }
 
         // Permissions

@@ -23,7 +23,6 @@
 
 namespace Xibo\Middleware;
 
-
 use Illuminate\Support\Str;
 use Psr\Container\ContainerInterface;
 use Psr\Http\Message\ResponseInterface as Response;
@@ -133,5 +132,11 @@ class Theme implements Middleware
         $view['ckeditorConfig'] = $container->get('mediaService')->setUser($container->get('user'))->fontCKEditorConfig(RouteContext::fromRequest($request)->getRouteParser());
         $view['version'] = Environment::$WEBSITE_VERSION_NAME;
         $view['revision'] = Environment::getGitCommit();
+        $samlSettings = $container->get('configService')->samlSettings;
+        if (isset($samlSettings['workflow'])
+            && isset($samlSettings['workflow']['slo'])
+            && $samlSettings['workflow']['slo'] == false) {
+            $view['hideLogout'] = true;
+        }
     }
 }
