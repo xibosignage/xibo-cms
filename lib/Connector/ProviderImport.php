@@ -52,13 +52,12 @@ class ProviderImport implements \JsonSerializable
     public $error;
 
     /**
-     * @param $url
      * @return \Xibo\Connector\ProviderImport
      */
-    public function configureDownload($url): ProviderImport
+    public function configureDownload(): ProviderImport
     {
         $this->isConfigured = true;
-        $this->url = $url;
+        $this->url = $this->searchResult->download;
         return $this;
     }
 

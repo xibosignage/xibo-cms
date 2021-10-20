@@ -2589,7 +2589,7 @@ class Library extends Base
                     // Use a module to make sure our type, etc is supported.
                     $module = $this->getModuleFactory()->create($import->type);
                     $import->media = $this->mediaFactory->queueDownload(
-                        $import->title,
+                        $import->searchResult->title,
                         str_replace(' ', '%20', htmlspecialchars_decode($import->url)),
                         0,
                         [
