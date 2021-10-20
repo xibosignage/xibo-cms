@@ -2594,7 +2594,7 @@ class Library extends Base
 
                     // Queue this for upload.
                     // Use a module to make sure our type, etc is supported.
-                    $module = $this->getModuleFactory()->create($import->type);
+                    $module = $this->getModuleFactory()->create($import->searchResult->type);
                     $import->media = $this->mediaFactory->queueDownload(
                         $import->searchResult->title,
                         str_replace(' ', '%20', htmlspecialchars_decode($import->url)),

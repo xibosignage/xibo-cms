@@ -36,9 +36,6 @@ class ProviderImport implements \JsonSerializable
     /** @var bool has this been configured for import */
     public $isConfigured = false;
 
-    /** @var string the type we are to expect */
-    public $type;
-
     /** @var string the URL to use for the download */
     public $url;
 
