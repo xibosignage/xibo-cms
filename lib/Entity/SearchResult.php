@@ -35,6 +35,9 @@ class SearchResult implements \JsonSerializable
     public $type;
     public $id;
     public $download;
+    public $fileSize;
+    public $width;
+    public $height;
 
     /** @var ProviderDetails */
     public $provider;
@@ -49,7 +52,10 @@ class SearchResult implements \JsonSerializable
             'description' => $this->description,
             'thumbnail' => $this->thumbnail,
             'download' => $this->download,
-            'provider' => $this->provider
+            'provider' => $this->provider,
+            'width' => $this->width,
+            'height' => $this->height,
+            'fileSize' => $this->fileSize,
         ];
     }
 }

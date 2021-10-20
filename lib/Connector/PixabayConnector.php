@@ -145,6 +145,7 @@ class PixabayConnector implements ConnectorInterface
         // Process each hit into a search result and add it to the overall results we've been given.
         foreach ($body->hits as $result) {
             $searchResult = new SearchResult();
+            // TODO: add more info
             $searchResult->source = $this->getSourceName();
             $searchResult->id = $result->id;
             $searchResult->title = $result->tags;
@@ -155,13 +156,32 @@ class PixabayConnector implements ConnectorInterface
                 $searchResult->thumbnail = $result->videos->tiny->url;
                 if (!empty($result->videos->large)) {
                     $searchResult->download = $result->videos->large->url;
-                } else {
+                    $searchResult->width = $result->videos->large->width;
+                    $searchResult->height = $result->videos->large->height;
+                    $searchResult->fileSize = $result->videos->large->size;
+                } else if (!empty($result->videos->medium)) {
                     $searchResult->download = $result->videos->medium->url;
+                    $searchResult->width = $result->videos->medium->width;
+                    $searchResult->height = $result->videos->medium->height;
+                    $searchResult->fileSize = $result->videos->medium->size;
+                } else if (!empty($result->videos->small)) {
+                    $searchResult->download = $result->videos->small->url;
+                    $searchResult->width = $result->videos->small->width;
+                    $searchResult->height = $result->videos->small->height;
+                    $searchResult->fileSize = $result->videos->small->size;
+                } else {
+                    $searchResult->download = $result->videos->tiny->url;
+                    $searchResult->width = $result->videos->tiny->width;
+                    $searchResult->height = $result->videos->tiny->height;
+                    $searchResult->fileSize = $result->videos->tiny->size;
                 }
             } else {
                 $searchResult->type = 'image';
                 $searchResult->thumbnail = $result->previewURL;
                 $searchResult->download = $result->fullHDURL ?? $result->largeImageURL;
+                $searchResult->width = $result->imageWidth;
+                $searchResult->height = $result->imageHeight;
+                $searchResult->fileSize = $result->imageSize;
             }
             $event->addResult($searchResult);
         }
