@@ -175,7 +175,7 @@ class PixabayConnector implements ConnectorInterface
         foreach ($event->getItems() as $providerImport) {
             if ($providerImport->searchResult->provider->id === $this->getSourceName()) {
                 // Configure this import, setting the URL, etc.
-                $providerImport->configureDownload($providerImport->searchResult->id);
+                $providerImport->configureDownload();
             }
         }
     }

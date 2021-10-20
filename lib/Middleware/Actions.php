@@ -124,6 +124,7 @@ class Actions implements Middleware
                 $container->get('sanitizerService')
                     ->getSanitizer($container->get('configService')->getConnectorSettings($connector->getSourceName()))
             )
+            ->useHttpOptions($container->get('configService')->getGuzzleProxy())
             ->registerWithDispatcher($container->get('dispatcher'));
 
         $connector = new PixabayConnector();
@@ -134,6 +135,7 @@ class Actions implements Middleware
                 $container->get('sanitizerService')
                     ->getSanitizer($container->get('configService')->getConnectorSettings($connector->getSourceName()))
             )
+            ->useHttpOptions($container->get('configService')->getGuzzleProxy())
             ->registerWithDispatcher($container->get('dispatcher'));
 
         // Only process notifications if we are a full request

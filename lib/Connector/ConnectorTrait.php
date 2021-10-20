@@ -22,6 +22,7 @@
 
 namespace Xibo\Connector;
 
+use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Stash\Interfaces\PoolInterface;
@@ -41,6 +42,9 @@ trait ConnectorTrait
 
     /** @var PoolInterface|null */
     private $pool;
+
+    /** @var array */
+    private $httpOptions;
 
     /**
      * @param \Psr\Log\LoggerInterface $logger
@@ -107,5 +111,20 @@ trait ConnectorTrait
     private function getPool(): PoolInterface
     {
         return $this->pool;
+    }
+
+    /**
+     * @param $options
+     * @return \Xibo\Connector\ConnectorInterface
+     */
+    public function useHttpOptions($options): ConnectorInterface
+    {
+        $this->httpOptions = $options;
+        return $this;
+    }
+
+    public function getClient(): Client
+    {
+        return new Client($this->httpOptions);
     }
 }

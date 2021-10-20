@@ -22,6 +22,7 @@
 
 namespace Xibo\Connector;
 
+use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
@@ -36,5 +37,7 @@ interface ConnectorInterface
     public function useLogger(LoggerInterface $logger): ConnectorInterface;
     public function useSettings(SanitizerInterface $settings): ConnectorInterface;
     public function usePool(PoolInterface $pool): ConnectorInterface;
+    public function useHttpOptions($httpOptions): ConnectorInterface;
+    public function getClient(): Client;
     public function getSourceName(): string;
 }

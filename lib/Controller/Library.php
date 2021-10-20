@@ -2575,6 +2575,7 @@ class Library extends Base
             $import->searchResult->provider->id = $item['provider']['id'];
             $import->searchResult->title = $item['title'];
             $import->searchResult->id = $item['id'];
+            $import->searchResult->download = $item['download'];
             $importQueue[] = $import;
         }
         $event = new LibraryProviderImportEvent($importQueue);
@@ -2585,6 +2586,11 @@ class Library extends Base
             try {
                 // Has this been configured for upload?
                 if ($import->isConfigured) {
+                    // Make sure we have a URL
+                    if (empty($import->url)) {
+                        throw new InvalidArgumentException('Missing or invalid URL', 'url');
+                    }
+
                     // Queue this for upload.
                     // Use a module to make sure our type, etc is supported.
                     $module = $this->getModuleFactory()->create($import->type);
