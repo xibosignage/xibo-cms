@@ -2575,6 +2575,7 @@ class Library extends Base
             $import->searchResult->provider->id = $item['provider']['id'];
             $import->searchResult->title = $item['title'];
             $import->searchResult->id = $item['id'];
+            $import->searchResult->type = $item['type'];
             $import->searchResult->download = $item['download'];
             $importQueue[] = $import;
         }
