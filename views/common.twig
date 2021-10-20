@@ -216,7 +216,11 @@
                 get: {
                     url: "{{ url_for("library.search") }}",
                     type: 'GET'
-                }
+                },
+                connectorImport: {
+                    url: "{{ url_for("library.connector.import") }}",
+                    type: 'POST'
+                },
             },
             playlist: {
                 get: {
@@ -484,6 +488,7 @@
                 deleteFailed: "{{ "Object delete failed: %error%" |trans }}",
                 saveAllChangesFailed: "{{ "Save all changes failed!" |trans }}",
                 removeAllChangesFailed: "{{ "Remove all changes failed!!" |trans }}",
+                importingMediaFailed: "{{ "Importing media failed!!" |trans }}",
                 addMediaFailed: "{{ "Add media failed: %error%" |trans }}",
                 addModuleFailed: "{{ "Add module failed: %error%" |trans }}",
                 createRegionFailed: "{{ "Create region failed: %error%" |trans }}",

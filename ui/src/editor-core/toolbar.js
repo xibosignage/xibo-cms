@@ -557,7 +557,10 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
     const self = this;
 
     // Create content only if it's not rendered yet ( if force reload is true, skip this step)
-    if(!forceReload && this.DOMObject.find('#content-' + menu + ' .toolbar-pane-container').length > 0) {
+    if(!forceReload && menu > self.widgetMenuIndex && this.DOMObject.find('#content-' + menu + ' .toolbar-pane-container').length > 0) {
+        // Recalculate masonry layout to refresh the elements positions
+        self.DOMObject.find('#media-content-' + menu).masonry('layout');
+        
         return;
     }
 
@@ -818,11 +821,16 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
                 });
 
                 for (let index = 0; index < res.data.length; index++) {
-                    const element = res.data[index];
+                    const element = Object.assign({}, res.data[index]);
                     element.trans = toolbarTrans;
 
                     // Use template
                     const $card = $(ToolbarCardMediaTemplate(element));
+
+                    // Add data object to card
+                    if($card.hasClass('from-provider')) {
+                        $card.data('providerData', res.data[index]);
+                    }
                     
                     // Append to container
                     $mediaContent.append($card).masonry('appended', $card);;
@@ -962,7 +970,8 @@ Toolbar.prototype.addToQueue = function(menu, target) {
     let mediaQueue = $mediaPane.data('mediaQueue') ?? [];
 
     // Add to queue
-    mediaQueue.push(target.data('mediaId'));
+    const toAdd = (target.data('providerData')) ||  target.data('mediaId');
+    mediaQueue.push(toAdd);
     target.addClass('card-selected');
     
     // Update queue positions
@@ -1129,6 +1138,22 @@ Toolbar.prototype.handleCardsBehaviour = function() {
                 self.addToQueue(self.openedMenu, $card);
             }
         });
+
+        // Play video on hover
+        this.DOMObject.find('#media-content-' + this.openedMenu + ' .toolbar-card[data-sub-type="video"]').off('mouseenter mouseleave').hover(
+            function() { // mouseenter
+                const vid = $(this).find('video')[0];
+                if(vid && vid.readyState > 1 && vid.paused) {
+                    vid.play();
+                }
+            },
+            function() { // mouseleave
+                const vid = $(this).find('video')[0];
+                if(vid && vid.readyState > 1 && !vid.paused && vid.currentTime > 0) {
+                    vid.currentTime = 0;
+                    vid.pause();
+                }
+            })
     }
 };
 

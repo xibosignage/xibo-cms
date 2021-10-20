@@ -79,7 +79,7 @@
         }
 
         form {
-            margin: 12px 12px 6px 16px;
+            margin: 13px 12px 6px;
 
             .form-group {
 
@@ -111,7 +111,7 @@
                 overflow-x: hidden;
                 overflow-y: auto;
                 width: 334px;
-                margin: 6px -2px 6px 6px;
+                margin: 0px -2px 6px 6px;
 
                 /* SCROLLBAR */
                 scrollbar-color: $xibo-color-primary lighten($xibo-color-primary, 40%); /* For firefox */
@@ -219,8 +219,8 @@
                 }
 
                 .media-search-form {
-                    width: 310px;
-                    margin: 6px 10px 10px;
+                    width: 320px;
+                    margin: 2px 2px 6px;
                 }
 
                 .toolbar-pane-container {
@@ -545,6 +545,7 @@
 
     .bootstrap-tagsinput {
         width: 100%;
+        min-width: 100%;
     }
 
     .navbar-submenu {

@@ -110,6 +110,33 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
         padding-left: 0;
     }
 
+    /* width */
+    ::-webkit-scrollbar {
+        width: 10px;
+        height: 10px;
+    }
+
+    /* Track */
+    ::-webkit-scrollbar-track {
+        background: $xibo-color-white;
+        @include border-radius(6px);
+    }
+    
+    /* Handle */
+    ::-webkit-scrollbar-thumb {
+        background: $xibo-color-blue-darker;
+        @include border-radius(4px);
+    }
+
+    /* Handle on hover */
+    ::-webkit-scrollbar-thumb:hover {
+        background: lighten($xibo-color-blue-darker, 20%);
+    }
+
+    ::-webkit-scrollbar-corner {
+        @include box-shadow(inset 0 0 5px $xibo-color-gray-dark);
+    }
+
     #playlist-timeline {
         background: $xibo-color-white;
         @include border-radius(4px);

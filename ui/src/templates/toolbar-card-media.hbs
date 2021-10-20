@@ -1,11 +1,15 @@
-<div class="toolbar-card {{#if selected}}card-selected{{/if}} {{#eq thumbnail null}}no-thumbnail{{thumbnail}}{{else}}hide-content{{/eq}}" 
+<div class="toolbar-card {{#if selected}}card-selected{{/if}} {{#eq thumbnail null}}no-thumbnail{{thumbnail}}{{else}}hide-content{{/eq}} {{#if provider}}from-provider{{/if}}" 
     data-type="media" 
     data-media-id="{{id}}"
     data-sub-type="{{type}}"
     drop-to="region">
 
     {{#neq thumbnail null}}
-        <img class="thumb" src="{{thumbnail}}" alt="">
+        {{#eq type "video"}}
+            <video class="thumb" src="{{thumbnail}}" alt="" muted="muted"></video>
+        {{else}}
+            <img class="thumb" src="{{thumbnail}}" alt="">
+        {{/eq}}
     {{/neq}}
 
     <div class="select-button">

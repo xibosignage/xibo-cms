@@ -25,6 +25,8 @@ let Layout = function(id, data) {
     this.id = 'layout_' + id;
     this.layoutId = id;
 
+    this.folderId = data.folderId;
+
     // Campaing ID
     this.campaignId = data.campaignId;
 

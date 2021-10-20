@@ -121,7 +121,15 @@ Playlist.prototype.addElement = function(droppable, draggable, addToPosition = n
 
     // Add dragged item to region
     if(draggableType == 'media') { // Adding media from search tab to a region
-        this.addMedia($(draggable).data('mediaId'), addToPosition);
+        if($(draggable).hasClass('from-provider')) {
+            pE.importFromProvider([$(draggable).data('providerData')]).then((res) =>  {
+                this.addMedia(res, addToPosition);
+            }).catch(function() {
+                toastr.error(errorMessagesTrans.importingMediaFailed);
+            });
+        } else {
+            this.addMedia($(draggable).data('mediaId'), addToPosition);
+        }
     } else if(draggableType == 'module') { // Add widget/module
 
         // Get regionSpecific property
@@ -276,7 +284,7 @@ Playlist.prototype.addMedia = function(media, addToPosition = null) {
     // Get media Id
     let mediaToAdd = {};
 
-    if($.isArray(media)) {
+    if(Array.isArray(media)) {
         mediaToAdd = {
             media: media
         };

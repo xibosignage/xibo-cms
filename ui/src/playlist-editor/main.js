@@ -251,8 +251,12 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
 
     } else if(!$.isEmptyObject(this.toolbar.selectedQueue)) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
         if(obj.data('type') == 'region') {
-            // Add media queue to playlist
-            this.playlist.addMedia(this.toolbar.selectedQueue, positionToAdd);
+            pE.importFromProvider(this.toolbar.selectedQueue).then((res) =>  {
+                // Add media queue to playlist
+                this.playlist.addMedia(res, positionToAdd);
+            }).catch(function() {
+                toastr.error(errorMessagesTrans.importingMediaFailed);
+            });
         }
 
         // Deselect cards and drop zones
@@ -1026,3 +1030,11 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
         undoActiveTitle: undoActiveTitle
     };
 };
+
+/**
+ * Toggle panel and refresh view containers
+ * @param {Array.<number, object>} items - list of items to add, either just an id or a provider object
+ */
+ pE.importFromProvider = function(items) {
+    //TODOM: Implement this
+ };

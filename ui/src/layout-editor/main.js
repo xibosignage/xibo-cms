@@ -381,8 +381,12 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                 playlistId = lD.layout.regions[droppableId].playlists.playlistId;
             }
 
-            // Add media queue to playlist
-            this.addMediaToPlaylist(playlistId, this.toolbar.selectedQueue, positionToAdd);
+            lD.importFromProvider(this.toolbar.selectedQueue).then((res) =>  {
+                // Add media queue to playlist
+                lD.addMediaToPlaylist(playlistId, res, positionToAdd);
+            }).catch(function() {
+                toastr.error(errorMessagesTrans.importingMediaFailed);
+            });
         }
 
         // Deselect cards and drop zones
@@ -1247,8 +1251,15 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
 
         const mediaId = $(draggable).data('mediaId');
 
-        lD.addMediaToPlaylist(playlistId, mediaId, positionToAdd);
-
+        if($(draggable).hasClass('from-provider')) {
+            lD.importFromProvider([$(draggable).data('providerData')]).then((res) =>  {
+                lD.addMediaToPlaylist(playlistId, res, positionToAdd);
+            }).catch(function() {
+                toastr.error(errorMessagesTrans.importingMediaFailed);
+            });
+        } else {
+            lD.addMediaToPlaylist(playlistId, mediaId, positionToAdd);
+        }
     } else if(draggableType == 'module') { // Add widget/module
 
         // Get regionSpecific property
@@ -1410,7 +1421,7 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
     // Get media Id
     let mediaToAdd = {};
 
-    if($.isArray(media)) {
+    if(Array.isArray(media)) {
         mediaToAdd = {
             media: media
         };
@@ -1875,7 +1886,7 @@ lD.unlockLayout = function() {
 /**
  * Check history and return last step description
  */
- lD.checkHistory = function() {
+lD.checkHistory = function() {
     // Check if there are some changes
     let undoActive = lD.manager.changeHistory.length > 0;
     let undoActiveTitle = '';
@@ -1900,7 +1911,7 @@ lD.unlockLayout = function() {
  * Toggle panel and refresh view containers
  * @param {jquery object} $panel 
  */
- lD.togglePanel = function($panel) {
+lD.togglePanel = function($panel) {
     $panel.toggleClass('opened');
 
     // Refresh navigators and viewer
@@ -1909,4 +1920,79 @@ lD.unlockLayout = function() {
     } else {
         lD.renderContainer(lD.viewer, lD.selectedObject);
     }
+};
+
+
+/**
+ * Toggle panel and refresh view containers
+ * @param {Array.<number, object>} items - list of items to add, either just an id or a provider object
+ */
+lD.importFromProvider = function(items) {
+    let requestItems = [];
+    let itemsResult = items;
+
+    itemsResult.forEach(element => {
+        if(isNaN(element)) {
+            requestItems.push(element);
+        }
+    });
+
+    const linkToAPI = urlsForApi.library.connectorImport;
+    let requestPath = linkToAPI.url;
+
+    // Run ajax request and save promise
+    return new Promise(function(resolve, reject) {
+        // If none of the items are from a provider, return the original array
+        if(requestItems.length == 0) {
+            resolve(itemsResult);
+        }
+
+        lD.common.showLoadingScreen();
+
+        $.ajax({
+            url: requestPath,
+            type: linkToAPI.type,
+            data: {
+                folderId: lD.layout.folderId,
+                items: requestItems,
+            }
+        }).done(function(res) {
+            if(res.success) {
+                console.log(res);
+
+                lD.common.hideLoadingScreen();
+
+
+                // TODOM: Replace ids on original Array with the new ones
+                itemsResult.forEach(element => {
+                    if(isNaN(element)) {
+                        console.log('Populate this element with the new ID from the request!!!');
+                    }
+                });
+
+                // TODOM: Return array of new elements' id
+                resolve(itemsResult);
+            } else {
+                lD.common.hideLoadingScreen();
+
+                // Login Form needed?
+                if(data.login) {
+                    window.location.href = window.location.href;
+                    location.reload();
+                } else {
+                    // Just an error we dont know about
+                    if(data.message == undefined) {
+                        reject(data);
+                    } else {
+                        reject(data.message);
+                    }
+                }
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            lD.common.hideLoadingScreen();
+
+            // Reject promise and return an object with all values
+            reject({jqXHR, textStatus, errorThrown});
+        });
+    });
 };
