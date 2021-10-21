@@ -390,11 +390,10 @@ class StatsMigrationTask implements TaskInterface
 
                 $entry = [];
 
-                $entry['statDate'] = Carbon::createFromTimestamp($stat['statDate'])->format('U');
-
+                $entry['statDate'] = Carbon::createFromTimestamp($stat['statDate']);
                 $entry['type'] = $stat['type'];
-                $entry['fromDt'] = Carbon::createFromTimestamp($stat['start'])->format('U');
-                $entry['toDt'] = Carbon::createFromTimestamp($stat['end'])->format('U');
+                $entry['fromDt'] = Carbon::createFromTimestamp($stat['start']);
+                $entry['toDt'] = Carbon::createFromTimestamp($stat['end']);
                 $entry['scheduleId'] = (int) $stat['scheduleId'];
                 $entry['mediaId'] = (int) $stat['mediaId'];
                 $entry['layoutId'] = (int) $stat['layoutId'];
@@ -408,7 +407,6 @@ class StatsMigrationTask implements TaskInterface
                 // Add stats in store $this->stats
                 $this->timeSeriesStore->addStat($entry);
                 $statCount++;
-
             }
 
             // Write stats
