@@ -595,16 +595,12 @@ lD.checkoutLayout = function() {
             // Turn off read only mode
             lD.readOnlyMode = false;
 
-            // Hide read only message
-            /*
-            lD.editorContainer.removeClass('view-mode');
-            lD.editorContainer.find('#read-only-message').remove();
-            
-            // Reload layout
-            lD.reloadData(res.data);
-            */
-
             lD.selectObject();
+
+            lD.common.hideLoadingScreen();
+
+            // Add thumbnail
+            setTimeout(lD.uploadThumbnail, 1000 * 5);
         } else {
             // Login Form needed?
             if(res.login) {
@@ -1422,6 +1418,9 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
     let mediaToAdd = {};
 
     if(Array.isArray(media)) {
+        if(media.length == 0) {
+            return;
+        }
         mediaToAdd = {
             media: media
         };
@@ -1922,7 +1921,6 @@ lD.togglePanel = function($panel) {
     }
 };
 
-
 /**
  * Toggle panel and refresh view containers
  * @param {Array.<number, object>} items - list of items to add, either just an id or a provider object
@@ -1952,6 +1950,7 @@ lD.importFromProvider = function(items) {
         $.ajax({
             url: requestPath,
             type: linkToAPI.type,
+            dataType: 'json',
             data: {
                 folderId: lD.layout.folderId,
                 items: requestItems,
@@ -1962,15 +1961,23 @@ lD.importFromProvider = function(items) {
 
                 lD.common.hideLoadingScreen();
 
-
-                // TODOM: Replace ids on original Array with the new ones
-                itemsResult.forEach(element => {
-                    if(isNaN(element)) {
-                        console.log('Populate this element with the new ID from the request!!!');
+                res.data.forEach((newElement) => {
+                    let addFlag = true;
+                    if(newElement.isError) {
+                        addFlag = false;
+                        toastr.error(newElement.error, newElement.item.id);
                     }
+
+                    itemsResult.forEach((oldElement, key) => {
+                        if(isNaN(oldElement) && newElement.item.id == oldElement.id) {
+                            itemsResult[key] = (addFlag) ? newElement.media.mediaId : null;
+                        }
+                    });
                 });
 
-                // TODOM: Return array of new elements' id
+                // Filter null results
+                itemsResult = itemsResult.filter(el => el);
+
                 resolve(itemsResult);
             } else {
                 lD.common.hideLoadingScreen();
@@ -1995,4 +2002,33 @@ lD.importFromProvider = function(items) {
             reject({jqXHR, textStatus, errorThrown});
         });
     });
+};
+
+/**
+ * Take and upload a thumbnail
+ */
+lD.uploadThumbnail = function() {
+    const linkToAPI = urlsForApi.layout.addThumbnail;
+    const $viewer = lD.editorContainer.find('#layout-viewer');
+    const $player = $viewer.find('.layout-player');
+    if ($player.length > 0) {
+        const top = Math.floor($player.offset().top - $viewer.offset().top);
+        const left = Math.floor($player.offset().left - $viewer.offset().left);
+        let requestPath = linkToAPI.url.replace(':id', lD.layout.layoutId);
+        requestPath += '?trim=' + [
+            top,
+            left,
+            Math.ceil($player.width()),
+            Math.ceil($player.height())].join();
+
+        htmlToImage.toPng($viewer[0]).then(function(dataUrl) {
+            $.ajax({
+                url: requestPath,
+                type: "POST",
+                data: dataUrl
+            })
+        });
+    } else {
+        console.log("Viewer not ready");
+    }
 };

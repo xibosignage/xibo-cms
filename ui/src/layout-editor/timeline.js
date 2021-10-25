@@ -516,6 +516,7 @@ Timeline.prototype.render = function(layout) {
     // Render timeline template using layout object
     const html = timelineTemplate({
         layout: layout, 
+        noRegions: Object.keys(layout.regions).length == 0,
         properties: this.properties,
         readOnlyModeOn: readOnlyModeOn,
         trans: timelineTrans,

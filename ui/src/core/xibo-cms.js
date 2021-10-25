@@ -3770,8 +3770,8 @@ function createMiniLayoutPreview(previewUrl) {
         $layoutPreview.toggleClass('large');
 
         // Change icon based on size state
-        $(this).toggleClass('fa-minus-square', $layoutPreview.hasClass('large'));
-
+        $(this).toggleClass('fa-arrow-circle-down', $layoutPreview.hasClass('large'));
+        $(this).toggleClass('fa-arrow-circle-up', !$layoutPreview.hasClass('large'));
         // Re-show play button
         $layoutPreview.find('#playBtn').show();
     });

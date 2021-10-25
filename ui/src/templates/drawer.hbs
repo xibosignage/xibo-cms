@@ -5,7 +5,9 @@
 
 <div id="actions-drawer-content" data-type="region" class="editable">
     {{#if drawer.isEmpty}}
-        <div id="actions-drawer-empty-message">
+        <div id="actions-drawer-empty-message" class="tooltip-always-on" 
+            data-toggle="tooltip" data-container=".timeline-panel" 
+            data-title="{{#if readOnlyModeOn}}{{ trans.notInitEmptyDrawer }}{{else}}{{ trans.emptyDrawer }}{{/if}}">
             {{#if readOnlyModeOn}}
                 <span>{{ trans.notInitEmptyDrawer }}</span>
             {{else}}

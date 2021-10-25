@@ -2,7 +2,9 @@
     data-type="media" 
     data-media-id="{{id}}"
     data-sub-type="{{type}}"
-    drop-to="region">
+    drop-to="region"
+    data-title="{{title}}"
+    data-download="{{download}}">
 
     {{#neq thumbnail null}}
         {{#eq type "video"}}
@@ -10,6 +12,12 @@
         {{else}}
             <img class="thumb" src="{{thumbnail}}" alt="">
         {{/eq}}
+    {{/neq}}
+
+    {{#neq download null}}
+        <div class="preview-button">
+            <i class="fa fa-play" data-title="{{trans.preview}}" data-toggle="tooltip" data-placement="top"></i>
+        </div>
     {{/neq}}
 
     <div class="select-button">

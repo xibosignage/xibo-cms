@@ -13,6 +13,7 @@ let Playlist = function(id, data) {
 
     //  properties
     this.playlistId = id;
+    this.folderId = data.folderId;
     this.isEmpty = true;
 
     this.widgets = {};

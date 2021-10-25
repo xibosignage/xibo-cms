@@ -1,58 +1,66 @@
 <div id="timeline-container">
     <div class="timeline-left-panel">
         {{!-- Regions info --}}
-        <div id="regions-info">
-            {{!-- Controls --}}
-            <div id="timeline-controls">
-                <a id="zoomInBtn" {{properties.zoomInDisable}} data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomIn}}">
-                    <i class="fas fa-search-plus"></i>
-                </a>
-                <a id="findSelectedBtn" {{properties.zoomFindWidgetDisabled}} data-toggle="tooltip" data-container="#layout-timeline" 
-                    data-title="{{trans.zoomFindSelected}}">
-                    <i class="fas fa-search-location"></i>
-                </a>
-                <a id="zoomReset" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.resetZoom}}">
-                    <i class="fas fa-search"></i>
-                </a>
-                <a id="zoomOutBtn" {{properties.zoomOutDisable}} data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomOut}}">
-                    <i class="fas fa-search-minus"></i>
-                </a>
-                <span id="zoomTimeSpan" class="pull-right" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomDelta}}">
-                    <i class="fa fa-hourglass-o"></i>&nbsp;{{properties.deltaTimeFormatted}}
-                </span>
+        {{#unless noRegions }}
+            <div id="regions-info">
+                {{!-- Controls --}}
+                <div id="timeline-controls">
+                    <a id="zoomInBtn" {{properties.zoomInDisable}} data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomIn}}">
+                        <i class="fas fa-search-plus"></i>
+                    </a>
+                    <a id="findSelectedBtn" {{properties.zoomFindWidgetDisabled}} data-toggle="tooltip" data-container="#layout-timeline" 
+                        data-title="{{trans.zoomFindSelected}}">
+                        <i class="fas fa-search-location"></i>
+                    </a>
+                    <a id="zoomReset" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.resetZoom}}">
+                        <i class="fas fa-search"></i>
+                    </a>
+                    <a id="zoomOutBtn" {{properties.zoomOutDisable}} data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomOut}}">
+                        <i class="fas fa-search-minus"></i>
+                    </a>
+                    <span id="zoomTimeSpan" class="pull-right" data-toggle="tooltip" data-container="#layout-timeline" data-title="{{trans.zoomDelta}}">
+                        <i class="fa fa-hourglass-o"></i>&nbsp;{{properties.deltaTimeFormatted}}
+                    </span>
+                </div>
+
+                {{#each layout.regions}}
+                    {{> timeline-region-info trans=../trans readOnlyModeOn=../readOnlyModeOn}}
+                {{/each}}
             </div>
-
-            {{#each layout.regions}}
-                {{> timeline-region-info trans=../trans readOnlyModeOn=../readOnlyModeOn}}
-            {{/each}}
-        </div>
+        {{/unless}}
     </div>
-
-    <div id="regions-container">
+    {{#unless noRegions }}
+        <div id="regions-container">
         {{!-- Regions container --}}
-        <div id="regions" class="timeline-regions-container" style="width: {{properties.zoom}}%;" data-zoom="{{properties.zoom}}">
-            <div id="timeruler">
-                {{#if timeruler}}
-                    {{!-- Time ruler --}}
-                    <div class="step-margin" style="width:{{timeruler.startMargin}}%;"></div>
-                    {{#each timeruler.steps}}
-                        <div class="step {{#if labelled}}labelled{{/if}}" title="{{label}}" style="width:{{../timeruler.gap}}%;">
-                            {{#if labelled}}
-                                <span>{{label}}</span>
-                            {{/if}}
-                        </div>
-                    {{/each}}
-                    <div class="step-margin" style="width:{{timeruler.endMargin}}%;"></div>
-                {{else}}
-                    <span class="timeruler-message">{{trans.hiddenTimeruler}}</span>
-                {{/if}}
+            <div id="regions" class="timeline-regions-container" style="width: {{properties.zoom}}%;" data-zoom="{{properties.zoom}}">
+                <div id="timeruler">
+                    {{#if timeruler}}
+                        {{!-- Time ruler --}}
+                        <div class="step-margin" style="width:{{timeruler.startMargin}}%;"></div>
+                        {{#each timeruler.steps}}
+                            <div class="step {{#if labelled}}labelled{{/if}}" title="{{label}}" style="width:{{../timeruler.gap}}%;">
+                                {{#if labelled}}
+                                    <span>{{label}}</span>
+                                {{/if}}
+                            </div>
+                        {{/each}}
+                        <div class="step-margin" style="width:{{timeruler.endMargin}}%;"></div>
+                    {{else}}
+                        <span class="timeruler-message">{{trans.hiddenTimeruler}}</span>
+                    {{/if}}
+                </div>
+                {{#each layout.regions}}
+                    {{> timeline-region trans=../trans}}
+                {{/each}}
             </div>
-
-            {{#each layout.regions}}
-                {{> timeline-region trans=../trans}}
-            {{/each}}
         </div>
-    </div>
+    {{else}}
+        <div class="empty-timeline">
+            <div class="empty-timeline-message">
+                {{trans.emptyTimeline}}
+            </div>
+        </div>
+    {{/unless}}
 </div>
     
 

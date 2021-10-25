@@ -5,6 +5,8 @@ const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
 const ToolbarContentTemplate = require('../templates/toolbar-content.hbs');
 const ToolbarContentMedia = require('../templates/toolbar-content-media.hbs');
+const MediaPlayerTemplate = require('../templates/toolbar-media-preview.hbs');
+const MediaInfoTemplate = require('../templates/toolbar-media-preview-info.hbs');
 
 const moduleListFiltered = [];
 const usersListFiltered = [];
@@ -557,7 +559,7 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
     const self = this;
 
     // Create content only if it's not rendered yet ( if force reload is true, skip this step)
-    if(!forceReload && menu > self.widgetMenuIndex && this.DOMObject.find('#content-' + menu + ' .toolbar-pane-container').length > 0) {
+    if(!forceReload && menu > self.widgetMenuIndex && self.DOMObject.find('#content-' + menu + ' .toolbar-pane-container .toolbar-card').length > 0) {
         // Recalculate masonry layout to refresh the elements positions
         self.DOMObject.find('#media-content-' + menu).masonry('layout');
         
@@ -770,7 +772,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         const $mediaContent = self.DOMObject.find('#media-content-' + menu);
         
         // Remove show more button
-        self.DOMObject.find('.show-more').remove();
+        $mediaContainer.find('.show-more').remove();
 
         // Empty content and reset item count
         if(clear) {
@@ -809,7 +811,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         }).done(function(res) {
             // Remove loading
             $mediaContent.parent().find('.loading-container').remove();
-            if(!res.data || res.data.length == 0) {
+            if((!res.data || res.data.length == 0) && $mediaContent.find('.toolbar-card').length == 0) {
                 // Show no results message
                 $mediaContent.append('<div class="no-results-message">' + toolbarTrans.noMediaToShow + '</div>');
             } else {
@@ -824,6 +826,11 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
                     const element = Object.assign({}, res.data[index]);
                     element.trans = toolbarTrans;
 
+                    // Create download link for images
+                    if(element.type == 'image' && !element.download) {
+                        element.download = imageDownloadUrl.replace(":id", element.id);
+                    }
+
                     // Use template
                     const $card = $(ToolbarCardMediaTemplate(element));
 
@@ -831,6 +838,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
                     if($card.hasClass('from-provider')) {
                         $card.data('providerData', res.data[index]);
                     }
+
                     
                     // Append to container
                     $mediaContent.append($card).masonry('appended', $card);;
@@ -847,13 +855,15 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
                     $mediaContent.find('.toolbar-card').removeClass('hide-content');
 
                     // Show more button
-                    if(res.data.length == requestLength) {
+                    if(res.data.length > 0) {
                         const $showMoreBtn = $('<button class="btn btn-block btn-white show-more">' + toolbarTrans.showMore + '</button>');
                         $mediaContent.after($showMoreBtn);
 
                         $showMoreBtn.off('click').on('click', function() {
                             loadData(false);
                         });
+                    } else {
+                        toastr.info(toolbarTrans.noShowMore, null, {"positionClass": "toast-bottom-center"});
                     }
 
                     // Fix for scrollbar
@@ -1127,9 +1137,8 @@ Toolbar.prototype.handleCardsBehaviour = function() {
             self.toggleFavourite(e.currentTarget);
         });
 
-        // Clicky on the +spans
+        // Card select button
         this.DOMObject.find('#media-content-' + this.openedMenu + ' .select-button').off('click').click(function() {
-            // Get the row that this is in.
             const $card = $(this).parent();
 
             if($card.hasClass('card-selected')) {
@@ -1139,12 +1148,25 @@ Toolbar.prototype.handleCardsBehaviour = function() {
             }
         });
 
+        // Media preview button
+        this.DOMObject.find('#media-content-' + this.openedMenu + ' .preview-button').off('click').click(function() {
+            self.createMediaPreview($(this).parent());
+        });
+
         // Play video on hover
         this.DOMObject.find('#media-content-' + this.openedMenu + ' .toolbar-card[data-sub-type="video"]').off('mouseenter mouseleave').hover(
             function() { // mouseenter
                 const vid = $(this).find('video')[0];
                 if(vid && vid.readyState > 1 && vid.paused) {
                     vid.play();
+
+                    // Stop playing after X seconds
+                    _.debounce(function() {
+                        if(vid && vid.readyState > 1 && !vid.paused && vid.currentTime > 0) {
+                            vid.currentTime = 0;
+                            vid.pause();
+                        }
+                    }, 5000)();
                 }
             },
             function() { // mouseleave
@@ -1156,5 +1178,80 @@ Toolbar.prototype.handleCardsBehaviour = function() {
             })
     }
 };
+
+/**
+ * Create media preview
+ * @param  {object} media
+ */
+Toolbar.prototype.createMediaPreview = function(media) {
+    const self = this;
+    const app = this.parent;
+    
+    if (self.DOMObject.find('.media-preview').length == 0) {
+        self.DOMObject.append(MediaPlayerTemplate({
+            trans: toolbarTrans,
+        }));
+    }
+
+    const $mediaPreview = self.DOMObject.find('.media-preview');
+    const $mediaPreviewContent = $mediaPreview.find('#content');
+    const $mediaPreviewInfo = $mediaPreview.find('#info');
+
+    // Create base template for preview content
+    const mediaTemplates = {
+        video: Handlebars.compile('<video src="{{url}}" controls></video>'),
+        image: Handlebars.compile('<img src="{{url}}">'),
+    }
+
+    // Clean all selected elements
+    $mediaPreviewContent.html('').removeData('mediaId');
+    $mediaPreviewInfo.html('');
+
+    const mediaData = media.data();
+
+    // Format file size
+    if(mediaData.providerData?.fileSize) {
+        mediaData.providerData.fileSizeFormatted = app.common.formatFileSize(mediaData.providerData.fileSize);
+    }
+
+    // Load and start preview
+    $mediaPreviewContent.append(mediaTemplates[mediaData.subType]({
+        url: (mediaData.providerData) ? mediaData.providerData.download : mediaData.download
+    })).data('mediaId', mediaData['mediaId']);
+
+    $mediaPreviewInfo.append(MediaInfoTemplate({
+        data: (mediaData.providerData) ? mediaData.providerData : mediaData,
+        trans: toolbarTrans,
+    }));
+
+    $mediaPreview.find('#closeBtn').off().on('click', function() {
+        // Close preview and empty content
+        $mediaPreview.find('#content').html('');
+        $mediaPreview.removeClass('show');
+        $mediaPreview.remove();
+    });
+
+    $mediaPreview.find('#sizeBtn').off().on('click', function() {
+        // Toggle size class
+        $mediaPreview.toggleClass('large');
+
+        // Change icon based on size state
+        $(this).toggleClass('fa-arrow-circle-down', $mediaPreview.hasClass('large'));
+        $(this).toggleClass('fa-arrow-circle-up', !$mediaPreview.hasClass('large'));
+    });
+
+    $mediaPreview.find('#selectBtn').off().on('click', function() {
+        // Select Media on toolbar
+        const $card = self.DOMObject.find('.toolbar-menu-content #content-' + self.openedMenu + ' .toolbar-card[data-media-id="' + $mediaPreviewContent.data('mediaId') + '"]');
+
+        if(!$card.hasClass('card-selected')) {
+            self.addToQueue(self.openedMenu, $card);
+        }
+    });
+
+    // Show layout preview element
+    $mediaPreview.addClass('show');
+};
+
 
 module.exports = Toolbar;

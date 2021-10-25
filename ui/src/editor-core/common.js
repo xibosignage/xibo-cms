@@ -71,5 +71,13 @@ module.exports = {
         var sDisplay = mDisplay != '' ? zeroBefore(s) : s;
 
         return hDisplay + mDisplay + sDisplay;
+    },
+
+    /**
+     * Format file size
+     */
+    formatFileSize: function(value) {
+        return (b = Math, c = b.log, d = 1e3, e = c(value) / c(d) | 0, value / b.pow(d, e)).toFixed(2)
+            + ' ' + (e ? 'kMGTPEZY'[--e] + 'B' : 'Bytes');
     }
 };

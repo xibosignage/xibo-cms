@@ -397,6 +397,20 @@ body, .page-content {
         width: calc(100% - #{$timeline-region-info-width});
     }
 
+    .empty-timeline {
+        width: 100%;
+        background-color: $xibo-color-blue-lightest;
+        display: table;
+        text-align: center;
+
+        .empty-timeline-message {
+            font-size: 1.1rem;
+            color: $xibo-color-blue;
+            vertical-align: middle;
+            display: table-cell;
+        }
+    }
+
     #timeruler {
         width: 100%;
         height: $timeline-timeruler-height;
@@ -1778,6 +1792,12 @@ body, .page-content {
         top: 50%;
         transform: translateY(-50%);
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        span {
+            padding: 4px;
+        }
     }
 
     &.drawed {
