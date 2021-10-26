@@ -57,7 +57,6 @@ class AddPurgeListTableMigration extends AbstractMigration
 
         // Add a task that will clean-up Purge List table and remove entries older than specified TTL.
         $this->table('task')
-            ->changeColumn('pid', 'integer', ['default' => 0])
             ->insert([
                 [
                     'name' => 'Purge List Cleanup',
@@ -66,6 +65,7 @@ class AddPurgeListTableMigration extends AbstractMigration
                     'schedule' => '0 0 * * *',
                     'isActive' => '1',
                     'configFile' => '/tasks/purge-list-cleanup.task',
+                    'pid' => 0,
                     'lastRunDt' => 0,
                     'lastRunDuration' => 0,
                     'lastRunExitCode' => 0
