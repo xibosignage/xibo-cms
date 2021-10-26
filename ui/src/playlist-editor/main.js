@@ -251,8 +251,12 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
 
     } else if(!$.isEmptyObject(this.toolbar.selectedQueue)) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
         if(obj.data('type') == 'region') {
-            // Add media queue to playlist
-            this.playlist.addMedia(this.toolbar.selectedQueue, positionToAdd);
+            pE.importFromProvider(this.toolbar.selectedQueue).then((res) =>  {
+                // Add media queue to playlist
+                this.playlist.addMedia(res, positionToAdd);
+            }).catch(function() {
+                toastr.error(errorMessagesTrans.importingMediaFailed);
+            });
         }
 
         // Deselect cards and drop zones
@@ -1025,4 +1029,85 @@ pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
         undoActive: undoActive,
         undoActiveTitle: undoActiveTitle
     };
+};
+
+/**
+ * Toggle panel and refresh view containers
+ * @param {Array.<number, object>} items - list of items to add, either just an id or a provider object
+ */
+ pE.importFromProvider = function(items) {
+    let requestItems = [];
+    let itemsResult = items;
+
+    itemsResult.forEach(element => {
+        if(isNaN(element)) {
+            requestItems.push(element);
+        }
+    });
+
+    const linkToAPI = urlsForApi.library.connectorImport;
+    let requestPath = linkToAPI.url;
+
+    // Run ajax request and save promise
+    return new Promise(function(resolve, reject) {
+        // If none of the items are from a provider, return the original array
+        if(requestItems.length == 0) {
+            resolve(itemsResult);
+        }
+
+        pE.common.showLoadingScreen();
+
+        $.ajax({
+            url: requestPath,
+            type: linkToAPI.type,
+            dataType: 'json',
+            data: {
+                folderId: pE.playlist.folderId,
+                items: requestItems,
+            }
+        }).done(function(res) {
+            if(res.success) {
+                pE.common.hideLoadingScreen();
+
+                res.data.forEach((newElement) => {
+                    let addFlag = true;
+                    if(newElement.isError) {
+                        addFlag = false;
+                        toastr.error(newElement.error, newElement.item.id);
+                    }
+
+                    itemsResult.forEach((oldElement, key) => {
+                        if(isNaN(oldElement) && newElement.item.id == oldElement.id) {
+                            itemsResult[key] = (addFlag) ? newElement.media.mediaId : null;
+                        }
+                    });
+                });
+
+                // Filter null results
+                itemsResult = itemsResult.filter(el => el);
+
+                resolve(itemsResult);
+            } else {
+                pE.common.hideLoadingScreen();
+
+                // Login Form needed?
+                if(data.login) {
+                    window.location.href = window.location.href;
+                    location.reload();
+                } else {
+                    // Just an error we dont know about
+                    if(data.message == undefined) {
+                        reject(data);
+                    } else {
+                        reject(data.message);
+                    }
+                }
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            pE.common.hideLoadingScreen();
+
+            // Reject promise and return an object with all values
+            reject({jqXHR, textStatus, errorThrown});
+        });
+    });
 };

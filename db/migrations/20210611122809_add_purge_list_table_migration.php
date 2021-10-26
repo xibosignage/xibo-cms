@@ -64,7 +64,11 @@ class AddPurgeListTableMigration extends AbstractMigration
                     'options' => '[]',
                     'schedule' => '0 0 * * *',
                     'isActive' => '1',
-                    'configFile' => '/tasks/purge-list-cleanup.task'
+                    'configFile' => '/tasks/purge-list-cleanup.task',
+                    'pid' => 0,
+                    'lastRunDt' => 0,
+                    'lastRunDuration' => 0,
+                    'lastRunExitCode' => 0
                 ],
             ])->save();
     }

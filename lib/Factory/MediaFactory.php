@@ -213,7 +213,7 @@ class MediaFactory extends BaseFactory
             $media->moduleSystemFile = 0;
             $media->isRemote = true;
             $media->urlDownload = true;
-            $media->extension = $requestOptions['extension'];
+            $media->extension = $requestOptions['extension'] ?? null;
             $media->enableStat = $requestOptions['enableStat'];
             $media->folderId = $requestOptions['folderId'];
             $media->permissionsFolderId = $requestOptions['permissionsFolderId'];
@@ -286,7 +286,10 @@ class MediaFactory extends BaseFactory
             // Create a generator and Pool
             $log = $this->getLog();
             $queue = $this->remoteDownloadQueue;
-            $client = new Client($this->config->getGuzzleProxy());
+            $client = new Client($this->config->getGuzzleProxy([
+                'connect_timeout' => 5,
+                'timeout' => 60
+            ]));
 
             $downloads = function () use ($client, $queue) {
                 foreach ($queue as $media) {
@@ -841,9 +844,6 @@ class MediaFactory extends BaseFactory
         }
 
         $sql = $select . $body . $order . $limit;
-
-        $this->getLog()->debug('--- BODY');
-        $this->getLog()->debug($sql);
         
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $media = $this->createEmpty()->hydrate($row, [

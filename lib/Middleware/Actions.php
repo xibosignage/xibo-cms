@@ -30,6 +30,8 @@ use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
+use Xibo\Connector\PixabayConnector;
+use Xibo\Connector\XiboExchangeConnector;
 use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\Environment;
@@ -112,6 +114,29 @@ class Actions implements Middleware
         if (Environment::migrationPending()) {
             return $handler->handle($request);
         }
+
+        // TODO: dynamically load any connectors?
+        $connector = new XiboExchangeConnector();
+        $connector
+            ->useLogger($container->get('logger'))
+            ->usePool($container->get('pool'))
+            ->useSettings(
+                $container->get('sanitizerService')
+                    ->getSanitizer($container->get('configService')->getConnectorSettings($connector->getSourceName()))
+            )
+            ->useHttpOptions($container->get('configService')->getGuzzleProxy())
+            ->registerWithDispatcher($container->get('dispatcher'));
+
+        $connector = new PixabayConnector();
+        $connector
+            ->useLogger($container->get('logger'))
+            ->usePool($container->get('pool'))
+            ->useSettings(
+                $container->get('sanitizerService')
+                    ->getSanitizer($container->get('configService')->getConnectorSettings($connector->getSourceName()))
+            )
+            ->useHttpOptions($container->get('configService')->getGuzzleProxy())
+            ->registerWithDispatcher($container->get('dispatcher'));
 
         // Only process notifications if we are a full request
         if (!$this->isAjax($request)) {

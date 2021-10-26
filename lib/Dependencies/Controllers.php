@@ -549,6 +549,7 @@ class Controllers
                     $c->get('tagFactory'),
                     $c->get('resolutionFactory')
                 );
+                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },

@@ -134,8 +134,8 @@ describe('Layout Designer (Empty)', function() {
             cy.route('POST', '**/playlist/widget/clock/*').as('createWidget');
 
             // Open toolbar Widgets tab
-            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force:true});
-            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
+            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force: true});
+            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force: true});
 
             cy.get('#layout-editor-toolbar .toolbar-pane-content [data-sub-type="clock"]').should('be.visible').then(() => {
                 cy.dragToElement(
@@ -155,29 +155,30 @@ describe('Layout Designer (Empty)', function() {
 
         });
 
-        it.skip('creates a new widget by selecting a searched media from the toolbar to layout-navigator region', () => {
+        it('creates a new widget by selecting a searched media from the toolbar to layout-navigator region', () => {
 
             cy.populateLibraryWithMedia();
 
             // Create and alias for reload Layout
             cy.server();
             cy.route('/layout?layoutId=*').as('reloadLayout');
-            cy.route('/library?assignable=1&retired=0&draw=2&*').as('mediaLoad');
-            
-            // Open library search tab
-            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
-            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force:true});
+            cy.route('/library/search?assignable=1&retired=0&*').as('mediaLoad');
 
-            // Select and search image items
-            cy.get('.toolbar-pane.active .input-type').select('image');
+            cy.get('.timeline-panel.toggle-panel .toggle-container .toggle').click();
+
+            // Open library search tab
+            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force: true});
+            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force: true});
 
             cy.wait('@mediaLoad');
 
-            cy.get('#layout-editor-bottombar #navigator-edit-btn').click({force:true});
+            cy.get('#layout-editor-bottombar #navigator-edit-btn').click({force: true});
+
+            cy.get('#layout-editor-toolbar #media-content-1 .toolbar-card:first').find("img").should('be.visible');
 
             // Get a table row, select it and add to the region
-            cy.get('#layout-editor-toolbar .media-content .select-item:first').click({force:true}).then(() => {
-                cy.get('#layout-navigator [data-type="region"]:first-child').click({force:true}).then(() => {
+            cy.get('#layout-editor-toolbar #media-content-1 .select-button:first').click({force: true}).then(() => {
+                cy.get('#layout-navigator [data-type="region"]:first-child').click({force: true}).then(() => {
 
                     // Wait for the layout to reload
                     cy.wait('@reloadLayout');
@@ -195,8 +196,8 @@ describe('Layout Designer (Empty)', function() {
             cy.populateLibraryWithMedia();
 
             // Open toolbar Widgets tab
-            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force:true});
-            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force:true});
+            cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click({force: true});
+            cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click({force: true});
 
             cy.get('#layout-editor-bottombar #navigator-edit-btn').click();
 

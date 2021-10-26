@@ -139,7 +139,8 @@ $app->get('/layout/view', ['\Xibo\Controller\Layout', 'displayPage'])
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/layout/preview/{id}', ['\Xibo\Controller\Preview', 'show'])->setName('layout.preview');
     $group->get('/layout/xlf/{id}', ['\Xibo\Controller\Preview', 'getXlf'])->setName('layout.getXlf');
-    $group->get('/layout/background/{id}',['\Xibo\Controller\Layout', 'downloadBackground'])->setName('layout.download.background');
+    $group->get('/layout/background/{id}', ['\Xibo\Controller\Layout', 'downloadBackground'])->setName('layout.download.background');
+    $group->get('/layout/thumbnail/{id}', ['\Xibo\Controller\Layout', 'downloadThumbnail'])->setName('layout.download.thumbnail');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.view', 'template.view']));
 
 // forms
@@ -233,6 +234,9 @@ $app->get('/playlist/form/usage/{id}', ['\Xibo\Controller\Playlist','usageForm']
 //
 // library
 //
+$app->get('/library/search', ['\Xibo\Controller\Library','search'])
+    ->setName('library.search.all');
+
 $app->get('/library/view', ['\Xibo\Controller\Library','displayPage'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.view']))
     ->setName('library.view');
@@ -240,6 +244,10 @@ $app->get('/library/view', ['\Xibo\Controller\Library','displayPage'])
 $app->get('/library/form/uploadUrl', ['\Xibo\Controller\Library','uploadFromUrlForm'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.add']))
     ->setName('library.uploadUrl.form');
+
+$app->post('/library/connector/import', ['\Xibo\Controller\Library', 'connectorImport'])
+    ->addMiddleware(new FeatureAuth($app->getContainer(), ['library.add']))
+    ->setName('library.connector.import');
 
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/library/form/edit/{id}', ['\Xibo\Controller\Library', 'editForm'])->setName('library.edit.form');
@@ -358,6 +366,7 @@ $app->get('/campaign/{id}/preview', ['\Xibo\Controller\Campaign','preview'])
 //
 // template
 //
+$app->get('/template/search', ['\Xibo\Controller\Template', 'search'])->setName('template.search.all');
 $app->get('/template/view', ['\Xibo\Controller\Template','displayPage'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['template.view']))
     ->setName('template.view');

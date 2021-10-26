@@ -72,7 +72,7 @@ $designer-overlay-z-index: 1050;
 $designer-z-index-select: 10;
 
 // CSS
-.page-content {
+body, .page-content {
     overflow: hidden;
     height: 100vh;
 }
@@ -282,7 +282,7 @@ $designer-z-index-select: 10;
 
 
 /* Main Editor */
-#layout-editor  {
+#layout-editor {
     overflow: hidden;
     margin: 0 -15px -15px -15px;
     background-color: $designer-color-background;
@@ -395,6 +395,20 @@ $designer-z-index-select: 10;
     #regions-container {
         display: inline-block;
         width: calc(100% - #{$timeline-region-info-width});
+    }
+
+    .empty-timeline {
+        width: 100%;
+        background-color: $xibo-color-blue-lightest;
+        display: table;
+        text-align: center;
+
+        .empty-timeline-message {
+            font-size: 1.1rem;
+            color: $xibo-color-blue;
+            vertical-align: middle;
+            display: table-cell;
+        }
     }
 
     #timeruler {
@@ -1778,6 +1792,12 @@ $designer-z-index-select: 10;
         top: 50%;
         transform: translateY(-50%);
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        span {
+            padding: 4px;
+        }
     }
 
     &.drawed {

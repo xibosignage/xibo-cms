@@ -1,31 +1,38 @@
-<form id="media-search-form" class="media-search-form drag-handle">
-    <div class="form-group mb-2 {{#if filters.type.locked}}hidden{{/if}}">
-        <label for="input-type" class="mb-0">{{filters.type.name}}</label>
-        <select id="input-type" name="type" class="form-control mr-1 input-type">
-            {{#if filters.type.locked}}
-                <option value="{{filters.type.value}}" selected>{{filters.type.value}}</option>
-            {{else}}
-                <option value=""></option>
+<form id="media-search-form" class="container-fluid p-0 media-search-form drag-handle">
+    {{#if filters.type}}
+        <div class="form-group col-6 p-1 mb-2 {{#if filters.type.locked}}hidden{{/if}}">
+            <label for="input-type" class="mb-0">{{trans.searchFilters.type}}</label>
+            <select id="input-type" name="type" class="form-control mr-1 input-type">
+                {{#if filters.type.locked}}
+                    <option value="{{filters.type.value}}" selected>{{filters.type.value}}</option>
+                {{else}}
+                    <option value=""></option>
 
-                {{#each filters.type.values}}
-                    <option value="{{type}}" {{#eq ../filters.type.value type}}selected{{/eq}}>{{name}}</option>
-                {{/each}}
-            {{/if}}
-        </select>
-    </div>
+                    {{#each filters.type.values}}
+                        <option value="{{type}}" {{#eq ../filters.type.value type}}selected{{/eq}}>{{name}}</option>
+                    {{/each}}
+                {{/if}}
+            </select>
+        </div>
+    {{/if}}
 
-    <div class="form-group mb-2">
-        <label for="input-name" class="mb-0">{{filters.name.name}}</label>
-        <input id="input-name" name="media" type="text" value="{{filters.name.value}}" class="form-control mr-1 input-name">
-    </div>
+    {{#if filters.name}}
+        <div class="form-group col-6 p-1 mb-2">
+            <label for="input-name" class="mb-0">{{trans.searchFilters.name}}</label>
+            <input id="input-name" name="media" type="text" value="{{filters.name.value}}" class="form-control mr-1 input-name">
+        </div>
+    {{/if}}
 
-    <div class="form-group mb-2">
-        <label for="input-tag" class="mb-0">{{filters.tag.name}}</label>
-        <input id="input-tag" name="tags" type="text" value="{{filters.tag.value}}" data-role="tagsinput" class="form-control input-tag">
-    </div>
-    <div class="row">
-        <div class="form-group col-6 pl-0 pr-1">
-            <label for="input-owner" class="mb-0">{{filters.owner.name}}</label>
+    {{#if filters.tag}}
+        <div class="form-group col-6 p-1 mb-2">
+            <label for="input-tag" class="mb-0">{{trans.searchFilters.tag}}</label>
+            <input id="input-tag" name="tags" type="text" value="{{filters.tag.value}}" data-role="tagsinput" class="form-control input-tag">
+        </div>
+    {{/if}}
+
+    {{#if filters.owner}}
+        <div class="form-group col-6 p-1 mb-2">
+            <label for="input-owner" class="mb-0">{{trans.searchFilters.owner}}</label>
             <select id="input-owner" name="ownerId" class="form-control mr-1 input-owner">
                 <option value=""></option>
                 {{#each filters.owner.values}}
@@ -33,16 +40,29 @@
                 {{/each}}
             </select>
         </div>
+    {{/if}}
 
-        <div class="form-group col-6 pl-1 pr-0">
-            <label for="input-orientation" class="mb-0">{{filters.orientation.name}}</label>
+    {{#if filters.orientation}}
+        <div class="form-group col-6 p-1 mb-2">
+            <label for="input-orientation" class="mb-0">{{trans.searchFilters.orientation}}</label>
             <select id="input-orientation" name="orientation" class="form-control mr-1 input-orientation">
                 <option value="" {{#eq  filters.orientation.value ""}}selected{{/eq}}>{{ trans.orientationValues.all}}</option>
                 <option value="landscape" {{#eq  filters.orientation.value "landscape"}}selected{{/eq}}>{{ trans.orientationValues.landscape}}</option>
                 <option value="portrait" {{#eq  filters.orientation.value "portrait"}}selected{{/eq}}>{{ trans.orientationValues.portrait}}</option>
             </select>
         </div>
-    </div>
+    {{/if}}
+
+    {{#if filters.provider}}
+        <div class="form-group col-6 p-1 mb-2">
+            <label for="input-provider" class="mb-0">{{trans.searchFilters.provider}}</label>
+            <select id="input-provider" name="provider" class="form-control mr-1 input-provider">
+                <option value="both" {{#eq  filters.provider.value "both"}}selected{{/eq}}>{{ trans.providerValues.both}}</option>
+                <option value="local" {{#eq  filters.provider.value "local"}}selected{{/eq}}>{{ trans.providerValues.local}}</option>
+                <option value="remote" {{#eq  filters.provider.value "remote"}}selected{{/eq}}>{{ trans.providerValues.remote}}</option>
+            </select>
+        </div>
+    {{/if}}
 </form>
 
 <div id="media-content-{{menuIndex}}" class="toolbar-pane-content"></div>

@@ -9,9 +9,10 @@
         var serverMode = "{{ settings.SERVER_MODE }}";
         var playlistRegionColouring =  "{{ settings.REGION_OPTIONS_COLOURING }}";
         var libraryUpload = {{ libraryUpload|json_encode|raw }};
-        var librarySearchUrl = "{{ url_for("library.search") }}";
+        var librarySearchUrl = "{{ url_for("library.search.all") }}";
         var libraryAddUrl = "{{ url_for("library.add") }}";
         var imageDownloadUrl = "{{ url_for("library.download", {id: ':id'}) }}?preview=1";
+        var defaultThumbnailUrl = '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png';
         var uploadFormUpdateAllDefault = {% if settings.LIBRARY_MEDIA_UPDATEINALL_CHECKB == 1 %}true{% else %}false{% endif %};
         var uploadFormDeleteOldDefault = {% if settings.LIBRARY_MEDIA_DELETEOLDVER_CHECKB == 1 %}true{% else %}false{% endif %};
         var tooltipDelay = {'show': 250, 'hide': 0};
@@ -115,6 +116,10 @@
                 saveDrawer: {
                     url: "{{ url_for("region.save.drawer", {id: ':id'}) }}",
                     type: 'PUT'
+                },
+                addThumbnail: {
+                  url: '{{ url_for("layout.thumbnail.add", {id: ":id"}) }}',
+                  type: 'POST'
                 }
             },
             region: {
@@ -211,7 +216,11 @@
                 get: {
                     url: "{{ url_for("library.search") }}",
                     type: 'GET'
-                }
+                },
+                connectorImport: {
+                    url: "{{ url_for("library.connector.import") }}",
+                    type: 'POST'
+                },
             },
             playlist: {
                 get: {
@@ -353,6 +362,7 @@
                 search: "{{ "Search" |trans }}",
                 select: "{{ "Select" |trans }}",
                 deselect: "{{ "Deselect" |trans }}",
+                preview: "{{ "Preview media" |trans }}",
                 add: "{{ "Add" |trans }}",
                 grab: "{{ "Grab" |trans }}",
                 addAsFavourite: "{{ "Mark as favourite" |trans }}",
@@ -367,12 +377,18 @@
                     tag: "{{ "Tag" |trans }}",
                     type: "{{ "Type" |trans }}",
                     owner: "{{ "Owner"|trans }}",
-                    orientation: "{{ "Orientation"|trans }}"
+                    orientation: "{{ "Orientation"|trans }}",
+                    provider: "{{ "Provider"|trans }}",
                 },
                 orientationValues: {
                   all: "{{ "All"|trans }}",
                   landscape: "{{ "Landscape"|trans }}",
                   portrait: "{{ "Portrait"|trans }}"
+                },
+                providerValues: {
+                  both: "{{ "All"|trans }}",
+                  local: "{{ "Local"|trans }}",
+                  remote: "{{ "Remote"|trans }}"
                 },
                 tabName: "{{ "Library Search %tagId%" |trans }}",
                 tableHeader: {
@@ -413,7 +429,15 @@
                 favourites: "{{ "Favourites"|trans }}",
                 noWidgetsToShow: "{{ "No widgets to display"|trans }}",
                 noMediaToShow: "{{ "No media to display!" |trans }}",
-                showMore: "{{ "Show more" |trans }}"
+                showMore: "{{ "Show more" |trans }}",
+                noShowMore: "{{ "No more results for this filter!" |trans }}",
+                mediaPreview: {
+                    close: "{{ "Close Preview" |trans }}",
+                    change: "{{ "Change window size" |trans }}",
+                    select: "{{ "Select media to add" |trans }}",
+                    dimensions: "{{ "Dimensions" |trans }}",
+                    size: "{{ "Size" |trans }}",
+                },
             };
 
             var topbarTrans = {
@@ -473,6 +497,7 @@
                 deleteFailed: "{{ "Object delete failed: %error%" |trans }}",
                 saveAllChangesFailed: "{{ "Save all changes failed!" |trans }}",
                 removeAllChangesFailed: "{{ "Remove all changes failed!!" |trans }}",
+                importingMediaFailed: "{{ "Importing media failed!!" |trans }}",
                 addMediaFailed: "{{ "Add media failed: %error%" |trans }}",
                 addModuleFailed: "{{ "Add module failed: %error%" |trans }}",
                 createRegionFailed: "{{ "Create region failed: %error%" |trans }}",

@@ -254,7 +254,7 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                 }
             }
 
-            this.DOMObject.find('.designer-region').droppable({
+            container.find('.designer-region').droppable({
                 greedy: true,
                 accept: function(el) {
                     return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region');
@@ -269,7 +269,7 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
             });
 
             // Enable select for each layout/region
-            this.DOMObject.find('.designer-region.editable').off('click').on('click', function(e) {
+            container.find('.designer-region.editable.ui-droppable-active').off('click').on('click', function(e) {
                 e.stopPropagation();
                 // Select object
                 lD.selectObject($(this));
@@ -277,7 +277,6 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
 
             // Click element to select it
             container.find('.preview-select').off('click').on('click', function() {
-
                 if(res.extra.number_items > 1) {
                     // Select paged widget
                     lD.selectObject($('#widget_' + targetElement.regionId + '_' + res.extra.tempId));

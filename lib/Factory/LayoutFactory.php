@@ -195,13 +195,14 @@ class LayoutFactory extends BaseFactory
      * @param string $description
      * @param string|array $tags
      * @param string $code
+     * @param bool $addRegion
      * @return Layout
      *
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags, $code)
+    public function createFromResolution($resolutionId, $ownerId, $name, $description, $tags, $code, $addRegion = true)
     {
         $resolution = $this->resolutionFactory->getById($resolutionId);
 
@@ -229,7 +230,39 @@ class LayoutFactory extends BaseFactory
         }
 
         // Add a blank, full screen region
-        $layout->regions[] = $this->regionFactory->create($ownerId, $name . '-1', $layout->width, $layout->height, 0, 0);
+        if ($addRegion) {
+            $layout->regions[] = $this->regionFactory->create(
+                $ownerId,
+                $name . '-1',
+                $layout->width,
+                $layout->height,
+                0,
+                0
+            );
+        }
+
+        return $layout;
+    }
+
+    /**
+     * @param \Xibo\Entity\Layout $layout
+     * @param int $width
+     * @param int $height
+     * @param int $top
+     * @param int $left
+     * @return \Xibo\Entity\Layout
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function addRegion(Layout $layout, int $width, int $height, int $top, int $left): Layout
+    {
+        $layout->regions[] = $this->regionFactory->create(
+            $layout->ownerId,
+            $layout->layout . '-' . count($layout->regions),
+            $layout->width,
+            $layout->height,
+            0,
+            0
+        );
 
         return $layout;
     }

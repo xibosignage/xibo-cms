@@ -2,3 +2,12 @@
 $blue:    #337ab7;
 
 @import '~bootstrap/scss/bootstrap.scss';
+
+.card-columns {
+  @include media-breakpoint-only(lg) {
+    column-count: 3;
+  }
+  @include media-breakpoint-only(xl) {
+    column-count: 4;
+  }
+}

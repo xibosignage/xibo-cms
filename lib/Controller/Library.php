@@ -22,18 +22,21 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManagerStatic as Img;
-use Mimey\MimeTypes;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Connector\ProviderDetails;
+use Xibo\Connector\ProviderImport;
 use Xibo\Entity\Media;
+use Xibo\Entity\SearchResult;
+use Xibo\Entity\SearchResults;
 use Xibo\Entity\Widget;
+use Xibo\Event\LibraryProviderEvent;
+use Xibo\Event\LibraryProviderImportEvent;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\MediaFullLoadEvent;
 use Xibo\Factory\DisplayFactory;
@@ -721,6 +724,104 @@ class Library extends Base
         $this->getState()->setData($mediaList);
 
         return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/library/search",
+     *  operationId="librarySearchAll",
+     *  tags={"library"},
+     *  summary="Library Search All",
+     *  description="Search all library files from local and connectors",
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(
+     *          type="array",
+     *          @SWG\Items(ref="#/definitions/SearchResult")
+     *      )
+     *  )
+     * )
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws NotFoundException
+     */
+    public function search(Request $request, Response $response)
+    {
+        $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
+        $provider = $parsedQueryParams->getString('provider', ['default' => 'both']);
+
+        $searchResults = new SearchResults();
+        if ($provider === 'both' || $provider === 'local') {
+            // Construct the SQL
+            $mediaList = $this->mediaFactory->query(['media.name'], $this->gridRenderFilter([
+                'name' => $parsedQueryParams->getString('media'),
+                'useRegexForName' => $parsedQueryParams->getCheckbox('useRegexForName'),
+                'nameExact' => $parsedQueryParams->getString('nameExact'),
+                'type' => $parsedQueryParams->getString('type'),
+                'types' => $parsedQueryParams->getArray('types'),
+                'tags' => $parsedQueryParams->getString('tags'),
+                'exactTags' => $parsedQueryParams->getCheckbox('exactTags'),
+                'ownerId' => $parsedQueryParams->getInt('ownerId'),
+                'notPlayerSoftware' => 1,
+                'notSavedReport' => 1,
+                'assignable' => 1,
+                'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
+            ], $parsedQueryParams));
+
+            // Add some additional row content
+            foreach ($mediaList as $media) {
+                $searchResult = new SearchResult();
+                $searchResult->id = $media->mediaId;
+                $searchResult->source = 'local';
+                $searchResult->type = $media->mediaType;
+                $searchResult->title = $media->name;
+                $searchResult->description = '';
+
+                // Thumbnail
+                $module = $this->moduleFactory->createWithMedia($media);
+
+                if ($module->hasThumbnail()) {
+                    $searchResult->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1])
+                        . '&width=250&height=250&cache=1';
+                }
+
+                // Add the result
+                $searchResults->data[] = $searchResult;
+            }
+        }
+
+        if ($provider === 'both' || $provider === 'remote') {
+            $this->getLog()->debug('Dispatching event.');
+
+            // Do we have a type filter
+            $types = $parsedQueryParams->getArray('types');
+            $type = $parsedQueryParams->getString('type');
+            if ($type !== null) {
+                $types[] = $type;
+            }
+
+            // Hand off to any other providers that may want to provide results.
+            $event = new LibraryProviderEvent(
+                $searchResults,
+                $parsedQueryParams->getInt('start', ['default' => 0]),
+                $parsedQueryParams->getInt('length', ['default' => 10]),
+                $parsedQueryParams->getString('media'),
+                $types,
+                $parsedQueryParams->getString('orientation')
+            );
+
+            try {
+                $this->getDispatcher()->dispatch($event->getName(), $event);
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Library search: Exception in dispatched event: ' . $exception->getMessage());
+                $this->getLog()->debug($exception->getTraceAsString());
+            }
+        }
+
+        return $response->withJson($searchResults);
     }
 
     /**
@@ -2184,28 +2285,28 @@ class Library extends Base
      */
     public function uploadFromUrl(Request $request, Response $response)
     {
-        $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        // Make sure the library exists
-        MediaService::ensureLibraryExists($libraryFolder);
-
+        // Params
         $url = $sanitizedParams->getString('url');
         $type = $sanitizedParams->getString('type');
         $optionalName = $sanitizedParams->getString('optionalName');
         $extension = $sanitizedParams->getString('extension');
-        $enableStat = $sanitizedParams->getString('enableStat', ['default' => $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT')]);
-        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
+        $enableStat = $sanitizedParams->getString('enableStat', [
+            'default' => $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT')
+        ]);
 
+        $folderId = $sanitizedParams->getInt('folderId', ['default' => 1]);
         if ($this->getUser()->featureEnabled('folder.view')) {
             $folder = $this->folderFactory->getById($folderId);
-            $permissionsFolderId = ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
+            $permissionsFolderId = ($folder->permissionsFolderId == null)
+                ? $folder->id
+                : $folder->permissionsFolderId;
         } else {
             $permissionsFolderId = 1;
         }
 
-        if ($sanitizedParams->getDate('expires') != null ) {
-
+        if ($sanitizedParams->hasParam('expires')) {
             if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
                 $expires = $sanitizedParams->getDate('expires')->format('U');
             } else {
@@ -2220,29 +2321,22 @@ class Library extends Base
             throw new InvalidArgumentException(__('Provided URL is invalid'), 'url');
         }
 
-        $librarySizeLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
-        $librarySizeLimitMB = round(($librarySizeLimit / 1024) / 1024, 2);
-
-        if ($librarySizeLimit > 0 && $this->getMediaService()->libraryUsage() > $librarySizeLimit) {
-            throw new InvalidArgumentException(sprintf(__('Your library is full. Library Limit: %s MB'), $librarySizeLimitMB), 'libraryLimit');
-        }
-
         // remote file size
-        $downloadInfo = $this->getDownloadInfo($url);
-        $size = $downloadInfo['size'];
+        $downloadInfo = $this->getMediaService()->getDownloadInfo($url);
 
-        if (ByteFormatter::toBytes(Environment::getMaxUploadSize()) < $size) {
-            throw new InvalidArgumentException(sprintf(__('This file size exceeds your environment Max Upload Size %s'), Environment::getMaxUploadSize()), 'size');
-        }
-
-        $this->getUser()->isQuotaFullByUser();
-
-        // check if we have extension provided in the request (available via API), if not get it from the headers
+        // check if we have extension provided in the request (available via API)
+        // if not get it from the headers
         if (!empty($extension)) {
             $ext = $extension;
         } else {
             $ext = $downloadInfo['extension'];
         }
+
+        // Initialise the library and do some checks
+        $this->getMediaService()
+            ->initLibrary()
+            ->checkLibraryOrQuotaFull(true)
+            ->checkMaxUploadSize($downloadInfo['size']);
 
         // check if we have type provided in the request (available via API), if not get the module type from the extension
         if (!empty($type)) {
@@ -2252,81 +2346,47 @@ class Library extends Base
             $module = $this->getModuleFactory()->create($module->type);
         }
 
-        // if we were provided with optional Media name set it here, otherwise get it from pathinfo
-        if (!empty($optionalName)) {
-            $name = $optionalName;
-        } else {
-            // get the media name from pathinfo
-            $name = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_FILENAME);
-        }
+        // if we were provided with optional Media name set it here, otherwise get it from download info
+        $name = empty($optionalName) ? $downloadInfo['filename'] : $optionalName;
 
         // double check that provided Module Type and Extension are valid
-        $moduleCheck = $this->getModuleFactory()->query(null, ['extension' => $ext, 'type' => $module->getModuleType()]);
+        $moduleCheck = $this->getModuleFactory()->query(null, [
+            'extension' => $ext,
+            'type' => $module->getModuleType()
+        ]);
 
         if (count($moduleCheck) <= 0) {
             throw new NotFoundException(sprintf(__('Invalid Module type or extension. Module type %s does not allow for %s extension'), $module->getModuleType(), $ext));
         }
 
         // add our media to queueDownload and process the downloads
-        $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), $expires, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat, 'folderId' => $folderId, 'permissionsFolderId' => $permissionsFolderId]);
+        $media = $this->mediaFactory->queueDownload(
+            $name,
+            str_replace(' ', '%20', htmlspecialchars_decode($url)),
+            $expires,
+            [
+                'fileType' => strtolower($module->getModuleType()),
+                'duration' => $module->determineDuration(),
+                'extension' => $ext,
+                'enableStat' => $enableStat,
+                'folderId' => $folderId,
+                'permissionsFolderId' => $permissionsFolderId
+            ]
+        );
         $this->mediaFactory->processDownloads(function($media) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
         });
 
-        // get our uploaded media
-        $media = $this->mediaFactory->getByName($name);
-
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 201,
-            'message' => sprintf(__('Media upload from URL was successful')),
+            'message' => __('Media upload from URL was successful'),
             'id' => $media->mediaId,
             'data' => $media
         ]);
 
         return $this->render($request, $response);
-    }
-
-    private function getDownloadInfo($url)
-    {
-        $downloadInfo = [];
-        $guzzle = new Client($this->getConfig()->getGuzzleProxy());
-
-        // first try to get the extension from pathinfo
-        $extension = pathinfo(parse_url($url, PHP_URL_PATH), PATHINFO_EXTENSION);
-        $size = -1;
-
-        try {
-            $head = $guzzle->head($url);
-            $contentLength = $head->getHeader('Content-Length');
-
-            foreach ($contentLength as $value) {
-                $size = $value;
-            }
-
-            if ($extension == '') {
-                $contentType = $head->getHeaderLine('Content-Type');
-
-                $extension = $contentType;
-
-                if ($contentType === 'binary/octet-stream' && $head->hasHeader('x-amz-meta-filetype')) {
-                    $amazonContentType = $head->getHeaderLine('x-amz-meta-filetype');
-                    $extension = $amazonContentType;
-                }
-
-                // get the extension corresponding to the mime type
-                $mimeTypes = new MimeTypes();
-                $extension = $mimeTypes->getExtension($extension);
-            }
-        } catch (RequestException $e) {
-            $this->getLog()->debug('Upload from url head request failed for URL ' . $url . ' with following message ' . $e->getMessage());
-        }
-
-        $downloadInfo['size'] = $size;
-        $downloadInfo['extension'] = $extension;
-
-        return $downloadInfo;
     }
 
     /**
@@ -2468,6 +2528,110 @@ class Library extends Base
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Media %s moved to Folder %s'), $media->name, $folder->text)
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Connector import.
+     *
+     *  Note: this doesn't have a Swagger document because it is only available via the web UI.
+     *
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function connectorImport(Request $request, Response $response)
+    {
+        $params = $this->getSanitizer($request->getParams());
+        $items = $params->getArray('items');
+        $folderId = $params->getInt('folderId', ['default' => 1]);
+        if ($this->getUser()->featureEnabled('folder.view')) {
+            $folder = $this->folderFactory->getById($folderId);
+            $permissionsFolderId = ($folder->permissionsFolderId == null)
+                ? $folder->id
+                : $folder->permissionsFolderId;
+        } else {
+            $permissionsFolderId = 1;
+        }
+        $enableStat = $params->getString('enableStat', [
+            'default' => $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT')
+        ]);
+
+        // Initialise the library.
+        $this->getMediaService()
+            ->initLibrary()
+            ->checkLibraryOrQuotaFull(true);
+
+        // Hand these off to the connector to format into a downloadable response.
+        $importQueue = [];
+        foreach ($items as $item) {
+            $import = new ProviderImport();
+            $import->searchResult = new SearchResult();
+            $import->searchResult->provider = new ProviderDetails();
+            $import->searchResult->provider->id = $item['provider']['id'];
+            $import->searchResult->title = $item['title'];
+            $import->searchResult->id = $item['id'];
+            $import->searchResult->type = $item['type'];
+            $import->searchResult->download = $item['download'];
+            $importQueue[] = $import;
+        }
+        $event = new LibraryProviderImportEvent($importQueue);
+        $this->getDispatcher()->dispatch($event->getName(), $event);
+
+        // Pull out our events and upload
+        foreach ($importQueue as $import) {
+            try {
+                // Has this been configured for upload?
+                if ($import->isConfigured) {
+                    // Make sure we have a URL
+                    if (empty($import->url)) {
+                        throw new InvalidArgumentException('Missing or invalid URL', 'url');
+                    }
+
+                    // Queue this for upload.
+                    // Use a module to make sure our type, etc is supported.
+                    $module = $this->getModuleFactory()->create($import->searchResult->type);
+                    $import->media = $this->mediaFactory->queueDownload(
+                        $import->searchResult->title,
+                        str_replace(' ', '%20', htmlspecialchars_decode($import->url)),
+                        0,
+                        [
+                            'fileType' => strtolower($module->getModuleType()),
+                            'duration' => $module->determineDuration(),
+                            'enableStat' => $enableStat,
+                            'folderId' => $folderId,
+                            'permissionsFolderId' => $permissionsFolderId
+                        ]
+                    );
+                } else {
+                    throw new GeneralException(__('Not configured by any active connector.'));
+                }
+            } catch (\Exception $e) {
+                $import->setError($e->getMessage());
+            }
+        }
+
+        // Process all of those downloads
+        $this->mediaFactory->processDownloads(null, function ($media) use ($importQueue) {
+            // Failure
+            // Pull out the import which failed.
+            foreach ($importQueue as $import) {
+                /** @var ProviderImport $import */
+                if ($import->media->getId() === $media->getId()) {
+                    $import->setError(__('Download failed'));
+                }
+            }
+        });
+
+        // Return
+        $this->getState()->hydrate([
+            'httpStatus' => 200,
+            'message' => __('Imported'),
+            'data' => $event->getItems()
         ]);
 
         return $this->render($request, $response);
