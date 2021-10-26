@@ -174,7 +174,7 @@ describe('Layout Designer (Empty)', function() {
 
             cy.get('#layout-editor-bottombar #navigator-edit-btn').click({force: true});
 
-            cy.wait(1000);
+            cy.get('#layout-editor-toolbar #media-content-1 .toolbar-card:first').find("img").should('be.visible');
 
             // Get a table row, select it and add to the region
             cy.get('#layout-editor-toolbar #media-content-1 .select-button:first').click({force: true}).then(() => {
