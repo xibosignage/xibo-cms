@@ -59,4 +59,3 @@ class SearchResult implements \JsonSerializable
         ];
     }
 }
-

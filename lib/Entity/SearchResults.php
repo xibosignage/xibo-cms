@@ -35,4 +35,3 @@ class SearchResults implements \JsonSerializable
         ];
     }
 }
-

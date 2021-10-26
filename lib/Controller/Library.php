@@ -748,7 +748,7 @@ class Library extends Base
      * @throws GeneralException
      * @throws NotFoundException
      */
-    function search(Request $request, Response $response)
+    public function search(Request $request, Response $response)
     {
         $parsedQueryParams = $this->getSanitizer($request->getQueryParams());
         $provider = $parsedQueryParams->getString('provider', ['default' => 'both']);
@@ -784,7 +784,7 @@ class Library extends Base
                 $module = $this->moduleFactory->createWithMedia($media);
 
                 if ($module->hasThumbnail()) {
-                    $searchResult->thumbnail = $this->urlFor($request,'library.download', ['id' => $media->mediaId], ['preview' => 1])
+                    $searchResult->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1])
                         . '&width=250&height=250&cache=1';
                 }
 
@@ -2616,7 +2616,7 @@ class Library extends Base
         }
 
         // Process all of those downloads
-        $this->mediaFactory->processDownloads(null, function($media) use ($importQueue) {
+        $this->mediaFactory->processDownloads(null, function ($media) use ($importQueue) {
             // Failure
             // Pull out the import which failed.
             foreach ($importQueue as $import) {

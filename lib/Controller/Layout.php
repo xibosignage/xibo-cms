@@ -397,11 +397,11 @@ class Layout extends Base
                     break;
 
                 case '0|l-bar-left':
-
+                    // TODO
                     break;
 
                 case '0|l-bar-right':
-
+                    // TODO
                     break;
 
                 case '0|full-screen':
@@ -1398,7 +1398,7 @@ class Layout extends Base
             // Thumbnail
             $layout->thumbnail = '';
             if (file_exists($layout->getThumbnailUri())) {
-                $layout->thumbnail = $this->urlFor($request,'layout.download.thumbnail', ['id' => $layout->layoutId]);
+                $layout->thumbnail = $this->urlFor($request, 'layout.download.thumbnail', ['id' => $layout->layoutId]);
             }
 
             // Fix up the description

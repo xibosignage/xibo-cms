@@ -143,7 +143,7 @@ class Template extends Base
             // Thumbnail
             $template->thumbnail = '';
             if (file_exists($template->getThumbnailUri())) {
-                $template->thumbnail = $this->urlFor($request,'layout.download.thumbnail', ['id' => $template->layoutId]);
+                $template->thumbnail = $this->urlFor($request, 'layout.download.thumbnail', ['id' => $template->layoutId]);
             }
 
             // Parse down for description
@@ -282,7 +282,7 @@ class Template extends Base
      * @return \Psr\Http\Message\ResponseInterface|Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    function search(Request $request, Response $response)
+    public function search(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
         $provider = $sanitizedQueryParams->getString('provider', ['default' => 'both']);
@@ -305,8 +305,11 @@ class Template extends Base
                 // Thumbnail
                 $searchResult->thumbnail = '';
                 if (file_exists($template->getThumbnailUri())) {
-                    $searchResult->thumbnail = $this->urlFor($request, 'layout.download.thumbnail',
-                        ['id' => $template->layoutId]);
+                    $searchResult->thumbnail = $this->urlFor(
+                        $request,
+                        'layout.download.thumbnail',
+                        ['id' => $template->layoutId]
+                    );
                 }
 
                 $searchResults->data[] = $searchResult;

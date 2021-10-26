@@ -200,4 +200,3 @@ class PixabayConnector implements ConnectorInterface
         }
     }
 }
-

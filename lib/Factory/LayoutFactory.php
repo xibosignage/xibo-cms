@@ -231,8 +231,14 @@ class LayoutFactory extends BaseFactory
 
         // Add a blank, full screen region
         if ($addRegion) {
-            $layout->regions[] = $this->regionFactory->create($ownerId, $name . '-1', $layout->width, $layout->height,
-                0, 0);
+            $layout->regions[] = $this->regionFactory->create(
+                $ownerId,
+                $name . '-1',
+                $layout->width,
+                $layout->height,
+                0,
+                0
+            );
         }
 
         return $layout;

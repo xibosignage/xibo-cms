@@ -155,7 +155,8 @@ class MediaService implements MediaServiceInterface
         if (ByteFormatter::toBytes(Environment::getMaxUploadSize()) < $size) {
             throw new InvalidArgumentException(
                 sprintf(__('This file size exceeds your environment Max Upload Size %s'), Environment::getMaxUploadSize()),
-                'size');
+                'size'
+            );
         }
         return $this;
     }

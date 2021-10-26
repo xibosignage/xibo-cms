@@ -59,7 +59,8 @@ trait ConnectorTrait
     /**
      * @return \Psr\Log\LoggerInterface|\Psr\Log\NullLogger
      */
-    private function getLogger(): LoggerInterface {
+    private function getLogger(): LoggerInterface
+    {
         if ($this->logger === null) {
             return new NullLogger();
         }
