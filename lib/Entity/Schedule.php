@@ -524,7 +524,7 @@ class Schedule implements \JsonSerializable
             . ', CommandId: ' . $this->commandId);
 
         // If we are a custom day part, make sure we don't have a fromDt which is way in the past
-        if ($this->isCustomDayPart() && $this->fromDt < Date::now()->subYears(10)->format('U')) {
+        if ($this->isCustomDayPart() && $this->fromDt < Carbon::now()->subYears(10)->format('U')) {
             throw new InvalidArgumentException(__('The from date is too far in the past.'), 'fromDt');
         }
 

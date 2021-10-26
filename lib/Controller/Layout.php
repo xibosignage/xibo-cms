@@ -357,7 +357,7 @@ class Layout extends Base
         $template = null;
 
         // Template or Resolution?
-        $isResolution = $templateId === '0' || Str::startsWith($templateId, '0|');
+        $isResolution = empty($templateId) || $templateId === '0' || Str::startsWith($templateId, '0|');
 
         if (!$isResolution) {
             // Load the template
