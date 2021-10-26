@@ -141,7 +141,7 @@ function XiboInitialise(scope) {
             if (gridName != undefined)
                 localStorage.setItem(gridName, JSON.stringify(form.serializeArray()));
 
-            $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+            $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
         }, 500);
         
         // Prevent enter key to submit form
@@ -3644,7 +3644,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                 }
 
                 $(folderIdInputSelector).val(selectedFolderId);
-                $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
             }
 
             // on form we always want to show the breadcrumbs to current and selected folder
@@ -3697,11 +3697,11 @@ function initJsTreeAjax(container, id, isForm, ttl)
 
                     // if the folder tree is hidden, then make it so datatable can take whole available width
                     $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
-                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                    $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
                 } else {
                     // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
                     $("#breadcrumbs").hide('slow');
-                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                    $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
                 }
             });
         })
