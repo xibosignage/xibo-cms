@@ -1414,16 +1414,16 @@
         },
         {
             "name": "lcobucci/jwt",
-            "version": "3.4.3",
+            "version": "3.4.6",
             "source": {
                 "type": "git",
                 "url": "https://github.com/lcobucci/jwt.git",
-                "reference": "cd83b5421df3dbbbc66bd07a5b970c9efb6371b9"
+                "reference": "3ef8657a78278dfeae7707d51747251db4176240"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/lcobucci/jwt/zipball/cd83b5421df3dbbbc66bd07a5b970c9efb6371b9",
-                "reference": "cd83b5421df3dbbbc66bd07a5b970c9efb6371b9",
+                "url": "https://api.github.com/repos/lcobucci/jwt/zipball/3ef8657a78278dfeae7707d51747251db4176240",
+                "reference": "3ef8657a78278dfeae7707d51747251db4176240",
                 "shasum": ""
             },
             "require": {
@@ -1473,7 +1473,21 @@
                 "JWS",
                 "jwt"
             ],
-            "time": "2021-01-27T23:38:30+00:00"
+            "support": {
+                "issues": "https://github.com/lcobucci/jwt/issues",
+                "source": "https://github.com/lcobucci/jwt/tree/3.4.6"
+            },
+            "funding": [
+                {
+                    "url": "https://github.com/lcobucci",
+                    "type": "github"
+                },
+                {
+                    "url": "https://www.patreon.com/lcobucci",
+                    "type": "patreon"
+                }
+            ],
+            "time": "2021-09-28T19:18:28+00:00"
         },
         {
             "name": "league/event",
