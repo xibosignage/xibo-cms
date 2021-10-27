@@ -281,16 +281,17 @@ jQuery.fn.extend({
 
                 $(this).wrapInner(scroller);
 
+                // Correct for up / down
+                if (options.fx === "marqueeUp" || options.fx === "marqueeDown") {
+                    $(this).css('height', '100%');
+                    $(this).find('.scroll').css('height', '100%').children().css({"white-space": "normal", float: "none"});
+                }
+
                 // Set some options on the extra DIV and make it a marquee
                 if (!is_android) {
                     $(this).find('.scroll').marquee();
                 } else {
                     $(this).find('.scroll').overflowMarquee();
-                }
-
-                // Correct for up / down
-                if (options.fx === "marqueeUp" || options.fx === "marqueeDown") {
-                    $(this).children().children().css({"white-space": "normal", float: "none"});
                 }
             }
 
