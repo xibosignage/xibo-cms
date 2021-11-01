@@ -206,15 +206,18 @@ jQuery.fn.extend({
                 });
 
                 var timeout = duration * 1000;
+                var noTransitionSpeed = 10;
 
                 if (options.fx !== "noTransition") {
-                    timeout = timeout - (options.speed * 0.7);
+                    timeout = timeout - options.speed;
+                } else {
+                    timeout = timeout - noTransitionSpeed;
                 }
 
                 // Cycle handles this for us
                 $(this).cycle({
                     fx: (options.fx === "noTransition") ? "none" : options.fx,
-                    speed: (options.fx === "noTransition") ? 1 : options.speed,
+                    speed: (options.fx === "noTransition") ? noTransitionSpeed : options.speed,
                     timeout: timeout,
                     slides: "> " + slides
                 });
