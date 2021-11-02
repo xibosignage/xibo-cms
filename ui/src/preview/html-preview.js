@@ -546,7 +546,9 @@ function Region(parent, id, xml, options, preload) {
     };
     
     self.run = function() {
-        self.nextMedia();
+        if (self.totalMediaObjects > 0) {
+            self.nextMedia();
+        }
     };
 
     /* Build Region Options */

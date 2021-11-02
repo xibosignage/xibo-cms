@@ -557,6 +557,7 @@ Toolbar.prototype.loadContent = function(menu = -1, forceReload = false) {
 Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
     const content = $.extend({}, this.menuItems[menu], {menuIndex: menu, trans: toolbarTrans, filters: this.menuItems[menu].filters});
     const self = this;
+    const app = this.parent;
 
     // Create content only if it's not rendered yet ( if force reload is true, skip this step)
     if(!forceReload && menu > self.widgetMenuIndex && self.DOMObject.find('#content-' + menu + ' .toolbar-pane-container .toolbar-card').length > 0) {
@@ -581,6 +582,7 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
         this.DOMObject.find('#module-search-form input[type="text"]').on('input', _.debounce(function(e) {
             self.menuItems[menu].filters.name.value = $(this).val();
             self.menuItems[menu].focus = e.target.selectionStart;
+            app.common.clearTooltips();
             self.loadContent(menu);
         }, 500));
 
@@ -656,6 +658,9 @@ Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
         // Save user preferences
         this.savePrefs();
     }
+
+    // Clear rogue tooltips
+    app.common.clearTooltips();
 };
 
 /**
