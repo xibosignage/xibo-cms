@@ -26,11 +26,16 @@
         {{#unless readOnlyModeOn}}
             <div class="region-actions">
                 <a class="edit-region">
-                    <i class="fa fa-edit"></i>
+                    <i class="fa fa-edit" data-content="tooltip" data-toggle="tooltip" data-placement="right" data-title="{{trans.editRegion}}"></i>
                 </a>
                 <a class="open-playlist-editor">
-                    <i class="fa fa-list"></i>
+                    <i class="fa fa-list" data-content="tooltip" data-toggle="tooltip" data-placement="right" data-title="{{trans.openRegionAsPlaylist}}"></i>
                 </a>
+                {{#if actions }}
+                    <a class="open-region-actions">
+                        <i class="fa fa-paper-plane tooltip-always-on" data-content="tooltip" data-toggle="tooltip" data-placement="right" data-title="{{trans.regionActions}} {{ actions.length}}" ></i>
+                    </a>
+                {{/if}}
             </div>
         {{/unless}}
     </div>

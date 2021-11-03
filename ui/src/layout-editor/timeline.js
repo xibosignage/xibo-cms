@@ -589,6 +589,13 @@ Timeline.prototype.render = function(layout) {
         lD.openPlaylistEditor(playlistId, region);
     });
 
+    this.DOMObject.find('.open-region-actions').click(function() {
+        const regionId = $(this).parents('.designer-region-info').data('region');
+        lD.toggleNavigatorEditing(true);
+        lD.propertiesPanel.openTabOnRender = 'a[href="#actionTab"]';
+        lD.selectObject(self.DOMObject.find('#' + regionId), true);
+    });
+
     // Select region to edit
     this.DOMObject.find('.edit-region, .region-preview').click(function() {
         const regionId = $(this).parents('.designer-region-info').data('region');
