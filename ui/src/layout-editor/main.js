@@ -354,6 +354,9 @@ $(document).ready(function() {
  * @param {number=} [options.positionToAdd = null] - Order position for widget
  */
 lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = null} = {}) {
+    // Clear rogue tooltips
+    lD.common.clearTooltips();
+
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 

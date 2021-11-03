@@ -597,6 +597,7 @@ Timeline.prototype.render = function(layout) {
     });
 
     this.DOMObject.find('.designer-region').droppable({
+        tolerance: 'pointer',
         accept: function(el) {
             return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region') ||
                 ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
@@ -608,6 +609,7 @@ Timeline.prototype.render = function(layout) {
 
     this.DOMObject.find('.designer-region-overlay-step').droppable({
         greedy: true,
+        tolerance: 'pointer',
         accept: function(el) {
             const $parentRegion = $(this).parents('.designer-region');
 
@@ -624,6 +626,7 @@ Timeline.prototype.render = function(layout) {
 
     this.DOMObject.find('.designer-widget').droppable({
         greedy: true,
+        tolerance: 'pointer',
         accept: function(el) {
             const allowDropToWidget =
                 $(this).hasClass("editable") &&

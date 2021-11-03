@@ -563,6 +563,9 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
     if(!forceReload && menu > self.widgetMenuIndex && self.DOMObject.find('#content-' + menu + ' .toolbar-pane-container .toolbar-card').length > 0) {
         // Recalculate masonry layout to refresh the elements positions
         self.DOMObject.find('#media-content-' + menu).masonry('layout');
+
+        // Adapt card behaviour to current tab
+        self.handleCardsBehaviour();
         
         return;
     }
