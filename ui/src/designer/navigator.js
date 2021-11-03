@@ -152,7 +152,16 @@ Navigator.prototype.render = function() {
                     ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
             },
             drop: function(event, ui) {
+                // Check if elements was dropped already
+                if(ui.helper.hasClass('dropped')) {
+                    return false;
+                }
+
+                // Add item
                 lD.dropItemAdd(event.target, ui.draggable[0]);
+
+                // Mark as dropped
+                ui.helper.addClass('dropped');
             }
         });
 
