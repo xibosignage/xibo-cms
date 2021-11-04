@@ -1057,7 +1057,9 @@ class Campaign extends Base
 
             foreach ($layouts as $layout) {
                 $layout->load();
-                foreach ($layout->regions as $region) {
+                $allRegions = array_merge($layout->regions, $layout->drawers);
+
+                foreach ($allRegions as $region) {
                     $playlist = $region->getPlaylist();
                     $playlist->folderId = $campaign->folderId;
                     $playlist->permissionsFolderId = $campaign->permissionsFolderId;

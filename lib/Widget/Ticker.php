@@ -79,7 +79,7 @@ class Ticker extends ModuleWidget
      */
     public function settings(Request $request, Response $response): Response
     {
-        $updateIntervalImages = $this->getSanitizer($request->getParams())->getInt('updateIntervalImages', 240);
+        $updateIntervalImages = $this->getSanitizer($request->getParams())->getInt('updateIntervalImages', ['default' => 240]);
 
         if ($this->module->enabled != 0) {
             if ($updateIntervalImages < 0) {
