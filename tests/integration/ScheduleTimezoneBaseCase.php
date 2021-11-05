@@ -301,7 +301,8 @@ class ScheduleTimezoneBaseCase extends LocalWebTestCase
 
         foreach ($layouts as $layout) {
             // Move our day on (we know we're recurring by day), and that we started a day behind
-            $localDate->addDay();
+            // we use addRealDay because our synced calendar entry _should_ change its time over a DST switch
+            $localDate->addRealDay();
 
             $xmlFromDt = $layout->getAttribute('fromdt');
             $this->assertEquals($localDate->format(DateFormatHelper::getSystemFormat()), $xmlFromDt, 'From date doesnt match: ' . $xmlFromDt);
