@@ -480,7 +480,7 @@ class Task extends Base
             $this->store->commitIfNecessary();
 
             // Collect results
-            $task->lastRunDuration = Carbon::now()->subSeconds($start)->format('U');
+            $task->lastRunDuration = Carbon::now()->format('U') - $start;
             $task->lastRunMessage = $taskClass->getRunMessage();
             $task->lastRunStatus = \Xibo\Entity\Task::$STATUS_SUCCESS;
         }
