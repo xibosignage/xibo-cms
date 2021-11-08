@@ -1346,3 +1346,108 @@ div.dataTables_wrapper div.dataTables_info {
     cursor: pointer;
     padding-left: 20px;
 }
+
+/* Datatable Cards */
+.dt-cards tbody tr {
+    float: left;
+    width: 20rem;
+    margin: 0.5rem;
+    border: 0.0625rem solid rgba(0, 0, 0, .125);
+    border-radius: .25rem;
+    box-shadow: 0.25rem 0.25rem 0.5rem rgba(0, 0, 0, 0.25);
+}
+
+.dt-cards tbody td {
+    display: block;
+}
+
+.dt-cards tbody label {
+    display: inline;
+    position: relative;
+    font-size: 85%;
+    top: -0.5rem;
+    float: left;
+    color: #808080;
+    min-width: 4rem;
+    margin-left: 0;
+    margin-right: 1rem;
+    text-align: left;
+}
+
+.dt-cards .fa {
+    font-size: 7.5rem;
+}
+
+.dt-cards tr.selected label {
+    color: #404040;
+}
+
+/* Step Wizard */
+/* Onboarding Step Wizard */
+.stepwizard-step p {
+    margin-top: 0px;
+    color:#666;
+}
+.stepwizard-row {
+    display: table-row;
+}
+.stepwizard {
+    display: table;
+    width: 100%;
+    position: relative;
+}
+.stepwizard-step button[disabled] {
+    /*opacity: 1 !important;
+    filter: alpha(opacity=100) !important;*/
+}
+.stepwizard .btn.disabled, .stepwizard .btn[disabled], .stepwizard fieldset[disabled] .btn {
+    opacity:1 !important;
+    color:#bbb;
+    background: white;
+    border: 1px solid #bbbbbb;
+}
+.stepwizard-row:before {
+    top: 14px;
+    bottom: 0;
+    position: absolute;
+    content:" ";
+    width: 100%;
+    height: 1px;
+    background-color: #ccc;
+    z-index: 0;
+}
+.stepwizard .stepwizard-step {
+    display: table-cell;
+    text-align: center;
+    position: relative;
+}
+.stepwizard .btn-circle {
+    width: 30px;
+    height: 30px;
+    text-align: center;
+    padding: 6px 0;
+    font-size: 12px;
+    line-height: 1.428571429;
+    border-radius: 15px;
+}
+.stepwizard .btn-default {
+    background: #bbbbbb;
+    border: 1px solid grey;
+}
+.stepwizard .btn-success {
+    background: #28a745;
+    border: 1px solid #28a745;
+}
+.stepwizard-form .checkbox+.checkbox, .stepwizard-form .radio+.radio {
+    margin-top: 8px;
+}
+.stepwizard-form .has-error {
+    color: red;
+}
+.stepwizard-form .jstree-checkbox-disabled {
+    display: none !important;
+}
+
+#layoutAddForm card {
+    cursor: pointer;
+}

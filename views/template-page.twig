@@ -126,7 +126,22 @@
                     "data": dataTableCreateTags,
                     responsivePriority: 3
                 },{% endif %}
-                { "data": "thumbnail", responsivePriority: 3},
+              {
+                responsivePriority: 3,
+                data: 'thumbnail',
+                render: function(data, type, row) {
+                  if (type !== 'display') {
+                    return row.layoutId;
+                  }
+                  if (data) {
+                    return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' + data + '">' +
+                        '<img class="img-fluid img-thumbnail" src="' + data + '" alt="{{ "Thumbnail"|trans }}" />' +
+                        '</a>';
+                  }
+                  return '';
+                },
+                sortable: false
+              },
                 { "data": "permissions", "sortable": false, responsivePriority: 3},
                 {
                     "orderable": false,

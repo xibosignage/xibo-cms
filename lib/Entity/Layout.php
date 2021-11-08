@@ -56,6 +56,7 @@ use Xibo\Widget\ModuleWidget;
  * @SWG\Definition()
  *
  * @property $isLocked
+ * @property $thumbnail
  */
 class Layout implements \JsonSerializable
 {
@@ -1022,9 +1023,7 @@ class Layout implements \JsonSerializable
         $this->getLog()->audit('Layout', $this->layoutId, 'Layout Deleted', ['layoutId' => $this->layoutId]);
 
         // Delete the cached file (if there is one)
-        if (file_exists($this->getCachePath())) {
-            @unlink($this->getCachePath());
-        }
+        $this->deleteFiles();
 
         // Audit the Delete
         $this->audit($this->layoutId, 'Deleted' . (($this->parentId !== null) ? ' draft for ' . $this->parentId : ''));
@@ -2077,6 +2076,27 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Delete any cached files for this Layout.
+     */
+    private function deleteFiles()
+    {
+        if (file_exists($this->getCachePath())) {
+            @unlink($this->getCachePath());
+        }
+
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
+
+        // Delete any thumbs
+        if (file_exists($libraryLocation . $this->getId() . '_layout_thumb.png')) {
+            @unlink($libraryLocation . $this->getId() . '_layout_thumb.png');
+        }
+
+        if (file_exists($libraryLocation . $this->campaignId . '_campaign_thumb.png')) {
+            @unlink($libraryLocation . $this->campaignId . '_campaign_thumb.png');
+        }
+    }
+
+    /**
      * Publish the Draft
      * @throws GeneralException
      * @throws InvalidArgumentException
@@ -2157,6 +2177,9 @@ class Layout implements \JsonSerializable
 
         // Preserve the widget information
         $this->addWidgetHistory($parent);
+
+        // Publish thumbnails.
+        $this->publishThumbnail();
 
         // Delete the parent (make sure we set the parent to be a child of us, otherwise we will delete the linked
         // campaign
@@ -2742,6 +2765,33 @@ class Layout implements \JsonSerializable
                     $action->save();
                 }
             }
+        }
+    }
+
+    /**
+     * @return string
+     */
+    public function getThumbnailUri(): string
+    {
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
+        if ($this->isEditable()) {
+            return $libraryLocation . 'thumbs/' . $this->campaignId . '_layout_thumb.png';
+        } else {
+            return $libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png';
+        }
+    }
+
+    /**
+     * Publish the Layout thumbnail if it exists.
+     */
+    private function publishThumbnail()
+    {
+        $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
+        if (file_exists($libraryLocation . 'thumbs/' . $this->campaignId . '_layout_thumb.png')) {
+            copy(
+                $libraryLocation . 'thumbs/' . $this->campaignId . '_layout_thumb.png',
+                $libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png'
+            );
         }
     }
 }

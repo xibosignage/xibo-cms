@@ -113,7 +113,7 @@ PropertiesPanel.prototype.save = function(element) {
                         // Login Form needed?
                         if(res.login) {
                             window.location.href = window.location.href;
-                            location.reload(false);
+                            location.reload();
                         } else {
                             toastr.error(errorMessagesTrans.formLoadFailed);
             
@@ -385,14 +385,7 @@ PropertiesPanel.prototype.render = function(element, step) {
         // Toggler
         self.DOMObject.parents('.toggle-panel').find('.toggle').off().click(function(e) {
             e.stopPropagation();
-            $(this).parents('.toggle-panel').toggleClass('opened');
-
-            // Refresh navigator or viewer
-            if (lD.navigatorMode) {
-                lD.renderContainer(lD.navigator);
-            } else {
-                lD.renderContainer(lD.viewer, lD.selectedObject);
-            }
+            lD.togglePanel($(this).parents('.toggle-panel'));
         });
     }).fail(function(data) {
 

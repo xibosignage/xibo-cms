@@ -288,12 +288,16 @@ $(document).ready(function() {
                 setInterval(lD.checkLayoutStatus, 1000 * 60); // Every minute
 
                 // Default selected object is the layout
-                lD.selectObject();
+                lD.selectedObject = lD.layout;
+                lD.selectedObject.type = 'layout';
+
+                // Refresh the designer containers
+                lD.refreshDesigner(true);
             } else {
                 // Login Form needed?
                 if(res.login) {
                     window.location.href = window.location.href;
-                    location.reload(false);
+                    location.reload();
                 } else {
                     lD.showErrorMessage();
                 }
@@ -350,6 +354,9 @@ $(document).ready(function() {
  * @param {number=} [options.positionToAdd = null] - Order position for widget
  */
 lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = null} = {}) {
+    // Clear rogue tooltips
+    lD.common.clearTooltips();
+
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
@@ -366,7 +373,7 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
             this.dropItemAdd(obj, card, {positionToAdd: positionToAdd});
         }
 
-    } else if(!$.isEmptyObject(this.toolbar.selectedQueue) && $(this.toolbar.selectedQueue).data('to-add')) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
+    } else if(!$.isEmptyObject(this.toolbar.selectedQueue)) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
         if(obj.data('type') == 'region') {
             const droppableId = $(obj).attr('id');
             let playlistId;
@@ -377,34 +384,27 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                 playlistId = lD.layout.regions[droppableId].playlists.playlistId;
             }
 
-            let mediaQueueArray = [];
-
-            // Get queue elements
-            this.toolbar.selectedQueue.find('.queue-element').each(function() {
-                mediaQueueArray.push($(this).attr('id'));
+            lD.importFromProvider(this.toolbar.selectedQueue).then((res) =>  {
+                // Add media queue to playlist
+                lD.addMediaToPlaylist(playlistId, res, positionToAdd);
+            }).catch(function() {
+                toastr.error(errorMessagesTrans.importingMediaFailed);
             });
-
-            // Add media queue to playlist
-            this.addMediaToPlaylist(playlistId, mediaQueueArray, positionToAdd);
-
-            // Destroy queue
-            this.toolbar.destroyQueue(this.toolbar.openedMenu);
         }
 
         // Deselect cards and drop zones
         this.toolbar.deselectCardsAndDropZones();
     } else {
-        
         // Get object properties from the DOM ( or set to layout if not defined )
         const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
         let newSelectedType = (obj === null) ? 'layout' : obj.data('type');
         let newSelectedParentType = (obj === null) ? 'layout' : obj.data('parentType');
 
         const oldSelectedId = this.selectedObject.id;
+        const oldSelectedType = this.selectedObject.type;
 
         // Unselect the previous selectedObject object if still selected
         if( this.selectedObject.selected ) {
-
             switch(this.selectedObject.type) {
                 case 'region':
                     if(this.layout.regions[this.selectedObject.id]) {
@@ -436,11 +436,9 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
         this.selectedObject.type = 'layout';
 
         // If the selected object was different from the previous, select a new one
-        if(oldSelectedId != newSelectedId || forceSelect) {
-
+        if(oldSelectedId != newSelectedId || oldSelectedType != newSelectedType || forceSelect) {
             // Save the new selected object
             if(newSelectedType === 'region') {
-
                 // If we're not in the navigator edit and the region has widgets, select the first one
                 if(!forceSelect && $.isEmptyObject(this.navigator) && !$.isEmptyObject(this.layout.regions[newSelectedId].widgets)) {
                     let widgets = this.layout.regions[newSelectedId].widgets;
@@ -463,7 +461,7 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
             } else if(newSelectedType === 'widget') {
                 // Close navigator mode when selecting a widget
                 if(lD.navigatorMode) {
-                    lD.toggleNavigatorEditing(false);
+                    lD.toggleNavigatorEditing(false, false);
                 }
 
                 if(newSelectedParentType == 'drawer') {
@@ -479,22 +477,25 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
         }
 
         // Refresh the designer containers
-        this.refreshDesigner();
+        lD.refreshDesigner();
     }
 };
 
 /**
  * Refresh designer
+ * @param {boolean} [renderToolbar=false] - Render toolbar
  */
-lD.refreshDesigner = function() {
-
+lD.refreshDesigner = function(renderToolbar = false) {
     // Remove temporary data
     this.clearTemporaryData();
 
     // Render containers with layout ( default )
-    this.renderContainer(this.toolbar);
+    (renderToolbar) && this.renderContainer(this.toolbar);
     this.renderContainer(this.topbar);
+
+    // Refresh bottom bar if no object is selected ( to avoid looping )
     (this.selectedObject.type === "layout") && this.renderContainer(this.bottombar, this.selectedObject);
+
     this.renderContainer(this.manager);
     this.renderContainer(this.propertiesPanel, this.selectedObject);
     this.renderContainer(this.navigator, this.selectedObject);
@@ -502,7 +503,6 @@ lD.refreshDesigner = function() {
     this.renderContainer(this.timeline);
     this.renderContainer(this.drawer);
 };
-
 
 /**
  * Reload API data and replace the layout structure with the new value
@@ -545,18 +545,13 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
                 // Reload the form helper connection
                 formHelpers.setup(lD, lD.layout);
 
-                // If there was a opened menu in the toolbar, open that tab
-                if(lD.toolbar.openedMenu != -1) {
-                    lD.toolbar.openMenu(lD.toolbar.openedMenu, true);
-                }
-
                 // Check layout status
                 lD.checkLayoutStatus();
             } else {
                 // Login Form needed?
                 if(res.login) {
                     window.location.href = window.location.href;
-                    location.reload(false);
+                    location.reload();
                 } else {
                     lD.showErrorMessage();
                 }
@@ -603,17 +598,17 @@ lD.checkoutLayout = function() {
             // Turn off read only mode
             lD.readOnlyMode = false;
 
-            // Hide read only message
-            lD.editorContainer.removeClass('view-mode');
-            lD.editorContainer.find('#read-only-message').remove();
-            
-            // Reload layout
-            lD.reloadData(res.data);
+            lD.selectObject();
+
+            lD.common.hideLoadingScreen();
+
+            // Add thumbnail
+            setTimeout(lD.uploadThumbnail, 1000 * 5);
         } else {
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
                 toastr.error(res.message);
             }
@@ -665,7 +660,7 @@ lD.publishLayout = function() {
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
                 toastr.error(res.message);
 
@@ -716,7 +711,7 @@ lD.discardLayout = function() {
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
                 toastr.error(res.message);
 
@@ -808,8 +803,9 @@ lD.renderContainer = function(container, element = {}) {
 /**
  * Toggle editing functionality on Navigator
  * @param {boolean} enable - flag to toggle the editing
+ * @param {boolean} reload - flag to force reload data
  */
-lD.toggleNavigatorEditing = function(enable) {
+lD.toggleNavigatorEditing = function(enable, reload = true) {
 
     // Unselect objects ( select layout )
     this.selectObject();
@@ -839,8 +835,10 @@ lD.toggleNavigatorEditing = function(enable) {
     } else {
         lD.navigatorMode = false;
 
-        // Refresh designer
-        this.reloadData(lD.layout);
+        // Reload designer
+        if(reload) {
+            this.reloadData(lD.layout);
+        }
 
         // Clean variable
         this.navigator = {};
@@ -1019,7 +1017,7 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
 
                 toastr.error(errorMessagesTrans.formLoadFailed);
@@ -1211,7 +1209,7 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
                     } else {
                         if(res.login) {
                             window.location.href = window.location.href;
-                            location.reload(false);
+                            location.reload();
                         } else {
                             toastr.error(res.message);
                         }
@@ -1239,7 +1237,6 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
  */
 lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
     const droppableId = $(droppable).attr('id');
-    const droppableType = $(droppable).data('type');
     const draggableType = $(draggable).data('type');
     const draggableSubType = $(draggable).data('subType');
 
@@ -1256,8 +1253,15 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
 
         const mediaId = $(draggable).data('mediaId');
 
-        lD.addMediaToPlaylist(playlistId, mediaId, positionToAdd);
-
+        if($(draggable).hasClass('from-provider')) {
+            lD.importFromProvider([$(draggable).data('providerData')]).then((res) =>  {
+                lD.addMediaToPlaylist(playlistId, res, positionToAdd);
+            }).catch(function() {
+                toastr.error(errorMessagesTrans.importingMediaFailed);
+            });
+        } else {
+            lD.addMediaToPlaylist(playlistId, mediaId, positionToAdd);
+        }
     } else if(draggableType == 'module') { // Add widget/module
 
         // Get regionSpecific property
@@ -1419,7 +1423,10 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
     // Get media Id
     let mediaToAdd = {};
 
-    if($.isArray(media)) {
+    if(Array.isArray(media)) {
+        if(media.length == 0) {
+            return;
+        }
         mediaToAdd = {
             media: media
         };
@@ -1550,7 +1557,7 @@ lD.checkLayoutStatus = function() {
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
                 // Just an error we dont know about
                 if(res.message == undefined) {
@@ -1605,7 +1612,7 @@ lD.openPlaylistEditor = function(playlistId, region) {
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
                 // Just an error we dont know about
                 if(res.message == undefined) {
@@ -1866,7 +1873,7 @@ lD.unlockLayout = function() {
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
                 toastr.error(res.message);
             }
@@ -1884,7 +1891,7 @@ lD.unlockLayout = function() {
 /**
  * Check history and return last step description
  */
- lD.checkHistory = function() {
+lD.checkHistory = function() {
     // Check if there are some changes
     let undoActive = lD.manager.changeHistory.length > 0;
     let undoActiveTitle = '';
@@ -1905,3 +1912,129 @@ lD.unlockLayout = function() {
     };
 };
 
+/**
+ * Toggle panel and refresh view containers
+ * @param {jquery object} $panel 
+ */
+lD.togglePanel = function($panel) {
+    $panel.toggleClass('opened');
+
+    // Refresh navigators and viewer
+    if (lD.navigatorMode) {
+        lD.renderContainer(lD.navigator);
+    } else {
+        lD.renderContainer(lD.viewer, lD.selectedObject);
+    }
+};
+
+/**
+ * Toggle panel and refresh view containers
+ * @param {Array.<number, object>} items - list of items to add, either just an id or a provider object
+ */
+lD.importFromProvider = function(items) {
+    let requestItems = [];
+    let itemsResult = items;
+
+    itemsResult.forEach(element => {
+        if(isNaN(element)) {
+            requestItems.push(element);
+        }
+    });
+
+    const linkToAPI = urlsForApi.library.connectorImport;
+    let requestPath = linkToAPI.url;
+
+    // Run ajax request and save promise
+    return new Promise(function(resolve, reject) {
+        // If none of the items are from a provider, return the original array
+        if(requestItems.length == 0) {
+            resolve(itemsResult);
+        }
+
+        lD.common.showLoadingScreen();
+
+        $.ajax({
+            url: requestPath,
+            type: linkToAPI.type,
+            dataType: 'json',
+            data: {
+                folderId: lD.layout.folderId,
+                items: requestItems,
+            }
+        }).done(function(res) {
+            if(res.success) {
+                console.log(res);
+
+                lD.common.hideLoadingScreen();
+
+                res.data.forEach((newElement) => {
+                    let addFlag = true;
+                    if(newElement.isError) {
+                        addFlag = false;
+                        toastr.error(newElement.error, newElement.item.id);
+                    }
+
+                    itemsResult.forEach((oldElement, key) => {
+                        if(isNaN(oldElement) && newElement.item.id == oldElement.id) {
+                            itemsResult[key] = (addFlag) ? newElement.media.mediaId : null;
+                        }
+                    });
+                });
+
+                // Filter null results
+                itemsResult = itemsResult.filter(el => el);
+
+                resolve(itemsResult);
+            } else {
+                lD.common.hideLoadingScreen();
+
+                // Login Form needed?
+                if(data.login) {
+                    window.location.href = window.location.href;
+                    location.reload();
+                } else {
+                    // Just an error we dont know about
+                    if(data.message == undefined) {
+                        reject(data);
+                    } else {
+                        reject(data.message);
+                    }
+                }
+            }
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+            lD.common.hideLoadingScreen();
+
+            // Reject promise and return an object with all values
+            reject({jqXHR, textStatus, errorThrown});
+        });
+    });
+};
+
+/**
+ * Take and upload a thumbnail
+ */
+lD.uploadThumbnail = function() {
+    const linkToAPI = urlsForApi.layout.addThumbnail;
+    const $viewer = lD.editorContainer.find('#layout-viewer');
+    const $player = $viewer.find('.layout-player');
+    if ($player.length > 0) {
+        const top = Math.floor($player.offset().top - $viewer.offset().top);
+        const left = Math.floor($player.offset().left - $viewer.offset().left);
+        let requestPath = linkToAPI.url.replace(':id', lD.layout.layoutId);
+        requestPath += '?trim=' + [
+            top,
+            left,
+            Math.ceil($player.width()),
+            Math.ceil($player.height())].join();
+
+        htmlToImage.toPng($viewer[0]).then(function(dataUrl) {
+            $.ajax({
+                url: requestPath,
+                type: "POST",
+                data: dataUrl
+            })
+        });
+    } else {
+        console.log("Viewer not ready");
+    }
+};

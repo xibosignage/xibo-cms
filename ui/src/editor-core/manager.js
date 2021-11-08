@@ -194,7 +194,7 @@ Manager.prototype.uploadChange = function(change, updateId, updateType, customRe
                 if(data.login) {
 
                     window.location.href = window.location.href;
-                    location.reload(false);
+                    location.reload();
                 } else {
                     // Just an error we dont know about
                     if(data.message == undefined) {
@@ -280,7 +280,7 @@ Manager.prototype.revertChange = function() {
                 if(lastChange.target) {
                     let replaceId = '';
 
-                    if($.isArray(lastChange.target.id)) {
+                    if(Array.isArray(lastChange.target.id)) {
                         replaceId = lastChange.target.id[0];
                         lastChange.target.id.shift();
                     } else {
@@ -302,7 +302,7 @@ Manager.prototype.revertChange = function() {
                 }).done(function(data) {
                     if(data.success) {
                         // If the target is a int or if it's an array with no elements, resolve method
-                        if(($.isArray(lastChange.target.id) && lastChange.target.id.length == 0) || $.isNumeric(lastChange.target.id)) {
+                        if((Array.isArray(lastChange.target.id) && lastChange.target.id.length == 0) || $.isNumeric(lastChange.target.id)) {
                             // Remove change from history
                             self.changeHistory.pop();
 
@@ -326,7 +326,7 @@ Manager.prototype.revertChange = function() {
                         if(data.login) {
 
                             window.location.href = window.location.href;
-                            location.reload(false);
+                            location.reload();
                         } else {
                             // Just an error we dont know about
                             if(data.message == undefined) {
@@ -401,7 +401,7 @@ Manager.prototype.removeAllChanges = function(targetType, targetId) {
             
             if(change.target.type === targetType && 
                 (change.target.id === targetId || 
-                    ($.isArray(change.target.id) && change.target.id.includes(targetId))
+                    (Array.isArray(change.target.id) && change.target.id.includes(targetId))
                 )
             ) {
                 self.changeHistory.splice(index, 1);

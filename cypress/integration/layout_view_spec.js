@@ -10,6 +10,10 @@ describe('Layout View', function() {
 
         cy.get('button[href="/layout/form/add"]').click();
 
+        // Select first template card
+        cy.get('#layout-add-templates .card:first').click();
+        cy.get('#layout-create-stepper-next-button').click();
+
         // Create random name
         let uuid = Cypress._.random(0, 1e10);
 

@@ -1,0 +1,39 @@
+<div class="toolbar-card {{#if selected}}card-selected{{/if}} {{#eq thumbnail null}}no-thumbnail{{thumbnail}}{{else}}hide-content{{/eq}} {{#if provider}}from-provider{{/if}}" 
+    data-type="media" 
+    data-media-id="{{id}}"
+    data-sub-type="{{type}}"
+    drop-to="region"
+    data-title="{{title}}"
+    data-download="{{download}}">
+
+    {{#neq thumbnail null}}
+        {{#eq type "video"}}
+            <video class="thumb" src="{{thumbnail}}" alt="" muted="muted"></video>
+        {{else}}
+            <img class="thumb" src="{{thumbnail}}" alt="">
+        {{/eq}}
+    {{/neq}}
+
+    {{#neq download null}}
+        <div class="preview-button">
+            <i class="fa fa-play" data-title="{{trans.preview}}" data-toggle="tooltip" data-placement="top"></i>
+        </div>
+    {{/neq}}
+
+    <div class="select-button">
+        <i class="fa fa-plus selectedHide" data-title="{{trans.select}}" data-toggle="tooltip" data-placement="top"></i>
+        <i class="fa fa-check selectedShow" data-title="{{trans.deselect}}" data-toggle="tooltip" data-placement="top"></i>
+    </div>
+
+    {{#eq thumbnail null}}
+        <i class="fa media-icon-{{type}} card-icon"></i>
+    {{/eq}}
+
+    {{#if provider}}
+        <a class="provider" href="{{provider.link}}" target="_blank" rel="noopener noreferrer">
+            <img src="{{provider.logoUrl}}"></img>
+        </a>
+    {{/if}}
+    
+    <span class="media-title tooltip-always-on" data-toggle="tooltip" data-title="{{title}}" data-placement="right">{{title}}</span>
+</div>

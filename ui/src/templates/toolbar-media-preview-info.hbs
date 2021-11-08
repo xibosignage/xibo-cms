@@ -1,0 +1,16 @@
+<div class="mediaInfo">
+    <span>{{data.title}}</span>
+    
+    {{#if data.width}}
+        <span>
+            <i class="fa fa-arrows-alt pr-2" data-title="{{trans.mediaPreview.dimensions}}" data-toggle="tooltip" data-placement="top"></i>
+            {{data.width}}x{{data.height}}
+        </span>
+    {{/if}}
+    {{#if data.fileSizeFormatted}}
+        <span>
+            <i class="fa fa-hdd pr-2" data-title="{{trans.mediaPreview.size}}" data-toggle="tooltip" data-placement="top"></i>
+            {{data.fileSizeFormatted}}
+        </span>
+    {{/if}}
+</div>

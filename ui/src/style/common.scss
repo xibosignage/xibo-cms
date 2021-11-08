@@ -211,7 +211,7 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-calendar-o;
 }
 
-.module-icon-audio {
+.module-icon-audio, .media-icon-audio {
     @extend .fa-file-audio;
 }
 
@@ -263,11 +263,11 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-video-camera;
 }
 
-.module-icon-htmlpackage {
+.module-icon-htmlpackage, .media-icon-htmlpackage {
     @extend .fa-file-code-o;
 }
 
-.module-icon-image {
+.module-icon-image, .media-icon-image {
     @extend .fa-file-image-o;
 }
 
@@ -279,11 +279,11 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-bell-o;
 }
 
-.module-icon-pdf {
+.module-icon-pdf, .media-icon-pdf {
     @extend .fa-file-pdf-o;
 }
 
-.module-icon-powerpoint {
+.module-icon-powerpoint, .media-icon-powerpoint {
     @extend .fa-file-powerpoint-o;
 }
 
@@ -319,7 +319,7 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-twitter-square;
 }
 
-.module-icon-video {
+.module-icon-video, .media-icon-video {
     @extend .fa-file-video-o;
 }
 

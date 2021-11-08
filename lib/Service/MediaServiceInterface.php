@@ -24,6 +24,7 @@ namespace Xibo\Service;
 
 use Slim\Routing\RouteParser;
 use Stash\Interfaces\PoolInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Factory\MediaFactory;
 use Xibo\Helper\SanitizerService;
@@ -32,6 +33,10 @@ use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
+/**
+ * MediaServiceInterface
+ * Provides common functionality for library media
+ */
 interface MediaServiceInterface
 {
     /**
@@ -55,23 +60,56 @@ interface MediaServiceInterface
     /**
      * @param User $user
      */
-    public function setUser(User $user) :MediaService;
+    public function setUser(User $user): MediaServiceInterface;
 
     /**
      * @return User
      */
-    public function getUser() : User;
+    public function getUser(): User;
+
+    /**
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
+     * @return MediaServiceInterface
+     */
+    public function setDispatcher(EventDispatcherInterface $dispatcher): MediaServiceInterface;
 
     /**
      * @param \Slim\Routing\RouteParser $routeParser
      */
-    public function fontCKEditorConfig(RouteParser $routeParser) :string;
+    public function fontCKEditorConfig(RouteParser $routeParser): string;
 
     /**
      * Library Usage
      * @return int
      */
     public function libraryUsage(): int;
+
+    /**
+     * @return $this
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     */
+    public function initLibrary(): MediaServiceInterface;
+
+    /**
+     * @return $this
+     * @throws \Xibo\Support\Exception\LibraryFullException
+     */
+    public function checkLibraryOrQuotaFull($isCheckUser = false): MediaServiceInterface;
+
+    /**
+     * @param $size
+     * @return \Xibo\Service\MediaService
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function checkMaxUploadSize($size): MediaServiceInterface;
+
+    /**
+     * Get download info for a URL
+     *  we're looking for the file size and the extension
+     * @param $url
+     * @return array
+     */
+    public function getDownloadInfo($url): array;
 
     /**
      * @param \Slim\Routing\RouteParser $routeParser

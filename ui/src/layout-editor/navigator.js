@@ -104,6 +104,7 @@ Navigator.prototype.render = function() {
 
     if(lD.readOnlyMode === false) {
         this.DOMObject.find('[data-type="layout"]').droppable({
+            tolerance: 'pointer',
             accept: '[drop-to="layout"]',
             drop: function(event, ui) {
                 // Calculate ratio
@@ -142,13 +143,23 @@ Navigator.prototype.render = function() {
         });
 
         this.DOMObject.find('.designer-region').droppable({
+            tolerance: 'pointer',
             greedy: true,
             accept: function(el) {
                 return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region') ||
                     ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
             },
             drop: function(event, ui) {
+                // Check if elements was dropped already
+                if(ui.helper.hasClass('dropped')) {
+                    return false;
+                }
+
+                // Add item
                 lD.dropItemAdd(event.target, ui.draggable[0]);
+
+                // Mark as dropped
+                ui.helper.addClass('dropped');
             }
         });
 

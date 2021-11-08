@@ -770,4 +770,23 @@ class Settings extends Base
             }
         }
     }
+
+    /**
+     * Configure Adspace settings
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     */
+    public function configureAdspace(Request $request, Response $response)
+    {
+        if (!$this->getUser()->isSuperAdmin()) {
+            throw new AccessDeniedException();
+        }
+
+        $params = $this->getSanitizer($request->getParams());
+        $this->getConfig()->changeSetting('isAdspaceEnabled', $params->getCheckbox('isAdspaceEnabled'));
+
+        return $response->withStatus(204);
+    }
 }

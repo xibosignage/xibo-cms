@@ -31,6 +31,9 @@ let Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
     this.isDeletable = data.isDeletable;
     this.isPermissionsModifiable = data.isPermissionsModifiable;
 
+    // Interactive actions
+    this.actions = data.actions;
+
     // set real dimentions
     this.dimensions = {
         width: data.width,
@@ -239,7 +242,7 @@ Region.prototype.editPropertyForm = function(property) {
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
 
                 toastr.error(errorMessagesTrans.formLoadFailed);

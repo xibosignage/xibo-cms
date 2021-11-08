@@ -28,23 +28,13 @@ let Topbar = function(parent, container, customDropdownOptions = null, customAct
 
     // Options menu
     this.showOptions = showOptions;
-
-    // Flag to mark if the topbar has been rendered at least one time
-    this.firstRun = true;
 };
 
 /**
  * Render topbar
  */
 Topbar.prototype.render = function() {
-
-    // Load preferences when the topbar is rendered for the first time
-    if(this.firstRun) {
-        // Mark topbar as loaded
-        this.firstRun = false;
-    }
-
-    let self = this;
+    const self = this;
     const app = this.parent;
 
     // Get main object 
@@ -129,7 +119,12 @@ Topbar.prototype.render = function() {
             app.undoLastAction();
         }
     });
-    
+
+    // Jump to actions
+    this.DOMObject.find('.layout-info-actions').off().click(function() {
+        lD.propertiesPanel.openTabOnRender = 'a[href="#actionTab"]';
+        lD.selectObject();
+    });
 
     // Set layout jumpList if exists
     if(!$.isEmptyObject(this.jumpList) && $('#layoutJumpList').length == 0) {

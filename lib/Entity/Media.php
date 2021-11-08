@@ -40,6 +40,7 @@ use Xibo\Support\Exception\InvalidArgumentException;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
+ * @property $extension
  */
 class Media implements \JsonSerializable
 {

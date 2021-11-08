@@ -1,6 +1,8 @@
-<div id="{{id}}" data-type="region" class="designer-region tooltip-always-on" data-region-id="{{id}}" data-toggle="tooltip" data-container="#layout-viewer" data-title="{{name}}" style="position:absolute; 
+<div id="{{id}}" data-type="region" class="designer-region tooltip-always-on {{#if isEditable}}editable{{/if}}" data-region-id="{{id}}" data-toggle="tooltip" data-container="#layout-viewer" data-title="{{name}}" style="position:absolute; 
         width: {{ scaledDimensions.width }}px; 
         height: {{ scaledDimensions.height }}px; 
         top: {{ scaledDimensions.top }}px;
         left: {{ scaledDimensions.left }}px;">
+
+        <div class="designer-region-overlay"></div>
 </div>

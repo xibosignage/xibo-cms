@@ -262,6 +262,14 @@ class Soap5 extends Soap4
                 }
                 $displayElement->appendChild($node);
 
+                // Adspace Enabled CMS?
+                $isAdspaceEnabled = intval($this->getConfig()->getSetting('isAdspaceEnabled', 0));
+                if ($isAdspaceEnabled === 1) {
+                    $node = $return->createElement('isAdspaceEnabled', 1);
+                    $node->setAttribute('type', 'checkbox');
+                    $displayElement->appendChild($node);
+                }
+
                 if (!empty($display->timeZone)) {
                     // Calculate local time
                     $dateNow->timezone($display->timeZone);

@@ -7,15 +7,9 @@
     data-max-size="{{ maxSize }}" 
     data-max-size-message="{{ maxSizeMessage }}"
     data-title="{{description}}"
-    data-container=".editor-side-bar"
-    
-    {{#each oneClickAdd}}
-        {{#eq this ../mainObjectType}}data-one-click-add="{{this}}"{{/eq}}
-    {{/each}}
-
     drop-to="region">
     
-    <div class="btn-favourite" data-toggle="tooltip" data-placement="left" data-container=".toolbar-pane-content-container" 
+    <div class="btn-favourite" data-toggle="tooltip" data-placement="left" 
         {{#unless favourited}}
             data-title="{{trans.addAsFavourite}}
         {{/unless}}
@@ -23,10 +17,10 @@
         <i class="{{#if favourited}}fas{{else}}far{{/if}} fa-star"></i>
     </div>
 
-    <div class="add-area action-area" data-title="{{trans.add}}" data-toggle="tooltip" data-container=".toolbar-pane-content-container" data-placement="left">
+    <div class="add-area action-area" data-title="{{trans.add}}" data-toggle="tooltip" data-placement="left">
         <i class="fa fa-plus"></i>
     </div>
-    <div class="drag-area action-area" data-title="{{trans.grab}}" data-toggle="tooltip" data-container=".toolbar-pane-content-container" data-placement="right">
+    <div class="drag-area action-area" data-title="{{trans.grab}}" data-toggle="tooltip" data-placement="right">
         <i class="fa fa-hand-rock-o"></i>
     </div>
 

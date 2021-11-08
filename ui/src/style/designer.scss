@@ -54,7 +54,7 @@ $navigator-shadow-colour: $xibo-color-white;
 $navigator-non-editable-shadow-colour: $xibo-color-gray-dark;
 
 $drawer-bg-color: lighten($xibo-color-blue-pastel, 5%);
-$drawer-fg-color: $xibo-color-gray-dark;
+$drawer-fg-color: $xibo-color-white;
 $drawer-toggle-bg-color: $xibo-color-blue-pastel;
 $drawer-toggle-fg-color: $xibo-color-white;
 $drawer-drop-bg-color: $xibo-color-gray-light;
@@ -72,7 +72,7 @@ $designer-overlay-z-index: 1050;
 $designer-z-index-select: 10;
 
 // CSS
-.page-content {
+body, .page-content {
     overflow: hidden;
     height: 100vh;
 }
@@ -282,7 +282,7 @@ $designer-z-index-select: 10;
 
 
 /* Main Editor */
-#layout-editor  {
+#layout-editor {
     overflow: hidden;
     margin: 0 -15px -15px -15px;
     background-color: $designer-color-background;
@@ -393,9 +393,22 @@ $designer-z-index-select: 10;
     }
 
     #regions-container {
-        overflow: auto;
         display: inline-block;
         width: calc(100% - #{$timeline-region-info-width});
+    }
+
+    .empty-timeline {
+        width: 100%;
+        background-color: $xibo-color-blue-lightest;
+        display: table;
+        text-align: center;
+
+        .empty-timeline-message {
+            font-size: 1.1rem;
+            color: $xibo-color-blue;
+            vertical-align: middle;
+            display: table-cell;
+        }
     }
 
     #timeruler {
@@ -405,7 +418,11 @@ $designer-z-index-select: 10;
         overflow: hidden;
         white-space: nowrap;
         font-size: 0;
-        opacity: 0.8;
+        opacity: 0.9;
+        position: -webkit-sticky; /* Safari */
+        position: sticky;
+        top: 0;
+        z-index: 1;
 
         .timeruler-message {
             color: white;
@@ -490,12 +507,15 @@ $designer-z-index-select: 10;
 
     /* Controls Container */
     #timeline-controls {
-        position: relative;
         font-size: 1.15rem;
         line-height: 20px;
         width: $timeline-region-info-width;
         padding: 2px 4px;
         background-color: $xibo-color-primary;
+        position: -webkit-sticky; /* Safari */
+        position: sticky;
+        top: 0;
+        z-index: 1;
     }
 
     /* Timeline buttons */
@@ -1418,15 +1438,15 @@ $designer-z-index-select: 10;
         background: $widget-selected-color !important;
     }
 
-    /* Navigator */
-    #layout-navigator {
+    /* Navigator & Viewer */
+    #layout-navigator, #layout-viewer {
         .designer-region.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
-            background: $region-hover-color;
+            background: $region-hover-color !important;
 
             &.ui-droppable-hover,
             &:hover {
-                background: darken($region-hover-color, 20%);
+                background: darken($region-hover-color, 20%) !important;
             }
 
             * {
@@ -1436,12 +1456,12 @@ $designer-z-index-select: 10;
 
         .layout.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
-            background: $layout-hover-color;
+            background: $layout-hover-color !important;
         }
 
         .layout.ui-droppable-active.ui-droppable-hover,
         .layout.ui-droppable-active:hover {
-            background: darken($layout-hover-color, 10%);
+            background: darken($layout-hover-color, 10%) !important;
         }
 
         .layout.ui-droppable-active * {
@@ -1772,6 +1792,12 @@ $designer-z-index-select: 10;
         top: 50%;
         transform: translateY(-50%);
         white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+
+        span {
+            padding: 4px;
+        }
     }
 
     &.drawed {

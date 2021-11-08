@@ -25,6 +25,8 @@ let Layout = function(id, data) {
     this.id = 'layout_' + id;
     this.layoutId = id;
 
+    this.folderId = data.folderId;
+
     // Campaing ID
     this.campaignId = data.campaignId;
 
@@ -41,6 +43,9 @@ let Layout = function(id, data) {
 
     this.code = data.code;
     this.folderId = data.folderId;
+
+    // Interactive actions
+    this.actions = data.actions;
 
     // Get background image if exists, if not, get the background color
     this.backgroundCss = function(width = this.width, height = this.height) {       

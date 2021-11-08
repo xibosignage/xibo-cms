@@ -34,8 +34,8 @@ use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\SanitizerService;
-use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\BaseDependenciesService;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\HelpServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Exception\ControllerNotImplemented;
@@ -186,6 +186,7 @@ class Base
     public function getDispatcher(): EventDispatcher
     {
         if ($this->dispatcher === null) {
+            $this->getLog()->error('getDispatcher: No dispatcher found, returning an empty one');
             $this->dispatcher = new EventDispatcher();
         }
 

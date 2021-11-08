@@ -20,13 +20,18 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Event;
 
+/**
+ * An event
+ */
 abstract class Event extends \Symfony\Component\EventDispatcher\Event
 {
     private static $NAME = 'generic.event';
 
+    /**
+     * @return string
+     */
     public function getName()
     {
         return $this::$NAME;

@@ -141,7 +141,7 @@ function XiboInitialise(scope) {
             if (gridName != undefined)
                 localStorage.setItem(gridName, JSON.stringify(form.serializeArray()));
 
-            $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+            $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
         }, 500);
         
         // Prevent enter key to submit form
@@ -1858,11 +1858,15 @@ function XiboFormRender(sourceObj, data) {
                 var id = new Date().getTime();
                 
                 // Create the dialog with our parameters
+                var size = 'large';
+                if (sourceObj && typeof sourceObj === 'object') {
+                  size = sourceObj.data().modalSize || 'large';
+                }
                 var dialog = bootbox.dialog({
                         message: response.html,
                         title: dialogTitle,
                         animate: false,
-                        size: 'large'
+                        size: size
                     }).attr("id", id);
 
                 // Store the extra
@@ -2902,7 +2906,7 @@ function LoginBox(message) {
 
     // Reload the page (appending the message)
     window.location.href = window.location.href;
-    location.reload(false);
+    location.reload();
 }
 
 /**
@@ -3647,7 +3651,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                 }
 
                 $(folderIdInputSelector).val(selectedFolderId);
-                $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
             }
 
             // on form we always want to show the breadcrumbs to current and selected folder
@@ -3700,11 +3704,11 @@ function initJsTreeAjax(container, id, isForm, ttl)
 
                     // if the folder tree is hidden, then make it so datatable can take whole available width
                     $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
-                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                    $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
                 } else {
                     // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
                     $("#breadcrumbs").hide('slow');
-                    $(this).closest(".XiboGrid").find("table[role='grid']").DataTable().ajax.reload();
+                    $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
                 }
                 // set current state of the folder tree visibility to local storage,
                 // this is then used to hide/show the tree when User navigates to a different grid or reloads this page
@@ -3776,8 +3780,8 @@ function createMiniLayoutPreview(previewUrl) {
         $layoutPreview.toggleClass('large');
 
         // Change icon based on size state
-        $(this).toggleClass('fa-minus-square', $layoutPreview.hasClass('large'));
-
+        $(this).toggleClass('fa-arrow-circle-down', $layoutPreview.hasClass('large'));
+        $(this).toggleClass('fa-arrow-circle-up', !$layoutPreview.hasClass('large'));
         // Re-show play button
         $layoutPreview.find('#playBtn').show();
     });

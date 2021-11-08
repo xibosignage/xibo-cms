@@ -31,7 +31,7 @@
 {% block pageContent %}
 
     <!-- Editor structure -->
-    <div id="layout-editor" data-layout-id="{{ layout.layoutId }}"></div>
+    <div id="layout-editor" data-published-layout-id="{{ publishedLayoutId }}" data-layout-id="{{ layout.layoutId }}"></div>
 
     <div class="loading-overlay">
         <i class="fa fa-spinner fa-spin loading-icon"></i>
@@ -61,7 +61,7 @@
                     unlockTitle: "{% trans "Unlock layout" %}",
                     saveTemplateTitle: "{% trans "Save Template" %}",
                     readOnlyModeTitle: "{% trans "Read Only Mode" %}",
-                    readOnlyModeMessage: "{% trans "You are viewing this Layout in read only mode, checkout by clicking on this message or from the Actions menu above!" %}",
+                    readOnlyModeMessage: "{% trans "You are viewing this Layout in read only mode, checkout by clicking on this message or from the Options menu above!" %}",
                     lockedModeTitle: "{% trans "Locked Layout" %}",
                     lockedModeMessage: "{% trans "This layout is being locked by another user. Lock expires on: [expiryDate]" %}",
                     checkoutMessage: "{% trans "Layout is not editable, please checkout!" %}",
@@ -83,6 +83,7 @@
                     resetZoom: "{% trans "Reset zoom" %}",
                     zoomDelta: "{% trans "Visible area time span" %}",
                     hiddenTimeruler: "{% trans "Zoom out to see timeruler!" %}",
+                    emptyTimeline: "{% trans "No regions: Add a region to start creating content!" %}",
                     zoomFindSelected: "{% trans "Scroll to selected widget" %}",
                     startTime: "{% trans "Visible area start time" %}",
                     endTime: "{% trans "Visible area end time" %}",
@@ -92,7 +93,10 @@
                     emptyRegion: "{% trans "Empty Region" %}",
                     addToThisPosition: "{% trans "Add to this position" %}",
                     hiddenContentInWidget: "{% trans "Zoom in to see more details!" %}",
-                    widgetActions: "{% trans "Widget Actions:" %}"
+                    editRegion: "{% trans "Edit region" %}",
+                    openRegionAsPlaylist: "{% trans "Open as playlist" %}",
+                    widgetActions: "{% trans "Widget Actions:" %}",
+                    regionActions: "{% trans "Region Actions:" %}"
                 };
 
                 var bottombarTrans = {
@@ -294,6 +298,11 @@
                         XiboDialogClose();
                     }
                 });
+            }
+
+            function layoutPublishFormOpen() {
+              // We are about to publish, so save a thumbnail
+              lD.uploadThumbnail();
             }
         </script>
 

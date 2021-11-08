@@ -175,7 +175,7 @@
 
         // Nabble the resulting buttons
         $seriesColors.on("click", "button", function (e) {
-            e.preventDefault();
+            e.stopPropagation();
 
             // find the gylph
             if ($(this).find("i").hasClass("fa-plus")) {

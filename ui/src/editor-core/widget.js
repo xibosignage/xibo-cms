@@ -291,7 +291,7 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
      * @returns {boolean}
      */
     this.isRegionSpecific = function() {
-        let self = this;
+        const self = this;
         let regionSpecific = false;
 
         Object.keys(modulesList).forEach(function(item) {
@@ -466,7 +466,7 @@ Widget.prototype.editPropertyForm = function(property, type) {
             // Login Form needed?
             if(res.login) {
                 window.location.href = window.location.href;
-                location.reload(false);
+                location.reload();
             } else {
 
                 toastr.error(errorMessagesTrans.formLoadFailed);

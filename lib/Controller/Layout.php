@@ -22,6 +22,10 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use GuzzleHttp\Psr7\Stream;
+use Illuminate\Support\Str;
+use Intervention\Image\ImageManagerStatic as Img;
+use Mimey\MimeTypes;
 use Parsedown;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -228,6 +232,7 @@ class Layout extends Base
 
         // Set up any JavaScript translations
         $data = [
+            'publishedLayoutId' => $id,
             'layout' => $layout,
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
@@ -331,8 +336,6 @@ class Layout extends Base
 
         $name = $sanitizedParams->getString('name');
         $description = $sanitizedParams->getString('description');
-        $templateId = $sanitizedParams->getInt('layoutId');
-        $resolutionId = $sanitizedParams->getInt('resolutionId');
         $enableStat = $sanitizedParams->getCheckbox('enableStat');
         $autoApplyTransitions = $sanitizedParams->getCheckbox('autoApplyTransitions');
         $code = $sanitizedParams->getString('code', ['defaultOnEmptyString' => true]);
@@ -344,9 +347,19 @@ class Layout extends Base
             $tags = [];
         }
 
+        // Template or resolution?
+        // TODO: if we have selected an item from a non-local source, we need to process that here.
+        //  the connector would be expected to import the layout at this point and return us with a Layout
+        //  object we can then decorate with our other options.
+        $templateId = $sanitizedParams->getString('layoutId');
+        $source = $sanitizedParams->getString('source');
+        $resolutionId = $sanitizedParams->getInt('resolutionId');
         $template = null;
 
-        if ($templateId != 0) {
+        // Template or Resolution?
+        $isResolution = empty($templateId) || $templateId === '0' || Str::startsWith($templateId, '0|');
+
+        if (!$isResolution) {
             // Load the template
             $template = $this->layoutFactory->loadById($templateId);
 
@@ -372,8 +385,30 @@ class Layout extends Base
                 $name,
                 $description,
                 $tags,
-                $code
+                $code,
+                false
             );
+
+            // Handle our various templateId's
+            // TODO
+            switch ($templateId) {
+                case '0|blank':
+                    // Do nothing
+                    break;
+
+                case '0|l-bar-left':
+                    // TODO
+                    break;
+
+                case '0|l-bar-right':
+                    // TODO
+                    break;
+
+                case '0|full-screen':
+                default:
+                    // Maintain backwards compatibility by creating an empty full screen region
+                    $this->layoutFactory->addRegion($layout, $layout->width, $layout->height, 0, 0);
+            }
         }
 
         // Set layout enableStat flag
@@ -1359,13 +1394,11 @@ class Layout extends Base
             }
 
             $layout->includeProperty('buttons');
-            //$layout->excludeProperty('regions');
 
+            // Thumbnail
             $layout->thumbnail = '';
-
-            if ($layout->backgroundImageId != 0) {
-                $download = $this->urlFor($request,'layout.download.background', ['id' => $layout->layoutId]) . '?preview=1' . '&backgroundImageId=' . $layout->backgroundImageId;
-                $layout->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56" /></i></a>';
+            if (file_exists($layout->getThumbnailUri())) {
+                $layout->thumbnail = $this->urlFor($request, 'layout.download.thumbnail', ['id' => $layout->layoutId]);
             }
 
             // Fix up the description
@@ -1700,8 +1733,6 @@ class Layout extends Base
     {
         $this->getState()->template = 'layout-form-add';
         $this->getState()->setData([
-            'layouts' => $this->layoutFactory->query(['layout'], ['excludeTemplates' => 0, 'tags' => 'template']),
-            'resolutions' => $this->resolutionFactory->query(['resolution']),
             'help' => $this->getHelp()->link('Layout', 'Add')
         ]);
 
@@ -2798,6 +2829,122 @@ class Layout extends Base
         $lock->set([]);
         $lock->save();
 
+        return $this->render($request, $response);
+    }
+
+    /**
+     * This is called when editing a layout.
+     * Saves provided base64 image to the library folder with the naming convention:
+     *  {layoutId}_layout_thumb.png for a draft
+     *  {campaignId}_campaign_thumb.png for a published layout
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return Response
+     * @throws \Xibo\Support\Exception\AccessDeniedException
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     * @throws \Xibo\Support\Exception\ConfigurationException
+     */
+    public function addThumbnail(Request $request, Response $response, $id): Response
+    {
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+        MediaService::ensureLibraryExists($libraryLocation);
+
+        // Check the Layout
+        $layout = $this->layoutFactory->getById($id);
+
+        // Make sure we have edit permissions
+        if (!$this->getUser()->checkEditable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // Do we want to trim?
+        $params = $this->getSanitizer($request->getParams());
+        $trim = $params->getString('trim');
+        if (!empty($trim)) {
+            $trim = explode(',', $trim);
+            $top = $trim[0];
+            $left = $trim[1];
+            $width = $trim[2];
+            $height = $trim[3];
+        } else {
+            $top = 0;
+            $left = 0;
+            $width = 0;
+            $height = 0;
+        }
+
+        // Where would we save this to?
+        if ($layout->isChild()) {
+            // A draft
+            $saveTo = $libraryLocation . 'thumbs/' . $layout->campaignId . '_layout_thumb.png';
+        } else {
+            // Published
+            // we support uploading the a thumb for the published layout, although we would usually expect this to
+            // be copied over during the publish transaction.
+            $saveTo = $libraryLocation . 'thumbs/' . $layout->campaignId . '_campaign_thumb.png';
+        }
+
+        // Base64 encoded thumbnail image.
+        try {
+            Img::configure(['driver' => 'gd']);
+            $image = Img::make($request->getBody()->getContents());
+
+            // Do we need to crop this image at all?
+            if ($width !== 0 && $height !== 0 && ($top !== 0 || $left !== 0)) {
+                $image->crop($width, $height, $left, $top);
+            }
+
+            // Save the file
+            $image->save($saveTo);
+
+            return $response->withStatus(204);
+        } catch (\Exception $e) {
+            $this->getLog()->error('Exception adding thumbnail to Layout. e = ' . $e->getMessage());
+            throw new InvalidArgumentException(__('Incorrect image data'));
+        }
+    }
+
+    /**
+     * Download the Layout Thumbnail
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function downloadThumbnail(Request $request, Response $response, $id)
+    {
+        $this->getLog()->debug('Layout thumbnail request for layoutId ' . $id);
+
+        $layout = $this->layoutFactory->getById($id);
+        if (!$this->getUser()->checkViewable($layout)) {
+            throw new AccessDeniedException();
+        }
+
+        // Get thumbnail uri
+        $uri = $layout->getThumbnailUri();
+
+        if (!file_exists($uri)) {
+            throw new NotFoundException(__('Thumbnail not found for Layout'));
+        }
+
+        $response = $response
+            ->withHeader('Content-Length', filesize($uri))
+            ->withHeader('Content-Type', (new MimeTypes())->getMimeType('png'));
+
+        $sendFileMode = $this->getConfig()->getSetting('SENDFILE_MODE');
+        if ($sendFileMode == 'Apache') {
+            $response = $response->withHeader('X-Sendfile', $uri);
+        } else if ($sendFileMode == 'Nginx') {
+            $response = $response->withHeader('X-Accel-Redirect', '/download/' . basename($uri));
+        } else {
+            // Return the file with PHP
+            $response = $response->withBody(new Stream(fopen($uri, 'r')));
+        }
+
+        $this->setNoOutput();
         return $this->render($request, $response);
     }
 }

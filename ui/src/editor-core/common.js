@@ -8,20 +8,28 @@ module.exports = {
      * Show loading screen
      */
     showLoadingScreen: function(cloneName = 'genericLoadingScreen') {
+        let bumpVal = $('.loading-overlay.loading').data('bump') || 0;
+        bumpVal++;
         
-        // Create a loading overlay clone, gave it a ID and append it to the same DOM object as the original
-        let clone = $('.loading-overlay').clone();
-        clone.attr('id', cloneName).addClass('loading').show();
-        clone.appendTo($('.loading-overlay').parent());
+        if(bumpVal <= 1) {
+            $('.loading-overlay').addClass('loading').show();
+        }
+
+        $('.loading-overlay').data('bump', bumpVal++);
     },
 
     /**
      * Hide loading screen
      */
     hideLoadingScreen: function(cloneName = 'genericLoadingScreen') {
+        let bumpVal = $('.loading-overlay.loading').data('bump') || 1;
+        bumpVal--;
 
-        // Remove generic or named clone
-        $('.loading-overlay#' + cloneName).remove();
+        if(bumpVal <= 0) {
+            $('.loading-overlay.loading').removeClass('loading');
+        }
+
+        $('.loading-overlay').data('bump', bumpVal);
     },
 
     /**
@@ -38,7 +46,15 @@ module.exports = {
         });
 
         // Remove rogue/detached tooltips
-        container.find('.tooltip').remove();
+        this.clearTooltips();
+    },
+
+    /**
+     * Clear Tooltips
+     */
+    clearTooltips: function() {
+        // Remove rogue/detached tooltips
+        $('body').find('.tooltip').remove();
     },
 
     /**
@@ -63,5 +79,13 @@ module.exports = {
         var sDisplay = mDisplay != '' ? zeroBefore(s) : s;
 
         return hDisplay + mDisplay + sDisplay;
+    },
+
+    /**
+     * Format file size
+     */
+    formatFileSize: function(value) {
+        return (b = Math, c = b.log, d = 1e3, e = c(value) / c(d) | 0, value / b.pow(d, e)).toFixed(2)
+            + ' ' + (e ? 'kMGTPEZY'[--e] + 'B' : 'Bytes');
     }
 };
