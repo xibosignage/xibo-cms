@@ -1296,7 +1296,14 @@ class Layout implements \JsonSerializable
         if ($this->backgroundImageId != 0) {
             // Get stored as
             $media = $this->mediaFactory->getById($this->backgroundImageId);
-
+            if ($media->released === 1) {
+                $this->pushStatusMessage( __('%s set as the Layout background image is pending conversion', $media->name));
+                $this->status = ModuleWidget::$STATUS_PLAYER;
+            } else if ($media->released === 2) {
+                $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
+                $this->status = ModuleWidget::$STATUS_INVALID;
+                throw new InvalidArgumentException(__('%s set as the Layout background image is too large. Please ensure that none of the images in your layout are larger than %s pixels on their longest edge. Please check the allowed Resize Limit in Administration -> Settings', $media->name, $resizeLimit), 'backgroundImageId');
+            }
             $layoutNode->setAttribute('background', $media->storedAs);
         }
 
