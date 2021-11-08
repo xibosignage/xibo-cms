@@ -78,6 +78,8 @@ class CASAuthentication extends AuthenticationBase
                 $this->getSession()->regenerateSessionId();
                 $this->getSession()->setUser($user->userId);
 
+                $user->touch();
+
                 // Audit Log
                 // Set the userId on the log object
                 $this->getLog()->audit('User', $user->userId, 'Login Granted via CAS', [
