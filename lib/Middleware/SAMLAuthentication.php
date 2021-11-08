@@ -263,6 +263,8 @@ class SAMLAuthentication extends AuthenticationBase
                     $this->getSession()->regenerateSessionId();
                     $this->getSession()->setUser($user->userId);
 
+                    $user->touch();
+
                     // Audit Log
                     $this->getLog()->audit('User', $user->userId, 'Login Granted via SAML', [
                         'IPAddress' => $request->getAttribute('ip_address'),
