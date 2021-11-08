@@ -116,6 +116,7 @@ class EmailNotificationsTask implements TaskInterface
                 if (!$mail->send()) {
                     $this->log->error('Unable to send email notification mail to ' . $notification->email);
                     $this->runMessage .= ' - E' . PHP_EOL;
+                    $this->log->error('Unable to send email notification Error: ' . $mail->ErrorInfo);
                 } else {
                     $this->runMessage .= ' - A' . PHP_EOL;
                 }
@@ -146,7 +147,7 @@ class EmailNotificationsTask implements TaskInterface
         ob_start();
 
         // Render the template
-        $this->view->fetch('email-template.twig', ['config' => $this->config, 'subject' => $subject, 'body' => $body]);
+        echo $this->view->fetch('email-template.twig', ['config' => $this->config, 'subject' => $subject, 'body' => $body]);
 
         $body = ob_get_contents();
 
