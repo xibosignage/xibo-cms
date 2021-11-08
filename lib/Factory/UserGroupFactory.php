@@ -443,7 +443,7 @@ class UserGroupFactory extends BaseFactory
                 'library.add' => [
                     'feature' => 'library.add',
                     'group' => 'library',
-                    'title' => __('Include "Add Media" buttons to allow for addtional content to be uploaded to the Media Library')
+                    'title' => __('Include "Add Media" buttons to allow for additional content to be uploaded to the Media Library')
                 ],
                 'library.modify' => [
                     'feature' => 'library.modify',
@@ -458,17 +458,17 @@ class UserGroupFactory extends BaseFactory
                 'dataset.add' => [
                     'feature' => 'dataset.add',
                     'group' => 'library',
-                    'title' => __('Include "Add DataSet" button to allow for additional DataSets to be created Independently to Layouts')
+                    'title' => __('Include "Add DataSet" button to allow for additional DataSets to be created independently to Layouts')
                 ],
                 'dataset.modify' => [
                     'feature' => 'dataset.modify',
                     'group' => 'library',
-                    'title' => __('Allow edits including deletion to all created DataSets Independently to Layouts')
+                    'title' => __('Allow edits including deletion to all created DataSets independently to Layouts')
                 ],
                 'dataset.data' => [
                     'feature' => 'dataset.data',
                     'group' => 'library',
-                    'title' => __('Allow edits including deletion to all data contained within a DataSet Independently to Layouts')
+                    'title' => __('Allow edits including deletion to all data contained within a DataSet independently to Layouts')
                 ],
                 'layout.view' => [
                     'feature' => 'layout.view',
