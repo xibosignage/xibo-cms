@@ -335,15 +335,15 @@
         <div class="form-group-command mt-2">
             <label for="httpMethod{{ unique }}">{% endverbatim %}{% trans "Request method:" %}{% verbatim %}</label>
             <select name="httpMethod{{ unique }}" id="httpMethod{{ unique }}" class="http-method pl-1 form-control form-control-inline">
-                <option value="GET" {{#eq value.method "GET"}}selected="selected"{{/eq}}>GET</option>
-                <option value="POST" {{#eq value.method "POST"}}selected="selected"{{/eq}}>POST</option>
-                <option value="PUT" {{#eq value.method "PUT"}}selected="selected"{{/eq}}>PUT</option>
-                <option value="DELETE" {{#eq value.method "DELETE"}}selected="selected"{{/eq}}>DELETE</option>
-                <option value="CONNECT" {{#eq value.method "CONNECT"}}selected="selected"{{/eq}}>CONNECT</option>
-                <option value="HEAD" {{#eq value.method "HEAD"}}selected="selected"{{/eq}}>HEAD</option>
-                <option value="OPTIONS" {{#eq value.method "OPTIONS"}}selected="selected"{{/eq}}>OPTIONS</option>
-                <option value="PATCH" {{#eq value.method "PATCH"}}selected="selected"{{/eq}}>PATCH</option>
-                <option value="TRACE" {{#eq value.method "TRACE"}}selected="selected"{{/eq}}>TRACE</option>
+                <option value="GET" {{#eq value.requestOptions.method "GET"}}selected="selected"{{/eq}}>GET</option>
+                <option value="POST" {{#eq value.requestOptions.method "POST"}}selected="selected"{{/eq}}>POST</option>
+                <option value="PUT" {{#eq value.requestOptions.method "PUT"}}selected="selected"{{/eq}}>PUT</option>
+                <option value="DELETE" {{#eq value.requestOptions.method "DELETE"}}selected="selected"{{/eq}}>DELETE</option>
+                <option value="CONNECT" {{#eq value.requestOptions.method "CONNECT"}}selected="selected"{{/eq}}>CONNECT</option>
+                <option value="HEAD" {{#eq value.requestOptions.method "HEAD"}}selected="selected"{{/eq}}>HEAD</option>
+                <option value="OPTIONS" {{#eq value.requestOptions.method "OPTIONS"}}selected="selected"{{/eq}}>OPTIONS</option>
+                <option value="PATCH" {{#eq value.requestOptions.method "PATCH"}}selected="selected"{{/eq}}>PATCH</option>
+                <option value="TRACE" {{#eq value.requestOptions.method "TRACE"}}selected="selected"{{/eq}}>TRACE</option>
             </select>
         </div>
 

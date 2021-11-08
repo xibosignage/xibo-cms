@@ -104,6 +104,7 @@ Navigator.prototype.render = function() {
 
     if(lD.readOnlyMode === false) {
         this.DOMObject.find('[data-type="layout"]').droppable({
+            tolerance: 'pointer',
             accept: '[drop-to="layout"]',
             drop: function(event, ui) {
                 // Calculate ratio
@@ -142,6 +143,7 @@ Navigator.prototype.render = function() {
         });
 
         this.DOMObject.find('.designer-region').droppable({
+            tolerance: 'pointer',
             greedy: true,
             accept: function(el) {
                 return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region') ||

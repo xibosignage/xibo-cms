@@ -119,6 +119,7 @@ Bottombar.prototype.render = function(element, data) {
             // Handle play button ( play or pause )
             this.DOMObject.find('#play-btn').click(function() {
                 if(lD.viewer.previewPlaying) {
+                    this.DOMObject.find('#play-btn i').removeClass('fa-stop-circle').addClass('fa-play-circle').attr('title', bottombarTrans.playPreviewLayout);
                     app.renderContainer(app.viewer, app.layout);
                 } else {
                     lD.viewer.playPreview(requestPath, lD.viewer.containerElementDimensions);

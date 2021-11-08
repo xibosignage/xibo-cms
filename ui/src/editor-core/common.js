@@ -46,7 +46,15 @@ module.exports = {
         });
 
         // Remove rogue/detached tooltips
-        container.find('.tooltip').remove();
+        this.clearTooltips();
+    },
+
+    /**
+     * Clear Tooltips
+     */
+    clearTooltips: function() {
+        // Remove rogue/detached tooltips
+        $('body').find('.tooltip').remove();
     },
 
     /**
