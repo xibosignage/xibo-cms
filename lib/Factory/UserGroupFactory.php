@@ -458,17 +458,17 @@ class UserGroupFactory extends BaseFactory
                 'dataset.add' => [
                     'feature' => 'dataset.add',
                     'group' => 'library',
-                    'title' => __('Include "Add DataSet" button to allow for additional DataSets to be created independantly to Layouts')
+                    'title' => __('Include "Add DataSet" button to allow for additional DataSets to be created Independently to Layouts')
                 ],
                 'dataset.modify' => [
                     'feature' => 'dataset.modify',
                     'group' => 'library',
-                    'title' => __('Allow edits including deletion to all created DataSets independantly to Layouts')
+                    'title' => __('Allow edits including deletion to all created DataSets Independently to Layouts')
                 ],
                 'dataset.data' => [
                     'feature' => 'dataset.data',
                     'group' => 'library',
-                    'title' => __('Allow edits including deletion to all data contained within a DataSet independantly to Layouts')
+                    'title' => __('Allow edits including deletion to all data contained within a DataSet Independently to Layouts')
                 ],
                 'layout.view' => [
                     'feature' => 'layout.view',
@@ -553,12 +553,12 @@ class UserGroupFactory extends BaseFactory
                 'playlist.add' => [
                     'feature' => 'playlist.add',
                     'group' => 'playlist-design',
-                    'title' => __('Include "Add Playlist" button to allow for additional Layouts to be created independantly to Layouts')
+                    'title' => __('Include "Add Playlist" button to allow for additional Playlists to be created independently to Layouts')
                 ],
                 'playlist.modify' => [
                     'feature' => 'playlist.modify',
                     'group' => 'playlist-design',
-                    'title' => __('Allow edits including deletion to all created Playlists independantly to Layouts')
+                    'title' => __('Allow edits including deletion to all created Playlists independently to Layouts')
                 ],
                 'user.profile' => [
                     'feature' => 'user.profile',
@@ -608,7 +608,7 @@ class UserGroupFactory extends BaseFactory
                 'users.modify' => [
                     'feature' => 'users.modify',
                     'group' => 'users-management',
-                    'title' => __('Allow edits including deletion for all added Users')
+                    'title' => __('Allow Group Admins to edit including deletion, for all added Users within their group')
                 ],
                 'usergroup.view' => [
                     'feature' => 'usergroup.view',
