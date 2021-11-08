@@ -141,6 +141,18 @@ Viewer.prototype.renderLayout = function(layout, container) {
             this.renderRegion(region, this.DOMObject.find('#' + region.id), true, 1);
         }
     }
+
+    // Handle droppables
+    this.DOMObject.find('.designer-region').droppable({
+        greedy: true,
+        tolerance: 'pointer',
+        accept: function(el) {
+            return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region');
+        },
+        drop: _.debounce(function(event, ui) {
+            lD.dropItemAdd(event.target, ui.draggable[0]);
+        }, 200)
+    });
 };
 
 /**
@@ -253,21 +265,6 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                     });
                 }
             }
-
-            container.droppable({
-                greedy: true,
-                tolerance: 'pointer',
-                accept: function(el) {
-                    return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region');
-                },
-                drop: function(event, ui) {
-                    if(ui.helper.hasClass('dropped')) {
-                        return false;
-                    }
-                    lD.dropItemAdd(event.target, ui.draggable[0]);
-                    ui.helper.addClass('dropped');
-                }
-            });
 
             // Enable select for each layout/region
             container.off('click').on('click', function(e) {

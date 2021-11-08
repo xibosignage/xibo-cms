@@ -864,7 +864,7 @@ body, .page-content {
                 font-size: 2em;
             }
 
-            @include set-transparent-color(background, $xibo-color-white, 0.3);
+            @include set-transparent-color(background, $xibo-color-gray, 0.6);
             @include box-shadow(0 0 4px 0px $xibo-color-black);
 
             .loading-icon {
