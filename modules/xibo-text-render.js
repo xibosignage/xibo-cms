@@ -206,15 +206,18 @@ jQuery.fn.extend({
                 });
 
                 var timeout = duration * 1000;
+                var noTransitionSpeed = 10;
 
                 if (options.fx !== "noTransition") {
-                    timeout = timeout - (options.speed * 0.7);
+                    timeout = timeout - options.speed;
+                } else {
+                    timeout = timeout - noTransitionSpeed;
                 }
 
                 // Cycle handles this for us
                 $(this).cycle({
                     fx: (options.fx === "noTransition") ? "none" : options.fx,
-                    speed: (options.fx === "noTransition") ? 1 : options.speed,
+                    speed: (options.fx === "noTransition") ? noTransitionSpeed : options.speed,
                     timeout: timeout,
                     slides: "> " + slides
                 });
@@ -281,16 +284,17 @@ jQuery.fn.extend({
 
                 $(this).wrapInner(scroller);
 
+                // Correct for up / down
+                if (options.fx === "marqueeUp" || options.fx === "marqueeDown") {
+                    $(this).css('height', '100%');
+                    $(this).find('.scroll').css('height', '100%').children().css({"white-space": "normal", float: "none"});
+                }
+
                 // Set some options on the extra DIV and make it a marquee
                 if (!is_android) {
                     $(this).find('.scroll').marquee();
                 } else {
                     $(this).find('.scroll').overflowMarquee();
-                }
-
-                // Correct for up / down
-                if (options.fx === "marqueeUp" || options.fx === "marqueeDown") {
-                    $(this).children().children().css({"white-space": "normal", float: "none"});
                 }
             }
 

@@ -254,8 +254,9 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                 }
             }
 
-            container.find('.designer-region').droppable({
+            container.droppable({
                 greedy: true,
+                tolerance: 'pointer',
                 accept: function(el) {
                     return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region');
                 },
@@ -269,10 +270,12 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
             });
 
             // Enable select for each layout/region
-            container.find('.designer-region.editable.ui-droppable-active').off('click').on('click', function(e) {
-                e.stopPropagation();
-                // Select object
-                lD.selectObject($(this));
+            container.off('click').on('click', function(e) {
+                if($(this).is('.editable, .ui-droppable-active')) {
+                    e.stopPropagation();
+                    // Select object
+                    lD.selectObject($(this));
+                }
             });
 
             // Click element to select it

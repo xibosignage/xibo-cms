@@ -212,6 +212,7 @@ Drawer.prototype.render = function() {
         // Drawer content
         this.DOMObject.find('#actions-drawer-content').droppable({
             accept: '[drop-to="region"]',
+            tolerance: 'pointer',
             drop: function(event, ui) {
                 if (self.opened) {
                     lD.dropItemAdd(event.target, ui.draggable[0]);
@@ -226,6 +227,7 @@ Drawer.prototype.render = function() {
 
         this.DOMObject.find('.designer-widget').droppable({
             greedy: true,
+            tolerance: 'pointer',
             accept: function(el) {
                 return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'widget') ||
                     ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');

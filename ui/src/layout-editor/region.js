@@ -31,6 +31,9 @@ let Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
     this.isDeletable = data.isDeletable;
     this.isPermissionsModifiable = data.isPermissionsModifiable;
 
+    // Interactive actions
+    this.actions = data.actions;
+
     // set real dimentions
     this.dimensions = {
         width: data.width,

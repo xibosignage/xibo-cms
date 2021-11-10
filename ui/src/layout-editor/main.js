@@ -354,6 +354,9 @@ $(document).ready(function() {
  * @param {number=} [options.positionToAdd = null] - Order position for widget
  */
 lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = null} = {}) {
+    // Clear rogue tooltips
+    lD.common.clearTooltips();
+
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 
@@ -458,7 +461,7 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
             } else if(newSelectedType === 'widget') {
                 // Close navigator mode when selecting a widget
                 if(lD.navigatorMode) {
-                    lD.toggleNavigatorEditing(false);
+                    lD.toggleNavigatorEditing(false, false);
                 }
 
                 if(newSelectedParentType == 'drawer') {
@@ -800,8 +803,9 @@ lD.renderContainer = function(container, element = {}) {
 /**
  * Toggle editing functionality on Navigator
  * @param {boolean} enable - flag to toggle the editing
+ * @param {boolean} reload - flag to force reload data
  */
-lD.toggleNavigatorEditing = function(enable) {
+lD.toggleNavigatorEditing = function(enable, reload = true) {
 
     // Unselect objects ( select layout )
     this.selectObject();
@@ -831,8 +835,10 @@ lD.toggleNavigatorEditing = function(enable) {
     } else {
         lD.navigatorMode = false;
 
-        // Refresh designer
-        this.reloadData(lD.layout);
+        // Reload designer
+        if(reload) {
+            this.reloadData(lD.layout);
+        }
 
         // Clean variable
         this.navigator = {};

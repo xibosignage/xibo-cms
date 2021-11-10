@@ -124,6 +124,7 @@ pE.loadEditor = function() {
                 pE.editorContainer.html(playlistEditorTemplate());
                 // Initialise dropabble containers
                 pE.editorContainer.find('#playlist-timeline, #dropzone-container').droppable({
+                    tolerance: 'pointer',
                     accept: '[drop-to="region"]',
                     drop: function(event, ui) {
                         pE.playlist.addElement(event.target, ui.draggable[0]);
@@ -234,6 +235,9 @@ window.getXiboApp = function() {
  * @param {number=} [options.positionToAdd = null] - Order position for widget
  */
 pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = null} = {}) {
+    // Clear rogue tooltips
+    pE.common.clearTooltips();
+    
     // If there is a selected card, use the drag&drop simulate to add that item to a object
     if(!$.isEmptyObject(this.toolbar.selectedCard)) {
 

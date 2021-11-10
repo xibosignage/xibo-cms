@@ -37,18 +37,18 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
     it('opens a media tab in the toolbar and searches for items', () => {
 
         cy.server();
-        cy.route('/library?assignable=1&retired=0&*').as('mediaLoad');
+        cy.route('/library/search?assignable=1&retired=0&*').as('mediaLoad');
 
         cy.populateLibraryWithMedia();
 
         // Open library search tab
         cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar #btn-menu-2').should('be.visible').click();
+        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
 
         cy.wait('@mediaLoad');
 
         // Check if there are audio items in the search content
-        cy.get('#playlist-editor-toolbar #content-2 .toolbar-card').should('be.visible');
+        cy.get('#playlist-editor-toolbar #content-1 .toolbar-card').should('be.visible');
     });
 
     it('creates a new widget by selecting a searched media from the toolbar to the editor, and then reverts the change', () => {
@@ -58,7 +58,7 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
         cy.server();
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
         cy.route('DELETE', '/playlist/widget/*').as('deleteWidget');
-        cy.route('/library?assignable=1&retired=0&*').as('mediaLoad');
+        cy.route('/library/search?assignable=1&retired=0&*').as('mediaLoad');
 
         // Open library search tab
         cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();

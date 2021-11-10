@@ -589,6 +589,13 @@ Timeline.prototype.render = function(layout) {
         lD.openPlaylistEditor(playlistId, region);
     });
 
+    this.DOMObject.find('.open-region-actions').click(function() {
+        const regionId = $(this).parents('.designer-region-info').data('region');
+        lD.toggleNavigatorEditing(true);
+        lD.propertiesPanel.openTabOnRender = 'a[href="#actionTab"]';
+        lD.selectObject(self.DOMObject.find('#' + regionId), true);
+    });
+
     // Select region to edit
     this.DOMObject.find('.edit-region, .region-preview').click(function() {
         const regionId = $(this).parents('.designer-region-info').data('region');
@@ -597,6 +604,7 @@ Timeline.prototype.render = function(layout) {
     });
 
     this.DOMObject.find('.designer-region').droppable({
+        tolerance: 'pointer',
         accept: function(el) {
             return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region') ||
                 ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
@@ -608,6 +616,7 @@ Timeline.prototype.render = function(layout) {
 
     this.DOMObject.find('.designer-region-overlay-step').droppable({
         greedy: true,
+        tolerance: 'pointer',
         accept: function(el) {
             const $parentRegion = $(this).parents('.designer-region');
 
@@ -624,6 +633,7 @@ Timeline.prototype.render = function(layout) {
 
     this.DOMObject.find('.designer-widget').droppable({
         greedy: true,
+        tolerance: 'pointer',
         accept: function(el) {
             const allowDropToWidget =
                 $(this).hasClass("editable") &&

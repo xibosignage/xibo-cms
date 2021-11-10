@@ -34,6 +34,16 @@
                 data-title="{{trans.dimensionsDetail}}">
                 <i class="fa fa-arrows layout-info-icon"></i><span class="layout-info-label">{{trans.dimensions}}:</span>{{mainObject.width}}x{{mainObject.height}}
             </span>
+
+            {{#if mainObject.actions }}
+                <span class="layout-info-actions"
+                    data-toggle="tooltip" 
+                    data-placement="bottom"
+                    data-container=".editor-top-bar" 
+                    data-title="{{trans.layoutActions}} {{ mainObject.actions.length}}">
+                    <i class="fa fa-paper-plane layout-info-icon"></i><span class="layout-info-label">{{trans.layoutActions}} {{ mainObject.actions.length}}
+                </span>
+            {{/if}}
         </div>
 
         {{!-- Right menu --}}
