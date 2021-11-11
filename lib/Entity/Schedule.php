@@ -269,6 +269,8 @@ class Schedule implements \JsonSerializable
 
     private $datesToFormat = ['toDt', 'fromDt'];
 
+    private $dayPart = null;
+
     /**
      * @var ConfigServiceInterface
      */
@@ -516,6 +518,11 @@ class Schedule implements \JsonSerializable
             . '. DayPartId: ' . $this->dayPartId
             . ', CampaignId: ' . $this->campaignId
             . ', CommandId: ' . $this->commandId);
+
+        // If we are a custom day part, make sure we don't have a fromDt which is way in the past
+        if ($this->isCustomDayPart() && $this->fromDt < Date::now()->subYears(10)->format('U')) {
+            throw new InvalidArgumentException(__('The from date is too far in the past.'), 'fromDt');
+        }
 
         if ($this->eventTypeId == Schedule::$LAYOUT_EVENT ||
             $this->eventTypeId == Schedule::$CAMPAIGN_EVENT ||
@@ -1236,7 +1243,8 @@ class Schedule implements \JsonSerializable
             // End is always based on Start
             $end->setTimestamp($start->format('U'));
 
-            $dayPart = $this->dayPartFactory->getById($this->dayPartId);
+            // Get the day part
+            $dayPart = $this->getDayPart();
 
             $this->getLog()->debug('Start and end time for dayPart is ' . $dayPart->startTime . ' - ' . $dayPart->endTime);
 
@@ -1368,15 +1376,26 @@ class Schedule implements \JsonSerializable
     }
 
     /**
+     * @return \Xibo\Entity\DayPart
+     * @throws \Xibo\Exception\NotFoundException
+     */
+    private function getDayPart()
+    {
+        if ($this->dayPart === null) {
+            $this->dayPart = $this->dayPartFactory->getById($this->dayPartId);
+        }
+
+        return $this->dayPart;
+    }
+
+    /**
      * Is this event an always daypart event
      * @return bool
      * @throws \Xibo\Exception\NotFoundException
      */
     public function isAlwaysDayPart()
     {
-        $dayPart = $this->dayPartFactory->getById($this->dayPartId);
-
-        return $dayPart->isAlways === 1;
+        return $this->getDayPart()->isAlways === 1;
     }
 
     /**
@@ -1386,9 +1405,7 @@ class Schedule implements \JsonSerializable
      */
     public function isCustomDayPart()
     {
-        $dayPart = $this->dayPartFactory->getById($this->dayPartId);
-
-        return $dayPart->isCustom === 1;
+        return $this->getDayPart()->isCustom === 1;
     }
 
     /**
