@@ -1163,7 +1163,7 @@ class Layout implements \JsonSerializable
                 $mediaNode->setAttribute('render', ($renderAs == '') ? 'native' : $renderAs);
 
                 // Set the duration according to whether we are using widget duration or not
-                $isEndDetectVideoWidget = ($widget->type === 'video' && $widget->useDuration === 0);
+                $isEndDetectVideoWidget = (($widget->type === 'video' || $widget->type === 'audio') && $widget->useDuration === 0);
                 $mediaNode->setAttribute('duration', ($isEndDetectVideoWidget ? 0 : $widgetDuration));
                 $mediaNode->setAttribute('useDuration', $widget->useDuration);
 
