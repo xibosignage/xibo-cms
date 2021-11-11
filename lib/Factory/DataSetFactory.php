@@ -199,6 +199,7 @@ class DataSetFactory extends BaseFactory
             dataset.`userAgent`,
             dataset.`refreshRate`,
             dataset.`clearRate`,
+            dataset.`truncateOnEmpty`,
             dataset.`runsAfter`,
             dataset.`dataRoot`,
             dataset.`summarize`,

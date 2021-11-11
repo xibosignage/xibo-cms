@@ -77,14 +77,14 @@ class RemoteDataSetFetchTask implements TaskInterface
         $dataSets = $this->orderDataSetsByDependency($this->dataSetFactory->query(null, ['isRemote' => 1]));
 
         // Log the order.
-        $this->log->debug('Order of processing: ' . json_encode(array_map(function($element) {
+        $this->log->debug(
+            'Order of processing: ' . json_encode(array_map(function ($element) {
                 return $element->dataSetId . ' - ' . $element->runsAfter;
             }, $dataSets))
         );
 
         // Reorder this list according to which order we want to run in
         foreach ($dataSets as $dataSet) {
-
             $this->log->debug('Processing ' . $dataSet->dataSet . '. ID:' . $dataSet->dataSetId);
             $hardRowLimit = $this->config->getSetting('DATASET_HARD_ROW_LIMIT');
             $softRowLimit = $dataSet->rowLimit;
@@ -102,7 +102,6 @@ class RemoteDataSetFetchTask implements TaskInterface
                 $this->log->debug('Comparing run time ' . $runTime . ' to next sync time ' . $dataSet->getNextSyncTime());
 
                 if ($runTime >= $dataSet->getNextSyncTime()) {
-
                     // Getting the dependant DataSet to process the current DataSet on
                     $dependant = null;
                     if ($dataSet->runsAfter != null && $dataSet->runsAfter != $dataSet->dataSetId) {
@@ -128,7 +127,6 @@ class RemoteDataSetFetchTask implements TaskInterface
 
                         // row limit reached
                         if ($currentNumberOfRows + $rowsToAdd >= $hardRowLimit || $softRowLimit != null && $currentNumberOfRows + $rowsToAdd >= $softRowLimit) {
-
                             // handle remote DataSets created before introduction of limit policy
                             if ($limitPolicy == null) {
                                 $this->log->debug('No limit policy set, default to stop syncing.');
@@ -162,17 +160,23 @@ class RemoteDataSetFetchTask implements TaskInterface
 
                         // notify here
                         $dataSet->notify();
-
                     } else {
-                        $this->appendRunMessage(__('No results for %s', $dataSet->dataSet));
+                        if ($dataSet->truncateOnEmpty && $dataSet->isTruncateEnabled() && $runTime >= $dataSet->getNextClearTime()) {
+                            $this->log->debug('Truncate ' . $dataSet->dataSet);
+                            $dataSet->deleteData();
+
+                            // Update the last clear time.
+                            $dataSet->saveLastClear($runTime);
+                            $this->appendRunMessage(__('No results for %s, truncate with no new data enabled', $dataSet->dataSet));
+                        } else {
+                            $this->appendRunMessage(__('No results for %s', $dataSet->dataSet));
+                        }
                     }
 
                     $dataSet->saveLastSync($runTime);
-
                 } else {
                     $this->log->debug('Sync not required for ' . $dataSet->dataSetId);
                 }
-
             } catch (GeneralException $e) {
                 $this->appendRunMessage(__('Error syncing DataSet %s', $dataSet->dataSet));
                 $this->log->error('Error syncing DataSet ' . $dataSet->dataSetId . '. E = ' . $e->getMessage());
@@ -222,31 +226,31 @@ class RemoteDataSetFetchTask implements TaskInterface
     {
         // DataSets are in no particular order
         // sort them according to their dependencies
-        usort($dataSets, function($a, $b) {
+        usort($dataSets, function ($a, $b) {
             /** @var DataSet $a */
             /** @var DataSet $b */
             // if a doesn't have a dependent, then a must be lower in the list (move b up)
-            if ($a->runsAfter === null)
+            if ($a->runsAfter === null) {
                 return -1;
-
+            }
             // if b doesn't have a dependent, then a must be higher in the list (move b down)
-            if ($b->runsAfter === null)
+            if ($b->runsAfter === null) {
                 return 1;
-
+            }
             // either a or b have a dependent
             // if they are the same, keep them where they are
-            if ($a->runsAfter === $b->runsAfter)
+            if ($a->runsAfter === $b->runsAfter) {
                 return 0;
-
+            }
             // the dependents are different.
             // if a depends on b, then move b up
-            if ($a->runsAfter === $b->dataSetId)
+            if ($a->runsAfter === $b->dataSetId) {
                 return -1;
-
+            }
             // if b depends on a, then move b down
-            if ($b->runsAfter === $a->dataSetId)
+            if ($b->runsAfter === $a->dataSetId) {
                 return 1;
-
+            }
             // Unsorted
             return 0;
         });
