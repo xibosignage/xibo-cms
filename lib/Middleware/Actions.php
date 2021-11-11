@@ -113,12 +113,6 @@ class Actions extends Middleware
                         }
                     }
 
-                    // Language match?
-                    if (Translate::getRequestedLanguage() != Translate::GetLocale()) {
-                        $notifications[] = $factory->create(__('Your requested language %s could not be loaded.', Translate::getRequestedLanguage()));
-                        $extraNotifications++;
-                    }
-
                     // User notifications
                     $notifications = array_merge($notifications, $factory->getMine());
 
