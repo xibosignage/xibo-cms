@@ -1300,7 +1300,7 @@ class Layout implements \JsonSerializable
             // Get stored as
             $media = $this->mediaFactory->getById($this->backgroundImageId);
             if ($media->released === 1) {
-                $this->pushStatusMessage( __('%s set as the Layout background image is pending conversion', $media->name));
+                $this->pushStatusMessage(__('%s set as the Layout background image is pending conversion', $media->name));
                 $this->status = ModuleWidget::$STATUS_PLAYER;
             } else if ($media->released === 2) {
                 $resizeLimit = $this->config->getSetting('DEFAULT_RESIZE_LIMIT');
