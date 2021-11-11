@@ -1082,7 +1082,6 @@ class LayoutFactory extends BaseFactory
 
         // for old imports it may not exist and would error out without this check.
         if (array_key_exists('layoutDefinitions', $layoutDetails)) {
-
             // Construct the Layout
             if ($playlistDetails !== false) {
                 $playlistDetails = json_decode(($playlistDetails), true);
