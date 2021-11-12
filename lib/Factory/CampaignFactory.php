@@ -244,7 +244,7 @@ class CampaignFactory extends BaseFactory
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $this->getSanitizer()->getCheckbox('exactTags', $filterBy) == 1 ? '=' : 'LIKE';
 
                 $body .= " AND campaign.campaignID IN (
                 SELECT lktagcampaign.campaignId

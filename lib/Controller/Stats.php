@@ -925,8 +925,24 @@ class Stats extends Base
         $sortOrder = $this->gridRenderSort();
 
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
+            $newSortOrder = [];
+            foreach ($sortOrder as $sort) {
+                if ($sort == '`bytesUsedFormatted`') {
+                    $newSortOrder[] = '`bytesUsed`';
+                    continue;
+                }
+
+                if ($sort == '`bytesUsedFormatted` DESC') {
+                    $newSortOrder[] = '`bytesUsed` DESC';
+                    continue;
+                }
+                $newSortOrder[] = $sort;
+            }
+            $sortOrder = $newSortOrder;
+
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
+        }
 
         $limit = '';
         // Paging
@@ -1063,7 +1079,7 @@ class Stats extends Base
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $this->getSanitizer()->getCheckbox('exactTags', $filterBy) == 1 ? '=' : 'LIKE';
 
                 $body .= " AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId

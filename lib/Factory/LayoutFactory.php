@@ -1909,7 +1909,7 @@ class LayoutFactory extends BaseFactory
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $this->getSanitizer()->getCheckbox('exactTags', $filterBy) == 1 ? '=' : 'LIKE';
 
                 $body .= " AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
