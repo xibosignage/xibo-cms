@@ -120,7 +120,7 @@ class Folder extends Base
 
         foreach ($children as $childId) {
             try {
-                $child = $this->folderFactory->getById($childId, 1);
+                $child = $this->folderFactory->getById($childId);
 
                 if ($child->children != null) {
                     $this->buildTreeView($child);

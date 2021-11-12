@@ -547,13 +547,13 @@ class Notification extends Base
 
         $notification->save();
 
-        $attachedFilename = $sanitizedParams->getString('attachedFilename');
+        $attachedFilename = $sanitizedParams->getString('attachedFilename', ['defaultOnEmptyString' => true]);
         $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
-        $saveName = $notification->notificationId .'_' .$attachedFilename;
-
         if (!empty($attachedFilename)) {
-
+            $saveName = $notification->notificationId .'_' .$attachedFilename;
+            $notification->filename = $saveName;
+            $notification->originalFileName = $attachedFilename;
             // Move the file into the library
             // Try to move the file first
             $from = $libraryFolder . 'temp/' . $attachedFilename;
@@ -576,12 +576,9 @@ class Notification extends Base
             if (!$moved) {
                 throw new ConfigurationException(__('Problem moving uploaded file into the Attachment Folder'));
             }
+
+            $notification->save();
         }
-
-        $notification->filename = $saveName;
-        $notification->originalFileName = $attachedFilename;
-
-        $notification->save();
 
         // Return
         $this->getState()->hydrate([

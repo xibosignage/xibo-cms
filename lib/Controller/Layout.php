@@ -630,7 +630,8 @@ class Layout extends Base
                 // if the folder changed on original Layout, make sure we keep its regionPlaylists and draft regionPlaylists updated
                 if ($folderChanged) {
                     $savedLayout->load();
-                    foreach ($savedLayout->regions as $region) {
+                    $allRegions = array_merge($savedLayout->regions, $savedLayout->drawers);
+                    foreach ($allRegions as $region) {
                         $playlist = $region->getPlaylist();
                         $playlist->folderId = $editedLayout->folderId;
                         $playlist->permissionsFolderId = $editedLayout->permissionsFolderId;

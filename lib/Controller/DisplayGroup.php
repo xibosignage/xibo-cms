@@ -2427,7 +2427,7 @@ class DisplayGroup extends Base
      */
     public function selectFolderForm(Request $request, Response $response, $id)
     {
-        // Get the Layout
+        // Get the Display Group
         $displayGroup = $this->displayGroupFactory->getById($id);
 
         // Check Permissions
@@ -2470,7 +2470,7 @@ class DisplayGroup extends Base
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
-     *      @SWG\Schema(ref="#/definitions/Campaign")
+     *      @SWG\Schema(ref="#/definitions/DisplayGroup")
      *  )
      * )
      *
@@ -2502,7 +2502,11 @@ class DisplayGroup extends Base
         $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
 
         // Save
-        $displayGroup->save();
+        $displayGroup->save([
+            'manageLinks' => false,
+            'manageDisplayLinks' => false,
+            'manageDynamicDisplayLinks' => false,
+        ]);
 
         // Return
         $this->getState()->hydrate([
