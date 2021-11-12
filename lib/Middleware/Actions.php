@@ -175,13 +175,6 @@ class Actions implements Middleware
                     }
                 }
 
-                // Language match?
-                if (Translate::getRequestedLanguage() != Translate::GetLocale()) {
-                    $notifications[] = $factory->create(__('Your requested language %s could not be loaded.',
-                        Translate::getRequestedLanguage()));
-                    $extraNotifications++;
-                }
-
                 // User notifications
                 $notifications = array_merge($notifications, $factory->getMine());
                 // If we aren't already in a notification interrupt, then check to see if we should be

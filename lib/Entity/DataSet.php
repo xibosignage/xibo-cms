@@ -172,6 +172,12 @@ class DataSet implements \JsonSerializable
     public $clearRate;
 
     /**
+     * @SWG\Property(description="Flag whether to truncate DataSet data if no new data is pulled from remote source")
+     * @var int
+     */
+    public $truncateOnEmpty;
+
+    /**
      * @SWG\Property(description="DataSetID of the DataSet which should be fetched and present before the Data from this DataSet are fetched")
      * @var int
      */
@@ -969,8 +975,8 @@ class DataSet implements \JsonSerializable
 
         // Insert the extra columns we expect for a remote DataSet
         if ($this->isRemote === 1) {
-            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `userAgent`, `refreshRate`, `clearRate`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`, `csvSeparator`';
-            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :userAgent, :refreshRate, :clearRate, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy, :csvSeparator';
+            $columns .= ', `method`, `uri`, `postData`, `authentication`, `username`, `password`, `customHeaders`, `userAgent`, `refreshRate`, `clearRate`, `truncateOnEmpty`, `runsAfter`, `dataRoot`, `lastSync`, `summarize`, `summarizeField`, `sourceId`, `ignoreFirstRow`, `rowLimit`, `limitPolicy`, `csvSeparator`';
+            $values .= ', :method, :uri, :postData, :authentication, :username, :password, :customHeaders, :userAgent, :refreshRate, :clearRate, :truncateOnEmpty, :runsAfter, :dataRoot, :lastSync, :summarize, :summarizeField, :sourceId, :ignoreFirstRow, :rowLimit, :limitPolicy, :csvSeparator';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -982,6 +988,7 @@ class DataSet implements \JsonSerializable
             $params['userAgent'] = $this->userAgent;
             $params['refreshRate'] = $this->refreshRate;
             $params['clearRate'] = $this->clearRate;
+            $params['truncateOnEmpty'] = $this->truncateOnEmpty;
             $params['runsAfter'] = $this->runsAfter;
             $params['dataRoot'] = $this->dataRoot;
             $params['summarize'] = $this->summarize;
@@ -1021,7 +1028,7 @@ class DataSet implements \JsonSerializable
         ];
 
         if ($this->isRemote) {
-            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, `userAgent` = :userAgent, refreshRate = :refreshRate, clearRate = :clearRate, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy, `csvSeparator` = :csvSeparator ';
+            $sql .= ', method = :method, uri = :uri, postData = :postData, authentication = :authentication, `username` = :username, `password` = :password, `customHeaders` = :customHeaders, `userAgent` = :userAgent, refreshRate = :refreshRate, clearRate = :clearRate, truncateOnEmpty = :truncateOnEmpty, runsAfter = :runsAfter, `dataRoot` = :dataRoot, `summarize` = :summarize, `summarizeField` = :summarizeField, `sourceId` = :sourceId, `ignoreFirstRow` = :ignoreFirstRow , `rowLimit` = :rowLimit, `limitPolicy` = :limitPolicy, `csvSeparator` = :csvSeparator ';
 
             $params['method'] = $this->method;
             $params['uri'] = $this->uri;
@@ -1033,6 +1040,7 @@ class DataSet implements \JsonSerializable
             $params['userAgent'] = $this->userAgent;
             $params['refreshRate'] = $this->refreshRate;
             $params['clearRate'] = $this->clearRate;
+            $params['truncateOnEmpty'] = $this->truncateOnEmpty;
             $params['runsAfter'] = $this->runsAfter;
             $params['dataRoot'] = $this->dataRoot;
             $params['summarize'] = $this->summarize;

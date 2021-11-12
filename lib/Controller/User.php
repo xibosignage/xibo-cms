@@ -336,9 +336,11 @@ class User extends Base
                 ];
             }
 
-            if ($this->getUser()->isSuperAdmin()
+            if ($this->getUser()->featureEnabled('users.modify')
+                && $this->getUser()->checkDeleteable($user)
                 && $user->userId != $this->getConfig()->getSetting('SYSTEM_USER')
                 && $this->getUser()->userId !== $user->userId
+                && ( ($this->getUser()->isGroupAdmin() && $user->userTypeId == 3) || $this->getUser()->isSuperAdmin() )
             ) {
                 // Delete
                 $user->buttons[] = [
@@ -597,7 +599,7 @@ class User extends Base
         if (!empty($user->homePageId)) {
             $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
             if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
-                throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
+                throw new InvalidArgumentException(__('User does not have the enabled Feature for this Dashboard'), 'homePageId');
             }
         }
 
@@ -828,7 +830,7 @@ class User extends Base
         // Handle enabled features for the homepage.
         $homepage = $this->userGroupFactory->getHomepageByName($user->homePageId);
         if (!empty($homepage->feature) && !$user->featureEnabled($homepage->feature)) {
-            throw new InvalidArgumentException(__('User does not have permission for this homepage'), 'homePageId');
+            throw new InvalidArgumentException(__('User does not have the enabled Feature for this Dashboard'), 'homePageId');
         }
 
         $this->getLog()->debug('Homepage validated.');
@@ -940,6 +942,10 @@ class User extends Base
 
         if ($this->getUser()->userId === $user->userId) {
             throw new InvalidArgumentException(__('Cannot delete your own User from the CMS.'));
+        }
+
+        if ($this->getUser()->isGroupAdmin() && $user->userTypeId !== 3) {
+            throw new InvalidArgumentException(__('Group Admin cannot remove Super Admins or other Group Admins.'));
         }
 
         if ($sanitizedParams->getCheckbox('deleteAllItems') && $user->isSuperAdmin()) {
@@ -2374,7 +2380,7 @@ class User extends Base
     {
         $parsedParams = $this->getSanitizer($request->getParams());
 
-        $this->getUser()->setOptionValue('navigationMenuPosition', $parsedParams->getString('navigationMenuPosition'));
+        $this->getUser()->setOptionValue('navigationMenuPosition', $parsedParams->getString('navigationMenuPosition', ['defaultOnEmptyString' => true]));
         $this->getUser()->setOptionValue('useLibraryDuration', $parsedParams->getCheckbox('useLibraryDuration'));
         $this->getUser()->setOptionValue('showThumbnailColumn', $parsedParams->getCheckbox('showThumbnailColumn'));
         $this->getUser()->setOptionValue('isAlwaysUseManualAddUserForm', $parsedParams->getCheckbox('isAlwaysUseManualAddUserForm'));

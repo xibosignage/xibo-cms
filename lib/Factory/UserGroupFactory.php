@@ -546,7 +546,7 @@ class UserGroupFactory extends BaseFactory
                 'playlist.add' => [
                     'feature' => 'playlist.add',
                     'group' => 'playlist-design',
-                    'title' => __('Include "Add Playlist" button to allow for additional Layouts to be created independently to Layouts')
+                    'title' => __('Include "Add Playlist" button to allow for additional Playlists to be created independently to Layouts')
                 ],
                 'playlist.modify' => [
                     'feature' => 'playlist.modify',
@@ -601,7 +601,7 @@ class UserGroupFactory extends BaseFactory
                 'users.modify' => [
                     'feature' => 'users.modify',
                     'group' => 'users-management',
-                    'title' => __('Allow edits including deletion for all added Users')
+                    'title' => __('Allow Group Admins to edit including deletion, for all added Users within their group')
                 ],
                 'usergroup.view' => [
                     'feature' => 'usergroup.view',

@@ -377,6 +377,12 @@ class UserGroup extends Base
         // Save
         $group->save();
 
+        // icondashboard does not need features, otherwise assign the feature matching selected homepage.
+        if ($group->defaultHomepageId !== 'icondashboard.view' && !empty($group->defaultHomepageId)) {
+            $group->features[] = $this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature;
+            $group->saveFeatures();
+        }
+
         // Return
         $this->getState()->hydrate([
             'message' => sprintf(__('Added %s'), $group->group),
@@ -497,6 +503,15 @@ class UserGroup extends Base
             $group->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
             $group->isShownForAddUser = $sanitizedParams->getCheckbox('isShownForAddUser');
             $group->defaultHomepageId = $sanitizedParams->getString('defaultHomepageId');
+
+            // if we have homepage set assign matching feature if it does not already exist
+            if (!in_array($this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature, $group->features)
+                && $group->defaultHomepageId !== 'icondashboard.view'
+                && !empty($group->defaultHomepageId)
+            ) {
+                $group->features[] = $this->userGroupFactory->getHomepageByName($group->defaultHomepageId)->feature;
+                $group->saveFeatures();
+            }
         }
 
         // Save

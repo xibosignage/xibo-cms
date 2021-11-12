@@ -173,7 +173,7 @@ class WebPage extends ModuleWidget
         $this->setOption('name', $sanitizedParams->getString('name'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->setOption('transparency', $sanitizedParams->getCheckbox('transparency'));
-        $this->setOption('uri', $sanitizedParams->getString('uri'));
+        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
         $this->setOption('scaling', $sanitizedParams->getInt('scaling'));
         $this->setOption('offsetLeft', $sanitizedParams->getInt('offsetLeft'));
         $this->setOption('offsetTop', $sanitizedParams->getInt('offsetTop'));
