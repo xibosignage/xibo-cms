@@ -522,7 +522,7 @@ class Calendar extends ModuleWidget
                     $("body").find("img").xiboImageRender(options);
                     $("body").xiboLayoutScaler(options);
                     
-                    const runOnVisible = function() { $("#content").xiboTextRender(options, parsedItems); };
+                    var runOnVisible = function() { $("#content").xiboTextRender(options, parsedItems); };
                     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
 
                     if(ongoingEvent && currentEventTrigger) {
