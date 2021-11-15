@@ -546,7 +546,9 @@ function Region(parent, id, xml, options, preload) {
     };
     
     self.run = function() {
-        self.nextMedia();
+        if (self.totalMediaObjects > 0) {
+            self.nextMedia();
+        }
     };
 
     /* Build Region Options */
@@ -979,6 +981,12 @@ function ActionController(parent, actions, options) {
 
         // Mark media as temporary ( removed after region stop playing or loops )
         targetMedia.singlePlay = true;
+
+        // If region is empty, remove the background colour and empty message
+        if(targetRegion.mediaObjects.length === 0) {
+            $('#' + targetRegion.containerName).find('.empty-message').remove();
+            $('#' + targetRegion.containerName).css('background-color', '');
+        }
         
         // Create media in region and play it next
         targetRegion.mediaObjects.splice(targetRegion.currentMedia + 1, 0, targetMedia);
