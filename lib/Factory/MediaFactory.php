@@ -293,7 +293,7 @@ class MediaFactory extends BaseFactory
             // Create a generator and Pool
             $log = $this->getLog();
             $queue = $this->remoteDownloadQueue;
-            $client = new Client($this->config->getGuzzleProxy());
+            $client = new Client($this->config->getGuzzleProxy(['timeout' => 0]));
 
             $downloads = function () use ($client, $queue) {
                 foreach ($queue as $media) {
