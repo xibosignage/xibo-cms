@@ -889,8 +889,8 @@ function ActionController(parent, actions, options) {
     self.parent = parent;
     self.actions = [];
 
-    $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
-    $container.append($('<div class="action-controller-title"><span class="title">' + previewTranslations.actionControllerTitle.toUpperCase() + '</span><button class="toggle"></button></div>'));
+    var $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
+    $container.append($('<div class="action-controller-title"><button class="toggle"></button><span class="title">' + previewTranslations.actionControllerTitle + '</span></div>'));
 
     for (var index = 0; index < actions.length; index++) {
         var newAction = actions[index];
