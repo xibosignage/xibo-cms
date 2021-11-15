@@ -587,7 +587,7 @@ class DataSetTicker extends ModuleWidget
                     $("body").xiboLayoutScaler(options);
                     $("#content").find("img").xiboImageRender(options);
 
-                    const runOnVisible = function() { $("#content").xiboTextRender(options, items); };
+                    var runOnVisible = function() { $("#content").xiboTextRender(options, items); };
                     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                     
                     // Do we have a freshnessTimeout?

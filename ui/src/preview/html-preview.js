@@ -546,7 +546,9 @@ function Region(parent, id, xml, options, preload) {
     };
     
     self.run = function() {
-        self.nextMedia();
+        if (self.totalMediaObjects > 0) {
+            self.nextMedia();
+        }
     };
 
     /* Build Region Options */
@@ -606,6 +608,9 @@ function Region(parent, id, xml, options, preload) {
     // If the regions does not have any media change its background to transparent red
     if ($(self.xml).children("media").length == 0) {
         $self = $("#" + self.containerName);
+
+        // Mark empty region as complete
+        self.complete = true;
         
         messageSize = (self.sWidth > self.sHeight ) ? self.sHeight : self.sWidth;
         
@@ -887,8 +892,8 @@ function ActionController(parent, actions, options) {
     self.parent = parent;
     self.actions = [];
 
-    $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
-    $container.append($('<div class="action-controller-title"><span class="title">' + previewTranslations.actionControllerTitle.toUpperCase() + '</span><button class="toggle"></button></div>'));
+    var $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
+    $container.append($('<div class="action-controller-title"><button class="toggle"></button><span class="title">' + previewTranslations.actionControllerTitle + '</span></div>'));
 
     for (var index = 0; index < actions.length; index++) {
         var newAction = actions[index];
@@ -979,6 +984,15 @@ function ActionController(parent, actions, options) {
 
         // Mark media as temporary ( removed after region stop playing or loops )
         targetMedia.singlePlay = true;
+
+        // If region is empty, remove the background colour and empty message
+        if(targetRegion.mediaObjects.length === 0) {
+            $('#' + targetRegion.containerName).find('.empty-message').remove();
+            $('#' + targetRegion.containerName).css('background-color', '');
+
+            // Mark empty region as incomplete
+            self.complete = false;
+        }
         
         // Create media in region and play it next
         targetRegion.mediaObjects.splice(targetRegion.currentMedia + 1, 0, targetMedia);
