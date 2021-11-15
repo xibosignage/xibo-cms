@@ -608,6 +608,9 @@ function Region(parent, id, xml, options, preload) {
     // If the regions does not have any media change its background to transparent red
     if ($(self.xml).children("media").length == 0) {
         $self = $("#" + self.containerName);
+
+        // Mark empty region as complete
+        self.complete = true;
         
         messageSize = (self.sWidth > self.sHeight ) ? self.sHeight : self.sWidth;
         
@@ -986,6 +989,9 @@ function ActionController(parent, actions, options) {
         if(targetRegion.mediaObjects.length === 0) {
             $('#' + targetRegion.containerName).find('.empty-message').remove();
             $('#' + targetRegion.containerName).css('background-color', '');
+
+            // Mark empty region as incomplete
+            self.complete = false;
         }
         
         // Create media in region and play it next
