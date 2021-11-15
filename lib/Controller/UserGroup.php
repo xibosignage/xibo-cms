@@ -946,6 +946,13 @@ class UserGroup extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="copyFeatures",
+     *      in="formData",
+     *      description="Flag indicating whether to copy group features",
+     *      type="integer",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -986,6 +993,13 @@ class UserGroup extends Base
         $newGroup = clone $group;
         $newGroup->group = $sanitizedParams->getString('group');
         $newGroup->save();
+
+        // Save features?
+        if ($sanitizedParams->getCheckbox('copyFeatures')) {
+            $newGroup->saveFeatures();
+        } else {
+            $newGroup->features = [];
+        }
 
         // Copy permissions
         foreach ($this->permissionFactory->getByGroupId('Page', $group->groupId) as $permission) {
