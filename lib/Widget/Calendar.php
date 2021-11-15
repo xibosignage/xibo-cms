@@ -698,6 +698,9 @@ class Calendar extends ModuleWidget
                 
                     $("body").find("img").xiboImageRender(options);
                     $("body").xiboLayoutScaler(options);
+                    
+                    var runOnVisible = function() { $("#content").xiboTextRender(options, parsedItems); };
+                    (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
 
                     // Run calendar render
                     $("body").xiboCalendarRender(options, parsedItems);
