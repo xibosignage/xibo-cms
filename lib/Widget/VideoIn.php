@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -134,7 +134,7 @@ class VideoIn extends ModuleWidget
         // Set some options
         $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
         $this->setUseDuration($sanitizedParams->getCheckbox('useDuration'));
-        $this->setOption('sourceId', $sanitizedParams->getString('sourceId' ,['default' => 'hdmi']));
+        $this->setOption('sourceId', $sanitizedParams->getString('sourceId', ['default' => 'hdmi']));
         $this->setOption('showFullScreen', $sanitizedParams->getCheckbox('showFullScreen'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
 
