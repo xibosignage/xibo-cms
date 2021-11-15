@@ -131,36 +131,43 @@ span.empty-icon {
 
 div.action-controller {
     position: absolute;
+    top: 6px;
+    left: 6px;;
     z-index: 2;
     font-family: monospace, monospace;
-    font-size: 1rem;
-    max-width: 280px;
-    background-color: #337ab7;
+    font-size: 0.75rem;
+    background-color: #363636;
+    padding-top: 2px;
     border-radius: 4px;
     opacity: 0.9;
     filter: alpha(opacity=90); /* IE8 and lower */
+    display: flex;
+    flex-direction: column;
+    padding: 0 4px;
+    min-width: 200px;
 }
 
 
 div.action-controller .action-controller-title {
-    padding: 3px;
-    color: #f3f3f3;
-    font-weight: bold;
+    padding: 4px 0;
+    color: #fff;
     cursor: grab;
 }
 
 div.action-controller .action-controller-title .title {
-    margin-right: 4px;
+    margin-left: 4px;
 }
 
 div.action-controller .action-controller-title .toggle {
-    float: right;
-    color: #f3f3f3;
+    cursor: pointer;
+    color: inherit;
     width: 24px;
+    height: 18px;
     padding: 0;
-    background-color: #2568a0;
-    border: 1px solid #3a7db5;
-    font-size: 1rem;
+    background-color: #5f5f5f;
+    border: none;
+    border-radius: 3px;
+    line-height: 12px;
     font-weight: bold;
 }
 
@@ -177,8 +184,14 @@ div.action-controller.d-none .action-controller-title .toggle:after {
 }
 
 div.action-controller.d-none {
-    opacity: 0.7;
-    filter: alpha(opacity=70); /* IE8 and lower */
+    min-width: 100px;
+    opacity: 0.5;
+    filter: alpha(opacity=50); /* IE8 and lower */
+}
+
+div.action-controller.d-none:hover {
+    opacity: 0.8;
+    filter: alpha(opacity=80); /* IE8 and lower */
 }
 
 div.action-controller.d-none .action {
@@ -190,9 +203,16 @@ div.action-controller .action {
     height: 20px;
     border-radius: 4px;
     margin-bottom: 4px;
-    background-color: #273759;
+    background-color: #337ab7;
     padding: 2px 4px;
     color: #f3f3f3;
+    line-height: 20px;
+    display: flex;
+    justify-content: space-between;
+}
+
+div.action-controller .action:hover {
+    background-color: #4289c7;
 }
 
 div.action-controller .action:not([triggerType="webhook"]) {
