@@ -258,10 +258,10 @@ class LayoutFactory extends BaseFactory
         $layout->regions[] = $this->regionFactory->create(
             $layout->ownerId,
             $layout->layout . '-' . count($layout->regions),
-            $layout->width,
-            $layout->height,
-            0,
-            0
+            $width,
+            $height,
+            $top,
+            $left
         );
 
         return $layout;
