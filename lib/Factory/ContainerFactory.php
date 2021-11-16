@@ -33,6 +33,7 @@ use Xibo\Dependencies\DispatcherListeners;
 use Xibo\Dependencies\Factories;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
+use Xibo\Helper\Environment;
 use Xibo\Helper\SanitizerService;
 use Xibo\Middleware\State;
 use Xibo\Service\ConfigService;
@@ -112,7 +113,7 @@ class ContainerFactory
                     PROJECT_ROOT . '/reports',
                     PROJECT_ROOT . '/custom'
                 ], [
-                    'cache' => PROJECT_ROOT . '/cache'
+                    'cache' => Environment::isDevMode() ? false : PROJECT_ROOT . '/cache'
                 ]);
                 $view->addExtension(new TransExtension());
                 $view->addExtension(new ByteFormatterTwigExtension());

@@ -242,14 +242,16 @@ function handleVideoCoverImage(e, data) {
                     video.setAttribute('id', file.name);
                     video.preload = 'metadata';
 
-                    //show help text describing this feature.
-                    var helpText = translations.videoImageCoverHelpText;
-                    $('.template-upload').find('video').closest("tr").find("td span.info")[0].append(helpText);
-
                     getVideoImage(video, 2);
                     video.addEventListener('seeked, pause', seekImage);
                 }
             });
+
+            //show help text describing this feature.
+            var helpText = translations.videoImageCoverHelpText;
+            var $helpTextSelector = $('.template-upload video:first').closest('tr').find('td span.info');
+            $helpTextSelector.empty();
+            $helpTextSelector.append(helpText);
 
             clearInterval(checkExist);
         }

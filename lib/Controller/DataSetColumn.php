@@ -351,7 +351,7 @@ class DataSetColumn extends Base
         $column->showFilter = $sanitizedParams->getCheckbox('showFilter');
         $column->showSort = $sanitizedParams->getCheckbox('showSort');
         $column->tooltip = $sanitizedParams->getString('tooltip');
-        $column->isRequired = $sanitizedParams->getCheckbox('isRequired');
+        $column->isRequired = $sanitizedParams->getCheckbox('isRequired', ['default' => 0]);
 
         if ($column->dataSetColumnTypeId == 3){
             $this->pool->deleteItem('/dataset/cache/' . $dataSet->dataSetId);

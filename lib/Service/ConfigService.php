@@ -569,6 +569,18 @@ class ConfigService implements ConfigServiceInterface
             }
         }
 
+        // Global timeout
+        // All outbound HTTP should have a timeout as they tie up a PHP process while the request completes (if
+        // triggered from an incoming request)
+        // https://github.com/xibosignage/xibo/issues/2631
+        if (!array_key_exists('timeout', $httpOptions)) {
+            $httpOptions['timeout'] = 20;
+        }
+
+        if (!array_key_exists('connect_timeout', $httpOptions)) {
+            $httpOptions['connect_timeout'] = 5;
+        }
+
         return $httpOptions;
     }
 

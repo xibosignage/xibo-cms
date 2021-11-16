@@ -441,6 +441,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="truncateOnEmpty",
+     *      in="formData",
+     *      description="Should the DataSet data be truncated even if no new data is pulled from the source?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="runsAfter",
      *      in="formData",
      *      description="An optional dataSetId which should be run before this Remote DataSet",
@@ -561,6 +568,7 @@ class DataSet extends Base
             $dataSet->userAgent = $sanitizedParams->getString('userAgent');
             $dataSet->refreshRate = $sanitizedParams->getInt('refreshRate');
             $dataSet->clearRate = $sanitizedParams->getInt('clearRate');
+            $dataSet->truncateOnEmpty = $sanitizedParams->getCheckbox('truncateOnEmpty');
             $dataSet->runsAfter = $sanitizedParams->getInt('runsAfter');
             $dataSet->dataRoot = $sanitizedParams->getString('dataRoot');
             $dataSet->summarize = $sanitizedParams->getString('summarize');
@@ -753,6 +761,13 @@ class DataSet extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="truncateOnEmpty",
+     *      in="formData",
+     *      description="Should the DataSet data be truncated even if no new data is pulled from the source?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="runsAfter",
      *      in="formData",
      *      description="An optional dataSetId which should be run before this Remote DataSet",
@@ -860,6 +875,7 @@ class DataSet extends Base
             $dataSet->userAgent = $sanitizedParams->getString('userAgent');
             $dataSet->refreshRate = $sanitizedParams->getInt('refreshRate');
             $dataSet->clearRate = $sanitizedParams->getInt('clearRate');
+            $dataSet->truncateOnEmpty = $sanitizedParams->getCheckbox('truncateOnEmpty');
             $dataSet->runsAfter = $sanitizedParams->getInt('runsAfter');
             $dataSet->dataRoot = $sanitizedParams->getString('dataRoot');
             $dataSet->summarize = $sanitizedParams->getString('summarize');

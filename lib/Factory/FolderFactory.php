@@ -64,7 +64,7 @@ class FolderFactory extends BaseFactory
      * @return Folder
      * @throws NotFoundException
      */
-    public function getById($folderId, $disableUserCheck = 0)
+    public function getById($folderId, $disableUserCheck = 1)
     {
         $folder = $this->query(null, ['folderId' => $folderId, 'disableUserCheck' => $disableUserCheck]);
 

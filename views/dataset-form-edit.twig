@@ -269,6 +269,10 @@
                         ] %}
                         {{ forms.dropdown("clearRate", "single", title, dataSet.clearRate, options, "typeid", "type", helpText) }}
 
+                        {% set title %}{% trans "Truncate with no new data?" %}{% endset %}
+                        {% set helpText %}{% trans "Should the DataSet data be truncated even if no new data is pulled from the source?" %}{% endset %}
+                        {{ forms.checkbox("truncateOnEmpty", title, dataSet.truncateOnEmpty, helpText) }}
+
                         {% set title %}{% trans "Depends on DataSet" %}{% endset %}
                         {% set dataSets = [{dataSetId: null, dataSet: ""}]|merge(dataSets) %}
                         {% set helpText %}{% trans "The DataSet you select here will be processed in advance and have its values available for subsitution in the data to add to this request on the Remote tab." %}{% endset %}

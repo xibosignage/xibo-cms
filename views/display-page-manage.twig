@@ -267,7 +267,6 @@
                 data: $("#bandwidthFilter").find("form").serialize(),
                 success: function(response) {
                     if (bandwidthChart !== undefined && bandwidthChart !== null) {
-                        console.log('Destroying Chart');
                         bandwidthChart.destroy();
                     }
 

@@ -840,7 +840,7 @@ class Currencies extends AlphaVantageBase
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboFinanceRender(options, items, body); }; ';
+        $javaScriptContent .= '       var runOnVisible = function() { $("#content").xiboFinanceRender(options, items, body); }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
 
         $javaScriptContent .= '   }); ';

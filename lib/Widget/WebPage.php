@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -173,7 +173,7 @@ class WebPage extends ModuleWidget
         $this->setOption('name', $sanitizedParams->getString('name'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
         $this->setOption('transparency', $sanitizedParams->getCheckbox('transparency'));
-        $this->setOption('uri', $sanitizedParams->getString('uri'));
+        $this->setOption('uri', urlencode($sanitizedParams->getString('uri')));
         $this->setOption('scaling', $sanitizedParams->getInt('scaling'));
         $this->setOption('offsetLeft', $sanitizedParams->getInt('offsetLeft'));
         $this->setOption('offsetTop', $sanitizedParams->getInt('offsetTop'));
@@ -181,6 +181,7 @@ class WebPage extends ModuleWidget
         $this->setOption('pageHeight', $sanitizedParams->getInt('pageHeight'));
         $this->setOption('modeid', $sanitizedParams->getInt('modeId'));
         $this->setOption('isPreNavigate', $sanitizedParams->getCheckbox('isPreNavigate'));
+        $this->setOption('pageLoadErrorTrigger', $sanitizedParams->getString('pageLoadErrorTrigger'));
 
         // Save the widget
         $this->isValid();
