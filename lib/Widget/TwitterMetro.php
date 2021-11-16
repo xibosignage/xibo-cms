@@ -815,7 +815,7 @@ class TwitterMetro extends TwitterBase
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options);';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboMetroRender(options, items, colors); $("#content").find(".cell").xiboImageRender(options); }; ';
+        $javaScriptContent .= '       var runOnVisible = function() { $("#content").xiboMetroRender(options, items, colors); $("#content").find(".cell").xiboImageRender(options); }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
         
         $javaScriptContent .= '   }); ';
