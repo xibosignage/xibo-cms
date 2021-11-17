@@ -433,7 +433,7 @@ class MenuBoardProduct extends Base
      *  @SWG\Parameter(
      *      name="allergyInfo",
      *      in="formData",
-     *      description="Menu Board Product allergyInfo,
+     *      description="Menu Board Product allergyInfo",
      *      type="string",
      *      required=false
      *   ),
@@ -456,14 +456,16 @@ class MenuBoardProduct extends Base
      *      in="formData",
      *      description="An array of optional Product Option names",
      *      type="array",
-     *      required=false
+     *      required=false,
+     *     @SWG\Items(type="string")
      *   ),
      *  @SWG\Parameter(
      *      name="productValues",
      *      in="formData",
      *      description="An array of optional Product Option values",
      *      type="array",
-     *      required=false
+     *      required=false,
+     *     @SWG\Items(type="string")
      *   ),
      *  @SWG\Response(
      *      response=204,

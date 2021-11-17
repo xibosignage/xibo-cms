@@ -25,6 +25,7 @@ use Phinx\Migration\AbstractMigration;
 
 /**
  * Add the new connectors table and first connector (pixabay)
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
  */
 class ConnectorsMigration extends AbstractMigration
 {

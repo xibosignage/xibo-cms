@@ -50,7 +50,7 @@ class Connector extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response)
     {
         $connectors = $this->connectorFactory->query([]);
         foreach ($connectors as $connector) {

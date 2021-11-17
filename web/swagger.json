@@ -11,7 +11,7 @@
             "name": "AGPLv3 or later",
             "url": "http://www.gnu.org/licenses/"
         },
-        "version": "2.2"
+        "version": "3.1"
     },
     "basePath": "/api",
     "schemes": [
@@ -336,6 +336,20 @@
                         "items": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "cyclePlaybackEnabled",
+                        "in": "formData",
+                        "description": "When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "playCount",
+                        "in": "formData",
+                        "description": "In cycle based playback, how many plays should each Layout have before moving on?",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -400,6 +414,20 @@
                         "items": {
                             "type": "integer"
                         }
+                    },
+                    {
+                        "name": "cyclePlaybackEnabled",
+                        "in": "formData",
+                        "description": "When cycle based playback is enabled only 1 Layout from this Campaign will be played each time it is in a Schedule loop. The same Layout will be shown until the 'Play count' is achieved.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "playCount",
+                        "in": "formData",
+                        "description": "In cycle based playback, how many plays should each Layout have before moving on?",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -886,6 +914,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "truncateOnEmpty",
+                        "in": "formData",
+                        "description": "Should the DataSet data be truncated even if no new data is pulled from the source?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "runsAfter",
                         "in": "formData",
                         "description": "An optional dataSetId which should be run before this Remote DataSet",
@@ -938,6 +973,13 @@
                         "name": "limitPolicy",
                         "in": "formData",
                         "description": "For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "csvSeparator",
+                        "in": "formData",
+                        "description": "Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.",
                         "required": false,
                         "type": "string"
                     },
@@ -1080,6 +1122,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "truncateOnEmpty",
+                        "in": "formData",
+                        "description": "Should the DataSet data be truncated even if no new data is pulled from the source?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "runsAfter",
                         "in": "formData",
                         "description": "An optional dataSetId which should be run before this Remote DataSet",
@@ -1132,6 +1181,13 @@
                         "name": "limitPolicy",
                         "in": "formData",
                         "description": "For remote DataSet, what should happen when the DataSet row limit is reached? stop, fifo or truncate",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "csvSeparator",
+                        "in": "formData",
+                        "description": "Separator that should be used when using Remote DataSets with CSV source, comma will be used by default.",
                         "required": false,
                         "type": "string"
                     },
@@ -1315,6 +1371,30 @@
                 }
             }
         },
+        "/dataset/export/csv/{dataSetId}": {
+            "get": {
+                "tags": [
+                    "dataset"
+                ],
+                "summary": "Export to CSV",
+                "description": "Export DataSet data to a csv file",
+                "operationId": "dataSetExportCsv",
+                "parameters": [
+                    {
+                        "name": "dataSetId",
+                        "in": "path",
+                        "description": "The DataSet ID to export.",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/dataset/{dataSetId}/column": {
             "get": {
                 "tags": [
@@ -1428,6 +1508,20 @@
                         "description": "Flag indicating whether this column should allow sorting on DataEntry",
                         "required": true,
                         "type": "integer"
+                    },
+                    {
+                        "name": "tooltip",
+                        "in": "formData",
+                        "description": "Help text that should be displayed when entering data for this Column.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isRequired",
+                        "in": "formData",
+                        "description": "Flag indicating whether value must be provided for this Column.",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -1530,6 +1624,20 @@
                         "in": "formData",
                         "description": "Flag indicating whether this column should allow sorting on DataEntry",
                         "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "tooltip",
+                        "in": "formData",
+                        "description": "Help text that should be displayed when entering data for this Column.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "isRequired",
+                        "in": "formData",
+                        "description": "Flag indicating whether value must be provided for this Column.",
+                        "required": false,
                         "type": "integer"
                     }
                 ],
@@ -2641,6 +2749,30 @@
                 }
             }
         },
+        "/display/purgeAll/{displayId}": {
+            "put": {
+                "tags": [
+                    "display"
+                ],
+                "summary": "Purge All",
+                "description": "Ask this Player to purge all Media from its local storage and request fresh files from CMS.",
+                "operationId": "displayPurgeAll",
+                "parameters": [
+                    {
+                        "name": "displayId",
+                        "in": "path",
+                        "description": "The Display ID",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/displaygroup": {
             "get": {
                 "tags": [
@@ -3504,7 +3636,7 @@
                     "200": {
                         "description": "successful operation",
                         "schema": {
-                            "$ref": "#/definitions/Campaign"
+                            "$ref": "#/definitions/DisplayGroup"
                         }
                     }
                 }
@@ -3738,6 +3870,124 @@
                             "Location": {
                                 "description": "Location of the new record",
                                 "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/folders": {
+            "get": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Search Folders",
+                "description": "Returns JSON representation of the Folder tree",
+                "operationId": "folderSearch",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/Folder"
+                            }
+                        }
+                    }
+                }
+            },
+            "post": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Add Folder",
+                "description": "Add a new Folder to the specified parent Folder",
+                "operationId": "folderAdd",
+                "parameters": [
+                    {
+                        "name": "text",
+                        "in": "formData",
+                        "description": "Folder Name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "parentId",
+                        "in": "formData",
+                        "description": "The ID of the parent Folder, if not provided, Folder will be added under Root Folder",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Folder"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/folders/{folderId}": {
+            "put": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Edit Folder",
+                "description": "Edit existing Folder",
+                "operationId": "folderEdit",
+                "parameters": [
+                    {
+                        "name": "folderId",
+                        "in": "path",
+                        "description": "Folder ID to edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "text",
+                        "in": "formData",
+                        "description": "Folder Name",
+                        "required": true,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Folder"
+                            }
+                        }
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "folder"
+                ],
+                "summary": "Delete Folder",
+                "description": "Delete existing Folder",
+                "operationId": "folderDelete",
+                "parameters": [
+                    {
+                        "name": "folderId",
+                        "in": "path",
+                        "description": "Folder ID to edit",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation",
+                        "schema": {
+                            "items": {
+                                "$ref": "#/definitions/Folder"
                             }
                         }
                     }
@@ -4641,6 +4891,27 @@
                 }
             }
         },
+        "/library/search": {
+            "get": {
+                "tags": [
+                    "library"
+                ],
+                "summary": "Library Search All",
+                "description": "Search all library files from local and connectors",
+                "operationId": "librarySearchAll",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SearchResult"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/library/{mediaId}": {
             "put": {
                 "tags": [
@@ -4736,6 +5007,13 @@
                         "in": "formData",
                         "description": "If the media item has been used should it be force removed from items that uses it?",
                         "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "purge",
+                        "in": "formData",
+                        "description": "Should this Media be added to the Purge List for all Displays?",
+                        "required": false,
                         "type": "integer"
                     }
                 ],
@@ -5137,6 +5415,548 @@
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/menuboards": {
+            "get": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Search Menu Boards",
+                "description": "Search all Menu Boards this user has access to",
+                "operationId": "menuBoardSearch",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "query",
+                        "description": "Filter by Menu board Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "userId",
+                        "in": "query",
+                        "description": "Filter by Owner Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "query",
+                        "description": "Filter by Folder Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/MenuBoard"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard": {
+            "post": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Add Menu Board",
+                "description": "Add a new Menu Board",
+                "operationId": "menuBoardAdd",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "Menu Board description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Menu Board Folder Id",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/MenuBoard"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuId}": {
+            "put": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Edit Menu Board",
+                "description": "Edit existing Menu Board",
+                "operationId": "menuBoardEdit",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The Menu Board ID to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "Menu Board description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Menu Board Folder Id",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Delete Menu Board",
+                "description": "Delete existing Menu Board",
+                "operationId": "menuBoardDelete",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The Menu Board ID to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/menuboard/{id}/selectfolder": {
+            "put": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Menu Board Select folder",
+                "description": "Select Folder for Menu Board",
+                "operationId": "menuBoardSelectFolder",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The Menu Board ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "folderId",
+                        "in": "formData",
+                        "description": "Folder ID to which this object should be assigned to",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/MenuBoard"
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuId}/categories": {
+            "get": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Search Menu Board Categories",
+                "description": "Search all Menu Boards Categories this user has access to",
+                "operationId": "menuBoardCategorySearch",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "Filter by Menu board Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "menuCategoryId",
+                        "in": "query",
+                        "description": "Filter by Menu Board Category Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/MenuBoard"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuId}/category": {
+            "post": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Add Menu Board",
+                "description": "Add a new Menu Board Category",
+                "operationId": "menuBoardCategoryAdd",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The Menu Board ID to which we want to add this Category to",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board Category name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Media ID associated with this Menu Board Category",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/MenuBoard"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuCategoryId}/category": {
+            "put": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Edit Menu Board Category",
+                "description": "Edit existing Menu Board Category",
+                "operationId": "menuBoardCategoryEdit",
+                "parameters": [
+                    {
+                        "name": "menuCategoryId",
+                        "in": "path",
+                        "description": "The Menu Board Category ID to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Media ID from CMS Library to associate with this Menu Board Category",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Delete Menu Board Category",
+                "description": "Delete existing Menu Board Category",
+                "operationId": "menuBoardCategoryDelete",
+                "parameters": [
+                    {
+                        "name": "menuId",
+                        "in": "path",
+                        "description": "The menuId to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuCategoryId}/products": {
+            "get": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Search Menu Board Products",
+                "description": "Search all Menu Boards Products this user has access to",
+                "operationId": "menuBoardProductsSearch",
+                "parameters": [
+                    {
+                        "name": "menuCategoryId",
+                        "in": "path",
+                        "description": "Filter by Menu Board Category Id",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "menuId",
+                        "in": "query",
+                        "description": "Filter by Menu board Id",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "query",
+                        "description": "Filter by name",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/MenuBoard"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuCategoryId}/product": {
+            "post": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Add Menu Board Product",
+                "description": "Add a new Menu Board Product",
+                "operationId": "menuBoardProductAdd",
+                "parameters": [
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board Product name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Media ID associated with this Menu Board Product",
+                        "required": false,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/MenuBoard"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new record",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/menuboard/{menuProductId}/product": {
+            "put": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Edit Menu Board Product",
+                "description": "Edit existing Menu Board Product",
+                "operationId": "menuBoardProductEdit",
+                "parameters": [
+                    {
+                        "name": "menuProductId",
+                        "in": "path",
+                        "description": "The Menu Board Product ID to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Menu Board Product name",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "description",
+                        "in": "formData",
+                        "description": "Menu Board Product description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "price",
+                        "in": "formData",
+                        "description": "Menu Board Product price, including the currency symbol if needed",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "allergyInfo",
+                        "in": "formData",
+                        "description": "Menu Board Product allergyInfo",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "availability",
+                        "in": "formData",
+                        "description": "Menu Board Product availability",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Media ID from CMS Library to associate with this Menu Board Product",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "productOptions",
+                        "in": "formData",
+                        "description": "An array of optional Product Option names",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "productValues",
+                        "in": "formData",
+                        "description": "An array of optional Product Option values",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            },
+            "delete": {
+                "tags": [
+                    "menuBoard"
+                ],
+                "summary": "Delete Menu Board",
+                "description": "Delete existing Menu Board Product",
+                "operationId": "menuBoardProductDelete",
+                "parameters": [
+                    {
+                        "name": "menuProductId",
+                        "in": "path",
+                        "description": "The Menu Board Product ID to Delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
                     }
                 }
             }
@@ -5850,6 +6670,13 @@
                         "type": "string"
                     },
                     {
+                        "name": "maxNumberOfItems",
+                        "in": "formData",
+                        "description": "Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "folderId",
                         "in": "formData",
                         "description": "Folder ID to which this object should be assigned to",
@@ -5923,6 +6750,13 @@
                         "description": "Add Library Media matching the tag filter provided",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "maxNumberOfItems",
+                        "in": "formData",
+                        "description": "Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
+                        "required": false,
+                        "type": "integer"
                     },
                     {
                         "name": "folderId",
@@ -6540,6 +7374,20 @@
                         "name": "enabled",
                         "in": "query",
                         "description": "Filter by Enabled",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "width",
+                        "in": "query",
+                        "description": "Filter by Resolution width",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "height",
+                        "in": "query",
+                        "description": "Filter by Resolution height",
                         "required": false,
                         "type": "integer"
                     }
@@ -7618,6 +8466,27 @@
                 }
             }
         },
+        "/template/search": {
+            "get": {
+                "tags": [
+                    "template"
+                ],
+                "summary": "Template Search All",
+                "description": "Search all templates from local and connectors",
+                "operationId": "templateSearchAll",
+                "responses": {
+                    "200": {
+                        "description": "successful operation",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/SearchResult"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/template/{layoutId}": {
             "post": {
                 "tags": [
@@ -8680,6 +9549,13 @@
                         "description": "Flag indicating whether to copy group members",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "copyFeatures",
+                        "in": "formData",
+                        "description": "Flag indicating whether to copy group features",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -8698,88 +9574,13 @@
                 }
             }
         },
-        "/playlist/widget/{widgetId}?audio": {
+        "/playlist/widget/{widgetId}?agenda": {
             "put": {
                 "tags": [
                     "widget"
                 ],
-                "summary": "Parameters for editing existing audio widget on a layout",
-                "description": "For uploading new audio files, please refer to POST /library documentation.\n     *               For assigning existing audio file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
-                "operationId": "WidgetAudioEdit",
-                "parameters": [
-                    {
-                        "name": "widgetId",
-                        "in": "path",
-                        "description": "The Widget ID",
-                        "required": true,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "useDuration",
-                        "in": "formData",
-                        "description": "Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "duration",
-                        "in": "formData",
-                        "description": "Edit Only - The Widget Duration",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "name",
-                        "in": "formData",
-                        "description": "Edit Only - The Widget name",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "mute",
-                        "in": "formData",
-                        "description": "Edit only - Flag (0, 1) Should the audio be muted?",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "loop",
-                        "in": "formData",
-                        "description": "Edit only - Flag (0, 1) Should the audio loop (only for duration > 0 )?",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "enableStat",
-                        "in": "formData",
-                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
-                        "required": false,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "201": {
-                        "description": "successful operation",
-                        "schema": {
-                            "$ref": "#/definitions/Widget"
-                        },
-                        "headers": {
-                            "Location": {
-                                "description": "Location of the new widget",
-                                "type": "string"
-                            }
-                        }
-                    }
-                }
-            }
-        },
-        "/playlist/widget/{widgetId}?calendar": {
-            "put": {
-                "tags": [
-                    "widget"
-                ],
-                "summary": "Edit a Calendar Widget",
-                "description": "Edit a Calendar Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "summary": "Edit an Agenda Widget",
+                "description": "Edit an Agenda Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
                 "operationId": "widgetCalendarEdit",
                 "parameters": [
                     {
@@ -9003,6 +9804,469 @@
                         "name": "currentEventTrigger",
                         "in": "formData",
                         "description": "Trigger code for a current event action",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
+        "/playlist/widget/{widgetId}?audio": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Parameters for editing existing audio widget on a layout",
+                "description": "For uploading new audio files, please refer to POST /library documentation.\n     *               For assigning existing audio file to a Playlist please see POST /playlist/library/assign/{playlistId} documentation.\n     *               This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "operationId": "WidgetAudioEdit",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The Widget ID",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Edit Only - (0, 1) Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "Edit Only - The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Edit Only - The Widget name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mute",
+                        "in": "formData",
+                        "description": "Edit only - Flag (0, 1) Should the audio be muted?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "loop",
+                        "in": "formData",
+                        "description": "Edit only - Flag (0, 1) Should the audio loop (only for duration > 0 )?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "201": {
+                        "description": "successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/Widget"
+                        },
+                        "headers": {
+                            "Location": {
+                                "description": "Location of the new widget",
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/playlist/widget/{widgetId}?calendar": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Edit a Calendar Widget",
+                "description": "Edit a Calendar Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "operationId": "widgetCalendarEdit",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The WidgetId to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Select 1 only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "uri",
+                        "in": "formData",
+                        "description": "The Link for the iCal Feed",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noEventsMessage",
+                        "in": "formData",
+                        "description": "No upcoming events message",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "customInterval",
+                        "in": "formData",
+                        "description": "Using natural language enter a string representing the period for which events should be returned, for example 2 days or 1 week.",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "excludeAllDay",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Exclude all day events from results?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "updateInterval",
+                        "in": "formData",
+                        "description": "Update interval in minutes",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useEventTimezone",
+                        "in": "formData",
+                        "description": "A flag (0,1), Should we use Event Timezone?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useCalendarTimezone",
+                        "in": "formData",
+                        "description": "A flag (0,1), Should we use Calendar Timezone?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "windowsFormatCalendar",
+                        "in": "formData",
+                        "description": "Does the calendar feed come from Windows - if unsure leave unselected.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "useDateRange",
+                        "in": "formData",
+                        "description": "Should we look for events with provided date range?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "rangeStart",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "rangeEnd",
+                        "in": "formData",
+                        "description": "Date in Y-m-d H:i:s",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noEventTrigger",
+                        "in": "formData",
+                        "description": "Trigger code for a no event action",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "currentEventTrigger",
+                        "in": "formData",
+                        "description": "Trigger code for a current event action",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "calendarType",
+                        "in": "formData",
+                        "description": "Calendar Type (0:custom ; 1:schedule ; 2:daily ; 3:weekly ; 4:monthly )",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "showHeader",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should the calendar template have a header?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "showNowMarker",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should the calendar show a marker for the current time?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "showDescription",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should the event description if exists?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "timeFormat",
+                        "in": "formData",
+                        "description": "Moment time format",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "startTime",
+                        "in": "formData",
+                        "description": "The start time for the calendar view",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "endTime",
+                        "in": "formData",
+                        "description": "The end time for the calendar view",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "textScale",
+                        "in": "formData",
+                        "description": "Scale for the text elements on calendar templates, defaults to 1.",
+                        "required": false,
+                        "type": "number"
+                    },
+                    {
+                        "name": "weekdayNameLength",
+                        "in": "formData",
+                        "description": "Week day name length",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "gridStep",
+                        "in": "formData",
+                        "description": "Weekly/Daily grid step in minutes.",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "templateTheme",
+                        "in": "formData",
+                        "description": "Template color theme dark/light",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "overrideColorTemplate",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Should the template colors be overriden?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "gridColor",
+                        "in": "formData",
+                        "description": "Colour for the grid between days/hours",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "mainBackgroundColor",
+                        "in": "formData",
+                        "description": "Colour for the main template",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "gridTextColor",
+                        "in": "formData",
+                        "description": "Colour for the grid text",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dayBgColor",
+                        "in": "formData",
+                        "description": "Background colour for day elements on monthly/weekly calendars",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dayTextColor",
+                        "in": "formData",
+                        "description": "Text colour for day elements on monthly/weekly calendars",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "todayTextColor",
+                        "in": "formData",
+                        "description": "Text colour for current day element on monthly/weekly calendars",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "nowMarkerColor",
+                        "in": "formData",
+                        "description": "Background colour for the current time marker",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dayOtherMonthBgColor",
+                        "in": "formData",
+                        "description": "Background colour for unfocused month day elements on monthly calendar",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dayOtherMonthTextColor",
+                        "in": "formData",
+                        "description": "Text colour for unfocused month day elements on monthly calendar",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "headerBgColor",
+                        "in": "formData",
+                        "description": "Background colour for main header",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "headerTextColor",
+                        "in": "formData",
+                        "description": "Text colour for main header",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "weekDaysHeaderBgColor",
+                        "in": "formData",
+                        "description": "Background colour for week days label on monthly/weekly calendars",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "weekDaysHeaderTextColor",
+                        "in": "formData",
+                        "description": "Text colour for week days label on monthly/weekly calendars",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "eventBgColor",
+                        "in": "formData",
+                        "description": "Background colour for a single day timed event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "eventTextColor",
+                        "in": "formData",
+                        "description": "Text colour for a single day timed event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dailyEventBgColor",
+                        "in": "formData",
+                        "description": "Background colour for a all day event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dailyEventTextColor",
+                        "in": "formData",
+                        "description": "Text colour for a all day event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "multiDayEventBgColor",
+                        "in": "formData",
+                        "description": "Background colour for a multiple day event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "multiDayEventTextColor",
+                        "in": "formData",
+                        "description": "Text colour for a multiple day event",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "aditionalEventsBgColor",
+                        "in": "formData",
+                        "description": "Background colour for the extra element counter label",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "aditionalEventsTextColor",
+                        "in": "formData",
+                        "description": "Text colour for the extra element counter label",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noEventsBgColor",
+                        "in": "formData",
+                        "description": "Background colour for the no events message",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "noEventsTextColor",
+                        "in": "formData",
+                        "description": "Text colour for the no events message",
                         "required": false,
                         "type": "string"
                     }
@@ -10656,6 +11920,58 @@
                 }
             }
         },
+        "/playlist/widget/{widgetId}?menuboard": {
+            "put": {
+                "tags": [
+                    "widget"
+                ],
+                "summary": "Edit a Menu Board Widget",
+                "description": "Edit Menu Board Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
+                "operationId": "WidgetMenuBoardEdit",
+                "parameters": [
+                    {
+                        "name": "widgetId",
+                        "in": "path",
+                        "description": "The WidgetId to Edit",
+                        "required": true,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "name",
+                        "in": "formData",
+                        "description": "Optional Widget Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "useDuration",
+                        "in": "formData",
+                        "description": "Select only if you will provide duration parameter as well",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "duration",
+                        "in": "formData",
+                        "description": "The Widget Duration",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "enableStat",
+                        "in": "formData",
+                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
+            }
+        },
         "/playlist/widget/{widgetId}?notificationView": {
             "put": {
                 "tags": [
@@ -11202,6 +12518,27 @@
                         "items": {
                             "type": "string"
                         }
+                    },
+                    {
+                        "name": "cyclePlaybackEnabled",
+                        "in": "formData",
+                        "description": "Enable cycle based playback?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "playCount",
+                        "in": "formData",
+                        "description": "In cycle based playback, how many plays should each Widget have before moving on?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "cycleRandomWidget",
+                        "in": "formData",
+                        "description": "In cycle based playback, a random Widget will be selected at the start of each cycle and shown until its play count has been met.",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -12666,6 +14003,10 @@
                 "userName": {
                     "description": "The User Name of the User that took this action",
                     "type": "string"
+                },
+                "ipAddress": {
+                    "description": "The IP Address of the User that took this action",
+                    "type": "string"
                 }
             }
         },
@@ -12701,6 +14042,14 @@
                 },
                 "permissionsFolderId": {
                     "description": "The id of the Folder responsible for providing permissions for this Campaign",
+                    "type": "integer"
+                },
+                "cyclePlaybackEnabled": {
+                    "description": "Flag indicating whether this Campaign has cycle based playback enabled",
+                    "type": "integer"
+                },
+                "playCount": {
+                    "description": "In cycle based playback, how many plays should each Layout have before moving on?",
                     "type": "integer"
                 }
             }
@@ -12757,6 +14106,7 @@
                 }
             }
         },
+        "Connector": {},
         "DataSet": {
             "properties": {
                 "dataSetId": {
@@ -12839,6 +14189,10 @@
                     "description": "Time in seconds when this Dataset should be cleared. If here is a lower value than in RefreshRate it will be cleared when the data is refreshed",
                     "type": "integer"
                 },
+                "truncateOnEmpty": {
+                    "description": "Flag whether to truncate DataSet data if no new data is pulled from remote source",
+                    "type": "integer"
+                },
                 "runsAfter": {
                     "description": "DataSetID of the DataSet which should be fetched and present before the Data from this DataSet are fetched",
                     "type": "integer"
@@ -12877,6 +14231,10 @@
                 },
                 "limitPolicy": {
                     "description": "Type of action that should be taken on next remote DataSet sync - stop, fifo or truncate",
+                    "type": "string"
+                },
+                "csvSeparator": {
+                    "description": "Custom separator for CSV source, comma will be used by default",
                     "type": "string"
                 },
                 "folderId": {
@@ -12942,6 +14300,14 @@
                 "dataSetColumnType": {
                     "description": "The column type for this Column",
                     "type": "string"
+                },
+                "tooltip": {
+                    "description": "Help text that should be displayed when entering data for this Column.",
+                    "type": "string"
+                },
+                "isRequired": {
+                    "description": "Flag indicating whether value must be provided for this Column.",
+                    "type": "integer"
                 }
             }
         },
@@ -13218,6 +14584,10 @@
                 "permissionsFolderId": {
                     "description": "The id of the Folder responsible for providing permissions for this Display",
                     "type": "integer"
+                },
+                "countFaults": {
+                    "description": "The count of Player reported faults",
+                    "type": "integer"
                 }
             }
         },
@@ -13446,6 +14816,10 @@
                     "type": "number",
                     "format": "double"
                 },
+                "orientation": {
+                    "description": "The Layout Orientation",
+                    "type": "string"
+                },
                 "displayOrder": {
                     "description": "If this Layout has been requested by Campaign, then this is the display order of the Layout within the Campaign",
                     "type": "integer"
@@ -13635,6 +15009,10 @@
                     "description": "The option to enable the collection of Media Proof of Play statistics",
                     "type": "string"
                 },
+                "orientation": {
+                    "description": "The orientation of the Media file",
+                    "type": "string"
+                },
                 "folderId": {
                     "description": "The id of the Folder this Media belongs to",
                     "type": "integer"
@@ -13642,6 +15020,125 @@
                 "permissionsFolderId": {
                     "description": "The id of the Folder responsible for providing permissions for this Media",
                     "type": "integer"
+                }
+            }
+        },
+        "MenuBoard": {
+            "properties": {
+                "menuId": {
+                    "description": "The Menu Board Id",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The Menu Board name",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The Menu Board description",
+                    "type": "string"
+                },
+                "userId": {
+                    "description": "The Menu Board owner Id",
+                    "type": "integer"
+                },
+                "modifiedDt": {
+                    "description": "The Menu Board last modified date",
+                    "type": "integer"
+                },
+                "folderId": {
+                    "description": "The Id of the Folder this Menu Board belongs to",
+                    "type": "string"
+                },
+                "permissionsFolderId": {
+                    "description": "The id of the Folder responsible for providing permissions for this Menu Board",
+                    "type": "integer"
+                },
+                "groupsWithPermissions": {
+                    "description": "A comma separated list of Groups/Users that have permission to this menu Board",
+                    "type": "string"
+                }
+            }
+        },
+        "MenuBoardCategory": {
+            "properties": {
+                "menuCategoryId": {
+                    "description": "The Menu Board Category Id",
+                    "type": "integer"
+                },
+                "menuId": {
+                    "description": "The Menu Board Id",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The Menu Board Category name",
+                    "type": "string"
+                },
+                "mediaId": {
+                    "description": "The Menu Board Category associated mediaId",
+                    "type": "integer"
+                }
+            }
+        },
+        "MenuBoardProduct": {
+            "properties": {
+                "menuProductId": {
+                    "description": "The Menu Board Product Id",
+                    "type": "integer"
+                },
+                "menuCategoryId": {
+                    "description": "The Menu Board Category Id",
+                    "type": "integer"
+                },
+                "menuId": {
+                    "description": "The Menu Board Id",
+                    "type": "integer"
+                },
+                "name": {
+                    "description": "The Menu Board Category name",
+                    "type": "string"
+                },
+                "price": {
+                    "description": "The Menu Board Product price",
+                    "type": "string"
+                },
+                "description": {
+                    "description": "The Menu Board Product description",
+                    "type": "string"
+                },
+                "availability": {
+                    "description": "The Menu Board Product availability",
+                    "type": "string"
+                },
+                "allergyInfo": {
+                    "description": "The Menu Board Product allergy information",
+                    "type": "string"
+                },
+                "mediaId": {
+                    "description": "The Menu Board Product associated mediaId",
+                    "type": "integer"
+                },
+                "productOptions": {
+                    "description": "The Menu Board Product array of options",
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                }
+            }
+        },
+        "MenuBoardProductOption": {
+            "properties": {
+                "menuProductId": {
+                    "description": "The Menu Product ID that this Option belongs to",
+                    "type": "integer"
+                },
+                "option": {
+                    "description": "The option name",
+                    "type": "string"
+                },
+                "value": {
+                    "description": "The option value",
+                    "type": "string"
                 }
             }
         },
@@ -13834,6 +15331,54 @@
                 }
             }
         },
+        "PlayerFault": {
+            "properties": {
+                "playerFaultId": {
+                    "description": "The Fault Id",
+                    "type": "integer"
+                },
+                "displayId": {
+                    "description": "The Display Id",
+                    "type": "integer"
+                },
+                "incidentDt": {
+                    "description": "The Date the error occured",
+                    "type": "string"
+                },
+                "expires": {
+                    "description": "The Date the error expires",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "The Code associated with the fault",
+                    "type": "integer"
+                },
+                "reason": {
+                    "description": "The Reason for the fault",
+                    "type": "string"
+                },
+                "layoutId": {
+                    "description": "The Layout Id",
+                    "type": "integer"
+                },
+                "regionId": {
+                    "description": "The Region Id",
+                    "type": "integer"
+                },
+                "scheduleId": {
+                    "description": "The Schedule Id",
+                    "type": "integer"
+                },
+                "widgetId": {
+                    "description": "The Widget Id",
+                    "type": "integer"
+                },
+                "mediaId": {
+                    "description": "The Media Id",
+                    "type": "integer"
+                }
+            }
+        },
         "PlayerVersion": {
             "properties": {
                 "versionId": {
@@ -13903,6 +15448,10 @@
                 "filterMediaTags": {
                     "description": "Filter Tags for a Dynamic Playlist",
                     "type": "string"
+                },
+                "maxNumberOfItems": {
+                    "description": "Maximum number of Media items matching dynamic Playlist filters",
+                    "type": "integer"
                 },
                 "createdDt": {
                     "description": "The datetime this entity was created",
@@ -14271,6 +15820,18 @@
                 "geoLocation": {
                     "description": "Geo JSON representing the area of this event",
                     "type": "string"
+                },
+                "actionTriggerCode": {
+                    "description": "For Action event type, Action trigger code",
+                    "type": "string"
+                },
+                "actionType": {
+                    "description": "For Action event type, the type of the Action (navigate to Layout or Command)",
+                    "type": "string"
+                },
+                "actionLayoutCode": {
+                    "description": "For Action event type and navigate to Layout Action type, the Layout code",
+                    "type": "string"
                 }
             }
         },
@@ -14330,6 +15891,8 @@
                 }
             }
         },
+        "SearchResult": {},
+        "SearchResults": {},
         "Tag": {
             "properties": {
                 "tagId": {
@@ -15061,6 +16624,10 @@
         {
             "name": "actions",
             "description": "Actions"
+        },
+        {
+            "name": "menuBoards",
+            "description": "Menu Boards"
         }
     ],
     "externalDocs": {

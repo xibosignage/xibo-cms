@@ -27,6 +27,9 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
+/**
+ * @SWG\Definition()
+ */
 class MenuBoardProductOption implements \JsonSerializable
 {
     use EntityTrait;
