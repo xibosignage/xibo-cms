@@ -85,6 +85,13 @@ class Resolution extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="partialResolution",
+     *      in="query",
+     *      description="Filter by Partial Resolution Name",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="enabled",
      *      in="query",
      *      description="Filter by Enabled",
@@ -128,6 +135,7 @@ class Resolution extends Base
             'enabled' => $sanitizedQueryParams->getInt('enabled', ['default' => -1]),
             'resolutionId' => $sanitizedQueryParams->getInt('resolutionId'),
             'resolution' => $sanitizedQueryParams->getString('resolution'),
+            'partialResolution' => $sanitizedQueryParams->getString('partialResolution'),
             'width' => $sanitizedQueryParams->getInt('width'),
             'height' => $sanitizedQueryParams->getInt('height'),
             'orientation' => $sanitizedQueryParams->getString('orientation')

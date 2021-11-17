@@ -157,6 +157,11 @@ class ResolutionFactory extends BaseFactory
             $params['resolution'] = $parsedFilter->getString('resolution');
         }
 
+        if ($parsedFilter->getString('partialResolution') != null) {
+            $body .= ' AND resolution LIKE :partialResolution ';
+            $params['partialResolution'] = '%' . $parsedFilter->getString('partialResolution') . '%';
+        }
+
         if ($parsedFilter->getDouble('width') !== null) {
             $body .= ' AND intended_width = :width ';
             $params['width'] = $parsedFilter->getDouble('width');
