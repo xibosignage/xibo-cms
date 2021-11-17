@@ -30,7 +30,6 @@ use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Slim\Routing\RouteContext;
-use Xibo\Connector\PixabayConnector;
 use Xibo\Entity\UserNotification;
 use Xibo\Factory\UserNotificationFactory;
 use Xibo\Helper\Environment;
@@ -113,17 +112,22 @@ class Actions implements Middleware
             return $handler->handle($request);
         }
 
-        // TODO: dynamically load any connectors?
-        $connector = new PixabayConnector();
-        $connector
-            ->useLogger($container->get('logger'))
-            ->usePool($container->get('pool'))
-            ->useSettings(
-                $container->get('sanitizerService')
-                    ->getSanitizer($container->get('configService')->getConnectorSettings($connector->getSourceName()))
-            )
-            ->useHttpOptions($container->get('configService')->getGuzzleProxy())
-            ->registerWithDispatcher($container->get('dispatcher'));
+        // Dynamically load any connectors?
+        /** @var \Xibo\Factory\ConnectorFactory $connectorFactory */
+        $connectorFactory = $container->get('connectorFactory');
+        foreach ($connectorFactory->query(['isEnabled' => 1]) as $connector) {
+            try {
+                // Create a connector and register it with the dispatcher.
+                $connector = $connectorFactory->create($connector);
+                $connector
+                    ->useSettings($container->get('configService')->getConnectorSettings($connector->getSourceName()))
+                    ->useHttpOptions($container->get('configService')->getGuzzleProxy())
+                    ->registerWithDispatcher($container->get('dispatcher'));
+            } catch (\Exception $exception) {
+                // Log and ignore.
+                $container->get('logger')->error('Incorrectly configured connector. e=' . $exception->getMessage());
+            }
+        }
 
         // Only process notifications if we are a full request
         if (!$this->isAjax($request)) {

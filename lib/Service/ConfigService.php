@@ -181,9 +181,7 @@ class ConfigService implements ConfigServiceInterface
     }
 
     /**
-     * Get Connector settings
-     * @param string $connector The connector to return settings for.
-     * @return array
+     * @inheritDoc
      */
     public function getConnectorSettings(string $connector): array
     {

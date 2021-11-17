@@ -175,7 +175,8 @@ interface ConfigServiceInterface
     public function getCacheNamespace();
 
     /**
-     * Get Connector settings
+     * Get Connector settings from the file based settings
+     *  this acts as an override for settings stored in the database
      * @param string $connector The connector to return settings for.
      * @return array
      */

@@ -26,7 +26,6 @@ use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Stash\Interfaces\PoolInterface;
-use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Connector trait to assit with basic scaffolding and utility methods.
@@ -37,8 +36,8 @@ trait ConnectorTrait
     /** @var \Psr\Log\LoggerInterface */
     private $logger;
 
-    /** @var SanitizerInterface|null */
-    private $settings;
+    /** @var array */
+    private $settings = [];
 
     /** @var PoolInterface|null */
     private $pool;
@@ -68,12 +67,12 @@ trait ConnectorTrait
     }
 
     /**
-     * @param \Xibo\Support\Sanitizer\SanitizerInterface $settings
+     * @param array $settings
      * @return \Xibo\Connector\ConnectorInterface
      */
-    public function useSettings(SanitizerInterface $settings): ConnectorInterface
+    public function useSettings(array $settings): ConnectorInterface
     {
-        $this->settings = $settings;
+        $this->settings = array_merge($this->settings, $settings);
         return $this;
     }
 
@@ -82,18 +81,15 @@ trait ConnectorTrait
      * @param null $default
      * @return string|null
      */
-    private function getSetting($setting, $default = null)
+    public function getSetting($setting, $default = null)
     {
         $this->logger->debug('getSetting: ' . $setting);
-        if ($this->settings === null) {
-            $this->logger->debug('getSetting: settings null');
-            return $default;
-        } else if (!$this->settings->hasParam($setting)) {
-            $this->logger->debug('getSetting: setting not present. ' . var_export($this->settings, true));
+        if (!array_key_exists($setting, $this->settings)) {
+            $this->logger->debug('getSetting: ' . $setting . ' not present.' . var_export($this->settings, true));
             return $default;
         }
 
-        return $this->settings->getString($setting, ['default' => $default]);
+        return $this->settings[$setting] ?: $default;
     }
 
     /**

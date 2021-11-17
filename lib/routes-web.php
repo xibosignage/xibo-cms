@@ -505,7 +505,7 @@ $app->get('/maintenance/form/tidy', ['\Xibo\Controller\Maintenance','tidyLibrary
     ->setName('maintenance.libraryTidy.form');
 
 //
-// oauth
+// Applications and connectors
 //
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/application/view', ['\Xibo\Controller\Applications','displayPage'])->setName('application.view');
@@ -516,6 +516,11 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/application/form/delete/{id}', ['\Xibo\Controller\Applications','deleteForm'])->setName('application.delete.form');
     $group->put('/application/{id}', ['\Xibo\Controller\Applications','edit'])->setName('application.edit');
     $group->delete('/application/{id}', ['\Xibo\Controller\Applications','delete'])->setName('application.delete');
+
+    // We can only view/edit these through the web app
+    $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
+    $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])->setName('connector.edit.form');
+    $group->put('/connectors/{id}', ['\Xibo\Controller\Connector','edit'])->setName('connector.edit');
 })->addMiddleware(new SuperAdminAuth($app->getContainer()));
 
 $app->get('/application/authorize', ['\Xibo\Controller\Applications','authorizeRequest'])->setName('application.authorize.request');

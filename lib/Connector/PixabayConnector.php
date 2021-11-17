@@ -28,6 +28,7 @@ use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\SearchResult;
 use Xibo\Event\LibraryProviderEvent;
 use Xibo\Event\LibraryProviderImportEvent;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Pixabay Connector
@@ -47,6 +48,32 @@ class PixabayConnector implements ConnectorInterface
     public function getSourceName(): string
     {
         return 'pixabay';
+    }
+
+    public function getTitle(): string
+    {
+        return 'Pixabay';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Show Pixabay images and videos in the Layout editor toolbar and download them to the library for use on your Layouts.';
+    }
+
+    public function getThumbnail(): string
+    {
+        return 'theme/default/img/connectors/pixabay_square_green.png';
+    }
+
+    public function getSettingsFormTwig(): string
+    {
+        return 'pixabay-form-settings';
+    }
+
+    public function processSettingsForm(SanitizerInterface $params, array $settings): array
+    {
+        $settings['apiKey'] = $params->getString('apiKey');
+        return $settings;
     }
 
     /**

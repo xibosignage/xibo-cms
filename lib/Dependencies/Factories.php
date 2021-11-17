@@ -89,6 +89,13 @@ class Factories
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
+            'connectorFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\ConnectorFactory(
+                    $c->get('pool')
+                );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
             'dataSetColumnFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\DataSetColumnFactory(
                     $c->get('dataTypeFactory'),

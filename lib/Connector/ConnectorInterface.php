@@ -35,9 +35,15 @@ interface ConnectorInterface
 {
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface;
     public function useLogger(LoggerInterface $logger): ConnectorInterface;
-    public function useSettings(SanitizerInterface $settings): ConnectorInterface;
+    public function useSettings(array $settings): ConnectorInterface;
     public function usePool(PoolInterface $pool): ConnectorInterface;
-    public function useHttpOptions($httpOptions): ConnectorInterface;
+    public function useHttpOptions(array $httpOptions): ConnectorInterface;
     public function getClient(): Client;
     public function getSourceName(): string;
+    public function getTitle(): string;
+    public function getDescription(): string;
+    public function getThumbnail(): string;
+    public function getSetting($setting, $default = null);
+    public function getSettingsFormTwig(): string;
+    public function processSettingsForm(SanitizerInterface $params, array $settings): array;
 }
