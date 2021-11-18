@@ -1551,6 +1551,17 @@ class Layout extends Base
                     'text' => __('Preview Layout')
                 );
 
+                // Also offer a way to preview the draft layout.
+                if ($layout->hasDraft()) {
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_preview_draft',
+                        'external' => true,
+                        'url' => '#',
+                        'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '?isPreviewDraft=true");',
+                        'text' => __('Preview Draft Layout')
+                    );
+                }
+
                 $layout->buttons[] = ['divider' => true];
             }
 
