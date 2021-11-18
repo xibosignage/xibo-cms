@@ -277,7 +277,7 @@ class Image extends ModuleWidget
                 }
 
                 // Output
-                $response = $this->cacheProvider->withExpires($response,'+1 week');
+                $response = $this->cacheProvider->withExpires($response, '+1 week');
                 echo $img->encode($extension);
             } catch (NotReadableException $notReadableException) {
                 $this->getLog()->debug($notReadableException->getTraceAsString());

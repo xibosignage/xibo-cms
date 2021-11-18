@@ -538,7 +538,7 @@ class Library extends Base
             $module = $this->moduleFactory->createWithMedia($media);
             $media->thumbnail = '';
             if ($module->hasThumbnail()) {
-                $media->thumbnail = $this->urlFor($request,'library.download', ['id' => $media->mediaId], ['preview' => 1]);
+                $media->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1]);
             }
 
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
