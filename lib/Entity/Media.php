@@ -41,6 +41,7 @@ use Xibo\Support\Exception\InvalidArgumentException;
  *
  * @SWG\Definition()
  * @property $extension
+ * @property $thumbnail
  */
 class Media implements \JsonSerializable
 {

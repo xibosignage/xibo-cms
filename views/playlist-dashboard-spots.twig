@@ -54,7 +54,7 @@
                                 {% if widget.module.getModule().type == 'image' %}
                                     {% set downloadUrl = url_for("library.download", {id: widget.getPrimaryMediaId()}) %}
                                     <a class="img-replace" data-toggle="lightbox" data-type="image" href="{{ downloadUrl }}?preview=1">
-                                        <img src='{{downloadUrl}}?preview=1&width=50&height=50&cache=1' style='max-height: 50px; max-width: 50px;'/>
+                                        <img src='{{downloadUrl}}?preview=1&isThumb=1' style='max-height: 50px; max-width: 50px;'/>
                                     </a>
                                 {% else %}
                                     <i title="{{ widget.module.getModule().name }}" class="fa fa-2x module-icon-{{ widget.type }}" style="height: 50px; max-width: 50px;"></i>

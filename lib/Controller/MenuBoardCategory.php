@@ -158,8 +158,8 @@ class MenuBoardCategory extends Base
 
             if ($menuBoardCategory->mediaId != 0) {
                 $download = $this->urlFor($request, 'library.download', ['id' => $menuBoardCategory->mediaId], ['preview' => 1]);
-                $menuBoardCategory->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
-                $menuBoardCategory->thumbnailUrl = $download . '&width=100&height=56&cache=1';
+                $menuBoardCategory->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&isThumb=1" /></i></a>';
+                $menuBoardCategory->thumbnailUrl = $download . '&isThumb=1';
             }
 
             $menuBoardCategory->includeProperty('buttons');

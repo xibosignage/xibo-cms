@@ -172,8 +172,8 @@ class MenuBoardProduct extends Base
 
             if ($menuBoardProduct->mediaId != 0) {
                 $download = $this->urlFor($request, 'library.download', ['id' => $menuBoardProduct->mediaId], ['preview' => 1]);
-                $menuBoardProduct->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
-                $menuBoardProduct->thumbnailUrl = $download . '&width=100&height=56&cache=1';
+                $menuBoardProduct->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&isThumb=1" /></i></a>';
+                $menuBoardProduct->thumbnailUrl = $download . '&isThumb=1';
             }
 
             if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkEditable($menuBoard)) {

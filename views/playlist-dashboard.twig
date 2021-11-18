@@ -243,7 +243,7 @@
                     if ($container.data("mediaType") === "image") {
                         var previewUrl = $container.data("widgetPreview").replace(":id", $container.data("mediaId"));
                         var thumbnail = $("<a class=\"img-replace\" data-toggle=\"lightbox\" data-type=\"image\" href=\"" + previewUrl + "\">" +
-                            "<img src=\"" + previewUrl + "&width=50&height=50&cache=1\" style=\"max-height: 50px; max-width: 50px;\"/>" +
+                            "<img src=\"" + previewUrl + "&isThumb=1\" style=\"max-height: 50px; max-width: 50px;\"/>" +
                             "</a>");
 
                         $imgDiv.append(thumbnail);
