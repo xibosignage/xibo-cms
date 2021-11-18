@@ -28,6 +28,9 @@ use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 
+/**
+ * @SWG\Definition()
+ */
 class MenuBoardProduct implements \JsonSerializable
 {
     use EntityTrait;
@@ -87,7 +90,7 @@ class MenuBoardProduct implements \JsonSerializable
     public $mediaId;
 
     /**
-     * @SWG\Property(description="The Menu Board Product array of options")
+     * @SWG\Property(description="The Menu Board Product array of options", @SWG\Items(type="string"))
      * @var array
      */
     public $productOptions;

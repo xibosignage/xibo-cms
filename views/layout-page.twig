@@ -444,7 +444,12 @@
 
                     // What is the next step?
                     if (curStep.data('next') === 'finished') {
-                      // Submit the form thereby creating the user
+                      // add a progress spinning to the button
+                      var $button = $(this);
+                      $button.append(' <span class="saving fa fa-cog fa-spin"></span>');
+                      $button.addClass("disabled");
+
+                      // Submit the form thereby creating the layout
                       $('#layoutAddForm').trigger('submit');
                     } else {
                       var nextStepWizard = steps.find('a[href=\'#' + curStep.data('next') + '\']');
@@ -478,15 +483,6 @@
             percentPosition: true
           });
 
-          // Add our blank resolution
-          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
-            title: '{{ "Blank"|trans }}',
-            description: '{{ "Start with a blank layout, pick orientation on step 2."|trans }}',
-            thumbnail: null,
-            source: 'local',
-            id: '0|blank'
-          }));
-
           // Add full screen, l-bar-right and l-bar-left
           masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
             title: '{{ "Full screen"|trans }}',
@@ -508,6 +504,15 @@
             thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/l-bar-right.png',
             source: 'local',
             id: '0|l-bar-right'
+          }));
+
+          // Add our blank resolution
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "Blank"|trans }}',
+            description: '{{ "Add your own regions using the editor"|trans }}',
+            thumbnail: null,
+            source: 'local',
+            id: '0|blank'
           }));
 
           cardColumn.imagesLoaded(function() {
@@ -556,6 +561,11 @@
             var $form = $(this);
             var url = $(this).data().redirect;
             XiboFormSubmit($form, null, function(xhr, form) {
+              // Remove the cogs/disabled.
+              var $saveButton = $(this).find('.saving');
+              $saveButton.parent().removeClass('disabled');
+              $saveButton.find('.saving').remove();
+
               if (xhr.success) {
                 // Reload the designer
                 XiboRedirect(url.replace(":id", xhr.id));

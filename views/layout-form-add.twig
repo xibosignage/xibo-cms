@@ -93,11 +93,12 @@
                                 {% set title %}{% trans "Resolution" %}{% endset %}
                                 {% set helpText %}{% trans "Choose the resolution this Layout should be designed for." %}{% endset %}
                                 {% set attributes = [
-                                    { name: "data-allow-clear", value: "true" },
                                     { name: "data-search-url", value: url_for("resolution.search") },
                                     { name: "data-search-term", value: "resolution" },
                                     { name: "data-id-property", value: "resolutionId" },
-                                    { name: "data-text-property", value: "resolution" }
+                                    { name: "data-text-property", value: "resolution" },
+                                    { name: "data-initial-value", value: "HD" },
+                                    { name: "data-initial-key", value: "partialResolution" }
                                 ] %}
                                 {{ forms.dropdown("resolutionId", "single", title, "", resolutions, "resolutionId", "resolution", helpText, "pagedSelect resolution-group", "", "", "", attributes) }}
 

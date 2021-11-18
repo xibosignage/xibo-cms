@@ -24,6 +24,7 @@
 namespace Xibo\Service;
 
 use Stash\Interfaces\PoolInterface;
+use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
@@ -91,7 +92,7 @@ class ModuleService implements ModuleServiceInterface
         $menuBoardFactory,
         $menuBoardCategoryFactory,
         $view,
-        $cacheProvider
+        HttpCacheProvider $cacheProvider
     ) {
         $object = $this->getByClass(
             $module->class,
@@ -136,14 +137,14 @@ class ModuleService implements ModuleServiceInterface
         $menuBoardFactory,
         $menuBoardCategoryFactory,
         $view,
-        $cacheProvider
+        HttpCacheProvider $cacheProvider
     ) {
         if (!\class_exists($className)) {
             throw new NotFoundException(__('Class %s not found', $className));
         }
 
         /* @var \Xibo\Widget\ModuleWidget $object */
-        $object = new $className(
+        return new $className(
             $this->store,
             $this->pool,
             $this->logService,
@@ -165,7 +166,5 @@ class ModuleService implements ModuleServiceInterface
             $view,
             $cacheProvider
         );
-
-        return $object;
     }
 }

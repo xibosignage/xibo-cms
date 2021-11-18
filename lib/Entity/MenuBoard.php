@@ -35,6 +35,9 @@ use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
+/**
+ * @SWG\Definition()
+ */
 class MenuBoard implements \JsonSerializable
 {
     use EntityTrait;

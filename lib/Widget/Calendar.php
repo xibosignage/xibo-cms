@@ -307,7 +307,7 @@ class Calendar extends ModuleWidget
      *  @SWG\Parameter(
      *      name="templateTheme",
      *      in="formData",
-     *      description="Template color theme dark/light
+     *      description="Template color theme dark/light",
      *      type="string",
      *      required=false
      *  ),

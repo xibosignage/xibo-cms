@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -63,6 +63,26 @@
             </div>
         </div>
     </div>
+    <div class="widget mt-2">
+        <div class="widget-title">{% trans "Connectors" %}</div>
+        <div class="widget-body">
+            <div id="connectors" class="card-deck">
+                <div class="card w-25 p3" style="max-width: 250px;">
+                    <img class="card-img-top" style="max-height: 250px" src="{{ theme.rootUri() }}theme/default/img/connectors/canva_logo.png" alt="Canva">
+                    <div class="card-body">
+                        <h5 class="card-title">Canva</h5>
+                        <p class="card-text">
+                            Publish your designs from Canva to Xibo at the push of a button.
+                            <br/>
+                            <br/>
+                            This connector is configured in Canva using the "Publish menu".
+                        </p>
+                        <a class="btn btn-primary" href="https://canva.com" target="_blank">Visit Canva</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 {% endblock %}
 
 {% block javaScript %}
@@ -74,32 +94,74 @@
             var copiedTrans = "{{ "Copied!"|trans }}";
         {% endautoescape %}
 
-        var table = $("#applications").DataTable({ "language": dataTablesLanguage,
-            dom: dataTablesTemplate,
-            serverSide: true,
-            stateSave: true,
-            responsive: true,
-            stateDuration: 0,
-            stateLoadCallback: dataTableStateLoadCallback,
-            stateSaveCallback: dataTableStateSaveCallback,
-            filter: false,
-            searchDelay: 3000,
-            "order": [[ 0, "asc"]],
-            ajax: "{{ url_for("application.search") }}",
-            "columns": [
-                { "data": "name", "render": dataTableSpacingPreformatted },
-                { "data": "owner" },
-                {
-                    "orderable": false,
-                    responsivePriority: 1,
-                    "data": dataTableButtonsColumn
-                }
-            ]
+        var table;
+        $(document).ready(function() {
+            table = $("#applications").DataTable({ "language": dataTablesLanguage,
+                dom: dataTablesTemplate,
+                serverSide: true,
+                stateSave: true,
+                responsive: true,
+                stateDuration: 0,
+                stateLoadCallback: dataTableStateLoadCallback,
+                stateSaveCallback: dataTableStateSaveCallback,
+                filter: false,
+                searchDelay: 3000,
+                "order": [[ 0, "asc"]],
+                ajax: "{{ url_for("application.search") }}",
+                "columns": [
+                    { "data": "name", "render": dataTableSpacingPreformatted },
+                    { "data": "owner" },
+                    {
+                        "orderable": false,
+                        responsivePriority: 1,
+                        "data": dataTableButtonsColumn
+                    }
+                ]
+            });
+
+            table.on('draw', dataTableDraw);
+            table.on('processing.dt', dataTableProcessing);
+            dataTableAddButtons(table, $('#applications_wrapper').find('.dataTables_buttons'));
+
+          // Connectors
+          loadConnectors();
         });
 
-        table.on('draw', dataTableDraw);
-        table.on('processing.dt', dataTableProcessing);
-        dataTableAddButtons(table, $('#applications_wrapper').find('.dataTables_buttons'));
+        function loadConnectors() {
+          var connectorTemplate = Handlebars.compile($('#template-connector-cards').html());
+          var $connectorContainer = $('#connectors');
+          $connectorContainer.find('.connector').remove();
+          $.ajax({
+            type: 'GET',
+            url: '{{ url_for("connector.search") }}',
+            cache: false,
+            dataType:"json",
+            success: function(xhr, textStatus, error) {
+              $.each(xhr.data, function(index, element) {
+                element.configureUrl = '{{ url_for("connector.edit.form", {id: ":id"}) }}'.replace(':id', element.connectorId);
+                element.thumbnail = element.thumbnail || 'theme/default/img/thumbs/placeholder.png';
+                if (!element.thumbnail.startsWith('http')) {
+                  element.thumbnail = '{{ theme.rootUri() }}' + element.thumbnail;
+                }
+                element.enabledIcon = (element.isEnabled) ? 'fa-check' : 'fa-times';
+                $connectorContainer.append(connectorTemplate(element));
+              });
+
+              // Bind to any configure buttons.
+              XiboInitialise('#connectors');
+            }
+          });
+        }
+
+        function connectorFormSubmit() {
+            $('#connectorEditForm').submit(function(e) {
+              e.preventDefault();
+              XiboFormSubmit(this, e, function() {
+                loadConnectors();
+              });
+              return false;
+            }).submit();
+        }
         
         function copyFromSecretInput() {
             // Initialize the tooltip.
@@ -142,4 +204,26 @@
             });
         }
     </script>
+{% endblock %}
+
+{% block javaScriptTemplates %}
+    {{ parent() }}
+
+    {% verbatim %}
+    <script type="text/x-handlebars-template" id="template-connector-cards">
+        <div class="connector card w-25 p3" style="max-width: 300px;">
+            {{#if thumbnail}}<img class="card-img-top" style="max-height: 250px" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
+            <div class="card-body">
+                <h5 class="card-title">{{ title }}</h5>
+                <p class="card-text">
+                {{ description }}
+                <br/>
+                <br/>
+                Enabled: <span class="fa {{ enabledIcon }}"></span>
+                </p>
+                <button class="btn btn-primary XiboFormButton" href="{{ configureUrl }}">Configure</button>
+            </div>
+        </div>
+    </script>
+    {% endverbatim %}
 {% endblock %}
