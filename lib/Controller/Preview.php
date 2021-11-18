@@ -60,9 +60,9 @@ class Preview extends Base
     public function show(Request $request, Response $response, $id )
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
-        $findByCode = $sanitizedParams->getInt('findByCode');
-        
-        if($findByCode == 1) {
+
+        // Get the layout
+        if ($sanitizedParams->getInt('findByCode') === 1) {
             $layout = $this->layoutFactory->getByCode($id);
         } else {
             $layout = $this->layoutFactory->getById($id);
@@ -72,6 +72,11 @@ class Preview extends Base
             || !$this->getUser()->featureEnabled(['layout.view', 'playlist.view'])
         ) {
             throw new AccessDeniedException();
+        }
+
+        // Do we want to preview the draft version of this Layout?
+        if ($sanitizedParams->getCheckbox('isPreviewDraft') && $layout->hasDraft()) {
+            $layout = $this->layoutFactory->getByParentId($layout->layoutId);
         }
 
         $this->getState()->template = 'layout-preview';

@@ -195,10 +195,20 @@
                         "data": dataTableCreateTags
                     },{% endif %}
                     {
-                        "name": "mediaId",
-                        responsivePriority: 3,
-                        "data": null,
-                        "render": {"_": "thumbnail", "display": "thumbnail", "sort": "mediaId"}
+                        responsivePriority: 5,
+                        data: 'thumbnail',
+                        render: function(data, type, row) {
+                            if (type !== 'display') {
+                                return row.layoutId;
+                            }
+                            if (data) {
+                                return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' + data + '">' +
+                                    '<img class="img-fluid" src="' + data + '&isThumb=1" alt="{{ "Thumbnail"|trans }}" />' +
+                                    '</a>';
+                            }
+                            return '';
+                        },
+                        sortable: false
                     },
                     {
                         "name": "duration",

@@ -534,18 +534,11 @@ class Library extends Base
             /* @var \Xibo\Entity\Media $media */
             $media->revised = ($media->parentId != 0) ? 1 : 0;
 
-            // Thumbnail URL
-            $media->thumbnail = '';
-            $media->thumbnailUrl = '';
-            $media->downloadUrl = '';
-
+            // Thumbnail
             $module = $this->moduleFactory->createWithMedia($media);
-
+            $media->thumbnail = '';
             if ($module->hasThumbnail()) {
-                $download = $this->urlFor($request,'library.download', ['id' => $media->mediaId], ['preview' => 1]);
-                $media->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
-                $media->thumbnailUrl = $download . '&width=100&height=56&cache=1';
-                $media->downloadUrl = $download;
+                $media->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1]);
             }
 
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
@@ -785,7 +778,7 @@ class Library extends Base
 
                 if ($module->hasThumbnail()) {
                     $searchResult->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1])
-                        . '&width=250&height=250&cache=1';
+                        . '&isThumb=1';
                 }
 
                 // Add the result

@@ -645,6 +645,14 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * @return bool true if this layout has a draft
+     */
+    public function hasDraft(): bool
+    {
+        return $this->isEditable() && !$this->isChild();
+    }
+
+    /**
      * Is this Layout a Template?
      * @return bool
      */
