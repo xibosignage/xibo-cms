@@ -733,6 +733,10 @@ class Calendar extends ModuleWidget
         // the rendered feed will be cached, so it is important the key covers all options.
         $feedUrl = urldecode($this->getOption('uri'));
 
+        if (empty($feedUrl)) {
+            throw new ConfigurationException(__('Please provide a calendar feed URL'));
+        }
+
         /** @var \Stash\Item $cache */
         $cache = $this->getPool()->getItem($this->makeCacheKey(md5($feedUrl)));
         $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
