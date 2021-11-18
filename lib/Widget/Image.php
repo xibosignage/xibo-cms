@@ -194,18 +194,9 @@ class Image extends ModuleWidget
         $media = $this->mediaFactory->getById($this->getMediaId());
         $filePath = $libraryLocation . $media->storedAs;
         $this->getLog()->debug('Media Returned: ' . $media->storedAs);
-
-        // What type of download are we?
-        $isThumb = $sanitizedParams->getCheckbox('isThumb') == 1;
-        if ($isThumb) {
-            $proportional = true;
-            $width = 120;
-            $height = 120;
-        } else {
-            $proportional = !$sanitizedParams->hasParam('proportional') || $sanitizedParams->getCheckbox('proportional') == 1;
-            $width = intval($sanitizedParams->getDouble('width'));
-            $height = intval($sanitizedParams->getDouble('height'));
-        }
+        
+        $width = intval($sanitizedParams->getDouble('width'));
+        $height = intval($sanitizedParams->getDouble('height'));
 
         // Get the extension if we can (module files do not have an extension stored with them)
         if (stripos($media->storedAs, '.') > -1) {
@@ -219,10 +210,11 @@ class Image extends ModuleWidget
 
         // Preview or download?
         if ($sanitizedParams->getCheckbox('preview')) {
-            $this->getLog()->debug('Preview Requested with Width and Height ' . $width . ' x ' . $height);
+            // What type of download are we?
+            $isThumb = $sanitizedParams->getCheckbox('isThumb') == 1;
 
             // We expect the preview to load, manipulate and output a thumbnail (even on error).
-            // therefore we need to end output buffering and wipe any output so far.
+            // Therefore, we need to end output buffering and wipe any output so far.
             // this means that we do not buffer the image output into memory
             while (ob_get_level() > 0) {
                 ob_end_clean();
@@ -236,8 +228,11 @@ class Image extends ModuleWidget
                 if ($isThumb) {
                     // Thumbnail
                     $thumbPath = $libraryLocation . 'tn_' . $media->storedAs;
+                    $proportional = true;
+                    $width = 120;
+                    $height = 120;
 
-                    $this->getLog()->debug('Thumbnail: ' . $thumbPath);
+                    $this->getLog()->debug('Thumbnail: ' . $thumbPath . ' requested');
 
                     // Does the thumbnail exist already?
                     $img = null;
@@ -265,15 +260,22 @@ class Image extends ModuleWidget
                     $response = $this->cacheProvider->withEtag($response, md5_file($thumbPath));
                 } else {
                     // Not a thumbnail, output the whole file
-                    $this->getLog()->debug('Whole file: ' . $filePath . ', proportional: ' . var_export($proportional, true));
+                    $proportional = !$sanitizedParams->hasParam('proportional') || $sanitizedParams->getCheckbox('proportional') == 1;
+
+                    $this->getLog()->debug('Whole file: ' . $filePath
+                        . ' requested with Width and Height ' . $width . ' x ' . $height
+                        . ', proportional: ' . var_export($proportional, true));
+
                     $img = Img::make($filePath);
 
                     // Output a specific width/height
-                    $img->resize($width, $height, function ($constraint) use ($proportional) {
-                        if ($proportional) {
-                            $constraint->aspectRatio();
-                        }
-                    });
+                    if ($width > 0 && $height > 0) {
+                        $img->resize($width, $height, function ($constraint) use ($proportional) {
+                            if ($proportional) {
+                                $constraint->aspectRatio();
+                            }
+                        });
+                    }
                 }
 
                 // Output
