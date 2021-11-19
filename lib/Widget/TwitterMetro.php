@@ -597,7 +597,7 @@ class TwitterMetro extends TwitterBase
 
                     case 'Date':
                         if($tweet->created_at != '')
-                            $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->format($dateFormat);
+                            $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->translatedFormat($dateFormat);
                         break;
   
                     case 'Location':

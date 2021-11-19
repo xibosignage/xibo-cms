@@ -661,7 +661,7 @@ class Twitter extends TwitterBase
                         break;
 
                     case 'Date':
-                        $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->format($dateFormat);
+                        $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->translatedFormat($dateFormat);
                         break;
   
                     case 'Location':
