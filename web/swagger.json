@@ -11,7 +11,7 @@
             "name": "AGPLv3 or later",
             "url": "http://www.gnu.org/licenses/"
         },
-        "version": "2.2"
+        "version": "3.0"
     },
     "basePath": "/api",
     "schemes": [
@@ -3504,7 +3504,7 @@
                     "200": {
                         "description": "successful operation",
                         "schema": {
-                            "$ref": "#/definitions/Campaign"
+                            "$ref": "#/definitions/DisplayGroup"
                         }
                     }
                 }
@@ -6660,6 +6660,20 @@
                         "description": "Filter by Enabled",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "width",
+                        "in": "query",
+                        "description": "Filter by Resolution width",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "height",
+                        "in": "query",
+                        "description": "Filter by Resolution height",
+                        "required": false,
+                        "type": "integer"
                     }
                 ],
                 "responses": {
@@ -8796,6 +8810,13 @@
                         "name": "copyMembers",
                         "in": "formData",
                         "description": "Flag indicating whether to copy group members",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "copyFeatures",
+                        "in": "formData",
+                        "description": "Flag indicating whether to copy group features",
                         "required": false,
                         "type": "integer"
                     }
