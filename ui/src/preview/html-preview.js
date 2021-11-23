@@ -639,15 +639,20 @@ function media(parent, id, xml, options, preload) {
     self.singlePlay = false;
     self.timeoutId = undefined;
     self.ready = true;
+    self.checkIframeStatus = true;
 
     if (self.render == undefined)
         self.render = "module";
     
     self.run = function() {
-        if (self.iframe != undefined) {
-            // Reload iframe
-            var iframeDOM = $("#" + self.containerName + ' #' + self.iframeName);
-            iframeDOM[0].src = iframeDOM[0].src;
+        if (self.iframe) {
+            if(self.checkIframeStatus) {
+                // Reload iframe
+                var iframeDOM = $("#" + self.containerName + ' #' + self.iframeName);
+                iframeDOM[0].src = iframeDOM[0].src;
+            } else {
+                $("#" + self.containerName).empty().append(self.iframe);
+            }
         }
 
         playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds");
@@ -812,7 +817,8 @@ function media(parent, id, xml, options, preload) {
         preload.addFiles(tmpUrl);
         
         self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + ' ' + (loop ? 'loop' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
-        
+        self.checkIframeStatus = false;
+
         // Stretch video?
         if(self.options['scaletype'] == 'stretch') {
             self.iframe.css("object-fit", "fill");
@@ -834,7 +840,7 @@ function media(parent, id, xml, options, preload) {
     }
 
     // Check/set iframe based widgets play status
-    if(self.iframe) {
+    if(self.iframe && self.checkIframeStatus) {
         // Set state as false ( for now )
         self.ready = false;
 
