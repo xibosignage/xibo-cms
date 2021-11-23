@@ -639,7 +639,7 @@ function media(parent, id, xml, options, preload) {
     self.singlePlay = false;
     self.timeoutId = undefined;
     self.ready = true;
-    self.checkIframeStatus = true;
+    self.checkIframeStatus = false;
 
     if (self.render == undefined)
         self.render = "module";
@@ -780,6 +780,7 @@ function media(parent, id, xml, options, preload) {
         (self.region.options['loop'] == '1' && self.region.totalMediaObjects == 1);
 
     if (self.render == "html" || self.mediaType == "ticker") {
+        self.checkIframeStatus = true;
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
         if(self.options['durationisperitem'] == '1' || self.options['durationisperpage'] == '1') {
@@ -811,13 +812,13 @@ function media(parent, id, xml, options, preload) {
         }
     }
     else if (self.mediaType == "text" || self.mediaType == "datasetview" || self.mediaType == "webpage" || self.mediaType == "embedded") {
+        self.checkIframeStatus = true;
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
     else if (self.mediaType == "video") {
         preload.addFiles(tmpUrl);
         
         self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + ' ' + (loop ? 'loop' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
-        self.checkIframeStatus = false;
 
         // Stretch video?
         if(self.options['scaletype'] == 'stretch') {
