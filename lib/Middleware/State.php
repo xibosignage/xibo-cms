@@ -234,10 +234,8 @@ class State implements Middleware
             $filter = new \Twig\TwigFilter('url_decode', 'urldecode');
             $twigEnvironment->addFilter($filter);
 
-            // set Twig auto reload if we are in dev mode
-            if (Environment::isDevMode()) {
-                $twigEnvironment->enableAutoReload();
-            }
+            // set Twig auto reload
+            $twigEnvironment->enableAutoReload();
         }
 
         // Configure logging

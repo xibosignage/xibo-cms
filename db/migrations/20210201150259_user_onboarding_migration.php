@@ -60,7 +60,7 @@ class UserOnboardingMigration extends AbstractMigration
                     [
                         'group' => 'Playlist Manager',
                         'description' => 'Management of specific Playlists to edit / replace Media only.',
-                        'defaultHomepageId' => 'icondashboard.view',
+                        'defaultHomepageId' => 'playlistdashboard.view',
                         'isUserSpecific' => 0,
                         'isEveryone' => 0,
                         'isSystemNotification' => 0,

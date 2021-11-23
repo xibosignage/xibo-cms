@@ -151,9 +151,10 @@ Navigator.prototype.render = function() {
                 return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region') ||
                     ($(this).hasClass('permissionsModifiable') && $(el).attr('drop-to') === 'all' && $(el).data('subType') === 'permissions');
             },
-            drop: function(event, ui) {
+            drop: _.debounce(function(event, ui) {
+                // Add item
                 lD.dropItemAdd(event.target, ui.draggable[0]);
-            }
+            }, 200)
         });
 
         // Handle right click context menu

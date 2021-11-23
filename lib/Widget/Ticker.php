@@ -79,7 +79,7 @@ class Ticker extends ModuleWidget
      */
     public function settings(Request $request, Response $response): Response
     {
-        $updateIntervalImages = $this->getSanitizer($request->getParams())->getInt('updateIntervalImages', 240);
+        $updateIntervalImages = $this->getSanitizer($request->getParams())->getInt('updateIntervalImages', ['default' => 240]);
 
         if ($this->module->enabled != 0) {
             if ($updateIntervalImages < 0) {
@@ -546,7 +546,7 @@ class Ticker extends ModuleWidget
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '       const runOnVisible = function() { if(items != false) { $("#content").xiboTextRender(options, items); } }; ';
+        $javaScriptContent .= '       var runOnVisible = function() { if(items != false) { $("#content").xiboTextRender(options, items); } }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
 
         $javaScriptContent .= '   }); ';

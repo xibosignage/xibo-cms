@@ -748,7 +748,7 @@ class LayoutFactory extends BaseFactory
         $layout->backgroundColor = $layoutJson['layoutDefinitions']['backgroundColor'];
         $layout->backgroundzIndex = (int)$layoutJson['layoutDefinitions']['backgroundzIndex'];
         $layout->actions = [];
-        $actions = $layoutJson['layoutDefinitions']['actions'];
+        $actions = $layoutJson['layoutDefinitions']['actions'] ?? [];
 
         foreach ($actions as $action) {
             $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importLayout', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
@@ -816,7 +816,7 @@ class LayoutFactory extends BaseFactory
                 (double)$regionJson['top'],
                 (double)$regionJson['left'],
                 (int)$regionJson['zIndex'],
-                (int)$regionJson['isDrawer']
+                isset($regionJson['isDrawer']) ? (int)$regionJson['isDrawer'] : 0
             );
 
             // Use the regionId locally to parse the rest of the JSON
@@ -833,7 +833,7 @@ class LayoutFactory extends BaseFactory
             $playlist = $this->playlistFactory->create($region->name, $regionOwnerId);
 
             // interactive Actions
-            $actions = $regionJson['actions'];
+            $actions = $regionJson['actions'] ?? [];
             foreach ($actions as $action) {
                 $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importRegion', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
                 $newAction->save(['validate' => false]);
@@ -997,7 +997,7 @@ class LayoutFactory extends BaseFactory
                 $playlist->assignWidget($widget);
 
                 // interactive Actions
-                $actions = $mediaNode['actions'];
+                $actions = $mediaNode['actions'] ?? [];
                 foreach ($actions as $action) {
                     $newAction = $this->actionFactory->create($action['triggerType'], $action['triggerCode'], $action['actionType'], 'importWidget', $action['sourceId'], $action['target'], $action['targetId'], $action['widgetId'], $action['layoutCode']);
                     $newAction->save(['validate' => false]);
@@ -1079,38 +1079,9 @@ class LayoutFactory extends BaseFactory
         // Get the Playlist details
         $playlistDetails = $zip->getFromName('playlist.json');
         $nestedPlaylistDetails = $zip->getFromName('nestedPlaylist.json');
-        $regionActions = false;
-        $widgetActions = false;
 
-        $actionsExist = !empty($layoutDetails['layoutDefinitions']['actions']) || $regionActions || $widgetActions;
-
-        // should we use json import?
-        $useJsonImport = !empty($layoutDetails['layoutDefinitions']['drawers']) || $playlistDetails !== false || $actionsExist;
-
-        if ($useJsonImport) {
-            // check if we have any actions in regions and/or widgets.
-            if (!empty($layoutDetails['layoutDefinitions']['drawers'])) {
-                $allRegions = array_merge($layoutDetails['layoutDefinitions']['regions'], $layoutDetails['layoutDefinitions']['drawers']);
-            } else {
-                $allRegions = $layoutDetails['layoutDefinitions']['regions'];
-            }
-
-            foreach ($allRegions as $region) {
-                $regionActions = (!empty($region['actions'])) ? true : false;
-
-                if ($regionActions) {
-                    break;
-                }
-
-                foreach ($region['regionPlaylist']['widgets'] as $widget) {
-                    $widgetActions = (!empty($widget['actions'])) ? true : false;
-
-                    if ($widgetActions) {
-                        break;
-                    }
-                }
-            }
-
+        // for old imports it may not exist and would error out without this check.
+        if (array_key_exists('layoutDefinitions', $layoutDetails)) {
             // Construct the Layout
             if ($playlistDetails !== false) {
                 $playlistDetails = json_decode(($playlistDetails), true);
@@ -1124,13 +1095,15 @@ class LayoutFactory extends BaseFactory
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
-            // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
-            // if the code does not exist, then persist it on import.
-            try {
-                $this->getByCode($layoutDetails['layoutDefinitions']['code']);
-                $layout->code = null;
-            } catch (NotFoundException $exception) {
-                $layout->code = $layoutDetails['layoutDefinitions']['code'];
+            if (array_key_exists('code', $layoutDetails['layoutDefinitions'])) {
+                // Layout code, remove it if Layout with the same code already exists in the CMS, otherwise import would fail.
+                // if the code does not exist, then persist it on import.
+                try {
+                    $this->getByCode($layoutDetails['layoutDefinitions']['code']);
+                    $layout->code = null;
+                } catch (NotFoundException $exception) {
+                    $layout->code = $layoutDetails['layoutDefinitions']['code'];
+                }
             }
         } else {
             $layout = $this->loadByXlf($zip->getFromName('layout.xml'));

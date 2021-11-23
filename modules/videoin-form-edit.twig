@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -40,12 +40,18 @@
                         {% set title %}{% trans "Input" %}{% endset %}
                         {% set helpText %}{% trans "Which device input should be shown" %}{% endset %}
                         {% set hdmi %}{% trans "HDMI" %}{% endset %}
+                        {% set hdmi2 %}{% trans "HDMI2" %}{% endset %}
+                        {% set hdmi3 %}{% trans "HDMI3" %}{% endset %}
+                        {% set hdmi4 %}{% trans "HDMI4" %}{% endset %}
                         {% set rgb %}{% trans "RGB" %}{% endset %}
                         {% set dvi %}{% trans "DVI" %}{% endset %}
                         {% set dp %}{% trans "DP" %}{% endset %}
                         {% set ops %}{% trans "OPS" %}{% endset %}
                         {% set options = [
                         { sourceId: hdmi, source: hdmi },
+                        { sourceId: hdmi2, source: hdmi2 },
+                        { sourceId: hdmi3, source: hdmi3 },
+                        { sourceId: hdmi4, source: hdmi4 },
                         { sourceId: rgb, source: rgb },
                         { sourceId: dvi, source: dvi },
                         { sourceId: dp, source: dp },

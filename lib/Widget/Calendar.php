@@ -522,7 +522,7 @@ class Calendar extends ModuleWidget
                     $("body").find("img").xiboImageRender(options);
                     $("body").xiboLayoutScaler(options);
                     
-                    const runOnVisible = function() { $("#content").xiboTextRender(options, parsedItems); };
+                    var runOnVisible = function() { $("#content").xiboTextRender(options, parsedItems); };
                     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
 
                     if(ongoingEvent && currentEventTrigger) {
@@ -747,11 +747,11 @@ class Calendar extends ModuleWidget
                     break;
 
                 case '[StartDate]':
-                    $replace = $startDt->format($dateFormat);
+                    $replace = $startDt->translatedFormat($dateFormat);
                     break;
 
                 case '[EndDate]':
-                    $replace = $endDt->format($dateFormat);
+                    $replace = $endDt->translatedFormat($dateFormat);
                     break;
             }
 

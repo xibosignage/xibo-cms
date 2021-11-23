@@ -93,6 +93,7 @@ class TwitterMetro extends TwitterBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.png')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.css')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
     }
 
     /**
@@ -597,7 +598,7 @@ class TwitterMetro extends TwitterBase
 
                     case 'Date':
                         if($tweet->created_at != '')
-                            $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->format($dateFormat);
+                            $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->translatedFormat($dateFormat);
                         break;
   
                     case 'Location':
@@ -815,7 +816,7 @@ class TwitterMetro extends TwitterBase
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options);';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboMetroRender(options, items, colors); $("#content").find(".cell").xiboImageRender(options); }; ';
+        $javaScriptContent .= '       var runOnVisible = function() { $("#content").xiboMetroRender(options, items, colors); $("#content").find(".cell").xiboImageRender(options); }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
         
         $javaScriptContent .= '   }); ';

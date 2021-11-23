@@ -94,6 +94,7 @@ function timestamp() {
     var hours = currentTime.getHours();
     var minutes = currentTime.getMinutes();
     var seconds = currentTime.getSeconds();
+    var milliseconds = currentTime.getMilliseconds();
 
     if (minutes < 10) {
         minutes = "0" + minutes
@@ -102,7 +103,8 @@ function timestamp() {
         seconds = "0" + seconds
     }
     str += day + "/" + month + "/" + year + " ";
-    str += hours + ":" + minutes + ":" + seconds;
+    str += hours + ":" + minutes + ":" + seconds + "'" + milliseconds;
+
     return str;
 }
 
@@ -247,7 +249,7 @@ function Layout(id, options, preload, layoutPreview) {
 
         self.actionController.initTouchActions();
 
-        self.ready = true;
+        self.ready = false;
         preload.addFiles(options.loaderUrl);
 
         if (layoutPreview){
@@ -271,7 +273,9 @@ function Layout(id, options, preload, layoutPreview) {
             }
         }
         else {
-            playLog(4, "error", "Attempted to run Layout ID " + self.id + " before it was ready.", false);
+            self.checkReadyState(40, self.run, function(){
+                playLog(4, "error", "Attempted to run Layout ID " + self.id + " before it was ready.", false);
+            });
         }
     };
     
@@ -346,6 +350,35 @@ function Layout(id, options, preload, layoutPreview) {
             }
         }
     };
+
+    // Check layout state
+    self.checkReadyState = function(numTries, success, failure) {
+        self.ready = true;
+
+        // Check every region
+        for (var i = 0; i < self.regionObjects.length; i++) {
+            var region = self.regionObjects[i];
+            region.checkReadyState();
+            if (!region.ready) {
+                self.ready = false;
+            }
+        }
+
+        if (!self.ready) {
+            numTries--;
+
+            if (numTries <= 0) {
+                failure();
+            } else {
+                // Not ready, check every 250ms
+                setTimeout(function() {
+                    self.checkReadyState(numTries, success, failure)
+                }, 250);
+            }
+        } else {
+            success();
+        }
+    };
     
     self.ready = false;
     self.id = id;
@@ -377,7 +410,8 @@ function Region(parent, id, xml, options, preload) {
     self.oldMedia = undefined;
     self.curMedia = undefined;
     self.totalMediaObjects = $(self.xml).children("media").length;
-    
+    self.ready = false;
+
     self.finished = function() {
         // Remove temporary media elements
         self.mediaObjects = self.mediaObjects.filter(function(media) { return !media.singlePlay; });
@@ -497,9 +531,24 @@ function Region(parent, id, xml, options, preload) {
         /* Do the transition */
         self.transitionNodes(self.oldMedia, self.curMedia);
     };
+
+    // Check if region is ready to play
+    self.checkReadyState = function() {
+        for (var index = 0; index < self.mediaObjects.length; index++) {
+            var media = self.mediaObjects[index];
+            if(!media.ready) {
+                self.ready = false;
+                return;
+            }
+        }
+
+        self.ready = true;
+    };
     
     self.run = function() {
-        self.nextMedia();
+        if (self.totalMediaObjects > 0) {
+            self.nextMedia();
+        }
     };
 
     /* Build Region Options */
@@ -559,6 +608,9 @@ function Region(parent, id, xml, options, preload) {
     // If the regions does not have any media change its background to transparent red
     if ($(self.xml).children("media").length == 0) {
         $self = $("#" + self.containerName);
+
+        // Mark empty region as complete
+        self.complete = true;
         
         messageSize = (self.sWidth > self.sHeight ) ? self.sHeight : self.sWidth;
         
@@ -586,14 +638,16 @@ function media(parent, id, xml, options, preload) {
     self.attachedAudio = false;
     self.singlePlay = false;
     self.timeoutId = undefined;
+    self.ready = true;
 
     if (self.render == undefined)
         self.render = "module";
     
     self.run = function() {
-
-        if(self.iframe != undefined) {
-            $("#" + self.containerName).empty().append(self.iframe);
+        if (self.iframe != undefined) {
+            // Reload iframe
+            var iframeDOM = $("#" + self.containerName + ' #' + self.iframeName);
+            iframeDOM[0].src = iframeDOM[0].src;
         }
 
         playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds");
@@ -778,7 +832,21 @@ function media(parent, id, xml, options, preload) {
     else {
         media.css("outline", "red solid thin");
     }
+
+    // Check/set iframe based widgets play status
+    if(self.iframe) {
+        // Set state as false ( for now )
+        self.ready = false;
+
+        // Append iframe
+        $("#" + self.containerName).empty().append(self.iframe);
     
+        // On iframe load, set state as ready to play full preview
+        $(self.iframe).on('load', function(){
+            self.ready = true;
+        });
+    }
+
     // Attached audio
     if($(self.xml).find('audio').length > 0) {
         var $audioObj = $(self.xml).find('audio');
@@ -824,8 +892,8 @@ function ActionController(parent, actions, options) {
     self.parent = parent;
     self.actions = [];
 
-    $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
-    $container.append($('<div class="action-controller-title"><span class="title">' + previewTranslations.actionControllerTitle.toUpperCase() + '</span><button class="toggle"></button></div>'));
+    var $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
+    $container.append($('<div class="action-controller-title"><button class="toggle"></button><span class="title">' + previewTranslations.actionControllerTitle + '</span></div>'));
 
     for (var index = 0; index < actions.length; index++) {
         var newAction = actions[index];
@@ -916,6 +984,15 @@ function ActionController(parent, actions, options) {
 
         // Mark media as temporary ( removed after region stop playing or loops )
         targetMedia.singlePlay = true;
+
+        // If region is empty, remove the background colour and empty message
+        if(targetRegion.mediaObjects.length === 0) {
+            $('#' + targetRegion.containerName).find('.empty-message').remove();
+            $('#' + targetRegion.containerName).css('background-color', '');
+
+            // Mark empty region as incomplete
+            self.complete = false;
+        }
         
         // Create media in region and play it next
         targetRegion.mediaObjects.splice(targetRegion.currentMedia + 1, 0, targetMedia);
