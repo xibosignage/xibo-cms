@@ -598,7 +598,15 @@ lD.checkoutLayout = function() {
             // Turn off read only mode
             lD.readOnlyMode = false;
 
-            lD.selectObject();
+            // Hide read only message
+            lD.editorContainer.removeClass('view-mode');
+            lD.editorContainer.find('#read-only-message').remove();
+            
+            // Reload layout
+            lD.reloadData(res.data);
+
+            // Refresh toolbar
+            lD.toolbar.render();
 
             lD.common.hideLoadingScreen();
 
@@ -1963,8 +1971,6 @@ lD.importFromProvider = function(items) {
             }
         }).done(function(res) {
             if(res.success) {
-                console.log(res);
-
                 lD.common.hideLoadingScreen();
 
                 res.data.forEach((newElement) => {
@@ -2037,4 +2043,42 @@ lD.uploadThumbnail = function() {
     } else {
         console.log("Viewer not ready");
     }
+};
+
+/**
+ * Add a new region to the layout
+ */
+lD.addRegion = function () {
+    lD.common.showLoadingScreen();
+
+    if(lD.selectedObject.type == 'region') {
+        lD.navigator.saveRegionPropertiesPanel();
+        lD.selectObject();
+    }
+
+    lD.layout.addElement('region').then((res) => { // Success
+
+        lD.common.hideLoadingScreen(); 
+
+        // Behavior if successful 
+        toastr.success(res.message);
+
+        // Reload with the new added element
+        lD.selectedObject.id = 'region_' + res.data.regionId;
+        lD.selectedObject.type = 'region';
+        lD.reloadData(lD.layout, true);
+    }).catch((error) => { // Fail/error
+
+        lD.common.hideLoadingScreen(); 
+        // Show error returned or custom message to the user
+        let errorMessage = '';
+
+        if(typeof error == 'string') {
+            errorMessage = error;
+        } else {
+            errorMessage = error.errorThrown;
+        }
+
+        toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
+    });  
 };

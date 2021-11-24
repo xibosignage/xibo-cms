@@ -35,12 +35,23 @@ Drawer.prototype.updateSearch = function() {
  * Toggle the drawer
  */
 Drawer.prototype.toggleDrawer = function(data) {
+    const app = this.parent;
     this.opened = !this.opened;
     this.DOMObject.toggleClass('drawed', this.opened);
 
     if(!this.initialised || $.isEmptyObject(lD.layout.drawer)) {
         this.initDrawer();
     }
+
+    // Update timeline width and scroll event ( with a delay for the drawer animation to end)
+    _.debounce(function() {
+        const $regionsContainer = app.timeline.DOMObject.find('#regions-container');
+        // Save regions size to guarantee that when the scroll event is called, the region don't reset to 0 ( bugfix )
+        app.timeline.properties.scrollWidth = $regionsContainer.find("#regions").width();
+
+        // Trigger scroll
+        $regionsContainer.scroll();
+    }, 1000)();
 };
 
 /**

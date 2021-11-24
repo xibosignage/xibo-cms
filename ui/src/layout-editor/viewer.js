@@ -142,7 +142,7 @@ Viewer.prototype.renderLayout = function(layout, container) {
         }
     }
 
-    // Handle droppables
+    // Handle droppable regions
     this.DOMObject.find('.designer-region').droppable({
         greedy: true,
         tolerance: 'pointer',
@@ -224,7 +224,12 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
             return;
         }
 
-        let elementType = (element.type === 'widget') ? (element.type + '_' + element.subType) : element.type;
+        const elementType = (element.type === 'widget') ? (element.type + '_' + element.subType) : element.type;
+
+        // If it's a widget, get parent region editable property and id
+        const editable = (element.type === 'widget') 
+            ? lD.getElementByTypeAndId('region', element.regionId).isEditable 
+            : element.isEditable;
 
         // Replace container html
         const html = viewerTemplate({
@@ -232,7 +237,11 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
             dimensions: containerElementDimensions,
             type: elementType,
             smallPreview: smallPreview,
+            editable: editable,
             isEmpty: (totalItems <= 0),
+            elementPosition: element.index,
+            id: element.id,
+            parentId: element.regionId,
             trans: viewerTrans
         });
 
@@ -268,7 +277,7 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
 
             // Enable select for each layout/region
             container.off('click').on('click', function(e) {
-                if($(this).is('.editable, .ui-droppable-active')) {
+                if($(this).is('.editable.ui-droppable-active')) {
                     e.stopPropagation();
                     // Select object
                     lD.selectObject($(this));
@@ -286,6 +295,53 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                 }
             });
         } else {
+            // Enable select for each layout/region
+            container.find('.widget-preview').off('click').on('click', function(e) {
+                if($(this).is('.parent-editable.ui-droppable-active')) {
+                    e.stopPropagation();
+                    const positionToAdd = ($(this).data('position') + 1);
+                    const numWidgetsInParent = lD.getElementByTypeAndId('region', $(this).data('parentId')).numWidgets;
+                    const options = (positionToAdd > numWidgetsInParent) ? {} : {positionToAdd: positionToAdd};
+
+                    lD.selectObject($('#' + $(this).data('parentId')), true, options);
+                }
+            });
+
+            // Handle droppables widgets
+            container.find('.widget-preview').droppable({
+                greedy: true,
+                tolerance: 'pointer',
+                accept: function(el) {
+                    return ($(this).hasClass('parent-editable') && $(el).attr('drop-to') === 'region');
+                },
+                drop: _.debounce(function(event, ui) {
+                    const positionToAdd = ($(this).data('position') + 1);
+                    const numWidgetsInParent = lD.getElementByTypeAndId('region', $(this).data('parentId')).numWidgets;
+                    const options = (positionToAdd > numWidgetsInParent) ? {} : {positionToAdd: positionToAdd};
+
+                    lD.dropItemAdd($('#' + $(this).data('parentId')), ui.draggable[0], options);
+                }, 200)
+            });
+
+            // Region click to add
+            container.find('.designer-region').off('click').on('click', function(e) {
+                if($(this).is('.editable.ui-droppable-active')) {
+                    e.stopPropagation();
+                    lD.selectObject($('#' + $(this).data('regionId')), true);
+                }
+            });
+
+            // Handle droppable regions
+            container.find('.designer-region').droppable({
+                greedy: true,
+                tolerance: 'pointer',
+                accept: function(el) {
+                    return ($(this).hasClass('editable') && $(el).attr('drop-to') === 'region');
+                },
+                drop: _.debounce(function(event, ui) {
+                    lD.dropItemAdd(event.target, ui.draggable[0]);
+                }, 200)
+            });
 
             //Update navbar
             lD.bottombar.render(lD.selectedObject, res);

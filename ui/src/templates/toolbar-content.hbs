@@ -1,12 +1,13 @@
 <div id="content-{{menuIndex}}"
     class="toolbar-pane toolbar-{{name}}-pane {{state}} {{#if search}}toolbar-library-pane{{/if}}">
+    <div class="close-content" data-toggle="tooltip" data-placement="right" data-title="{{trans.closeTab}}"><i class="fa fa-arrow-left"></i></div>
     {{#if search}}
         {{!-- Show search container --}}
         <div id="media-container-{{menuIndex}}" class="toolbar-pane-container"></div>
     {{else if content}}
         <form id="module-search-form" class="module-search-form">
             <div class="form-group">
-                <label for="module-name" class="mb-0">{{trans.searchFilters.name}}</label>
+                <label for="module-name" class="mb-0">{{trans.searchFilters.search}}</label>
                 <input id="module-name" name="module-name" type="text" class="form-control input-name" value="{{ filters.name.value }}">
             </div>
         </form>

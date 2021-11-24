@@ -28,7 +28,6 @@
             </div>
         </div>
     {{else}}
-
         {{#unless smallPreview }}
             {{!-- Render Widget or Region --}}
             <div id="inline-editor" class="inline-editor-opened"></div>
@@ -41,11 +40,13 @@
         {{/unless}}
         
         {{#if isEmpty}}
-            <p class="center-msg">
-                {{res.extra.text}}
-            </p>
+            <div id="{{id}}"class="empty-region designer-region {{#if editable}}editable{{/if}}" data-region-id="{{id}}" data-type="region">
+                <p class="center-msg">
+                    {{res.extra.text}}
+                </p>
+            </div>
         {{else}}
-            <div id="viewer-preview" data-type="{{type}}">
+            <div id="viewer-preview" class="widget-preview {{#if editable}}parent-editable{{/if}}" data-parent="region" data-parent-id="{{parentId}}" data-type="{{type}}" data-position="{{elementPosition}}">
                 {{{res.html}}}
             </div>
         {{/if}}

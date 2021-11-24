@@ -9,9 +9,9 @@
             data-toggle="tooltip" data-container=".timeline-panel" 
             data-title="{{#if readOnlyModeOn}}{{ trans.notInitEmptyDrawer }}{{else}}{{ trans.emptyDrawer }}{{/if}}">
             {{#if readOnlyModeOn}}
-                <span>{{ trans.notInitEmptyDrawer }}</span>
+                <div>{{ trans.notInitEmptyDrawer }}</div>
             {{else}}
-                <span>{{ trans.emptyDrawer }}</span>
+                <div>{{ trans.emptyDrawer }}</div>
             {{/if}}
         </div>
     {{else}}

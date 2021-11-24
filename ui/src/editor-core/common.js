@@ -54,7 +54,7 @@ module.exports = {
      */
     clearTooltips: function() {
         // Remove rogue/detached tooltips
-        $('body').find('.tooltip').remove();
+        $('body').find('.tooltip, .popover').remove();
     },
 
     /**
