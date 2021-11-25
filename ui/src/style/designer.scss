@@ -360,6 +360,48 @@ body, .page-content {
     .show-on-fs {
         display: none;
     }
+
+    .breadcrumb-trail {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        font-size: 1rem;
+        display: flex;
+
+        i.fa {
+            color: $xibo-color-white;
+            margin: 4px;
+        }
+
+        .bc-link {
+            max-width: 100px;
+            height: 24px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            border-radius: 0.2rem;
+            padding: 0px 4px;
+            cursor: pointer;
+            opacity: 0.8;
+            border: 2px solid $xibo-color-gray-light;
+
+            &:hover {
+                opacity: 1;
+            }
+
+            &.bc-layout {
+                background-color: $designer-colour-layout;
+            }
+
+            &.bc-region {
+                background-color: $designer-colour-region;
+            }
+
+            &.bc-widget {
+                background-color: $designer-colour-widget;
+            }
+        }
+    }
 }
 
 @media (max-width: 768px) {
