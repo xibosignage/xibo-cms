@@ -27,6 +27,7 @@ const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
 const deleteElementModalContentTemplate = require('../templates/delete-element-modal-content.hbs');
+const breadcrumbTemplate = require('../templates/breadcrumb-trail.hbs');
 
 // Include modules
 const Layout = require('../layout-editor/layout.js');
@@ -329,7 +330,7 @@ $(document).ready(function() {
 
             // Refresh navigators or viewer
             if(lD.navigatorMode) {
-                lD.renderContainer(lD.viewer, lD.selectedObject);
+                lD.renderContainer(lD.navigator);
             } else {
                 lD.renderContainer(lD.viewer, lD.selectedObject);
             }
@@ -440,7 +441,7 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
             // Save the new selected object
             if(newSelectedType === 'region') {
                 // If we're not in the navigator edit and the region has widgets, select the first one
-                if(!forceSelect && $.isEmptyObject(this.navigator) && !$.isEmptyObject(this.layout.regions[newSelectedId].widgets)) {
+                if(!forceSelect && !this.navigatorMode && !$.isEmptyObject(this.layout.regions[newSelectedId].widgets)) {
                     let widgets = this.layout.regions[newSelectedId].widgets;
 
                     // Select first widget
@@ -455,6 +456,11 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                         }
                     }
                 } else {
+                    if(!this.navigatorMode) {
+                        // If we select region when on viewer mode, turn on the navigator first
+                        this.toggleNavigatorEditing(true, true);
+                    }
+
                     this.layout.regions[newSelectedId].selected = true;
                     this.selectedObject = this.layout.regions[newSelectedId];
                 }
@@ -464,17 +470,23 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                     lD.toggleNavigatorEditing(false, false);
                 }
 
-                if(newSelectedParentType == 'drawer') {
+                if(newSelectedParentType === 'drawer') {
                     this.layout.drawer.widgets[newSelectedId].selected = true;
                     this.selectedObject = this.layout.drawer.widgets[newSelectedId];
                 } else {
                     this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
                     this.selectedObject = this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
                 }
+            } else if(newSelectedType === 'layout' && this.navigatorMode) {
+                // If we select the layout and are in region edit mode, move to normal view/mode
+                lD.toggleNavigatorEditing(false, false);
             }
 
             this.selectedObject.type = newSelectedType;
         }
+
+        // Upgrade breadcrumb navigation based on the selected object
+        lD.upgradeBreadcrumbTrail();
 
         // Refresh the designer containers
         lD.refreshDesigner();
@@ -598,7 +610,15 @@ lD.checkoutLayout = function() {
             // Turn off read only mode
             lD.readOnlyMode = false;
 
-            lD.selectObject();
+            // Hide read only message
+            lD.editorContainer.removeClass('view-mode');
+            lD.editorContainer.find('#read-only-message').remove();
+            
+            // Reload layout
+            lD.reloadData(res.data);
+
+            // Refresh toolbar
+            lD.toolbar.render();
 
             lD.common.hideLoadingScreen();
 
@@ -1963,8 +1983,6 @@ lD.importFromProvider = function(items) {
             }
         }).done(function(res) {
             if(res.success) {
-                console.log(res);
-
                 lD.common.hideLoadingScreen();
 
                 res.data.forEach((newElement) => {
@@ -2037,4 +2055,102 @@ lD.uploadThumbnail = function() {
     } else {
         console.log("Viewer not ready");
     }
+};
+
+/**
+ * Add a new region to the layout
+ */
+lD.addRegion = function () {
+    lD.common.showLoadingScreen();
+
+    if(lD.selectedObject.type == 'region') {
+        lD.navigator.saveRegionPropertiesPanel();
+        lD.selectObject();
+    }
+
+    lD.layout.addElement('region').then((res) => { // Success
+
+        lD.common.hideLoadingScreen(); 
+
+        // Behavior if successful 
+        toastr.success(res.message);
+
+        // Reload with the new added element
+        lD.selectedObject.id = 'region_' + res.data.regionId;
+        lD.selectedObject.type = 'region';
+        lD.reloadData(lD.layout, true);
+    }).catch((error) => { // Fail/error
+
+        lD.common.hideLoadingScreen(); 
+        // Show error returned or custom message to the user
+        let errorMessage = '';
+
+        if(typeof error == 'string') {
+            errorMessage = error;
+        } else {
+            errorMessage = error.errorThrown;
+        }
+
+        toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
+    });  
+};
+
+/**
+ * Updare breadcrumb trail
+ */
+lD.upgradeBreadcrumbTrail = function() {
+    const selectedObject = lD.selectedObject;
+    const $parentContainer = (lD.navigatorMode) ? lD.navigator.DOMObject : lD.viewer.DOMObject;
+    const $breadcrumbContainer = $parentContainer.siblings('.breadcrumb-trail');
+    const data = {
+        layout: null,
+        region: null,
+        widget: null,
+    };
+
+    // Don't show if we're rendering the layout
+    if(selectedObject.type === 'layout') {
+        // Clear breadcrumb
+        $($breadcrumbContainer).empty();
+        return;
+    }
+
+    // Get layout info
+    data.layout = {
+        name: lD.layout.name,
+        id: lD.layout.id
+    };
+
+    // Get region info
+    if(selectedObject.type === 'region') {
+        data.region = {
+            name: selectedObject.name,
+            id: selectedObject.id
+        };
+    }
+
+    // Get widget and region info
+    if(selectedObject.type === 'widget') {
+        data.region = {
+            name: lD.getElementByTypeAndId('region', selectedObject.regionId).name,
+            id: selectedObject.regionId
+        };
+
+        data.widget = {
+            id: selectedObject.id,
+            name: selectedObject.widgetName
+        };
+    }
+
+    // Add translation
+    data.trans = editorsTrans.breadcrumb;
+
+    // Append loading html to the main div
+    $breadcrumbContainer.html(breadcrumbTemplate(data));
+
+    // Handle cell click
+    $breadcrumbContainer.find('.bc-link').on('click', function() {
+        // Select object
+        ($(this).hasClass('bc-layout')) ? lD.selectObject() : lD.selectObject($('#' + $(this).data('id')), true);
+    });
 };

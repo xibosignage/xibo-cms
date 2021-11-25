@@ -489,6 +489,7 @@ Timeline.prototype.render = function(layout) {
     const app = this.parent;
     const self = this;
     const readOnlyModeOn = (app.readOnlyMode != undefined && app.readOnlyMode === true);
+    const noRegions = Object.keys(layout.regions).length == 0;
 
     // If starting zoom is not defined, calculate its value based on minimum widget duration
     if(this.properties.zoom === -1) {
@@ -516,7 +517,7 @@ Timeline.prototype.render = function(layout) {
     // Render timeline template using layout object
     const html = timelineTemplate({
         layout: layout, 
-        noRegions: Object.keys(layout.regions).length == 0,
+        noRegions: noRegions,
         properties: this.properties,
         readOnlyModeOn: readOnlyModeOn,
         trans: timelineTrans,
@@ -773,6 +774,17 @@ Timeline.prototype.render = function(layout) {
             // Prevent browser menu to open
             return false;
         });
+
+        // Create a new region
+        this.DOMObject.find('.empty-timeline').on('click', function() {
+            lD.toggleNavigatorEditing(true);
+            lD.addRegion();
+        });
+
+        // Open timeline if there are no regions
+        if(noRegions && !this.DOMObject.parents('.toggle-panel').hasClass('opened')) {
+            lD.togglePanel(this.DOMObject.parents('.toggle-panel'));
+        }
     }
     
     // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour

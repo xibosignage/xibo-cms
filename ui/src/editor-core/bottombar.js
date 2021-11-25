@@ -14,7 +14,7 @@ let Bottombar = function(parent, container) {
 };
 
 /**
- * Render topbar
+ * Render bottombar
  */
 Bottombar.prototype.render = function(element, data) {
     const self = this;
@@ -38,40 +38,7 @@ Bottombar.prototype.render = function(element, data) {
             lD.toggleNavigatorEditing(false);
         });
 
-        this.DOMObject.find('#add-btn').click(function() {
-            lD.common.showLoadingScreen();
-
-            if(lD.selectedObject.type == 'region') {
-                lD.navigator.saveRegionPropertiesPanel();
-                lD.selectObject();
-            }
-
-            lD.layout.addElement('region').then((res) => { // Success
-
-                lD.common.hideLoadingScreen(); 
-
-                // Behavior if successful 
-                toastr.success(res.message);
-
-                // Reload with the new added element
-                lD.selectedObject.id = 'region_' + res.data.regionId;
-                lD.selectedObject.type = 'region';
-                lD.reloadData(lD.layout, true);
-            }).catch((error) => { // Fail/error
-
-                lD.common.hideLoadingScreen(); 
-                // Show error returned or custom message to the user
-                let errorMessage = '';
-
-                if(typeof error == 'string') {
-                    errorMessage = error;
-                } else {
-                    errorMessage = error.errorThrown;
-                }
-
-                toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
-            });
-        });
+        this.DOMObject.find('#add-btn').click(lD.addRegion);
     } else {
         if(element.type == 'widget') {
             const currentItem = element.index;

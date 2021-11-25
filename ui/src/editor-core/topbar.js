@@ -354,6 +354,11 @@ Topbar.prototype.updateLayoutStatus = function() {
 
     // Click status to scroll timeline to first broken widget
     statusContainer.toggleClass('clickable', (iconCodes[lD.layout.status.code] == undefined)).on('click', function(){
+        // Open timeline
+        if(!app.timeline.DOMObject.parents('.toggle-panel').hasClass('opened')) {
+            lD.togglePanel(app.timeline.DOMObject.parents('.toggle-panel'));
+        }
+
         if(iconCodes[lD.layout.status.code] == undefined) {
             app.timeline.scrollToBrokenWidget();
         }
