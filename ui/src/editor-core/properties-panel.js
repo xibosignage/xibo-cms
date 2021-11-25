@@ -60,7 +60,7 @@ PropertiesPanel.prototype.save = function(element) {
         app.common.showLoadingScreen();
 
         // Save content tab
-        this.openTabOnRender = 'a[href="' + lD.propertiesPanel.DOMObject.find('.nav-tabs .nav-link.active').attr('href') + '"]';
+        this.openTabOnRender = 'a[href="' + app.propertiesPanel.DOMObject.find('.nav-tabs .nav-link.active').attr('href') + '"]';
 
         // Add a save form change to the history array, with previous form state and the new state
         app.manager.addChange(
@@ -396,14 +396,14 @@ PropertiesPanel.prototype.render = function(element, step) {
         }
 
         // Open panel if object is an invalid widget
-        if(element.type === 'widget' && element.isValid === 0 && !$togglePanel.hasClass('opened')) {
-            lD.togglePanel($togglePanel);
+        if(app.mainObjectType === 'layout' && element.type === 'widget' && element.isValid === 0 && !$togglePanel.hasClass('opened')) {
+            app.togglePanel($togglePanel);
         }
 
         // Toggler
         $togglePanel.find('.toggle').off().click(function(e) {
             e.stopPropagation();
-            lD.togglePanel($togglePanel);
+            app.togglePanel($togglePanel);
         });
 
         // Show toggler
