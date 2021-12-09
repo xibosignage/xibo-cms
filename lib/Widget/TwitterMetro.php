@@ -619,7 +619,7 @@ class TwitterMetro extends TwitterBase
                             $tweet->user->profile_image_url = str_replace('_normal', $imageSizeType, $tweet->user->profile_image_url);
                             
                             // Grab the profile image
-                            $file = $this->mediaFactory->queueDownload('twitter_' . $tweet->user->id, $tweet->user->profile_image_url, $expires);
+                            $file = $this->mediaFactory->queueDownload('twitter_' . $tweet->user->id_str ?? $tweet->user->id, $tweet->user->profile_image_url, $expires);
 
                             $replace = ($isPreview)
                                 ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
@@ -668,7 +668,7 @@ class TwitterMetro extends TwitterBase
                             $photoUrl = $mediaObject->media_url;
                             
                             if ($photoUrl != '') {
-                                $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl, $expires);
+                                $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweet->user->id_str ?? $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl, $expires);
 
                                 $replace = "background-image: url(" 
                                     . (($isPreview) ? $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) : $file->storedAs)
