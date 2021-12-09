@@ -405,34 +405,27 @@ class MaintenanceRegularTask implements TaskInterface
 
         // check if we have any layouts with set publish date
         if (count($layouts) > 0) {
-
             foreach ($layouts as $layout) {
-
                 // check if the layout should be published now according to the date
                 if (Carbon::createFromTimestamp($layout->publishedDate)->format('U') < Carbon::now()->format('U')) {
                     try {
-                        // check if draft is valid
-                        if ($layout->status === ModuleWidget::$STATUS_INVALID && isset($layout->statusMessage)) {
-                            throw new GeneralException(__($layout->statusMessage));
-                        } else {
-                            // publish the layout
-                            $layout = $this->layoutFactory->concurrentRequestLock($layout, true);
-                            try {
-                                $draft = $this->layoutFactory->getByParentId($layout->layoutId);
-                                $draft->publishDraft();
-                                $draft->load();
-                                $draft->xlfToDisk([
-                                    'notify' => true,
-                                    'exceptionOnError' => true,
-                                    'exceptionOnEmptyRegion' => false
-                                ]);
-                            } finally {
-                                $this->layoutFactory->concurrentRequestRelease($layout, true);
-                            }
-                            $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
+                        // publish the layout
+                        $layout = $this->layoutFactory->concurrentRequestLock($layout, true);
+                        try {
+                            $draft = $this->layoutFactory->getByParentId($layout->layoutId);
+                            $draft->publishDraft();
+                            $draft->load();
+                            $draft->xlfToDisk([
+                                'notify' => true,
+                                'exceptionOnError' => true,
+                                'exceptionOnEmptyRegion' => false
+                            ]);
+                        } finally {
+                            $this->layoutFactory->concurrentRequestRelease($layout, true);
                         }
+                        $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
                     } catch (GeneralException $e) {
-                        $this->log->error('Error publishing layout ID ' . $layout->layoutId . ' Failed with message: ' . $e->getMessage());
+                        $this->log->error('Error publishing layout ID ' . $layout->layoutId . ' with name ' . $layout->layout . ' Failed with message: ' . $e->getMessage());
 
                         // create a notification
                         $subject = __(sprintf('Error publishing layout ID %d', $layout->layoutId));
@@ -442,8 +435,7 @@ class MaintenanceRegularTask implements TaskInterface
                                 $date->startOfDay()->format('U'),
                                 $date->addDay()->startOfDay()->format('U'))) <= 0) {
 
-                            $body = __(sprintf('Publishing layout ID %d failed. With message %s', $layout->layoutId,
-                                $e->getMessage()));
+                            $body = __(sprintf('Publishing layout ID %d with name %s failed. With message %s', $layout->layoutId, $layout->layout, $e->getMessage()));
 
                             $notification = $this->notificationFactory->createSystemNotification(
                                 $subject,
