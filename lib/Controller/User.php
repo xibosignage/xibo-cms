@@ -910,8 +910,13 @@ class User extends Base
 
         if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $sanitizedParams->getInt('userTypeId');
-            $user->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
-            $user->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
+            if ($user->retired === 1) {
+                $user->isSystemNotification = 0;
+                $user->isDisplayNotification = 0;
+            } else {
+                $user->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
+                $user->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
+            }
         }
 
         $user->firstName = $sanitizedParams->getString('firstName');
