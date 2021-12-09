@@ -232,13 +232,14 @@ class UserGroupFactory extends BaseFactory
         if ($parsedFilter->getInt('checkRetired') === 1) {
             $body .= '
                 AND `group`.groupId NOT IN (
-                    SELECT group.groupId 
+                    SELECT `group`.groupId 
                       FROM `user`
-                        INNER JOIN lkusergroup
-                            ON lkusergroup.userId = user.userId
+                        INNER JOIN `lkusergroup`
+                            ON `lkusergroup`.userId = `user`.userId
                         INNER JOIN `group`
-                            ON `group`.groupId = lkusergroup.groupId
-                            AND isUserSpecific = 1 AND user.retired = 1
+                            ON `group`.groupId = `lkusergroup`.groupId
+                            AND isUserSpecific = 1
+                      WHERE user.retired = 1
                 )
                 ';
         }
