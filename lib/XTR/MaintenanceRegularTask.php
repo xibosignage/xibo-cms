@@ -376,32 +376,31 @@ class MaintenanceRegularTask implements TaskInterface
 
         // check if we have any layouts with set publish date
         if (count($layouts) > 0) {
-
             foreach ($layouts as $layout) {
-
                 // check if the layout should be published now according to the date
                 if ($this->date->parse($layout->publishedDate)->format('U') < $this->date->getLocalDate(null, 'U')) {
                     try {
-                        // check if draft is valid
-                        if ($layout->status === ModuleWidget::$STATUS_INVALID && isset($layout->statusMessage)) {
-                            throw new XiboException(__($layout->statusMessage));
-                        } else {
-                            // publish the layout
-                            $layout = $this->layoutFactory->concurrentRequestLock($layout, true);
-                            try {
-                                $draft = $this->layoutFactory->getByParentId($layout->layoutId);
-                                $draft->publishDraft();
-                                $draft->load();
-                                $draft->xlfToDisk([
-                                    'notify' => true,
-                                    'exceptionOnError' => true,
-                                    'exceptionOnEmptyRegion' => false
-                                ]);
-                            } finally {
-                                $this->layoutFactory->concurrentRequestRelease($layout, true);
+                        // publish the layout
+                        $layout = $this->layoutFactory->concurrentRequestLock($layout, true);
+                        try {
+                            $draft = $this->layoutFactory->getByParentId($layout->layoutId);
+                            if ($draft->status === ModuleWidget::$STATUS_INVALID
+                                && isset($draft->statusMessage)
+                                && (count($draft->getStatusMessage()) > 1 || count($draft->getStatusMessage()) === 1 && !$draft->checkForEmptyRegion())
+                            ) {
+                                throw new XiboException(json_encode($draft->statusMessage));
                             }
-                            $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
+                            $draft->publishDraft();
+                            $draft->load();
+                            $draft->xlfToDisk([
+                                'notify' => true,
+                                'exceptionOnError' => true,
+                                'exceptionOnEmptyRegion' => false
+                            ]);
+                        } finally {
+                            $this->layoutFactory->concurrentRequestRelease($layout, true);
                         }
+                        $this->log->info('Published layout ID ' . $layout->layoutId . ' new layout id is ' . $draft->layoutId);
                     } catch (XiboException $e) {
                         $this->log->error('Error publishing layout ID ' . $layout->layoutId . ' Failed with message: ' . $e->getMessage());
 
@@ -413,8 +412,7 @@ class MaintenanceRegularTask implements TaskInterface
                                 $this->date->getLocalDate($date->startOfDay(), 'U'),
                                 $this->date->getLocalDate($date->addDay(1)->startOfDay(), 'U'))) <= 0) {
 
-                            $body = __(sprintf('Publishing layout ID %d failed. With message %s', $layout->layoutId,
-                                $e->getMessage()));
+                            $body = __(sprintf('Publishing layout ID %d with name %s failed. With message %s', $layout->layoutId, $layout->layout, $e->getMessage()));
 
                             $notification = $this->notificationFactory->createSystemNotification(
                                 $subject,

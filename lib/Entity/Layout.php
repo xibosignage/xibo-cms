@@ -481,6 +481,27 @@ class Layout implements \JsonSerializable
     }
 
     /**
+     * Helper function that checks if Layout has an empty Region
+     * without building it.
+     */
+    public function checkForEmptyRegion()
+    {
+        $this->load();
+
+        foreach ($this->regions as $region) {
+            $widgets = $region->getPlaylist()->setModuleFactory($this->moduleFactory)->expandWidgets();
+            $countWidgets = count($widgets);
+
+            if ($countWidgets <= 0) {
+                $this->hasEmptyRegion = true;
+                break;
+            }
+        }
+
+        return $this->hasEmptyRegion;
+    }
+
+    /**
      * Get Widgets assigned to this Layout
      * @return Widget[]
      * @throws NotFoundException
