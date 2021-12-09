@@ -1488,9 +1488,9 @@ class User extends Base
 
         if (isset($_SESSION['tfaSecret'])) {
             // validate the provided two factor code with secret for this user
-            $result = $tfa->verifyCode($_SESSION['tfaSecret'], $code, 2);
+            $result = $tfa->verifyCode($_SESSION['tfaSecret'], $code, 3);
         } elseif (isset($user->twoFactorSecret)) {
-            $result = $tfa->verifyCode($user->twoFactorSecret, $code, 2);
+            $result = $tfa->verifyCode($user->twoFactorSecret, $code, 3);
         } else {
             $result = false;
         }
