@@ -2246,7 +2246,7 @@ class Display extends Base
         $authenticationCode = $sanitizedParams->getString('twoFactorCode');
 
         $tfa = new TwoFactorAuth($issuer);
-        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode);
+        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode, 3);
 
         if ($result) {
 
