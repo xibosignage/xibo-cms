@@ -193,11 +193,10 @@ class MenuBoard extends ModuleWidget
         }
 
         $categories = $this->menuBoardCategoriesSelected();
-        $numOfColumns = $this->getOption('numOfColumns');
         $categoriesInColumns = [];
         $notAssignedCategories = [];
 
-        for ($i = 1; $i <= $numOfColumns; $i++) {
+        for ($i = 1; $i <= $this->getOption('templateZones'); $i++) {
             foreach (array_filter(explode(',', $this->getOption('categories_' . $i))) as $categoryId) {
                 $categoriesInColumns[] = $categoryId;
             }
@@ -210,6 +209,18 @@ class MenuBoard extends ModuleWidget
         }
 
         return $notAssignedCategories;
+    }
+
+    private function getTemplateInfo()
+    {
+        $templateInfo = [];
+        $template = $this->getTemplateById($this->getOption('templateId'));
+
+        if (isset($template)) {
+            $templateInfo = array_key_exists('info', $template) ? $template['info'] : [];
+        }
+
+        return $templateInfo;
     }
 
     /** @inheritdoc */
@@ -229,10 +240,16 @@ class MenuBoard extends ModuleWidget
             }
         }
 
+        $templateInfo = $this->getTemplateInfo();
+        $templateOptions = array_key_exists('options', $templateInfo) ? $templateInfo['options'] : [];
+        $gridTemplate = array_key_exists('grid-template', $templateInfo) ? $templateInfo['grid-template'] : '';
+
         return [
             'menuBoard' => $menuBoard,
             'menuCategories' => $menuBoardCategories,
             'templates' => $this->templatesAvailable(true),
+            'templateOptions' => $templateOptions,
+            'gridTemplate' => $gridTemplate,
             'products' => $products,
             'highlightProducts' => explode(',', $this->getOption('highlightProducts'))
         ];
@@ -346,6 +363,9 @@ class MenuBoard extends ModuleWidget
                 throw new InvalidArgumentException(__('You do not have permission to use that Menu Board'), 'menuId');
             }
         } elseif ($step == 2) {
+            // Template
+            $this->setOption('templateId', $sanitizedParams->getString('templateId'));
+
             // Categories
             $categories = $sanitizedParams->getIntArray('menuBoardCategories', ['default' => []]);
 
@@ -359,7 +379,10 @@ class MenuBoard extends ModuleWidget
                 $this->setOption('categories', implode(',', $categories));
             }
 
-            $this->setOption('numOfColumns', $sanitizedParams->getInt('numOfColumns', ['default' => 1]));
+            // Set template zones and layout structure
+            $templateInfo = $this->getTemplateInfo();
+            $templateZones = array_key_exists('zones', $templateInfo) ? $templateInfo['zones'] : 1;
+            $this->setOption('templateZones', $templateZones);
         } else {
             $highlightProducts = $sanitizedParams->getIntArray('productsHighlight', ['default' => []]);
 
@@ -376,45 +399,29 @@ class MenuBoard extends ModuleWidget
             $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
             $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
 
-            $this->setOption('templateId', $sanitizedParams->getString('templateId'));
-            $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
-            $this->setOption('showImagesFor', $sanitizedParams->getString('showImagesFor'));
+            // Template options
+            $templateInfo = $this->getTemplateInfo();
+            $templateOptions = array_key_exists('options', $templateInfo) ? $templateInfo['options'] : [];
 
+            foreach ($templateOptions as $key => $option) {
+                if ($option['type'] === "checkbox" || $option['type'] === "switch") {
+                    $optionValue = $sanitizedParams->getCheckbox($key);
+                } elseif ($sanitizedParams->getString($key) == "") {
+                    $optionValue = $option['default'];
+                } else {
+                    $optionValue = $sanitizedParams->getString($key);
+                }
+
+                $this->setOption($key, $optionValue);
+            }
 
             $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', ''));
             $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
             $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
-
-            $this->setOption('showMenuBoardName', $sanitizedParams->getCheckbox('showMenuBoardName'));
-            $this->setOption('showMenuCategoryName', $sanitizedParams->getCheckbox('showMenuCategoryName'));
-            $this->setOption('showProductOptions', $sanitizedParams->getCheckbox('showProductOptions'));
-            $this->setOption('showProductDescription', $sanitizedParams->getCheckbox('showProductDescription'));
-            $this->setOption('showProductAllergyInformation', $sanitizedParams->getCheckbox('showProductAllergyInformation'));
             $this->setOption('showUnavailable', $sanitizedParams->getCheckbox('showUnavailable'));
-
-            $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
-            $this->setOption('fontColorMenu', $sanitizedParams->getString('fontColorMenu'));
-            $this->setOption('fontColorCategory', $sanitizedParams->getString('fontColorCategory'));
-            $this->setOption('fontColorProduct', $sanitizedParams->getString('fontColorProduct'));
-            $this->setOption('fontColorUnavailableProduct', $sanitizedParams->getString('fontColorUnavailableProduct'));
-            $this->setOption('fontColorHighlightProduct', $sanitizedParams->getString('fontColorHighlightProduct'));
-
             $this->setOption('fontFamily', $sanitizedParams->getString('fontFamily'));
-            $this->setOption('fontSizeMenu', $sanitizedParams->getInt('fontSizeMenu'));
-            $this->setOption('fontSizeCategory', $sanitizedParams->getInt('fontSizeCategory'));
-            $this->setOption('fontSizeProduct', $sanitizedParams->getInt('fontSizeProduct'));
-            $this->setOption('fontSizeProductDescription', $sanitizedParams->getInt('fontSizeProductDescription'));
-            $this->setOption('fontSizeProductUnavailable', $sanitizedParams->getInt('fontSizeProductUnavailable'));
-            $this->setOption('fontSizeProductHighlight', $sanitizedParams->getInt('fontSizeProductHighlight'));
 
-            $this->setOption('numOfRows', $sanitizedParams->getInt('numOfRows', ['default' => 1]));
-            $this->setOption('productsPerPage', $sanitizedParams->getInt('productsPerPage', ['default' => 0]));
-
-            if ($this->getOption('overrideTemplate') == 1) {
-                $this->setRawNode('styleSheet', $request->getParam('styleSheet', null));
-            }
-
-            for ($i = 1; $i <= $this->getOption('numOfColumns'); $i++) {
+            for ($i = 1; $i <= $this->getOption('templateZones'); $i++) {
                 $this->setOption('categories_' . $i, implode(',', $sanitizedParams->getIntArray('menuBoardCategories_' . $i, ['default' => []])));
             }
 
@@ -447,74 +454,23 @@ class MenuBoard extends ModuleWidget
 
         // Get CSS from the original template or from the input field
         $styleSheet = '';
-        $templateOverrode = false;
-        if ($this->getOption('overrideTemplate', 1) == 0) {
-            $template = $this->getTemplateById($this->getOption('templateId'));
+        $template = $this->getTemplateById($this->getOption('templateId'));
 
-            if (isset($template)) {
-                $styleSheet = $template['css'];
-            }
-        } else {
-            $styleSheet = $this->getRawNode('styleSheet', '');
-            $templateOverrode = true;
-        }
+        $widgetOriginalWidth = null;
+        $widgetOriginalHeight = null;
+        $styleSheet = $template['css'];
+
+        $widgetOriginalWidth = $template['widgetOriginalWidth'];
+        $widgetOriginalHeight = $template['widgetOriginalHeight'];
 
         $styleSheet = $this->parseLibraryReferences($this->isPreview(), $styleSheet);
 
-        // If we have some options then add them to the end of the style sheet
+        $this->getLog()->debug('--- Stylesheet');
+        $this->getLog()->debug($styleSheet);
 
-        if ($this->getOption('backgroundColor') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardContainer { background-color: ' . $this->getOption('backgroundColor') . '; }';
-        }
+        // Parse stylesheet values using options
+        $styleSheet = $this->parseCSSProperties($styleSheet);
 
-        if ($this->getOption('fontColorMenu') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardName { color: ' . $this->getOption('fontColorMenu') . '; }';
-        }
-
-        if ($this->getOption('fontColorCategory') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardCategoryContainer  { color: ' . $this->getOption('fontColorCategory') . '; }';
-        }
-
-        if ($this->getOption('fontColorProduct') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardProductContainer { color: ' . $this->getOption('fontColorProduct') . '; }';
-        }
-
-        if ($this->getOption('fontColorUnavailableProduct') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardProductContainer.product-unavailable { color: ' . $this->getOption('fontColorUnavailableProduct') . '; }';
-        }
-
-        if ($this->getOption('fontColorHighlightProduct') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardProductContainer.product-highlight { color: ' . $this->getOption('fontColorHighlightProduct') . '; }';
-        }
-
-        if ($this->getOption('fontFamily') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardContainer { font-family: ' . $this->getOption('fontFamily') . '; }';
-        }
-
-        if ($this->getOption('fontSizeMenu') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardName { font-size: ' . $this->getOption('fontSizeMenu') . 'px; }';
-        }
-
-        if ($this->getOption('fontSizeCategory') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardCategoryContainer { font-size: ' . $this->getOption('fontSizeCategory') . 'px; }';
-        }
-
-        if ($this->getOption('fontSizeProduct') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardProductContainer { font-size: ' . $this->getOption('fontSizeProduct') . 'px; }';
-        }
-
-        if ($this->getOption('fontSizeProductDescription') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardProductContainer.MenuBoardProductAllergyInfo { font-size: ' . $this->getOption('fontSizeProductDescription') . 'px; }';
-            $styleSheet .= '.MenuBoardProductContainer.MenuBoardProductDescription { font-size: ' . $this->getOption('fontSizeProductDescription') . 'px; }';
-        }
-
-        if ($this->getOption('fontSizeProductUnavailable') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardProductContainer.product-unavailable { font-size: ' . $this->getOption('fontSizeProductUnavailable') . 'px; }';
-        }
-
-        if ($this->getOption('fontSizeProductHighlight') != '' && !$templateOverrode) {
-            $styleSheet .= '.MenuBoardProductContainer.product-highlight { font-size: ' . $this->getOption('fontSizeProductHighlight') . 'px; }';
-        }
         // Calculate duration
         $duration = $this->getCalculatedDurationForGetResource();
 
@@ -529,18 +485,19 @@ class MenuBoard extends ModuleWidget
                 'type' => $this->getModuleType(),
                 'duration' => $duration,
                 'maxPages' => $table['pages'],
-                'productsPerPage' => $this->getOption('productsPerPage'),
                 'originalWidth' => $this->region->width,
                 'originalHeight' => $this->region->height,
+                'widgetDesignWidth' => $widgetOriginalWidth,
+                'widgetDesignHeight' => $widgetOriginalHeight,
                 'generatedOn' => Carbon::now()->format('c'),
                 'noDataMessage' => $this->noDataMessageOrDefault('')['html']
             ])
             ->appendJavaScript('
                 $(document).ready(function() {
                     $("body").xiboLayoutScaler(options); 
-                    const runOnVisible = function() { $(".MenuBoardContainer").menuBoardRender(options);  };
+                    const runOnVisible = function() { $(".menu-board-parent-container").menuBoardRender(options);  };
                     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
-                    $(".MenuBoardContainer").find("img").xiboImageRender(options);
+                    $(".menu-board-parent-container").find("img").xiboImageRender(options);
                 });
             ')
             ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')))
@@ -563,24 +520,31 @@ class MenuBoard extends ModuleWidget
         if ($categories == '') {
             return $this->noDataMessageOrDefault(__('No categories selected'));
         }
-        $table = '';
+
+        $menu = '';
         $maxPages = 1;
 
         try {
-            if ($this->getOption('showMenuBoardName') == 1 && $this->hasMenu()) {
-                $table .= '<h1 id="MenuBoardName" class="MenuBoardName">' . $menuBoard->name . '</h1>';
-            }
+            // Main menu container
+            $menu .= '<div class="menu-board-parent-container">';
 
-            $table .= '<div class="row" style="display: flex;">';
+            // Menu board name
+            $menu .= '<div id="menuBoardName" class="menu-board-name">' . $menuBoard->name . '</div>';
 
-            for ($i = 1; $i <= $this->getOption('numOfColumns'); $i++) {
+            // Get template option property
+            $templateInfo = $this->getTemplateInfo();
+            $gridTemplate = array_key_exists('grid-template', $templateInfo) ? $templateInfo['grid-template'] : '';
+
+            // Menu categories container
+            $menu .= "<div class='menu-board-categories-container' style='display: grid; grid-template: " . $gridTemplate . ";' >";
+
+            // Create zones
+            for ($i = 1; $i <= $this->getOption('templateZones'); $i++) {
                 $categoryIds = array_filter(explode(',', $this->getOption('categories_' . $i)));
-                if ($categoryIds != []) {
-                    $table .= '<div class="MenuBoardContainer" id="MenuBoardContainer_' . $i . '">';
-                }
+
+                $menu .= '<div class="menu-board-zone" id="menuBoardZone_' . $i . '" style="grid-area: z' . $i . ';" >';
 
                 foreach ($categoryIds as $categoryId) {
-                    $rowCount = 1;
                     // Get the category
                     $category = $this->menuBoardCategoryFactory->getById((int)$categoryId);
 
@@ -591,141 +555,96 @@ class MenuBoard extends ModuleWidget
                         $categoryProductsData = $category->getProducts();
                     }
 
-                    $table .= '<div class="MenuBoardCategoryContainer">';
+                    // Category header
+                    $menu .= '<div class="menu-board-category-header">';
+                    $menu .= '  <div class="menu-board-category-header-name">' . $category->name . '</div>';
+                    $menu .= '</div>';
 
-                    if ($this->getOption('showMenuCategoryName') == 1) {
-                        $table .= '<h2 class="MenuBoardCategoryName">' . $category->name . '</h2>';
-                    }
+                    // Get max items per category/zone
+                    $maxItems = array_key_exists('max-items', $templateInfo) ? $templateInfo['max-items'][$i] : -1;
 
-                    if (in_array($this->getOption('showImagesFor'), ['all', 'category'])) {
-                        try {
-                            $file = $this->mediaFactory->getById($category->mediaId);
+                    // Create pages if there are more elements than space for them
+                    $createPages = $maxItems != -1 && sizeof($categoryProductsData) > $maxItems;
+                    $categoryPages = 0;
 
-                            // Already in the library - assign this mediaId to the Layout immediately.
-                            $this->assignMedia($file->mediaId);
+                    // Products
+                    $menu .= '<div class="menu-board-products-container" data-max-items="' . $maxItems . '">';
 
-                            $replace = ($this->isPreview())
-                                ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
-                                : '<img src="' . $file->storedAs . '" />';
-
-                            $table .= '<p class="MenuBoardMedia MenuBoardCategoryMedia" id="category_media_' . $category->menuCategoryId . '">' . $replace . '</p>';
-                        } catch (NotFoundException $e) {
-                            //
-                        }
-                    }
-
-                    // close MenuBoardCategoryContainer
-                    $table .= '</div>';
-                    $table .= '<div class="ProductsContainer">';
-                    $productPerRowCount = 1;
-
-                    // if we should show specific number of products per page
-                    // then calculate the max number of pages for each category products,
-                    // this is then passed to jQuery cycle to calculate cycle timeout
-                    if ($this->getOption('productsPerPage') > 0) {
-                        $numberOfPages = ceil(count($categoryProductsData) / $this->getOption('productsPerPage'));
-
-                        if ($numberOfPages > $maxPages) {
-                            $maxPages = $numberOfPages;
-                        }
-                    }
-
-                    foreach ($categoryProductsData as $categoryProduct) {
-                        // paging, if we have more than one page to show for this category products then wrap products html in a div
-                        if ($this->getOption('productsPerPage') > 0 && $rowCount === 1 && count($categoryProductsData) > $this->getOption('productsPerPage')) {
-                            $table .= '<div class="page">';
-                        }
-
-                        // if we have more than one product to show in a row, then wrap required number of products in a div
-                        if ($this->getOption('numOfRows') > 1 && $productPerRowCount == 1) {
-                            $table .= '<div class="row" style="display: flex;">';
+                    // Create products
+                    foreach ($categoryProductsData as $key => $categoryProduct) {
+                        // Create product page
+                        if ($createPages && $key % $maxItems == 0) {
+                            $menu .= '<div class="menu-board-product-page">';
+                            $categoryPages++;
+                            $toClosePage = true;
                         }
 
                         // depending on configured options, we will want to assign different css classes to the MenuBoardProductContainer
                         if ($categoryProduct->availability === 0 && $this->getOption('showUnavailable') == 0) {
                             continue;
                         } elseif ($categoryProduct->availability === 0 && $this->getOption('showUnavailable') == 1) {
-                            $table .= '<div class="MenuBoardProductContainer product-unavailable">';
+                            $menu .= '<div class="menu-board-product product-unavailable">';
                         } elseif (in_array($categoryProduct->menuProductId, explode(',', $this->getOption('highlightProducts')))) {
-                            $table .= '<div class="MenuBoardProductContainer product-highlight">';
+                            $menu .= '<div class="menu-board-product product-highlight">';
                         } else {
-                            $table .= '<div class="MenuBoardProductContainer">';
+                            $menu .= '<div class="menu-board-product">';
                         }
 
                         // Product name and price should always be visible.
-                        $table .= '<div class="MenuBoardProduct MenuBoardProductName" id="productName_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $categoryProduct->name . '</span></div>';
-                        $table .= '<div class="MenuBoardProduct MenuBoardProductPrice" id="productPrice_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $categoryProduct->price . '</span></div>';
+                        $menu .= '<div class="menu-board-product-name" id="productName_' . $i . '"><span>' . $categoryProduct->name . '</span></div>';
+                        $menu .= '<div class="menu-board-product-price" id="productPrice_' . $i . '"><span>' . $categoryProduct->price . '</span></div>';
 
-                        // Product options, description, allergy info and images visibility depends on the Widget configuration
-                        if ($this->getOption('showProductOptions') == 1) {
-                            foreach ($categoryProduct->getOptions() as $productOption) {
-                                $table .= '<div class="MenuBoardProduct MenuBoardProductOptions" id="productOptions_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $productOption->option . ' ' . $productOption->value . '</span></div>';
-                            }
+                        // Product options
+                        $menu .= '<div class="menu-board-product-options-container">';
+                        foreach ($categoryProduct->getOptions() as $productOption) {
+                            $menu .= '<div class="menu-board-product-options" id="productOptions_' . $i . '"><span>' . $productOption->option . ': ' . $productOption->value . '</span></div>';
                         }
+                        // Close menu-board-product-options-container
+                        $menu .= '</div>';
 
-                        if ($this->getOption('showProductDescription')) {
-                            $table .= '<div class="MenuBoardProduct MenuBoardProductDescription" id="productDescription_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $categoryProduct->description . '</span></div>';
+                        // Description
+                        $menu .= '<div class="menu-board-product-description" id="productDescription_' . $i . '"><span>' . $categoryProduct->description . '</span></div>';
+
+                        // Allergy
+                        $menu .= '<div class="menu-board-product-allergy" id="productAllergyInfo_' . $i . '"><span>' . $categoryProduct->allergyInfo . '</span></div>';
+
+                        // Close menu-board-product
+                        $menu .= '</div>';
+
+                        // If the next item will create a new page, close current
+                        if ($createPages && $toClosePage && ($key + 1) % $maxItems == 0) {
+                            $menu .= '</div>';
+                            $toClosePage = false;
                         }
-
-                        if ($this->getOption('showProductAllergyInformation')) {
-                            $table .= '<div class="MenuBoardProduct MenuBoardProductAllergyInfo" id="productAllergyInfo_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $categoryProduct->allergyInfo . '</span></div>';
-                        }
-
-                        if (in_array($this->getOption('showImagesFor'), ['all', 'product'])) {
-                            try {
-                                $file = $this->mediaFactory->getById($categoryProduct->mediaId);
-
-                                // Already in the library - assign this mediaId to the Layout immediately.
-                                $this->assignMedia($file->mediaId);
-
-                                $replace = ($this->isPreview())
-                                    ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
-                                    : '<img src="' . $file->storedAs . '" />';
-
-
-                                $table .= '<div class="MenuBoardMedia MenuBoardProductMedia" id="productMedia_' . $i . '"><span class="MenuBoardProductSpan_' . $rowCount . '_' . $i . '" id="span_' . $rowCount . '_' . ($i + 1) . '">' . $replace . '</span></div>';
-                            } catch (NotFoundException $e) {
-                                $table .= '</div>';
-                                continue;
-                            }
-                        }
-
-                        // if we should show more than one product in a row, see if reached the requested number of products per row yet, if yes close the corresponding div
-                        if ($this->getOption('numOfRows') > 1 && $this->getOption('numOfRows') == $productPerRowCount) {
-                            $table .= '</div>';
-                            $productPerRowCount = 0;
-                        }
-
-                        // if we have more than one page, then check how many products we already have, if it's equals to the productsPerPage then close the page div
-                        if ($this->getOption('productsPerPage') > 0 && $rowCount == $this->getOption('productsPerPage')) {
-                            $table .= '</div>';
-                            $rowCount = 0;
-                        }
-
-                        $rowCount++;
-                        $productPerRowCount++;
-
-                        // close MenuBoardProductContainer
-                        $table .= '</div>';
                     }
-                    // close ProductsContainer
-                    $table .= '</div>';
 
-                    // if we have only one category to go through, close the MenuBoardContainer container
-                    if (count($categoryIds) == 1) {
-                        $table .= '</div>';
+                    // Save max pages based on this category total pages 
+                    if ($categoryPages > $maxPages) {
+                        $maxPages = $categoryPages;
                     }
+
+                    // If there are pages to be closed...
+                    if ($createPages && $toClosePage) {
+                        $menu .= '</div>';
+                        $toClosePage = false;
+                    }
+
+                    // Close menu-board-products-container
+                    $menu .= '</div>';
                 }
-                // with more than one category, close the row MenuBoardContainer here.
-                if (count($categoryIds) > 1) {
-                    $table .= '</div>';
-                }
+
+                // Close menu-board-zone
+                $menu .= '</div>';
             }
 
-            // close the row div
-            $table .= '</div>';
+            // Close menu-board-categories-container
+            $menu .= '</div>';
+
+            // Close menu-board-parent-container
+            $menu .= '</div>';
+
             return [
-                'html' => $table,
+                'html' => $menu,
                 'pages' => $maxPages
             ];
         } catch (NotFoundException $e) {
@@ -734,6 +653,48 @@ class MenuBoard extends ModuleWidget
 
             return $this->noDataMessageOrDefault();
         }
+    }
+
+    private function parseCSSProperties($css)
+    {
+        // Get template option property
+        $templateInfo = $this->getTemplateInfo();
+        $templateOptions = array_key_exists('options', $templateInfo) ? $templateInfo['options'] : [];
+
+        // We've got something at least, so prepare the template
+        $matches = [];
+        preg_match_all('/\[.*?\]/', $css, $matches);
+
+        // Run through all [] substitutes in $matches for colors
+        foreach ($matches[0] as $sub) {
+            // Get option name
+            $option = substr($sub, 1, -1);
+
+            // Value from form options or default values from the template
+            $value = $this->getOption($option) ? $this->getOption($option) : $templateOptions[$option]['default'];
+
+            // Substitute the replacement we have found (it might be '')
+            $css = str_replace($sub, $value, $css);
+        }
+
+        // Build override rules based on other options
+        foreach ($templateOptions as $key => $option) {
+            if (!array_key_exists('rule', $option)) {
+                continue;
+            }
+
+            $query = array_key_exists('query', $option) ? $option['query'] : ("." . $key);
+            if ($option['rule'] == 'display' && $this->getOption($key) == 0) {
+                $css .= " $query { display: none; } ";
+            }
+        }
+
+        // Font family
+        if ($this->getOption('fontFamily') != '') {
+            $css .= ' .menu-board-parent-container { font-family: ' . $this->getOption('fontFamily') . '; }';
+        }
+
+        return $css;
     }
 
     /**
@@ -797,7 +758,7 @@ class MenuBoard extends ModuleWidget
 
     private function clearColumnCategories()
     {
-        for ($i = 1; $i <= $this->getOption('numOfColumns', 1); $i++) {
+        for ($i = 1; $i <= $this->getOption('templateZones'); $i++) {
             $this->setOption('categories_' . $i, '');
         }
     }
