@@ -1314,6 +1314,35 @@ body, .page-content {
                         }
                     }
                 }
+
+                #zonesContainer {
+                    .structure {
+                        display: grid;
+                        width: 100%;
+
+                        .connectedlist {
+                            border: 1px solid $xibo-color-blue-lighter;
+
+                            ul {
+                                height: 100%;
+                            }
+                        }
+                    }
+
+                    .connectedlist {
+                        ul.ui-sortable {
+                            width: 100%;
+                            min-height: 60px;
+                            overflow: hidden;
+                            margin: 0;
+
+                            li {
+                                width: initial;
+                                text-align: center;
+                            }
+                        }
+                    }
+                }
             }
 
             .form-content-title {

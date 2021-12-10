@@ -42,24 +42,8 @@
         } else if($(this).find('form').data('formStep') === 3) {
             formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
-            // Set override template field, using the helper ()
-            formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls', '.template-selector-control');
-
-            // Set clock type input field, using the helper ()
-            formHelpers.setupObjectValueInputFields($(this), '#templateId', ['.template-selector-default'], ['empty']);
-
             // Initialise CKEditor for the noDataMessage
             formHelpers.setupDualTypeTextArea(this, 'noDataMessage');
-
-            // Setup template override
-            formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId',
-                {
-                    '#styleSheet': 'css'
-                });
-
-            formHelpers.setupCheckboxInputFields($(this).find('form'), '#showUnavailable', '.unavailable-product');
-            formHelpers.setupCheckboxInputFields($(this).find('form'), '#showMenuBoardName', '.menu-name-control');
-            formHelpers.setupCheckboxInputFields($(this).find('form'), '#showMenuCategoryName', '.category-name-control');
 
             menuBoardFormSetup(this);
         }
@@ -85,7 +69,7 @@
         } else if($(this).find('form').data('formStep') === 3) {
             var form3 = $("#menuBoardEditFormStep3");
 
-            for (var i = 1; i <= form3.find('#numOfColumns').val(); i++) {
+            for (var i = 1; i <= $(this).find('form').data().elementOptions.templateZones; i++) {
                 form3.find('input[name="menuBoardCategories_'+ i + '[]"]').remove();
 
                 $($("#categoriesSelected_"+i).sortable('toArray')).each(function() {
@@ -105,14 +89,18 @@
             connectWith: '.connectedSortable2',
             dropOnEmpty: true
         }).disableSelection();
+        
+        $('.connectedSortable2.single').on("sortreceive", function(event, ui) {
+            var $list = $(this);
+            
+            if ($list.children().length > 1) {
+                toastr.warning(menuBoardTranslations.maxNumElementsPerZone);
+                $(ui.sender).sortable('cancel');
+            }
+        });
 
         // Configure some color pickers
-        $(dialog).find('#backgroundColor').colorpicker();
-        $(dialog).find('#fontColorMenu').colorpicker();
-        $(dialog).find('#fontColorCategory').colorpicker();
-        $(dialog).find('#fontColorProduct').colorpicker();
-        $(dialog).find('#fontColorUnavailableProduct').colorpicker();
-        $(dialog).find('#fontColorHighlightProduct').colorpicker();
+        $(dialog).find('.colorpicker').colorpicker();
 
         // Populate the font list with options
         var $fontFamily = $(dialog).find('#fontFamily');
