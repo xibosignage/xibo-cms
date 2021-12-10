@@ -128,8 +128,6 @@ class MenuBoardWidgetTest extends LocalWebTestCase
         foreach ($widget['widgetOptions'] as $option) {
             if ($option['option'] == 'showUnavailable') {
                 $this->assertSame(0, intval($option['value']));
-            } elseif ($option['option'] == 'templateId') {
-                $this->assertSame('menuboard', $option['value']);
             } elseif ($option['option'] == 'name') {
                 $this->assertSame('Test Menu Board Widget', $option['value']);
             } elseif ($option['option'] == 'productsHighlight') {
