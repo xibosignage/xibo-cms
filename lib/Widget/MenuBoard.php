@@ -685,7 +685,7 @@ class MenuBoard extends ModuleWidget
 
             $query = array_key_exists('query', $option) ? $option['query'] : ('.' . $key);
             if ($option['rule'] == 'display' && $this->getOption($key) == 0) {
-                $css .= " " . $query . " { display: none; } ";
+                $css .= ' ' . $query . ' { display: none; } ';
             }
         }
 
