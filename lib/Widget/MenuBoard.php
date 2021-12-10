@@ -404,9 +404,9 @@ class MenuBoard extends ModuleWidget
             $templateOptions = array_key_exists('options', $templateInfo) ? $templateInfo['options'] : [];
 
             foreach ($templateOptions as $key => $option) {
-                if ($option['type'] === "checkbox" || $option['type'] === "switch") {
+                if ($option['type'] === 'checkbox' || $option['type'] === 'switch') {
                     $optionValue = $sanitizedParams->getCheckbox($key);
-                } elseif ($sanitizedParams->getString($key) == "") {
+                } elseif ($sanitizedParams->getString($key) == '') {
                     $optionValue = $option['default'];
                 } else {
                     $optionValue = $sanitizedParams->getString($key);
@@ -618,7 +618,7 @@ class MenuBoard extends ModuleWidget
                         }
                     }
 
-                    // Save max pages based on this category total pages 
+                    // Save max pages based on this category total pages
                     if ($categoryPages > $maxPages) {
                         $maxPages = $categoryPages;
                     }
@@ -683,9 +683,9 @@ class MenuBoard extends ModuleWidget
                 continue;
             }
 
-            $query = array_key_exists('query', $option) ? $option['query'] : ("." . $key);
+            $query = array_key_exists('query', $option) ? $option['query'] : ('.' . $key);
             if ($option['rule'] == 'display' && $this->getOption($key) == 0) {
-                $css .= " $query { display: none; } ";
+                $css .= " " . $query . " { display: none; } ";
             }
         }
 
