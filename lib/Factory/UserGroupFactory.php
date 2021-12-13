@@ -211,7 +211,7 @@ class UserGroupFactory extends BaseFactory
             }
         }
 
-        if ($this->getSanitizer()->getInt('checkRetired') === 1) {
+        if ($this->getSanitizer()->getInt('checkRetired', 0, $filterBy) === 1) {
             $body .= '
                 AND `group`.groupId NOT IN (
                     SELECT `group`.groupId 

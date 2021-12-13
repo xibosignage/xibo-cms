@@ -182,7 +182,7 @@ class UserNotificationFactory extends BaseFactory
                 $body .= ' AND `lknotificationuser`.emailDt <> 0 ';
         }
 
-        if ($this->getSanitizer()->getInt('checkRetired') === 1) {
+        if ($this->getSanitizer()->getInt('checkRetired', 0, $filterBy) === 1) {
             $body .= ' AND `user`.retired = 0 ';
         }
 
