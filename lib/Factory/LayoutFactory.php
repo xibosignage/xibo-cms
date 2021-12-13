@@ -544,7 +544,9 @@ class LayoutFactory extends BaseFactory
 
         // Parse the XML and fill in the details for this layout
         $document = new \DOMDocument();
-        $document->loadXML($layoutXlf);
+        if ($document->loadXML($layoutXlf) === false) {
+            throw new InvalidArgumentException(__('Layout import failed, invalid xlf supplied'));
+        }
 
         $layout->schemaVersion = (int)$document->documentElement->getAttribute('schemaVersion');
         $layout->width = $document->documentElement->getAttribute('width');
