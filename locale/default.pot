@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-11-15 16:39+0000\n"
+"POT-Creation-Date: 2021-12-13 15:56+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -376,11 +376,11 @@ msgstr ""
 msgid "December"
 msgstr ""
 
-#: locale/dbtranslate.php:119 lib/Factory/UserGroupFactory.php:810
+#: locale/dbtranslate.php:119 lib/Factory/UserGroupFactory.php:826
 msgid "Icon Dashboard"
 msgstr ""
 
-#: locale/dbtranslate.php:120 lib/Factory/UserGroupFactory.php:804
+#: locale/dbtranslate.php:120 lib/Factory/UserGroupFactory.php:820
 msgid "Status Dashboard"
 msgstr ""
 
@@ -3085,7 +3085,7 @@ msgstr ""
 #: cache/e2/e21c2780320689ac6ce350a406b035331fd4ab3416f1215d70ab1d0181c458a7.php:142
 #: cache/fd/fd689f1592b8ddb00c4f039a82b22b4dd6efbb082d35d79d9702346571797ca9.php:60
 #: cache/2d/2d1ffeafdc28def28b1ac7949e40938cb464b16a3a7f44a3a5076aaeeb124334.php:60
-#: lib/Widget/ForecastIo.php:392
+#: lib/Widget/ForecastIo.php:393
 msgid "Forecast"
 msgstr ""
 
@@ -8125,7 +8125,7 @@ msgstr ""
 #: cache/2a/2aee6043c3cda7e0b32dc764721ad7a9402be770bc2456a747cbc713a42ea0b3.php:218
 #: cache/63/6375875be8cd52bf7c309054babc8bde8599a27cf31c056351341a85ed859b16.php:265
 #: cache/d3/d3273d78dbc6bccc3d7f19def2a4bef341bd1b3a6390ef65db8cadb616cd4a06.php:113
-#: lib/Entity/Layout.php:2041 lib/Controller/Region.php:697
+#: lib/Entity/Layout.php:2062 lib/Controller/Region.php:697
 msgid "Empty Region"
 msgstr ""
 
@@ -16632,9 +16632,9 @@ msgid "Zulu"
 msgstr ""
 
 #: lib/Widget/Countdown.php:438 lib/Widget/Weather.php:916
-#: lib/Widget/WorldClock.php:583 lib/Widget/Twitter.php:899
-#: lib/Widget/Stocks.php:674 lib/Widget/Currencies.php:862
-#: lib/Widget/TwitterMetro.php:165 lib/Widget/ForecastIo.php:721
+#: lib/Widget/WorldClock.php:583 lib/Widget/Twitter.php:898
+#: lib/Widget/Stocks.php:675 lib/Widget/Currencies.php:863
+#: lib/Widget/TwitterMetro.php:166 lib/Widget/ForecastIo.php:722
 msgid "Please choose a template"
 msgstr ""
 
@@ -16712,18 +16712,18 @@ msgid "Assignable variable must be a number"
 msgstr ""
 
 #: lib/Widget/Weather.php:230 lib/Widget/AlphaVantageBase.php:149
-#: lib/Widget/Twitter.php:148 lib/Widget/GoogleTraffic.php:111
-#: lib/Widget/Stocks.php:110 lib/Widget/Currencies.php:116
-#: lib/Widget/ForecastIo.php:134
+#: lib/Widget/Twitter.php:149 lib/Widget/GoogleTraffic.php:111
+#: lib/Widget/Stocks.php:111 lib/Widget/Currencies.php:117
+#: lib/Widget/ForecastIo.php:135
 msgid "Missing API Key"
 msgstr ""
 
-#: lib/Widget/Weather.php:233 lib/Widget/Twitter.php:156
-#: lib/Widget/ForecastIo.php:137
+#: lib/Widget/Weather.php:233 lib/Widget/Twitter.php:157
+#: lib/Widget/ForecastIo.php:138
 msgid "Cache period must be a positive number"
 msgstr ""
 
-#: lib/Widget/Weather.php:584 lib/Widget/ForecastIo.php:453
+#: lib/Widget/Weather.php:584 lib/Widget/ForecastIo.php:454
 msgid "Lat/Long invalid"
 msgstr ""
 
@@ -16740,22 +16740,22 @@ msgid "Please enter a positive number of columns."
 msgstr ""
 
 #: lib/Widget/Weather.php:933 lib/Widget/DataSetView.php:913
-#: lib/Widget/Twitter.php:903 lib/Widget/GoogleTraffic.php:243
-#: lib/Widget/Hls.php:191 lib/Widget/Calendar.php:781 lib/Widget/Stocks.php:678
-#: lib/Widget/Currencies.php:866 lib/Widget/TwitterMetro.php:169
-#: lib/Widget/ForecastIo.php:724 lib/Widget/Ticker.php:911
+#: lib/Widget/Twitter.php:902 lib/Widget/GoogleTraffic.php:243
+#: lib/Widget/Hls.php:191 lib/Widget/Calendar.php:781 lib/Widget/Stocks.php:679
+#: lib/Widget/Currencies.php:867 lib/Widget/TwitterMetro.php:170
+#: lib/Widget/ForecastIo.php:725 lib/Widget/Ticker.php:911
 #: lib/Widget/DataSetTicker.php:856
 msgid "Please enter a duration"
 msgstr ""
 
 #: lib/Widget/Weather.php:938 lib/Widget/GoogleTraffic.php:253
-#: lib/Widget/ForecastIo.php:729 lib/Entity/Display.php:630
+#: lib/Widget/ForecastIo.php:730 lib/Entity/Display.php:630
 #: lib/Controller/Settings.php:343
 msgid "The latitude entered is not valid."
 msgstr ""
 
 #: lib/Widget/Weather.php:941 lib/Widget/GoogleTraffic.php:257
-#: lib/Widget/ForecastIo.php:732 lib/Entity/Display.php:627
+#: lib/Widget/ForecastIo.php:733 lib/Entity/Display.php:627
 #: lib/Controller/Settings.php:353
 msgid "The longitude entered is not valid."
 msgstr ""
@@ -16877,19 +16877,19 @@ msgid ""
 "Please enter a full path name giving the location of this video on the client"
 msgstr ""
 
-#: lib/Widget/Twitter.php:152
+#: lib/Widget/Twitter.php:153
 msgid "Missing API Secret"
 msgstr ""
 
-#: lib/Widget/Twitter.php:160
+#: lib/Widget/Twitter.php:161
 msgid "Image cache period must be a positive number"
 msgstr ""
 
-#: lib/Widget/Twitter.php:582 lib/Widget/TwitterMetro.php:521
+#: lib/Widget/Twitter.php:583 lib/Widget/TwitterMetro.php:522
 msgid "There are no tweets to display"
 msgstr ""
 
-#: lib/Widget/Twitter.php:906 lib/Widget/TwitterMetro.php:172
+#: lib/Widget/Twitter.php:905 lib/Widget/TwitterMetro.php:173
 msgid "Please enter a search term"
 msgstr ""
 
@@ -16963,19 +16963,19 @@ msgstr ""
 msgid "Please select a graph type"
 msgstr ""
 
-#: lib/Widget/Stocks.php:113 lib/Widget/Currencies.php:120
+#: lib/Widget/Stocks.php:114 lib/Widget/Currencies.php:121
 msgid "Cache Period must be 3600 or greater for this Module"
 msgstr ""
 
-#: lib/Widget/Stocks.php:518 lib/Widget/Currencies.php:703
+#: lib/Widget/Stocks.php:519 lib/Widget/Currencies.php:704
 msgid "No data returned, please check error log."
 msgstr ""
 
-#: lib/Widget/Stocks.php:683 lib/Widget/Currencies.php:871
+#: lib/Widget/Stocks.php:684 lib/Widget/Currencies.php:872
 msgid "Please provide a comma separated list of symbols in the items field."
 msgstr ""
 
-#: lib/Widget/Currencies.php:876
+#: lib/Widget/Currencies.php:877
 msgid "Please provide a symbols in the base field."
 msgstr ""
 
@@ -16999,7 +16999,7 @@ msgstr ""
 msgid "Please select at least 1 Playlist to embed"
 msgstr ""
 
-#: lib/Widget/SubPlaylist.php:288 lib/Entity/Layout.php:2422
+#: lib/Widget/SubPlaylist.php:288 lib/Entity/Layout.php:2443
 msgid "Cannot add the same SubPlaylist twice."
 msgstr ""
 
@@ -17019,11 +17019,11 @@ msgstr ""
 msgid "Sub-Playlist: %s"
 msgstr ""
 
-#: lib/Widget/TwitterMetro.php:414
+#: lib/Widget/TwitterMetro.php:415
 msgid "cURL extension is required for Twitter"
 msgstr ""
 
-#: lib/Widget/ForecastIo.php:585
+#: lib/Widget/ForecastIo.php:586
 msgid "Template not found, please edit the Widget and select another."
 msgstr ""
 
@@ -17051,7 +17051,7 @@ msgstr ""
 msgid "Please enter a display group name"
 msgstr ""
 
-#: lib/Entity/DisplayGroup.php:672 lib/Entity/Layout.php:1046
+#: lib/Entity/DisplayGroup.php:672 lib/Entity/Layout.php:1067
 #: lib/Entity/DataSet.php:730
 msgid "Description can not be longer than 254 characters"
 msgstr ""
@@ -17367,11 +17367,11 @@ msgstr ""
 msgid "Region Option not found"
 msgstr ""
 
-#: lib/Entity/Region.php:388
+#: lib/Entity/Region.php:393
 msgid "The Region dimensions cannot be empty or negative"
 msgstr ""
 
-#: lib/Entity/Region.php:393 lib/Entity/Layout.php:1065
+#: lib/Entity/Region.php:398 lib/Entity/Layout.php:1086
 msgid "Layer must be 0 or a positive number"
 msgstr ""
 
@@ -17405,49 +17405,49 @@ msgstr ""
 msgid "Folder needs a specified parent Folder id"
 msgstr ""
 
-#: lib/Entity/Layout.php:530
+#: lib/Entity/Layout.php:551
 msgid "Cannot find region"
 msgstr ""
 
-#: lib/Entity/Layout.php:548
+#: lib/Entity/Layout.php:569
 msgid "Cannot find drawer region"
 msgstr ""
 
-#: lib/Entity/Layout.php:569
+#: lib/Entity/Layout.php:590
 msgid "Cannot find Region or Drawer"
 msgstr ""
 
-#: lib/Entity/Layout.php:940
+#: lib/Entity/Layout.php:961
 msgid "This layout is used as the global default and cannot be deleted"
 msgstr ""
 
-#: lib/Entity/Layout.php:1037
+#: lib/Entity/Layout.php:1058
 msgid "The layout dimensions cannot be empty"
 msgstr ""
 
-#: lib/Entity/Layout.php:1042
+#: lib/Entity/Layout.php:1063
 msgid "Layout Name must be between 1 and 50 characters"
 msgstr ""
 
-#: lib/Entity/Layout.php:1060
+#: lib/Entity/Layout.php:1081
 #, php-format
 msgid "You already own a Layout called '%s'. Please choose another name."
 msgstr ""
 
-#: lib/Entity/Layout.php:1071
+#: lib/Entity/Layout.php:1092
 msgid "Please use only alphanumeric characters in Layout Code identifier"
 msgstr ""
 
-#: lib/Entity/Layout.php:1083
+#: lib/Entity/Layout.php:1104
 msgid "Layout with provided code already exists"
 msgstr ""
 
-#: lib/Entity/Layout.php:1300
+#: lib/Entity/Layout.php:1321
 #, php-format
 msgid "%s set as the Layout background image is pending conversion"
 msgstr ""
 
-#: lib/Entity/Layout.php:1305
+#: lib/Entity/Layout.php:1326
 #, php-format
 msgid ""
 "%s set as the Layout background image is too large. Please ensure that none "
@@ -17455,20 +17455,20 @@ msgid ""
 "edge. Please check the allowed Resize Limit in Administration -> Settings"
 msgstr ""
 
-#: lib/Entity/Layout.php:1754 lib/Controller/Fault.php:122
+#: lib/Entity/Layout.php:1775 lib/Controller/Fault.php:122
 msgid "Can't create ZIP. Error Code: "
 msgstr ""
 
-#: lib/Entity/Layout.php:2033
+#: lib/Entity/Layout.php:2054
 #, php-format
 msgid "There is an error with this Layout: %s"
 msgstr ""
 
-#: lib/Entity/Layout.php:2087 lib/Entity/Layout.php:2206
+#: lib/Entity/Layout.php:2108 lib/Entity/Layout.php:2227
 msgid "Not a Draft"
 msgstr ""
 
-#: lib/Entity/Layout.php:2291
+#: lib/Entity/Layout.php:2312
 msgid "Draft Layouts must have a parent"
 msgstr ""
 
@@ -17673,7 +17673,7 @@ msgstr ""
 msgid "Tidy Cache"
 msgstr ""
 
-#: lib/XTR/MaintenanceDailyTask.php:110 lib/XTR/MaintenanceDailyTask.php:156
+#: lib/XTR/MaintenanceDailyTask.php:110 lib/XTR/MaintenanceDailyTask.php:161
 #: lib/XTR/StatsMigrationTask.php:225 lib/XTR/StatsMigrationTask.php:366
 #: lib/XTR/StatsMigrationTask.php:468 lib/XTR/StatsMigrationTask.php:638
 #: lib/XTR/ClearCachedMediaDataTask.php:81
@@ -17684,7 +17684,7 @@ msgstr ""
 msgid "Import Layouts"
 msgstr ""
 
-#: lib/XTR/MaintenanceDailyTask.php:158
+#: lib/XTR/MaintenanceDailyTask.php:163
 msgid "Not Required."
 msgstr ""
 
@@ -18087,7 +18087,7 @@ msgstr ""
 #: lib/Controller/DisplayGroup.php:784 lib/Controller/Library.php:1273
 #: lib/Controller/Help.php:236 lib/Controller/DataSetColumn.php:547
 #: lib/Controller/Applications.php:565 lib/Controller/DisplayProfile.php:465
-#: lib/Controller/DayPart.php:532 lib/Controller/User.php:974
+#: lib/Controller/DayPart.php:532 lib/Controller/User.php:979
 #: lib/Controller/Campaign.php:636 lib/Controller/Notification.php:716
 #: lib/Controller/Playlist.php:818 lib/Controller/Tag.php:521
 #: lib/Controller/Report.php:450 lib/Controller/Transition.php:172
@@ -18106,7 +18106,7 @@ msgstr ""
 #: lib/Controller/DisplayGroup.php:835 lib/Controller/Library.php:901
 #: lib/Controller/Help.php:261 lib/Controller/DataSetColumn.php:637
 #: lib/Controller/Applications.php:597 lib/Controller/DisplayProfile.php:545
-#: lib/Controller/DayPart.php:647 lib/Controller/User.php:1085
+#: lib/Controller/DayPart.php:647 lib/Controller/User.php:1090
 #: lib/Controller/Campaign.php:717 lib/Controller/Notification.php:775
 #: lib/Controller/Playlist.php:879 lib/Controller/Tag.php:649
 #: lib/Controller/Report.php:489 lib/Controller/Report.php:1005
@@ -18500,8 +18500,8 @@ msgstr ""
 msgid "Turn Features on/off for this User"
 msgstr ""
 
-#: lib/Controller/User.php:649 lib/Controller/User.php:1103
-#: lib/Controller/User.php:1181 lib/Controller/User.php:2542
+#: lib/Controller/User.php:649 lib/Controller/User.php:1108
+#: lib/Controller/User.php:1186 lib/Controller/User.php:2547
 msgid "Only super and group admins can create users"
 msgstr ""
 
@@ -18509,138 +18509,138 @@ msgstr ""
 msgid "Invalid user group selected"
 msgstr ""
 
-#: lib/Controller/User.php:705 lib/Controller/User.php:936
+#: lib/Controller/User.php:705 lib/Controller/User.php:941
 msgid "User does not have the enabled Feature for this Dashboard"
 msgstr ""
 
-#: lib/Controller/User.php:952 lib/Controller/User.php:1352
-#: lib/Controller/User.php:1600
+#: lib/Controller/User.php:957 lib/Controller/User.php:1357
+#: lib/Controller/User.php:1605
 msgid "Passwords do not match"
 msgstr ""
 
-#: lib/Controller/User.php:1040
+#: lib/Controller/User.php:1045
 msgid "This User is set as System User and cannot be deleted."
 msgstr ""
 
-#: lib/Controller/User.php:1048
+#: lib/Controller/User.php:1053
 msgid "Cannot delete your own User from the CMS."
 msgstr ""
 
-#: lib/Controller/User.php:1052
+#: lib/Controller/User.php:1057
 msgid "Group Admin cannot remove Super Admins or other Group Admins."
 msgstr ""
 
-#: lib/Controller/User.php:1056
+#: lib/Controller/User.php:1061
 msgid ""
 "Cannot delete all items owned by a Super Admin, please reassign to a "
 "different User."
 msgstr ""
 
-#: lib/Controller/User.php:1075
+#: lib/Controller/User.php:1080
 #, php-format
 msgid "This user cannot be deleted as it has %d child items"
 msgstr ""
 
-#: lib/Controller/User.php:1157
+#: lib/Controller/User.php:1162
 msgid "Homepage not found"
 msgstr ""
 
-#: lib/Controller/User.php:1346
+#: lib/Controller/User.php:1351
 msgid "Please enter your password"
 msgstr ""
 
-#: lib/Controller/User.php:1364
+#: lib/Controller/User.php:1369
 msgid "Please provide valid email address"
 msgstr ""
 
-#: lib/Controller/User.php:1369
+#: lib/Controller/User.php:1374
 msgid ""
 "Please provide valid sending email address in CMS Settings on Network tab"
 msgstr ""
 
-#: lib/Controller/User.php:1387
+#: lib/Controller/User.php:1392
 msgid "Access Code is empty"
 msgstr ""
 
-#: lib/Controller/User.php:1394
+#: lib/Controller/User.php:1399
 msgid "Access Code is incorrect"
 msgstr ""
 
-#: lib/Controller/User.php:1419
+#: lib/Controller/User.php:1424
 msgid "User Profile Saved"
 msgstr ""
 
-#: lib/Controller/User.php:1597
+#: lib/Controller/User.php:1602
 msgid "Please enter the password"
 msgstr ""
 
-#: lib/Controller/User.php:1612
+#: lib/Controller/User.php:1617
 msgid "Password Changed"
 msgstr ""
 
-#: lib/Controller/User.php:1671 lib/Controller/User.php:1817
-#: lib/Controller/User.php:1952
+#: lib/Controller/User.php:1676 lib/Controller/User.php:1822
+#: lib/Controller/User.php:1957
 msgid "You do not have permission to edit these permissions."
 msgstr ""
 
-#: lib/Controller/User.php:1731 lib/Controller/User.php:1868
-#: lib/Controller/User.php:2077 lib/Controller/Display.php:1526
+#: lib/Controller/User.php:1736 lib/Controller/User.php:1873
+#: lib/Controller/User.php:2082 lib/Controller/Display.php:1526
 #: lib/Controller/Display.php:1562 lib/Controller/Display.php:1567
 msgid "The array of ids is empty!"
 msgstr ""
 
-#: lib/Controller/User.php:1752
+#: lib/Controller/User.php:1757
 msgid "You do not have permission to edit all the entities permissions."
 msgstr ""
 
-#: lib/Controller/User.php:1976
+#: lib/Controller/User.php:1981
 msgid "Cannot change owner on this Object"
 msgstr ""
 
-#: lib/Controller/User.php:2007 lib/Controller/User.php:2088
+#: lib/Controller/User.php:2012 lib/Controller/User.php:2093
 msgid "Permissions Updated"
 msgstr ""
 
-#: lib/Controller/User.php:2106
+#: lib/Controller/User.php:2111
 msgid "Permissions requested without an entity"
 msgstr ""
 
-#: lib/Controller/User.php:2110
+#: lib/Controller/User.php:2115
 msgid "Permissions form requested without an object"
 msgstr ""
 
-#: lib/Controller/User.php:2118
+#: lib/Controller/User.php:2123
 msgid "Permissions form requested with an invalid entity"
 msgstr ""
 
-#: lib/Controller/User.php:2274
+#: lib/Controller/User.php:2279
 msgid "Updated Preference"
 msgstr ""
 
-#: lib/Controller/User.php:2274 lib/Controller/User.php:2523
+#: lib/Controller/User.php:2279 lib/Controller/User.php:2528
 msgid "Updated Preferences"
 msgstr ""
 
-#: lib/Controller/User.php:2365 lib/Controller/User.php:2377
+#: lib/Controller/User.php:2370 lib/Controller/User.php:2382
 msgid "Access Denied to UserGroup"
 msgstr ""
 
-#: lib/Controller/User.php:2387
+#: lib/Controller/User.php:2392
 #, php-format
 msgid "%s assigned to User Groups"
 msgstr ""
 
-#: lib/Controller/User.php:2412
+#: lib/Controller/User.php:2417
 #, php-format
 msgid "%s has started the welcome tutorial"
 msgstr ""
 
-#: lib/Controller/User.php:2436
+#: lib/Controller/User.php:2441
 #, php-format
 msgid "%s has seen the welcome tutorial"
 msgstr ""
 
-#: lib/Controller/User.php:2510
+#: lib/Controller/User.php:2515
 msgid "Option available only for Super Admins"
 msgstr ""
 
@@ -19621,19 +19621,19 @@ msgstr ""
 msgid "Log Truncated"
 msgstr ""
 
-#: lib/Controller/DisplayProfileConfigFields.php:688
+#: lib/Controller/DisplayProfileConfigFields.php:693
 msgid ""
 "On/Off Timers: Please check the days selected and remove the duplicates or "
 "empty"
 msgstr ""
 
-#: lib/Controller/DisplayProfileConfigFields.php:697
+#: lib/Controller/DisplayProfileConfigFields.php:702
 msgid ""
 "On/Off Timers: Please enter a on and off date for any row with a day "
 "selected, or remove that row"
 msgstr ""
 
-#: lib/Controller/DisplayProfileConfigFields.php:741
+#: lib/Controller/DisplayProfileConfigFields.php:746
 msgid ""
 "Picture: Please check the settings selected and remove the duplicates or "
 "empty"
@@ -19756,406 +19756,406 @@ msgstr ""
 msgid "Group not found"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:401
+#: lib/Factory/UserGroupFactory.php:417
 msgid ""
 "Page which shows all Events added to the Calendar for the purposes of "
 "Schedule Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:406
+#: lib/Factory/UserGroupFactory.php:422
 msgid "Include the Agenda View on the Calendar"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:411
+#: lib/Factory/UserGroupFactory.php:427
 msgid ""
 "Include \"Add Event\" button to allow for the creation of new Scheduled "
 "Events"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:416
+#: lib/Factory/UserGroupFactory.php:432
 msgid "Allow edits including deletion of exsiting Scheduled Events"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:421
+#: lib/Factory/UserGroupFactory.php:437
 msgid ""
 "Add \"Schedule Now\" function to allow for the creation of short events to "
 "play immediately"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:426
+#: lib/Factory/UserGroupFactory.php:442
 msgid "Page which shows all Dayparts that have been created"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:431
+#: lib/Factory/UserGroupFactory.php:447
 msgid ""
 "Include \"Add Daypart\" button to allow for the creation of new Dayparts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:436
+#: lib/Factory/UserGroupFactory.php:452
 msgid "Allow edits including deletion to be made to all created Dayparts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:441
+#: lib/Factory/UserGroupFactory.php:457
 msgid ""
 "Page which shows all items that have been uploaded to the Library for the "
 "purposes of Media Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:446
+#: lib/Factory/UserGroupFactory.php:462
 msgid ""
 "Include \"Add Media\" buttons to allow for additional content to be uploaded "
 "to the Media Library"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:451
+#: lib/Factory/UserGroupFactory.php:467
 msgid ""
 "Allow edits including deletion to all items uploaded to the Media Library"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:456
+#: lib/Factory/UserGroupFactory.php:472
 msgid ""
 "Page which shows all DataSets that have been created which can be used in "
 "multiple Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:461
+#: lib/Factory/UserGroupFactory.php:477
 msgid ""
 "Include \"Add DataSet\" button to allow for additional DataSets to be "
 "created independently to Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:466
+#: lib/Factory/UserGroupFactory.php:482
 msgid ""
 "Allow edits including deletion to all created DataSets independently to "
 "Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:471
+#: lib/Factory/UserGroupFactory.php:487
 msgid ""
 "Allow edits including deletion to all data contained within a DataSet "
 "independently to Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:476
+#: lib/Factory/UserGroupFactory.php:492
 msgid ""
 "Page which shows all Layouts that have been created for the purposes of "
 "Layout Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:481
+#: lib/Factory/UserGroupFactory.php:497
 msgid ""
 "Include \"Add Layout\" button to allow for additional Layouts to be created"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:486
+#: lib/Factory/UserGroupFactory.php:502
 msgid "Allow edits including deletion to be made to all created Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:491
+#: lib/Factory/UserGroupFactory.php:507
 msgid ""
 "Include the Export function for all editable Layouts to allow a User to "
 "export a Layout and its contents regardless of the share options that have "
 "been set"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:496
+#: lib/Factory/UserGroupFactory.php:512
 msgid ""
 "Page which shows all Campaigns that have been created for the purposes of "
 "Campaign Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:501
+#: lib/Factory/UserGroupFactory.php:517
 msgid ""
 "Include \"Add Campaign\" button to allow for additional Campaigns to be "
 "created"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:506
+#: lib/Factory/UserGroupFactory.php:522
 msgid "Allow edits including deletion to all created Campaigns"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:511
+#: lib/Factory/UserGroupFactory.php:527
 msgid "Page which shows all Templates that have been saved"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:516
+#: lib/Factory/UserGroupFactory.php:532
 msgid "Add \"Save Template\" function for all Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:521
+#: lib/Factory/UserGroupFactory.php:537
 msgid "Allow edits to be made to all saved Templates"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:526
+#: lib/Factory/UserGroupFactory.php:542
 msgid "Page which shows all Resolutions that have been added to the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:531
+#: lib/Factory/UserGroupFactory.php:547
 msgid "Add Resolution button to allow for addtional Resolutions to be added"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:536
+#: lib/Factory/UserGroupFactory.php:552
 msgid "Allow edits including deletion to all added Resolutions"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:541
+#: lib/Factory/UserGroupFactory.php:557
 msgid ""
 "Page which shows all Tags that have been added for the purposes of Tag "
 "Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:546
+#: lib/Factory/UserGroupFactory.php:562
 msgid "Ability to add and edit Tags when assigning to items"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:551
+#: lib/Factory/UserGroupFactory.php:567
 msgid ""
 "Page which shows all Playlists that have been created which can be used in "
 "multiple Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:556
+#: lib/Factory/UserGroupFactory.php:572
 msgid ""
 "Include \"Add Playlist\" button to allow for additional Playlists to be "
 "created independently to Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:561
+#: lib/Factory/UserGroupFactory.php:577
 msgid ""
 "Allow edits including deletion to all created Playlists independently to "
 "Layouts"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:566
+#: lib/Factory/UserGroupFactory.php:582
 msgid ""
 "Ability to update own Profile, including changing passwords and "
 "authentication preferences"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:571
+#: lib/Factory/UserGroupFactory.php:587
 msgid "Notifications appear in the navigation bar"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:576
+#: lib/Factory/UserGroupFactory.php:592
 msgid "Access to the Notification Centre to view past notifications"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:581
+#: lib/Factory/UserGroupFactory.php:597
 msgid "Access to API applications"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:586
+#: lib/Factory/UserGroupFactory.php:602
 msgid "Allow Sharing capabilities for all User objects"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:591
+#: lib/Factory/UserGroupFactory.php:607
 msgid ""
 "Include \"Add Notification\" button to allow for the creation of new "
 "notifications"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:596
+#: lib/Factory/UserGroupFactory.php:612
 msgid ""
 "Allow edits including deletion for all notifications in the Notification "
 "Centre"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:601
+#: lib/Factory/UserGroupFactory.php:617
 msgid ""
 "Page which shows all Users in the platform for the purposes of User "
 "Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:606
+#: lib/Factory/UserGroupFactory.php:622
 msgid ""
 "Include \"Add User\" button to allow for additional Users to be added to the "
 "platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:611
+#: lib/Factory/UserGroupFactory.php:627
 msgid ""
 "Allow Group Admins to edit including deletion, for all added Users within "
 "their group"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:616
+#: lib/Factory/UserGroupFactory.php:632
 msgid "Page which shows all User Groups that have been created"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:621
+#: lib/Factory/UserGroupFactory.php:637
 msgid "Allow edits including deletion for all created User Groups"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:626
+#: lib/Factory/UserGroupFactory.php:642
 msgid ""
 "Status Dashboard showing key platform metrics, suitable for an Administrator."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:631
+#: lib/Factory/UserGroupFactory.php:647
 msgid ""
 "Media Manager Dashboard showing only the Widgets the user has access to "
 "modify."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:636
+#: lib/Factory/UserGroupFactory.php:652
 msgid ""
 "Playlist Dashboard showing only the Playlists configured in Layouts the user "
 "has access to modify."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:641
+#: lib/Factory/UserGroupFactory.php:657
 msgid ""
 "Page which shows all Displays added to the platform for the purposes of "
 "Display Management"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:646
+#: lib/Factory/UserGroupFactory.php:662
 msgid ""
 "Include \"Add Display\" button to allow additional Displays to be added to "
 "the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:651
+#: lib/Factory/UserGroupFactory.php:667
 msgid "Allow edits including deletion for all added Displays"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:656
+#: lib/Factory/UserGroupFactory.php:672
 msgid "Page which shows all Display Groups that have been created"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:661
+#: lib/Factory/UserGroupFactory.php:677
 msgid ""
 "Include \"Add Display Group\" button to allow for the creation of additional "
 "Display Groups"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:666
+#: lib/Factory/UserGroupFactory.php:682
 msgid "Allow edits including deletion for all created Display Groups"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:671
+#: lib/Factory/UserGroupFactory.php:687
 msgid "Page which shows all Display Setting Profiles that have been added"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:676
+#: lib/Factory/UserGroupFactory.php:692
 msgid ""
 "Include \"Add Profile\" button to allow for addtional Display Setting "
 "Profiles to be added to the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:681
+#: lib/Factory/UserGroupFactory.php:697
 msgid "Allow edits including deletion for all created Display Setting Profiles"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:686
+#: lib/Factory/UserGroupFactory.php:702
 msgid "Page to view/add/edit/delete/download Player Software Versions"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:691
+#: lib/Factory/UserGroupFactory.php:707
 msgid "Page to view/add/edit/delete Commands"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:696
+#: lib/Factory/UserGroupFactory.php:712
 msgid ""
 "Access to a Report Fault wizard for collecting reports to forward to the "
 "support team for analysis, which may contain sensitive data."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:701
+#: lib/Factory/UserGroupFactory.php:717
 msgid "Page to show debug and error logging which may contain sensitive data"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:706
+#: lib/Factory/UserGroupFactory.php:722
 msgid "Page to show all User Sessions throughout the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:711
+#: lib/Factory/UserGroupFactory.php:727
 msgid ""
 "Page to show the Audit Trail for all created/modified and removed items "
 "throughout the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:716
+#: lib/Factory/UserGroupFactory.php:732
 msgid "Page which allows for Module Management for the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:721
+#: lib/Factory/UserGroupFactory.php:737
 msgid "Page which allows for Transition Management for the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:726
+#: lib/Factory/UserGroupFactory.php:742
 msgid "Page which allows for Task Management for the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:731
+#: lib/Factory/UserGroupFactory.php:747
 msgid "Page which allows for Help Link Management for the platform"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:736
+#: lib/Factory/UserGroupFactory.php:752
 msgid "Dashboard which shows all available Reports"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:741
+#: lib/Factory/UserGroupFactory.php:757
 msgid ""
 "Display Reports to show bandwidth usage and time connected / disconnected"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:746
+#: lib/Factory/UserGroupFactory.php:762
 msgid ""
 "Proof of Play Reports which include summary and distribution by Layout, "
 "Media or Event"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:751
+#: lib/Factory/UserGroupFactory.php:767
 msgid "Page which shows all Reports that have been Scheduled"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:756
+#: lib/Factory/UserGroupFactory.php:772
 msgid "Page which shows all Reports that have been Saved"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:761
+#: lib/Factory/UserGroupFactory.php:777
 msgid "View Folder Tree on Grids and Forms"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:766
+#: lib/Factory/UserGroupFactory.php:782
 msgid "Create new Folders"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:771
+#: lib/Factory/UserGroupFactory.php:787
 msgid "Rename and Delete existing Folders"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:788
+#: lib/Factory/UserGroupFactory.php:804
 #, php-format
 msgid "Homepage %s not found."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:805
+#: lib/Factory/UserGroupFactory.php:821
 msgid ""
 "Status Dashboard showing key platform metrics, usually for an administrator."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:811
+#: lib/Factory/UserGroupFactory.php:827
 msgid ""
 "Icon Dashboard showing an easy access set of feature icons the user can "
 "access."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:816
+#: lib/Factory/UserGroupFactory.php:832
 msgid "Media Manager Dashboard"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:817
+#: lib/Factory/UserGroupFactory.php:833
 msgid ""
 "Media Manager Dashboard showing all Widgets the user has access to modify."
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:822
+#: lib/Factory/UserGroupFactory.php:838
 msgid "Playlist Dashboard"
 msgstr ""
 
-#: lib/Factory/UserGroupFactory.php:823
+#: lib/Factory/UserGroupFactory.php:839
 msgid ""
 "Playlist Dashboard showing all Playlists configured in Layouts the user has "
 "access to modify."
@@ -20235,38 +20235,42 @@ msgstr ""
 msgid "Layout does not exist"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:735
+#: lib/Factory/LayoutFactory.php:508
+msgid "Layout import failed, invalid xlf supplied"
+msgstr ""
+
+#: lib/Factory/LayoutFactory.php:737
 msgid "playlist.json not found in the archive"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1067 lib/Service/ReportService.php:277
+#: lib/Factory/LayoutFactory.php:1069 lib/Service/ReportService.php:277
 #: lib/Service/ReportService.php:317
 msgid "File does not exist"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1073 lib/Service/ReportService.php:283
+#: lib/Factory/LayoutFactory.php:1075 lib/Service/ReportService.php:283
 #: lib/Service/ReportService.php:323
 msgid "Unable to open ZIP"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1215
+#: lib/Factory/LayoutFactory.php:1217
 msgid "Empty file in ZIP"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1220
+#: lib/Factory/LayoutFactory.php:1222
 msgid "Cannot save media file from ZIP file"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1470
+#: lib/Factory/LayoutFactory.php:1472
 #, php-format
 msgid "DataSets have different number of columns imported = %d, existing = %d"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1481
+#: lib/Factory/LayoutFactory.php:1483
 msgid "DataSets have different column names"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:2302 lib/Factory/LayoutFactory.php:2318
+#: lib/Factory/LayoutFactory.php:2304 lib/Factory/LayoutFactory.php:2320
 msgid "Draft"
 msgstr ""
 
