@@ -418,7 +418,7 @@ class MaintenanceRegularTask implements TaskInterface
                                 && isset($draft->statusMessage)
                                 && (count($draft->getStatusMessage()) > 1 || count($draft->getStatusMessage()) === 1 && !$draft->checkForEmptyRegion())
                             ) {
-                                throw new GeneralException(__(json_encode($draft->statusMessage)));
+                                throw new GeneralException(json_encode($draft->statusMessage));
                             }
                             $draft->publishDraft();
                             $draft->load();
