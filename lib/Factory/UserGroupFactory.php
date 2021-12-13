@@ -135,7 +135,7 @@ class UserGroupFactory extends BaseFactory
      */
     public function getSystemNotificationGroups()
     {
-        return $this->query(null, ['disableUserCheck' => 1, 'isSystemNotification' => 1, 'isUserSpecific' => -1]);
+        return $this->query(null, ['disableUserCheck' => 1, 'isSystemNotification' => 1, 'isUserSpecific' => -1, 'checkRetired' => 1]);
     }
 
     /**
@@ -149,7 +149,8 @@ class UserGroupFactory extends BaseFactory
             'disableUserCheck' => 1,
             'isDisplayNotification' => 1,
             'isUserSpecific' => -1,
-            'displayGroupId' => $displayGroupId
+            'displayGroupId' => $displayGroupId,
+            'checkRetired' => 1
         ]);
     }
 
@@ -233,6 +234,21 @@ class UserGroupFactory extends BaseFactory
                 ';
                 $params['currentUserId'] = $this->getUser()->userId;
             }
+        }
+
+        if ($parsedFilter->getInt('checkRetired') === 1) {
+            $body .= '
+                AND `group`.groupId NOT IN (
+                    SELECT `group`.groupId 
+                      FROM `user`
+                        INNER JOIN `lkusergroup`
+                            ON `lkusergroup`.userId = `user`.userId
+                        INNER JOIN `group`
+                            ON `group`.groupId = `lkusergroup`.groupId
+                            AND isUserSpecific = 1
+                      WHERE user.retired = 1
+                )
+                ';
         }
 
         // Filter by Group Id
