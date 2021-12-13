@@ -92,7 +92,7 @@ class UserNotificationFactory extends BaseFactory
      */
     public function getEmailQueue()
     {
-        return $this->query(null, ['isEmail' => 1, 'isEmailed' => 0]);
+        return $this->query(null, ['isEmail' => 1, 'isEmailed' => 0, 'checkRetired' => 1]);
     }
 
     /**
@@ -123,8 +123,9 @@ class UserNotificationFactory extends BaseFactory
     {
         $entries = array();
 
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = ['releaseDt DESC'];
+        }
 
         $params = ['now' => time()];
         $select = 'SELECT `lknotificationuser`.lknotificationuserId,
@@ -141,7 +142,8 @@ class UserNotificationFactory extends BaseFactory
              `notification`.filename,
              `notification`.originalFileName,
              `notification`.nonusers,
-             `user`.email
+             `user`.email,
+             `user`.retired
         ';
 
         $body = ' FROM `lknotificationuser`
@@ -178,6 +180,10 @@ class UserNotificationFactory extends BaseFactory
                 $body .= ' AND `lknotificationuser`.emailDt = 0 ';
             else
                 $body .= ' AND `lknotificationuser`.emailDt <> 0 ';
+        }
+
+        if ($this->getSanitizer()->getInt('checkRetired', 0, $filterBy) === 1) {
+            $body .= ' AND `user`.retired = 0 ';
         }
 
         // Sorting?

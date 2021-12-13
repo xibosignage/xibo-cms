@@ -8,6 +8,7 @@
 
 namespace Xibo\XTR;
 use Xibo\Controller\Library;
+use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\UserFactory;
@@ -105,28 +106,32 @@ class MaintenanceDailyTask implements TaskInterface
         $this->runMessage .= '## ' . __('Import Layouts') . PHP_EOL;
 
         if ($this->config->getSetting('DEFAULTS_IMPORTED') == 0) {
-
             $folder = $this->config->uri('layouts', true);
 
             foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                 if (stripos($file, '.zip')) {
-                    $layout = $this->layoutFactory->createFromZip(
-                        $folder . '/' . $file,
-                        null,
-                        $this->userFactory->getSystemUser()->getId(),
-                        false,
-                        false,
-                        true,
-                        false,
-                        true,
-                        $this->libraryController,
-                        null
-                    );
+                    try {
+                        $layout = $this->layoutFactory->createFromZip(
+                            $folder . '/' . $file,
+                            null,
+                            $this->userFactory->getSystemUser()->getId(),
+                            false,
+                            false,
+                            true,
+                            false,
+                            true,
+                            $this->libraryController,
+                            null
+                        );
 
-                    $layout->save([
-                        'audit' => false,
-                        'import' => true
-                    ]);
+                        $layout->save([
+                            'audit' => false,
+                            'import' => true
+                        ]);
+                    } catch (\Exception $exception) {
+                        $this->log->error('Unable to import layout: ' . $file . '. E = ' . $exception->getMessage());
+                        $this->log->debug($exception->getTraceAsString());
+                    }
                 }
             }
 

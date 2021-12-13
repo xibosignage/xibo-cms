@@ -1919,7 +1919,7 @@ class Display extends Base
         $authenticationCode = $this->getSanitizer()->getString('twoFactorCode', '');
 
         $tfa = new TwoFactorAuth($issuer);
-        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode);
+        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode, 3);
 
         if ($result) {
 

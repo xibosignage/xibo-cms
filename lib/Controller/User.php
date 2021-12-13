@@ -762,8 +762,13 @@ class User extends Base
 
         if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $this->getSanitizer()->getInt('userTypeId');
-            $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
-            $user->isDisplayNotification = $this->getSanitizer()->getCheckbox('isDisplayNotification');
+            if ($user->retired === 1) {
+                $user->isSystemNotification = 0;
+                $user->isDisplayNotification = 0;
+            } else {
+                $user->isSystemNotification = $this->getSanitizer()->getCheckbox('isSystemNotification');
+                $user->isDisplayNotification = $this->getSanitizer()->getCheckbox('isDisplayNotification');
+            }
         }
 
         $user->firstName = $this->getSanitizer()->getString('firstName');
@@ -1171,9 +1176,9 @@ class User extends Base
 
         if (isset($_SESSION['tfaSecret'])) {
             // validate the provided two factor code with secret for this user
-            $result = $tfa->verifyCode($_SESSION['tfaSecret'], $code, 2);
+            $result = $tfa->verifyCode($_SESSION['tfaSecret'], $code, 3);
         } elseif (isset($user->twoFactorSecret)) {
-            $result = $tfa->verifyCode($user->twoFactorSecret, $code, 2);
+            $result = $tfa->verifyCode($user->twoFactorSecret, $code, 3);
         } else {
             $result = false;
         }
