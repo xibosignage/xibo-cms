@@ -416,7 +416,7 @@ class MaintenanceRegularTask implements TaskInterface
                             $draft = $this->layoutFactory->getByParentId($layout->layoutId);
                             if ($draft->status === ModuleWidget::$STATUS_INVALID
                                 && isset($draft->statusMessage)
-                                && (count($draft->getStatusMessage()) > 1 || count($draft->getStatusMessage()) === 1 && !in_array(__('Empty Region'), $draft->getStatusMessage()))
+                                && (count($draft->getStatusMessage()) > 1 || count($draft->getStatusMessage()) === 1 && !$draft->checkForEmptyRegion())
                             ) {
                                 throw new GeneralException(__(json_encode($draft->statusMessage)));
                             }
