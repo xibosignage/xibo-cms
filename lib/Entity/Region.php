@@ -334,7 +334,12 @@ class Region implements \JsonSerializable
     public function getPlaylist($options = [])
     {
         if ($this->regionPlaylist === null) {
-            $this->regionPlaylist = $this->playlistFactory->getByRegionId($this->regionId)->load($options);
+            try {
+                $this->regionPlaylist = $this->playlistFactory->getByRegionId($this->regionId)->load($options);
+            } catch (NotFoundException $exception) {
+                $this->regionPlaylist = $this->playlistFactory->create($this->name, $this->ownerId, $this->regionId);
+                $this->regionPlaylist->save();
+            }
         }
 
         return $this->regionPlaylist;
