@@ -83,7 +83,6 @@ class MenuBoardWidgetTest extends LocalWebTestCase
 
         $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'step' => 2,
-            'numOfColumns' => 1,
             'menuBoardCategories' => [$this->menuBoardCategory['menuCategoryId']]
         ]);
 
@@ -114,7 +113,6 @@ class MenuBoardWidgetTest extends LocalWebTestCase
             'duration' => 60,
             'useDuration' => 1,
             'showUnavailable' => 0,
-            'showImagesFor' => 'product',
             'templateId' => 'menuboard',
             'productsHighlight' => [$this->menuBoardProduct['menuProductId']]
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
@@ -130,10 +128,6 @@ class MenuBoardWidgetTest extends LocalWebTestCase
         foreach ($widget['widgetOptions'] as $option) {
             if ($option['option'] == 'showUnavailable') {
                 $this->assertSame(0, intval($option['value']));
-            } elseif ($option['option'] == 'showImagesFor') {
-                $this->assertSame('product', $option['value']);
-            } elseif ($option['option'] == 'templateId') {
-                $this->assertSame('menuboard', $option['value']);
             } elseif ($option['option'] == 'name') {
                 $this->assertSame('Test Menu Board Widget', $option['value']);
             } elseif ($option['option'] == 'productsHighlight') {

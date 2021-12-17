@@ -66,10 +66,10 @@ const defaultMenuItems = [
         favouriteModules: [],
     },
     {
-        name: 'images',
-        itemName: toolbarTrans.menuItems.imagesName,
-        itemIcon: 'images',
-        itemTitle: toolbarTrans.menuItems.imagesTitle,
+        name: 'image',
+        itemName: toolbarTrans.menuItems.imageName,
+        itemIcon: 'image',
+        itemTitle: toolbarTrans.menuItems.imageTitle,
         search: true,
         filters: {
             name: {
@@ -596,6 +596,11 @@ Toolbar.prototype.createContent = function(menu = -1, forceReload = false) {
             $('#module-search-form input[type="text"]')[0].setSelectionRange(focusPosition, focusPosition);
         }
     }
+
+    // Handle content close button
+    this.DOMObject.find('.close-content').on('click', function() {
+        self.openMenu(self.openedMenu);
+    });
 };
 
 /**
@@ -703,7 +708,9 @@ Toolbar.prototype.selectCard = function(card) {
                 selectorAppend = ':not([data-widget-type="subplaylist"])';
             }
 
-            $('[data-type="' + dropTo + '"].ui-droppable.editable' + selectorAppend).addClass('ui-droppable-active');
+            $('[data-type="' + dropTo + '"].ui-droppable.editable' + selectorAppend + 
+                ', [data-parent="' + dropTo + '"].widget-preview.ui-droppable.parent-editable' + selectorAppend
+                ).addClass('ui-droppable-active');
         }
     }
 };
@@ -1022,7 +1029,7 @@ Toolbar.prototype.queueToggleOverlays = function(menu, enable = true) {
         });
 
         // Set droppable areas as active
-        $('[data-type="region"].ui-droppable.editable').addClass('ui-droppable-active');
+        $('[data-type="region"].ui-droppable.editable, [data-parent="region"].widget-preview.ui-droppable.parent-editable').addClass('ui-droppable-active');
     } else {
         self.deselectCardsAndDropZones();
     }
@@ -1261,5 +1268,21 @@ Toolbar.prototype.createMediaPreview = function(media) {
     $mediaPreview.addClass('show');
 };
 
+/**
+ * Opens a new tab and search for the given media type
+ * @param {string} type - Type of media
+ */
+ Toolbar.prototype.openNewTabAndSearch = function(type) {
+     if(['audio', 'video', 'image'].includes(type)) {
+        this.openedMenu = ['image', 'audio', 'video'].indexOf(type) + 1;
+     } else {
+        // Open library tab
+        this.openedMenu = 4;
+        this.menuItems[this.openedMenu].filters.type.value = type;
+     }
+
+    // Re-render toolbar
+    this.render();
+};
 
 module.exports = Toolbar;
