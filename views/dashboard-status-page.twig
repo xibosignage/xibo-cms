@@ -298,7 +298,6 @@
                             <th>{% trans "Remote" %}</th>
                             <th>{% trans "Created Date" %}</th>
                             <th>{% trans "Modified Date" %}</th>
-                            <th>{% trans "Faults?" %}</th>
                         </tr>
                         </thead>
                         <tbody>
@@ -435,7 +434,7 @@
             $displaysComment.html((total > 0) ? $displaysComment.data().titlePlural : $displaysComment.data().title)
         });
 
-        var displayData = {{ displayStatus|raw }};
+        var displayData {% if displayStatus|raw %}= {{ displayStatus|raw }}{% endif %};
         var displayStatusChart = new Chart($("#displayStatusChart"), {
             type: 'doughnut',
             data: {
@@ -449,8 +448,8 @@
                 maintainAspectRatio: false
             }
         });
-
-        var displayMediaStatusData = {{ displayMediaStatus|raw }};
+        
+        var displayMediaStatusData {% if displayMediaStatus|raw %}= {{ displayMediaStatus|raw }}{% endif %};
 
         var displayContentChart = new Chart($("#displayContentChart"), {
             type: 'doughnut',
@@ -911,22 +910,6 @@
                         },
                         {"data": "createdDt", "visible": false, responsivePriority: 6},
                         {"data": "modifiedDt", "visible": false, responsivePriority: 6},
-                        {
-                            "data": "countFaults",
-                            "name": "countFaults",
-                            responsivePriority: 3,
-                            "render": function (data, type, row) {
-                                if (type != "display") {
-                                    return data;
-                                }
-
-                                if (data > 0) {
-                                    return '<span class="badge" style="background-color: red; color: white">'+(row.countFaults)+'</span>';
-                                } else {
-                                    return '';
-                                }
-                            }
-                        },
                     ]
                 });
 
