@@ -1,6 +1,7 @@
 // PROPERTIES PANEL Module
 
 const loadingTemplate = require('../templates/loading.hbs');
+const messageTemplate = require('../templates/properties-panel-message.hbs');
 const propertiesPanel = require('../templates/properties-panel.hbs');
 const actionsTemplate = require('../templates/actions-form-template.hbs');
 const actionsButtonTemplate = require('../templates/actions-button-template.hbs');
@@ -204,6 +205,14 @@ PropertiesPanel.prototype.render = function(element, step) {
         // Clean the property panel html
         this.DOMObject.html('');
 
+        return false;
+    }
+
+    // Show a message if the module type is disabled
+    if(element.type == 'widget' && !element.enabled) {
+        this.DOMObject.html(messageTemplate({
+            message: editorsTrans.invalidModule
+        }));
         return false;
     }
 

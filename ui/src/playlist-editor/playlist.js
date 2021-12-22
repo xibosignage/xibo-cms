@@ -55,6 +55,9 @@ Playlist.prototype.createDataStructure = function(data) {
 
         // calculate expire status
         newWidget.calculateExpireStatus();
+
+        // Check if widget is enabled
+        newWidget.checkIfEnabled();
         
         // Add newWidget to the playlist widget object
         this.widgets[newWidget.id] = newWidget;

@@ -227,9 +227,16 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
         const elementType = (element.type === 'widget') ? (element.type + '_' + element.subType) : element.type;
 
         // If it's a widget, get parent region editable property and id
-        const editable = (element.type === 'widget') 
-            ? lD.getElementByTypeAndId('region', element.regionId).isEditable 
-            : element.isEditable;
+        let editable = element.isEditable;
+        let drawer = false;
+        if(element.type === 'widget') {
+            if(element.drawerWidget) {
+                editable = lD.layout.drawer.isEditable;
+                drawer = true;
+            } else {
+                editable = lD.getElementByTypeAndId('region', element.regionId).isEditable;
+            }
+        }
 
         // Replace container html
         const html = viewerTemplate({
@@ -238,6 +245,7 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
             type: elementType,
             smallPreview: smallPreview,
             editable: editable,
+            drawer: drawer,
             isEmpty: (totalItems <= 0),
             elementPosition: element.index,
             id: element.id,
@@ -295,15 +303,33 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                 }
             });
         } else {
+            // Get options to add the element
+            const getAddOptions = function (target) {
+                let numWidgetsInParent = 0;
+                let droppable;
+                if($(target).hasClass('drawer-parent')) {
+                    numWidgetsInParent = lD.layout.drawer.numWidgets;
+                    droppable = $('#actions-drawer-content');
+                } else {
+                    numWidgetsInParent = lD.getElementByTypeAndId('region', $(target).data('parentId')).numWidgets;
+                    droppable = $('#' + $(target).data('parentId'));
+                }
+
+                const positionToAdd = ($(target).data('position') + 1);
+                const options = (positionToAdd > numWidgetsInParent) ? {} : {positionToAdd: positionToAdd};
+
+                return {
+                    options: options,
+                    droppable: droppable
+                };
+            }
+
             // Enable select for each layout/region
             container.find('.widget-preview').off('click').on('click', function(e) {
                 if($(this).is('.parent-editable.ui-droppable-active')) {
                     e.stopPropagation();
-                    const positionToAdd = ($(this).data('position') + 1);
-                    const numWidgetsInParent = lD.getElementByTypeAndId('region', $(this).data('parentId')).numWidgets;
-                    const options = (positionToAdd > numWidgetsInParent) ? {} : {positionToAdd: positionToAdd};
-
-                    lD.selectObject($('#' + $(this).data('parentId')), true, options);
+                    const addOptions = getAddOptions(this);
+                    lD.selectObject(addOptions.droppable, true, addOptions.options);
                 }
             });
 
@@ -315,11 +341,8 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                     return ($(this).hasClass('parent-editable') && $(el).attr('drop-to') === 'region');
                 },
                 drop: _.debounce(function(event, ui) {
-                    const positionToAdd = ($(this).data('position') + 1);
-                    const numWidgetsInParent = lD.getElementByTypeAndId('region', $(this).data('parentId')).numWidgets;
-                    const options = (positionToAdd > numWidgetsInParent) ? {} : {positionToAdd: positionToAdd};
-
-                    lD.dropItemAdd($('#' + $(this).data('parentId')), ui.draggable[0], options);
+                    const addOptions = getAddOptions(this);
+                    lD.dropItemAdd(addOptions.droppable, ui.draggable[0], addOptions.options);
                 }, 200)
             });
 
@@ -568,6 +591,10 @@ Viewer.prototype.closeInlineEditorContent = function() {
  * Calculate background CSS
  */
 Viewer.prototype.calculateBackground = function(dimensions, element, layout) {
+    // Fix for an element without regions set
+    if(!element.dimensions) {
+        return;
+    }
 
     // Calculate element and layout dimensions scaled to the container
     const elementScaledDimensions = {

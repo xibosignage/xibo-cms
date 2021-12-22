@@ -30,15 +30,6 @@ $fa-font-path: "~font-awesome/fonts";
     }
 }
 
-/* Drag and Drop */
-.drag-handle {
-    cursor: grab;
-}
-
-.ui-draggable-dragging .drag-handle {
-    cursor: grabbing;
-}
-
 /* Tab System */
 .form-container {
     .nav>li>a {

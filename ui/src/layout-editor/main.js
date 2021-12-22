@@ -831,6 +831,11 @@ lD.toggleNavigatorEditing = function(enable, reload = true) {
     this.selectObject();
 
     if(enable) {
+        // Fix to prevent going into region edit mode on a publish layout
+        if(lD.readOnlyMode) {
+            return;
+        }
+
         lD.navigatorMode = true;
 
         // Create a new navigator instance
@@ -2109,7 +2114,7 @@ lD.upgradeBreadcrumbTrail = function() {
     };
 
     // Don't show if we're rendering the layout
-    if(selectedObject.type === 'layout') {
+    if(selectedObject.type === 'layout' || selectedObject.drawerWidget) {
         // Clear breadcrumb
         $($breadcrumbContainer).empty();
         return;
