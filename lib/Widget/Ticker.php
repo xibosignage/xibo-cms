@@ -546,7 +546,7 @@ class Ticker extends ModuleWidget
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '       const runOnVisible = function() { if(items != false) { $("#content").xiboTextRender(options, items); } }; ';
+        $javaScriptContent .= '       var runOnVisible = function() { if(items != false) { $("#content").xiboTextRender(options, items); } }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
 
         $javaScriptContent .= '   }); ';

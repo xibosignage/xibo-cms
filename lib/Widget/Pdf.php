@@ -52,7 +52,6 @@ class Pdf extends ModuleWidget
         
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/pdfjs/pdf.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/pdfjs/pdf.worker.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/pdfjs/compatibility.js')->save();
     }
 
     /**
@@ -168,7 +167,6 @@ class Pdf extends ModuleWidget
         // Replace the head content
         $javaScriptContent  = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/pdf.js') . '"></script>';
-        $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/pdfjs/compatibility.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">var xiboICTargetId = ' . $this->getWidgetId() . ';</script>';
         $javaScriptContent .= '<script type="text/javascript" src="' . $this->getResourceUrl('xibo-interactive-control.min.js') . '"></script>';
         $javaScriptContent .= '<script type="text/javascript">xiboIC.lockAllInteractions();</script>';

@@ -290,7 +290,12 @@
                 discard: "{{ "Discard"|trans }}",
                 copyToClipboard: "{{ "Copy to Clipboard"|trans }}",
                 couldNotCopy: "{{ "Could not copy"|trans }}",
-                copied: "{{ "Copied!"|trans }}"
+                copied: "{{ "Copied!"|trans }}",
+                breadcrumb: {
+                    layout:  "{{ "Layout"|trans }}",
+                    region:  "{{ "Region"|trans }}",
+                    widget:  "{{ "Widget"|trans }}",
+                },
             };
 
             var uploadTrans = {
@@ -310,7 +315,6 @@
                 deleteOnExpiryMessage: "{{ "When the End Time for this Widget passes should the Widget be removed from the Playlist?" |trans }}",
                 applyToMedia: "{{ "Delete from Library" |trans }}",
                 applyToMediaMessage: "{{ "Remove file from the Media Library" |trans }}",
-
                 selectFolder: "{{ "Select Folder"|trans }}",
                 selectFolderTitle: "{{ "Change Current Folder location"|trans }}",
                 selectedFolder: "{{ "Current Folder"|trans }}:",
@@ -373,6 +377,7 @@
                 moduleNavRight: "{{ "Scroll right!" |trans }}",
                 removedFromFavourites: "{{ "Module removed from favourites!" |trans }}",
                 searchFilters: {
+                    search: "{{ "Search" |trans }}",
                     name: "{{ "Name" |trans }}",
                     tag: "{{ "Tag" |trans }}",
                     type: "{{ "Type" |trans }}",
@@ -410,8 +415,8 @@
                 menuItems: {
                     widgetsName: "{{ "Widgets" |trans }}",
                     widgetsTitle: "{{ "Layout Designer widgets" |trans }}",
-                    imagesName: "{{ "Images" |trans }}",
-                    imagesTitle: "{{ "Library images search"|trans }}",
+                    imageName: "{{ "Image" |trans }}",
+                    imageTitle: "{{ "Library image search"|trans }}",
                     audioName: "{{ "Audio" |trans }}",
                     audioTitle: "{{ "Library audio search"|trans }}",
                     videoName: "{{ "Video" |trans }}",
@@ -427,6 +432,7 @@
                 },
                 widgets: "{{ "Widgets"|trans }}",
                 favourites: "{{ "Favourites"|trans }}",
+                closeTab: "{{ "Close content"|trans }}",
                 noWidgetsToShow: "{{ "No widgets to display"|trans }}",
                 noMediaToShow: "{{ "No media to display!" |trans }}",
                 showMore: "{{ "Show more" |trans }}",
@@ -582,6 +588,10 @@
                     name: "{{ "Add Action" |trans }}",
                     description: "{{ "Click to Add a new Action"|trans }}"
                 }
+            };
+
+            var menuBoardTranslations = {
+                maxNumElementsPerZone: "{{ "There can only be one category per zone!" |trans }}",
             };
         {% endautoescape %}
     </script>

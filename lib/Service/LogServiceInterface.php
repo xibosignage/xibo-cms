@@ -24,6 +24,7 @@
 namespace Xibo\Service;
 
 use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 
 /**
  * Interface LogServiceInterface
@@ -37,6 +38,13 @@ interface LogServiceInterface
      * @param string $mode
      */
     public function __construct($logger, $mode = 'production');
+
+    /**
+     * Get the underlying logger interface
+     *  useful for custom code and modules which may not want to know about the full Xibo LogServiceInterface
+     * @return \Psr\Log\LoggerInterface
+     */
+    public function getLoggerInterface(): LoggerInterface;
 
     /**
      * Set the user Id

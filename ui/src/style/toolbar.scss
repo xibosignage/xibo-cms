@@ -79,7 +79,7 @@
         }
 
         form {
-            margin: 13px 12px 6px;
+            margin: 0 12px 6px;
 
             .form-group {
 
@@ -104,6 +104,21 @@
             border-style: solid;
             border-color: $xibo-color-blue-darker;
             color: $xibo-color-gray-light;
+
+            .close-content {
+                cursor: pointer;
+                padding: 6px 6px 0 0;
+                font-size: 18px;
+                line-height: 15px;
+                color: $xibo-color-white;
+                text-align: right;
+                transition: 0.3s 0.1s padding-right;
+                
+                &:hover {
+                    color: $xibo-color-white-pure;
+                    padding-right: 12px;
+                }
+            }
 
             .toolbar-pane-container {
                 float: left;
@@ -220,13 +235,13 @@
 
                 .media-search-form {
                     width: 320px;
-                    margin: 2px 2px 6px;
+                    margin: -8px 2px 6px;
                 }
 
                 .toolbar-pane-container {
                     width: 334px;
                     margin: 6px -2px 6px 6px;
-                    min-height: calc(100% - 10px);
+                    min-height: calc(100% - 28px);
                 }
 
                 .loading-container {
@@ -501,6 +516,10 @@
 
     .navbar-submenu-container {
         background: $xibo-color-blue-pastel;
+        padding: 0.4rem 0.2rem;
+        margin: 0;
+        border: none;
+        @include border-radius(0.25rem 0 0.25rem 0.25rem);
 
         & > a {
             padding: 0;
@@ -512,7 +531,7 @@
     }
 
     .navbar-submenu-item {
-        padding: 3px 6px;
+        padding: 4px 8px;
         cursor: pointer;
     }
 
@@ -597,6 +616,11 @@
                 opacity: 0.6;
                 cursor: unset;
             }
+        }
+
+        &.show > a {
+            color: $xibo-color-white;
+            background-color: $toolbar-main-color;
         }
 
         &.open > a {

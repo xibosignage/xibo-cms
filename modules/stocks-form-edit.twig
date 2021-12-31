@@ -99,7 +99,7 @@
                     <div class="tab-pane" id="appearanceTab">
                         {% set title %}{% trans "Background Colour" %}{% endset %}
                         {% set helpText %}{% trans "The selected effect works best with a background colour. Optionally add one here." %}{% endset %}
-                        {{ forms.color("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+                        {{ forms.colorPicker("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
 
                         {% set title %}{% trans "Date Format" %}
                             <span class="fa fa-info-circle date-format-table"

@@ -30,7 +30,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="menuBoardEditFormStep1" class="XiboForm form-horizontal" data-form-step="1" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}"
+            <form id="menuBoardEditFormStep1" class="XiboForm pt-4 form-horizontal" data-form-step="1" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}"
                   data-next-form-url="{{ url_for("module.widget.edit.form", {id: module.widget.widgetId}) }}?step=2">
 
                 {% set title %}{% trans "Menu Board" %}{% endset %}

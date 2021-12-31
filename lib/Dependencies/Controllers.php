@@ -73,6 +73,14 @@ class Controllers
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
+            '\Xibo\Controller\Connector' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\Connector(
+                    $c->get('connectorFactory')
+                );
+                $controller->useDispatcher($c->get('dispatcher'));
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
             '\Xibo\Controller\Clock' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Clock(
                     $c->get('session')

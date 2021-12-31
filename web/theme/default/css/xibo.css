@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -313,6 +313,7 @@ div.dropdown-menu-form {
     text-align: center;
     display: block;
     background-color: #333;
+    width: 120px;
 }
 
 .display-screenshot {
@@ -1470,4 +1471,16 @@ div.dataTables_wrapper div.dataTables_info {
 
 #layoutAddForm card {
     cursor: pointer;
+}
+
+.img-replace {
+    text-align: center;
+    display: block;
+    background-color: #333;
+    width: 120px;
+}
+
+.img-replace img {
+    max-width: 120px;
+    max-height: 80px;
 }

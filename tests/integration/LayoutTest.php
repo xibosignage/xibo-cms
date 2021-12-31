@@ -338,11 +338,21 @@ class LayoutTest extends LocalWebTestCase
             }
         }
         # Load in a known layout if it's not there already
-        if ($flag)
-            (new XiboLayout($this->getEntityProvider()))->create('phpunit layout', 'phpunit layout', '', $this->getResolutionId('landscape'));
+        $landscapeId = $this->getResolutionId('landscape');
+
+        if ($flag) {
+            (new XiboLayout($this->getEntityProvider()))->create(
+                'phpunit layout',
+                'phpunit layout',
+                '',
+                $landscapeId
+            );
+        }
+
         $response = $this->sendRequest('POST','/layout', [
             'name' => 'phpunit layout',
-            'description' => 'phpunit layout'
+            'description' => 'phpunit layout',
+            'resolutionId' => $landscapeId
         ]);
         $this->assertSame(409, $response->getStatusCode(), 'Expecting failure, received ' . $response->getStatusCode() . '. Body = ' . $response->getBody());
         $object = json_decode($response->getBody());

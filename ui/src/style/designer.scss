@@ -66,7 +66,6 @@ $unsuccess-message-bg-color: darken($xibo-color-red, 30%);
 $layout-status-popover-message-bg-color: $xibo-color-red;
 
 // Variables
-$timeline-max-height: 190px;
 $properties-panel-width: 400px;
 $designer-overlay-z-index: 1050;
 $designer-z-index-select: 10;
@@ -361,6 +360,48 @@ body, .page-content {
     .show-on-fs {
         display: none;
     }
+
+    .breadcrumb-trail {
+        position: absolute;
+        top: 6px;
+        left: 6px;
+        font-size: 1rem;
+        display: flex;
+
+        i.fa {
+            color: $xibo-color-white;
+            margin: 4px;
+        }
+
+        .bc-link {
+            max-width: 100px;
+            height: 24px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+            border-radius: 0.2rem;
+            padding: 0px 4px;
+            cursor: pointer;
+            opacity: 0.8;
+            border: 2px solid $xibo-color-gray-light;
+
+            &:hover {
+                opacity: 1;
+            }
+
+            &.bc-layout {
+                background-color: $designer-colour-layout;
+            }
+
+            &.bc-region {
+                background-color: $designer-colour-region;
+            }
+
+            &.bc-widget {
+                background-color: $designer-colour-widget;
+            }
+        }
+    }
 }
 
 @media (max-width: 768px) {
@@ -374,7 +415,6 @@ body, .page-content {
     flex-basis: calc(100% - 40px);
     margin: 4px 0;
     overflow-y: auto;
-    max-height: $timeline-max-height;
 
     #timeline-container {
         display: flex;
@@ -395,9 +435,11 @@ body, .page-content {
     #regions-container {
         display: inline-block;
         width: calc(100% - #{$timeline-region-info-width});
+        overflow-x: auto;
     }
 
     .empty-timeline {
+        cursor: pointer;
         width: 100%;
         background-color: $xibo-color-blue-lightest;
         display: table;
@@ -691,7 +733,7 @@ body, .page-content {
         }
 
         &.invalid-widget:before {
-            @include box-shadow(inset 0px 0px 2px 1px $xibo-color-red);
+            @include box-shadow(inset 0px 0px 6px 4px $xibo-color-red);
             content: ' ';
             position: absolute;
             top: 1px;
@@ -860,11 +902,16 @@ body, .page-content {
 
         .designer-region {
 
+            &.empty-region {
+                width: 100%;
+                height: 100%;
+            }
+
             .module-preview-icon {
                 font-size: 2em;
             }
 
-            @include set-transparent-color(background, $xibo-color-white, 0.3);
+            @include set-transparent-color(background, $xibo-color-gray, 0.6);
             @include box-shadow(0 0 4px 0px $xibo-color-black);
 
             .loading-icon {
@@ -1267,6 +1314,35 @@ body, .page-content {
                         }
                     }
                 }
+
+                #zonesContainer {
+                    .structure {
+                        display: grid;
+                        width: 100%;
+
+                        .connectedlist {
+                            border: 1px solid $xibo-color-blue-lighter;
+
+                            ul {
+                                height: 100%;
+                            }
+                        }
+                    }
+
+                    .connectedlist {
+                        ul.ui-sortable {
+                            width: 100%;
+                            min-height: 60px;
+                            overflow: hidden;
+                            margin: 0;
+
+                            li {
+                                width: initial;
+                                text-align: center;
+                            }
+                        }
+                    }
+                }
             }
 
             .form-content-title {
@@ -1447,6 +1523,22 @@ body, .page-content {
             &.ui-droppable-hover,
             &:hover {
                 background: darken($region-hover-color, 20%) !important;
+            }
+
+            * {
+                visibility: hidden;
+            }
+        }
+
+        .widget-preview.ui-droppable-active {
+            @include z-index-set($designer-z-index-select);
+            background: $widget-hover-color !important;
+            width: 100%;
+            height: 100%;
+
+            &.ui-droppable-hover,
+            &:hover {
+                background: darken($widget-hover-color, 20%) !important;
             }
 
             * {
@@ -1729,7 +1821,7 @@ body, .page-content {
                     .info-text {
                         font-size: 13px;
                         line-height: 13px;
-                        max-width: 98px;
+                        max-width: 90px;
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: nowrap;
@@ -1780,6 +1872,9 @@ body, .page-content {
         width: 40px;
         position: relative;
         @include border-radius(6px 0px 0px 6px);
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
     }
 
     #actions-drawer-empty-message {
@@ -1794,9 +1889,12 @@ body, .page-content {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+        height: 100%;
 
-        span {
-            padding: 4px;
+        div {
+            top: 50%;
+            position: relative;
+            transform: translateY(-50%);
         }
     }
 

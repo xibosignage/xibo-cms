@@ -357,7 +357,7 @@ class Countdown extends ModuleWidget
         $javaScriptContent .= '     $("body").xiboLayoutScaler(options); $("#content").find("img").xiboImageRender(options); ';
         
         // Run based only if the element is visible or not
-        $javaScriptContent .= '     const runOnVisible = function() { $("#content").xiboCountdownRender(options, body); }; ';
+        $javaScriptContent .= '     var runOnVisible = function() { $("#content").xiboCountdownRender(options, body); }; ';
         $javaScriptContent .= '     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
         
         $javaScriptContent .= '   }); ';

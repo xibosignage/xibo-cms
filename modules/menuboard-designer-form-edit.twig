@@ -32,11 +32,15 @@
 {% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}
+    {% set templateOptions = module.getExtra().templateOptions %}
+    
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
             <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
-            <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            {% if templateOptions %}
+                <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
+            {% endif %}
             <li class="nav-item dropdown">
                 <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Templates" %}<span class="caret"></span>
                 </a>
@@ -80,26 +84,29 @@
                     </div>
 
                     <div class="tab-pane" id="configurationTab">
-                        {{ forms.hidden("numOfColumns", module.getOption("numOfColumns", 2)) }}
-                        <div id="columnsContainer">
+                        <div id="zonesContainer">
                             <div class="row">
                                 <div class="col-md-12 row">
-                                    {% for i in 1..module.getOption("numOfColumns", 2) %}
-                                        <div class="connectedlist col-sm">
-                                            <p class="text-info text-center">{% trans "Column" %} {{ i }}</p>
-                                            <ul id="categoriesSelected_{{ i }}"
-                                                class="connectedSortable2 m-auto text-center">
-                                                {% for category in module.menuBoardCategoriesSelectedAssigned(i) %}
-                                                    <li id="{{ category.menuCategoryId }}"
-                                                        class="li-sortable">{{ category.name }}</li>
-                                                {% endfor %}
-                                            </ul>
-                                        </div>
-                                    {% endfor %}
-                                    <div class="connectedlist col-sm">
-                                        <p class="text-info text-center">{% trans "Categories Unassigned" %}</p>
+                                    <div class="text-info mb-1">{% trans "Structure" %}</div>
+                                    {% set gridTemplate = module.getExtra().gridTemplate %}
+                                    <div class="structure" style="grid-template: {{ gridTemplate }};">
+                                        {% for i in 1..module.getOption("templateZones", 1) %}
+                                            <div class="connectedlist" style="grid-area: z{{ i }}";>
+                                                <ul id="categoriesSelected_{{ i }}"
+                                                    class="connectedSortable2 single">
+                                                    {% for category in module.menuBoardCategoriesSelectedAssigned(i) %}
+                                                        <li id="{{ category.menuCategoryId }}"
+                                                            class="li-sortable">{{ category.name }}</li>
+                                                    {% endfor %}
+                                                </ul>
+                                            </div>
+                                        {% endfor %}
+                                    </div>
+
+                                    <div class="connectedlist flex-fill mb-3">
+                                        <p class="text-info mb-1">{% trans "Unassigned Categories" %}</p>
                                         <ul id="categoriesSelectedNotAssigned"
-                                            class="connectedSortable2 m-auto text-center">
+                                            class="connectedSortable2">
                                             {% for category in module.menuBoardCategoriesSelectedNotAssigned() %}
                                                 <li id="{{ category.menuCategoryId }}"
                                                     class="li-sortable">{{ category.name }}</li>
@@ -110,46 +117,18 @@
                             </div>
                         </div>
 
-                        {% set title %}{% trans "Show Media for" %}{% endset %}
-                        {% set helpText %}{% trans "Select which associated Media items should be rendered" %}{% endset %}
-                        {% set all %}{% trans "All" %}{% endset %}
-                        {% set product %}{% trans "Per Product" %}{% endset %}
-                        {% set category %}{% trans "Per Category" %}{% endset %}
-                        {% set noImages %}{% trans "None" %}{% endset %}
-                        {% set options = [
-                            { id: "all", value: all },
-                            { id: "product", value: product },
-                            { id: "category", value: category },
-                            { id: "none", value: noImages }
-                        ] %}
-                        {{ forms.dropdown("showImagesFor", "single", title, module.getOption("showImagesFor", "none"), options, "id", "value", helpText) }}
-
-                        {% set title %}{% trans "Show the Menu Board Name?" %}{% endset %}
-                        {{ forms.checkbox("showMenuBoardName", title, module.getOption("showMenuBoardName")) }}
-
-                        {% set title %}{% trans "Show the Menu Category Name?" %}{% endset %}
-                        {{ forms.checkbox("showMenuCategoryName", title, module.getOption("showMenuCategoryName")) }}
-
-                        {% set title %}{% trans "Show the Product Options?" %}{% endset %}
-                        {{ forms.checkbox("showProductOptions", title, module.getOption("showProductOptions")) }}
-
-                        {% set title %}{% trans "Show the Product Description?" %}{% endset %}
-                        {{ forms.checkbox("showProductDescription", title, module.getOption("showProductDescription")) }}
-
-                        {% set title %}{% trans "Show the Product Allergy Information?" %}{% endset %}
-                        {{ forms.checkbox("showProductAllergyInformation", title, module.getOption("showProductAllergyInformation")) }}
-
                         {% set title %}{% trans "Show Unavailable Products?" %}{% endset %}
                         {% set helpText %}{% trans "Should the currently unavailable products appear in the menu?" %}{% endset %}
                         {{ forms.checkbox('showUnavailable', title, module.getOption("showUnavailable"), helpText) }}
 
-                        {% set title %}{% trans "Number of Products in a row" %}{% endset %}
-                        {% set helpText %}{% trans "How many Products should be displayed in one row?" %}{% endset %}
-                        {{ forms.number("numOfRows", title, module.getOption("numOfRows", 1), helpText) }}
+                        {% set title %}{% trans "Font" %}{% endset %}
+                        {% set attributes = [
+                            { name: "data-search-url", value: url_for("library.font.list") },
+                            { name: "data-value", value: module.getOption("fontFamily") }
+                        ] %}
+                        {% set helpText %}{% trans "Select a custom font - leave empty to use the default font." %}{% endset %}
+                        {{ forms.dropdown("fontFamily", "single", title, "", [{id: "", value: ""}], "id", "value", helpText, "template-selector-control", "", "", "", attributes) }}
 
-                        {% set title %}{% trans "Number of Products per page" %}{% endset %}
-                        {% set helpText %}{% trans "How many products per page should be displayed? If number of returned products for a category is larger than the number specified here Widget will cycle between pages of products for this category. Leave at 0 to show all category products in one page" %}{% endset %}
-                        {{ forms.number("productsPerPage", title, module.getOption("productsPerPage", 0), helpText) }}
 
                         {% set products = module.getExtra().products %}
                         {% if products %}
@@ -168,77 +147,21 @@
                         {% endif %}
                     </div>
 
-                    <div class="tab-pane" id="appearanceTab">
-
-                        {% set title %}{% trans "Template" %}{% endset %}
-                        {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                        {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), templatesAvailable, "id", "value", helpText, "template-selector-control") }}
-
-                        {% set title %}{% trans "Override the template?" %}{% endset %}
-                        {% set helpText %}{% trans "Tick if you would like to override the template." %}{% endset %}
-                        {{ forms.checkbox("overrideTemplate", title, module.getOption("overrideTemplate", "0"), helpText) }}
-
-                        {% set useTemplatesMessage %}
-                            {% trans "With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above." %}
-                        {% endset %}
-                        {{ forms.message(useTemplatesMessage, 'template-override-controls') }}
-
-                        {% set title %}{% trans "Background Colour" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
-                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "template-selector-control") }}
-
-                        {% set title %}{% trans "Font Colour for Menu Board Name" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
-                        {{ forms.input("fontColorMenu", title, module.getOption("fontColorMenu"), helpText, "template-selector-control menu-name-control") }}
-
-                        {% set title %}{% trans "Font Colour for Categories" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
-                        {{ forms.input("fontColorCategory", title, module.getOption("fontColorCategory"), helpText, "template-selector-control category-name-control") }}
-
-                        {% set title %}{% trans "Font Colour for Products" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
-                        {{ forms.input("fontColorProduct", title, module.getOption("fontColorProduct"), helpText, "template-selector-control") }}
-
-                        {% set title %}{% trans "Font Colour for Unavailable Products" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
-                        {{ forms.input("fontColorUnavailableProduct", title, module.getOption("fontColorUnavailableProduct"), helpText, "template-selector-control unavailable-product") }}
-
-                        {% set title %}{% trans "Font Colour for Highlighted Products" %}{% endset %}
-                        {% set helpText %}{% trans "Use the colour picker to select the font colour" %}{% endset %}
-                        {{ forms.input("fontColorHighlightProduct", title, module.getOption("fontColorHighlightProduct"), helpText, "template-selector-control") }}
-
-                        {% set title %}{% trans "Font" %}{% endset %}
-                        {% set attributes = [
-                            { name: "data-search-url", value: url_for("library.font.list") },
-                            { name: "data-value", value: module.getOption("fontFamily") }
-                        ] %}
-                        {% set helpText %}{% trans "Select a custom font - leave empty to use the default font." %}{% endset %}
-                        {{ forms.dropdown("fontFamily", "single", title, "", [{id: "", value: ""}], "id", "value", helpText, "template-selector-control", "", "", "", attributes) }}
-
-                        {% set title %}{% trans "Font Size for Menu Board Name" %}{% endset %}
-                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
-                        {{ forms.number("fontSizeMenu", title, module.getOption("fontSizeMenu"), helpText, "template-selector-control menu-name-control") }}
-
-                        {% set title %}{% trans "Font Size for Categories" %}{% endset %}
-                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
-                        {{ forms.number("fontSizeCategory", title, module.getOption("fontSizeCategory"), helpText, "template-selector-control category-name-control") }}
-
-                        {% set title %}{% trans "Font Size for Products" %}{% endset %}
-                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
-                        {{ forms.number("fontSizeProduct", title, module.getOption("fontSizeProduct"), helpText, "template-selector-control") }}
-
-                        {% set title %}{% trans "Font Size for Product Description" %}{% endset %}
-                        {% set helpText %}{% trans "Set the font size, affects description and allergy information" %}{% endset %}
-                        {{ forms.number("fontSizeProductDescription", title, module.getOption("fontSizeProductDescription"), helpText, "template-selector-control") }}
-
-                        {% set title %}{% trans "Font Size for Unavailable Products" %}{% endset %}
-                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
-                        {{ forms.number("fontSizeProductUnavailable", title, module.getOption("fontSizeProductUnavailable"), helpText, "template-selector-control unavailable-product") }}
-
-                        {% set title %}{% trans "Font Size for Highlighted Products" %}{% endset %}
-                        {% set helpText %}{% trans "Set the font size" %}{% endset %}
-                        {{ forms.number("fontSizeProductHighlight", title, module.getOption("fontSizeProductHighlight"), helpText, "template-selector-control") }}
-                    </div>
+                    {% if templateOptions %}
+                        <div class="tab-pane" id="appearanceTab">
+                            {% for key, option in templateOptions %}
+                                {% if option.type == "switch" %}
+                                    {{ forms.switch(key, option.name, module.getOption(key, option.default)) }}
+                                {% elseif option.type == "checkbox" %}
+                                    {{ forms.checkbox(key, option.name, module.getOption(key, option.default)) }}
+                                {% elseif option.type == "colorPicker" %}
+                                    {{ forms.colorPicker(key, option.name, module.getOption(key, option.default)) }}
+                                {% endif %}
+                            {% else %}
+                                <p>No options</p>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
 
                     <div class="tab-pane" id="noDataTemplateTab">
                         <div class="form-content-title row">

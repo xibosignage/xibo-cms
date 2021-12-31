@@ -23,11 +23,15 @@
 namespace Xibo\Connector;
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Xibo\Entity\SearchResult;
 use Xibo\Event\TemplateProviderEvent;
 
 /**
  * XiboExchangeConnector
+ * ---------------------
+ * This connector will consume the Xibo Layout Exchange API and offer pre-built templates for selection when adding
+ * a new layout.
+ *
+ * This is a work in progress and is currently disabled pending work on the Layout Exchange API.
  */
 class XiboExchangeConnector implements ConnectorInterface
 {
@@ -39,7 +43,7 @@ class XiboExchangeConnector implements ConnectorInterface
      */
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
-        $dispatcher->addListener('connector.provider.template', [$this, 'onTemplateProvider']);
+        //$dispatcher->addListener('connector.provider.template', [$this, 'onTemplateProvider']);
         return $this;
     }
 
@@ -48,20 +52,7 @@ class XiboExchangeConnector implements ConnectorInterface
      */
     public function onTemplateProvider(TemplateProviderEvent $event)
     {
-        $this->getLogger()->debug('onTemplateProvider');
-
-        // Mimic some network
-        sleep(2);
-
-        // Add some random events.
-        for ($i = 0; $i < 10; $i++) {
-            $searchResult = new SearchResult();
-            $searchResult->id = $i;
-            $searchResult->source = $this->getSourceName();
-            $searchResult->title = $i;
-            $searchResult->description = $i . 'desc';
-            $event->addResult($searchResult);
-        }
+        $this->getLogger()->debug('XiboExchangeConnector: onTemplateProvider');
     }
 
     public function getSourceName(): string

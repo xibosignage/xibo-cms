@@ -608,6 +608,9 @@ function Region(parent, id, xml, options, preload) {
     // If the regions does not have any media change its background to transparent red
     if ($(self.xml).children("media").length == 0) {
         $self = $("#" + self.containerName);
+
+        // Mark empty region as complete
+        self.complete = true;
         
         messageSize = (self.sWidth > self.sHeight ) ? self.sHeight : self.sWidth;
         
@@ -636,15 +639,20 @@ function media(parent, id, xml, options, preload) {
     self.singlePlay = false;
     self.timeoutId = undefined;
     self.ready = true;
+    self.checkIframeStatus = false;
 
     if (self.render == undefined)
         self.render = "module";
     
     self.run = function() {
-        if (self.iframe != undefined) {
-            // Reload iframe
-            var iframeDOM = $("#" + self.containerName + ' #' + self.iframeName);
-            iframeDOM[0].src = iframeDOM[0].src;
+        if (self.iframe) {
+            if(self.checkIframeStatus) {
+                // Reload iframe
+                var iframeDOM = $("#" + self.containerName + ' #' + self.iframeName);
+                iframeDOM[0].src = iframeDOM[0].src;
+            } else {
+                $("#" + self.containerName).empty().append(self.iframe);
+            }
         }
 
         playLog(5, "debug", "Running media " + self.id + " for " + self.duration + " seconds");
@@ -772,6 +780,7 @@ function media(parent, id, xml, options, preload) {
         (self.region.options['loop'] == '1' && self.region.totalMediaObjects == 1);
 
     if (self.render == "html" || self.mediaType == "ticker") {
+        self.checkIframeStatus = true;
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
         /* Check if the ticker duration is based on the number of items in the feed */
         if(self.options['durationisperitem'] == '1' || self.options['durationisperpage'] == '1') {
@@ -803,13 +812,14 @@ function media(parent, id, xml, options, preload) {
         }
     }
     else if (self.mediaType == "text" || self.mediaType == "datasetview" || self.mediaType == "webpage" || self.mediaType == "embedded") {
+        self.checkIframeStatus = true;
         self.iframe = $('<iframe scrolling="no" id="' + self.iframeName + '" src="' + tmpUrl + '&width=' + self.divWidth + '&height=' + self.divHeight + '" width="' + self.divWidth + 'px" height="' + self.divHeight + 'px" style="border:0;"></iframe>');
     }
     else if (self.mediaType == "video") {
         preload.addFiles(tmpUrl);
         
         self.iframe = $('<video id="' + self.containerName + '-vid" preload="auto" ' + ((self.options["mute"] == 1) ? 'muted' : '') + ' ' + (loop ? 'loop' : '') + '><source src="' + tmpUrl + '">Unsupported Video</video>');
-        
+
         // Stretch video?
         if(self.options['scaletype'] == 'stretch') {
             self.iframe.css("object-fit", "fill");
@@ -831,7 +841,7 @@ function media(parent, id, xml, options, preload) {
     }
 
     // Check/set iframe based widgets play status
-    if(self.iframe) {
+    if(self.iframe && self.checkIframeStatus) {
         // Set state as false ( for now )
         self.ready = false;
 
@@ -889,8 +899,8 @@ function ActionController(parent, actions, options) {
     self.parent = parent;
     self.actions = [];
 
-    $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
-    $container.append($('<div class="action-controller-title"><span class="title">' + previewTranslations.actionControllerTitle.toUpperCase() + '</span><button class="toggle"></button></div>'));
+    var $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
+    $container.append($('<div class="action-controller-title"><button class="toggle"></button><span class="title">' + previewTranslations.actionControllerTitle + '</span></div>'));
 
     for (var index = 0; index < actions.length; index++) {
         var newAction = actions[index];
@@ -981,6 +991,15 @@ function ActionController(parent, actions, options) {
 
         // Mark media as temporary ( removed after region stop playing or loops )
         targetMedia.singlePlay = true;
+
+        // If region is empty, remove the background colour and empty message
+        if(targetRegion.mediaObjects.length === 0) {
+            $('#' + targetRegion.containerName).find('.empty-message').remove();
+            $('#' + targetRegion.containerName).css('background-color', '');
+
+            // Mark empty region as incomplete
+            self.complete = false;
+        }
         
         // Create media in region and play it next
         targetRegion.mediaObjects.splice(targetRegion.currentMedia + 1, 0, targetMedia);

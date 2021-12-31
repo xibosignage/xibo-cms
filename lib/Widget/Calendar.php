@@ -307,7 +307,7 @@ class Calendar extends ModuleWidget
      *  @SWG\Parameter(
      *      name="templateTheme",
      *      in="formData",
-     *      description="Template color theme dark/light
+     *      description="Template color theme dark/light",
      *      type="string",
      *      required=false
      *  ),
@@ -698,6 +698,9 @@ class Calendar extends ModuleWidget
                 
                     $("body").find("img").xiboImageRender(options);
                     $("body").xiboLayoutScaler(options);
+                    
+                    var runOnVisible = function() { $("#content").xiboTextRender(options, parsedItems); };
+                    (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
 
                     // Run calendar render
                     $("body").xiboCalendarRender(options, parsedItems);
@@ -729,6 +732,10 @@ class Calendar extends ModuleWidget
         // Create a key to use as a caching key for this item.
         // the rendered feed will be cached, so it is important the key covers all options.
         $feedUrl = urldecode($this->getOption('uri'));
+
+        if (empty($feedUrl)) {
+            throw new ConfigurationException(__('Please provide a calendar feed URL'));
+        }
 
         /** @var \Stash\Item $cache */
         $cache = $this->getPool()->getItem($this->makeCacheKey(md5($feedUrl)));

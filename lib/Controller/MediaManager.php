@@ -189,8 +189,8 @@ class MediaManager extends Base
 
                 if ($widget->type == 'image') {
                     $download = $this->urlFor($request,'library.download', ['id' => $widget->getPrimaryMediaId()]) . '?preview=1';
-                    $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
-                    $row['thumbnailUrl'] = $download . '&width=100&height=56&cache=1';
+                    $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&isThumb=1" /></i></a>';
+                    $row['thumbnailUrl'] = $download . '&isThumb=1';
                 }
 
                 // Add a replace button directly on the drop down menu

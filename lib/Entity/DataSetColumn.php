@@ -129,7 +129,7 @@ class DataSetColumn implements \JsonSerializable
      * @SWG\Property(description="Flag indicating whether value must be provided for this Column.")
      * @var int
      */
-    public $isRequired;
+    public $isRequired = 0;
 
     /** @var  DataSetColumnFactory */
     private $dataSetColumnFactory;

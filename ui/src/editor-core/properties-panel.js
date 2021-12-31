@@ -37,8 +37,8 @@ PropertiesPanel.prototype.elementAction = function(element, subAction) {
  * @param {object} element - the element that the form relates to
  */
 PropertiesPanel.prototype.save = function(element) {
-
     const app = this.parent;
+    const self = this;
 
     // If inline editor and viewer exist
     if(this.inlineEditor && (typeof app.viewer != 'undefined')) {
@@ -58,6 +58,9 @@ PropertiesPanel.prototype.save = function(element) {
         const formNewData = form.serialize();
 
         app.common.showLoadingScreen();
+
+        // Save content tab
+        this.openTabOnRender = 'a[href="' + app.propertiesPanel.DOMObject.find('.nav-tabs .nav-link.active').attr('href') + '"]';
 
         // Add a save form change to the history array, with previous form state and the new state
         app.manager.addChange(
@@ -155,6 +158,9 @@ PropertiesPanel.prototype.save = function(element) {
                 app.viewer.showInlineEditor();
             }
 
+            // Reset active tab
+            self.openTabOnRender = '';
+
             // Show toast message
             toastr.error(errorMessage);
         });
@@ -191,6 +197,8 @@ PropertiesPanel.prototype.makeFormReadOnly = function() {
  * @param {Object} element - the element object to be rendered
  */
 PropertiesPanel.prototype.render = function(element, step) {
+    const self = this;
+
     // Prevent the panel to render if there's no selected object
     if(typeof element == 'undefined' || $.isEmptyObject(element) || typeof element.type == 'undefined' || typeof element[element.type + 'Id'] == 'undefined') {
         // Clean the property panel html
@@ -205,14 +213,19 @@ PropertiesPanel.prototype.render = function(element, step) {
     this.DOMObject.html(loadingTemplate());
     let requestPath = urlsForApi[element.type].getForm.url;
 
+    // Get toggleable panel
+    const $togglePanel = self.DOMObject.parents('.toggle-panel');
+
+    // Hide toggler
+    if($togglePanel.hasClass('opened')) {
+        this.DOMObject.siblings('.toggle-container').hide();
+    }
+
     requestPath = requestPath.replace(':id', element[element.type + 'Id']);
 
     if(step !== undefined && typeof step == 'number') {
         requestPath += '?step=' + step;
     } 
-
-    // Get form for the given element
-    const self = this;
 
     // If there was still a render request, abort it
     if(this.renderRequest != undefined) {
@@ -280,7 +293,7 @@ PropertiesPanel.prototype.render = function(element, step) {
             showActionsGrid(element.type, element[element.type + 'Id']);
 
             // add a button to the button panel for adding an action.
-            self.DOMObject.find('.button-container').prepend($(actionsButtonTemplate({
+            self.DOMObject.find('.button-container').append($(actionsButtonTemplate({
                 addUrl: actionFormAddRequest,
                 trans: actionsTranslations
             })));
@@ -382,11 +395,19 @@ PropertiesPanel.prototype.render = function(element, step) {
             }
         }
 
+        // Open panel if object is an invalid widget
+        if(app.mainObjectType === 'layout' && element.type === 'widget' && element.isValid === 0 && !$togglePanel.hasClass('opened')) {
+            app.togglePanel($togglePanel);
+        }
+
         // Toggler
-        self.DOMObject.parents('.toggle-panel').find('.toggle').off().click(function(e) {
+        $togglePanel.find('.toggle').off().click(function(e) {
             e.stopPropagation();
-            lD.togglePanel($(this).parents('.toggle-panel'));
+            app.togglePanel($togglePanel);
         });
+
+        // Show toggler
+        self.DOMObject.siblings('.toggle-container').show();
     }).fail(function(data) {
 
         // Clear request var after response

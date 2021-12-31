@@ -25,6 +25,7 @@ namespace Xibo\Service;
 
 use Carbon\Carbon;
 use Monolog\Logger;
+use Psr\Log\LoggerInterface;
 use Xibo\Helper\DatabaseLogHandler;
 use Xibo\Storage\PdoStorageService;
 
@@ -69,6 +70,12 @@ class LogService implements LogServiceInterface
     {
         $this->log = $logger;
         $this->mode = $mode;
+    }
+
+    /** @inheritDoc */
+    public function getLoggerInterface(): LoggerInterface
+    {
+        return $this->log;
     }
 
     /**

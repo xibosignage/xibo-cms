@@ -27,7 +27,6 @@ use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Helper\HttpCacheProvider;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
@@ -195,10 +194,7 @@ class Image extends ModuleWidget
         $media = $this->mediaFactory->getById($this->getMediaId());
         $filePath = $libraryLocation . $media->storedAs;
         $this->getLog()->debug('Media Returned: ' . $media->storedAs);
-
-        $proportional = $sanitizedParams->getInt('proportional', ['default' => 1]) == 1;
-        $preview = $sanitizedParams->getInt('preview', ['default' => 0]) == 1;
-        $cache = $sanitizedParams->getInt('cache', ['default' => 0]) == 1;
+        
         $width = intval($sanitizedParams->getDouble('width'));
         $height = intval($sanitizedParams->getDouble('height'));
 
@@ -212,12 +208,13 @@ class Image extends ModuleWidget
             $extension = null;
         }
 
-        $this->getLog()->debug('Preview: ' . var_export($preview, true));
-
         // Preview or download?
-        if ($preview) {
+        if ($sanitizedParams->getCheckbox('preview')) {
+            // What type of download are we?
+            $isThumb = $sanitizedParams->getCheckbox('isThumb') == 1;
+
             // We expect the preview to load, manipulate and output a thumbnail (even on error).
-            // therefore we need to end output buffering and wipe any output so far.
+            // Therefore, we need to end output buffering and wipe any output so far.
             // this means that we do not buffer the image output into memory
             while (ob_get_level() > 0) {
                 ob_end_clean();
@@ -225,49 +222,65 @@ class Image extends ModuleWidget
 
             // Preview (we output the file to the browser with image headers)
             try {
-                // should we use a cache?
-                if (!$cache || ($cache && !file_exists($libraryLocation . 'tn_' . $media->storedAs))) {
-                    // Not cached, or cache not required, lets load it again
-                    Img::configure(array('driver' => 'gd'));
+                Img::configure(['driver' => 'gd']);
 
-                    $this->getLog()->debug('Preview Requested with Width and Height '. $width . ' x ' . $height);
-                    $this->getLog()->debug('Loading ' . $filePath);
+                // Do we want a thumbnail
+                if ($isThumb) {
+                    // Thumbnail
+                    $thumbPath = $libraryLocation . 'tn_' . $media->storedAs;
+                    $proportional = true;
+                    $width = 120;
+                    $height = 120;
 
-                    // Load the image
+                    $this->getLog()->debug('Thumbnail: ' . $thumbPath . ' requested');
+
+                    // Does the thumbnail exist already?
+                    $img = null;
+                    $regenerate = true;
+                    if (file_exists($thumbPath)) {
+                        $img = Img::make($filePath);
+                        if ($img->width() === $width || $img->height() === $height) {
+                            // Correct cache
+                            $regenerate = false;
+                        }
+                    }
+
+                    if ($regenerate) {
+                        // Get the full image and make a thumbnail
+                        $img = Img::make($filePath);
+                        $img->resize($width, $height, function ($constraint) use ($proportional) {
+                            if ($proportional) {
+                                $constraint->aspectRatio();
+                            }
+                        });
+                        $img->save($thumbPath);
+                    }
+
+                    // Output Etag
+                    $response = $this->cacheProvider->withEtag($response, md5_file($thumbPath));
+                } else {
+                    // Not a thumbnail, output the whole file
+                    $proportional = !$sanitizedParams->hasParam('proportional') || $sanitizedParams->getCheckbox('proportional') == 1;
+
+                    $this->getLog()->debug('Whole file: ' . $filePath
+                        . ' requested with Width and Height ' . $width . ' x ' . $height
+                        . ', proportional: ' . var_export($proportional, true));
+
                     $img = Img::make($filePath);
 
-                    // Output a thumbnail?
-                    if ($width != 0 || $height != 0) {
-                        // Make a thumb
+                    // Output a specific width/height
+                    if ($width > 0 && $height > 0) {
                         $img->resize($width, $height, function ($constraint) use ($proportional) {
-                            if ($proportional)
+                            if ($proportional) {
                                 $constraint->aspectRatio();
+                            }
                         });
                     }
-
-                    $this->getLog()->debug('Outputting Image Response');
-
-                    // Output Etags
-                    $httpCache = $this->cacheProvider;
-                    $response = $httpCache->withEtag($response, $media->md5 . $width . $height . $proportional . $preview);
-                    $response = $httpCache->withExpires($response,'+1 week');
-
-                    // Should we cache?
-                    if ($cache) {
-                        $this->getLog()->debug('Saving cached copy to tn_');
-
-                        // Save the file
-                        $img->save($libraryLocation . 'tn_' . $media->storedAs);
-                    }
-
-                    // Output the file
-                    echo $img->encode($extension);
-
-                } else if ($cache) {
-                    // File exists, output it directly
-                    $img = Img::make($libraryLocation . 'tn_' . $media->storedAs);
-                    echo $img->encode($extension);
                 }
+
+                // Output
+                $response = $this->cacheProvider->withExpires($response, '+1 week');
+                echo $img->encode($extension);
             } catch (NotReadableException $notReadableException) {
                 $this->getLog()->debug($notReadableException->getTraceAsString());
                 $this->getLog()->error('Image not readable: ' . $notReadableException->getMessage());
@@ -277,8 +290,9 @@ class Image extends ModuleWidget
 
                 if ($width != 0 || $height != 0) {
                     $img->resize($width, $height, function ($constraint) use ($proportional) {
-                        if ($proportional)
+                        if ($proportional) {
                             $constraint->aspectRatio();
+                        }
                     });
                 }
 

@@ -46,7 +46,7 @@ defined('XIBO') or die('Sorry, you are not allowed to directly access this page.
  *  description="Xibo CMS API.
        Using HTTP formData requests.
        All PUT requests require Content-Type:application/x-www-form-urlencoded header.",
- *  version="2.2",
+ *  version="3.1",
  *  termsOfService="http://xibo.org.uk/legal",
  *  @SWG\License(
  *      name="AGPLv3 or later",

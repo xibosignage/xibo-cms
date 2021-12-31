@@ -20,18 +20,15 @@
  */
 jQuery.fn.extend({
     menuBoardRender: function(options) {
+        // Calculate the min duration between all the containers/zones
+        var duration = options.duration / options.maxPages;
         $(this).each(function() {
-            var maxPages = options.maxPages;
-            var duration =  options.duration / maxPages;
-
-            if (options.productsPerPage > 0) {
-                // Cycle handles this for us
-                $('.ProductsContainer').cycle({
-                    fx: "fade",
-                    timeout: duration * 1000,
-                    "slides": "> div.page"
-                });
-            }
+            // Cycle handles this for us
+            $('.menu-board-products-container').cycle({
+                fx: "fade",
+                timeout: duration * 1000,
+                "slides": "> div.menu-board-product-page"
+            });
 
             return $(this);
         });

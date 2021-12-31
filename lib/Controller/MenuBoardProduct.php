@@ -172,8 +172,8 @@ class MenuBoardProduct extends Base
 
             if ($menuBoardProduct->mediaId != 0) {
                 $download = $this->urlFor($request, 'library.download', ['id' => $menuBoardProduct->mediaId], ['preview' => 1]);
-                $menuBoardProduct->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&width=100&height=56&cache=1" /></i></a>';
-                $menuBoardProduct->thumbnailUrl = $download . '&width=100&height=56&cache=1';
+                $menuBoardProduct->thumbnail = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&isThumb=1" /></i></a>';
+                $menuBoardProduct->thumbnailUrl = $download . '&isThumb=1';
             }
 
             if ($this->getUser()->featureEnabled('menuboard.modify') && $this->getUser()->checkEditable($menuBoard)) {
@@ -433,7 +433,7 @@ class MenuBoardProduct extends Base
      *  @SWG\Parameter(
      *      name="allergyInfo",
      *      in="formData",
-     *      description="Menu Board Product allergyInfo,
+     *      description="Menu Board Product allergyInfo",
      *      type="string",
      *      required=false
      *   ),
@@ -456,14 +456,16 @@ class MenuBoardProduct extends Base
      *      in="formData",
      *      description="An array of optional Product Option names",
      *      type="array",
-     *      required=false
+     *      required=false,
+     *     @SWG\Items(type="string")
      *   ),
      *  @SWG\Parameter(
      *      name="productValues",
      *      in="formData",
      *      description="An array of optional Product Option values",
      *      type="array",
-     *      required=false
+     *      required=false,
+     *     @SWG\Items(type="string")
      *   ),
      *  @SWG\Response(
      *      response=204,

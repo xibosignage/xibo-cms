@@ -351,9 +351,15 @@ class Layout extends Base
         // TODO: if we have selected an item from a non-local source, we need to process that here.
         //  the connector would be expected to import the layout at this point and return us with a Layout
         //  object we can then decorate with our other options.
-        $templateId = $sanitizedParams->getString('layoutId');
+        //  WIP: currently pending the API in the connector.
         $source = $sanitizedParams->getString('source');
-        $resolutionId = $sanitizedParams->getInt('resolutionId');
+        if ($source === 'remote') {
+            // Hand off to the connector
+            throw new GeneralException('Not implemented in this alpha release - coming soon');
+        } else {
+            $templateId = $sanitizedParams->getString('layoutId');
+            $resolutionId = $sanitizedParams->getInt('resolutionId');
+        }
         $template = null;
 
         // Template or Resolution?
@@ -379,6 +385,11 @@ class Layout extends Base
             // Set the owner
             $layout->setOwner($this->getUser()->userId, true);
         } else {
+            // Validate that a resolution has been selected.
+            if (empty($resolutionId)) {
+                throw new InvalidArgumentException(__('Please select a resolution'), 'resolutionId');
+            }
+
             $layout = $this->layoutFactory->createFromResolution(
                 $resolutionId,
                 $this->getUser()->userId,
@@ -390,18 +401,35 @@ class Layout extends Base
             );
 
             // Handle our various templateId's
-            // TODO
             switch ($templateId) {
                 case '0|blank':
                     // Do nothing
                     break;
 
                 case '0|l-bar-left':
-                    // TODO
+                    // Main window - 80%
+                    $mainWidth = $layout->width * 0.8;
+                    $mainHeight = $layout->height * 0.8;
+                    $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, $layout->width - $mainWidth);
+
+                    // Bottom bar
+                    $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
+
+                    // Left bar
+                    $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, 0);
                     break;
 
                 case '0|l-bar-right':
-                    // TODO
+                    // Main window - 80%
+                    $mainWidth = $layout->width * 0.8;
+                    $mainHeight = $layout->height * 0.8;
+                    $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, 0);
+
+                    // Bottom bar
+                    $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
+
+                    // Right bar
+                    $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, $mainWidth);
                     break;
 
                 case '0|full-screen':
@@ -1523,6 +1551,17 @@ class Layout extends Base
                     'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '");',
                     'text' => __('Preview Layout')
                 );
+
+                // Also offer a way to preview the draft layout.
+                if ($layout->hasDraft()) {
+                    $layout->buttons[] = array(
+                        'id' => 'layout_button_preview_draft',
+                        'external' => true,
+                        'url' => '#',
+                        'onclick' => 'createMiniLayoutPreview("' . $this->urlFor($request, 'layout.preview', ['id' => $layout->layoutId]) . '?isPreviewDraft=true");',
+                        'text' => __('Preview Draft Layout')
+                    );
+                }
 
                 $layout->buttons[] = ['divider' => true];
             }

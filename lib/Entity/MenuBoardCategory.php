@@ -29,6 +29,9 @@ use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
+/**
+ * @SWG\Definition()
+ */
 class MenuBoardCategory implements \JsonSerializable
 {
     use EntityTrait;

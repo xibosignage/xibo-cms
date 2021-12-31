@@ -94,6 +94,7 @@ class Twitter extends TwitterBase
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.png')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/emojione/emojione.sprites.css')->save();
+        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
         
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */
@@ -661,7 +662,7 @@ class Twitter extends TwitterBase
                         break;
 
                     case 'Date':
-                        $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->format($dateFormat);
+                        $replace = Carbon::createFromTimestamp(strtotime($tweet->created_at))->translatedFormat($dateFormat);
                         break;
   
                     case 'Location':
@@ -874,7 +875,7 @@ class Twitter extends TwitterBase
         $javaScriptContent .= '       $("body").xiboLayoutScaler(options); $("img").xiboImageRender(options);';
 
         // Run based only if the element is visible or not
-        $javaScriptContent .= '       const runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
+        $javaScriptContent .= '       var runOnVisible = function() { $("#content").xiboTextRender(options, items); }; ';
         $javaScriptContent .= '       (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible); ';
 
         $javaScriptContent .= '   }); ';

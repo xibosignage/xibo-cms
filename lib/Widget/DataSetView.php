@@ -571,7 +571,7 @@ class DataSetView extends ModuleWidget
                     $("body").xiboLayoutScaler(options); 
                     $("#DataSetTableContainer").find("img").xiboImageRender(options);
 
-                    const runOnVisible = function() { $("#DataSetTableContainer").dataSetRender(options);  };
+                    var runOnVisible = function() { $("#DataSetTableContainer").dataSetRender(options);  };
                     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                     
                     // Do we have a freshnessTimeout?
