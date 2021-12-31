@@ -130,10 +130,13 @@
                             {% set helpText %}{% trans "A comma separated set of regular expressions run against the Display name to determine membership." %}{% endset %}
                             {{ forms.input("dynamicCriteria", title, "", helpText, "dynamic-fields") }}
 
-                            {% set title %}{% trans "Criteria Tags" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated set of tags run against the Display tag to determine membership." %}{% endset %}
-                            {{ forms.inputWithTags("dynamicCriteriaTags", title, "", helpText, "dynamic-fields") }}
-
+                            {% if currentUser.featureEnabled("tag.tagging") %}
+                                {% set title %}{% trans "Criteria Tags" %}{% endset %}
+                                {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated set of tags run against the Display tag to determine membership." %}{% endset %}
+                                {{ forms.inputWithTags("dynamicCriteriaTags", title, "", helpText, "dynamic-fields", null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
+                            {% endif %}
                             {{ forms.hidden("useRegexForName", 1) }}
                         </div>
 

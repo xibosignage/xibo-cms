@@ -233,7 +233,6 @@ class CampaignFactory extends BaseFactory
 
         // Tags
         if ($sanitizedFilter->getString('tags') != '') {
-
             $tagFilter = $sanitizedFilter->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -246,16 +245,17 @@ class CampaignFactory extends BaseFactory
                 ';
             } else {
                 $operator = $sanitizedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND campaign.campaignID IN (
+                $logicalOperator = $sanitizedFilter->getString('logicalOperator', ['default' => 'OR']);
+                $lkTagTableSql = ' AND campaign.campaignID IN (
                 SELECT lktagcampaign.campaignId
                   FROM tag
                     INNER JOIN lktagcampaign
                     ON lktagcampaign.tagId = tag.tagId
-                ";
+                ';
+                $body .= $lkTagTableSql;
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, $body, $params);
             }
         }
 

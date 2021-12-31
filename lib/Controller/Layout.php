@@ -1297,7 +1297,8 @@ class Layout extends Base
             'folderId' => $parsedQueryParams->getInt('folderId'),
             'codeLike' => $parsedQueryParams->getString('codeLike'),
             'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
-            'onlyMyLayouts' => $parsedQueryParams->getCheckbox('onlyMyLayouts')
+            'onlyMyLayouts' => $parsedQueryParams->getCheckbox('onlyMyLayouts'),
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
         ], $parsedQueryParams));
 
         foreach ($layouts as $layout) {

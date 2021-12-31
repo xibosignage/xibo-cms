@@ -511,7 +511,8 @@ class Display extends Base
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
             'orientation' => $parsedQueryParams->getString('orientation'),
             'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
-            'folderId' => $parsedQueryParams->getInt('folderId')
+            'folderId' => $parsedQueryParams->getInt('folderId'),
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
         ];
 
         // Get a list of displays

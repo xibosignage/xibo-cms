@@ -243,6 +243,7 @@ class DisplayGroup extends Base
             'userId' => $parsedQueryParams->getInt('userId'),
             'isDynamic' => $parsedQueryParams->getInt('isDynamic'),
             'folderId' => $parsedQueryParams->getInt('folderId'),
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
         ];
 
         $scheduleWithView = ($this->getConfig()->getSetting('SCHEDULE_WITH_VIEW_PERMISSION') == 1);
@@ -577,6 +578,27 @@ class DisplayGroup extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="dynamicCriteriaTags",
+     *      in="formData",
+     *      description="The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dynamicCriteriaExactTags",
+     *      in="formData",
+     *      description="When filtering by Tags, should we use exact match?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dynamicCriteriaLogicalOperator",
+     *      in="formData",
+     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -621,6 +643,8 @@ class DisplayGroup extends Base
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $displayGroup->tags = $this->tagFactory->tagsFromString($sanitizedParams->getString('tags'));
             $displayGroup->dynamicCriteriaTags = $sanitizedParams->getString('dynamicCriteriaTags');
+            $displayGroup->dynamicCriteriaExactTags = $sanitizedParams->getCheckbox('exactTags');
+            $displayGroup->dynamicCriteriaLogicalOperator = $sanitizedParams->getString('logicalOperator');
         }
 
         if ($displayGroup->isDynamic === 1) {
@@ -700,6 +724,27 @@ class DisplayGroup extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="dynamicCriteriaTags",
+     *      in="formData",
+     *      description="The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dynamicCriteriaExactTags",
+     *      in="formData",
+     *      description="When filtering by Tags, should we use exact match?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="dynamicCriteriaLogicalOperator",
+     *      in="formData",
+     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Folder ID to which this object should be assigned to",
@@ -738,6 +783,8 @@ class DisplayGroup extends Base
         if ($this->getUser()->featureEnabled('tag.tagging')) {
             $displayGroup->replaceTags($this->tagFactory->tagsFromString($parsedRequestParams->getString('tags')));
             $displayGroup->dynamicCriteriaTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('dynamicCriteriaTags') : null;
+            $displayGroup->dynamicCriteriaExactTags = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getCheckbox('exactTags') : 0;
+            $displayGroup->dynamicCriteriaLogicalOperator = ($displayGroup->isDynamic == 1) ? $parsedRequestParams->getString('logicalOperator') : 'OR';
         }
 
         // if we have changed the type from dynamic to non-dynamic or other way around, clear display/dg members

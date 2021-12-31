@@ -387,7 +387,6 @@ class DisplayGroupFactory extends BaseFactory
 
         // Tags
         if ($parsedBody->getString('tags') != '') {
-
             $tagFilter = $parsedBody->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -400,16 +399,17 @@ class DisplayGroupFactory extends BaseFactory
                 ';
             } else {
                 $operator = $parsedBody->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `displaygroup`.displaygroupId IN (
+                $logicalOperator = $parsedBody->getString('logicalOperator', ['default' => 'OR']);
+                $lkTagTableSql = ' AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId
                   FROM tag
                     INNER JOIN `lktagdisplaygroup`
                     ON `lktagdisplaygroup`.tagId = tag.tagId
-                ";
+                ';
+                $body .= $lkTagTableSql;
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, $body, $params);
             }
         }
 

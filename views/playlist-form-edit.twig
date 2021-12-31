@@ -158,7 +158,10 @@
 
                                     {% if currentUser.featureEnabled("tag.tagging") %}
                                         {% set title %}{% trans "Tag filter" %}{% endset %}
-                                        {{ forms.inputWithTags("filterMediaTag", title, playlist.filterMediaTags) }}
+                                        {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                        {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
+                                        {% set helpText %}{% trans "A comma separated set of tags run against the Display tag to determine membership." %}{% endset %}
+                                        {{ forms.inputWithTags("filterMediaTag", title, playlist.filterMediaTags, helpText, "", null, null, "exactTags", exactTagTitle, logicalOperatorTitle, playlist.filterExactTags, playlist.filterLogicalOperator) }}
                                     {% endif %}
 
                                     {% set title %}{% trans "Max number of Items" %}{% endset %}

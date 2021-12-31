@@ -108,6 +108,18 @@ class DisplayGroup implements \JsonSerializable
     public $dynamicCriteriaTags;
 
     /**
+     * @SWG\Property(description="Flag indicating whether to filter by exact Tag match")
+     * @var int
+     */
+    public $dynamicCriteriaExactTags;
+
+    /**
+     * @SWG\Property(description="Which logical operator should be used when filtering by multiple Tags? OR|AND")
+     * @var string
+     */
+    public $dynamicCriteriaLogicalOperator;
+
+    /**
      * @SWG\Property(
      *  description="The UserId who owns this display group",
      * )
@@ -804,7 +816,7 @@ class DisplayGroup implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $this->displayGroupId = $this->getStore()->insert('
-          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `userId`, `createdDt`, `modifiedDt`, `folderId`, `permissionsFolderId`)
+          INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `dynamicCriteriaExactTags`, `dynamicCriteriaLogicalOperator`, `userId`, `createdDt`, `modifiedDt`, `folderId`, `permissionsFolderId`)
             VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId, :createdDt, :modifiedDt, :folderId, :permissionsFolderId)
         ', [
             'displayGroup' => $this->displayGroup,
@@ -813,6 +825,8 @@ class DisplayGroup implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria,
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
+            'dynamicCriteriaExactTags' => $this->dynamicCriteriaExactTags ?? 0,
+            'dynamicCriteriaLogicalOperator' => $this->dynamicCriteriaLogicalOperator ?? 'OR',
             'userId' => $this->userId,
             'createdDt' => $time,
             'modifiedDt' => $time,
@@ -838,6 +852,8 @@ class DisplayGroup implements \JsonSerializable
               `isDynamic` = :isDynamic,
               `dynamicCriteria` = :dynamicCriteria,
               `dynamicCriteriaTags` = :dynamicCriteriaTags,
+              `dynamicCriteriaExactTags` = :dynamicCriteriaExactTags,
+              `dynamicCriteriaLogicalOperator` = :dynamicCriteriaLogicalOperator,
               `bandwidthLimit` = :bandwidthLimit,
               `userId` = :userId,
               `modifiedDt` = :modifiedDt,
@@ -851,6 +867,8 @@ class DisplayGroup implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'dynamicCriteria' => $this->dynamicCriteria,
             'dynamicCriteriaTags' => $this->dynamicCriteriaTags,
+            'dynamicCriteriaExactTags' => $this->dynamicCriteriaExactTags ?? 0,
+            'dynamicCriteriaLogicalOperator' => $this->dynamicCriteriaLogicalOperator ?? 'OR',
             'bandwidthLimit' => $this->bandwidthLimit,
             'userId' => $this->userId,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
@@ -880,6 +898,8 @@ class DisplayGroup implements \JsonSerializable
             $this->displays = $this->displayFactory->query(null, [
                 'display' => $this->dynamicCriteria,
                 'tags' => $this->dynamicCriteriaTags,
+                'exactTags' => $this->dynamicCriteriaExactTags,
+                'logicalOperator' => $this->dynamicCriteriaLogicalOperator,
                 'userCheckUserId' => $this->getOwnerId(),
                 'useRegexForName' => true
             ]);

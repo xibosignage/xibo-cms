@@ -45,7 +45,7 @@
     </div>
 {% endmacro %}
 
-{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle) %}
+{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle, logicalOperatorTitle) %}
     <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         {% if exactTag %}
@@ -55,6 +55,10 @@
                     <div class="input-group-text">
                         <input title="{{ exactTagTitle }}" type="checkbox" id="{{ exactTag }}" name="{{ exactTag }}">
                     </div>
+                    <select class="custom-select" id="logicalOperator" name="logicalOperator" title="{{ logicalOperatorTitle }}" style="min-width:auto!important">
+                        <option value="OR" selected>OR</option>
+                        <option value="AND">AND</option>
+                    </select>
                 </div>
             </div>
         {% else %}

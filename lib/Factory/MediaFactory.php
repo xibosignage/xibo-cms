@@ -769,7 +769,6 @@ class MediaFactory extends BaseFactory
 
         // Tags
         if ($sanitizedFilter->getString('tags') != '') {
-
             $tagFilter = $sanitizedFilter->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -782,16 +781,17 @@ class MediaFactory extends BaseFactory
                 ';
             } else {
                 $operator = $sanitizedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `media`.mediaId IN (
+                $logicalOperator = $sanitizedFilter->getString('logicalOperator', ['default' => 'OR']);
+                $lkTagTableSql = ' AND `media`.mediaId IN (
                 SELECT `lktagmedia`.mediaId
                   FROM tag
                     INNER JOIN `lktagmedia`
                     ON `lktagmedia`.tagId = tag.tagId
-                ";
+                ';
+                $body .= $lkTagTableSql;
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, $body, $params);
             }
         }
 

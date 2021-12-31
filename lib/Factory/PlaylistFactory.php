@@ -326,7 +326,6 @@ class PlaylistFactory extends BaseFactory
 
         // Tags
         if ($parsedFilter->getString('tags') != '') {
-
             $tagFilter = $parsedFilter->getString('tags', $filterBy);
 
             if (trim($tagFilter) === '--no-tag') {
@@ -339,16 +338,17 @@ class PlaylistFactory extends BaseFactory
                 ';
             } else {
                 $operator = $parsedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `playlist`.playlistID IN (
+                $logicalOperator = $parsedFilter->getString('logicalOperator', ['default' => 'OR']);
+                $lkTagTableSql =  ' AND `playlist`.playlistID IN (
                 SELECT lktagplaylist.playlistId
                   FROM tag
                     INNER JOIN lktagplaylist
                     ON lktagplaylist.tagId = tag.tagId
-                ";
+                ';
+                $body .= $lkTagTableSql;
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, $body, $params);
             }
         }
 
@@ -409,7 +409,7 @@ class PlaylistFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic', 'maxNumberOfItems']]);
+            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic', 'maxNumberOfItems', 'duration']]);
             $entries[] = $playlist;
         }
 

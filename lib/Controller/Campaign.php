@@ -189,7 +189,8 @@ class Campaign extends Base
             'folderId' => $parsedParams->getInt('folderId'),
             'totalDuration' => $parsedParams->getInt('totalDuration', ['default' => 1]),
             'cyclePlaybackEnabled' => $parsedParams->getInt('cyclePlaybackEnabled'),
-            'layoutId' => $parsedParams->getInt('layoutId')
+            'layoutId' => $parsedParams->getInt('layoutId'),
+            'logicalOperator' => $parsedParams->getString('logicalOperator'),
         ];
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];

@@ -2105,7 +2105,6 @@ class LayoutFactory extends BaseFactory
 
         // Tags
         if ($parsedFilter->getString('tags') != '') {
-
             $tagFilter = $parsedFilter->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -2118,16 +2117,17 @@ class LayoutFactory extends BaseFactory
                 ';
             } else {
                 $operator = $parsedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND layout.layoutID IN (
+                $logicalOperator = $parsedFilter->getString('logicalOperator', ['default' => 'OR']);
+                $lkTagTableSql = ' AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
                   FROM tag
                     INNER JOIN lktaglayout
                     ON lktaglayout.tagId = tag.tagId
-                ";
+                ';
+                $body .= $lkTagTableSql;
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, $body, $params);
             }
         }
 
