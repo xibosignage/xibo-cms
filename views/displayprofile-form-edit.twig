@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -68,6 +68,8 @@
         {{ include('displayprofile-form-edit-linux.twig') }}
     {% elseif displayProfile.getClientType() == "lg" or displayProfile.getClientType() == "sssp"  %}
         {{ include('displayprofile-form-edit-soc.twig') }}
+    {% elseif displayProfile.isCustom() %}
+        {{ include(displayProfile.getCustomEditTemplate()) }}
     {% else %}
         {% set message %}{% trans "This is an unknown type of Player and there are no special settings for it." %}{% endset %}
         {{ forms.message(message) }}

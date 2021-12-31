@@ -671,6 +671,11 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('screenShotRequestInterval')) {
+                    $this->handleChangedSettings('screenShotRequestInterval', ($ownConfig) ? $displayProfile->getSetting('screenShotRequestInterval') : $display->getSetting('screenShotRequestInterval'), $sanitizedParams->getInt('screenShotRequestInterval'), $changedSettings);
+                    $displayProfile->setSetting('screenShotRequestInterval', $sanitizedParams->getInt('screenShotRequestInterval'), $ownConfig, $config);
+                }
+
                 if ($sanitizedParams->hasParam('timers')) {
                     // Options object to be converted to a JSON string
                     $timerOptions = (object)[];
@@ -797,7 +802,46 @@ trait DisplayProfileConfigFields
                 break;
 
             default:
-                $this->getLog()->info('Edit for unknown type ' . $displayProfile->getClientType());
+                if ($displayProfile->isCustom()) {
+                    $this->getLog()->info('Edit for custom Display profile type ' . $displayProfile->getClientType());
+
+                    foreach ($displayProfile->configDefault as $setting) {
+                        switch ($setting['type']) {
+                            case 'string':
+                                if ($sanitizedParams->hasParam($setting['name'])) {
+                                    $this->handleChangedSettings($setting['name'], ($ownConfig) ? $displayProfile->getSetting($setting['name']) : $display->getSetting($setting['name']), $sanitizedParams->getString($setting['name']), $changedSettings);
+                                    $displayProfile->setSetting($setting['name'], $sanitizedParams->getString($setting['name']), $ownConfig, $config);
+                                }
+                                break;
+
+                            case 'int':
+                                if ($sanitizedParams->hasParam($setting['name'])) {
+                                    $this->handleChangedSettings($setting['name'], ($ownConfig) ? $displayProfile->getSetting($setting['name']) : $display->getSetting($setting['name']), $sanitizedParams->getInt($setting['name']), $changedSettings);
+                                    $displayProfile->setSetting($setting['name'], $sanitizedParams->getInt($setting['name']), $ownConfig, $config);
+                                }
+                                break;
+
+                            case 'double':
+                                if ($sanitizedParams->hasParam($setting['name'])) {
+                                    $this->handleChangedSettings($setting['name'], ($ownConfig) ? $displayProfile->getSetting($setting['name']) : $display->getSetting($setting['name']), $sanitizedParams->getDouble($setting['name']), $changedSettings);
+                                    $displayProfile->setSetting($setting['name'], $sanitizedParams->getDouble($setting['name']), $ownConfig, $config);
+                                }
+                                break;
+
+                            case 'checkbox':
+                                if ($sanitizedParams->hasParam($setting['name'])) {
+                                    $this->handleChangedSettings($setting['name'], ($ownConfig) ? $displayProfile->getSetting($setting['name']) : $display->getSetting($setting['name']), $sanitizedParams->getCheckbox($setting['name']), $changedSettings);
+                                    $displayProfile->setSetting($setting['name'], $sanitizedParams->getCheckbox($setting['name']), $ownConfig, $config);
+                                }
+                                break;
+
+                            default:
+                                $this->getLog()->debug('Custom Display Profile requested unknown setting type ' . $setting['type']);
+                        }
+                    }
+                } else {
+                    $this->getLog()->info('Edit for unknown type ' . $displayProfile->getClientType());
+                }
         }
 
         if ($changedSettings != []) {

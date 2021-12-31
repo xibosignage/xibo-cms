@@ -274,6 +274,8 @@
                     {% include "displayprofile-form-edit-linux.twig" %}
                 {% elseif displayProfile.getClientType() == "lg" or displayProfile.getClientType() == "sssp"  %}
                     {% include "displayprofile-form-edit-soc.twig" %}
+                {% elseif displayProfile.isCustom() %}
+                    {{ include(displayProfile.getCustomEditTemplate()) }}
                 {% endif %}
 
                 {% include "displayprofile-form-edit-javascript.twig" %}
