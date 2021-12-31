@@ -118,9 +118,13 @@
                         {% set helpText %}{% trans "Should items be shown side by side?" %}{% endset %}
                         {{ forms.checkbox("itemsSideBySide", title, module.getOption("itemsSideBySide"), helpText) }}
 
-                        {% set title %}{% trans "Date Format" %}{% endset %}
-                        {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
-                        {% set helpText %}{% trans %}The format to apply to all dates returned by the ticker. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
+                        {% set title %}{% trans "Date Format" %}
+                            <span class="fa fa-info-circle date-format-table"
+                                  data-toggle="popover"
+                                  data-trigger="hover">
+                            </span>
+                        {% endset %}
+                        {% set helpText %}{% trans "The format to apply to all dates returned by the Widget." %}{% endset %}
                         {{ forms.input("dateFormat", title, module.getOption("dateFormat"), helpText) }}
 
                         {% set title %}{% trans "Allowable Attributes" %}{% endset %}
