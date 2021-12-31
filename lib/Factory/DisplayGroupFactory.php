@@ -274,6 +274,8 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.isDynamic,
                 `displaygroup`.dynamicCriteria,
                 `displaygroup`.dynamicCriteriaTags,
+                `displaygroup`.dynamicCriteriaExactTags,
+                `displaygroup`.dynamicCriteriaLogicalOperator,
                 `displaygroup`.bandwidthLimit,
                 `displaygroup`.createdDt,
                 `displaygroup`.modifiedDt,

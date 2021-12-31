@@ -176,6 +176,8 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.isDynamic,
                 `playlist`.filterMediaName,
                 `playlist`.filterMediaTags,
+                `playlist`.filterExactTags,
+                `playlist`.filterLogicalOperator,
                 `playlist`.maxNumberOfItems,
                 `playlist`.requiresDurationUpdate,
                 `playlist`.enableStat,
