@@ -313,7 +313,7 @@ class StatsArchiveTask implements TaskInterface
             $options = [
                 'maxAttempts' => $this->getOption('statsDeleteMaxAttempts', 10),
                 'statsDeleteSleep' => $this->getOption('statsDeleteSleep', 3),
-                'limit' => 10000 // Note: for mongo we dont use $options['limit'] anymore
+                'limit' => $this->getOption('limit', 10000) // Note: for mongo we dont use $options['limit'] anymore
             ];
 
             try {
