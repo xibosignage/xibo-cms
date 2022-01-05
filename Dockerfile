@@ -1,7 +1,7 @@
 # Multi-stage build
 # Stage 0
 # Compile xsendfile apache module
-FROM alpine:3.12 as sendfile
+FROM alpine:3.15 as sendfile
 ADD docker/mod_xsendfile.c /mod_xsendfile.c
 RUN apk update && apk upgrade && apk add \
     gcc \
@@ -63,7 +63,7 @@ RUN npm run publish
 
 # Stage 3
 # Build the CMS container
-FROM alpine:3.12
+FROM alpine:3.15
 MAINTAINER Xibo Signage <support@xibosignage.com>
 
 # Install apache, PHP, and supplimentary programs.
@@ -92,6 +92,7 @@ RUN apk update && apk upgrade && apk add tar \
     php7-tokenizer \
     php7-mbstring \
     php7-memcached \
+    php7-pecl-mongodb \
     php7-zlib \
     mysql-client \
     msmtp \
@@ -101,11 +102,6 @@ RUN apk update && apk upgrade && apk add tar \
     tzdata \
     openssl \
     && rm -rf /var/cache/apk/*
-
-RUN apk add --no-cache build-base php7-dev php7-pear openssl-dev \
-    && pecl install mongodb-1.6.1 \
-    && apk del build-base php7-dev \
-    && echo extension=mongodb.so > /etc/php7/conf.d/51_mongodb.ini
 
 # Add all necessary config files in one layer
 ADD docker/ /
