@@ -87,5 +87,20 @@ module.exports = {
     formatFileSize: function(value) {
         return (b = Math, c = b.log, d = 1e3, e = c(value) / c(d) | 0, value / b.pow(d, e)).toFixed(2)
             + ' ' + (e ? 'kMGTPEZY'[--e] + 'B' : 'Bytes');
+    },
+
+    /**
+     * Get a module by type
+     * @param {string} type - Type of media
+     */
+    getModuleByType: function(type) {
+        let module;
+        modulesList.forEach((element) => {
+            if(element.type == type) {
+                module = element;
+            }
+        });
+
+        return module;
     }
 };

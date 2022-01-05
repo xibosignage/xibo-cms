@@ -373,7 +373,7 @@ body, .page-content {
             margin: 4px;
         }
 
-        .bc-link {
+        .bc-element {
             max-width: 100px;
             height: 24px;
             overflow: hidden;
@@ -381,12 +381,15 @@ body, .page-content {
             white-space: nowrap;
             border-radius: 0.2rem;
             padding: 0px 4px;
-            cursor: pointer;
             opacity: 0.8;
             border: 2px solid $xibo-color-gray-light;
 
             &:hover {
                 opacity: 1;
+            }
+
+            &.bc-link {
+                cursor: pointer;
             }
 
             &.bc-layout {

@@ -3,6 +3,7 @@
 // Load templates
 const ToolbarTemplate = require('../templates/toolbar.hbs');
 const ToolbarCardMediaTemplate = require('../templates/toolbar-card-media.hbs');
+const ToolbarCardMediaUploadTemplate = require('../templates/toolbar-card-media-upload.hbs');
 const ToolbarContentTemplate = require('../templates/toolbar-content.hbs');
 const ToolbarContentMedia = require('../templates/toolbar-content-media.hbs');
 const MediaPlayerTemplate = require('../templates/toolbar-media-preview.hbs');
@@ -199,6 +200,24 @@ const Toolbar = function(parent, container, customActions = {}, showOptions = fa
     this.openedMenu = -1;
 
     this.menuItems = defaultMenuItems;
+
+    // Check if menu items based on modules are disabled
+    const getModuleByTypeFunc = this.parent.common.getModuleByType;
+    this.menuItems.forEach(function(el) {
+        if (el.search) { // validate only media menu options
+            if (el.name == 'library') { // library needs its filters to be validated
+                el.disabled = true;
+                el.filters.type.values.forEach(function(el2) {
+                    el2.disabled = $.isEmptyObject(getModuleByTypeFunc(el2.type));
+                    if (el.disabled && !el2.disabled) {
+                        el.disabled = false;
+                    }
+                });
+            } else { // other basic media (audio, video,...) only need to check the upper level
+                el.disabled = $.isEmptyObject(getModuleByTypeFunc(el.name));
+            }
+        }
+    });
 
     this.widgetMenuIndex = 0;
     this.libraryMenuIndex = 4;
@@ -778,6 +797,7 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
  */
 Toolbar.prototype.mediaContentPopulate = function(menu) {
     const self = this;
+    const app = this.parent;
     const filters = self.menuItems[menu].filters;
     const requestURL = librarySearchUrl + '?assignable=1&retired=0';
     const $mediaContainer = self.DOMObject.find('#media-container-' + menu);
@@ -785,6 +805,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     // Request elements based on filters
     const loadData = function(clear = true) {
         const $mediaContent = self.DOMObject.find('#media-content-' + menu);
+        const $mediaForm = $mediaContent.parent().find('.media-search-form');
         
         // Remove show more button
         $mediaContainer.find('.show-more').remove();
@@ -802,8 +823,11 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         // Show loading
         $mediaContent.after('<div class="loading-container w-100 text-center"><span class="loading fa fa-cog fa-spin"></span></div>');
 
+        // Remove no media message if exists
+        $mediaForm.find('.no-results-message').remove();
+
         // Get filter data
-        const filter = self.DOMObject.find('#media-container-' + menu + ' #media-search-form').serializeObject();
+        const filter = self.DOMObject.find('#media-container-' + menu + ' .media-search-form').serializeObject();
 
         if(menu == self.libraryMenuIndex && filter.type == '') {
             filter.types = moduleListFiltered.map(el => el.type);
@@ -824,18 +848,39 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
                 provider: 'both'
             }, filter),
         }).done(function(res) {
+            // Add upload card
+            const showUploadCard = function () {
+                if($mediaContent.find('.upload-card').length == 0) {
+                    // Find specific module
+                    const module = app.common.getModuleByType(filter.type);
+                    if(module) {
+                        module.trans = toolbarTrans;
+                        const $uploadCard = $(ToolbarCardMediaUploadTemplate(module));
+                        $mediaContent.append($uploadCard).masonry('appended', $uploadCard);
+                    }
+                }   
+            }
+
             // Remove loading
             $mediaContent.parent().find('.loading-container').remove();
+
+            // Init masonry
+            $mediaContent.masonry({
+                itemSelector: '.toolbar-card',
+                columnWidth: 96,
+                gutter: 11,
+            });
+
             if((!res.data || res.data.length == 0) && $mediaContent.find('.toolbar-card').length == 0) {
+                showUploadCard();
+
+                // Handle card behaviour
+                self.handleCardsBehaviour();
+
                 // Show no results message
-                $mediaContent.append('<div class="no-results-message">' + toolbarTrans.noMediaToShow + '</div>');
+                $mediaForm.append('<div class="no-results-message">' + toolbarTrans.noMediaToShow + '</div>');
             } else {
-                // Init masonry
-                $mediaContent.masonry({
-                    itemSelector: '.toolbar-card',
-                    columnWidth: 96,
-                    gutter: 11,
-                });
+                showUploadCard();
 
                 for (let index = 0; index < res.data.length; index++) {
                     const element = Object.assign({}, res.data[index]);
@@ -846,6 +891,11 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
                         element.download = imageDownloadUrl.replace(":id", element.id);
                     }
 
+                    // Format duration
+                    if(['audio', 'video'].includes(element.type)) {
+                        element.mediaDuration = app.common.timeFormat(element.duration);
+                    }
+
                     // Use template
                     const $card = $(ToolbarCardMediaTemplate(element));
 
@@ -854,9 +904,8 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
                         $card.data('providerData', res.data[index]);
                     }
 
-                    
                     // Append to container
-                    $mediaContent.append($card).masonry('appended', $card);;
+                    $mediaContent.append($card).masonry('appended', $card);
 
                     self.menuItems[menu].itemCount++;
                 }
@@ -909,7 +958,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     const filterRefresh = function(filters) {
         // Save filter options
         for (let filter in filters) {
-            filters[filter].value = self.DOMObject.find('#content-' + menu + ' #media-search-form #input-' + filter).val();
+            filters[filter].value = self.DOMObject.find('#content-' + menu + ' .media-search-form #input-' + filter).val();
         }
 
         // Reload data
@@ -919,22 +968,22 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     };
 
     // Prevent filter form submit and bind the change event to reload the table
-    $mediaContainer.find('#media-search-form').on('submit', function(e) {
+    $mediaContainer.find('.media-search-form').on('submit', function(e) {
         e.preventDefault();
         return false;
     });
 
     // Bind seach action to refresh the results
-    $mediaContainer.find('#media-search-form select, #media-search-form input[type="text"].input-tag').change(_.debounce(function() {
+    $mediaContainer.find('.media-search-form select, .media-search-form input[type="text"].input-tag').change(_.debounce(function() {
         filterRefresh(filters);
     }, 200));
 
-    $mediaContainer.find('#media-search-form input[type="text"]').on('input', _.debounce(function() {
+    $mediaContainer.find('.media-search-form input[type="text"]').on('input', _.debounce(function() {
         filterRefresh(filters);
     }, 500));
 
     // Initialize tagsinput
-    const $tags = $mediaContainer.find('#media-search-form input[data-role="tagsinput"]');
+    const $tags = $mediaContainer.find('.media-search-form input[data-role="tagsinput"]');
     $tags.tagsinput();
 
     $mediaContainer.find('#media-' + menu).off('click').on('click', '#tagDiv .btn-tag', function() {
@@ -1147,15 +1196,29 @@ Toolbar.prototype.handleCardsBehaviour = function() {
             self.selectCard($(e.currentTarget).parent());
         });
 
+        // Select upload card
+        this.DOMObject.find('.toolbar-card .select-upload').click((e) => {
+            const $card = $(this).parent();
+            if(!$card.hasClass('card-selected')) {
+                self.selectCard($(e.currentTarget).parent());
+            } else {
+                self.deselectCardsAndDropZones();
+            }
+        });
+
         // Select card clicking in the Add button
         this.DOMObject.find('.toolbar-card:not(.card-selected) .btn-favourite').click((e) => {
             self.toggleFavourite(e.currentTarget);
         });
 
         // Card select button
-        this.DOMObject.find('#media-content-' + this.openedMenu + ' .select-button').off('click').click(function() {
-            const $card = $(this).parent();
+        this.DOMObject.find('#media-content-' + this.openedMenu + ' .select-button:not(.select-upload)').off('click').click(function() {
+            // If upload card is selected, remove all selected
+            if(!$.isEmptyObject(self.selectedCard) && self.selectedCard.hasClass('card-selected')) {{
+                self.deselectCardsAndDropZones();
+            }}
 
+            const $card = $(this).parent();
             if($card.hasClass('card-selected')) {
                 self.removeFromQueue(self.openedMenu, $card);
             } else {
@@ -1272,7 +1335,7 @@ Toolbar.prototype.createMediaPreview = function(media) {
  * Opens a new tab and search for the given media type
  * @param {string} type - Type of media
  */
- Toolbar.prototype.openNewTabAndSearch = function(type) {
+Toolbar.prototype.openNewTabAndSearch = function(type) {
      if(['audio', 'video', 'image'].includes(type)) {
         this.openedMenu = ['image', 'audio', 'video'].indexOf(type) + 1;
      } else {

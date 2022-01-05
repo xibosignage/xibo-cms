@@ -303,6 +303,21 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
         return regionSpecific;
     };
 
+    /**
+     * Check if the current module is enabled
+     */
+    this.checkIfEnabled = function() {
+        // Check if module is enabled
+        const module = this.designerObject.common.getModuleByType(this.subType);
+        this.enabled = !$.isEmptyObject(module);
+
+        // Override properties if not enabled
+        if(!this.enabled) {
+            this.isEditable = false;
+            this.isPermissionsModifiable = false;
+            this.isDeletable = data.isDeletable;
+        }
+    }
 };
 
 /**

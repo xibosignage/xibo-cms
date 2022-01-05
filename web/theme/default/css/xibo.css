@@ -1044,6 +1044,8 @@ ul li.active.tab-design:hover a {
 
 .permissionsDiv {
     width: 200px;
+    overflow-x: auto;
+    max-width: 250px;
 }
 
 .permissionsDiv .badge {
