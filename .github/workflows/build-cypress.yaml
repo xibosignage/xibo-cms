@@ -1,0 +1,23 @@
+name: Build Cypress
+
+on:
+  workflow_dispatch:
+
+  schedule:
+    - cron: '0 0 * * 1'
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+
+      - name: Build Cypress
+        run: |
+          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
+          docker build . -f Dockerfile.cypress -t xibosignage/xibo-cms:cypress
+          docker push xibosignage/xibo-cms:cypress
