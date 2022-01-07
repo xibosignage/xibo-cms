@@ -111,7 +111,7 @@ class Folder
      */
     public function getOwnerId()
     {
-        return null;
+        return -1;
     }
 
     public function getParentId()
