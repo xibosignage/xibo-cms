@@ -898,7 +898,7 @@ class LayoutFactory extends BaseFactory
                 $widget->ownerId = $mediaOwnerId;
                 $widget->duration = $mediaNode['duration'];
                 $widget->useDuration = $mediaNode['useDuration'];
-                $widget->mediaIds = $mediaNode['mediaIds'];
+                $widget->tempId = (int)implode(',', $mediaNode['mediaIds']);
                 $widget->tempWidgetId = $mediaNode['widgetId'];
 
                 // Widget from/to dates.
@@ -916,6 +916,7 @@ class LayoutFactory extends BaseFactory
                 }
 
                 /* @var \Xibo\Entity\Module $module */
+                $module = $modules[$widget->type];
 
                 //
                 // Get all widget options
@@ -942,6 +943,16 @@ class LayoutFactory extends BaseFactory
                     if ($widget->type == 'ticker' && $widgetOption->option == 'sourceId' && $widgetOption->value == '2') {
                         $widget->type = 'datasetticker';
                     }
+                }
+
+                //
+                // Get the MediaId associated with this widget
+                //
+                if ($module->regionSpecific == 0) {
+                    $this->getLog()->debug('Library Widget, getting mediaId');
+
+                    $this->getLog()->debug(sprintf('Assigning mediaId %d', $widget->tempId));
+                    $widget->assignMedia($widget->tempId);
                 }
 
                 //
