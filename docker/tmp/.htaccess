@@ -23,11 +23,6 @@ RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_URI} ^REPLACE_ME/install/.*$
 RewriteRule ^ install/index.php [QSA,L]
 
-# maintenance
-RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} ^REPLACE_ME/maint/.*$
-RewriteRule ^ maint/index.php [QSA,L]
-
 # all others - i.e. web
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
