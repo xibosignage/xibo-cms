@@ -30,7 +30,7 @@ function openUploadForm(options) {
     options = $.extend(true, {}, {
         templateId: "template-file-upload",
         videoImageCovers: true,
-        className: "upload-modal",
+        className: "",
         animateDialog: true,
         formOpenedEvent: null,
         templateOptions : {
@@ -49,7 +49,7 @@ function openUploadForm(options) {
         message: uploadTemplate(options.templateOptions),
         title: options.title,
         buttons: options.buttons,
-        className: options.className,
+        className: options.className + " upload-modal",
         animate: options.animateDialog,
         size: 'large'
     }).on('hidden.bs.modal', function () {
