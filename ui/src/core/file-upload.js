@@ -55,11 +55,7 @@ function openUploadForm(options) {
     }).on('hidden.bs.modal', function () {
         // Reset video image covers.
         videoImageCovers = {};
-    }).attr("id", Date.now());
-
-    setTimeout(function() {
-        console.log("Timeout fired, we should be shown by now");
-
+    }).on('shown.bs.modal', function () {
         // Configure the upload form
         var form = $(dialog).find("form");
         var uploadOptions = {
@@ -151,12 +147,14 @@ function openUploadForm(options) {
                         clearInterval(refreshSessionInterval);
                     }
 
-                    if (options.uploadDoneEvent !== undefined && options.uploadDoneEvent !== null) {
+                    // Run the callback function for done when we're processing the last uploading element
+                    var filesToUploadCount = form.find('tr.template-upload').length;
+                    if (filesToUploadCount == 1 && options.uploadDoneEvent !== undefined && options.uploadDoneEvent !== null && typeof options.uploadDoneEvent == 'function') {
                         // Run in a short while.
                         // this gives time for file-upload's own deferreds to run
                         setTimeout(function () {
-                            eval(options.uploadDoneEvent)(data);
-                        });
+                            options.uploadDoneEvent(data);
+                        }, 300);
                     }
                 })
             .bind('fileuploadprogressall', function (e, data) {
@@ -213,7 +211,7 @@ function openUploadForm(options) {
             eval(options.formOpenedEvent)(dialog);
         }
 
-    }, 500);
+    }).attr("id", Date.now());
 
     return dialog;
 }
