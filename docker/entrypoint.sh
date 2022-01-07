@@ -276,7 +276,7 @@ then
         /bin/sed -i "s|.*Alias.*$|Alias $CMS_ALIAS /var/www/cms/web|" /etc/apache2/conf.d/cms.conf
 
         echo "Settings up htaccess"
-        cp /var/www/cms/docker/tmp/.htaccess /var/www/cms/web/.htaccess
+        /bin/cp /tmp/.htaccess /var/www/cms/web/.htaccess
         /bin/sed -i "s|REPLACE_ME|$CMS_ALIAS|" /var/www/cms/web/.htaccess
     fi
 
