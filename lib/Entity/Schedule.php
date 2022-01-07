@@ -1012,8 +1012,14 @@ class Schedule implements \JsonSerializable
             $end = $start->copy()->addSeconds($eventDuration);
 
             if ($start <= $generateToDt && $end >= $generateFromDt) {
-                $this->addDetail($start->format('U'), $end->format('U'));
                 $this->getLog()->debug('The event start/end is inside the month' );
+                // If we're a weekly repeat, check that the start date is on a selected day
+                if ($this->recurrenceType !== 'Week'
+                    || (!empty($this->recurrenceRepeatsOn)
+                        && in_array($start->dayOfWeekIso, explode(',', $this->recurrenceRepeatsOn)))
+                ) {
+                    $this->addDetail($start->format('U'), $end->format('U'));
+                }
             }
         }
 
