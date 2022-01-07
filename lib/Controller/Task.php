@@ -446,6 +446,11 @@ class Task extends Base
         $task->lastRunDt = Carbon::now()->format('U');
         $task->runNow = 0;
 
+        // lastRunMessage columns has a limit of 255 characters, if the message is longer, we need to truncate it.
+        if (strlen($task->lastRunMessage) > 255) {
+            $task->lastRunMessage = substr($task->lastRunMessage, 0, 250) . '(...)';
+        }
+
         // Save (on the XTR connection)
         $task->save(['connection' => 'xtr', 'validate' => false, 'reconnect' => true]);
 
