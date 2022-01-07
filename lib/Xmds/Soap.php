@@ -36,7 +36,6 @@ use Xibo\Entity\Stat;
 use Xibo\Entity\Widget;
 use Xibo\Exception\ControllerNotImplemented;
 use Xibo\Exception\DeadlockException;
-use Xibo\Exception\InvalidArgumentException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\XiboException;
 use Xibo\Factory\BandwidthFactory;
@@ -1662,13 +1661,7 @@ class Soap
                 // Do we need to set the duration of this record (we will do for older individually collected stats)
                 if ($duration == '') {
                     $duration = $todt->diffInSeconds($fromdt);
-
-                    // If the duration is enormous, then we have an eroneous message from the player
-                    if ($duration > (86400 * 365)) {
-                        throw new InvalidArgumentException('Dates are too far apart', 'duration');
-                    }
                 }
-
             } catch (\Exception $e) {
                 // Protect against the date format being unreadable
                 $this->getLog()->error('Stat with a from or to date that cannot be understood. fromDt: ' . $fromdt . ', toDt: ' . $todt . '. E = ' . $e->getMessage());
@@ -1684,6 +1677,12 @@ class Soap
                     $this->getLog()->debug('Stat older than max retention period, skipping.');
                     continue;
                 }
+            }
+
+            // If the duration is enormous, then we have an eroneous message from the player
+            if ($duration > (86400 * 365)) {
+                $this->getLog()->debug('Dates are too far apart');
+                continue;
             }
 
             // Important - stats will now send display entity instead of displayId
