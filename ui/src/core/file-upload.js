@@ -55,7 +55,11 @@ function openUploadForm(options) {
     }).on('hidden.bs.modal', function () {
         // Reset video image covers.
         videoImageCovers = {};
-    }).on('shown.bs.modal', function () {
+    }).attr("id", Date.now());
+
+    setTimeout(function() {
+        console.log("Timeout fired, we should be shown by now");
+
         // Configure the upload form
         var form = $(dialog).find("form");
         var uploadOptions = {
@@ -211,7 +215,7 @@ function openUploadForm(options) {
             eval(options.formOpenedEvent)(dialog);
         }
 
-    }).attr("id", Date.now());
+    }, 500);
 
     return dialog;
 }
