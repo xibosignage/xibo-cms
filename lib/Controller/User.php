@@ -1954,7 +1954,7 @@ class User extends Base
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object)) {
-            throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
+            throw new AccessDeniedException(__('This object is not shared with you with edit permission'));
         }
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -2009,7 +2009,7 @@ class User extends Base
         // Return
         $this->getState()->hydrate([
             'httpCode' => 204,
-            'message' => __('Permissions Updated')
+            'message' => __('Share option Updated')
         ]);
 
         return $this->render($request, $response);
@@ -2090,7 +2090,7 @@ class User extends Base
         // Return
         $this->getState()->hydrate([
             'httpCode' => 204,
-            'message' => __('Permissions Updated')
+            'message' => __('Share option Updated')
         ]);
 
         return $this->render($request, $response);
@@ -2108,11 +2108,11 @@ class User extends Base
     private function parsePermissionsEntity($entity, $objectId)
     {
         if ($entity == '') {
-            throw new InvalidArgumentException(__('Permissions requested without an entity'));
+            throw new InvalidArgumentException(__('Sharing requested without an entity'));
         }
 
         if ($objectId == 0) {
-            throw new InvalidArgumentException(__('Permissions form requested without an object'));
+            throw new InvalidArgumentException(__('Sharing form requested without an object'));
         }
 
         // Check to see that we can resolve the entity
@@ -2120,7 +2120,7 @@ class User extends Base
 
         if (!$this->container->has($entity) || !method_exists($this->container->get($entity), 'getById')) {
             $this->getLog()->error(sprintf('Invalid Entity %s', $entity));
-            throw new InvalidArgumentException(__('Permissions form requested with an invalid entity'));
+            throw new InvalidArgumentException(__('Sharing form requested with an invalid entity'));
         }
 
         return $this->container->get($entity);
