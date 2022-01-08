@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2021-12-13 14:37+0000\n"
+"POT-Creation-Date: 2022-01-08 13:35+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -15396,13 +15396,13 @@ msgstr ""
 msgid "Unable to generate schedule, unknown event"
 msgstr ""
 
-#: lib/Entity/Schedule.php:1521 lib/Entity/Schedule.php:1532
+#: lib/Entity/Schedule.php:1527 lib/Entity/Schedule.php:1538
 #: lib/Controller/Schedule.php:319 lib/Controller/Schedule.php:330
 #, php-format
 msgid "%s scheduled on %s"
 msgstr ""
 
-#: lib/Entity/Schedule.php:1530 lib/Controller/Schedule.php:328
+#: lib/Entity/Schedule.php:1536 lib/Controller/Schedule.php:328
 #: lib/Controller/Schedule.php:541
 msgid "Private Item"
 msgstr ""
@@ -17613,17 +17613,17 @@ msgstr ""
 msgid "Failed to write to database after %d retries. Please try again later."
 msgstr ""
 
-#: lib/Xmds/Soap.php:2027
+#: lib/Xmds/Soap.php:2026
 #, php-format
 msgid "Recovery for Display %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2028
+#: lib/Xmds/Soap.php:2027
 #, php-format
 msgid "Display ID %d is now back online %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2099
+#: lib/Xmds/Soap.php:2098
 msgid "Bandwidth allowance exceeded"
 msgstr ""
 
