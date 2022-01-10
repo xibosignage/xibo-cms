@@ -1747,8 +1747,8 @@ class Display extends Base
         if ($display->lastAccessed == 0) {
             $nextCollect = __('once it has connected for the first time');
         } else {
-            $collectionInterval = $display->getSetting('collectionInterval', 5);
-            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)->addMinutes($collectionInterval)->diffForHumans();
+            $collectionInterval = $display->getSetting('collectInterval', 300);
+            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)->addSeconds($collectionInterval)->diffForHumans();
         }
 
         $this->getState()->template = 'display-form-request-screenshot';

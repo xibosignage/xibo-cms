@@ -359,7 +359,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
             $provider = new \Xibo\OAuth2\Client\Provider\Xibo([
                 'clientId' => $application->key,
                 'clientSecret' => $application->secret,
-                'redirectUri' => '',
+                'redirectUri' => null,
                 'baseUrl' => 'http://localhost'
             ]);
 

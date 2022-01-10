@@ -655,7 +655,7 @@ class UserGroup extends Base
         // Load the Group we are working on
         // Get the object
         if ($id == 0) {
-            throw new InvalidArgumentException(__('ACL form requested without a User Group'), 'id');
+            throw new InvalidArgumentException(__('Features form requested without a User Group'), 'id');
         }
 
         $features = $request->getParam('features', null);
@@ -670,7 +670,7 @@ class UserGroup extends Base
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('ACL set for %s'), $group->group),
+            'message' => sprintf(__('Features updated for %s'), $group->group),
             'id' => $group->groupId
         ]);
 

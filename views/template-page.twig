@@ -119,15 +119,29 @@
             "columns": [
                 { "data": "layout", responsivePriority: 2},
                 { "data": "owner", responsivePriority: 3},
-                { "data": "descriptionWithMarkup", responsivePriority: 4},
+                {
+                    "name": "description",
+                    "data": null,
+                    responsivePriority: 3,
+                    "render": {"_": "description", "display": "descriptionWithMarkup", "sort": "description"}
+                },
                 {% if currentUser.featureEnabled("tag.tagging") %}{
                     "sortable": false,
                     "visible": false,
                     "data": dataTableCreateTags,
                     responsivePriority: 3
                 },{% endif %}
-                { "data": "thumbnail", responsivePriority: 3},
-                { "data": "permissions", "sortable": false, responsivePriority: 3},
+                {
+                    "name": "layoutId",
+                    responsivePriority: 3,
+                    "data": null,
+                    "render": {"_": "thumbnail", "display": "thumbnail", "sort": "layoutId"}
+                },
+                {
+                    "data": "groupsWithPermissions",
+                    responsivePriority: 4,
+                    "render": dataTableCreatePermissions
+                },
                 {
                     "orderable": false,
                     responsivePriority: 1,
