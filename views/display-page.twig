@@ -907,7 +907,7 @@
                 }
 
                 // Append new row to the table
-                var $tableNewRow = $('<tr><td style="width: 40%;"><strong title="' + help + '">' + text + '</strong></td><td style="width: 25%;"><div>' + value + '</div></td><td class="override-input text-center" style="width: 35%;" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block btn-outline-secondary" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
+                var $tableNewRow = $('<tr><td style="width: 40%;"><strong title="' + help + '">' + text + '</strong></td><td style="width: 25%; overflow-x: auto; max-width: 250px;"><div>' + value + '</div></td><td class="override-input text-center" style="width: 35%;" data-editing="false" data-input-name="' + over + '"><button class="btn btn-block btn-outline-secondary" type="button"><i class="fa fa-edit"></i></button></td></tr>').appendTo($table);
 
                 // Get override element
                 var overrideEl = override.find(function(x) { return x.name === over; });

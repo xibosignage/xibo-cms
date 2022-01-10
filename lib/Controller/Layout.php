@@ -1325,6 +1325,10 @@ class Layout extends Base
                     // Add widget module type name
                     $widget->moduleName = $module->getModuleName();
 
+                    if ($widget->type === 'subplaylist') {
+                        $widget->calculateDuration($module);
+                    }
+
                     // apply default transitions to a dynamic parameters on widget object.
                     if ($layout->autoApplyTransitions == 1) {
                         $widgetTransIn = $widget->getOptionValue('transIn', $this->getConfig()->getSetting('DEFAULT_TRANSITION_IN'));
