@@ -780,6 +780,10 @@ Toolbar.prototype.createNewTab = function(menu) {
     this.menuItems[menu].content.push({
         name: toolbarTrans.tabName.replace('%tagId%', self.menuItems[menu].content.length),
         filters: {
+            mediaId: {
+                name: toolbarTrans.searchFilters.mediaId,
+                value: ''
+            },
             name: {
                 name: toolbarTrans.searchFilters.name,
                 value: ''
@@ -909,7 +913,7 @@ Toolbar.prototype.mediaContentCreateWindow = function(menu) {
             handle: '.drag-handle'
         })
         .resizable({
-            minWidth: 640
+            minWidth: 600
         }).off('dragstart dragstart resizestart resizestop dragstop').on('dragstart',
             function() {
                 // Remove right sticky css
@@ -1115,6 +1119,7 @@ Toolbar.prototype.mediaContentPopulateTable = function(menu) {
     var filterRefresh = function(mediaTable, tabObj) {
 
         // Save filter options
+        tabObj.filters.mediaId.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-id-' + tabIndex).val();
         tabObj.filters.name.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-name-' + tabIndex).val();
         tabObj.filters.tag.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-tag-' + tabIndex).val();
         tabObj.filters.type.value = self.DOMObject.find('#media-search-form-' + tabIndex + ' #input-type-' + tabIndex).val();

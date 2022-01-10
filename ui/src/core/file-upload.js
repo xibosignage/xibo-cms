@@ -30,7 +30,7 @@ function openUploadForm(options) {
     options = $.extend(true, {}, {
         templateId: "template-file-upload",
         videoImageCovers: true,
-        className: "upload-modal",
+        className: "",
         animateDialog: true,
         formOpenedEvent: null,
         templateOptions : {
@@ -49,7 +49,7 @@ function openUploadForm(options) {
         message: uploadTemplate(options.templateOptions),
         title: options.title,
         buttons: options.buttons,
-        className: options.className,
+        className: options.className + " upload-modal",
         animate: options.animateDialog,
         size: 'large'
     }).on('hidden.bs.modal', function () {
@@ -151,12 +151,14 @@ function openUploadForm(options) {
                         clearInterval(refreshSessionInterval);
                     }
 
-                    if (options.uploadDoneEvent !== undefined && options.uploadDoneEvent !== null) {
+                    // Run the callback function for done when we're processing the last uploading element
+                    var filesToUploadCount = form.find('tr.template-upload').length;
+                    if (filesToUploadCount == 1 && options.uploadDoneEvent !== undefined && options.uploadDoneEvent !== null && typeof options.uploadDoneEvent == 'function') {
                         // Run in a short while.
                         // this gives time for file-upload's own deferreds to run
                         setTimeout(function () {
-                            eval(options.uploadDoneEvent)(data);
-                        });
+                            options.uploadDoneEvent(data);
+                        }, 300);
                     }
                 })
             .bind('fileuploadprogressall', function (e, data) {
