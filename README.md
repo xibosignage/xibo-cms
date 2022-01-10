@@ -149,7 +149,7 @@ find ./locale ./cache ./lib ./web  -iname "*.php" -print0 | xargs -0 xgettext --
 To import translations:
 
 ```bash
-bzr pull lp:~dangarner/xibo/swift-translations
+bzr pull lp:~dangarner/xibo/finlay-translations
 ```
 
 Convert to `mo` format:
