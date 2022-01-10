@@ -282,7 +282,7 @@
     display: block;
 }
 
-.event-important .event-priority {
+[data-event-class="event-important"] .event-priority {
     vertical-align: super;
     font-size: smaller;
     margin: 1px;
