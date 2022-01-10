@@ -265,6 +265,7 @@
                     var title = event.title;
                     var eventIcon = "fa-desktop";
                     var eventClass = "event-warning";
+                    var eventPriority = "";
 
                     if (event.event.isAlways != 1) {
                     if (event.event.eventTypeId == 2) {
@@ -296,8 +297,9 @@
                     }
 
                     if (event.event.isPriority >= 1) {
-                    eventClass = "event-important";
-                    eventIcon = "fa-bullseye";
+                        eventClass = "event-important";
+                        eventIcon = "fa-bullseye";
+                        eventPriority = event.event.isPriority;
                     }
 
                     if (event.event.eventTypeId == 2) {
@@ -323,7 +325,7 @@
                         <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
                            data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                            data-event-class="<%= eventClass %>" class="event-item">
-                            <span class="fa <%= eventIcon %>"></span> <%= title %></a>
+                            <span class="fa <%= eventIcon %>"><span class="event-priority"><%= eventPriority %></span></span> <%= title %></a>
                     </li>
                     <% }) %>
                 </ul>
@@ -367,6 +369,7 @@
                     var title = event.title;
                     var eventIcon = "fa-desktop";
                     var eventClass = "event-warning";
+                    var eventPriority = "";
 
                     if (event.event.isAlways != 1) {
                     if (event.event.eventTypeId == 2) {
@@ -398,8 +401,9 @@
                     }
 
                     if (event.event.isPriority >= 1) {
-                    eventClass = "event-important";
-                    eventIcon = "fa-bullseye";
+                        eventClass = "event-important";
+                        eventIcon = "fa-bullseye";
+                        eventPriority = event.event.isPriority;
                     }
 
                     if (event.event.eventTypeId == 2) {
@@ -424,7 +428,7 @@
                        data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                        data-event-class="<%= eventClass %>"
                        class="pull-left event <%= eventClass %>" data-toggle="tooltip"
-                       title="<%= event.title %>"><span class="fa <%= eventIcon %>"></span></a>
+                       title="<%= event.title %>"><span class="fa <%= eventIcon %>"><span class="event-priority"><%= eventPriority %></span></span></a>
                     <% }); %>
                 </div>
                 <% } %>
@@ -458,6 +462,7 @@
             var title = event.title;
             var eventIcon = "fa-desktop";
             var eventClass = "event-warning";
+            var eventPriority = "";
 
             if (event.event.isAlways != 1) {
             if (event.event.eventTypeId == 2) {
@@ -488,9 +493,10 @@
             eventIcon = "fa-repeat";
             }
 
-            if (event.event.isPriority == 1) {
-            eventClass = "event-important";
-            eventIcon = "fa-bullseye";
+            if (event.event.isPriority >= 1) {
+                eventClass = "event-important";
+                eventIcon = "fa-bullseye";
+                eventPriority = event.event.isPriority;
             }
 
             if (event.event.eventTypeId == 4) {
@@ -512,7 +518,7 @@
                     <a href="<%= event.url ? event.url : 'javascript:void(0)' %>" data-event-id="<%= event.id %>"
                        data-event-start="<%= event.start %>" data-event-end="<%= event.end %>"
                        data-event-class="<%= eventClass %>"
-                       class="cal-event-week event<%= event.id %>"><span class="fa <%= eventIcon %>"></span> <%= title %></a>
+                       class="cal-event-week event<%= event.id %>"><span class="fa <%= eventIcon %>"><span class="event-priority"><%= eventPriority %></span></span> <%= title %></a>
                 </div>
             </div>
             <% }); %>
