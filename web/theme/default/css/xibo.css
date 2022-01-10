@@ -457,8 +457,8 @@ div.dt-buttons {
     position: relative;
 }
 
-.template-upload div.input-group {
-    max-width: fit-content;
+.template-upload div.input-group input {
+    width: 100%;
 }
 
 .template-upload p.size {
@@ -1090,10 +1090,17 @@ ul li.active.tab-design:hover a {
 
 .override-input button.button-close-override {
     position: absolute;
-    right: -15px;
+    right: -18px;
     height: 33.5px;
     top: 6px;
     padding: 6px 4px;
+}
+
+
+.override-input.timerOverride .multiSelectInputs {
+    width: 50%;
+    display: inline-block;
+    padding: 3px;
 }
 
 .override-input .text-muted {
