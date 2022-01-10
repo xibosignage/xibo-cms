@@ -120,7 +120,12 @@
             "columns": [
                 { "data": "layout", responsivePriority: 2},
                 { "data": "owner", responsivePriority: 3},
-                { "data": "descriptionWithMarkup", responsivePriority: 4},
+                {
+                    "name": "description",
+                    "data": null,
+                    responsivePriority: 3,
+                    "render": {"_": "description", "display": "descriptionWithMarkup", "sort": "description"}
+                },
                 {% if currentUser.featureEnabled("tag.tagging") %}{
                     "sortable": false,
                     "visible": false,
