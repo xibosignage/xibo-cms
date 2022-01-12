@@ -702,7 +702,8 @@ class Twitter extends TwitterBase
                             $photoUrl = $mediaObject->media_url;
                             
                             if ($photoUrl != '') {
-                                $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweet->user->id_str ?? $tweet->user->id . '_' . $mediaObject->id_str, $photoUrl, $expires);
+                                $tweetUserId = $tweet->user->id_str ?? $tweet->user->id;
+                                $file = $this->mediaFactory->queueDownload('twitter_photo_' . $tweetUserId . '_' . $mediaObject->id_str, $photoUrl, $expires);
 
                                 $replace = ($isPreview)
                                     ? '<img src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
