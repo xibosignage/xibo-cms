@@ -73,7 +73,7 @@ class AuditLogArchiveTask implements TaskInterface
 
             // Delete all audit log messages older than 1 month
             $this->store->update('DELETE FROM `auditlog` WHERE logDate < :logDate', [
-                'logDate' => Carbon::now()->subMonth()->setTime(0, 0, 0)->format('U')
+                'logDate' => Carbon::now()->subMonth($this->getOption('maxAgeMonths', 1))->setTime(0, 0, 0)->format('U')
             ]);
 
         } else {
