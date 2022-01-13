@@ -450,7 +450,7 @@
             }
         });
 
-        var displayData {% if displayStatus|raw %}= {{ displayStatus|raw }}{% endif %};
+        var displayMediaStatusData {% if displayMediaStatus|raw %}= {{ displayMediaStatus|raw }}{% endif %};
 
         var displayContentChart = new Chart($("#displayContentChart"), {
             type: 'doughnut',
