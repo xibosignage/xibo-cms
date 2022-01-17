@@ -1,7 +1,8 @@
-# htaccess file for CMS instances running in /
-# if you are running using an alias or from a sub-folder, please refer to the file in docker/tmp
-# if you previously set a RewriteBase in here, the file in docker/tmp replaces that approach
+# htaccess file for CMS instances using an Alias.
+# REPLACE_ME gets replaced on container start by entrypoint.sh
 RewriteEngine On
+
+RewriteBase REPLACE_ME/
 
 # fix authorization header
 RewriteCond %{HTTP:Authorization} .+
@@ -9,28 +10,28 @@ RewriteRule .* - [E=HTTP_AUTHORIZATION:%{HTTP:Authorization}]
 
 # requests for api authorize
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} ^/api/authorize/.*$
+RewriteCond %{REQUEST_URI} ^REPLACE_ME/api/authorize/.*$
 RewriteRule ^ api/authorize/index.php [QSA,L]
 
 # requests that start with api go down to api/index.php
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} ^/api/.*$
+RewriteCond %{REQUEST_URI} ^REPLACE_ME/api/.*$
 RewriteRule ^ api/index.php [QSA,L]
 
 # install
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} ^/install/.*$
+RewriteCond %{REQUEST_URI} ^REPLACE_ME/install/.*$
 RewriteRule ^ install/index.php [QSA,L]
 
 # maintenance
 RewriteCond %{REQUEST_FILENAME} !-f
-RewriteCond %{REQUEST_URI} ^/maint/.*$
+RewriteCond %{REQUEST_URI} ^REPLACE_ME/maint/.*$
 RewriteRule ^ maint/index.php [QSA,L]
 
 # all others - i.e. web
 RewriteCond %{REQUEST_FILENAME} !-f
 RewriteCond %{REQUEST_FILENAME} !-d
 RewriteCond %{REQUEST_FILENAME} !\.(css|js|png|jpg)$
-RewriteCond %{REQUEST_URI} !^/dist/.*$
-RewriteCond %{REQUEST_URI} !^/theme/.*$
+RewriteCond %{REQUEST_URI} !^REPLACE_ME/dist/.*$
+RewriteCond %{REQUEST_URI} !^REPLACE_ME/theme/.*$
 RewriteRule ^ index.php [QSA,L]

@@ -1,6 +1,6 @@
 # Introduction
 Xibo - Digital Signage - https://xibo.org.uk
-Copyright (C) 2006-2021 Xibo Signage Ltd and Contributors.
+Copyright (C) 2006-2022 Xibo Signage Ltd and Contributors.
 
 
 
@@ -133,7 +133,7 @@ find ./locale ./cache ./lib ./web  -iname "*.php" -print0 | xargs -0 xgettext --
 To import translations:
 
 ```bash
-bzr pull lp:~dangarner/xibo/swift-translations
+bzr pull lp:~dangarner/xibo/wolf-translations
 ```
 
 Convert to `mo` format:
