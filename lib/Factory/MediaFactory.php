@@ -506,19 +506,19 @@ class MediaFactory extends BaseFactory
 
         $params = [];
         $select = '
-            SELECT  media.mediaId,
-               media.name,
-               media.type AS mediaType,
-               media.duration,
-               media.userId AS ownerId,
-               media.fileSize,
-               media.storedAs,
-               media.valid,
-               media.moduleSystemFile,
-               media.expires,
-               media.md5,
-               media.retired,
-               media.isEdited,
+            SELECT `media`.mediaId,
+               `media`.name,
+               `media`.type AS mediaType,
+               `media`.duration,
+               `media`.userId AS ownerId,
+               `media`.fileSize,
+               `media`.storedAs,
+               `media`.valid,
+               `media`.moduleSystemFile,
+               `media`.expires,
+               `media`.md5,
+               `media`.retired,
+               `media`.isEdited,
                IFNULL(parentmedia.mediaId, 0) AS parentId,
                `media`.released,
                `media`.apiRef,
@@ -528,11 +528,16 @@ class MediaFactory extends BaseFactory
                `media`.folderId,
                `media`.permissionsFolderId,
                `media`.orientation,
+               ( 
+                   SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                        FROM tag
+                        INNER JOIN lktagmedia
+                            ON lktagmedia.tagId = tag.tagId
+                            WHERE lktagmedia.mediaId = media.mediaId
+                        GROUP BY lktagmedia.mediaId
+               ) as tags,
+               `user`.UserName AS owner,
             ';
-
-        $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
-        $select .= " (SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaId GROUP BY lktagmedia.mediaId) AS tagValues, ";
-        $select .= "        `user`.UserName AS owner, ";
         $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                               FROM `permission`
                                 INNER JOIN `permissionentity`

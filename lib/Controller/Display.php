@@ -1048,7 +1048,6 @@ class Display extends Base
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
-            'tags' => $this->tagFactory->getTagsWithValues($display),
             'dayParts' => $dayparts
         ]);
 

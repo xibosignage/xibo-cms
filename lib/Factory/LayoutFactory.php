@@ -1848,37 +1848,41 @@ class LayoutFactory extends BaseFactory
             $sortOrder = ['layout'];
         }
 
-        $select  = "";
-        $select .= "SELECT layout.layoutID, ";
-        $select .= "        layout.parentId, ";
-        $select .= "        layout.layout, ";
-        $select .= "        layout.description, ";
-        $select .= "        layout.duration, ";
-        $select .= "        layout.userID, ";
-        $select .= "        `user`.UserName AS owner, ";
-        $select .= "        campaign.CampaignID, ";
-        $select .= "        layout.status, ";
-        $select .= "        layout.statusMessage, ";
-        $select .= "        layout.enableStat, ";
-        $select .= "        layout.width, ";
-        $select .= "        layout.height, ";
-        $select .= '        layout.orientation, ';
-        $select .= "        layout.retired, ";
-        $select .= "        layout.createdDt, ";
-        $select .= "        layout.modifiedDt, ";
-        $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
-        $select .= " (SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tagValues, ";
-        $select .= "        layout.backgroundImageId, ";
-        $select .= "        layout.backgroundColor, ";
-        $select .= "        layout.backgroundzIndex, ";
-        $select .= "        layout.schemaVersion, ";
-        $select .= "        layout.publishedStatusId, ";
-        $select .= "        `status`.status AS publishedStatus, ";
-        $select .= "        layout.publishedDate, ";
-        $select .= "        layout.autoApplyTransitions, ";
-        $select .= "        layout.code, ";
-        $select .= "        campaign.folderId,  ";
-        $select .= "        campaign.permissionsFolderId,  ";
+        $select  = 'SELECT `layout`.layoutID, 
+                        `layout`.parentId,
+                        `layout`.layout,
+                        `layout`.description,
+                        `layout`.duration,
+                        `layout`.userID,
+                        `user`.userName as owner,
+                        `campaign`.CampaignID,
+                        `layout`.status,
+                        `layout`.statusMessage,
+                        `layout`.enableStat,
+                        `layout`.width,
+                        `layout`.height,
+                        `layout`.retired,
+                        `layout`.createdDt,
+                        `layout`.modifiedDt,
+                        ( SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                                    FROM tag
+                                    INNER JOIN lktaglayout
+                                        ON lktaglayout.tagId = tag.tagId
+                                        WHERE lktaglayout.layoutId = layout.layoutId
+                                    GROUP BY lktaglayout.layoutId
+                        ) as tags,
+                        `layout`.backgroundImageId,
+                        `layout`.backgroundColor,
+                        `layout`.backgroundzIndex,
+                        `layout`.schemaVersion,
+                        `layout`.publishedStatusId,
+                        `status`.status AS publishedStatus,
+                        `layout`.publishedDate,
+                        `layout`.autoApplyTransitions,
+                        `layout`.code,
+                        `campaign`.folderId,
+                        `campaign`.permissionsFolderId,
+                   ';
 
         if ($parsedFilter->getInt('campaignId') !== null) {
             $select .= ' lkcl.displayOrder, ';
@@ -2254,7 +2258,6 @@ class LayoutFactory extends BaseFactory
             $layout->description = $parsedRow->getString('description');
             $layout->duration = $parsedRow->getInt('duration');
             $layout->tags = $parsedRow->getString('tags');
-            $layout->tagValues = $parsedRow->getString('tagValues');
             $layout->backgroundColor = $parsedRow->getString('backgroundColor');
             $layout->owner = $parsedRow->getString('owner');
             $layout->ownerId = $parsedRow->getInt('userID');

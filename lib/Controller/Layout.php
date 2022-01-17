@@ -1843,7 +1843,6 @@ class Layout extends Base
         $this->getState()->template = 'layout-form-edit';
         $this->getState()->setData([
             'layout' => $layout,
-            'tags' => $this->tagFactory->getTagsWithValues($layout),
             'help' => $this->getHelp()->link('Layout', 'Edit')
         ]);
 
@@ -2004,13 +2003,12 @@ class Layout extends Base
 
         // Clone
         $layout = clone $originalLayout;
-        $tags = $this->tagFactory->getTagsWithValues($layout);
 
-        $this->getLog()->debug('Tag values from original layout: ' . $tags);
+        $this->getLog()->debug('Tag values from original layout: ' . $originalLayout->tags);
 
         $layout->layout = $sanitizedParams->getString('name');
         $layout->description = $sanitizedParams->getString('description');
-        $layout->replaceTags($this->tagFactory->tagsFromString($tags));
+        $layout->replaceTags($this->tagFactory->tagsFromString($originalLayout->tags));
         $layout->setOwner($this->getUser()->userId, true);
 
         // Copy the media on the layout and change the assignments.

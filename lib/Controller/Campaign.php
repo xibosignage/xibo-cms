@@ -183,6 +183,7 @@ class Campaign extends Base
             'name' => $parsedParams->getString('name'),
             'useRegexForName' => $parsedParams->getCheckbox('useRegexForName'),
             'tags' => $parsedParams->getString('tags'),
+            'exactTags' => $parsedParams->getCheckbox('exactTags'),
             'hasLayouts' => $parsedParams->getInt('hasLayouts'),
             'isLayoutSpecific' => $parsedParams->getInt('isLayoutSpecific'),
             'retired' => $parsedParams->getInt('retired'),
@@ -509,8 +510,7 @@ class Campaign extends Base
         $this->getState()->setData([
             'campaign' => $campaign,
             'layouts' => $layouts,
-            'help' => $this->getHelp()->link('Campaign', 'Edit'),
-            'tags' => $this->tagFactory->getTagsWithValues($campaign)
+            'help' => $this->getHelp()->link('Campaign', 'Edit')
         ]);
 
         return $this->render($request, $response);

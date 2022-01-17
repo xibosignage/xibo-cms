@@ -323,8 +323,9 @@
                         responsivePriority: 5,
                         "visible": false,
                         "render": function (data, type, row) {
-                            if (type != "display")
+                            if (type != "display" && type != "export") {
                                 return data;
+                            }
 
                             return row.storageAvailableSpaceFormatted;
                         }
@@ -334,8 +335,9 @@
                         responsivePriority: 5,
                         "visible": false,
                         "render": function (data, type, row) {
-                            if (type != "display")
+                            if (type != "display" && type != "export") {
                                 return data;
+                            }
 
                             return row.storageTotalSpaceFormatted;
                         }
