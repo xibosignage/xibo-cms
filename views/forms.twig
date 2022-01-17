@@ -90,12 +90,12 @@
     </div>
 {% endmacro %}
 
-{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle, logicalOperatorTitle, exactTagValue, logicalOperatorValue) %}
+{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle, logicalOperatorTitle, exactTagValue, logicalOperatorValue, autoCompleteEnabled = 1) %}
         {% if exactTag %}
             <div class="form-group tags-input-addons-wide row {{ groupClass }}">
             <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
             <div class="input-group input-group-tags-exact col-sm-10">
-                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputForm" data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {{ validation }} />
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputForm" {% if autoCompleteEnabled == 1 %} data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {% endif %} {{ validation }} />
                 <div class="input-group-append input-group-addon">
                     <div class="input-group-text">
                         <input title="{{ exactTagTitle }}" type="checkbox" id="{{ exactTag }}" name="{{ exactTag }}" {% if exactTagValue %}checked{% endif %}>
@@ -111,7 +111,7 @@
             <div class="form-group tags-input-wide row {{ groupClass }}">
             <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
             <div class="col-sm-10">
-                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputForm" data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {{ validation }} />
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputForm" {% if autoCompleteEnabled == 1 %} data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {% endif %}  {{ validation }} />
                 <small class="form-text text-muted">{{ helpText }}</small>
             </div>
         {% endif %}
