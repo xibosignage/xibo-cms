@@ -104,7 +104,7 @@ class ConnectorFactory extends BaseFactory
         $entries = [];
         $params = [];
 
-        $sql = 'SELECT `connectorId`, `className`, `settings`, `isEnabled` FROM `connectors` WHERE 1 = 1 ';
+        $sql = 'SELECT `connectorId`, `className`, `settings`, `isEnabled`, `isVisible` FROM `connectors` WHERE 1 = 1 ';
 
         if ($sanitizedFilter->hasParam('connectorId')) {
             $sql .= ' AND connectorId = :connectorId ';
@@ -114,6 +114,11 @@ class ConnectorFactory extends BaseFactory
         if ($sanitizedFilter->hasParam('isEnabled')) {
             $sql .= ' AND isEnabled = :isEnabled ';
             $params['isEnabled'] = $sanitizedFilter->getCheckbox('isEnabled');
+        }
+
+        if ($sanitizedFilter->hasParam('isVisible')) {
+            $sql .= ' AND isVisible = :isVisible ';
+            $params['isVisible'] = $sanitizedFilter->getCheckbox('isVisible');
         }
 
         foreach ($this->getStore()->select($sql, $params) as $row) {

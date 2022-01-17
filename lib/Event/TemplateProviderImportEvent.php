@@ -1,0 +1,140 @@
+<?php
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Xibo\Event;
+
+use Slim\Interfaces\RouteParserInterface;
+use Xibo\Entity\Layout;
+use Xibo\Factory\DataSetFactory;
+use Xibo\Factory\LayoutFactory;
+use Xibo\Service\MediaService;
+
+/**
+ * Event raised when one or more provider search results have been chosen for importing on a layout
+ */
+class TemplateProviderImportEvent extends Event
+{
+    protected static $NAME = 'connector.provider.template.import';
+    /**
+     * @var string
+     */
+    private $downloadUrl;
+    /**
+     * @var LayoutFactory
+     */
+    private $layoutFactory;
+    /** @var string */
+    private $libraryLocation;
+    /** @var string */
+    private $layoutName;
+    /** @var int */
+    private $userId;
+    /** @var DataSetFactory */
+    private $dataSetFactory;
+    /** @var RouteParserInterface */
+    private $routeParser;
+    /** @var MediaService */
+    private $mediaService;
+    /**
+     * @var string
+     */
+    private $fileName;
+    /** @var Layout */
+    private $layout;
+
+    public function __construct(
+        string $uri,
+        string $fileName,
+        LayoutFactory $layoutFactory,
+        string $libraryLocation,
+        string $layoutName,
+        int $userId,
+        DataSetFactory $dataSetFactory,
+        RouteParserInterface $routeParser,
+        MediaService $mediaService
+    ) {
+        $this->downloadUrl = $uri;
+        $this->fileName = $fileName;
+        $this->layoutFactory = $layoutFactory;
+        $this->libraryLocation = $libraryLocation;
+        $this->layoutName = $layoutName;
+        $this->userId = $userId;
+        $this->dataSetFactory = $dataSetFactory;
+        $this->routeParser = $routeParser;
+        $this->mediaService = $mediaService;
+    }
+
+    public function getDownloadUrl(): string
+    {
+        return $this->downloadUrl;
+    }
+
+    public function getFileName(): string
+    {
+        return $this->fileName;
+    }
+
+    public function getLayoutFactory(): LayoutFactory
+    {
+        return $this->layoutFactory;
+    }
+
+    public function getLibraryLocation(): string
+    {
+        return $this->libraryLocation;
+    }
+
+    public function getLayoutName(): string
+    {
+        return $this->layoutName;
+    }
+
+    public function getUserId(): int
+    {
+        return $this->userId;
+    }
+
+    public function getDataSetFactory(): DataSetFactory
+    {
+        return $this->dataSetFactory;
+    }
+
+    public function getRouteParser(): RouteParserInterface
+    {
+        return $this->routeParser;
+    }
+
+    public function getMediaService(): MediaService
+    {
+        return $this->mediaService;
+    }
+
+    public function setLayout($layout)
+    {
+        $this->layout = $layout;
+    }
+
+    public function getLayout()
+    {
+        return $this->layout;
+    }
+}

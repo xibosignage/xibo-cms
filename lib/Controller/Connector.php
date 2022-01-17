@@ -52,7 +52,7 @@ class Connector extends Base
      */
     public function grid(Request $request, Response $response)
     {
-        $connectors = $this->connectorFactory->query([]);
+        $connectors = $this->connectorFactory->query($request->getParams());
         foreach ($connectors as $connector) {
             // Instantiate and decorate the entity
             try {

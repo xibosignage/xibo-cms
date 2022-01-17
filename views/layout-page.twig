@@ -629,8 +629,11 @@
             // If source is local and layoutId is 0, then show the resolution filter otherwise don't
             var layoutId = $(this).data('layout-id') + "";
             var source = $(this).data('source');
+            var download = $(this).data('download');
+
             $that.closest('form').find('input[name="layoutId"]').val(layoutId);
             $that.closest('form').find('input[name="source"]').val(source);
+            $that.closest('form').find('input[name="download"]').val(download);
 
             if (layoutId.startsWith("0|")) {
               $that.closest('form').find('.resolution-group').removeClass('d-none');
@@ -690,7 +693,7 @@
 
     {% verbatim %}
     <script type="text/x-handlebars-template" id="template-layout-add-template-cards">
-        <div class="card w-25 p-3 mb-0" data-layout-id="{{ id }}" data-source="{{ source }}">
+        <div class="card w-25 p-3 mb-0" data-layout-id="{{ id }}" data-source="{{ source }}" data-download="{{ download }}">
             {{#if thumbnail}}<img class="card-img-top" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
             <div class="card-body">
                 <h5 class="card-title">{{ title }}</h5>

@@ -87,8 +87,12 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $layout->folderId = $folderId;
 
             $layout->save(['saveActions' => false, 'import' => $importTags]);
-            $layout->managePlaylistClosureTable($layout);
-            $layout->manageActions($layout);
+
+            if (!empty($layout->thumbnail)) {
+                rename($layout->thumbnail, $layout->getThumbnailUri());
+            }
+            $layout->managePlaylistClosureTable();
+            $layout->manageActions();
 
             @unlink($controller->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/' . $fileName);
 

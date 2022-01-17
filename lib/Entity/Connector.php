@@ -40,6 +40,7 @@ class Connector implements \JsonSerializable
     public $className;
     public $settings;
     public $isEnabled;
+    public $isVisible;
 
     // Decorated properties
     public $title;
@@ -85,6 +86,7 @@ class Connector implements \JsonSerializable
         ', [
             'className' => $this->className,
             'isEnabled' => $this->isEnabled,
+            'isVisible' => $this->isVisible,
             'settings' => json_encode($this->settings)
         ]);
     }
@@ -95,12 +97,14 @@ class Connector implements \JsonSerializable
           UPDATE `connectors` SET
               `className` = :className,
               `isEnabled` = :isEnabled,
+              `isVisible` = :isVisible,
               `settings` = :settings
            WHERE connectorId = :connectorId
         ', [
             'connectorId' => $this->connectorId,
             'className' => $this->className,
             'isEnabled' => $this->isEnabled,
+            'isVisible' => $this->isVisible,
             'settings' => json_encode($this->settings)
         ]);
     }

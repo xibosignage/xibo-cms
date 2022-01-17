@@ -1789,8 +1789,9 @@ class Layout implements \JsonSerializable
         // We export to a ZIP file
         $zip = new \ZipArchive();
         $result = $zip->open($fileName, \ZipArchive::CREATE | \ZipArchive::OVERWRITE);
-        if ($result !== true)
+        if ($result !== true) {
             throw new InvalidArgumentException(__('Can\'t create ZIP. Error Code: ' . $result), 'fileName');
+        }
 
         // Add a mapping file for the region names
         $regionMapping = [];
@@ -1855,6 +1856,10 @@ class Layout implements \JsonSerializable
                 'font' => 0,
                 'tags' => $media->tags
             ];
+        }
+
+        if (file_exists($this->getThumbnailUri())) {
+            $zip->addFile($this->getThumbnailUri(), 'library/thumbs/campaign_thumb.png');
         }
 
         // Add any fonts
@@ -2143,8 +2148,9 @@ class Layout implements \JsonSerializable
         $this->getLog()->debug('publish: publishing draft layoutId: ' . $this->layoutId . ', status: ' . $this->status);
 
         // We are the draft - make sure we have a parent
-        if (!$this->isChild())
+        if (!$this->isChild()) {
             throw new InvalidArgumentException(__('Not a Draft'), 'statusId');
+        }
 
         // Get my parent for later
         $parent = $this->layoutFactory->loadById($this->parentId);
@@ -2321,7 +2327,6 @@ class Layout implements \JsonSerializable
         // Add a Campaign
         // we do not add a campaign record for draft layouts.
         if ($this->parentId === null) {
-
             $campaign = $this->campaignFactory->createEmpty();
             $campaign->campaign = $this->layout;
             $campaign->isLayoutSpecific = 1;
@@ -2351,11 +2356,9 @@ class Layout implements \JsonSerializable
 
             // Add a layout history
             $this->addLayoutHistory();
-
         } else if ($this->campaignId == null) {
             throw new InvalidArgumentException(__('Draft Layouts must have a parent'), 'campaignId');
         } else {
-
             // Add this draft layout as a link to the campaign
             $campaign = $this->campaignFactory->getById($this->campaignId);
             $campaign->layouts = $this->layoutFactory->getByCampaignId($campaign->campaignId, false);
@@ -2451,22 +2454,20 @@ class Layout implements \JsonSerializable
     /**
      * Handle the Playlist closure table for specified Layout object
      *
-     * @param Layout $layout
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function managePlaylistClosureTable($layout)
+    public function managePlaylistClosureTable()
     {
-
         // we only need to set the closure table records for the playlists assigned directly to the regionPlaylist here
         // all other relations between Playlists themselves are handled on import before layout is created
         // as the SQL we run here is recursive everything will end up with correct parent/child relation and depth level.
-        foreach ($layout->getAllWidgets() as $widget) {
+        foreach ($this->getAllWidgets() as $widget) {
             if ($widget->type == 'subplaylist') {
                 $assignedPlaylists = json_decode($widget->getOptionValue('subPlaylistIds', '[]'));
                 $assignedPlaylists = implode(',', $assignedPlaylists);
 
-                foreach ($layout->regions as $region) {
+                foreach ($this->regions as $region) {
                     $regionPlaylist = $region->regionPlaylist;
 
                     if ($widget->playlistId == $regionPlaylist->playlistId) {
@@ -2505,11 +2506,10 @@ class Layout implements \JsonSerializable
     /**
      * This function will adjust the Action sourceId and targetId in all relevant objects in our imported Layout
      *
-     * @param Layout $layout
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function manageActions(Layout $layout)
+    public function manageActions()
     {
         $oldRegionIds = [];
         $newRegionIds = [];
@@ -2517,7 +2517,7 @@ class Layout implements \JsonSerializable
         $oldWidgetIds = [];
 
         // get all regionIds including drawers
-        $allNewRegions = array_merge($layout->regions, $layout->drawers);
+        $allNewRegions = array_merge($this->regions, $this->drawers);
 
         // create an array of new and old (from import) Region and Widget ids
         /** @var Region $region */
@@ -2542,7 +2542,7 @@ class Layout implements \JsonSerializable
         // go through all imported actions on a Layout and replace the source/target Ids with the new ones
         foreach ($layoutActions as $action) {
             $action->source = 'layout';
-            $action->sourceId = $layout->layoutId;
+            $action->sourceId = $this->layoutId;
 
             if ($action->targetId != null) {
                 foreach ($combined as $old => $new) {

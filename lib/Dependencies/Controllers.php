@@ -238,6 +238,7 @@ class Controllers
                     $c->get('pool'),
                     $c->get('mediaService')
                 );
+                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },

@@ -35,6 +35,7 @@ use Stash\Item;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
 use Xibo\Entity\Widget;
+use Xibo\Event\TemplateProviderImportEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -347,95 +348,117 @@ class Layout extends Base
             $tags = [];
         }
 
-        // Template or resolution?
-        // TODO: if we have selected an item from a non-local source, we need to process that here.
-        //  the connector would be expected to import the layout at this point and return us with a Layout
-        //  object we can then decorate with our other options.
-        //  WIP: currently pending the API in the connector.
+        $templateId = $sanitizedParams->getString('layoutId');
+        $resolutionId = $sanitizedParams->getInt('resolutionId');
+        $template = null;
+
+        // Source?
         $source = $sanitizedParams->getString('source');
         if ($source === 'remote') {
             // Hand off to the connector
-            throw new GeneralException('Not implemented in this alpha release - coming soon');
-        } else {
-            $templateId = $sanitizedParams->getString('layoutId');
-            $resolutionId = $sanitizedParams->getInt('resolutionId');
-        }
-        $template = null;
-
-        // Template or Resolution?
-        $isResolution = empty($templateId) || $templateId === '0' || Str::startsWith($templateId, '0|');
-
-        if (!$isResolution) {
-            // Load the template
-            $template = $this->layoutFactory->loadById($templateId);
-
-            // Empty all of the ID's
-            $layout = clone $template;
-
-            // Overwrite our new properties
-            $layout->layout = $name;
-            $layout->description = $description;
-            $layout->code = $code;
-
-            // Create some tags (overwriting the old ones)
-            if ($this->getUser()->featureEnabled('tag.tagging')) {
-                $layout->tags = $tags;
-            }
-
-            // Set the owner
-            $layout->setOwner($this->getUser()->userId, true);
-        } else {
-            // Validate that a resolution has been selected.
-            if (empty($resolutionId)) {
-                throw new InvalidArgumentException(__('Please select a resolution'), 'resolutionId');
-            }
-
-            $layout = $this->layoutFactory->createFromResolution(
-                $resolutionId,
-                $this->getUser()->userId,
+            $event = new TemplateProviderImportEvent(
+                $sanitizedParams->getString('download'),
+                $templateId,
+                $this->getLayoutFactory(),
+                $this->getConfig()->getSetting('LIBRARY_LOCATION'),
                 $name,
-                $description,
-                $tags,
-                $code,
-                false
+                $this->getUser()->userId,
+                $this->getDataSetFactory(),
+                RouteContext::fromRequest($request)->getRouteParser(),
+                $this->mediaService
             );
 
-            // Handle our various templateId's
-            switch ($templateId) {
-                case '0|blank':
-                    // Do nothing
-                    break;
+            $this->getLog()->debug('Dispatching event. ' . $event->getName());
+            try {
+                $this->getDispatcher()->dispatch($event->getName(), $event);
+            } catch (\Exception $exception) {
+                $this->getLog()->error('Template search: Exception in dispatched event: ' . $exception->getMessage());
+                $this->getLog()->debug($exception->getTraceAsString());
+            }
 
-                case '0|l-bar-left':
-                    // Main window - 80%
-                    $mainWidth = $layout->width * 0.8;
-                    $mainHeight = $layout->height * 0.8;
-                    $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, $layout->width - $mainWidth);
+            $layout = $event->getLayout();
+            $layout->description = $description;
+            $layout->code = $code;
+        } else {
+            // Template or Resolution?
+            $isResolution = empty($templateId) || $templateId === '0' || Str::startsWith($templateId, '0|');
 
-                    // Bottom bar
-                    $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
+            if (!$isResolution) {
+                // Load the template
+                $template = $this->layoutFactory->loadById($templateId);
 
-                    // Left bar
-                    $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, 0);
-                    break;
+                // Empty all of the ID's
+                $layout = clone $template;
 
-                case '0|l-bar-right':
-                    // Main window - 80%
-                    $mainWidth = $layout->width * 0.8;
-                    $mainHeight = $layout->height * 0.8;
-                    $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, 0);
+                // Overwrite our new properties
+                $layout->layout = $name;
+                $layout->description = $description;
+                $layout->code = $code;
 
-                    // Bottom bar
-                    $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
+                // Create some tags (overwriting the old ones)
+                if ($this->getUser()->featureEnabled('tag.tagging')) {
+                    $layout->tags = $tags;
+                }
 
-                    // Right bar
-                    $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, $mainWidth);
-                    break;
+                // Set the owner
+                $layout->setOwner($this->getUser()->userId, true);
+            } else {
+                // Validate that a resolution has been selected.
+                if (empty($resolutionId)) {
+                    throw new InvalidArgumentException(__('Please select a resolution'), 'resolutionId');
+                }
 
-                case '0|full-screen':
-                default:
-                    // Maintain backwards compatibility by creating an empty full screen region
-                    $this->layoutFactory->addRegion($layout, $layout->width, $layout->height, 0, 0);
+                $layout = $this->layoutFactory->createFromResolution(
+                    $resolutionId,
+                    $this->getUser()->userId,
+                    $name,
+                    $description,
+                    $tags,
+                    $code,
+                    false
+                );
+
+                // Handle our various templateId's
+                switch ($templateId) {
+                    case '0|blank':
+                        // Do nothing
+                        break;
+
+                    case '0|l-bar-left':
+                        // Main window - 80%
+                        $mainWidth = $layout->width * 0.8;
+                        $mainHeight = $layout->height * 0.8;
+                        $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0,
+                            $layout->width - $mainWidth);
+
+                        // Bottom bar
+                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight,
+                            $mainHeight, 0);
+
+                        // Left bar
+                        $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, 0);
+                        break;
+
+                    case '0|l-bar-right':
+                        // Main window - 80%
+                        $mainWidth = $layout->width * 0.8;
+                        $mainHeight = $layout->height * 0.8;
+                        $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, 0);
+
+                        // Bottom bar
+                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight,
+                            $mainHeight, 0);
+
+                        // Right bar
+                        $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0,
+                            $mainWidth);
+                        break;
+
+                    case '0|full-screen':
+                    default:
+                        // Maintain backwards compatibility by creating an empty full screen region
+                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height, 0, 0);
+                }
             }
         }
 
@@ -450,6 +473,13 @@ class Layout extends Base
 
         // Save
         $layout->save();
+
+        // for remote source, we import the Layout and save the thumbnail to temporary file
+        // after save we can move the image to correct library folder, as we have campaignId
+        if ($source === 'remote' && !empty($layout->thumbnail)) {
+            $campaignThumb = $layout->getThumbnailUri();
+            rename($layout->thumbnail, $campaignThumb);
+        }
 
         if ($templateId != null && $template !== null) {
             $layout->copyActions($layout, $template);
@@ -487,6 +517,11 @@ class Layout extends Base
 
         // Automatically checkout the new layout for edit
         $layout = $this->layoutFactory->checkoutLayout($layout, $sanitizedParams->getCheckbox('returnDraft'));
+
+        // After checkout, if we imported remote sourced Layout, copy the thumb
+        if ($source === 'remote' && !empty($campaignThumb)) {
+            copy($campaignThumb, $layout->getThumbnailUri());
+        }
 
         // Return
         $this->getState()->hydrate([
@@ -1362,6 +1397,10 @@ class Layout extends Base
 
                     // Add widget module type name
                     $widget->moduleName = $module->getModuleName();
+
+                    if ($widget->type === 'subplaylist') {
+                        $widget->calculateDuration($module);
+                    }
 
                     // apply default transitions to a dynamic parameters on widget object.
                     if ($layout->autoApplyTransitions == 1) {
@@ -2876,7 +2915,7 @@ class Layout extends Base
     /**
      * This is called when editing a layout.
      * Saves provided base64 image to the library folder with the naming convention:
-     *  {layoutId}_layout_thumb.png for a draft
+     *  {campaignId}_layout_thumb.png for a draft
      *  {campaignId}_campaign_thumb.png for a published layout
      * @param Request $request
      * @param Response $response
