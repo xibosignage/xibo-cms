@@ -200,8 +200,13 @@ ul.sidebar {
     }
 
     .media-search-form {
-        input[type="text"] {
-            max-width: 140px;
+        input[type="text"], .bootstrap-tagsinput {
+            max-width: 130px;
+            min-width: auto;
+
+            &.input-id {
+                max-width: 80px;
+            }
         }
     }
 

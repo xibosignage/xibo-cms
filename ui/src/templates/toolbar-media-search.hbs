@@ -23,6 +23,11 @@
 {{#each menuObj.content}}
     <form id="media-search-form-{{@index}}" class="form-inline media-search-form drag-handle {{#neq @index ../menuObj.selectedTab}}hidden{{/neq}}">
         <div class="form-group search-form-group">
+            <span class="mr-1">
+                <input id="input-mediaId-{{@index}}" name="mediaId" type="text" value="{{filters.mediaId.value}}" data-role="idinput"
+                            class="form-control form-control-inline input-id" placeholder="{{filters.mediaId.name}}">
+            </span>
+
             <select id="input-type-{{@index}}" name="type" class="form-control mr-1 form-control-inline input-type">
                 <option value="">{{filters.type.name}}</option>
                 {{#each filters.type.values}}
