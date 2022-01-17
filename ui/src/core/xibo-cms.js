@@ -657,30 +657,15 @@ function dataTableSpacingPreformatted(data, type, row) {
  * @returns {*}
  */
 function dataTableCreateTags(data, type) {
-
-    if (type !== "display")
+    if (type !== "display") {
         return data.tags;
+    }
 
     var returnData = '';
 
-    if(typeof data.tags != undefined && data.tags != null ) {
-        let arrayOfValues = [];
-        var arrayOfTags = data.tags.split(',');
-
-        if(typeof data.tagValues != undefined && data.tagValues != null) {
-            arrayOfValues = data.tagValues.split(',');
-        }
-
-        returnData += '<div id="tagDiv">';
-
-        for (let i = 0; i < arrayOfTags.length; i++) {
-            if(arrayOfTags[i] != '' && (arrayOfValues[i] == undefined || arrayOfValues[i] === 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '</span></li>'
-            } else if (arrayOfTags[i] != '' && (arrayOfValues[i] != '' || arrayOfValues[i] !== 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-default btn-tag">' + arrayOfTags[i] + '|' + arrayOfValues[i] + '</span></li>'
-            }
-        }
-
+    if (typeof data.tags !== undefined && data.tags != null ) {
+        var tagsArray = data.tags.split(',');
+        tagsArray.forEach((element) => returnData += '<li class="btn btn-sm btn-default btn-tag">' + element + '</span></li>')
         returnData += '</div>';
     }
 

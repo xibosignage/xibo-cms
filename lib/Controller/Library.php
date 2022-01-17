@@ -904,20 +904,6 @@ class Library extends Base
         if (!$this->getUser()->checkEditable($media))
             throw new AccessDeniedException();
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $media->tags));
-        $arrayOfTagValues = array_filter(explode(',', $media->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL')) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
         $media->enableStat = ($media->enableStat == null) ? $this->getConfig()->getSetting('MEDIA_STATS_ENABLED_DEFAULT') : $media->enableStat;
 
         $this->getState()->template = 'library-form-edit';
@@ -925,7 +911,6 @@ class Library extends Base
             'media' => $media,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit'),
-            'tags' => $tags,
             'expiryDate' => ($media->expires == 0 ) ? null : date('Y-m-d H:i:s', $media->expires)
         ]);
     }
@@ -1897,25 +1882,10 @@ class Library extends Base
         if (!$this->getUser()->checkViewable($media))
             throw new AccessDeniedException();
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $media->tags));
-        $arrayOfTagValues = array_filter(explode(',', $media->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
         $this->getState()->template = 'library-form-copy';
         $this->getState()->setData([
             'media' => $media,
-            'help' => $this->getHelp()->link('Media', 'Copy'),
-            'tags' => $tags
+            'help' => $this->getHelp()->link('Media', 'Copy')
         ]);
     }
 

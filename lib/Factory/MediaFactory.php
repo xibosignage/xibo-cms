@@ -508,8 +508,7 @@ class MediaFactory extends BaseFactory
                `media`.enableStat,
             ';
 
-        $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
-        $select .= " (SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaId GROUP BY lktagmedia.mediaId) AS tagValues, ";
+        $select .= " (SELECT GROUP_CONCAT(CONCAT_WS('|', tag, value))  FROM tag INNER JOIN lktagmedia ON lktagmedia.tagId = tag.tagId WHERE lktagmedia.mediaId = media.mediaID GROUP BY lktagmedia.mediaId) AS tags, ";
         $select .= "        `user`.UserName AS owner, ";
         $select .= "     (SELECT GROUP_CONCAT(DISTINCT `group`.group)
                               FROM `permission`

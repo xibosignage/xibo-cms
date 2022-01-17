@@ -99,7 +99,6 @@ class Media implements \JsonSerializable
      * @var Tag[]
      */
     public $tags = [];
-    public $tagValues;
 
     /**
      * @SWG\Property(description="The file size in bytes")
