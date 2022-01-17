@@ -1,0 +1,20 @@
+<div class="toolbar-card upload-card"
+    data-toggle="tooltip" 
+    data-type="module" 
+    data-sub-type="{{type}}"
+    data-region-specific="{{regionSpecific}}"
+    data-valid-ext="{{ validExtensions }}"
+    data-max-size="{{ maxSize }}" 
+    data-max-size-message="{{ maxSizeMessage }}"
+    data-title="{{description}}"
+    drop-to="region">
+
+    <div class="select-button select-upload">
+        <i class="fa fa-plus selectedHide" data-title="{{trans.select}}" data-toggle="tooltip" data-placement="top"></i>
+        <i class="fa fa-check selectedShow" data-title="{{trans.deselect}}" data-toggle="tooltip" data-placement="top"></i>
+    </div>
+
+     <i class="fa fa-upload card-icon"></i>
+
+    <span class="media-title">{{trans.upload}}</span>
+</div>

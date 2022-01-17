@@ -435,7 +435,7 @@
             $displaysComment.html((total > 0) ? $displaysComment.data().titlePlural : $displaysComment.data().title)
         });
 
-        var displayData = {{ displayStatus|raw }};
+        var displayData {% if displayStatus|raw %}= {{ displayStatus|raw }}{% endif %};
         var displayStatusChart = new Chart($("#displayStatusChart"), {
             type: 'doughnut',
             data: {
@@ -450,7 +450,7 @@
             }
         });
 
-        var displayMediaStatusData = {{ displayMediaStatus|raw }};
+        var displayMediaStatusData {% if displayMediaStatus|raw %}= {{ displayMediaStatus|raw }}{% endif %};
 
         var displayContentChart = new Chart($("#displayContentChart"), {
             type: 'doughnut',

@@ -155,6 +155,15 @@
                         -ms-overflow-style: -ms-autohiding-scrollbar;
                     }
                 }
+
+                .no-results-message {
+                    font-size: 1.2rem;
+                    white-space: normal;
+                    margin: 1rem 0;
+                    font-weight: bold;
+                    width: 100%;
+                    text-align: center;
+                }
     
                 .toolbar-pane-content {
                     display: flex;
@@ -168,15 +177,6 @@
                         flex-basis: 100%;
                         margin: 6px 0 4px 0;
                         text-transform: uppercase;
-                    }
-
-                    .no-results-message {
-                        font-size: 1.2rem;
-                        white-space: normal;
-                        margin-top: 1rem;
-                        font-weight: bold;
-                        width: 100%;
-                        text-align: center;
                     }
                 }
             }
@@ -231,6 +231,7 @@
             &.toolbar-library-pane {
                 .toolbar-pane-content {
                     width: 310px;
+                    align-content: flex-start;
                 }
 
                 .media-search-form {
@@ -299,6 +300,7 @@
                         overflow: hidden;
                         text-overflow: ellipsis;
                         white-space: nowrap;
+                        line-height: 18px;
                     }
 
                     .card-icon {
@@ -321,6 +323,12 @@
                         border-radius: 50%;
                         width: 17px;
                         height: 17px;
+                        opacity: 0.8;
+                        transition-delay: 0s;
+
+                        &:hover {
+                            opacity: 1;
+                        }
 
                         i {
                             cursor: pointer;
@@ -355,6 +363,19 @@
                         }
                     }
 
+                    .media-duration {
+                        display: none;
+                        position: absolute;
+                        top: 0;
+                        background: $xibo-color-primary;
+                        padding: 0px 4px;
+                        @include border-radius(4px);
+                        opacity: 0.8;
+                        line-height: 20px;
+                        left: 50%;
+                        transform: translateX(-50%);
+                    }
+
                     .provider {
                         display: block;
                         background-color: $xibo-color-white-pure;
@@ -370,6 +391,10 @@
                         .select-button, .media-title, .preview-button {
                             display: block;
                             background-color: $xibo-color-white;
+                        }
+
+                        .media-duration {
+                            display: block;
                         }
 
                         .card-icon {
@@ -395,8 +420,8 @@
                 }
 
                 .show-more {
-                    margin: 6px 10px;
-                    width: 310px;
+                    margin: 6px 6px;
+                    width: 315px;
                 }
             }
 

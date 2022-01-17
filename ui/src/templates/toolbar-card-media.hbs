@@ -34,6 +34,12 @@
             <img src="{{provider.logoUrl}}"></img>
         </a>
     {{/if}}
+
+    {{#if mediaDuration}}
+        <div class="media-duration" data-title="{{trans.duration}}" data-toggle="tooltip" data-placement="top">
+            {{mediaDuration}}
+        </div>
+    {{/if}}
     
     <span class="media-title tooltip-always-on" data-toggle="tooltip" data-title="{{title}}" data-placement="right">{{title}}</span>
 </div>

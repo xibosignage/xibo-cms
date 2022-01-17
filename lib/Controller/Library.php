@@ -773,6 +773,7 @@ class Library extends Base
                 $searchResult->type = $media->mediaType;
                 $searchResult->title = $media->name;
                 $searchResult->description = '';
+                $searchResult->duration = $media->duration;
 
                 // Thumbnail
                 $module = $this->moduleFactory->createWithMedia($media);

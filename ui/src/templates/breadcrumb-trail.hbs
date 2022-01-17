@@ -1,17 +1,17 @@
-<div data-id="{{layout.id}}" class="bc-layout bc-link" data-toggle="tooltip" data-title="{{trans.layout}}">
+<div data-id="{{layout.id}}" class="bc-layout bc-element bc-link" data-toggle="tooltip" data-title="{{trans.layout}}">
     {{layout.name}}
 </div>
 
 {{#if region}}
     <i class="fa fa-arrow-right"></i>
-    <div data-id="{{region.id}}" class="bc-region bc-link" data-toggle="tooltip" data-title="{{trans.region}}">
+    <div data-id="{{region.id}}" class="bc-region bc-element bc-link" data-toggle="tooltip" data-title="{{trans.region}}">
         {{region.name}}
     </div>
 {{/if}}
 
 {{#if widget}}
     <i class="fa fa-arrow-right"></i>
-    <div data-id="{{widget.id}}" class="bc-widget bc-link" data-toggle="tooltip" data-title="{{trans.widget}}">
+    <div data-id="{{widget.id}}" class="bc-widget bc-element" data-toggle="tooltip" data-title="{{trans.widget}}">
         {{widget.name}}
     </div>
 {{/if}}

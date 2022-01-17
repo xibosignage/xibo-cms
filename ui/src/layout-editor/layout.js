@@ -116,6 +116,9 @@ Layout.prototype.createDataStructure = function(data) {
             // calculate expire status
             newWidget.calculateExpireStatus();
 
+            // Check if widget is enabled
+            newWidget.checkIfEnabled();
+
             // Add newWidget to the Region widget object
             newRegion.widgets[newWidget.id] = newWidget;
 

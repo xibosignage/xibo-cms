@@ -40,6 +40,9 @@ Topbar.prototype.render = function() {
     // Get main object 
     const mainObject = app.getElementByTypeAndId(app.mainObjectType, app.mainObjectId);
 
+    // Format duration
+    mainObject.duration = Math.round(Number(mainObject.duration)*100)/100;
+
     // Get topbar trans
     let newTopbarTrans = $.extend(toolbarTrans, topbarTrans);
 
