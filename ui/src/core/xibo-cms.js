@@ -1046,30 +1046,16 @@ function dataTableSpacingPreformatted(data, type, row) {
  * @returns {*}
  */
 function dataTableCreateTags(data, type) {
-
-    if (type !== "display")
+    if (type !== "display") {
         return data.tags;
+    }
 
     var returnData = '';
 
-    if(typeof data.tags != undefined && data.tags != null ) {
-        var arrayOfValues = [];
-        var arrayOfTags = data.tags.split(',');
-
-        if(typeof data.tagValues != undefined && data.tagValues != null) {
-            arrayOfValues = data.tagValues.split(',');
-        }
-
+    if (typeof data.tags !== undefined && data.tags != null ) {
         returnData += '<div id="tagDiv">';
-
-        for (var i = 0; i < arrayOfTags.length; i++) {
-            if(arrayOfTags[i] != '' && (arrayOfValues[i] == undefined || arrayOfValues[i] === 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-white btn-tag">' + arrayOfTags[i] + '</span></li>'
-            } else if (arrayOfTags[i] != '' && (arrayOfValues[i] != '' || arrayOfValues[i] !== 'NULL')) {
-                returnData += '<li class="btn btn-sm btn-white btn-tag">' + arrayOfTags[i] + '|' + arrayOfValues[i] + '</span></li>'
-            }
-        }
-
+        var tagsArray = data.tags.split(',');
+        tagsArray.forEach((element) => returnData += '<li class="btn btn-sm btn-white btn-tag">' + element + '</span></li>')
         returnData += '</div>';
     }
 
@@ -1934,20 +1920,13 @@ function XiboMultiSelectTagFormRender(button) {
             // Add match id to the array
             matchIds.push(rowData[elementIdName]);
 
-            var arrayOfValues = [];
-            if(typeof rowData.tagValues != undefined && rowData.tagValues != null) {
-                arrayOfValues = rowData.tagValues.split(',');
-            }
-
             // Add existing tags to the array
             if(['', null].indexOf(rowData.tags) === -1) {
                 var arrayOfTags = rowData.tags.split(',');
 
-                arrayOfTags.forEach(function(tag, index) {
-                    if(existingTags.indexOf(tag) === -1 && (arrayOfValues[index] == undefined || arrayOfValues[index] == 'NULL')) {
+                arrayOfTags.forEach(function(tag) {
+                    if (existingTags.indexOf(tag) === -1) {
                         existingTags.push(tag);
-                    } else if (existingTags.indexOf(tag) === -1 && (arrayOfValues[index] != '' || arrayOfValues[index] != 'NULL')) {
-                        existingTags.push(arrayOfTags[index] + '|' + arrayOfValues[index]);
                     }
                 });
             }

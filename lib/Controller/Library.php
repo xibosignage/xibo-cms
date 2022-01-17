@@ -1120,7 +1120,6 @@ class Library extends Base
             'media' => $media,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit'),
-            'tags' => $this->tagFactory->getTagsWithValues($media),
             'expiryDate' => ($media->expires == 0 ) ? null : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat(), $media->expires)
         ]);
 
@@ -2269,8 +2268,7 @@ class Library extends Base
         $this->getState()->template = 'library-form-copy';
         $this->getState()->setData([
             'media' => $media,
-            'help' => $this->getHelp()->link('Media', 'Copy'),
-            'tags' => $this->tagFactory->getTagsWithValues($media)
+            'help' => $this->getHelp()->link('Media', 'Copy')
         ]);
 
         return $this->render($request, $response);

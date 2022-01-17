@@ -288,21 +288,13 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.folderId,
                 `displaygroup`.permissionsFolderId,
                 (
-                  SELECT GROUP_CONCAT(DISTINCT tag) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tags,
-                (
-                  SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tagValues  
+                    SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                        FROM tag
+                        INNER JOIN lktagdisplaygroup
+                        ON lktagdisplaygroup.tagId = tag.tagId
+                        WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID
+                        GROUP BY lktagdisplaygroup.displayGroupId
+                ) as tags
         ';
 
         $body = '

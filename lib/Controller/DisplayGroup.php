@@ -482,8 +482,7 @@ class DisplayGroup extends Base
         $this->getState()->template = 'displaygroup-form-edit';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'help' => $this->getHelp()->link('DisplayGroup', 'Edit'),
-            'tags' => $this->tagFactory->getTagsWithValues($displayGroup)
+            'help' => $this->getHelp()->link('DisplayGroup', 'Edit')
         ]);
 
         return $this->render($request, $response);
@@ -2386,8 +2385,7 @@ class DisplayGroup extends Base
 
         // handle tags
         if ($copyTags) {
-            $tags = $this->tagFactory->getTagsWithValues($displayGroup);
-            $new->replaceTags($this->tagFactory->tagsFromString($tags));
+            $new->replaceTags($this->tagFactory->tagsFromString($displayGroup->tags));
         }
 
         $new->displayGroup = $sanitizedParams->getString('displayGroup');

@@ -203,9 +203,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
             if (isset($mediaTags)) {
                 $arrayOfTags = explode(',', $mediaTags);
                 for ($i=0; $i<count($arrayOfTags); $i++) {
-                    if (isset($arrayOfTags[$i])) {
-                        if (!empty($arrayOfTags[$i])) {
-                            $tagFilter['media'][$i]['tag'] = $arrayOfTags[$i];
+                    if (isset($arrayOfTags[$i]) && !empty($arrayOfTags[$i])) {
+                        $tag = explode('|', $arrayOfTags[$i]);
+                        $tagFilter['media'][$i]['tag'] = $tag[0];
+                        if (isset($tag[1])) {
+                            $tagFilter['media'][$i]['val'] = $tag[1];
                         }
                     }
                 }
@@ -303,9 +305,11 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         if (isset($layoutTags)) {
             $arrayOfTags = explode(',', $layoutTags);
             for ($i=0; $i<count($arrayOfTags); $i++) {
-                if (isset($arrayOfTags[$i])) {
-                    if (!empty($arrayOfTags[$i])) {
-                        $tagFilter['layout'][$i]['tag'] = $arrayOfTags[$i];
+                if (isset($arrayOfTags[$i]) && !empty($arrayOfTags[$i])) {
+                    $tag = explode('|', $arrayOfTags[$i]);
+                    $tagFilter['layout'][$i]['tag'] = $tag[0];
+                    if (isset($tag[1])) {
+                        $tagFilter['layout'][$i]['val'] = $tag[1];
                     }
                 }
             }
@@ -323,14 +327,14 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         $statData['displayName'] = $display->display;
 
         $arrayOfTags = array_filter(explode(',', $display->tags));
-        $arrayOfTagValues = array_filter(explode(',', $display->tagValues));
 
         for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
-                $tagFilter['dg'][$i]['val'] = $arrayOfTagValues[$i];
-            } else {
-                $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
+            if (isset($arrayOfTags[$i]) && !empty($arrayOfTags[$i])) {
+                $tag = explode('|', $arrayOfTags[$i]);
+                $tagFilter['dg'][$i]['tag'] = $tag[0];
+                if (isset($tag[1])) {
+                    $tagFilter['dg'][$i]['val'] = $tag[1];
+                }
             }
         }
 
@@ -350,13 +354,14 @@ class MongoDbTimeSeriesStore implements TimeSeriesStoreInterface
         }
 
         $arrayOfTags = array_filter(explode(',', $displayGroup->tags));
-        $arrayOfTagValues = array_filter(explode(',', $displayGroup->tagValues));
+
         for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
-                $tagFilter['dg'][$i]['val'] = $arrayOfTagValues[$i];
-            } else {
-                $tagFilter['dg'][$i]['tag'] = $arrayOfTags[$i];
+            if (isset($arrayOfTags[$i]) && !empty($arrayOfTags[$i])) {
+                $tag = explode('|', $arrayOfTags[$i]);
+                $tagFilter['dg'][$i]['tag'] = $tag[0];
+                if (isset($tag[1])) {
+                    $tagFilter['dg'][$i]['val'] = $tag[1];
+                }
             }
         }
 

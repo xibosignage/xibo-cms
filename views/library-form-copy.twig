@@ -47,7 +47,7 @@
                 {% if currentUser.featureEnabled("tag.tagging") %}
                     {% set title %}{% trans "Tags" %}{% endset %}
                     {% set helpText %}{% trans "Tag this media. Comma Separated." %}{% endset %}
-                    {{ forms.inputWithTags("tags", title, tags, helpText) }}
+                    {{ forms.inputWithTags("tags", title, media.tags, helpText) }}
                 {% endif %}
             </form>
         </div>

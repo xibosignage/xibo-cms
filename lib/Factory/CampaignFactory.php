@@ -178,22 +178,16 @@ class CampaignFactory extends BaseFactory
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
             ) AS numberLayouts,
             MAX(CASE WHEN `campaign`.IsLayoutSpecific = 1 THEN `layout`.retired ELSE 0 END) AS retired,
-            (
-                SELECT GROUP_CONCAT(DISTINCT tag) 
-                FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
-                WHERE lktagcampaign.campaignId = campaign.CampaignID 
-                GROUP BY lktagcampaign.campaignId
-            ) AS tags,
-            
-            (
-                SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
-                FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
-                WHERE lktagcampaign.campaignId = campaign.CampaignID 
-                GROUP BY lktagcampaign.campaignId
-            ) AS tagValues
+            ( SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                            FROM tag
+                            INNER JOIN lktagcampaign
+                            ON lktagcampaign.tagId = tag.tagId
+                            WHERE lktagcampaign.campaignId = campaign.campaignId
+                            GROUP BY lktagcampaign.campaignId
+            ) as tags
         ';
 
-        $body  = '
+        $body  = "
             FROM `campaign`
               LEFT OUTER JOIN `lkcampaignlayout`
               ON lkcampaignlayout.CampaignID = campaign.CampaignID
@@ -202,7 +196,7 @@ class CampaignFactory extends BaseFactory
               INNER JOIN `user`
               ON user.userId = campaign.userId 
            WHERE 1 = 1
-        ';
+        ";
 
         if ($sanitizedFilter->getInt('isLayoutSpecific', ['default' => 0]) != -1) {
             // Exclude layout specific campaigns
