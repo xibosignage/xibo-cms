@@ -116,6 +116,7 @@ class DisplayProfile implements \JsonSerializable
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
      * @param CommandFactory $commandFactory
+     * @param DisplayProfileFactory $displayProfileFactory
      */
     public function __construct($store, $log, $config, $commandFactory, $displayProfileFactory)
     {
@@ -550,5 +551,10 @@ class DisplayProfile implements \JsonSerializable
             $this->getLog()->error('Attempting to get Custom Edit template for Display Profile ' . $this->getClientType() . ' that is not custom');
             return null;
         }
+    }
+
+    public function handleCustomFields($sanitizedParams, $config = null, $display = null)
+    {
+        return $this->displayProfileFactory->handleCustomFields($this, $sanitizedParams, $config, $display);
     }
 }

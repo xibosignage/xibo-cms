@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,7 +23,9 @@ namespace Xibo\Factory;
 
 use Xibo\Entity\DisplayProfile;
 use Xibo\Service\ConfigServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class DisplayProfileFactory
@@ -325,49 +327,20 @@ class DisplayProfileFactory extends BaseFactory
             if ($this->config->getMiddleware() != null) {
                 foreach ($this->config->middleware as $object) {
                     // Add any new routes from custom middleware
-                    if (method_exists($object, 'registerCustomDisplayProfile')) {
-                        $defaultConfig = $object->registerCustomDisplayProfile($type);
-                        if (!empty($defaultConfig)) {
-                            return $defaultConfig;
-                        } else {
-                            continue;
-                        }
+                    if (method_exists($object, 'registerCustomDisplayProfile') && method_exists($object, 'getProfileType') && $object->getProfileType() === $type) {
+                        $config[$type] = $object->registerCustomDisplayProfile($type);
                     }
                 }
-                if (empty($defaultConfig)) {
+                if (empty($config[$type])) {
                     $this->getLog()->error('Custom Display Profile registerCustomDisplayProfile function not found for ' . $type);
                     return [];
                 }
             } else {
-                return [];
+                $config[$type] = [];
             }
         }
 
         return $config[$type];
-    }
-
-    public function getCustomEditTemplate($type)
-    {
-        if ($this->config->getMiddleware() != null) {
-            foreach ($this->config->middleware as $object) {
-                // Add any new routes from custom middleware
-                if (method_exists($object, 'getCustomEditTemplate')) {
-                    $template = $object->getCustomEditTemplate($type);
-                    if ($template != null) {
-                        return $template;
-                    } else {
-                        continue;
-                    }
-                }
-            }
-            if (empty($template)) {
-                $this->getLog()->error('Custom Display Profile Edit template not found for ' . $type);
-                return null;
-            }
-        } else {
-            $this->getLog()->error('Attempting to get Custom Display Profile Edit form, without any custom middleware');
-            return null;
-        }
     }
 
     /**
@@ -486,6 +459,26 @@ class DisplayProfileFactory extends BaseFactory
         return $entries;
     }
 
+    public function getCustomEditTemplate($type)
+    {
+        $template = '';
+
+        if ($this->config->getMiddleware() != null) {
+            foreach ($this->config->middleware as $object) {
+                if (method_exists($object, 'getCustomEditTemplate') && method_exists($object, 'getProfileType') && $object->getProfileType() === $type) {
+                    $template = $object->getCustomEditTemplate($type);
+                    return $template;
+                }
+            }
+            if (empty($template)) {
+                throw new InvalidArgumentException(__('Custom Display Profile Edit template not found for ' . $type));
+            }
+        } else {
+            $this->getLog()->error('Attempting to get Custom Display Profile Edit form, without any custom middleware');
+        }
+        return null;
+    }
+
     public function isCustomType($type)
     {
         $results = $this->getStore()->select('SELECT displayProfileId FROM `displayprofile` WHERE isCustom = 1 AND type = :type', [
@@ -493,5 +486,19 @@ class DisplayProfileFactory extends BaseFactory
         ]);
 
         return (count($results) >= 1) ? 1 : 0;
+    }
+
+    public function handleCustomFields(DisplayProfile $displayProfile, SanitizerInterface $sanitizedParams, $config, $display)
+    {
+        if ($this->config->getMiddleware() != null) {
+            foreach ($this->config->middleware as $object) {
+                if (method_exists($object, 'editCustomConfigFields') && method_exists($object, 'getProfileType') && $object->getProfileType() === $displayProfile->getClientType()) {
+                    return $object->editCustomConfigFields($displayProfile, $sanitizedParams, $config, $display);
+                }
+            }
+        } else {
+            $this->getLog()->error('Attempting to get Custom Display Profile Edit config fields, without any custom middleware');
+        }
+        return [];
     }
 }

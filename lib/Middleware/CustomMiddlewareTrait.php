@@ -67,4 +67,17 @@ trait CustomMiddlewareTrait
     {
         return $this->getContainer()->get($key);
     }
+
+    /**
+     * @param $setting
+     * @param $oldValue
+     * @param $newValue
+     * @param $changedSettings
+     */
+    protected function handleChangedSettings($setting, $oldValue, $newValue, &$changedSettings)
+    {
+        if ($oldValue != $newValue) {
+            $changedSettings[$setting] = $oldValue . ' > ' . $newValue;
+        }
+    }
 }
