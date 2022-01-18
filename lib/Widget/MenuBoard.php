@@ -109,7 +109,8 @@ class MenuBoard extends ModuleWidget
         return $this->menuBoardCategoryFactory->getByMenuId($this->getOption('menuId'));
     }
 
-    public function getTemplatesWithInfo() {
+    public function getTemplatesWithInfo()
+    {
         // Get templates with filter option
         $templates = $this->templatesAvailable(true);
 
@@ -351,7 +352,6 @@ class MenuBoard extends ModuleWidget
             $templateZones = array_key_exists('zones', $templateInfo) ? $templateInfo['zones'] : 1;
             $this->setOption('templateZones', $templateZones);
         } elseif ($step == 2) {
-
             $categoriesAssigned = '';
             // Categories
             for ($i = 1; $i <= $this->getOption('templateZones'); $i++) {
