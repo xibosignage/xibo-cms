@@ -753,6 +753,12 @@
                 if(timepickerOptionsFixFlag) {
                     timersFormInit($inputFieldsOld);
                     timersFormInit($(target));
+
+                    // Parent container
+                    var $inputParent = $inputFields.parent()
+                    $inputParent.addClass('timerOverride');
+                    $inputParent.find('.date-clear-button').remove();
+                    $inputParent.append('<div class="text-muted">{{ "Adjust the times of this timer. To add or remove a day, use the Display Profile."|trans }}</div>');
                 }
 
                 if(sliderFixFlag) {
