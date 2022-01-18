@@ -33,32 +33,38 @@
             <form id="menuBoardEditFormStep2" class="XiboForm form-horizontal pt-4" data-form-step="2" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}"
                   data-next-form-url="{{ url_for("module.widget.edit.form", {id: module.widget.widgetId}) }}?step=3">
 
-                {% set title %}{% trans "Template" %}{% endset %}
-                {% set helpText %}{% trans "Select the template you would like to apply. This can be overridden using the check box below." %}{% endset %}
-                {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), templatesAvailable, "id", "value", helpText, "template-selector-control selectPicker selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image") }}
-
-                {% set message %}{% trans "Below you can select the Categories - drag and drop to reorder and to move between lists." %}{% endset %}
+                {% set message %}{% trans "Below you can add Categories to the menu structure - drag and drop to add them to the empty spaces." %}{% endset %}
                 {{ forms.message(message) }}
 
-                <div class="row">
-                    <div class="col-md-12 row">
-                        <div class="connectedlist col-sm-6">
-                            <p class="text-info text-center">{% trans "Categories Selected" %}</p>
-                            <ul id="categoriesIn" class="connectedSortable m-auto text-center">
-                                {% for category in module.menuBoardCategoriesSelected() %}
-                                    <li id="{{ category.menuCategoryId }}"
-                                        class="li-sortable dbclick">{{ category.name }}</li>
+                <div id="zonesContainer">
+                    <div class="row">
+                        <div class="col-md-12 row">
+                            <div class="text-info mb-1">{% trans "Menu Structure" %}</div>
+                            {% set gridTemplate = module.getExtra().gridTemplate %}
+                            <div class="structure" style="grid-template: {{ gridTemplate }};">
+                                {% for i in 1..module.getOption("templateZones", 1) %}
+                                    <div class="connectedlist" style="grid-area: z{{ i }}";>
+                                        <ul id="categoriesAssigned_{{ i }}"
+                                            class="connectedSortable2 single">
+                                            {% for category in module.menuBoardCategoriesSelectedAssigned(i) %}
+                                                <li id="{{ category.menuCategoryId }}"
+                                                    class="li-sortable">{{ category.name }}</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
                                 {% endfor %}
-                            </ul>
-                        </div>
-                        <div class="connectedlist col-sm-6">
-                            <p class="text-info text-center">{% trans "Categories Available" %}</p>
-                            <ul id="categoriesOut" class="connectedSortable m-auto text-center">
-                                {% for category in module.menuBoardCategoriesNotSelected() %}
-                                    <li id="{{ category.menuCategoryId }}"
-                                        class="li-sortable dbclick">{{ category.name }}</li>
-                                {% endfor %}
-                            </ul>
+                            </div>
+
+                            <div class="connectedlist flex-fill mb-3">
+                                <p class="text-info mb-1">{% trans "Unassigned Categories" %}</p>
+                                <ul id="categoriesNotAssigned"
+                                    class="connectedSortable2">
+                                    {% for category in module.menuBoardCategoriesSelectedNotAssigned() %}
+                                        <li id="{{ category.menuCategoryId }}"
+                                            class="li-sortable">{{ category.name }}</li>
+                                    {% endfor %}
+                                </ul>
+                            </div>
                         </div>
                     </div>
                 </div>

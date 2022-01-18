@@ -33,6 +33,9 @@
             <form id="menuBoardEditFormStep1" class="XiboForm pt-4 form-horizontal" data-form-step="1" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}"
                   data-next-form-url="{{ url_for("module.widget.edit.form", {id: module.widget.widgetId}) }}?step=2">
 
+                {% set message %}{% trans "Selected target Menu Board and the template to be rendered as." %}{% endset %}
+                {{ forms.message(message) }}
+
                 {% set title %}{% trans "Menu Board" %}{% endset %}
                 {% set helpText %}{% trans "Please select the Menu Board to use as a source of data for this Widget." %}{% endset %}
                 {% set attributes = [
@@ -46,6 +49,17 @@
                     { name: "data-text-property", value: "name" }
                 ] %}
                 {{ forms.dropdown("menuId", "single", title, "", module.getMenuBoard(), "menuId", "name", helpText, "pagedSelect", "", "", "", attributes) }}
+
+                {% set title %}{% trans "Orientation" %}{% endset %}
+                {% set helpText %}{% trans "Set intended orientation for the Menu, this is for filtering templates only." %}{% endset %}
+                {% set option1 = "Landscape"|trans %}
+                {% set option2 = "Portrait"|trans %}
+                {% set values = [{id: 'landscape', value: option1}, {id: 'portrait', value: option2}] %}
+                {{ forms.dropdown("orientation", "single", title, module.getOption("orientation"), values, "id", "value", helpText) }}
+
+                {% set title %}{% trans "Template" %}{% endset %}
+                {% set helpText %}{% trans "Select the template you would like to apply." %}{% endset %}
+                {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.getTemplatesWithInfo, "id", "value", helpText, "template-selector-control localSelect selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image", "orientation") }}
 
                 <input type="hidden" name="step" value="1" />
             </form>
