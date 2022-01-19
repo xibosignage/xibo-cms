@@ -816,7 +816,7 @@ class DisplayGroup implements \JsonSerializable
 
         $this->displayGroupId = $this->getStore()->insert('
           INSERT INTO displaygroup (DisplayGroup, IsDisplaySpecific, Description, `isDynamic`, `dynamicCriteria`, `dynamicCriteriaTags`, `dynamicCriteriaExactTags`, `dynamicCriteriaLogicalOperator`, `userId`, `createdDt`, `modifiedDt`, `folderId`, `permissionsFolderId`)
-            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :userId, :createdDt, :modifiedDt, :folderId, :permissionsFolderId)
+            VALUES (:displayGroup, :isDisplaySpecific, :description, :isDynamic, :dynamicCriteria, :dynamicCriteriaTags, :dynamicCriteriaExactTags, :dynamicCriteriaLogicalOperator, :userId, :createdDt, :modifiedDt, :folderId, :permissionsFolderId)
         ', [
             'displayGroup' => $this->displayGroup,
             'isDisplaySpecific' => $this->isDisplaySpecific,
