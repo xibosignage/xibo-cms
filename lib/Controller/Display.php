@@ -382,6 +382,27 @@ class Display extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="tags",
+     *      in="query",
+     *      description="Filter by tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="exactTags",
+     *      in="query",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="query",
+     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="macAddress",
      *      in="query",
      *      description="Filter by Mac Address",

@@ -184,6 +184,27 @@ class DisplayGroup extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="tags",
+     *      in="query",
+     *      description="Filter by tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="exactTags",
+     *      in="query",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="query",
+     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="isDisplaySpecific",
      *      in="query",
      *      description="Filter by whether the Display Group belongs to a Display or is user created",
@@ -256,12 +277,14 @@ class DisplayGroup extends Base
             // Check to see if we're getting this data for a Schedule attempt, or for a general list
             if ($parsedQueryParams->getCheckbox('forSchedule') == 1) {
                 // Can't schedule with view, but no edit permissions
-                if (!$scheduleWithView && !$this->getUser()->checkEditable($group))
+                if (!$scheduleWithView && !$this->getUser()->checkEditable($group)) {
                     continue;
+                }
             }
 
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 continue;
+            }
 
             $group->includeProperty('buttons');
 
@@ -283,13 +306,13 @@ class DisplayGroup extends Base
                 // Edit
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_edit',
-                    'url' => $this->urlFor($request,'displayGroup.edit.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.edit.form', ['id' => $group->displayGroupId]),
                     'text' => __('Edit')
                 );
 
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_copy',
-                    'url' => $this->urlFor($request,'displayGroup.copy.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.copy.form', ['id' => $group->displayGroupId]),
                     'text' => __('Copy')
                 );
 
@@ -297,11 +320,11 @@ class DisplayGroup extends Base
                     // Select Folder
                     $group->buttons[] = [
                         'id' => 'displaygroup_button_selectfolder',
-                        'url' => $this->urlFor($request,'displayGroup.selectfolder.form', ['id' => $group->displayGroupId]),
+                        'url' => $this->urlFor($request, 'displayGroup.selectfolder.form', ['id' => $group->displayGroupId]),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.selectfolder', ['id' => $group->displayGroupId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.selectfolder', ['id' => $group->displayGroupId])],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'displaygroup_button_selectfolder'],
                             ['name' => 'text', 'value' => __('Move to Folder')],
@@ -318,11 +341,11 @@ class DisplayGroup extends Base
                 // Show the delete button
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_delete',
-                    'url' => $this->urlFor($request,'displayGroup.delete.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.delete.form', ['id' => $group->displayGroupId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.delete', ['id' => $group->displayGroupId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.delete', ['id' => $group->displayGroupId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'displaygroup_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
@@ -342,14 +365,14 @@ class DisplayGroup extends Base
                 // File Associations
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_fileassociations',
-                    'url' => $this->urlFor($request,'displayGroup.media.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.media.form', ['id' => $group->displayGroupId]),
                     'text' => __('Assign Files')
                 );
 
                 // Layout Assignments
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_layout_associations',
-                    'url' => $this->urlFor($request,'displayGroup.layout.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.layout.form', ['id' => $group->displayGroupId]),
                     'text' => __('Assign Layouts')
                 );
             }
@@ -360,18 +383,18 @@ class DisplayGroup extends Base
                 // Show the modify permissions button
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_permissions',
-                    'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId]),
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'DisplayGroup', 'id' => $group->displayGroupId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'displaygroup_button_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $group->displayGroup],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'DisplayGroup'])],
                         ['name' => 'content-id-name', 'value' => 'displayGroupId']
                     ]
                 ];
@@ -384,28 +407,28 @@ class DisplayGroup extends Base
 
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_command',
-                    'url' => $this->urlFor($request,'displayGroup.command.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.command.form', ['id' => $group->displayGroupId]),
                     'text' => __('Send Command')
                 );
 
                 $group->buttons[] = array(
                     'id' => 'displaygroup_button_collectNow',
-                    'url' => $this->urlFor($request,'displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.collectNow.form', ['id' => $group->displayGroupId]),
                     'text' => __('Collect Now'),
                     'dataAttributes' => [
                         ['name' => 'auto-submit', 'value' => true],
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.collectNow', ['id' => $group->displayGroupId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.collectNow', ['id' => $group->displayGroupId])],
                     ]
                 );
 
                 // Trigger webhook
                 $group->buttons[] = [
                     'id' => 'displaygroup_button_trigger_webhook',
-                    'url' => $this->urlFor($request,'displayGroup.trigger.webhook.form', ['id' => $group->displayGroupId]),
+                    'url' => $this->urlFor($request, 'displayGroup.trigger.webhook.form', ['id' => $group->displayGroupId]),
                     'text' => __('Trigger a web hook'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'displayGroup.action.trigger.webhook', ['id' => $group->displayGroupId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'displayGroup.action.trigger.webhook', ['id' => $group->displayGroupId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'displaygroup_button_trigger_webhook'],
                         ['name' => 'text', 'value' => __('Trigger a web hook')],
@@ -480,12 +503,13 @@ class DisplayGroup extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function deleteForm(Request $request, Response $response, $id)
+    public function deleteForm(Request $request, Response $response, $id)
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkDeleteable($displayGroup))
+        if (!$this->getUser()->checkDeleteable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'displaygroup-form-delete';
         $this->getState()->setData([
@@ -511,8 +535,9 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
 
-        if (!$this->getUser()->checkEditable($displayGroup))
+        if (!$this->getUser()->checkEditable($displayGroup)) {
             throw new AccessDeniedException();
+        }
 
         // Displays in Group
         $displaysAssigned = $this->displayFactory->getByDisplayGroupId($displayGroup->displayGroupId);
@@ -584,14 +609,14 @@ class DisplayGroup extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="dynamicCriteriaExactTags",
+     *      name="exactTags",
      *      in="formData",
      *      description="When filtering by Tags, should we use exact match?",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="dynamicCriteriaLogicalOperator",
+     *      name="logicalOperator",
      *      in="formData",
      *      description="When filtering by Tags, which logical operator should be used? AND|OR",
      *      type="string",
@@ -730,14 +755,14 @@ class DisplayGroup extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="dynamicCriteriaExactTags",
+     *      name="exactTags",
      *      in="formData",
      *      description="When filtering by Tags, should we use exact match?",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="dynamicCriteriaLogicalOperator",
+     *      name="logicalOperator",
      *      in="formData",
      *      description="When filtering by Tags, which logical operator should be used? AND|OR",
      *      type="string",

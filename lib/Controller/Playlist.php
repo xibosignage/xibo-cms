@@ -207,6 +207,13 @@ class Playlist extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="query",
+     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Parameter(
      *      name="ownerUserGroupId",
      *      in="query",
@@ -532,14 +539,14 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="filterExactTags",
+     *      name="exactTags",
      *      in="formData",
      *      description="When filtering by Tags, should we use exact match?",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="filterLogicalOperator",
+     *      name="logicalOperator",
      *      in="formData",
      *      description="When filtering by Tags, which logical operator should be used? AND|OR",
      *      type="string",
@@ -758,14 +765,14 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="filterExactTags",
+     *      name="exactTags",
      *      in="formData",
      *      description="When filtering by Tags, should we use exact match?",
      *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="filterLogicalOperator",
+     *      name="logicalOperator",
      *      in="formData",
      *      description="When filtering by Tags, which logical operator should be used? AND|OR",
      *      type="string",
