@@ -41,15 +41,6 @@
             {% if templateOptions %}
                 <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
             {% endif %}
-            <li class="nav-item dropdown">
-                <a class="nav-link dropdown-toggle" data-toggle="dropdown" href="#" role="button" aria-haspopup="true" aria-expanded="false">{% trans "Templates" %}<span class="caret"></span>
-                </a>
-                <div class="dropdown-menu">
-                    <a class="template-override-controls dropdown-item" href="#optionalStylesheetTab" role="tab" data-toggle="tab"><span>{% trans "Optional Stylesheet" %}</span></a>
-                    <a class="dropdown-item" href="#noDataTemplateTab" role="tab" data-toggle="tab"><span>{% trans "No Data" %}</span></a>
-                    <a class="dropdown-item" href="#optionalJavascriptTab" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a>
-                </div>
-            </li>
             <li class="nav-item"><a class="nav-link" href="#cachingTab" role="tab"
                                     data-toggle="tab"><span>{% trans "Caching" %}</span></a></li>
         </ul>
@@ -84,39 +75,6 @@
                     </div>
 
                     <div class="tab-pane" id="configurationTab">
-                        <div id="zonesContainer">
-                            <div class="row">
-                                <div class="col-md-12 row">
-                                    <div class="text-info mb-1">{% trans "Structure" %}</div>
-                                    {% set gridTemplate = module.getExtra().gridTemplate %}
-                                    <div class="structure" style="grid-template: {{ gridTemplate }};">
-                                        {% for i in 1..module.getOption("templateZones", 1) %}
-                                            <div class="connectedlist" style="grid-area: z{{ i }}";>
-                                                <ul id="categoriesSelected_{{ i }}"
-                                                    class="connectedSortable2 single">
-                                                    {% for category in module.menuBoardCategoriesSelectedAssigned(i) %}
-                                                        <li id="{{ category.menuCategoryId }}"
-                                                            class="li-sortable">{{ category.name }}</li>
-                                                    {% endfor %}
-                                                </ul>
-                                            </div>
-                                        {% endfor %}
-                                    </div>
-
-                                    <div class="connectedlist flex-fill mb-3">
-                                        <p class="text-info mb-1">{% trans "Unassigned Categories" %}</p>
-                                        <ul id="categoriesSelectedNotAssigned"
-                                            class="connectedSortable2">
-                                            {% for category in module.menuBoardCategoriesSelectedNotAssigned() %}
-                                                <li id="{{ category.menuCategoryId }}"
-                                                    class="li-sortable">{{ category.name }}</li>
-                                            {% endfor %}
-                                        </ul>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
                         {% set title %}{% trans "Show Unavailable Products?" %}{% endset %}
                         {% set helpText %}{% trans "Should the currently unavailable products appear in the menu?" %}{% endset %}
                         {{ forms.checkbox('showUnavailable', title, module.getOption("showUnavailable"), helpText) }}
@@ -163,60 +121,11 @@
                         </div>
                     {% endif %}
 
-                    <div class="tab-pane" id="noDataTemplateTab">
-                        <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "No Data Template" %}</h4>
-                            <div class="col-6 text-right">
-                                <input type="checkbox" class="bootstrap-switch-target" id="noDataMessage_advanced"
-                                       name="noDataMessage_advanced"
-                                       {% if module.getOption("noDataMessage_advanced", 0) == 1 %}checked{% endif %}
-                                       data-size="small"
-                                       data-label-text="{% trans "Visual editor" %}"
-                                       data-label-width="80px"
-                                       data-on-text="{% trans "On" %}"
-                                       data-off-text="{% trans "Off" %}">
-                            </div>
-                        </div>
-
-                        {% set noDataMessageMessage1 %}
-                            {% trans "Enter text or HTML in the box below." %}<br>
-                        {% endset %}
-                        {{ forms.message(noDataMessageMessage1, 'noDataMessage-advanced-editor-hide') }}
-
-                        {% set noDataMessageMessage2 %}
-                            {% trans "Enter the text to display." %}
-                            {% trans "The red rectangle reflects the size of the region you are editing." %}
-                            {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                        {% endset %}
-                        {{ forms.message(noDataMessageMessage2, 'noDataMessage-advanced-editor-show') }}
-
-                        {% set helpText %}{% trans "A message to display when no data is returned from the source" %}{% endset %}
-                        {{ forms.textarea("noDataMessage", "", module.getRawNode("noDataMessage"), helpText, "", "", 5) }}
-                    </div>
-
-                    <div class="tab-pane" id="optionalStylesheetTab">
-                        <div class="form-content-title">
-                            <h4>{% trans "Optional Stylesheet Template" %}</h4>
-                        </div>
-
-                        {% set title %}{% trans "Enter a style sheet for the table" %}{% endset %}
-                        {{ forms.textarea("styleSheet", "", module.getRawNode("styleSheet", module.defaultStyleSheet()), title, "template-override-controls", "", 10) }}
-                    </div>
-
-                    <div class="tab-pane" id="optionalJavascriptTab">
-                        <div class="form-content-title">
-                            <h4>{% trans "Optional JavaScript" %}</h4>
-                        </div>
-
-                        {{ forms.textarea("javaScript", "", module.getRawNode("javaScript"), "", "", "", 10) }}
-                    </div>
-
                     <div class="tab-pane" id="cachingTab">
                         {% set title %}{% trans "Update Interval (mins)" %}{% endset %}
                         {% set helpText %}{% trans "Please enter the update interval in minutes. This should be kept as high as possible. For example, if the data will only change once per day this could be set to 60." %}{% endset %}
                         {{ forms.number("updateInterval", title, module.getOption("updateInterval", 60), helpText, "", "required") }}
                     </div>
-
                 </div>
 
                 <input type="hidden" name="step" value="3"/>

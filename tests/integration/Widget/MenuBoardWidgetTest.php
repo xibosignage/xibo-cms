@@ -78,12 +78,13 @@ class MenuBoardWidgetTest extends LocalWebTestCase
 
         $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'step' => 1,
-            'menuId' => $this->menuBoard['menuId']
+            'menuId' => $this->menuBoard['menuId'],
+            'templateId' => 'menuboard1'
         ]);
 
         $this->getEntityProvider()->put('/playlist/widget/' . $response['widgetId'], [
             'step' => 2,
-            'menuBoardCategories' => [$this->menuBoardCategory['menuCategoryId']]
+            'menuBoardCategories_1' => [$this->menuBoardCategory['menuCategoryId']]
         ]);
 
         $this->widgetId = $response['widgetId'];
@@ -113,7 +114,6 @@ class MenuBoardWidgetTest extends LocalWebTestCase
             'duration' => 60,
             'useDuration' => 1,
             'showUnavailable' => 0,
-            'templateId' => 'menuboard',
             'productsHighlight' => [$this->menuBoardProduct['menuProductId']]
         ], ['CONTENT_TYPE' => 'application/x-www-form-urlencoded']);
 
