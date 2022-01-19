@@ -390,7 +390,7 @@ class BaseFactory
      * @param string $body Current SQL body passed by reference
      * @param array $params Array of parameters passed by reference
      */
-    public function tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, &$body, &$params)
+    public function tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, &$body, &$params, $statHelper = null)
     {
         $i = 0;
 
@@ -407,7 +407,12 @@ class BaseFactory
                     if ($logicalOperator === 'OR') {
                         $body .= ' ' . $logicalOperator . ' `tag` ' . $operator . ' :tags' . $i;
                     } else {
-                        $body .= ' )' . $lkTagTableSql;
+                        if ($statHelper != null) {
+                            $body .= ' ) ' . str_replace('X', 'A'.$i, $statHelper) . $lkTagTableSql;
+                        } else {
+                            $body .= ' ) ' . $lkTagTableSql;
+                        }
+
                         $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
                     }
                 }
@@ -422,7 +427,16 @@ class BaseFactory
                 if ($i == 1) {
                     $body .= ' WHERE `value` ' . $operator . ' :value' . $i;
                 } else {
-                    $body .= ' ' . $logicalOperator . ' `value` ' . $operator . ' :value' . $i;
+                    if ($logicalOperator === 'OR') {
+                        $body .= ' ' . $logicalOperator . ' `value` ' . $operator . ' :value' . $i;
+                    } else {
+                        if ($statHelper != null) {
+                            $body .= ' ) ' . str_replace('X', 'A'.$i, $statHelper) . $lkTagTableSql;
+                        } else {
+                            $body .= ' ) ' . $lkTagTableSql;
+                        }
+                        $body .= ' WHERE `value` ' . $operator . ' :value' . $i;
+                    }
                 }
 
                 if ($operator === '=') {
@@ -436,8 +450,18 @@ class BaseFactory
                     $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i .
                         ' AND value ' . $operator . ' :value' . $i;
                 } else {
-                    $body .= ' ' . $logicalOperator . ' `tag` ' . $operator . ' :tags' . $i .
-                        ' AND value ' . $operator . ' :value' . $i;
+                    if ($logicalOperator === 'OR') {
+                        $body .= ' ' . $logicalOperator . ' `tag` ' . $operator . ' :tags' . $i .
+                            ' AND value ' . $operator . ' :value' . $i;
+                    } else {
+                        if ($statHelper != null) {
+                            $body .= ' ) ' . str_replace('X', 'A'.$i, $statHelper) . $lkTagTableSql;
+                        } else {
+                            $body .= ' ) ' . $lkTagTableSql;
+                        }
+                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i .
+                            ' AND value ' . $operator . ' :value' . $i;
+                    }
                 }
 
                 if ($operator === '=') {
