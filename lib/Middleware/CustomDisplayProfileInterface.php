@@ -64,5 +64,4 @@ interface CustomDisplayProfileInterface
      * @return array
      */
     public function editCustomConfigFields(DisplayProfile $displayProfile, SanitizerInterface $sanitizedParams, ?array $config, ?Display $display) : array;
-
 }

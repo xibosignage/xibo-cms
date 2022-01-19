@@ -428,12 +428,10 @@ class Layout extends Base
                         // Main window - 80%
                         $mainWidth = $layout->width * 0.8;
                         $mainHeight = $layout->height * 0.8;
-                        $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0,
-                            $layout->width - $mainWidth);
+                        $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, $layout->width - $mainWidth);
 
                         // Bottom bar
-                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight,
-                            $mainHeight, 0);
+                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
 
                         // Left bar
                         $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, 0);
@@ -446,12 +444,10 @@ class Layout extends Base
                         $this->layoutFactory->addRegion($layout, $mainWidth, $mainHeight, 0, 0);
 
                         // Bottom bar
-                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight,
-                            $mainHeight, 0);
+                        $this->layoutFactory->addRegion($layout, $layout->width, $layout->height - $mainHeight, $mainHeight, 0);
 
                         // Right bar
-                        $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0,
-                            $mainWidth);
+                        $this->layoutFactory->addRegion($layout, $layout->width - $mainWidth, $mainHeight, 0, $mainWidth);
                         break;
 
                     case '0|full-screen':

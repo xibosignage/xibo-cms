@@ -721,9 +721,9 @@ class ProofOfPlay implements ReportInterface
                 $this->layoutFactory->tagFilter($tagsFilter, $lkTagTableSql, $logicalOperator, $operator, $body, $params, $helper);
 
                 if ($tagsType === 'layout') {
-                    $body .= " B
+                    $body .= ' B
                         LEFT OUTER JOIN
-                        `layouthistory` ON `layouthistory`.layoutId = B.layoutId ) ";
+                        `layouthistory` ON `layouthistory`.layoutId = B.layoutId ) ';
                 }
             }
         }

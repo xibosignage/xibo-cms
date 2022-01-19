@@ -105,7 +105,7 @@ class PixabayConnector implements ConnectorInterface
             'key' => $apiKey,
             'page' => $page,
             'per_page' => $perPage,
-            'safesearch' => "true"
+            'safesearch' => 'true'
         ];
 
         // Now we handle any other search
