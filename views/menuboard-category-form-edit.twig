@@ -41,8 +41,12 @@
             <form id="menuBoardCategoryEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("menuBoard.category.edit", { id: menuBoardCategory.menuCategoryId }) }}">
 
                 {% set title %}{% trans "Name" %}{% endset %}
-                {% set helpText %}{% trans "The Name for this Menu Board" %}{% endset %}
+                {% set helpText %}{% trans "The Name for this Menu Board Category" %}{% endset %}
                 {{ forms.input("name", title, menuBoardCategory.name, helpText) }}
+
+                {% set title %}{% trans "Code" %}{% endset %}
+                {% set helpText %}{% trans "The Code identifier for this Menu Board Category" %}{% endset %}
+                {{ forms.input("code", title, menuBoardCategory.code, helpText) }}
 
                 {% set title %}{% trans "Media" %}{% endset %}
                 {% set helpText %}{% trans "Optionally select Image or Video to be associated with this Menu Board Category" %}{% endset %}

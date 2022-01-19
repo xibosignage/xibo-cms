@@ -99,14 +99,16 @@ class MenuBoardFactory extends BaseFactory
      * Create a new action
      * @param string $name
      * @param string $description
+     * @param string $code
      * @param int $folderId
      * @return MenuBoard
      */
-    public function create($name, $description, $folderId)
+    public function create($name, $description, $code, $folderId)
     {
         $menuBoard = $this->createEmpty();
         $menuBoard->name = $name;
         $menuBoard->description = $description;
+        $menuBoard->code = $code;
         $menuBoard->userId = $this->getUser()->userId;
         $menuBoard->folderId = $folderId;
 
@@ -182,6 +184,7 @@ class MenuBoardFactory extends BaseFactory
                `menu_board`.menuId,
                `menu_board`.name,
                `menu_board`.description,
+               `menu_board`.code,
                `menu_board`.modifiedDt,
                `menu_board`.userId,
                `user`.UserName AS owner,
@@ -234,6 +237,11 @@ class MenuBoardFactory extends BaseFactory
         if ($sanitizedFilter->getInt('menuCategoryId') !== null) {
             $body .= ' AND `menu_category`.menuCategoryId = :menuCategoryId ';
             $params['menuCategoryId'] = $sanitizedFilter->getInt('menuCategoryId');
+        }
+
+        if ($sanitizedFilter->getString('code') != '') {
+            $body.= ' AND `menu_board`.code LIKE :code ';
+            $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
         // Sorting?

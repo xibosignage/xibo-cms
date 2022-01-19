@@ -68,6 +68,10 @@
                         {% set helpText %}{% trans "Should this Product appear as available?" %}{% endset %}
                         {{ forms.switch('availability', title, menuBoardProduct.availability, helpText) }}
 
+                        {% set title %}{% trans "Code" %}{% endset %}
+                        {% set helpText %}{% trans "The Code identifier for this Menu Board Product" %}{% endset %}
+                        {{ forms.input("code", title, menuBoardProduct.code, helpText) }}
+
                         {% set title %}{% trans "Media" %}{% endset %}
                         {% set helpText %}{% trans "Optionally select Image or Video to be associated with this Menu Board Product" %}{% endset %}
                         {% set attributes = [
