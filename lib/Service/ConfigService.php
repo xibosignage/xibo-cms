@@ -809,9 +809,4 @@ class ConfigService implements ConfigServiceInterface
     {
         return NatoAlphabet::convertToNato($this->getSetting('SERVER_KEY'));
     }
-
-    public function getMiddleware()
-    {
-        return $this->middleware;
-    }
 }

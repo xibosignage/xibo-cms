@@ -181,6 +181,4 @@ interface ConfigServiceInterface
      * @return array
      */
     public function getConnectorSettings(string $connector): array;
-
-    public function getMiddleware();
 }
