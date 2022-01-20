@@ -674,22 +674,27 @@ class ProofOfPlay implements ReportInterface
                         ';
                 }
             } else {
-                $helper = null;
                 $operator = $exactTags == 1 ? '=' : 'LIKE';
+                $lkTagTable = '';
+                $lkTagTableIdColumn = '';
+                $idColumn = '';
+
                 if ($tagsType === 'dg') {
-                    $lkTagTableSql = ' AND `displaygroup`.displaygroupId IN (
+                    $body .= ' AND `displaygroup`.displaygroupId IN (
                         SELECT `lktagdisplaygroup`.displaygroupId
                           FROM tag
                             INNER JOIN `lktagdisplaygroup`
                             ON `lktagdisplaygroup`.tagId = tag.tagId
                 ';
-                    $body .= $lkTagTableSql;
+                    $lkTagTable = 'lktagdisplaygroup';
+                    $lkTagTableIdColumn = 'lkTagDisplayGroupId';
+                    $idColumn = 'displayGroupId';
                 }
                 // old layout and latest layout have same tags
                 // old layoutId replaced with latest layoutId in the lktaglayout table and
                 // join with layout history to get campaignId then we can show old layouts that have given tag
                 if ($tagsType === 'layout') {
-                    $lkTagTableSql = ' AND `stat`.campaignId IN (
+                    $body .= ' AND `stat`.campaignId IN (
                         SELECT 
                             `layouthistory`.campaignId
                         FROM
@@ -699,26 +704,25 @@ class ProofOfPlay implements ReportInterface
                             INNER JOIN `lktaglayout`
                             ON `lktaglayout`.tagId = tag.tagId
                         ';
-                    $body .= $lkTagTableSql;
 
-                    // for Layout stat filter we also need to join on layouthistory, add this as a helper
-                    // in tagFilter in BaseFactory the X will get replaced by A<index>
-                    $helper = 'X
-                        LEFT OUTER JOIN
-                        `layouthistory` ON `layouthistory`.layoutId = X.layoutId ) ';
+                    $lkTagTable = 'lktaglayout';
+                    $lkTagTableIdColumn = 'lkTagLayoutId';
+                    $idColumn = 'layoutId';
                 }
                 if ($tagsType === 'media') {
-                    $lkTagTableSql = ' AND `media`.mediaId IN (
+                    $body .= ' AND `media`.mediaId IN (
                         SELECT `lktagmedia`.mediaId
                           FROM tag
                             INNER JOIN `lktagmedia`
                             ON `lktagmedia`.tagId = tag.tagId
                 ';
-                    $body .= $lkTagTableSql;
+                    $lkTagTable = 'lktagmedia';
+                    $lkTagTableIdColumn = 'lkTagMediaId';
+                    $idColumn = 'mediaId';
                 }
                 $tagsFilter = explode(',', $tags);
                 // pass to BaseFactory tagFilter, it does not matter from which factory we do that.
-                $this->layoutFactory->tagFilter($tagsFilter, $lkTagTableSql, $logicalOperator, $operator, $body, $params, $helper);
+                $this->layoutFactory->tagFilter($tagsFilter, $lkTagTable, $lkTagTableIdColumn, $idColumn, $logicalOperator, $operator, $body, $params);
 
                 if ($tagsType === 'layout') {
                     $body .= ' B

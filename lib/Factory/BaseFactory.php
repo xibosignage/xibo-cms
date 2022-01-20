@@ -384,13 +384,15 @@ class BaseFactory
 
     /**
      * @param array $tags An array of tags
-     * @param string $lkTagTableSql SQL string for lktabTable inner join
+     * @param string $lkTagTable name of the lktag table
+     * @param string $lkTagTableIdColumn name of the id column in the lktag table
+     * @param string $idColumn name of the id column in main table
      * @param string $logicalOperator AND or OR logical operator passed from Factory
      * @param string $operator exactTags passed from factory, determines if the search is LIKE or =
      * @param string $body Current SQL body passed by reference
      * @param array $params Array of parameters passed by reference
      */
-    public function tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, &$body, &$params, $statHelper = null)
+    public function tagFilter($tags, $lkTagTable, $lkTagTableIdColumn, $idColumn, $logicalOperator, $operator, &$body, &$params)
     {
         $i = 0;
 
@@ -404,17 +406,7 @@ class BaseFactory
                 if ($i == 1) {
                     $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
                 } else {
-                    if ($logicalOperator === 'OR') {
-                        $body .= ' ' . $logicalOperator . ' `tag` ' . $operator . ' :tags' . $i;
-                    } else {
-                        if ($statHelper != null) {
-                            $body .= ' ) ' . str_replace('X', 'A'.$i, $statHelper) . $lkTagTableSql;
-                        } else {
-                            $body .= ' ) ' . $lkTagTableSql;
-                        }
-
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                    }
+                    $body .= ' OR ' . ' `tag` ' . $operator . ' :tags' . $i;
                 }
 
                 if ($operator === '=') {
@@ -427,16 +419,7 @@ class BaseFactory
                 if ($i == 1) {
                     $body .= ' WHERE `value` ' . $operator . ' :value' . $i;
                 } else {
-                    if ($logicalOperator === 'OR') {
-                        $body .= ' ' . $logicalOperator . ' `value` ' . $operator . ' :value' . $i;
-                    } else {
-                        if ($statHelper != null) {
-                            $body .= ' ) ' . str_replace('X', 'A'.$i, $statHelper) . $lkTagTableSql;
-                        } else {
-                            $body .= ' ) ' . $lkTagTableSql;
-                        }
-                        $body .= ' WHERE `value` ' . $operator . ' :value' . $i;
-                    }
+                    $body .= ' OR ' . ' `value` ' . $operator . ' :value' . $i;
                 }
 
                 if ($operator === '=') {
@@ -450,18 +433,8 @@ class BaseFactory
                     $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i .
                         ' AND value ' . $operator . ' :value' . $i;
                 } else {
-                    if ($logicalOperator === 'OR') {
-                        $body .= ' ' . $logicalOperator . ' `tag` ' . $operator . ' :tags' . $i .
-                            ' AND value ' . $operator . ' :value' . $i;
-                    } else {
-                        if ($statHelper != null) {
-                            $body .= ' ) ' . str_replace('X', 'A'.$i, $statHelper) . $lkTagTableSql;
-                        } else {
-                            $body .= ' ) ' . $lkTagTableSql;
-                        }
-                        $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i .
-                            ' AND value ' . $operator . ' :value' . $i;
-                    }
+                    $body .= ' OR ' . ' `tag` ' . $operator . ' :tags' . $i .
+                        ' AND value ' . $operator . ' :value' . $i;
                 }
 
                 if ($operator === '=') {
@@ -473,6 +446,11 @@ class BaseFactory
                 }
             }
         }
+
+        if ($logicalOperator === 'AND' && count($tags) > 1) {
+            $body .= ' GROUP BY ' . $lkTagTable . '.' . $idColumn . ' HAVING count(' . $lkTagTable .'.'. $lkTagTableIdColumn .') = ' . count($tags);
+        }
+
         $body .= ' ) ';
     }
 }

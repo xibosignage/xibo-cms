@@ -331,16 +331,15 @@ class PlaylistFactory extends BaseFactory
             } else {
                 $operator = $parsedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
                 $logicalOperator = $parsedFilter->getString('logicalOperator', ['default' => 'OR']);
-                $lkTagTableSql =  ' AND `playlist`.playlistID IN (
+                $body .=  ' AND `playlist`.playlistID IN (
                 SELECT lktagplaylist.playlistId
                   FROM tag
                     INNER JOIN lktagplaylist
                     ON lktagplaylist.tagId = tag.tagId
                 ';
-                $body .= $lkTagTableSql;
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagplaylist', 'lkTagPlaylistId', 'playlistId', $logicalOperator, $operator, $body, $params);
             }
         }
 

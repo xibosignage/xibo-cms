@@ -784,16 +784,15 @@ class MediaFactory extends BaseFactory
             } else {
                 $operator = $sanitizedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
                 $logicalOperator = $sanitizedFilter->getString('logicalOperator', ['default' => 'OR']);
-                $lkTagTableSql = ' AND `media`.mediaId IN (
+                $body .= ' AND `media`.mediaId IN (
                 SELECT `lktagmedia`.mediaId
                   FROM tag
                     INNER JOIN `lktagmedia`
                     ON `lktagmedia`.tagId = tag.tagId
                 ';
-                $body .= $lkTagTableSql;
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagmedia', 'lkTagMediaId', 'mediaId', $logicalOperator, $operator, $body, $params);
             }
         }
 

@@ -240,16 +240,15 @@ class CampaignFactory extends BaseFactory
             } else {
                 $operator = $sanitizedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
                 $logicalOperator = $sanitizedFilter->getString('logicalOperator', ['default' => 'OR']);
-                $lkTagTableSql = ' AND campaign.campaignID IN (
+                $body .= ' AND campaign.campaignID IN (
                 SELECT lktagcampaign.campaignId
                   FROM tag
                     INNER JOIN lktagcampaign
                     ON lktagcampaign.tagId = tag.tagId
                 ';
-                $body .= $lkTagTableSql;
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagcampaign', 'lkTagCampaignId', 'campaignId', $logicalOperator, $operator, $body, $params);
             }
         }
 

@@ -394,16 +394,15 @@ class DisplayGroupFactory extends BaseFactory
             } else {
                 $operator = $parsedBody->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
                 $logicalOperator = $parsedBody->getString('logicalOperator', ['default' => 'OR']);
-                $lkTagTableSql = ' AND `displaygroup`.displaygroupId IN (
+                $body .= ' AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId
                   FROM tag
                     INNER JOIN `lktagdisplaygroup`
                     ON `lktagdisplaygroup`.tagId = tag.tagId
                 ';
-                $body .= $lkTagTableSql;
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagdisplaygroup', 'lkTagDisplayGroupId', 'displayGroupId', $logicalOperator, $operator, $body, $params);
             }
         }
 

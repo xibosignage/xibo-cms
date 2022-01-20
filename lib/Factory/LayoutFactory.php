@@ -2140,16 +2140,15 @@ class LayoutFactory extends BaseFactory
             } else {
                 $operator = $parsedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
                 $logicalOperator = $parsedFilter->getString('logicalOperator', ['default' => 'OR']);
-                $lkTagTableSql = ' AND layout.layoutID IN (
+                $body .= ' AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
                   FROM tag
                     INNER JOIN lktaglayout
                     ON lktaglayout.tagId = tag.tagId
                 ';
-                $body .= $lkTagTableSql;
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $lkTagTableSql, $logicalOperator, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktaglayout', 'lkTagLayoutId', 'layoutId', $logicalOperator, $operator, $body, $params);
             }
         }
 
