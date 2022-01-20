@@ -31,6 +31,18 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
 interface CustomDisplayProfileInterface
 {
     /**
+     * Return Display Profile type
+     * @return string
+     */
+    public static function getType():string;
+
+    /**
+     * Return Display Profile name
+     * @return string
+     */
+    public static function getName():string;
+
+    /**
      * This function should return an array with default Display Profile config.
      *
      * @param ConfigServiceInterface $configService

@@ -32,31 +32,6 @@ trait CustomDisplayProfileMiddlewareTrait
 {
     /**
      * @return string
-     * @throws InvalidArgumentException
-     */
-    public static function getType(): string
-    {
-        if (empty(self::$type)) {
-            throw new InvalidArgumentException(__('Custom Display Profile type not defined in ' . self::getClass()));
-        }
-        return self::$type;
-    }
-
-    /**
-     * @return string
-     * @throws InvalidArgumentException
-     */
-    public static function getName(): string
-    {
-        if (empty(self::$name)) {
-            throw new InvalidArgumentException(__('Custom Display Profile name not defined in ' . self::getClass()));
-        }
-
-        return self::$name;
-    }
-
-    /**
-     * @return string
      */
     public static function getClass():string
     {
