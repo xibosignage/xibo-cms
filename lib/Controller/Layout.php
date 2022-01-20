@@ -359,13 +359,7 @@ class Layout extends Base
             $event = new TemplateProviderImportEvent(
                 $sanitizedParams->getString('download'),
                 $templateId,
-                $this->getLayoutFactory(),
-                $this->getConfig()->getSetting('LIBRARY_LOCATION'),
-                $name,
-                $this->getUser()->userId,
-                $this->getDataSetFactory(),
-                RouteContext::fromRequest($request)->getRouteParser(),
-                $this->mediaService
+                $this->getConfig()->getSetting('LIBRARY_LOCATION')
             );
 
             $this->getLog()->debug('Dispatching event. ' . $event->getName());
@@ -376,9 +370,29 @@ class Layout extends Base
                 $this->getLog()->debug($exception->getTraceAsString());
             }
 
-            $layout = $event->getLayout();
+            $layout = $this->getLayoutFactory()->createFromZip(
+                $event->getFilePath(),
+                $name,
+                $this->getUser()->userId,
+                0,
+                0,
+                0,
+                0,
+                1,
+                $this->getDataSetFactory(),
+                '',
+                RouteContext::fromRequest($request)->getRouteParser(),
+                $this->mediaService
+            );
+
+            $layout->managePlaylistClosureTable();
+            $layout->manageActions();
+
             $layout->description = $description;
             $layout->code = $code;
+            $layout->tags = $tags;
+
+            @unlink($event->getFilePath());
         } else {
             // Template or Resolution?
             $isResolution = empty($templateId) || $templateId === '0' || Str::startsWith($templateId, '0|');

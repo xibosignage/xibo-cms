@@ -25,7 +25,6 @@ namespace Xibo\Connector;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
-use Xibo\Entity\Layout;
 use Xibo\Entity\SearchResult;
 use Xibo\Event\TemplateProviderEvent;
 use Xibo\Event\TemplateProviderImportEvent;
@@ -153,30 +152,6 @@ class XiboExchangeConnector implements ConnectorInterface
         $client = new Client();
         $tempFile = $event->getLibraryLocation() . 'temp/' . $event->getFileName();
         $client->request('GET', $downloadUrl, ['sink' => $tempFile]);
-
-        $layoutFactory = $event->getLayoutFactory();
-
-        /* @var Layout $layout */
-        $layout = $layoutFactory->createFromZip(
-            $tempFile,
-            $event->getLayoutName(),
-            $event->getUserId(),
-            0,
-            0,
-            0,
-            0,
-            1,
-            $event->getDataSetFactory(),
-            '',
-            $event->getRouteParser(),
-            $event->getMediaService()
-        );
-
-        $event->setLayout($layout);
-
-        $layout->managePlaylistClosureTable();
-        $layout->manageActions();
-
-        @unlink($tempFile);
+        $event->setFilePath($tempFile);
     }
 }

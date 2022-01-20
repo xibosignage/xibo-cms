@@ -22,12 +22,6 @@
 
 namespace Xibo\Event;
 
-use Slim\Interfaces\RouteParserInterface;
-use Xibo\Entity\Layout;
-use Xibo\Factory\DataSetFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Service\MediaService;
-
 /**
  * Event raised when one or more provider search results have been chosen for importing on a layout
  */
@@ -38,49 +32,23 @@ class TemplateProviderImportEvent extends Event
      * @var string
      */
     private $downloadUrl;
-    /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
     /** @var string */
     private $libraryLocation;
-    /** @var string */
-    private $layoutName;
-    /** @var int */
-    private $userId;
-    /** @var DataSetFactory */
-    private $dataSetFactory;
-    /** @var RouteParserInterface */
-    private $routeParser;
-    /** @var MediaService */
-    private $mediaService;
     /**
      * @var string
      */
     private $fileName;
-    /** @var Layout */
-    private $layout;
+    /** @var string */
+    private $tempFile;
 
     public function __construct(
         string $uri,
         string $fileName,
-        LayoutFactory $layoutFactory,
-        string $libraryLocation,
-        string $layoutName,
-        int $userId,
-        DataSetFactory $dataSetFactory,
-        RouteParserInterface $routeParser,
-        MediaService $mediaService
+        string $libraryLocation
     ) {
         $this->downloadUrl = $uri;
         $this->fileName = $fileName;
-        $this->layoutFactory = $layoutFactory;
         $this->libraryLocation = $libraryLocation;
-        $this->layoutName = $layoutName;
-        $this->userId = $userId;
-        $this->dataSetFactory = $dataSetFactory;
-        $this->routeParser = $routeParser;
-        $this->mediaService = $mediaService;
     }
 
     public function getDownloadUrl(): string
@@ -93,48 +61,18 @@ class TemplateProviderImportEvent extends Event
         return $this->fileName;
     }
 
-    public function getLayoutFactory(): LayoutFactory
-    {
-        return $this->layoutFactory;
-    }
-
     public function getLibraryLocation(): string
     {
         return $this->libraryLocation;
     }
 
-    public function getLayoutName(): string
+    public function setFilePath($tempFile)
     {
-        return $this->layoutName;
+        $this->tempFile = $tempFile;
     }
 
-    public function getUserId(): int
+    public function getFilePath()
     {
-        return $this->userId;
-    }
-
-    public function getDataSetFactory(): DataSetFactory
-    {
-        return $this->dataSetFactory;
-    }
-
-    public function getRouteParser(): RouteParserInterface
-    {
-        return $this->routeParser;
-    }
-
-    public function getMediaService(): MediaService
-    {
-        return $this->mediaService;
-    }
-
-    public function setLayout($layout)
-    {
-        $this->layout = $layout;
-    }
-
-    public function getLayout()
-    {
-        return $this->layout;
+        return $this->tempFile;
     }
 }
