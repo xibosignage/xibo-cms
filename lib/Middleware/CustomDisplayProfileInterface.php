@@ -24,34 +24,30 @@ namespace Xibo\Middleware;
 
 use Xibo\Entity\Display;
 use Xibo\Entity\DisplayProfile;
+use Xibo\Service\ConfigServiceInterface;
+use Xibo\Service\LogServiceInterface;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 interface CustomDisplayProfileInterface
 {
     /**
      * This function should return an array with default Display Profile config.
-     * If requested type does not match the custom Display Profile in the middleware an empty array should be returned.
      *
-     * @param string $type
+     * @param ConfigServiceInterface $configService
      * @return array
      */
-    public function registerCustomDisplayProfile(string $type) : array;
+    public static function getDefaultConfig(ConfigServiceInterface $configService) : array;
 
     /**
      * This function should return full name, including extension (.twig) to the custom display profile edit form
      * the file is expected to be in the /custom folder along the custom Middleware.
      * To match naming convention twig file should be called displayprofile-form-edit-<type>.twig
+     * This will be done automatically from the CustomDisplayProfileMiddlewareTrait.
      *
-     * @param string $type
+     * If you have named your twig file differently, override getCustomEditTemplate function in your middleware
      * @return string
      */
-    public function getCustomEditTemplate(string $type) : string;
-
-    /**
-     * This function should return the Custom Display Profile type
-     * @return string
-     */
-    public function getProfileType() : string;
+    public static function getCustomEditTemplate() : string;
 
     /**
      * This function handles any changes to the default Display Profile settings, as well as overrides per Display.
@@ -61,7 +57,8 @@ interface CustomDisplayProfileInterface
      * @param SanitizerInterface $sanitizedParams
      * @param array|null $config
      * @param Display|null $display
+     * @param LogServiceInterface $logService
      * @return array
      */
-    public function editCustomConfigFields(DisplayProfile $displayProfile, SanitizerInterface $sanitizedParams, ?array $config, ?Display $display) : array;
+    public static function editCustomConfigFields(DisplayProfile $displayProfile, SanitizerInterface $sanitizedParams, ?array $config, ?Display $display, LogServiceInterface $logService) : array;
 }
