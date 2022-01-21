@@ -274,6 +274,8 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.isDynamic,
                 `displaygroup`.dynamicCriteria,
                 `displaygroup`.dynamicCriteriaTags,
+                `displaygroup`.dynamicCriteriaExactTags,
+                `displaygroup`.dynamicCriteriaLogicalOperator,
                 `displaygroup`.bandwidthLimit,
                 `displaygroup`.createdDt,
                 `displaygroup`.modifiedDt,
@@ -281,21 +283,13 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.folderId,
                 `displaygroup`.permissionsFolderId,
                 (
-                  SELECT GROUP_CONCAT(DISTINCT tag) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tags,
-                (
-                  SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tagValues  
+                    SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                        FROM tag
+                        INNER JOIN lktagdisplaygroup
+                        ON lktagdisplaygroup.tagId = tag.tagId
+                        WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID
+                        GROUP BY lktagdisplaygroup.displayGroupId
+                ) as tags
         ';
 
         $body = '
@@ -387,7 +381,6 @@ class DisplayGroupFactory extends BaseFactory
 
         // Tags
         if ($parsedBody->getString('tags') != '') {
-
             $tagFilter = $parsedBody->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -400,16 +393,16 @@ class DisplayGroupFactory extends BaseFactory
                 ';
             } else {
                 $operator = $parsedBody->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `displaygroup`.displaygroupId IN (
+                $logicalOperator = $parsedBody->getString('logicalOperator', ['default' => 'OR']);
+                $body .= ' AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId
                   FROM tag
                     INNER JOIN `lktagdisplaygroup`
                     ON `lktagdisplaygroup`.tagId = tag.tagId
-                ";
+                ';
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagdisplaygroup', 'lkTagDisplayGroupId', 'displayGroupId', $logicalOperator, $operator, $body, $params);
             }
         }
 

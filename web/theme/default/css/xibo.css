@@ -400,6 +400,22 @@ table.dataTable tbody tr.selected > td {
     background-color: #a6b3cd;
 }
 
+.popover-content-container th, .popover-content-container td {
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+.scrollable-popover-table {
+    display: block;
+    width: auto;
+    height: 300px;
+    overflow-y: scroll;
+}
+
+.scrollable-popover-table table thead {
+    background: #fafafa;
+}
+
 div.dt-buttons {
     float: none;
     text-align: right;
@@ -931,6 +947,10 @@ ul li.active.tab-design:hover a {
 
 .tags-input-wide .bootstrap-tagsinput {
     width: 100%;
+}
+
+.tags-input-addons-wide .bootstrap-tagsinput {
+    width: 80%;
 }
 
 @media (min-width: 768px) {

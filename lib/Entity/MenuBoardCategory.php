@@ -55,6 +55,12 @@ class MenuBoardCategory implements \JsonSerializable
     public $name;
 
     /**
+     * @SWG\Property(description="The Menu Board Category code identifier")
+     * @var string
+     */
+    public $code;
+
+    /**
      * @SWG\Property(description="The Menu Board Category associated mediaId")
      * @var int
      */
@@ -88,11 +94,12 @@ class MenuBoardCategory implements \JsonSerializable
     public function __toString()
     {
         return sprintf(
-            'MenuCategoryId %d MenuId %d, Name %s, Media %d',
+            'MenuCategoryId %d MenuId %d, Name %s, Media %d, Code %s',
             $this->menuCategoryId,
             $this->menuId,
             $this->name,
-            $this->mediaId
+            $this->mediaId,
+            $this->code
         );
     }
 
@@ -184,11 +191,12 @@ class MenuBoardCategory implements \JsonSerializable
     private function add()
     {
         $this->menuCategoryId = $this->getStore()->insert(
-            'INSERT INTO `menu_category` (name, menuId, mediaId) VALUES (:name, :menuId, :mediaId)',
+            'INSERT INTO `menu_category` (name, menuId, mediaId, code) VALUES (:name, :menuId, :mediaId, :code)',
             [
                 'name' => $this->name,
                 'mediaId' => $this->mediaId,
-                'menuId' => $this->menuId
+                'menuId' => $this->menuId,
+                'code' => $this->code
             ]
         );
     }
@@ -196,11 +204,12 @@ class MenuBoardCategory implements \JsonSerializable
     private function update()
     {
         $this->getStore()->update(
-            'UPDATE `menu_category` SET name = :name, mediaId = :mediaId WHERE menuCategoryId = :menuCategoryId',
+            'UPDATE `menu_category` SET name = :name, mediaId = :mediaId, code = :code WHERE menuCategoryId = :menuCategoryId',
             [
                 'menuCategoryId' => $this->menuCategoryId,
                 'name' => $this->name,
-                'mediaId' => $this->mediaId
+                'mediaId' => $this->mediaId,
+                'code' => $this->code
             ]
         );
     }

@@ -1649,6 +1649,28 @@ let formHelpers = function() {
         return data;
     };
 
+    this.setupPhpDateFormatPopover = function ($dialog) {
+        var phpDateFormatTable = Handlebars.compile($('#php-date-format-table').html());
+        $dialog.find('form .date-format-table').popover({
+            content: phpDateFormatTable,
+            html: true,
+            placement: "bottom",
+            sanitize: false,
+            trigger: "manual",
+            container: $dialog.find('form')
+        }).on("mouseenter", function() {
+            $(this).popover("show");
+            $(".popover").on("mouseleave", function() {
+                $(this).popover('hide');
+            });
+        }).on("mouseleave", function() {
+            setTimeout(function() {
+                if (!$(".popover:hover").length) {
+                    $(this).popover("hide");
+                }
+            }, 300);
+        });
+    }
 };
 
 

@@ -248,27 +248,16 @@ class DisplayFactory extends BaseFactory
               ';
 
         if ($parsedBody->getCheckbox('showTags') === 1) {
-            $select .= ', 
-                (
-                  SELECT GROUP_CONCAT(DISTINCT tag) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tags
+            $select .= ',
+                   (
+                     SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                       FROM tag
+                       INNER JOIN lktagdisplaygroup
+                       ON lktagdisplaygroup.tagId = tag.tagId
+                       WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID
+                       GROUP BY lktagdisplaygroup.displayGroupId
+                   ) as tags
             ';
-
-            $select .= ", 
-                (
-                  SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tagValues
-            ";
         }
 
         $body = '
@@ -447,7 +436,6 @@ class DisplayFactory extends BaseFactory
 
         // Tags
         if ($parsedBody->getString('tags') != '') {
-
             $tagFilter = $parsedBody->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -460,16 +448,16 @@ class DisplayFactory extends BaseFactory
                 ';
             } else {
                 $operator = $parsedBody->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `displaygroup`.displaygroupId IN (
+                $logicalOperator = $parsedBody->getString('logicalOperator', ['default' => 'OR']);
+                $body .= ' AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId
                   FROM tag
                     INNER JOIN `lktagdisplaygroup`
                     ON `lktagdisplaygroup`.tagId = tag.tagId
-                ";
+                ';
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagdisplaygroup', 'lkTagDisplayGroupId', 'displayGroupId', $logicalOperator, $operator, $body, $params);
             }
         }
 

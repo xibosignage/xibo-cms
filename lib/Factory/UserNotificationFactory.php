@@ -101,7 +101,7 @@ class UserNotificationFactory extends BaseFactory
      */
     public function getEmailQueue()
     {
-        return $this->query(null, ['isEmail' => 1, 'isEmailed' => 0]);
+        return $this->query(null, ['isEmail' => 1, 'isEmailed' => 0, 'checkRetired' => 1]);
     }
 
     /**
@@ -133,8 +133,9 @@ class UserNotificationFactory extends BaseFactory
         $entries = [];
         $parsedBody = $this->getSanitizer($filterBy);
 
-        if ($sortOrder == null)
+        if ($sortOrder == null) {
             $sortOrder = ['releaseDt DESC'];
+        }
 
         $params = ['now' => Carbon::now()->format('U')];
         $select = 'SELECT `lknotificationuser`.lknotificationuserId,
@@ -151,7 +152,8 @@ class UserNotificationFactory extends BaseFactory
              `notification`.filename,
              `notification`.originalFileName,
              `notification`.nonusers,
-             `user`.email
+             `user`.email,
+             `user`.retired
         ';
 
         $body = ' FROM `lknotificationuser`
@@ -188,6 +190,10 @@ class UserNotificationFactory extends BaseFactory
                 $body .= ' AND `lknotificationuser`.emailDt = 0 ';
             else
                 $body .= ' AND `lknotificationuser`.emailDt <> 0 ';
+        }
+
+        if ($parsedBody->getInt('checkRetired') === 1) {
+            $body .= ' AND `user`.retired = 0 ';
         }
 
         // Sorting?

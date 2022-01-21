@@ -115,7 +115,7 @@ class Actions implements Middleware
         // Dynamically load any connectors?
         /** @var \Xibo\Factory\ConnectorFactory $connectorFactory */
         $connectorFactory = $container->get('connectorFactory');
-        foreach ($connectorFactory->query(['isEnabled' => 1]) as $connector) {
+        foreach ($connectorFactory->query(['isEnabled' => 1, 'isVisible' => 1]) as $connector) {
             try {
                 // Create a connector and register it with the dispatcher.
                 $connector = $connectorFactory->create($connector);

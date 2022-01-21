@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,41 +22,136 @@
 
 namespace Xibo\Connector;
 
+use Carbon\Carbon;
+use GuzzleHttp\Client;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Entity\SearchResult;
 use Xibo\Event\TemplateProviderEvent;
+use Xibo\Event\TemplateProviderImportEvent;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * XiboExchangeConnector
  * ---------------------
  * This connector will consume the Xibo Layout Exchange API and offer pre-built templates for selection when adding
  * a new layout.
- *
- * This is a work in progress and is currently disabled pending work on the Layout Exchange API.
  */
 class XiboExchangeConnector implements ConnectorInterface
 {
     use ConnectorTrait;
 
     /**
-     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
-     * @return \Xibo\Connector\ConnectorInterface
+     * @param EventDispatcherInterface $dispatcher
+     * @return ConnectorInterface
      */
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
-        //$dispatcher->addListener('connector.provider.template', [$this, 'onTemplateProvider']);
+        $dispatcher->addListener('connector.provider.template', [$this, 'onTemplateProvider']);
+        $dispatcher->addListener('connector.provider.template.import', [$this, 'onTemplateProviderImport']);
         return $this;
-    }
-
-    /**
-     * @param \Xibo\Event\TemplateProviderEvent $event
-     */
-    public function onTemplateProvider(TemplateProviderEvent $event)
-    {
-        $this->getLogger()->debug('XiboExchangeConnector: onTemplateProvider');
     }
 
     public function getSourceName(): string
     {
         return 'xibo-exchange';
+    }
+
+    public function getTitle(): string
+    {
+        return 'Xibo Layout Exchange';
+    }
+
+    public function getDescription(): string
+    {
+        return 'Show Layout Templates provided by Xibo Layout Exchange in the add new Layout form.';
+    }
+
+    public function getThumbnail(): string
+    {
+        // TODO change this placeholder to Layout Exchange logo.
+        return 'theme/default/img/thumbs/placeholder.png';
+    }
+
+    public function getSettingsFormTwig(): string
+    {
+        return 'connector-form-edit';
+    }
+
+    public function processSettingsForm(SanitizerInterface $params, array $settings): array
+    {
+        return $settings;
+    }
+
+    /**
+     * Get layouts available in Layout exchange and add them to the results
+     * This is triggered in Template Controller search function
+     * @param TemplateProviderEvent $event
+     */
+    public function onTemplateProvider(TemplateProviderEvent $event)
+    {
+        $this->getLogger()->debug('XiboExchangeConnector: onTemplateProvider');
+
+        $uri = 'https://xibo-download.fra1.digitaloceanspaces.com/layouts.json';
+
+        $key = md5($uri);
+        $cache = $this->getPool()->getItem($key);
+        $body = $cache->get();
+
+        if ($cache->isMiss()) {
+            $this->getLogger()->debug('onTemplateProvider: cache miss, generating.');
+
+            // Make the request
+            $client = new Client();
+            $request = $client->request('GET', $uri);
+
+            $body = $request->getBody()->getContents();
+            if (empty($body)) {
+                $this->getLogger()->debug('onTemplateProvider: Empty body');
+                return;
+            }
+
+            $body = json_decode($body);
+            if ($body === null || $body === false) {
+                $this->getLogger()->debug('onTemplateProvider: non-json body or empty body returned.');
+                return;
+            }
+
+            // Cache for next time
+            $cache->set($body);
+            $cache->expiresAt(Carbon::now()->addHours(24));
+            $this->getPool()->saveDeferred($cache);
+        } else {
+            $this->getLogger()->debug('onTemplateProvider: serving from cache.');
+        }
+
+        foreach ($body as $template) {
+            $searchResult = new SearchResult();
+            $searchResult->id = $template->fileName;
+            $searchResult->provider = $this->getSourceName();
+            $searchResult->source = 'remote';
+            $searchResult->title = $template->title;
+            $searchResult->description = $template->description;
+
+            // Thumbnail
+            $searchResult->thumbnail = $template->thumbnailUrl;
+            $searchResult->download = $template->downloadUrl;
+
+            $event->addResult($searchResult);
+        }
+    }
+
+    /**
+     * When remote source Template is selected on Layout add,
+     * we need to get the zip file from specified url and import it to the CMS
+     * imported Layout object is set on the Event and retrieved later in Layout controller
+     * @param TemplateProviderImportEvent $event
+     */
+    public function onTemplateProviderImport(TemplateProviderImportEvent $event)
+    {
+        $downloadUrl = $event->getDownloadUrl();
+        $client = new Client();
+        $tempFile = $event->getLibraryLocation() . 'temp/' . $event->getFileName();
+        $client->request('GET', $downloadUrl, ['sink' => $tempFile]);
+        $event->setFilePath($tempFile);
     }
 }

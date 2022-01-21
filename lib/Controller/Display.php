@@ -382,6 +382,27 @@ class Display extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="tags",
+     *      in="query",
+     *      description="Filter by tags",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="exactTags",
+     *      in="query",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="query",
+     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="macAddress",
      *      in="query",
      *      description="Filter by Mac Address",
@@ -511,7 +532,8 @@ class Display extends Base
             'displayGroupIdMembers' => $parsedQueryParams->getInt('displayGroupIdMembers'),
             'orientation' => $parsedQueryParams->getString('orientation'),
             'commercialLicence' => $parsedQueryParams->getInt('commercialLicence'),
-            'folderId' => $parsedQueryParams->getInt('folderId')
+            'folderId' => $parsedQueryParams->getInt('folderId'),
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator'),
         ];
 
         // Get a list of displays
@@ -1047,7 +1069,6 @@ class Display extends Base
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
-            'tags' => $this->tagFactory->getTagsWithValues($display),
             'dayParts' => $dayparts
         ]);
 
@@ -1722,8 +1743,8 @@ class Display extends Base
         if ($display->lastAccessed == 0) {
             $nextCollect = __('once it has connected for the first time');
         } else {
-            $collectionInterval = $display->getSetting('collectionInterval', 5);
-            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)->addMinutes($collectionInterval)->diffForHumans();
+            $collectionInterval = $display->getSetting('collectInterval', 300);
+            $nextCollect = Carbon::createFromTimestamp($display->lastAccessed)->addSeconds($collectionInterval)->diffForHumans();
         }
 
         $this->getState()->template = 'display-form-request-screenshot';
@@ -2246,7 +2267,7 @@ class Display extends Base
         $authenticationCode = $sanitizedParams->getString('twoFactorCode');
 
         $tfa = new TwoFactorAuth($issuer);
-        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode);
+        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode, 3);
 
         if ($result) {
 

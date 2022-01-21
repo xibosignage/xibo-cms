@@ -54,6 +54,8 @@
                 }
             });
         }
+
+        formHelpers.setupPhpDateFormatPopover($(this))
     }
 
     function configureColoursForm(dialog, extra) {
@@ -152,3 +154,9 @@
     };
 
 </script>
+
+<style>
+    .popover{
+        max-width: 100%;
+    }
+</style>

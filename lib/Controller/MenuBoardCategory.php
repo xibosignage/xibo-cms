@@ -117,6 +117,13 @@ class MenuBoardCategory extends Base
      *      type="string",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="code",
+     *      in="query",
+     *      description="Filter by code",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -140,7 +147,8 @@ class MenuBoardCategory extends Base
         $filter = [
             'menuId' => $menuBoard->menuId,
             'menuCategoryId' => $parsedParams->getInt('menuCategoryId'),
-            'name' => $parsedParams->getString('name')
+            'name' => $parsedParams->getString('name'),
+            'code' => $parsedParams->getString('code')
         ];
 
         $menuBoardCategories = $this->menuBoardCategoryFactory->query(
@@ -255,6 +263,13 @@ class MenuBoardCategory extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="Menu Board Category code identifier",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -285,8 +300,9 @@ class MenuBoardCategory extends Base
 
         $name = $sanitizedParams->getString('name');
         $mediaId = $sanitizedParams->getInt('mediaId');
+        $code = $sanitizedParams->getString('code');
 
-        $menuBoardCategory = $this->menuBoardCategoryFactory->create($id, $name, $mediaId);
+        $menuBoardCategory = $this->menuBoardCategoryFactory->create($id, $name, $mediaId, $code);
         $menuBoardCategory->save();
 
         // Return
@@ -357,6 +373,13 @@ class MenuBoardCategory extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="Menu Board Category code identifier",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -385,6 +408,7 @@ class MenuBoardCategory extends Base
 
         $menuBoardCategory->name = $sanitizedParams->getString('name');
         $menuBoardCategory->mediaId = $sanitizedParams->getInt('mediaId');
+        $menuBoardCategory->code = $sanitizedParams->getString('code');
 
         $menuBoardCategory->save();
 

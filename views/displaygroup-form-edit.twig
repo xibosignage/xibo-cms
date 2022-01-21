@@ -106,7 +106,7 @@
                 {% if currentUser.featureEnabled("tag.tagging") %}
                     {% set title %}{% trans "Tags" %}{% endset %}
                     {% set helpText %}{% trans "Tags for this Display Group - Comma separated string of Tags or Tag|Value format. If you choose a Tag that has associated values, they will be shown for selection below." %}{% endset %}
-                    {{ forms.inputWithTags("tags", title, tags, helpText, 'tags-with-value') }}
+                    {{ forms.inputWithTags("tags", title, displayGroup.tags, helpText, 'tags-with-value') }}
 
                     <p id="loadingValues" style="margin-left: 17%"></p>
 
@@ -136,10 +136,13 @@
                             {% set helpText %}{% trans "A comma separated set of regular expressions run against the Display name to determine membership." %}{% endset %}
                             {{ forms.input("dynamicCriteria", title, displayGroup.dynamicCriteria, helpText, "dynamic-fields") }}
 
-                            {% set title %}{% trans "Criteria Tags" %}{% endset %}
-                            {% set helpText %}{% trans "A comma separated set of tags run against the Display tag to determine membership." %}{% endset %}
-                            {{ forms.inputWithTags("dynamicCriteriaTags", title, displayGroup.dynamicCriteriaTags, helpText, "dynamic-fields") }}
-
+                            {% if currentUser.featureEnabled("tag.tagging") %}
+                                {% set title %}{% trans "Criteria Tags" %}{% endset %}
+                                {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
+                                {% set helpText %}{% trans "A comma separated set of tags run against the Display tag to determine membership." %}{% endset %}
+                                {{ forms.inputWithTags("dynamicCriteriaTags", title, displayGroup.dynamicCriteriaTags, helpText, "dynamic-fields", null, null, "exactTags", exactTagTitle, logicalOperatorTitle, displayGroup.dynamicCriteriaExactTags, displayGroup.dynamicCriteriaLogicalOperator) }}
+                            {% endif %}
                             {{ forms.hidden("useRegexForName", 1) }}
                         </div>
 

@@ -176,29 +176,21 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.isDynamic,
                 `playlist`.filterMediaName,
                 `playlist`.filterMediaTags,
+                `playlist`.filterExactTags,
+                `playlist`.filterLogicalOperator,
                 `playlist`.maxNumberOfItems,
                 `playlist`.requiresDurationUpdate,
                 `playlist`.enableStat,
                 `playlist`.folderId,
                 `playlist`.permissionsFolderId,
-                (
-                SELECT GROUP_CONCAT(DISTINCT tag) 
-                  FROM tag 
-                    INNER JOIN lktagplaylist 
-                    ON lktagplaylist.tagId = tag.tagId 
-                 WHERE lktagplaylist.playlistId = playlist.playlistId 
-                GROUP BY lktagplaylist.playlistId
-                ) AS tags,
-                
-                (
-                SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
-                  FROM tag 
-                    INNER JOIN lktagplaylist 
-                    ON lktagplaylist.tagId = tag.tagId 
-                 WHERE lktagplaylist.playlistId = playlist.playlistId 
-                GROUP BY lktagplaylist.playlistId
-                ) AS tagValues,
-                
+                ( 
+                   SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                        FROM tag
+                        INNER JOIN lktagplaylist
+                            ON lktagplaylist.tagId = tag.tagId
+                            WHERE lktagplaylist.playlistId = playlist.playlistId
+                        GROUP BY lktagplaylist.playlistId
+                ) as tags,
                 (
                 SELECT GROUP_CONCAT(DISTINCT `group`.group)
                   FROM `permission`
@@ -326,7 +318,6 @@ class PlaylistFactory extends BaseFactory
 
         // Tags
         if ($parsedFilter->getString('tags') != '') {
-
             $tagFilter = $parsedFilter->getString('tags', $filterBy);
 
             if (trim($tagFilter) === '--no-tag') {
@@ -339,16 +330,16 @@ class PlaylistFactory extends BaseFactory
                 ';
             } else {
                 $operator = $parsedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND `playlist`.playlistID IN (
+                $logicalOperator = $parsedFilter->getString('logicalOperator', ['default' => 'OR']);
+                $body .=  ' AND `playlist`.playlistID IN (
                 SELECT lktagplaylist.playlistId
                   FROM tag
                     INNER JOIN lktagplaylist
                     ON lktagplaylist.tagId = tag.tagId
-                ";
+                ';
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagplaylist', 'lkTagPlaylistId', 'playlistId', $logicalOperator, $operator, $body, $params);
             }
         }
 
@@ -409,7 +400,7 @@ class PlaylistFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic', 'maxNumberOfItems']]);
+            $playlist = $this->createEmpty()->hydrate($row, ['intProperties' => ['requiresDurationUpdate', 'isDynamic', 'maxNumberOfItems', 'duration']]);
             $entries[] = $playlist;
         }
 

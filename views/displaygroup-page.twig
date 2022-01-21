@@ -83,8 +83,9 @@
                             {% if currentUser.featureEnabled("tag.tagging") %}
                                 {% set title %}{% trans "Tags" %}{% endset %}
                                 {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
                                 {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                             {% endif %}
 
                             {{ inline.hidden("folderId") }}
@@ -192,6 +193,8 @@
         var criteria;
         var criteriaTag;
         var useRegexForName;
+        var exactTags;
+        var logicalOperator;
 
         function setDeleteMultiSelectFormOpen(dialog) {
             $(dialog).find('.save-button').prop('disabled', false);
@@ -227,7 +230,7 @@
                 displayGroupQueryDynamicMembers(dialog);
             }, 500));
 
-            $(dialog).find("input[name=dynamicCriteriaTags]").change(function() {
+            $(dialog).find("input[name=dynamicCriteriaTags], input[name=exactTags], select[name=logicalOperator]").change(function() {
                 displayGroupQueryDynamicMembers(dialog);
             });
 
@@ -244,6 +247,8 @@
                 criteria = $(dialog).find("input[name=dynamicCriteria]").val();
                 criteriaTag = $(dialog).find("input[name=dynamicCriteriaTags]").val();
                 useRegexForName = $(dialog).find("input[name=useRegexForName]").val();
+                exactTags = $(dialog).find("input[name=exactTags]").is(':checked');
+                logicalOperator = $(dialog).find("select[name=logicalOperator]").val();
 
                 if (criteria === "" && criteriaTag === "") {
                     if (displayTable != null) {
@@ -268,9 +273,7 @@
                         ajax: {
                             "url": "{{ url_for("display.search") }}",
                             "data": function (d) {
-                                //console.log(criteria);
-                                //console.log(criteriaTag);
-                                $.extend(d, {display: criteria, tags: criteriaTag, useRegexForName: useRegexForName});
+                                $.extend(d, {display: criteria, tags: criteriaTag, useRegexForName: useRegexForName, exactTags: exactTags, logicalOperator: logicalOperator});
                             }
                         },
                         "columns": [

@@ -117,6 +117,20 @@ class Campaign extends Base
      *      type="string",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="exactTags",
+     *      in="query",
+     *      description="A flag indicating whether to treat the tags filter as an exact match",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="query",
+     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Parameter(
      *      name="hasLayouts",
      *      in="query",
@@ -183,13 +197,15 @@ class Campaign extends Base
             'name' => $parsedParams->getString('name'),
             'useRegexForName' => $parsedParams->getCheckbox('useRegexForName'),
             'tags' => $parsedParams->getString('tags'),
+            'exactTags' => $parsedParams->getCheckbox('exactTags'),
             'hasLayouts' => $parsedParams->getInt('hasLayouts'),
             'isLayoutSpecific' => $parsedParams->getInt('isLayoutSpecific'),
             'retired' => $parsedParams->getInt('retired'),
             'folderId' => $parsedParams->getInt('folderId'),
             'totalDuration' => $parsedParams->getInt('totalDuration', ['default' => 1]),
             'cyclePlaybackEnabled' => $parsedParams->getInt('cyclePlaybackEnabled'),
-            'layoutId' => $parsedParams->getInt('layoutId')
+            'layoutId' => $parsedParams->getInt('layoutId'),
+            'logicalOperator' => $parsedParams->getString('logicalOperator'),
         ];
 
         $embed = ($parsedParams->getString('embed') !== null) ? explode(',', $parsedParams->getString('embed')) : [];
@@ -508,8 +524,7 @@ class Campaign extends Base
         $this->getState()->setData([
             'campaign' => $campaign,
             'layouts' => $layouts,
-            'help' => $this->getHelp()->link('Campaign', 'Edit'),
-            'tags' => $this->tagFactory->getTagsWithValues($campaign)
+            'help' => $this->getHelp()->link('Campaign', 'Edit')
         ]);
 
         return $this->render($request, $response);

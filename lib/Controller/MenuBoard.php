@@ -120,6 +120,13 @@ class MenuBoard extends Base
      *      type="string",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="code",
+     *      in="query",
+     *      description="Filter by code",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -142,6 +149,7 @@ class MenuBoard extends Base
             'menuId' => $parsedParams->getInt('menuId'),
             'userId' => $parsedParams->getInt('userId'),
             'name' => $parsedParams->getString('name'),
+            'code' => $parsedParams->getString('code'),
             'folderId' => $parsedParams->getInt('folderId')
         ];
 
@@ -283,6 +291,13 @@ class MenuBoard extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="Menu Board code identifier",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Menu Board Folder Id",
@@ -312,9 +327,10 @@ class MenuBoard extends Base
 
         $name = $sanitizedParams->getString('name');
         $description = $sanitizedParams->getString('description');
+        $code = $sanitizedParams->getString('code');
         $folderId = $sanitizedParams->getInt('folderId');
 
-        $menuBoard = $this->menuBoardFactory->create($name, $description, $folderId);
+        $menuBoard = $this->menuBoardFactory->create($name, $description, $code, $folderId);
         $menuBoard->save();
 
         // Return
@@ -381,6 +397,13 @@ class MenuBoard extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="Menu Board code identifier",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="folderId",
      *      in="formData",
      *      description="Menu Board Folder Id",
@@ -414,6 +437,7 @@ class MenuBoard extends Base
 
         $menuBoard->name = $sanitizedParams->getString('name');
         $menuBoard->description = $sanitizedParams->getString('description');
+        $menuBoard->code = $sanitizedParams->getString('code');
         $menuBoard->folderId = $sanitizedParams->getInt('folderId', ['default' => $menuBoard->folderId]);
 
         if ($menuBoard->hasPropertyChanged('folderId')) {

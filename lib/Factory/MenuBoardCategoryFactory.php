@@ -71,14 +71,16 @@ class MenuBoardCategoryFactory extends BaseFactory
      * @param int $menuId
      * @param string $name
      * @param int $mediaId
+     * @param string $code
      * @return MenuBoardCategory
      */
-    public function create($menuId, $name, $mediaId)
+    public function create($menuId, $name, $mediaId, $code)
     {
         $menuBoardCategory = $this->createEmpty();
         $menuBoardCategory->menuId = $menuId;
         $menuBoardCategory->name = $name;
         $menuBoardCategory->mediaId = $mediaId;
+        $menuBoardCategory->code = $code;
 
         return $menuBoardCategory;
     }
@@ -93,6 +95,7 @@ class MenuBoardCategoryFactory extends BaseFactory
      * @param string $allergyInfo
      * @param int $availability
      * @param int $mediaId
+     * @param string $code
      * @return MenuBoardProduct
      */
     public function createProduct(
@@ -103,7 +106,8 @@ class MenuBoardCategoryFactory extends BaseFactory
         $description,
         $allergyInfo,
         $availability,
-        $mediaId
+        $mediaId,
+        $code
     ) {
         $menuBoardProduct = $this->createEmptyProduct();
         $menuBoardProduct->menuId = $menuId;
@@ -114,6 +118,7 @@ class MenuBoardCategoryFactory extends BaseFactory
         $menuBoardProduct->allergyInfo = $allergyInfo;
         $menuBoardProduct->availability = $availability;
         $menuBoardProduct->mediaId = $mediaId;
+        $menuBoardProduct->code = $code;
 
         return $menuBoardProduct;
     }
@@ -194,6 +199,7 @@ class MenuBoardCategoryFactory extends BaseFactory
             SELECT menu_category.menuCategoryId,
                `menu_category`.menuId,
                `menu_category`.name,
+               `menu_category`.code,
                `menu_category`.mediaId
             ';
 
@@ -217,6 +223,11 @@ class MenuBoardCategoryFactory extends BaseFactory
         if ($sanitizedFilter->getString('name') != '') {
             $terms = explode(',', $sanitizedFilter->getString('name'));
             $this->nameFilter('menu_category', 'name', $terms, $body, $params, ($sanitizedFilter->getCheckbox('useRegexForName') == 1));
+        }
+
+        if ($sanitizedFilter->getString('code') != '') {
+            $body.= ' AND `menu_category`.code LIKE :code ';
+            $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
         if ($sanitizedFilter->getInt('mediaId') !== null) {
@@ -279,7 +290,8 @@ class MenuBoardCategoryFactory extends BaseFactory
                `menu_product`.description,
                `menu_product`.mediaId,
                `menu_product`.availability,
-               `menu_product`.allergyInfo
+               `menu_product`.allergyInfo,
+               `menu_product`.code
             ';
 
         $body = ' FROM menu_product WHERE 1 = 1  ';
@@ -317,6 +329,11 @@ class MenuBoardCategoryFactory extends BaseFactory
         if ($sanitizedFilter->getInt('mediaId') !== null) {
             $body .= ' AND `menu_product`.mediaId = :mediaId ';
             $params['mediaId'] = $sanitizedFilter->getInt('mediaId');
+        }
+
+        if ($sanitizedFilter->getString('code') != '') {
+            $body.= ' AND `menu_product`.code LIKE :code ';
+            $params['code'] = '%' . $sanitizedFilter->getString('code') . '%';
         }
 
         // Sorting?

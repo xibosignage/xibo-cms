@@ -91,6 +91,18 @@ class Playlist implements \JsonSerializable
     public $filterMediaTags;
 
     /**
+     * @SWG\Property(description="Flag indicating whether to filter by exact Tag match")
+     * @var int
+     */
+    public $filterExactTags;
+
+    /**
+     * @SWG\Property(description="Which logical operator should be used when filtering by multiple Tags? OR|AND")
+     * @var string
+     */
+    public $filterLogicalOperator;
+
+    /**
      * @SWG\Property(description="Maximum number of Media items matching dynamic Playlist filters")
      * @var int
      */
@@ -159,8 +171,6 @@ class Playlist implements \JsonSerializable
      * @var string read only string
      */
     public $tempId = null;
-
-    public $tagValues;
 
     // Read only properties
     public $owner;
@@ -329,7 +339,7 @@ class Playlist implements \JsonSerializable
     {
         // check for duplicates,
         // we check for empty playlist name due to layouts existing in the CMS before upgrade to v2
-        if ($this->name != '') {
+        if ($this->name != '' && !$this->isRegionPlaylist()) {
             $duplicates = $this->playlistFactory->query(null, [
                 'userId' => $this->ownerId,
                 'playlistExact' => $this->name,
@@ -816,8 +826,8 @@ class Playlist implements \JsonSerializable
         $time = Carbon::now()->format(DateFormatHelper::getSystemFormat());
 
         $sql = '
-        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `maxNumberOfItems`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`, `folderId`, `permissionsFolderId`) 
-          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :maxNumberOfItems, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat, :folderId, :permissionsFolderId)
+        INSERT INTO `playlist` (`name`, `ownerId`, `regionId`, `isDynamic`, `filterMediaName`, `filterMediaTags`, `filterExactTags`, `filterLogicalOperator`, `maxNumberOfItems`, `createdDt`, `modifiedDt`, `requiresDurationUpdate`, `enableStat`, `folderId`, `permissionsFolderId`) 
+          VALUES (:name, :ownerId, :regionId, :isDynamic, :filterMediaName, :filterMediaTags, :filterExactTags, :filterLogicalOperator, :maxNumberOfItems, :createdDt, :modifiedDt, :requiresDurationUpdate, :enableStat, :folderId, :permissionsFolderId)
         ';
         $this->playlistId = $this->getStore()->insert($sql, array(
             'name' => $this->name,
@@ -826,6 +836,8 @@ class Playlist implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'filterMediaName' => $this->filterMediaName,
             'filterMediaTags' => $this->filterMediaTags,
+            'filterExactTags' => $this->filterExactTags ?? 0,
+            'filterLogicalOperator' => $this->filterLogicalOperator ?? 'OR',
             'maxNumberOfItems' => $this->isDynamic == 0 ? null : $this->maxNumberOfItems,
             'createdDt' => $time,
             'modifiedDt' => $time,
@@ -859,6 +871,8 @@ class Playlist implements \JsonSerializable
                 `isDynamic` = :isDynamic,
                 `filterMediaName` = :filterMediaName,
                 `filterMediaTags` = :filterMediaTags,
+                `filterExactTags` = :filterExactTags,
+                `filterLogicalOperator` = :filterLogicalOperator,
                 `maxNumberOfItems` = :maxNumberOfItems,
                 `requiresDurationUpdate` = :requiresDurationUpdate,
                 `enableStat` = :enableStat,
@@ -876,6 +890,8 @@ class Playlist implements \JsonSerializable
             'isDynamic' => $this->isDynamic,
             'filterMediaName' => $this->filterMediaName,
             'filterMediaTags' => $this->filterMediaTags,
+            'filterExactTags' => $this->filterExactTags ?? 0,
+            'filterLogicalOperator' => $this->filterLogicalOperator ?? 'OR',
             'maxNumberOfItems' => $this->maxNumberOfItems,
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'requiresDurationUpdate' => $this->requiresDurationUpdate,
