@@ -91,7 +91,7 @@ class XiboExchangeConnector implements ConnectorInterface
     {
         $this->getLogger()->debug('XiboExchangeConnector: onTemplateProvider');
 
-        $uri = 'https://xibo-download.fra1.digitaloceanspaces.com/layouts.json';
+        $uri = 'https://download.xibosignage.com/layouts.json';
 
         $key = md5($uri);
         $cache = $this->getPool()->getItem($key);
