@@ -104,7 +104,8 @@ class PixabayConnector implements ConnectorInterface
         $query = [
             'key' => $apiKey,
             'page' => $page,
-            'per_page' => $perPage
+            'per_page' => $perPage,
+            'safesearch' => 'true'
         ];
 
         // Now we handle any other search
@@ -181,6 +182,7 @@ class PixabayConnector implements ConnectorInterface
             if ($type === 'video') {
                 $searchResult->type = 'video';
                 $searchResult->thumbnail = $result->videos->tiny->url;
+                $searchResult->duration = $result->duration;
                 if (!empty($result->videos->large)) {
                     $searchResult->download = $result->videos->large->url;
                     $searchResult->width = $result->videos->large->width;

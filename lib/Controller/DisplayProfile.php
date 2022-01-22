@@ -88,6 +88,9 @@ class DisplayProfile extends Base
     function displayPage(Request $request, Response $response)
     {
         $this->getState()->template = 'displayprofile-page';
+        $this->getState()->setData([
+            'types' => $this->displayProfileFactory->getAvailableTypes()
+        ]);
 
         return $this->render($request, $response);
     }
@@ -223,6 +226,9 @@ class DisplayProfile extends Base
     function addForm(Request $request, Response $response)
     {
         $this->getState()->template = 'displayprofile-form-add';
+        $this->getState()->setData([
+            'types' => $this->displayProfileFactory->getAvailableTypes()
+        ]);
 
         return $this->render($request, $response);
     }
@@ -284,9 +290,10 @@ class DisplayProfile extends Base
         $displayProfile->type = $sanitizedParams->getString('type');
         $displayProfile->isDefault = $sanitizedParams->getCheckbox('isDefault');
         $displayProfile->userId = $this->getUser()->userId;
+        $displayProfile->isCustom = $this->displayProfileFactory->isCustomType($displayProfile->type);
 
         // We do not set any config at this point, so that unless the user chooses to edit the display profile
-        // our defaults in the Display Profile Entity take effect
+        // our defaults in the Display Profile Factory take effect
         $displayProfile->save();
 
         // Return

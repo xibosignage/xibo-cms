@@ -109,61 +109,16 @@ class MenuBoard extends ModuleWidget
         return $this->menuBoardCategoryFactory->getByMenuId($this->getOption('menuId'));
     }
 
-    /**
-     * Get selected Menu Board Categories
-     * @return MenuBoardCategory[]
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function menuBoardCategoriesSelected()
+    public function getTemplatesWithInfo()
     {
-        if ($this->getOption('menuId') == 0) {
-            throw new InvalidArgumentException(__('Menu Board not selected'));
+        // Get templates with filter option
+        $templates = $this->templatesAvailable(true);
+
+        foreach ($templates as $template) {
+            $template['orientation'] = $this->getTemplateOrientation($template['id']);
         }
 
-        $categories = $this->menuBoardCategoryFactory->getByMenuId($this->getOption('menuId'));
-        $categoriesSelected = [];
-        $categoriesIds = explode(',', $this->getOption('categories'));
-
-        // Cycle elements of the ordered category Ids array $categoriesIds
-        foreach ($categoriesIds as $categoryId) {
-            // Cycle Menu Board categories $categories
-            foreach ($categories as $category) {
-                // See if the element on the ordered list is the category
-                if ($category->menuCategoryId == $categoryId) {
-                    $categoriesSelected[] = $category;
-                }
-            }
-        }
-
-        return $categoriesSelected;
-    }
-
-    /**
-     * Get Not selected Menu Board Categories
-     * @return MenuBoardCategory[]
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function menuBoardCategoriesNotSelected()
-    {
-        if ($this->getOption('menuId') == 0) {
-            throw new InvalidArgumentException(__('Menu Board not selected'));
-        }
-
-        $categories = $this->menuBoardCategoryFactory->getByMenuId($this->getOption('menuId'));
-
-        $categoriesNotSelected = [];
-        $categoriesIds = explode(',', $this->getOption('categories'));
-
-        foreach ($categories as $category) {
-            /* @var MenuBoardCategory $category */
-            if (!in_array($category->menuCategoryId, $categoriesIds)) {
-                $categoriesNotSelected[] = $category;
-            }
-        }
-
-        return $categoriesNotSelected;
+        return $templates;
     }
 
     public function menuBoardCategoriesSelectedAssigned($columnId)
@@ -192,7 +147,7 @@ class MenuBoard extends ModuleWidget
             throw new InvalidArgumentException(__('Menu Board not selected'));
         }
 
-        $categories = $this->menuBoardCategoriesSelected();
+        $categories = $this->getMenuBoardCategories();
         $categoriesInColumns = [];
         $notAssignedCategories = [];
 
@@ -211,10 +166,11 @@ class MenuBoard extends ModuleWidget
         return $notAssignedCategories;
     }
 
-    private function getTemplateInfo()
+    private function getTemplateInfo($templateId = null)
     {
         $templateInfo = [];
-        $template = $this->getTemplateById($this->getOption('templateId'));
+        $templateId = ($templateId) ? $templateId : $this->getOption('templateId');
+        $template = $this->getTemplateById($templateId);
 
         if (isset($template)) {
             $templateInfo = array_key_exists('info', $template) ? $template['info'] : [];
@@ -223,16 +179,27 @@ class MenuBoard extends ModuleWidget
         return $templateInfo;
     }
 
+    private function getTemplateOrientation($templateId = null)
+    {
+        $templateOrientation = 'landscape';
+        $templateId = ($templateId) ? $templateId : $this->getOption('templateId');
+        $template = $this->getTemplateById($templateId);
+
+        if (isset($template)) {
+            $templateOrientation = array_key_exists('orientation', $template) ? $template['orientation'] : $templateOrientation;
+        }
+
+        return $templateOrientation;
+    }
+
     /** @inheritdoc */
     public function getExtra()
     {
         $menuBoard = $this->menuBoardFactory->getById($this->getOption('menuId'));
         $menuBoardCategories = $this->getMenuBoardCategories();
-
-        $selectedCategories = $this->menuBoardCategoriesSelected();
+        
         $products = [];
-
-        foreach ($selectedCategories as $category) {
+        foreach ($menuBoardCategories as $category) {
             foreach ($category->getProducts() as $product) {
                 if ($product->availability === 1) {
                     $products[] = $product;
@@ -240,16 +207,16 @@ class MenuBoard extends ModuleWidget
             }
         }
 
+        // Get selected template info
         $templateInfo = $this->getTemplateInfo();
         $templateOptions = array_key_exists('options', $templateInfo) ? $templateInfo['options'] : [];
-        $gridTemplate = array_key_exists('grid-template', $templateInfo) ? $templateInfo['grid-template'] : '';
+        $templateGrid = array_key_exists('grid-template', $templateInfo) ? $templateInfo['grid-template'] : '';
 
         return [
             'menuBoard' => $menuBoard,
             'menuCategories' => $menuBoardCategories,
-            'templates' => $this->templatesAvailable(true),
             'templateOptions' => $templateOptions,
-            'gridTemplate' => $gridTemplate,
+            'gridTemplate' => $templateGrid,
             'products' => $products,
             'highlightProducts' => explode(',', $this->getOption('highlightProducts'))
         ];
@@ -276,7 +243,7 @@ class MenuBoard extends ModuleWidget
 
         if ($step == 1 || !$this->hasMenu()) {
             return 'menuboard-designer-form-edit-step1';
-        } elseif ($step == 2 || $this->getOption('categories') == '') {
+        } elseif ($step == 2 || !$this->hasCategoriesAssigned()) {
             return 'menuboard-designer-form-edit-step2';
         } else {
             return 'menuboard-designer-form-edit';
@@ -349,6 +316,7 @@ class MenuBoard extends ModuleWidget
             if ($this->hasMenu() && $menuId != $this->getOption('menuId')) {
                 // Reset the fields that are dependent on the menuId
                 $this->setOption('categories', '');
+                $this->_clearColumnCategories();
             }
 
             $this->setOption('menuId', $menuId);
@@ -362,27 +330,42 @@ class MenuBoard extends ModuleWidget
             if (!$this->getUser()->checkViewable($this->menuBoardFactory->getById($this->getOption('menuId')))) {
                 throw new InvalidArgumentException(__('You do not have permission to use that Menu Board'), 'menuId');
             }
-        } elseif ($step == 2) {
+
             // Template
-            $this->setOption('templateId', $sanitizedParams->getString('templateId'));
+            $template = $sanitizedParams->getString('templateId');
 
-            // Categories
-            $categories = $sanitizedParams->getIntArray('menuBoardCategories', ['default' => []]);
-
-            if (count($categories) == 0) {
-                $this->setOption('categories', '');
-                $this->clearColumnCategories();
-            } else {
-                if (implode(',', $categories) != $this->getOption('categories')) {
-                    $this->clearColumnCategories();
-                }
-                $this->setOption('categories', implode(',', $categories));
+            // Validate Menu Board Selected
+            if (!$template) {
+                throw new InvalidArgumentException(__('Please select a template'), 'templateId');
             }
+
+            // Did we change template?
+            if ($template != $this->getOption('templateId')) {
+                $this->_clearColumnCategories();
+            }
+            $this->setOption('templateId', $template);
+
+            $this->setOption('orientation', $sanitizedParams->getString('orientation'));
 
             // Set template zones and layout structure
             $templateInfo = $this->getTemplateInfo();
             $templateZones = array_key_exists('zones', $templateInfo) ? $templateInfo['zones'] : 1;
             $this->setOption('templateZones', $templateZones);
+        } elseif ($step == 2) {
+            $categoriesAssigned = '';
+            // Categories
+            for ($i = 1; $i <= $this->getOption('templateZones'); $i++) {
+                $this->setOption('categories_' . $i, implode(',', $sanitizedParams->getIntArray('menuBoardCategories_' . $i, ['default' => []])));
+                $categoriesAssigned .= $this->getOption('categories_' . $i);
+            }
+
+            // Validate Menu Board Selected
+            if ($categoriesAssigned == '') {
+                throw new InvalidArgumentException(__('Please assign some Categories to the Menu structure'), 'structure');
+            }
+
+            // Store all categories assigned
+            $this->setOption('categoriesAssigned', $categoriesAssigned);
         } else {
             $highlightProducts = $sanitizedParams->getIntArray('productsHighlight', ['default' => []]);
 
@@ -415,15 +398,8 @@ class MenuBoard extends ModuleWidget
                 $this->setOption($key, $optionValue);
             }
 
-            $this->setRawNode('noDataMessage', $request->getParam('noDataMessage', ''));
-            $this->setOption('noDataMessage_advanced', $sanitizedParams->getCheckbox('noDataMessage_advanced'));
-            $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
             $this->setOption('showUnavailable', $sanitizedParams->getCheckbox('showUnavailable'));
             $this->setOption('fontFamily', $sanitizedParams->getString('fontFamily'));
-
-            for ($i = 1; $i <= $this->getOption('templateZones'); $i++) {
-                $this->setOption('categories_' . $i, implode(',', $sanitizedParams->getIntArray('menuBoardCategories_' . $i, ['default' => []])));
-            }
 
             // Validate
             $this->isValid();
@@ -456,6 +432,10 @@ class MenuBoard extends ModuleWidget
         $styleSheet = '';
         $template = $this->getTemplateById($this->getOption('templateId'));
 
+        if (!$template) {
+            return;
+        }
+
         $widgetOriginalWidth = null;
         $widgetOriginalHeight = null;
         $styleSheet = $template['css'];
@@ -464,9 +444,6 @@ class MenuBoard extends ModuleWidget
         $widgetOriginalHeight = $template['widgetOriginalHeight'];
 
         $styleSheet = $this->parseLibraryReferences($this->isPreview(), $styleSheet);
-
-        $this->getLog()->debug('--- Stylesheet');
-        $this->getLog()->debug($styleSheet);
 
         // Parse stylesheet values using options
         $styleSheet = $this->parseCSSProperties($styleSheet);
@@ -489,8 +466,7 @@ class MenuBoard extends ModuleWidget
                 'originalHeight' => $this->region->height,
                 'widgetDesignWidth' => $widgetOriginalWidth,
                 'widgetDesignHeight' => $widgetOriginalHeight,
-                'generatedOn' => Carbon::now()->format('c'),
-                'noDataMessage' => $this->noDataMessageOrDefault('')['html']
+                'generatedOn' => Carbon::now()->format('c')
             ])
             ->appendJavaScript('
                 $(document).ready(function() {
@@ -499,9 +475,7 @@ class MenuBoard extends ModuleWidget
                     (xiboIC.checkVisible()) ? runOnVisible() : xiboIC.addToQueue(runOnVisible);
                     $(".menu-board-parent-container").find("img").xiboImageRender(options);
                 });
-            ')
-            ->appendJavaScript($this->parseLibraryReferences($this->isPreview(), $this->getRawNode('javaScript', '')))
-            ->appendBody($table['html']);
+            ')->appendBody($table['html']);
 
 
         return $this->finaliseGetResource();
@@ -513,12 +487,12 @@ class MenuBoard extends ModuleWidget
         if ($this->hasMenu()) {
             $menuId = $this->getOption('menuId');
             $menuBoard = $this->menuBoardFactory->getById($menuId);
+        } else {
+            return $this->noDataMessageOrDefault('No menu selected');
         }
 
-        $categories = $this->getOption('categories');
-
-        if ($categories == '') {
-            return $this->noDataMessageOrDefault(__('No categories selected'));
+        if (!$this->hasCategoriesAssigned()) {
+            return $this->noDataMessageOrDefault('No categories selected');
         }
 
         $menu = '';
@@ -541,7 +515,7 @@ class MenuBoard extends ModuleWidget
             // Create zones
             for ($i = 1; $i <= $this->getOption('templateZones'); $i++) {
                 $categoryIds = array_filter(explode(',', $this->getOption('categories_' . $i)));
-
+        
                 $menu .= '<div class="menu-board-zone" id="menuBoardZone_' . $i . '" style="grid-area: z' . $i . ';" >';
 
                 foreach ($categoryIds as $categoryId) {
@@ -595,18 +569,25 @@ class MenuBoard extends ModuleWidget
                         $menu .= '<div class="menu-board-product-price" id="productPrice_' . $i . '"><span>' . $categoryProduct->price . '</span></div>';
 
                         // Product options
-                        $menu .= '<div class="menu-board-product-options-container">';
-                        foreach ($categoryProduct->getOptions() as $productOption) {
-                            $menu .= '<div class="menu-board-product-options" id="productOptions_' . $i . '"><span>' . $productOption->option . ': ' . $productOption->value . '</span></div>';
+                        $productOptions = $categoryProduct->getOptions();
+                        if ($productOptions) {
+                            $menu .= '<div class="menu-board-product-options-container">';
+                            foreach ($productOptions as $productOption) {
+                                $menu .= '<div class="menu-board-product-options" id="productOptions_' . $i . '"><span>' . $productOption->option . ': ' . $productOption->value . '</span></div>';
+                            }
+                            // Close menu-board-product-options-container
+                            $menu .= '</div>';
                         }
-                        // Close menu-board-product-options-container
-                        $menu .= '</div>';
 
                         // Description
-                        $menu .= '<div class="menu-board-product-description" id="productDescription_' . $i . '"><span>' . $categoryProduct->description . '</span></div>';
+                        if ($categoryProduct->description) {
+                            $menu .= '<div class="menu-board-product-description" id="productDescription_' . $i . '"><span>' . $categoryProduct->description . '</span></div>';
+                        }
 
                         // Allergy
-                        $menu .= '<div class="menu-board-product-allergy" id="productAllergyInfo_' . $i . '"><span>' . $categoryProduct->allergyInfo . '</span></div>';
+                        if ($categoryProduct->allergyInfo) {
+                            $menu .= '<div class="menu-board-product-allergy" id="productAllergyInfo_' . $i . '"><span>' . $categoryProduct->allergyInfo . '</span></div>';
+                        }
 
                         // Close menu-board-product
                         $menu .= '</div>';
@@ -684,7 +665,8 @@ class MenuBoard extends ModuleWidget
             }
 
             $query = array_key_exists('query', $option) ? $option['query'] : ('.' . $key);
-            if ($option['rule'] == 'display' && $this->getOption($key) == 0) {
+
+            if ($option['rule'] == 'display' && $this->getOption($key, $option['default']) == 0) {
                 $css .= ' ' . $query . ' { display: none; } ';
             }
         }
@@ -704,6 +686,15 @@ class MenuBoard extends ModuleWidget
     private function hasMenu()
     {
         return (v::notEmpty()->validate($this->getOption('menuId')));
+    }
+
+    /**
+     * Does this module have assigned categories?
+     * @return bool
+     */
+    private function hasCategoriesAssigned()
+    {
+        return (v::notEmpty()->validate($this->getOption('categoriesAssigned')));
     }
 
     /** @inheritdoc */
@@ -745,19 +736,16 @@ class MenuBoard extends ModuleWidget
             $default = __('Empty Result Set with filter criteria.');
         }
 
-        if ($this->getRawNode('noDataMessage') == '') {
-            throw new NotFoundException($default);
-        } else {
-            return [
-                'html' => $this->getRawNode('noDataMessage'),
-                'countPages' => 1,
-                'countRows' => 1
-            ];
-        }
+        throw new NotFoundException($default);
     }
 
-    private function clearColumnCategories()
+    /**
+     * Clear all the assigned categories from the manu structure
+     */
+    private function _clearColumnCategories()
     {
+        $this->setOption('categoriesAssigned', '');
+
         for ($i = 1; $i <= $this->getOption('templateZones'); $i++) {
             $this->setOption('categories_' . $i, '');
         }

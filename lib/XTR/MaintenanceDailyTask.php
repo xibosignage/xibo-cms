@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2021 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,8 +20,8 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\XTR;
+
 use Carbon\Carbon;
 use Xibo\Controller\Module;
 use Xibo\Factory\DataSetFactory;
@@ -129,35 +129,39 @@ class MaintenanceDailyTask implements TaskInterface
         $this->runMessage .= '## ' . __('Import Layouts') . PHP_EOL;
 
         if ($this->config->getSetting('DEFAULTS_IMPORTED') == 0) {
-
             $folder = $this->config->uri('layouts', true);
 
             foreach (array_diff(scandir($folder), array('..', '.')) as $file) {
                 if (stripos($file, '.zip')) {
-                    $layout = $this->layoutFactory->createFromZip(
-                        $folder . '/' . $file,
-                        null,
-                        $this->userFactory->getSystemUser()->getId(),
-                        false,
-                        false,
-                        true,
-                        false,
-                        true,
-                        $this->dataSetFactory,
-                        null,
-                        null,
-                        $this->mediaService
-                    );
-
-                    $layout->save([
-                        'audit' => false,
-                        'import' => true
-                    ]);
-
                     try {
-                        $this->layoutFactory->getById($this->config->getSetting('DEFAULT_LAYOUT'));
-                    } catch (NotFoundException $exception) {
-                        $this->config->changeSetting('DEFAULT_LAYOUT', $layout->layoutId);
+                        $layout = $this->layoutFactory->createFromZip(
+                            $folder . '/' . $file,
+                            null,
+                            $this->userFactory->getSystemUser()->getId(),
+                            false,
+                            false,
+                            true,
+                            false,
+                            true,
+                            $this->dataSetFactory,
+                            null,
+                            null,
+                            $this->mediaService
+                        );
+
+                        $layout->save([
+                            'audit' => false,
+                            'import' => true
+                        ]);
+
+                        try {
+                            $this->layoutFactory->getById($this->config->getSetting('DEFAULT_LAYOUT'));
+                        } catch (NotFoundException $exception) {
+                            $this->config->changeSetting('DEFAULT_LAYOUT', $layout->layoutId);
+                        }
+                    } catch (\Exception $exception) {
+                        $this->log->error('Unable to import layout: ' . $file . '. E = ' . $exception->getMessage());
+                        $this->log->debug($exception->getTraceAsString());
                     }
                 }
             }

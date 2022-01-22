@@ -61,6 +61,12 @@ class MenuBoard implements \JsonSerializable
     public $description;
 
     /**
+     * @SWG\Property(description="The Menu Board code identifier")
+     * @var string
+     */
+    public $code;
+
+    /**
      * @SWG\Property(description="The Menu Board owner Id")
      * @var int
      */
@@ -166,7 +172,7 @@ class MenuBoard implements \JsonSerializable
      */
     public function __toString()
     {
-        return sprintf('MenuId %d, Name %s, Description %s', $this->menuId, $this->name, $this->description);
+        return sprintf('MenuId %d, Name %s, Description %s, Code %s', $this->menuId, $this->name, $this->description, $this->code);
     }
 
     /**
@@ -320,10 +326,11 @@ class MenuBoard implements \JsonSerializable
     private function add()
     {
         $this->menuId = $this->getStore()->insert(
-            'INSERT INTO `menu_board` (name, description, userId, modifiedDt, folderId, permissionsFolderId) VALUES (:name, :description, :userId, :modifiedDt, :folderId, :permissionsFolderId)',
+            'INSERT INTO `menu_board` (name, description, code, userId, modifiedDt, folderId, permissionsFolderId) VALUES (:name, :description, :code, :userId, :modifiedDt, :folderId, :permissionsFolderId)',
             [
                 'name' => $this->name,
                 'description' => $this->description,
+                'code' => $this->code,
                 'userId' => $this->userId,
                 'modifiedDt' => Carbon::now()->format('U'),
                 'folderId' => ($this->folderId == null) ? 1 : $this->folderId,
@@ -335,11 +342,12 @@ class MenuBoard implements \JsonSerializable
     private function update()
     {
         $this->getStore()->update(
-            'UPDATE `menu_board` SET name = :name, description = :description, userId = :userId, modifiedDt = :modifiedDt, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE menuId = :menuId',
+            'UPDATE `menu_board` SET name = :name, description = :description, code = :code, userId = :userId, modifiedDt = :modifiedDt, folderId = :folderId, permissionsFolderId = :permissionsFolderId WHERE menuId = :menuId',
             [
                 'menuId' => $this->menuId,
                 'name' => $this->name,
                 'description' => $this->description,
+                'code' => $this->code,
                 'userId' => $this->userId,
                 'modifiedDt' => Carbon::now()->format('U'),
                 'folderId' => $this->folderId,

@@ -25,25 +25,32 @@
     // Runs after form opens
     function menuboard_form_edit_open() {
 
-        if($(this).find('form').data('formStep') === 1) {
+        var $form = $(this).find('form');
+
+        if($form.data('formStep') === 1) {
             // If Menu Board ID exists, set the drop-down to that value
-            var menuId = $(this).find('form').data().elementOptions.menuId;
+            var menuId = $form.data().elementOptions.menuId;
 
             if(menuId !== undefined) {
                 $(this).find('#menuId').val(menuId);
             }
-        } else if ($(this).find('form').data('formStep') === 2) {
+
+            $form.find('#orientation').on('change', function(){
+                filterTemplates($form, true);
+            });
+
+            filterTemplates($(this));
+        } else if ($form.data('formStep') === 2) {
             // Setup lists drag and sort ( with double click )
             $('#categoriesIn, #categoriesOut').sortable({
                 connectWith: '.connectedSortable',
                 dropOnEmpty: true
             }).disableSelection();
             $('.li-sortable.dbclick', this).dblclick(switchLists);
-        } else if($(this).find('form').data('formStep') === 3) {
-            formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
-            // Initialise CKEditor for the noDataMessage
-            formHelpers.setupDualTypeTextArea(this, 'noDataMessage');
+            menuBoardFormSetup(this);
+        } else if($form.data('formStep') === 3) {
+            formHelpers.setupCheckboxInputFields($form, '#useDuration', '.duration-fields');
 
             menuBoardFormSetup(this);
         }
@@ -51,35 +58,18 @@
 
     // Runs before form submit
     function menuboard_form_edit_submit() {
-
         if($(this).find('form').data('formStep') === 2) {
             var form2 = $("#menuBoardEditFormStep2");
-            // Clean the previous generated hidden menuBoardCategories from the form
-            form2.find('input[name="menuBoardCategories[]"]').remove();
-
-            // Add all the selected columns to the form as hidden input fields
-            $($('#categoriesIn').sortable('toArray')).each(function() {
-                form2.append('<input type="hidden" name="menuBoardCategories[]" value="' + this + '" />');
-            });
-
-            form2.data("apply", true);
-
-            formHelpers.updateCKEditor();
-
-        } else if($(this).find('form').data('formStep') === 3) {
-            var form3 = $("#menuBoardEditFormStep3");
 
             for (var i = 1; i <= $(this).find('form').data().elementOptions.templateZones; i++) {
-                form3.find('input[name="menuBoardCategories_'+ i + '[]"]').remove();
+                form2.find('input[name="menuBoardCategories_'+ i + '[]"]').remove();
 
-                $($("#categoriesSelected_"+i).sortable('toArray')).each(function() {
-                    form3.append('<input type="hidden" name="menuBoardCategories_' + i +'[]" value="' + this + '" />');
+                $($("#categoriesAssigned_"+i).sortable('toArray')).each(function() {
+                    form2.append('<input type="hidden" name="menuBoardCategories_' + i +'[]" value="' + this + '" />');
                 });
             }
 
-            form3.data("apply", true);
-
-            formHelpers.updateCKEditor();
+            form2.data("apply", true);
         }
     }
 
@@ -127,6 +117,14 @@
                     $(dialog).find('.colorpicker-element').colorpicker('destroy');
                 }
             });
+        }
+    }
+
+    function filterTemplates($form, change) {
+        $form.find('#templateId').data('filterClass', $form.find('#orientation').val())
+        // Select first option
+        if(change) {
+            $form.find('#templateId').val(null).trigger("change");
         }
     }
 

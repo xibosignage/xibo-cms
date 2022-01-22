@@ -68,7 +68,7 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
         cy.wait(1000);
 
         // Get a table row, select it and add to the dropzone
-        cy.get('#playlist-editor-toolbar .toolbar-card .select-button:first').click({force: true}).then(() => {
+        cy.get('#playlist-editor-toolbar .toolbar-card:nth-of-type(2) .select-button').click({force: true}).then(() => {
             cy.get('#timeline-overlay-container').click({force: true}).then(() => {
 
                 // Wait for the layout to reload

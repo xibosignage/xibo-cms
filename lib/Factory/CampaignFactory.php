@@ -170,19 +170,13 @@ class CampaignFactory extends BaseFactory
                 WHERE lkcampaignlayout.campaignId = `campaign`.campaignId
             ) AS numberLayouts,
             MAX(CASE WHEN `campaign`.IsLayoutSpecific = 1 THEN `layout`.retired ELSE 0 END) AS retired,
-            (
-                SELECT GROUP_CONCAT(DISTINCT tag) 
-                FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
-                WHERE lktagcampaign.campaignId = campaign.CampaignID 
-                GROUP BY lktagcampaign.campaignId
-            ) AS tags,
-            
-            (
-                SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
-                FROM tag INNER JOIN lktagcampaign ON lktagcampaign.tagId = tag.tagId 
-                WHERE lktagcampaign.campaignId = campaign.CampaignID 
-                GROUP BY lktagcampaign.campaignId
-            ) AS tagValues
+            ( SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value))
+                            FROM tag
+                            INNER JOIN lktagcampaign
+                            ON lktagcampaign.tagId = tag.tagId
+                            WHERE lktagcampaign.campaignId = campaign.campaignId
+                            GROUP BY lktagcampaign.campaignId
+            ) as tags
         ';
 
         $body  = '
@@ -233,7 +227,6 @@ class CampaignFactory extends BaseFactory
 
         // Tags
         if ($sanitizedFilter->getString('tags') != '') {
-
             $tagFilter = $sanitizedFilter->getString('tags');
 
             if (trim($tagFilter) === '--no-tag') {
@@ -246,16 +239,16 @@ class CampaignFactory extends BaseFactory
                 ';
             } else {
                 $operator = $sanitizedFilter->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
-
-                $body .= " AND campaign.campaignID IN (
+                $logicalOperator = $sanitizedFilter->getString('logicalOperator', ['default' => 'OR']);
+                $body .= ' AND campaign.campaignID IN (
                 SELECT lktagcampaign.campaignId
                   FROM tag
                     INNER JOIN lktagcampaign
                     ON lktagcampaign.tagId = tag.tagId
-                ";
+                ';
 
                 $tags = explode(',', $tagFilter);
-                $this->tagFilter($tags, $operator, $body, $params);
+                $this->tagFilter($tags, 'lktagcampaign', 'lkTagCampaignId', 'campaignId', $logicalOperator, $operator, $body, $params);
             }
         }
 

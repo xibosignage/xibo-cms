@@ -130,6 +130,13 @@ class MenuBoardProduct extends Base
      *      type="string",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="code",
+     *      in="query",
+     *      description="Filter by code",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -153,7 +160,8 @@ class MenuBoardProduct extends Base
         $filter = [
             'menuProductId' => $parsedParams->getInt('menuProductId'),
             'menuCategoryId' => $id,
-            'name' => $parsedParams->getString('name')
+            'name' => $parsedParams->getString('name'),
+            'code' => $parsedParams->getString('code')
         ];
 
         $menuBoardProducts = $this->menuBoardCategoryFactory->getProductData(
@@ -285,11 +293,62 @@ class MenuBoardProduct extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
-     *      name="mediaId",
+     *      name="description",
      *      in="formData",
-     *      description="Media ID associated with this Menu Board Product",
+     *      description="Menu Board Product description",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="price",
+     *      in="formData",
+     *      description="Menu Board Product price, including the currency symbol if needed",
+     *      type="string",
+     *      required=true
+     *   ),
+     *  @SWG\Parameter(
+     *      name="allergyInfo",
+     *      in="formData",
+     *      description="Menu Board Product allergyInfo",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="availability",
+     *      in="formData",
+     *      description="Menu Board Product availability",
      *      type="integer",
      *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="formData",
+     *      description="Media ID from CMS Library to associate with this Menu Board Product",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="Menu Board Product code",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="productOptions",
+     *      in="formData",
+     *      description="An array of optional Product Option names",
+     *      type="array",
+     *      required=false,
+     *     @SWG\Items(type="string")
+     *   ),
+     *  @SWG\Parameter(
+     *      name="productValues",
+     *      in="formData",
+     *      description="An array of optional Product Option values",
+     *      type="array",
+     *      required=false,
+     *     @SWG\Items(type="string")
      *   ),
      *  @SWG\Response(
      *      response=201,
@@ -328,6 +387,7 @@ class MenuBoardProduct extends Base
         $availability = $sanitizedParams->getCheckbox('availability');
         $productOptions = $sanitizedParams->getArray('productOptions', ['default' => []]);
         $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
+        $code = $sanitizedParams->getString('code');
 
         $menuBoardProduct = $this->menuBoardCategoryFactory->createProduct(
             $menuBoard->menuId,
@@ -337,7 +397,8 @@ class MenuBoardProduct extends Base
             $description,
             $allergyInfo,
             $availability,
-            $mediaId
+            $mediaId,
+            $code
         );
         $menuBoardProduct->save();
 
@@ -452,6 +513,13 @@ class MenuBoardProduct extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="code",
+     *      in="formData",
+     *      description="Menu Board Product code",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="productOptions",
      *      in="formData",
      *      description="An array of optional Product Option names",
@@ -499,6 +567,7 @@ class MenuBoardProduct extends Base
         $menuBoardProduct->allergyInfo = $sanitizedParams->getString('allergyInfo');
         $menuBoardProduct->availability = $sanitizedParams->getCheckbox('availability');
         $menuBoardProduct->mediaId = $sanitizedParams->getInt('mediaId');
+        $menuBoardProduct->code = $sanitizedParams->getString('code');
         $productOptions = $sanitizedParams->getArray('productOptions', ['default' => []]);
         $productValues = $sanitizedParams->getArray('productValues', ['default' => []]);
 

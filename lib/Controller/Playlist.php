@@ -207,6 +207,13 @@ class Playlist extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="query",
+     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Parameter(
      *      name="ownerUserGroupId",
      *      in="query",
@@ -264,7 +271,8 @@ class Playlist extends Base
             'mediaLike' => $sanitizedParams->getString('mediaLike'),
             'regionSpecific' => $sanitizedParams->getInt('regionSpecific', ['default' => 0]),
             'folderId' => $sanitizedParams->getInt('folderId'),
-            'layoutId' => $sanitizedParams->getInt('layoutId')
+            'layoutId' => $sanitizedParams->getInt('layoutId'),
+            'logicalOperator' => $sanitizedParams->getString('logicalOperator')
         ], $sanitizedParams));
 
         foreach ($playlists as $playlist) {
@@ -531,6 +539,20 @@ class Playlist extends Base
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="exactTags",
+     *      in="formData",
+     *      description="When filtering by Tags, should we use exact match?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="formData",
+     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="maxNumberOfItems",
      *      in="formData",
      *      description="Maximum number of items that can be assigned to this Playlist (dynamic Playlist only)",
@@ -592,6 +614,8 @@ class Playlist extends Base
         // Do we have a tag or name filter?
         $nameFilter = $sanitizedParams->getString('filterMediaName');
         $tagFilter = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('filterMediaTag') : null;
+        $logicalOperator = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getString('logicalOperator') : 'OR';
+        $exactTags = $this->getUser()->featureEnabled('tag.tagging') ? $sanitizedParams->getCheckbox('exactTags') : 0;
 
         // Capture these as dynamic filter criteria
         if ($playlist->isDynamic === 1) {
@@ -599,7 +623,11 @@ class Playlist extends Base
                 throw new InvalidArgumentException(__('No filters have been set for this dynamic Playlist, please click the Filters tab to define'));
             }
             $playlist->filterMediaName = $nameFilter;
-            $playlist->filterMediaTags = $tagFilter;
+            if ($this->getUser()->featureEnabled('tag.tagging')) {
+                $playlist->filterMediaTags = $tagFilter;
+                $playlist->filterExactTags = $exactTags;
+                $playlist->filterLogicalOperator = $logicalOperator;
+            }
             $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems', ['default' => $this->getConfig()->getSetting('DEFAULT_DYNAMIC_PLAYLIST_MAXNUMBER')]);
         }
 
@@ -607,7 +635,7 @@ class Playlist extends Base
 
         // Should we assign any existing media
         if (!empty($nameFilter) || !empty($tagFilter)) {
-            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter, 'assignable' => 1]);
+            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter, 'assignable' => 1, 'exactTags' => $exactTags, 'logicalOperator' => $logicalOperator]);
 
             if (count($media) > 0) {
                 $widgets = [];
@@ -679,8 +707,7 @@ class Playlist extends Base
 
         $this->getState()->template = 'playlist-form-edit';
         $this->getState()->setData([
-            'playlist' => $playlist,
-            'tags' => $this->tagFactory->getTagsWithValues($playlist)
+            'playlist' => $playlist
         ]);
 
         return $this->render($request, $response);
@@ -734,6 +761,20 @@ class Playlist extends Base
      *      name="filterMediaTag",
      *      in="formData",
      *      description="Add Library Media matching the tag filter provided",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="exactTags",
+     *      in="formData",
+     *      description="When filtering by Tags, should we use exact match?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="formData",
+     *      description="When filtering by Tags, which logical operator should be used? AND|OR",
      *      type="string",
      *      required=false
      *   ),
@@ -801,6 +842,8 @@ class Playlist extends Base
 
             if ($this->getUser()->featureEnabled('tag.tagging')) {
                 $playlist->filterMediaTags = $sanitizedParams->getString('filterMediaTag');
+                $playlist->filterExactTags = $sanitizedParams->getCheckbox('exactTags');
+                $playlist->filterLogicalOperator = $sanitizedParams->getString('logicalOperator');
             }
             $playlist->maxNumberOfItems = $sanitizedParams->getInt('maxNumberOfItems');
         }
@@ -996,9 +1039,7 @@ class Playlist extends Base
         }
 
         // Handle tags
-        $tags = $this->tagFactory->getTagsWithValues($playlist);
-
-        $playlist->replaceTags($this->tagFactory->tagsFromString($tags));
+        $playlist->replaceTags($this->tagFactory->tagsFromString($playlist->tags));
 
         // Set from global setting
         if ($playlist->enableStat == null) {

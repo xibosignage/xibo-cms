@@ -807,8 +807,13 @@ class User extends Base
 
         if ($this->getUser()->isSuperAdmin()) {
             $user->userTypeId = $sanitizedParams->getInt('userTypeId');
-            $user->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
-            $user->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
+            if ($user->retired === 1) {
+                $user->isSystemNotification = 0;
+                $user->isDisplayNotification = 0;
+            } else {
+                $user->isSystemNotification = $sanitizedParams->getCheckbox('isSystemNotification');
+                $user->isDisplayNotification = $sanitizedParams->getCheckbox('isDisplayNotification');
+            }
         }
 
         $user->firstName = $sanitizedParams->getString('firstName');
@@ -1391,9 +1396,9 @@ class User extends Base
 
         if (isset($_SESSION['tfaSecret'])) {
             // validate the provided two factor code with secret for this user
-            $result = $tfa->verifyCode($_SESSION['tfaSecret'], $code, 2);
+            $result = $tfa->verifyCode($_SESSION['tfaSecret'], $code, 3);
         } elseif (isset($user->twoFactorSecret)) {
-            $result = $tfa->verifyCode($user->twoFactorSecret, $code, 2);
+            $result = $tfa->verifyCode($user->twoFactorSecret, $code, 3);
         } else {
             $result = false;
         }
@@ -1845,7 +1850,7 @@ class User extends Base
 
         // Does this user have permission to edit the permissions?!
         if (!$this->getUser()->checkPermissionsModifyable($object)) {
-            throw new AccessDeniedException(__('You do not have permission to edit these permissions.'));
+            throw new AccessDeniedException(__('This object is not shared with you with edit permission'));
         }
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
@@ -1896,7 +1901,7 @@ class User extends Base
         // Return
         $this->getState()->hydrate([
             'httpCode' => 204,
-            'message' => __('Permissions Updated')
+            'message' => __('Share option Updated')
         ]);
 
         return $this->render($request, $response);
@@ -1977,7 +1982,7 @@ class User extends Base
         // Return
         $this->getState()->hydrate([
             'httpCode' => 204,
-            'message' => __('Permissions Updated')
+            'message' => __('Share option Updated')
         ]);
 
         return $this->render($request, $response);
@@ -1992,13 +1997,13 @@ class User extends Base
     private function parsePermissionsEntity($entity, $objectId)
     {
         if ($entity == '') {
-            throw new InvalidArgumentException(__('Permissions requested without an entity'));
+            throw new InvalidArgumentException(__('Sharing requested without an entity'));
         }
 
         if ($objectId == 0) {
-            throw new InvalidArgumentException(__('Permissions form requested without an object'));
+            throw new InvalidArgumentException(__('Sharing form requested without an object'));
         }
-
+        
         /** @var ParsePermissionEntityEvent $event */
         $event = $this->getDispatcher()->dispatch(ParsePermissionEntityEvent::$NAME . lcfirst($entity), new ParsePermissionEntityEvent($entity, $objectId));
 

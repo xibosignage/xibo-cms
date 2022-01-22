@@ -957,8 +957,14 @@
 
                                 {% if theme.isSettingVisible("DATE_FORMAT") %}
                                     {% set title %}{% trans "Date Format" %}{% endset %}
-                                    {% set manualUrl %}{{ helpService.address("advanced_dateFormat.html") }}{% endset %}
-                                    {% set helpText %}{% trans %}The Date Format to use when displaying dates in the CMS. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}
+                                    {% set helpText %}{% trans %}The Date Format to use when displaying dates in the CMS.{% endtrans %}
+                                        <span id="date-format-table"
+                                              class="fa fa-info-circle"
+                                              data-toggle="popover"
+                                              data-trigger="hover"
+                                              data-placement="right">
+                                        </span>
+                                    {% endset %}
 
                                     {% if theme.isSettingEditable("DATE_FORMAT") %}
                                         {{ forms.input("DATE_FORMAT", title, theme.getSetting("DATE_FORMAT", "Y-m-d"), helpText, "required") }}
@@ -1190,4 +1196,37 @@
             </div>
         </div>
     </div>
+{% endblock %}
+
+{% block javaScript %}
+    <script type="text/javascript">
+        $(function () {
+            var phpDateFormatTable = Handlebars.compile($('#php-date-format-table').html());
+            $('#date-format-table').popover({
+                content: phpDateFormatTable,
+                html: true,
+                placement: "right",
+                sanitize: false,
+                trigger: "manual",
+                container: "form"
+            }).on("mouseenter", function() {
+                $(this).popover("show");
+                $(".popover").on("mouseleave", function() {
+                    $(this).popover('hide');
+                });
+            }).on("mouseleave", function() {
+                setTimeout(function() {
+                    if (!$(".popover:hover").length) {
+                        $(this).popover("hide");
+                    }
+                }, 300);
+            });
+        })
+    </script>
+
+    <style>
+        .popover{
+            max-width: 25%;
+        }
+    </style>
 {% endblock %}

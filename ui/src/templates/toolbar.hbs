@@ -4,7 +4,7 @@
         <ul class="navbar-nav navbar-buttons flex-column toolbar-menu-left hide-on-read-only hide-on-lock">
             {{#each menuItems}}
                 <li>
-                    <a id="btn-menu-{{@index}}" class="btn-menu-option {{state}}" data-container=".editor-side-bar"
+                    <a id="btn-menu-{{@index}}" class="btn-menu-option {{#if disabled}}d-none{{/if}} {{state}}" data-container=".editor-side-bar"
                         data-toggle="tooltip" data-title="{{itemTitle}}" data-test="toolbarTabs">
                         <i class="fas fa-{{itemIcon}}"></i>
                     </a>
@@ -15,7 +15,7 @@
         <ul class="navbar-nav flex-column toolbar-menu-content hide-on-read-only hide-on-lock">
             {{!-- Menu items/tabs --}}
             {{#each menuItems}}
-                <div id="content-{{@index}}" class="content"></div>
+                <div id="content-{{@index}}" class="content {{#if disabled}}d-none{{/if}}"></div>
             {{/each}}
         </ul>
 

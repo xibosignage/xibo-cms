@@ -160,11 +160,10 @@
                 {{ forms.dropdown("tagsType", "single", title, tagsType, options, "tagsTypeid", "tagsType") }}
 
                 {% set title %}{% trans "Tags" %}{% endset %}
+                {% set exactTagTitle %}{% trans "Should Tags filter by exact match?" %}{% endset %}
+                {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
                 {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter --no-tag to see items without tags." %}{% endset %}
-                {{ forms.inputWithTags("tags", title, tags, helpText) }}
-
-                {% set title %}{% trans "Should Tags filter by exact match?" %}{% endset %}
-                {{ forms.checkbox("exactTags", title, exactTags) }}
+                {{ forms.inputWithTags("tags", title, tags, helpText, "", "", "", "exactTag", exactTagTitle, logicalOperatorTitle, 0, 'OR') }}
 
                 {% set title %}{% trans "Should an email be sent?" %}{% endset %}
                 {{ forms.checkbox("sendEmail", title, sendEmail) }}

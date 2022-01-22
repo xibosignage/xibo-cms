@@ -4,6 +4,7 @@
   "options": {
     "deleteInstead": 1,
     "maxPeriods": 4,
-    "archiveOwner": ""
+    "archiveOwner": "",
+    "maxAgeMonths": 1
   }
 }

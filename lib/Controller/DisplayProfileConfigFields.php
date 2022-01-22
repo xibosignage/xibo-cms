@@ -671,6 +671,11 @@ trait DisplayProfileConfigFields
                     $displayProfile->setSetting('embeddedServerAllowWan', $sanitizedParams->getCheckbox('embeddedServerAllowWan'), $ownConfig, $config);
                 }
 
+                if ($sanitizedParams->hasParam('screenShotRequestInterval')) {
+                    $this->handleChangedSettings('screenShotRequestInterval', ($ownConfig) ? $displayProfile->getSetting('screenShotRequestInterval') : $display->getSetting('screenShotRequestInterval'), $sanitizedParams->getInt('screenShotRequestInterval'), $changedSettings);
+                    $displayProfile->setSetting('screenShotRequestInterval', $sanitizedParams->getInt('screenShotRequestInterval'), $ownConfig, $config);
+                }
+
                 if ($sanitizedParams->hasParam('timers')) {
                     // Options object to be converted to a JSON string
                     $timerOptions = (object)[];
@@ -797,7 +802,12 @@ trait DisplayProfileConfigFields
                 break;
 
             default:
-                $this->getLog()->info('Edit for unknown type ' . $displayProfile->getClientType());
+                if ($displayProfile->isCustom()) {
+                    $this->getLog()->info('Edit for custom Display profile type ' . $displayProfile->getClientType());
+                    $config = $displayProfile->handleCustomFields($sanitizedParams, $config, $display);
+                } else {
+                    $this->getLog()->info('Edit for unknown type ' . $displayProfile->getClientType());
+                }
         }
 
         if ($changedSettings != []) {

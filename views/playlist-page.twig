@@ -64,8 +64,9 @@
                                     {% if currentUser.featureEnabled("tag.tagging") %}
                                         {% set title %}{% trans "Tags" %}{% endset %}
                                         {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                        {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
                                         {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                        {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                                     {% endif %}
 
                                     {% set attributes = [
@@ -279,6 +280,8 @@
         var mediaTable;
         var nameFilter;
         var tagFilter;
+        var exactTags;
+        var logicalOperator;
 
         function playlistEditorFormOpen(formData) {
 
@@ -296,7 +299,7 @@
                 playlistFormPopulateMediaTable(dialog);
             }, 500));
 
-            $(dialog).find("input[name=filterMediaTag]").on("change", function () {
+            $(dialog).find("input[name=filterMediaTag], input[name=exactTags], select[name=logicalOperator]").on("change", function () {
                 playlistFormPopulateMediaTable(dialog);
             });
 
@@ -367,6 +370,8 @@
         function playlistFormPopulateMediaTable(dialog) {
             nameFilter = $(dialog).find("input[name=filterMediaName]").val();
             tagFilter = $(dialog).find("input[name=filterMediaTag]").val();
+            exactTags = $(dialog).find("input[name=exactTags]").is(':checked')
+            logicalOperator = $(dialog).find("select[name=logicalOperator]").val();
 
             if (nameFilter === "" && tagFilter === "") {
                 if (mediaTable != null) {
@@ -393,7 +398,7 @@
                     ajax: {
                         "url": "{{ url_for("library.search") }}",
                         "data": function (d) {
-                            $.extend(d, {media: nameFilter, tags: tagFilter, assignable: 1});
+                            $.extend(d, {media: nameFilter, tags: tagFilter, assignable: 1, exactTags: exactTags, logicalOperator: logicalOperator});
                         }
                     },
                     "columns": [

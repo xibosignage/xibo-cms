@@ -325,7 +325,7 @@ class Folder extends Base
 
         $buttons = [];
 
-        if ($user->featureEnabled('folder.add')) {
+        if ($user->featureEnabled('folder.add') &&  $user->checkViewable($folder)) {
             $buttons['create'] = true;
         }
 

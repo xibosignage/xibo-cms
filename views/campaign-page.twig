@@ -60,8 +60,9 @@
                             {% if currentUser.featureEnabled("tag.tagging") %}
                                 {% set title %}{% trans "Tags" %}{% endset %}
                                 {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
+                                {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
                                 {% set helpText %}{% trans "A comma separated list of tags to filter by. Enter a Tag value preceded with | to filter by Tag values. Enter --no-tag to see items without tags." %}{% endset %}
-                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle) }}
+                                {{ inline.inputWithTags("tags", title, null, helpText, null, null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                             {% endif %}
 
                             {% set title %}{% trans "Layouts" %}{% endset %}

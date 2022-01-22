@@ -171,8 +171,9 @@ class ProofOfPlay implements ReportInterface
         $tagsType = $sanitizedParams->getString('tagsType');
         $tags = $sanitizedParams->getString('tags');
         $exactTags = $sanitizedParams->getCheckbox('exactTags');
+        $logicalOperator = $sanitizedParams->getString('logicalOperator');
 
-        $temp = ['filter', 'displayId', 'layoutIds', 'mediaIds', 'type', 'sortBy', 'tagsType', 'tags', 'exactTags'];
+        $temp = ['filter', 'displayId', 'layoutIds', 'mediaIds', 'type', 'sortBy', 'tagsType', 'tags', 'exactTags', 'logicalOperator'];
 
         $filterCriteria = [];
         foreach ($temp as $value) {
@@ -337,6 +338,7 @@ class ProofOfPlay implements ReportInterface
         $tags = $sanitizedParams->getString('tags');
         $tagsType = $sanitizedParams->getString('tagsType');
         $exactTags = $sanitizedParams->getCheckbox('exactTags');
+        $operator = $sanitizedParams->getString('logicalOperator', ['default' => 'OR']);
 
         // Do not filter by display if super admin and no display is selected
         // Super admin will be able to see stat records of deleted display, we will not filter by display later
@@ -485,9 +487,9 @@ class ProofOfPlay implements ReportInterface
         // -------------
         $timeSeriesStore = $this->getTimeSeriesStore()->getEngine();
         if ($timeSeriesStore == 'mongodb') {
-            $result = $this->getProofOfPlayReportMongoDb($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start, $length);
+            $result = $this->getProofOfPlayReportMongoDb($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $operator, $start, $length);
         } else {
-            $result = $this->getProofOfPlayReportMySql($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start, $length);
+            $result = $this->getProofOfPlayReportMySql($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $operator, $start, $length);
         }
 
         // Sanitize results
@@ -560,7 +562,7 @@ class ProofOfPlay implements ReportInterface
      * @param $length int
      * @return array[array result, date periodStart, date periodEnd, int count, int totalStats]
      */
-    private function getProofOfPlayReportMySql($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start, $length)
+    private function getProofOfPlayReportMySql($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $logicalOperator, $start, $length)
     {
 
         $fromDt = $fromDt->format('U');
@@ -673,19 +675,26 @@ class ProofOfPlay implements ReportInterface
                 }
             } else {
                 $operator = $exactTags == 1 ? '=' : 'LIKE';
+                $lkTagTable = '';
+                $lkTagTableIdColumn = '';
+                $idColumn = '';
+
                 if ($tagsType === 'dg') {
-                    $body .= " AND `displaygroup`.displaygroupId IN (
+                    $body .= ' AND `displaygroup`.displaygroupId IN (
                         SELECT `lktagdisplaygroup`.displaygroupId
                           FROM tag
                             INNER JOIN `lktagdisplaygroup`
                             ON `lktagdisplaygroup`.tagId = tag.tagId
-                        ";
+                ';
+                    $lkTagTable = 'lktagdisplaygroup';
+                    $lkTagTableIdColumn = 'lkTagDisplayGroupId';
+                    $idColumn = 'displayGroupId';
                 }
                 // old layout and latest layout have same tags
                 // old layoutId replaced with latest layoutId in the lktaglayout table and
                 // join with layout history to get campaignId then we can show old layouts that have given tag
                 if ($tagsType === 'layout') {
-                    $body .= " AND `stat`.campaignId IN (
+                    $body .= ' AND `stat`.campaignId IN (
                         SELECT 
                             `layouthistory`.campaignId
                         FROM
@@ -694,73 +703,31 @@ class ProofOfPlay implements ReportInterface
                             FROM tag
                             INNER JOIN `lktaglayout`
                             ON `lktaglayout`.tagId = tag.tagId
-                        ";
+                        ';
+
+                    $lkTagTable = 'lktaglayout';
+                    $lkTagTableIdColumn = 'lkTagLayoutId';
+                    $idColumn = 'layoutId';
                 }
                 if ($tagsType === 'media') {
-                    $body .= " AND `media`.mediaId IN (
+                    $body .= ' AND `media`.mediaId IN (
                         SELECT `lktagmedia`.mediaId
                           FROM tag
                             INNER JOIN `lktagmedia`
                             ON `lktagmedia`.tagId = tag.tagId
-                    ";
+                ';
+                    $lkTagTable = 'lktagmedia';
+                    $lkTagTableIdColumn = 'lkTagMediaId';
+                    $idColumn = 'mediaId';
                 }
-                $i = 0;
-                foreach (explode(',', $tags) as $tag) {
-                    $i++;
+                $tagsFilter = explode(',', $tags);
+                // pass to BaseFactory tagFilter, it does not matter from which factory we do that.
+                $this->layoutFactory->tagFilter($tagsFilter, $lkTagTable, $lkTagTableIdColumn, $idColumn, $logicalOperator, $operator, $body, $params);
 
-                    $tagV = explode('|', $tag);
-
-                    // search tag without value
-                    if (!isset($tagV[1])) {
-                        if ($i == 1) {
-                            $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i;
-                        } else {
-                            $body .= ' OR `tag` ' . $operator . ' :tags' . $i;
-                        }
-
-                        if ($operator === '=') {
-                            $params['tags' . $i] = $tag;
-                        } else {
-                            $params['tags' . $i] = '%' . $tag . '%';
-                        }
-                        // search tag only by value
-                    } elseif ($tagV[0] == '') {
-                        if ($i == 1) {
-                            $body .= ' WHERE `value` ' . $operator . ' :value' . $i;
-                        } else {
-                            $body .= ' OR `value` ' . $operator . ' :value' . $i;
-                        }
-
-                        if ($operator === '=') {
-                            $params['value' . $i] = $tagV[1];
-                        } else {
-                            $params['value' . $i] = '%' . $tagV[1] . '%';
-                        }
-                        // search tag by both tag and value
-                    } else {
-                        if ($i == 1) {
-                            $body .= ' WHERE `tag` ' . $operator . ' :tags' . $i .
-                                ' AND value ' . $operator . ' :value' . $i;
-                        } else {
-                            $body .= ' OR `tag` ' . $operator . ' :tags' . $i .
-                                ' AND value ' . $operator . ' :value' . $i;
-                        }
-
-                        if ($operator === '=') {
-                            $params['tags' . $i] = $tagV[0];
-                            $params['value' . $i] = $tagV[1];
-                        } else {
-                            $params['tags' . $i] = '%' . $tagV[0] . '%';
-                            $params['value' . $i] = '%' . $tagV[1] . '%';
-                        }
-                    }
-                }
                 if ($tagsType === 'layout') {
-                    $body .= " ) B
+                    $body .= ' B
                         LEFT OUTER JOIN
-                        `layouthistory` ON `layouthistory`.layoutId = B.layoutId ) ";
-                } else {
-                    $body .= " ) ";
+                        `layouthistory` ON `layouthistory`.layoutId = B.layoutId ) ';
                 }
             }
         }
@@ -887,9 +854,8 @@ class ProofOfPlay implements ReportInterface
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    private function getProofOfPlayReportMongoDb($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $start, $length)
+    private function getProofOfPlayReportMongoDb($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $operator, $start, $length)
     {
-
         $fromDt = new UTCDateTime($fromDt->format('U')*1000);
         $toDt = new UTCDateTime($toDt->format('U')*1000);
 
@@ -941,11 +907,14 @@ class ProofOfPlay implements ReportInterface
 
             // When exact match is not desired
             if (count($tagsArray) > 0) {
-                $match['$match']['tagFilter.' . $tagsType] = [
-                    '$elemMatch' => [
-                        '$or' => $tagsArray
-                    ]
-                ];
+                $logicalOperator = ($operator === 'AND') ? '$and' : '$or';
+                foreach ($tagsArray as $tag) {
+                    $match['$match'][$logicalOperator][] = [
+                        'tagFilter.' . $tagsType => [
+                            '$elemMatch' => $tag
+                        ]
+                    ];
+                }
             }
         }
 

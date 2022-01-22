@@ -400,6 +400,22 @@ table.dataTable tbody tr.selected > td {
     background-color: #a6b3cd;
 }
 
+.popover-content-container th, .popover-content-container td {
+    border: 1px solid #ddd;
+    padding: 10px;
+}
+
+.scrollable-popover-table {
+    display: block;
+    width: auto;
+    height: 300px;
+    overflow-y: scroll;
+}
+
+.scrollable-popover-table table thead {
+    background: #fafafa;
+}
+
 div.dt-buttons {
     float: none;
     text-align: right;
@@ -458,8 +474,8 @@ div.dt-buttons {
     position: relative;
 }
 
-.template-upload div.input-group {
-    max-width: fit-content;
+.template-upload div.input-group input {
+    width: 100%;
 }
 
 .template-upload p.size {
@@ -933,6 +949,10 @@ ul li.active.tab-design:hover a {
     width: 100%;
 }
 
+.tags-input-addons-wide .bootstrap-tagsinput {
+    width: 80%;
+}
+
 @media (min-width: 768px) {
     .form-horizontal .control-label {
         padding-top: 7px;
@@ -1044,6 +1064,8 @@ ul li.active.tab-design:hover a {
 
 .permissionsDiv {
     width: 200px;
+    overflow-x: auto;
+    max-width: 250px;
 }
 
 .permissionsDiv .badge {
@@ -1089,10 +1111,17 @@ ul li.active.tab-design:hover a {
 
 .override-input button.button-close-override {
     position: absolute;
-    right: -15px;
+    right: -18px;
     height: 33.5px;
     top: 6px;
     padding: 6px 4px;
+}
+
+
+.override-input.timerOverride .multiSelectInputs {
+    width: 50%;
+    display: inline-block;
+    padding: 3px;
 }
 
 .override-input .text-muted {

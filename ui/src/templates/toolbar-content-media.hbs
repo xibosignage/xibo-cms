@@ -1,4 +1,4 @@
-<form id="media-search-form" class="container-fluid p-0 media-search-form drag-handle">
+<form class="container-fluid p-0 media-search-form">
     {{#if filters.type}}
         <div class="form-group col-6 p-1 mb-2 {{#if filters.type.locked}}hidden{{/if}}">
             <label for="input-type" class="mb-0">{{trans.searchFilters.type}}</label>
@@ -9,7 +9,7 @@
                     <option value=""></option>
 
                     {{#each filters.type.values}}
-                        <option value="{{type}}" {{#eq ../filters.type.value type}}selected{{/eq}}>{{name}}</option>
+                        <option value="{{type}}" class="{{#if disabled}}disabled{{/if}}" {{#eq ../filters.type.value type}}selected{{/eq}}>{{name}}</option>
                     {{/each}}
                 {{/if}}
             </select>

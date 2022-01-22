@@ -60,6 +60,10 @@
                 {% set helpText %}{% trans "The Name for this Menu Board" %}{% endset %}
                 {{ forms.input("name", title, menuBoard.name, helpText) }}
 
+                {% set title %}{% trans "Code" %}{% endset %}
+                {% set helpText %}{% trans "The Code identifier for this Menu Board" %}{% endset %}
+                {{ forms.input("code", title, menuBoard.code, helpText) }}
+
                 {% set title %}{% trans "Description" %}{% endset %}
                 {% set helpText %}{% trans "An optional description of the Menu Board. (1 - 250 characters)" %}{% endset %}
                 {{ forms.textarea("description", title, menuBoard.description, helpText) }}

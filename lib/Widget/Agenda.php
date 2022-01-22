@@ -758,12 +758,12 @@ class Agenda extends ModuleWidget
             // custom date formats
             if (strpos($sub, '[StartDate|') !== false) {
                 $format = str_replace('[', '', str_replace(']', '', str_replace('[StartDate|', '[', $sub)));
-                $replace = $startDt->format($format);
+                $replace = $startDt->translatedFormat($format);
             }
 
             if (strpos($sub, '[EndDate|') !== false) {
                 $format = str_replace('[', '', str_replace(']', '', str_replace('[EndDate|', '[', $sub)));
-                $replace = $endDt->format($format);
+                $replace = $endDt->translatedFormat($format);
             }
 
             // Substitute the replacement we have found (it might be '')

@@ -131,6 +131,8 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 foreach ($this->mediaFactory->query(null, [
                     'name' => $playlist->filterMediaName,
                     'tags' => $playlist->filterMediaTags,
+                    'exactTags' => $playlist->filterExactTags,
+                    'logicalOperator' => $playlist->filterLogicalOperator,
                     'userCheckUserId' => $playlist->getOwnerId(),
                     'start' => 0,
                     'length' => $playlist->maxNumberOfItems
@@ -212,7 +214,6 @@ class DynamicPlaylistSyncTask implements TaskInterface
                                 // We do want to save the Playlist here.
                                 $assignmentMade = true;
                             }
-
                         } catch (NotFoundException $exception) {
                             // Delete it
                             $playlist->deleteWidget($widget);
@@ -243,7 +244,6 @@ class DynamicPlaylistSyncTask implements TaskInterface
                 } else {
                     $this->log->debug('No differences detected');
                 }
-
             } catch (GeneralException $exception) {
                 $this->log->debug($exception->getTraceAsString());
                 $this->log->error('Problem with PlaylistId: ' . $playlist->getId() . ', e = ' . $exception->getMessage());

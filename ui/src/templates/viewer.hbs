@@ -46,7 +46,7 @@
                 </p>
             </div>
         {{else}}
-            <div id="viewer-preview" class="widget-preview {{#if editable}}parent-editable{{/if}}" data-parent="region" data-parent-id="{{parentId}}" data-type="{{type}}" data-position="{{elementPosition}}">
+            <div id="viewer-preview" class="widget-preview {{#if editable}}parent-editable{{/if}} {{#if drawer}}drawer-parent{{/if}}" data-parent="region" data-parent-id="{{parentId}}" data-type="{{type}}" data-position="{{elementPosition}}">
                 {{{res.html}}}
             </div>
         {{/if}}

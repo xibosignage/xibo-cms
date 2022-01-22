@@ -591,9 +591,9 @@ class Login extends Base
             $tfa = new TwoFactorAuth($issuer);
 
             if ($user->twoFactorTypeId === 1 && $user->email !== '') {
-                $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 8);
+                $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 9);
             } else {
-                $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 2);
+                $result = $tfa->verifyCode($user->twoFactorSecret, $sanitizedParams->getString('code'), 3);
             }
         } elseif (isset($_POST['recoveryCode'])) {
             // get the array of recovery codes, go through them and try to match provided code

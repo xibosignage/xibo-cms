@@ -133,7 +133,7 @@
           $connectorContainer.find('.connector').remove();
           $.ajax({
             type: 'GET',
-            url: '{{ url_for("connector.search") }}',
+            url: '{{ url_for("connector.search") }}?isVisible=1',
             cache: false,
             dataType:"json",
             success: function(xhr, textStatus, error) {

@@ -90,13 +90,31 @@
     </div>
 {% endmacro %}
 
-{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey) %}
-    <div class="form-group tags-input-wide row {{ groupClass }}">
-        <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
-        <div class="col-sm-10">
-            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputForm" data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {{ validation }} />
-            <small class="form-text text-muted">{{ helpText }}</small>
-        </div>
+{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle, logicalOperatorTitle, exactTagValue, logicalOperatorValue, autoCompleteEnabled = 1) %}
+        {% if exactTag %}
+            <div class="form-group tags-input-addons-wide row {{ groupClass }}">
+            <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+            <div class="input-group input-group-tags-exact col-sm-10">
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputForm" {% if autoCompleteEnabled == 1 %} data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {% endif %} {{ validation }} />
+                <div class="input-group-append input-group-addon">
+                    <div class="input-group-text">
+                        <input title="{{ exactTagTitle }}" type="checkbox" id="{{ exactTag }}" name="{{ exactTag }}" {% if exactTagValue %}checked{% endif %}>
+                    </div>
+                    <select class="custom-select" id="logicalOperator" name="logicalOperator" title="{{ logicalOperatorTitle }}" >
+                        <option value="OR" {% if logicalOperatorValue != "AND" %}selected{% endif %}>OR</option>
+                        <option value="AND" {% if logicalOperatorValue == "AND" %}selected{% endif %}>AND</option>
+                    </select>
+                </div>
+                <small class="form-text text-muted">{{ helpText }}</small>
+            </div>
+        {% else %}
+            <div class="form-group tags-input-wide row {{ groupClass }}">
+            <label class="col-sm-2 control-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+            <div class="col-sm-10">
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputForm" {% if autoCompleteEnabled == 1 %} data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {% endif %}  {{ validation }} />
+                <small class="form-text text-muted">{{ helpText }}</small>
+            </div>
+        {% endif %}
     </div>
 {% endmacro %}
 
@@ -149,12 +167,12 @@
     {% endif %}
 {% endmacro %}
 
-{% macro checkbox(name, title, value, helpText, groupClass, accessKey, disabled) %}
+{% macro checkbox(name, title, value, helpText, groupClass, accessKey, disabled, id) %}
     <div class="form-group row {{ groupClass }}">
         <div class="offset-sm-2 col-sm-10">
             <div class="form-check">
-                <input class="form-check-input" type="checkbox" id="{{ name }}" name="{{ name }}" {% if value == 1 %}checked{% endif %} {% if disabled == 1 %}disabled{% endif %}>
-                <label class="form-check-label" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
+                <input class="form-check-input" type="checkbox" {% if id %} id="{{ id }}" {% else %} id="{{ name }}" {% endif %} name="{{ name }}" {% if value == 1 %}checked{% endif %} {% if disabled == 1 %}disabled{% endif %}>
+                <label class="form-check-label" {% if id %} for="{{ id }}" {% else %} for="{{ name }}" {% endif %} accesskey="{{ accessKey }}">{{ title }}</label>
             </div>
             <small class="form-text text-muted">{{ helpText }}</small>
         </div>

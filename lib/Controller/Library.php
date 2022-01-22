@@ -454,6 +454,13 @@ class Library extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *   @SWG\Parameter(
+     *      name="logicalOperator",
+     *      in="query",
+     *      description="When filtering by multiple Tags, which logical operator should be used? AND|OR",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Parameter(
      *      name="duration",
      *      in="query",
@@ -526,7 +533,8 @@ class Library extends Base
             'onlyMenuBoardAllowed' => $parsedQueryParams->getInt('onlyMenuBoardAllowed'),
             'layoutId' => $parsedQueryParams->getInt('layoutId'),
             'includeLayoutBackgroundImage' => ($parsedQueryParams->getInt('layoutId') != null) ? 1 : 0,
-            'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
+            'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true]),
+            'logicalOperator' => $parsedQueryParams->getString('logicalOperator')
         ], $parsedQueryParams));
 
         // Add some additional row content
@@ -772,6 +780,7 @@ class Library extends Base
                 $searchResult->type = $media->mediaType;
                 $searchResult->title = $media->name;
                 $searchResult->description = '';
+                $searchResult->duration = $media->duration;
 
                 // Thumbnail
                 $module = $this->moduleFactory->createWithMedia($media);
@@ -1146,7 +1155,6 @@ class Library extends Base
             'media' => $media,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit'),
-            'tags' => $this->tagFactory->getTagsWithValues($media),
             'expiryDate' => ($media->expires == 0 ) ? null : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat(), $media->expires)
         ]);
 
@@ -2019,8 +2027,7 @@ class Library extends Base
         $this->getState()->template = 'library-form-copy';
         $this->getState()->setData([
             'media' => $media,
-            'help' => $this->getHelp()->link('Media', 'Copy'),
-            'tags' => $this->tagFactory->getTagsWithValues($media)
+            'help' => $this->getHelp()->link('Media', 'Copy')
         ]);
 
         return $this->render($request, $response);
