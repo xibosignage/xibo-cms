@@ -226,7 +226,7 @@
 
                     <option value="{{ itemOptionId }}" {% if selected %}selected{% endif %}
                             {% if itemOptionImageValue %}
-                                data-content="<span class='media'><span class='media-left mr-2'><img style='max-width: 100px' src='{{ itemOptionImageValue }}' /></span> <span class='media-body'>{{ itemOptionValue }}</span></span>"
+                                data-content="<span class='media'><span class='media-left mr-2'><img style='max-width: 100px; max-height: 80px;' src='{{ itemOptionImageValue }}' /></span> <span class='media-body'>{{ itemOptionValue }}</span></span>"
                             {% endif %}
                             {% if itemOptionType %}
                                 data-filter-class="{{ itemOptionType }}"

@@ -38,7 +38,7 @@
 
                 <div id="zonesContainer">
                     <div class="row">
-                        <div class="col-md-12 row">
+                        <div class="col-md-12">
                             <div class="text-info mb-1">{% trans "Menu Structure" %}</div>
                             {% set gridTemplate = module.getExtra().gridTemplate %}
                             <div class="structure" style="grid-template: {{ gridTemplate }};">
@@ -54,9 +54,10 @@
                                     </div>
                                 {% endfor %}
                             </div>
-
-                            <div class="connectedlist flex-fill mb-3">
-                                <p class="text-info mb-1">{% trans "Unassigned Categories" %}</p>
+                        </div>
+                        <div class="col-md-12">
+                            <div class="text-info mb-1">{% trans "Unassigned Categories" %}</div>
+                            <div class="connectedlist categoriesNotAssigned">
                                 <ul id="categoriesNotAssigned"
                                     class="connectedSortable2">
                                     {% for category in module.menuBoardCategoriesSelectedNotAssigned() %}
