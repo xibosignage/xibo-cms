@@ -588,8 +588,6 @@ class MenuBoard extends ModuleWidget
                             try {
                                 $file = $this->mediaFactory->getById($categoryProduct->mediaId);
 
-                                $this->getLog()->debug($file->mediaId);
-
                                 // Already in the library - assign this mediaId to the Layout immediately.
                                 $this->assignMedia($file->mediaId);
 
