@@ -596,7 +596,6 @@ class MenuBoard extends ModuleWidget
                                 $menu .= ($this->isPreview())
                                     ? '<img class="menu-board-product-image" src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
                                     : '<img class="menu-board-product-image" src="' . $file->storedAs . '" />';
-
                             } catch (NotFoundException $e) {
                                 $this->getLog()->debug('Image for product ' . $categoryProduct->mediaId . ' failed!');
                             }
