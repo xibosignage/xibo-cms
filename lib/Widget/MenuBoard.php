@@ -503,7 +503,7 @@ class MenuBoard extends ModuleWidget
             $menu .= '<div class="menu-board-parent-container">';
 
             // Menu board name
-            $menu .= '<div id="menuBoardName" class="menu-board-name">' . $menuBoard->name . '</div>';
+            $menu .= '<div id="menuBoardName" class="menu-board-name"><div class="menu-board-name-text">' . $menuBoard->name . '</div></div>';
 
             // Get template option property
             $templateInfo = $this->getTemplateInfo();
@@ -532,6 +532,24 @@ class MenuBoard extends ModuleWidget
                     // Category header
                     $menu .= '<div class="menu-board-category-header">';
                     $menu .= '  <div class="menu-board-category-header-name">' . $category->name . '</div>';
+                    
+                    // Product image
+                    $showImagesForCategories = array_key_exists('categoryImage', $templateInfo) ? $templateInfo['categoryImage'] : false;
+                    if ($showImagesForCategories) {
+                        try {
+                            $file = $this->mediaFactory->getById($category->mediaId);
+
+                            // Already in the library - assign this mediaId to the Layout immediately.
+                            $this->assignMedia($file->mediaId);
+
+                            $menu .= ($this->isPreview())
+                                ? '<img class="menu-board-category-image" src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                                : '<img class="menu-board-category-image" src="' . $file->storedAs . '" />';
+                        } catch (NotFoundException $e) {
+                            $this->getLog()->debug('Image for category ' . $category->mediaId . ' failed!');
+                        }
+                    }
+
                     $menu .= '</div>';
 
                     // Get max items per category/zone
@@ -562,6 +580,23 @@ class MenuBoard extends ModuleWidget
                             $menu .= '<div class="menu-board-product product-highlight">';
                         } else {
                             $menu .= '<div class="menu-board-product">';
+                        }
+
+                        // Product image
+                        $showImagesForProducts = array_key_exists('productImage', $templateInfo) ? $templateInfo['productImage'] : false;
+                        if ($showImagesForProducts) {
+                            try {
+                                $file = $this->mediaFactory->getById($categoryProduct->mediaId);
+
+                                // Already in the library - assign this mediaId to the Layout immediately.
+                                $this->assignMedia($file->mediaId);
+
+                                $menu .= ($this->isPreview())
+                                    ? '<img class="menu-board-product-image" src="' . $this->urlFor('library.download', ['id' => $file->mediaId, 'type' => 'image']) . '?preview=1" />'
+                                    : '<img class="menu-board-product-image" src="' . $file->storedAs . '" />';
+                            } catch (NotFoundException $e) {
+                                $this->getLog()->debug('Image for product ' . $categoryProduct->mediaId . ' failed!');
+                            }
                         }
 
                         // Product name and price should always be visible.
