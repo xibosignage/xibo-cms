@@ -1319,25 +1319,25 @@ body, .page-content {
                 }
 
                 #zonesContainer {
-                    .structure {
+                    .structure, .categoriesNotAssigned {
                         display: grid;
                         width: 100%;
-
-                        .connectedlist {
-                            border: 1px solid $xibo-color-blue-lighter;
-
-                            ul {
-                                height: 100%;
-                            }
-                        }
                     }
 
                     .connectedlist {
+                        outline: 2px solid $xibo-color-blue-lighter;
+                        outline-offset: -1px;
+                        background-color: lighten($xibo-color-blue-lighter, 10%);
+
                         ul.ui-sortable {
                             width: 100%;
-                            min-height: 60px;
-                            overflow: hidden;
+                            min-height: 90px;
                             margin: 0;
+                            background-color: initial;
+                            
+                            ul {
+                                height: 100%;
+                            }
 
                             li {
                                 width: initial;
