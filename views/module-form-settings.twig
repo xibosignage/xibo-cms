@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -37,7 +37,7 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="moduleEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.settings", {id: module.module.moduleId}) }}">
+            <form id="moduleEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.settings", {id: moduleId}) }}">
 
                 {% set title %}{% trans "Default Duration" %}{% endset %}
                 {% set helpText %}{% trans "The default duration for Widgets of this Module when the user has elected to not set a specific duration." %}{% endset %}
@@ -58,6 +58,10 @@
                 {% block moduleFormFields %}
 
                 {% endblock %}
+
+                {% if error %}
+                    <p class="alert alert-danger">{{ "There is an error with this module, please save to disable it."|trans }}</p>
+                {% endif %}
             </form>
         </div>
     </div>

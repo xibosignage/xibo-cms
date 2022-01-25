@@ -532,7 +532,9 @@ $app->post('/application/authorize', ['\Xibo\Controller\Applications','authorize
 $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/module/view', ['\Xibo\Controller\Module','displayPage'])->setName('module.view');
     $group->post('/module/inst/{name}', ['\Xibo\Controller\Module','install'])->setName('module.install');
+    $group->delete('/module/uninst/{id}', ['\Xibo\Controller\Module','uninstall'])->setName('module.uninstall');
     $group->get('/module/form/inst/{name}', ['\Xibo\Controller\Module','installForm'])->setName('module.install.form');
+    $group->get('/module/form/uninst/{id}', ['\Xibo\Controller\Module','uninstallForm'])->setName('module.uninstall.form');
     $group->get('/module/form/instlist', ['\Xibo\Controller\Module','installListForm'])->setName('module.install.list.form');
     $group->get('/module/form/verify', ['\Xibo\Controller\Module','verifyForm'])->setName('module.verify.form');
     $group->get('/module/form/clear-cache/{id}', ['\Xibo\Controller\Module','clearCacheForm'])->setName('module.clear.cache.form');

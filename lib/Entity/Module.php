@@ -221,4 +221,13 @@ class Module implements \JsonSerializable
             'settings' => json_encode($this->settings)
         ]);
     }
+
+    /**
+     * Delete this module
+     * @return void
+     */
+    public function delete()
+    {
+        $this->getStore()->update('DELETE FROM `module` WHERE moduleId = :id', ['id' => $this->moduleId]);
+    }
 }

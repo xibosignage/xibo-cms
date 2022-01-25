@@ -25,7 +25,6 @@ namespace Xibo\Service;
 
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Module;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
@@ -79,6 +78,7 @@ interface ModuleServiceInterface
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
      * @return ModuleWidget
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function get(
         $module,
@@ -117,6 +117,7 @@ interface ModuleServiceInterface
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
      * @return ModuleWidget
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     public function getByClass(
         $className,
