@@ -388,6 +388,11 @@ class Agenda extends ModuleWidget
      */
     public function getResource($displayId = 0)
     {
+        // Have we configured our feed yet?
+        if (empty($this->getOption('uri'))) {
+            throw new ConfigurationException(__('Configure your feed'));
+        }
+
         // Construct the response HTML
         $this
             ->initialiseGetResource()
@@ -410,18 +415,18 @@ class Agenda extends ModuleWidget
         $noDataMessage = $this->getRawNode('noDataMessage');
 
         // Return no data message as the last element ( removed after JS event filtering )
-            if ($noDataMessage != '') {
-                $items[] = [
-                    'startDate' => 0,
-                    'endDate' => Carbon::now()->addYear()->format('c'),
-                    'item' => $noDataMessage,
-                    'currentEventItem' => $noDataMessage,
-                    'noDataMessage' => 1
-                ];
-            } else {
-                $this->getLog()->error('Request failed for Widget=' . $this->getWidgetId() . '. Due to No Records Found');
-                return '';
-            }
+        if ($noDataMessage != '') {
+            $items[] = [
+                'startDate' => 0,
+                'endDate' => Carbon::now()->addYear()->format('c'),
+                'item' => $noDataMessage,
+                'currentEventItem' => $noDataMessage,
+                'noDataMessage' => 1
+            ];
+        } else {
+            $this->getLog()->error('Request failed for Widget=' . $this->getWidgetId() . '. Due to No Records Found');
+            return '';
+        }
 
         // Information from the Module
         $itemsSideBySide = $this->getOption('itemsSideBySide', 0);
@@ -719,7 +724,7 @@ class Agenda extends ModuleWidget
      * @param Carbon $startDt
      * @param Carbon $endDt
      * @param $dateFormat
-     * @param $event
+     * @param \ICal\Event $event
      * @return mixed
      */
     private function substituteForEvent($matches, $string, $startDt, $endDt, $dateFormat, $event)

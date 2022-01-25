@@ -26,6 +26,7 @@ use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\DataSetColumn;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -816,10 +817,22 @@ class DataSetTicker extends ModuleWidget
                                 } else {
                                     $replace = '';
                                 }
-                            }
-                            catch (NotFoundException $e) {
+                            } catch (NotFoundException $e) {
                                 $this->getLog()->error(sprintf('Library Image [%s] not found in DataSetId %d.', $replace, $dataSetId));
                                 $replace = '';
+                            }
+                        } else if ($mappings[$header]['dataTypeId'] === 3) {
+                            // We have a date
+                            // see if a format has been provided.
+                            if (isset($subs[2])) {
+                                try {
+                                    $replace = Carbon::createFromFormat(
+                                        DateFormatHelper::getSystemFormat(),
+                                        $replace
+                                    )->format($subs[2]);
+                                } catch (\Exception $exception) {
+                                    $this->getLog()->debug('widgetId: ' . $this->getWidgetId() . '. Invalid date format sub: ' . $sub[2]);
+                                }
                             }
                         }
                     }
