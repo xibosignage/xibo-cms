@@ -316,7 +316,7 @@ class ModuleFactory extends BaseFactory
      * @return ModuleWidget
      * @throws NotFoundException
      */
-    public function createById($moduleId)
+    public function createById(string $moduleId)
     {
         return $this->moduleService->get(
             $this->getById($moduleId),
@@ -580,17 +580,21 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Get View Paths
-     * @return array[string]
+     * @return string[]
      */
-    public function getViewPaths()
+    public function getViewPaths(): array
     {
+        $paths = [];
         $modules = $this->query();
-        $paths = array_map(function ($module) {
-            /* @var Module $module */
-            return Str::replaceFirst('..', PROJECT_ROOT, $module->viewPath);
-        }, $modules);
-
-        $paths = array_unique($paths);
+        foreach ($modules as $module) {
+            $path = Str::replaceFirst('..', PROJECT_ROOT, $module->viewPath);
+            if (is_dir($path)) {
+                $paths[] = $path;
+            } else {
+                $this->getLog()->notice('View path ' . $module->viewPath . ' for module '
+                    . $module->class . ' does not exist.');
+            }
+        }
 
         return $paths;
     }

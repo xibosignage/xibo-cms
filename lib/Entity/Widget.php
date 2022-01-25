@@ -39,6 +39,7 @@ use Xibo\Widget\ModuleWidget;
  * @package Xibo\Entity
  *
  * @SWG\Definition()
+ * @property int $isValid Is this Widget valid
  */
 class Widget implements \JsonSerializable
 {

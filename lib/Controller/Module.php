@@ -214,15 +214,16 @@ class Module extends Base
         foreach ($modules as $module) {
             /* @var \Xibo\Entity\Module $module */
 
-            if ($this->isApi($request))
+            if ($this->isApi($request)) {
                 break;
+            }
 
             $module->includeProperty('buttons');
 
             // Edit button
             $module->buttons[] = array(
                 'id' => 'module_button_edit',
-                'url' => $this->urlFor($request,'module.settings.form', ['id' => $module->moduleId]),
+                'url' => $this->urlFor($request, 'module.settings.form', ['id' => $module->moduleId]),
                 'text' => __('Edit')
             );
 
@@ -230,7 +231,7 @@ class Module extends Base
             if ($module->regionSpecific == 1) {
                 $module->buttons[] = array(
                     'id' => 'module_button_clear_cache',
-                    'url' => $this->urlFor($request,'module.clear.cache.form', ['id' => $module->moduleId]),
+                    'url' => $this->urlFor($request, 'module.clear.cache.form', ['id' => $module->moduleId]),
                     'text' => __('Clear Cache'),
                     'dataAttributes' => [
                         ['name' => 'auto-submit', 'value' => true],
@@ -240,20 +241,35 @@ class Module extends Base
                 );
             }
 
-            // Create a module object and return any buttons it may require
-            $moduleObject = $this->moduleFactory->create($module->type)
-                ->setUser($this->getUser())
-                ->setPreview(
-                    true,
-                    RouteContext::fromRequest($request)->getRouteParser(),
-                    0,
-                    0
-                );
+            // Uninstall button
+            if ($module->enabled === 0 && !empty($module->installName)) {
+                $module->buttons[] = ['divider' => true];
+                $module->buttons[] = [
+                    'id' => 'module_button_uninstall',
+                    'url' => $this->urlFor($request, 'module.uninstall.form', ['id' => $module->moduleId]),
+                    'text' => __('Uninstall')
+                ];
+            }
 
-            // Are there any buttons we need to provide as part of the module?
-            foreach ($moduleObject->settingsButtons() as $button) {
-                $button['text'] = __($button['text']);
-                $module->buttons[] = $button;
+            // Create a module object and return any buttons it may require
+            try {
+                $moduleObject = $this->moduleFactory->create($module->type)
+                    ->setUser($this->getUser())
+                    ->setPreview(
+                        true,
+                        RouteContext::fromRequest($request)->getRouteParser(),
+                        0,
+                        0
+                    );
+
+                // Are there any buttons we need to provide as part of the module?
+                foreach ($moduleObject->settingsButtons() as $button) {
+                    $button['text'] = __($button['text']);
+                    $module->buttons[] = $button;
+                }
+            } catch (NotFoundException $notFoundException) {
+                $this->getLog()->notice('Error with module ' . $module->type
+                    . ', e: ' . $notFoundException->getMessage());
             }
         }
 
@@ -278,20 +294,31 @@ class Module extends Base
     public function settingsForm(Request $request, Response $response, $id)
     {
         // Can we edit?
-        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1 || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
+        $moduleConfigLocked = $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1
+            || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked';
 
-        if (!$this->getUser()->userTypeId == 1)
+        if (!$this->getUser()->userTypeId == 1) {
             throw new AccessDeniedException();
+        }
 
-        $module = $this->moduleFactory->createById($id);
-
-        $moduleFields = $module->settingsForm();
+        $module = null;
+        $moduleFields = null;
+        $error = false;
+        try {
+            $module = $this->moduleFactory->createById($id);
+            $moduleFields = $module->settingsForm();
+        } catch (NotFoundException $notFoundException) {
+            // There is an error with this module.
+            $error = true;
+        }
 
         // Pass to view
         $this->getState()->template = ($moduleFields == null) ? 'module-form-settings' : $moduleFields;
         $this->getState()->setData([
             'moduleConfigLocked' => $moduleConfigLocked,
+            'moduleId' => $id,
             'module' => $module,
+            'error' => $error,
             'help' => $this->getHelp()->link('Module', 'Edit')
         ]);
 
@@ -311,21 +338,26 @@ class Module extends Base
      */
     public function settings(Request $request, Response $response, $id)
     {
-        // Can we edit?
-        $moduleConfigLocked = ($this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 1
-            || $this->getConfig()->getSetting('MODULE_CONFIG_LOCKED_CHECKB') == 'Checked');
-
-        $sanitizedPrams = $this->getSanitizer($request->getParams());
-
         if (!$this->getUser()->userTypeId == 1) {
             throw new AccessDeniedException();
         }
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        $module = $this->moduleFactory->createById($id);
-        $module->getModule()->defaultDuration = $sanitizedPrams->getInt('defaultDuration');
-        $module->getModule()->validExtensions = $sanitizedPrams->getString('validExtensions');
-        $module->getModule()->enabled = $sanitizedPrams->getCheckbox('enabled');
-        $module->getModule()->previewEnabled = $sanitizedPrams->getCheckbox('previewEnabled');
+        try {
+            $module = $this->moduleFactory->createById($id);
+        } catch (NotFoundException $notFoundException) {
+            // If we can't load the module, we should disable it.
+            $module = $this->moduleFactory->getById($id);
+            $module->enabled = 0;
+            $module->save();
+            return $this->render($request, $response);
+        }
+
+        // Module loaded, so continue with the normal edit procedure.
+        $module->getModule()->defaultDuration = $sanitizedParams->getInt('defaultDuration');
+        $module->getModule()->validExtensions = $sanitizedParams->getString('validExtensions');
+        $module->getModule()->enabled = $sanitizedParams->getCheckbox('enabled');
+        $module->getModule()->previewEnabled = $sanitizedParams->getCheckbox('previewEnabled');
 
         // for Font Module set the User, needed for installing fonts in MediaService
         if ($module->getModuleType() === 'font') {
@@ -518,6 +550,61 @@ class Module extends Base
             'data' => $module
         ]);
 
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @param Request $request
+     * @param Response $response
+     * @param string $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function uninstallForm(Request $request, Response $response, $id)
+    {
+        $module = $this->moduleFactory->getById($id);
+        if (empty($module->installName)) {
+            throw new InvalidArgumentException(
+                __('Cannot uninstall a core module, please disable it instead.'),
+                'installName'
+            );
+        }
+        
+        $this->getState()->template = 'module-form-uninstall';
+        $this->getState()->setData([
+            'module' => $module,
+            'help' => $this->getHelp()->link('Module', 'Install')
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Install Module
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function uninstall(Request $request, Response $response, $id)
+    {
+        $module = $this->moduleFactory->getById($id);
+        if (empty($module->installName)) {
+            throw new InvalidArgumentException(
+                __('Cannot uninstall a core module, please disable it instead.'),
+                'installName'
+            );
+        }
+        $module->delete();
+
+        $this->getState()->hydrate([
+            'message' => sprintf(__('Uninstalled %s'), $module->name),
+        ]);
         return $this->render($request, $response);
     }
 
@@ -759,16 +846,26 @@ class Module extends Base
      */
     public function deleteWidgetForm(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
+        $widget = $this->widgetFactory->loadByWidgetId($id);
 
-        if (!$this->getUser()->checkDeleteable($module->widget)) {
+        if (!$this->getUser()->checkDeleteable($widget)) {
             throw new AccessDeniedException(__('This Widget is not shared with you with delete permission'));
+        }
+
+        $error = false;
+        $module = null;
+        try {
+            $module = $this->moduleFactory->createWithWidget($widget);
+        } catch (NotFoundException $notFoundException) {
+            $error = true;
         }
 
         // Pass to view
         $this->getState()->template = 'module-form-delete';
         $this->getState()->setData([
+            'widgetId' => $id,
             'module' => $module,
+            'error' => $error,
             'help' => $this->getHelp()->link('Media', 'Delete')
         ]);
 
@@ -808,11 +905,22 @@ class Module extends Base
      */
     public function deleteWidget(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
+        $widget = $this->widgetFactory->loadByWidgetId($id);
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
-        if (!$this->getUser()->checkDeleteable($module->widget)) {
+        if (!$this->getUser()->checkDeleteable($widget)) {
             throw new AccessDeniedException(__('This Widget is not shared with you with delete permission'));
+        }
+
+        try {
+            $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($id));
+        } catch (NotFoundException $notFoundException) {
+            // This module doesn't exist, so we just delete the widget.
+            $widget->delete();
+            $this->getState()->hydrate([
+                'message' => __('Deleted Widget')
+            ]);
+            return $this->render($request, $response);
         }
 
         // Test to see if we are on a Region Specific Playlist or a standalone
