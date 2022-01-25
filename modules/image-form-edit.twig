@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -65,13 +65,16 @@
                     </div>
 
                     <div class="tab-pane" id="appearanceTab">
-                        {% set title %}{% trans "Scale type" %}{% endset %}
+                        {% set fitMessage %}{{ "Fit supported from: "|trans }} {% endset %}
+                        {% set title %}{% trans "Scale type" %} {{ forms.playerCompat("v3 R304", "TBC", "TBC", "TBC", "v3 R303", fitMessage) }}{% endset %}
                         {% set helpText %}{% trans "How should this image be scaled?" %}{% endset %}
                         {% set center %}{% trans "Centre" %}{% endset %}
                         {% set stretch %}{% trans "Stretch" %}{% endset %}
+                        {% set fit %}{% trans "Fit" %}{% endset %}
                         {% set options = [
                         { scaleTypeId: "center", scaleType: center },
-                        { scaleTypeId: "stretch", scaleType: stretch }
+                        { scaleTypeId: "stretch", scaleType: stretch },
+                        { scaleTypeId: "fit", scaleType: fit },
                         ] %}
                         {{ forms.dropdown("scaleTypeId", "single", title, module.getOption("scaleType"), options, "scaleTypeId", "scaleType", helpText) }}
 

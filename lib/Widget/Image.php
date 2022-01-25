@@ -167,14 +167,19 @@ class Image extends ModuleWidget
     /** @inheritdoc */
     public function preview($width, $height, $scaleOverride = 0)
     {
-        if ($this->module->previewEnabled == 0)
+        if ($this->module->previewEnabled == 0) {
             return parent::preview($width, $height, $scaleOverride);
+        }
 
-        $proportional = ($this->getOption('scaleType') == 'stretch') ? 0 : 1;
+        $proportional = ($this->getOption('scaleType') !== 'stretch') ? 1 : 0;
+        $fit = $this->getOption('scaleType') === 'fit' ? 1 : 0;
         $align = $this->getOption('align', 'center');
         $vAlign = $this->getOption('valign', 'middle');
 
-        $url = $this->urlFor('library.download', ['regionId' => $this->region->regionId, 'id' => $this->getMediaId()]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional;
+        $url = $this->urlFor('library.download', [
+            'regionId' => $this->region->regionId,
+            'id' => $this->getMediaId()
+            ]) . '?preview=1&width=' . $width . '&height=' . $height . '&proportional=' . $proportional . '&fit=' . $fit;
 
         // Show the image - scaled to the aspect ratio of this region (get from GET)
         return '<div style="display:table; width:100%; height: ' . $height . 'px">
@@ -260,21 +265,29 @@ class Image extends ModuleWidget
                     $response = $this->cacheProvider->withEtag($response, md5_file($thumbPath));
                 } else {
                     // Not a thumbnail, output the whole file
-                    $proportional = !$sanitizedParams->hasParam('proportional') || $sanitizedParams->getCheckbox('proportional') == 1;
+                    $proportional = !$sanitizedParams->hasParam('proportional')
+                        || $sanitizedParams->getCheckbox('proportional') == 1;
+
+                    $fit = $proportional && $sanitizedParams->getCheckbox('fit') === 1;
 
                     $this->getLog()->debug('Whole file: ' . $filePath
                         . ' requested with Width and Height ' . $width . ' x ' . $height
-                        . ', proportional: ' . var_export($proportional, true));
+                        . ', proportional: ' . var_export($proportional, true)
+                        . ', fit: ' . var_export($fit, true));
 
                     $img = Img::make($filePath);
 
                     // Output a specific width/height
                     if ($width > 0 && $height > 0) {
-                        $img->resize($width, $height, function ($constraint) use ($proportional) {
-                            if ($proportional) {
-                                $constraint->aspectRatio();
-                            }
-                        });
+                        if ($fit) {
+                            $img->fit($width, $height);
+                        } else {
+                            $img->resize($width, $height, function ($constraint) use ($proportional) {
+                                if ($proportional) {
+                                    $constraint->aspectRatio();
+                                }
+                            });
+                        }
                     }
                 }
 
