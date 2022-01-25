@@ -305,7 +305,7 @@ class Module extends Base
         $moduleFields = null;
         $error = false;
         try {
-            $module = $this->moduleFactory->createById($id);
+            $module = $this->moduleFactory->createById((int)$id);
             $moduleFields = $module->settingsForm();
         } catch (NotFoundException $notFoundException) {
             // There is an error with this module.
@@ -344,7 +344,7 @@ class Module extends Base
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         try {
-            $module = $this->moduleFactory->createById($id);
+            $module = $this->moduleFactory->createById((int)$id);
         } catch (NotFoundException $notFoundException) {
             // If we can't load the module, we should disable it.
             $module = $this->moduleFactory->getById($id);
@@ -1488,7 +1488,7 @@ class Module extends Base
      */
     public function customFormRender(Request $request, Response $response, $id, $name)
     {
-        $module = $this->moduleFactory->createById($id);
+        $module = $this->moduleFactory->createById((int)$id);
 
         if (!method_exists($module, $name)) {
             throw new ConfigurationException(__('Method does not exist'));
@@ -1524,7 +1524,7 @@ class Module extends Base
      */
     public function customFormExecute(Request $request, Response $response, $id, $name)
     {
-        $module = $this->moduleFactory->createById($id);
+        $module = $this->moduleFactory->createById((int)$id);
 
         if (!method_exists($module, $name)) {
             throw new ConfigurationException(__('Method does not exist'));
@@ -1631,7 +1631,7 @@ class Module extends Base
      */
     public function clearCache(Request $request, Response $response, $id)
     {
-        $module = $this->moduleFactory->createById($id);
+        $module = $this->moduleFactory->createById((int)$id);
         $module->dumpCacheForModule();
 
         $this->getState()->hydrate([

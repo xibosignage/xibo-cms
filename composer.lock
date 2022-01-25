@@ -6043,12 +6043,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/support.git",
-                "reference": "92b04037062e2c1a3dcf0c0db97c387b98349227"
+                "reference": "00dbe80d1db63ffd8ce345dd4f5050b401929304"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/support/zipball/92b04037062e2c1a3dcf0c0db97c387b98349227",
-                "reference": "92b04037062e2c1a3dcf0c0db97c387b98349227",
+                "url": "https://api.github.com/repos/xibosignage/support/zipball/00dbe80d1db63ffd8ce345dd4f5050b401929304",
+                "reference": "00dbe80d1db63ffd8ce345dd4f5050b401929304",
                 "shasum": ""
             },
             "require": {
@@ -6086,7 +6086,7 @@
                 "source": "https://github.com/xibosignage/support/tree/master",
                 "issues": "https://github.com/xibosignage/support/issues"
             },
-            "time": "2021-05-24T13:13:13+00:00"
+            "time": "2022-01-25T11:52:37+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
@@ -6924,6 +6924,7 @@
             "keywords": [
                 "tokenizer"
             ],
+            "abandoned": true,
             "time": "2017-11-27T05:48:46+00:00"
         },
         {

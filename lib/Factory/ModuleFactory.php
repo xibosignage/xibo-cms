@@ -312,11 +312,11 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Create a Module
-     * @param string $moduleId
+     * @param int $moduleId
      * @return ModuleWidget
      * @throws NotFoundException
      */
-    public function createById(string $moduleId)
+    public function createById(int $moduleId)
     {
         return $this->moduleService->get(
             $this->getById($moduleId),
