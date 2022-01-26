@@ -524,7 +524,7 @@ class MenuBoard extends ModuleWidget
             if ($templateFlex) {
                 $menu .= "style='" . $templateFlex . "'";
             }
-            $menu .= " >";
+            $menu .= ' >';
 
             // Create zones
             for ($i = 1; $i <= $this->getOption('templateZones'); $i++) {
@@ -537,7 +537,7 @@ class MenuBoard extends ModuleWidget
                 if ($templateFlex) {
                     $menu .= 'style="flex:' . $templateFlexSize[$i] . '";';
                 }
-                $menu .= " >";
+                $menu .= ' >';
 
                 foreach ($categoryIds as $categoryId) {
                     // Get the category
