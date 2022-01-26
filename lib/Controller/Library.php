@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
@@ -2566,6 +2567,8 @@ class Library extends Base
             ->initLibrary()
             ->checkLibraryOrQuotaFull(true);
 
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
         // Hand these off to the connector to format into a downloadable response.
         $importQueue = [];
         foreach ($items as $item) {
@@ -2577,6 +2580,8 @@ class Library extends Base
             $import->searchResult->id = $item['id'];
             $import->searchResult->type = $item['type'];
             $import->searchResult->download = $item['download'];
+            $import->searchResult->duration = (int)$item['duration'];
+            $import->searchResult->pictureId = $item['pictureId'];
             $importQueue[] = $import;
         }
         $event = new LibraryProviderImportEvent($importQueue);
@@ -2601,7 +2606,7 @@ class Library extends Base
                         0,
                         [
                             'fileType' => strtolower($module->getModuleType()),
-                            'duration' => $module->determineDuration(),
+                            'duration' => !(empty($import->searchResult->duration)) ? $import->searchResult->duration : $module->determineDuration(),
                             'enableStat' => $enableStat,
                             'folderId' => $folderId,
                             'permissionsFolderId' => $permissionsFolderId
@@ -2616,16 +2621,39 @@ class Library extends Base
         }
 
         // Process all of those downloads
-        $this->mediaFactory->processDownloads(null, function ($media) use ($importQueue) {
-            // Failure
-            // Pull out the import which failed.
-            foreach ($importQueue as $import) {
-                /** @var ProviderImport $import */
-                if ($import->media->getId() === $media->getId()) {
-                    $import->setError(__('Download failed'));
+        $this->mediaFactory->processDownloads(
+            function ($media) use ($importQueue, $libraryLocation) {
+                // Success
+                // if we have pictureId (pixabay) get the thumbnail for the video and save it to library
+                foreach ($importQueue as $import) {
+                    /** @var ProviderImport $import */
+                    if ($import->media->getId() === $media->getId() && $media->mediaType === 'video' && !empty($import->searchResult->pictureId)) {
+                        try {
+                            $client = new Client();
+                            $client->request(
+                                'GET',
+                                str_replace('pictureId', $import->searchResult->pictureId, 'https://i.vimeocdn.com/video/pictureId_960x540.png'),
+                                ['sink' => $libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png']
+                            );
+                        } catch (\Exception $exception) {
+                            // if we failed, corrupted file might still be created, remove it here
+                            unlink($libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png');
+                            $this->getLog()->error(sprintf('Downloading thumbnail for video %s failed with message %s', $media->name, $exception->getMessage()));
+                        }
+                    }
+                }
+            },
+            function ($media) use ($importQueue) {
+                // Failure
+                // Pull out the import which failed.
+                foreach ($importQueue as $import) {
+                    /** @var ProviderImport $import */
+                    if ($import->media->getId() === $media->getId()) {
+                        $import->setError(__('Download failed'));
+                    }
                 }
             }
-        });
+        );
 
         // Return
         $this->getState()->hydrate([

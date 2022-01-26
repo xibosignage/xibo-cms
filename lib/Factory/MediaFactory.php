@@ -230,7 +230,6 @@ class MediaFactory extends BaseFactory
         // Add to our collection of queued downloads
         // but only if its not already in the queue (we might have tried to queue it multiple times in the same request)
         if ($media->isSaveRequired) {
-
             $this->getLog()->debug('We are required to download as this file is either expired or not existing');
 
             $queueItem = true;
@@ -245,9 +244,9 @@ class MediaFactory extends BaseFactory
                 }
             }
 
-            if ($queueItem)
+            if ($queueItem) {
                 $this->remoteDownloadQueue[] = $media;
-
+            }
         } else {
             // Queue in the not required download queue
             $this->getLog()->debug('Download not required as this file exists and is up to date. Expires = ' . $media->getOriginalValue('expires'));
@@ -264,8 +263,9 @@ class MediaFactory extends BaseFactory
                 }
             }
 
-            if ($queueItem)
+            if ($queueItem) {
                 $this->remoteDownloadNotRequiredQueue[] = $media;
+            }
         }
 
         // Return the media item
@@ -280,7 +280,6 @@ class MediaFactory extends BaseFactory
     public function processDownloads($success = null, $failure = null)
     {
         if (count($this->remoteDownloadQueue) > 0) {
-
             $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadQueue) . ' downloads.');
 
             // Create a generator and Pool
@@ -292,7 +291,7 @@ class MediaFactory extends BaseFactory
                 foreach ($queue as $media) {
                     $url = $media->downloadUrl();
                     $sink = $media->downloadSink();
-                    $requestOptions = array_merge($media->downloadRequestOptions(),  ['save_to' => $sink]);
+                    $requestOptions = array_merge($media->downloadRequestOptions(), ['save_to' => $sink]);
 
                     yield function () use ($client, $url, $requestOptions) {
                         return $client->getAsync($url, $requestOptions);
@@ -311,9 +310,9 @@ class MediaFactory extends BaseFactory
                         $item->saveFile();
 
                         // If a success callback has been provided, call it
-                        if ($success !== null && is_callable($success))
+                        if ($success !== null && is_callable($success)) {
                             $success($item);
-
+                        }
                     } catch (\Exception $e) {
                         $this->getLog()->error('Unable to save:' . $item->mediaId . '. ' . $e->getMessage());
 
@@ -321,8 +320,9 @@ class MediaFactory extends BaseFactory
                         $item->delete(['rollback' => true]);
 
                         // If a failure callback has been provided, call it
-                        if ($failure !== null && is_callable($failure))
+                        if ($failure !== null && is_callable($failure)) {
                             $failure($item);
+                        }
                     }
                 },
                 'rejected' => function ($reason, $index) use ($log) {
@@ -341,8 +341,9 @@ class MediaFactory extends BaseFactory
 
             foreach ($this->remoteDownloadNotRequiredQueue as $item) {
                 // If a success callback has been provided, call it
-                if ($success !== null && is_callable($success))
+                if ($success !== null && is_callable($success)) {
                     $success($item);
+                }
             }
         }
 
@@ -867,5 +868,22 @@ class MediaFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * This is called for video or audio on saveFile
+     * When uploading from URL the duration is set to 0 (module default)
+     * On saveFile we can get the real duration from the file in the library and update the record
+     *
+     * @param Media $media
+     * @return int
+     */
+    public function determineRealDuration(Media $media)
+    {
+        $libraryFolder = $this->config->getSetting('LIBRARY_LOCATION');
+        $this->getLog()->debug('Determine Duration from ' . $media->name);
+        $info = new \getID3();
+        $file = $info->analyze($libraryFolder . $media->storedAs);
+        return intval($this->getSanitizer($file)->getDouble('playtime_seconds', ['default' => 0]));
     }
 }
