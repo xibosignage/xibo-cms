@@ -500,8 +500,9 @@ class Media implements \JsonSerializable
             'saveTags' => true
         ], $options);
 
-        if ($options['validate'] && $this->mediaType != 'module')
+        if ($options['validate'] && $this->mediaType !== 'module') {
             $this->validate($options);
+        }
 
         // Add or edit
         if ($this->mediaId == null || $this->mediaId == 0) {
@@ -510,14 +511,23 @@ class Media implements \JsonSerializable
             // Always set force to true as we always want to save new files
             $this->isSaveRequired = true;
 
-            $this->audit($this->mediaId, 'Added', ['mediaId' => $this->mediaId, 'name' => $this->name, 'mediaType' => $this->mediaType, 'fileName' => $this->fileName, 'folderId' => $this->folderId]);
-        }
-        else {
+            $this->audit($this->mediaId, 'Added', [
+                'mediaId' => $this->mediaId,
+                'name' => $this->name,
+                'mediaType' => $this->mediaType,
+                'fileName' => $this->fileName,
+                'folderId' => $this->folderId
+            ]);
+        } else {
             $this->edit();
 
             // If the media file is invalid, then force an update (only applies to module files)
             $expires = $this->getOriginalValue('expires');
-            $this->isSaveRequired = ($this->isSaveRequired || $this->valid == 0 || ($expires > 0 && $expires < Carbon::now()->format('U')));
+            $this->isSaveRequired = $this->isSaveRequired
+                || $this->valid == 0
+                || ($expires > 0 && $expires < Carbon::now()->format('U'))
+                || ($this->mediaType === 'module' && !file_exists($this->downloadSink(false)));
+
             $this->audit($this->mediaId, 'Updated', $this->getChangedProperties());
         }
 
@@ -527,8 +537,9 @@ class Media implements \JsonSerializable
             $this->getLog()->debug('Media Update happening now');
 
             // Call save file
-            if ($this->isSaveRequired)
+            if ($this->isSaveRequired) {
                 $this->saveFile();
+            }
         }
 
         if ($options['saveTags']) {
@@ -943,9 +954,11 @@ class Media implements \JsonSerializable
      * Download Sink
      * @return string
      */
-    public function downloadSink()
+    public function downloadSink($temp = true)
     {
-        return $this->config->getSetting('LIBRARY_LOCATION') . 'temp' . DIRECTORY_SEPARATOR . $this->name;
+        return $this->config->getSetting('LIBRARY_LOCATION')
+            . ($temp ? 'temp' . DIRECTORY_SEPARATOR : '')
+            . $this->name;
     }
 
     /**

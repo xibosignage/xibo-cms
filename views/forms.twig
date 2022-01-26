@@ -338,9 +338,9 @@
     </div>
 {% endmacro %}
 
-{% macro playerCompat(android, linux, tizen, webos, windows) %}
+{% macro playerCompat(android, linux, tizen, webos, windows, message) %}
     <span class="fa fa-info-circle" data-toggle="popover" data-trigger="hover" data-placement="bottom" data-html="true"
-          data-content='<ul class="player-compatibility">
+          data-content='{% if message %}<p>{{ message }}</p>{% endif %}<ul class="player-compatibility">
                 {% if android %}<li><span class="fa fa-android"></span> {{ android }}</li>{% endif %}
                 {% if linux %}<li><span class="fa fa-linux"></span> {{ linux }}</li>{% endif %}
                 {% if tizen %}<li>Tizen: {{ tizen }}</li>{% endif %}

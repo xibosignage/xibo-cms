@@ -89,7 +89,14 @@ class MediaFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Media($this->getStore(), $this->getLog(), $this->config, $this, $this->permissionFactory, $this->tagFactory, $this->playlistFactory);
+        return new Media(
+            $this->getStore(),
+            $this->getLog(),
+            $this->config,
+            $this,
+            $this->permissionFactory,
+            $this->tagFactory
+        );
     }
 
     /**
@@ -228,7 +235,8 @@ class MediaFactory extends BaseFactory
         $media->saveAsync(['requestOptions' => $requestOptions]);
 
         // Add to our collection of queued downloads
-        // but only if its not already in the queue (we might have tried to queue it multiple times in the same request)
+        // but only if it's not already in the queue (we might have tried to queue it multiple times in
+        // the same request)
         if ($media->isSaveRequired) {
             $this->getLog()->debug('We are required to download as this file is either expired or not existing');
 

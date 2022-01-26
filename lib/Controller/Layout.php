@@ -1404,8 +1404,17 @@ class Layout extends Base
             // Annotate each Widget with its validity, tags and permissions
             if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) { 
                 foreach ($layout->getAllWidgets() as $widget) {
-                    /* @var Widget $widget */
-                    $module = $this->moduleFactory->createWithWidget($widget);
+                    try {
+                        $module = $this->moduleFactory->createWithWidget($widget);
+                    } catch (NotFoundException $notFoundException) {
+                        // This module isn't available, mark it as invalid.
+                        $widget->isValid = 0;
+                        $widget->moduleName = __('Invalid Module');
+                        $widget->name = __('Invalid Module');
+                        $widget->tags = [];
+                        $widget->isDeletable = 1;
+                        continue;
+                    }
 
                     $widget->name = $module->getName();
 
@@ -1450,7 +1459,7 @@ class Layout extends Base
 
                     if (in_array('widget_validity', $embed)) {
                         try {
-                            $widget->isValid = (int)$module->isValid();
+                            $widget->isValid = $module->isValid();
                         } catch (GeneralException $xiboException) {
                             $widget->isValid = 0;
                         }
