@@ -41,9 +41,12 @@
                         <div class="col-md-12">
                             <div class="text-info mb-1">{% trans "Menu Structure" %}</div>
                             {% set gridTemplate = module.getExtra().gridTemplate %}
-                            <div class="structure" style="grid-template: {{ gridTemplate }};">
+                            {% set flexTemplate = module.getExtra().flexTemplate %}
+                            {% set flexTemplateSize = module.getExtra().flexTemplateSize %}
+
+                            <div class="structure" style="{% if gridTemplate %}grid-template: {{ gridTemplate }};{% endif %}{{ flexTemplate }}">
                                 {% for i in 1..module.getOption("templateZones", 1) %}
-                                    <div class="connectedlist" style="grid-area: z{{ i }}";>
+                                    <div class="connectedlist" style="{% if gridTemplate %}grid-area: z{{ i }}{% endif %}{% if flexTemplateSize %}flex: {{ flexTemplateSize[i] }}{% endif %}";>
                                         <ul id="categoriesAssigned_{{ i }}"
                                             class="connectedSortable2 single">
                                             {% for category in module.menuBoardCategoriesSelectedAssigned(i) %}
