@@ -211,12 +211,16 @@ class MenuBoard extends ModuleWidget
         $templateInfo = $this->getTemplateInfo();
         $templateOptions = array_key_exists('options', $templateInfo) ? $templateInfo['options'] : [];
         $templateGrid = array_key_exists('grid-template', $templateInfo) ? $templateInfo['grid-template'] : '';
+        $templateFlex = array_key_exists('flex-template', $templateInfo) ? $templateInfo['flex-template'] : '';
+        $templateFlexSize = array_key_exists('flex-size', $templateInfo) ? $templateInfo['flex-size'] : '';
 
         return [
             'menuBoard' => $menuBoard,
             'menuCategories' => $menuBoardCategories,
             'templateOptions' => $templateOptions,
             'gridTemplate' => $templateGrid,
+            'flexTemplate' => $templateFlex,
+            'flexTemplateSize' => $templateFlexSize,
             'products' => $products,
             'highlightProducts' => explode(',', $this->getOption('highlightProducts'))
         ];
@@ -508,15 +512,32 @@ class MenuBoard extends ModuleWidget
             // Get template option property
             $templateInfo = $this->getTemplateInfo();
             $gridTemplate = array_key_exists('grid-template', $templateInfo) ? $templateInfo['grid-template'] : '';
+            $templateFlex = array_key_exists('flex-template', $templateInfo) ? $templateInfo['flex-template'] : '';
+            $templateFlexSize = array_key_exists('flex-size', $templateInfo) ? $templateInfo['flex-size'] : '';
+            $legacyTemplate = array_key_exists('legacy', $templateInfo) ? $templateInfo['legacy'] : false;
 
             // Menu categories container
-            $menu .= "<div class='menu-board-categories-container' style='display: grid; grid-template: " . $gridTemplate . ";' >";
+            $menu .= "<div class='menu-board-categories-container' ";
+            if ($gridTemplate) {
+                $menu .= "style='display: grid; grid-template: " . $gridTemplate . ";'";
+            }
+            if ($templateFlex) {
+                $menu .= "style='" . $templateFlex . "'";
+            }
+            $menu .= " >";
 
             // Create zones
             for ($i = 1; $i <= $this->getOption('templateZones'); $i++) {
                 $categoryIds = array_filter(explode(',', $this->getOption('categories_' . $i)));
         
-                $menu .= '<div class="menu-board-zone" id="menuBoardZone_' . $i . '" style="grid-area: z' . $i . ';" >';
+                $menu .= '<div class="menu-board-zone" id="menuBoardZone_' . $i . '" ';
+                if ($gridTemplate) {
+                    $menu .= 'style="grid-area: z' . $i . '";';
+                }
+                if ($templateFlex) {
+                    $menu .= 'style="flex:' . $templateFlexSize[$i] . '";';
+                }
+                $menu .= " >";
 
                 foreach ($categoryIds as $categoryId) {
                     // Get the category
@@ -599,6 +620,11 @@ class MenuBoard extends ModuleWidget
                             }
                         }
 
+                        // On legacy templates, we group the info items together
+                        if ($legacyTemplate) {
+                            $menu .= '<div class="menu-board-product-info">';
+                        }
+
                         // Product name and price should always be visible.
                         $menu .= '<div class="menu-board-product-name" id="productName_' . $i . '"><span>' . $categoryProduct->name . '</span></div>';
                         $menu .= '<div class="menu-board-product-price" id="productPrice_' . $i . '"><span>' . $categoryProduct->price . '</span></div>';
@@ -622,6 +648,11 @@ class MenuBoard extends ModuleWidget
                         // Allergy
                         if ($categoryProduct->allergyInfo) {
                             $menu .= '<div class="menu-board-product-allergy" id="productAllergyInfo_' . $i . '"><span>' . $categoryProduct->allergyInfo . '</span></div>';
+                        }
+
+                        // close info group
+                        if ($legacyTemplate) {
+                            $menu .= '</div>';
                         }
 
                         // Close menu-board-product
