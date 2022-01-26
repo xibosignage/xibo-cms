@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,7 +23,7 @@
 var LOG_LEVEL;
 
 /* String: Client Version */
-var VERSION = "1.8.3";
+var VERSION = "3.1";
 
 /* Int: Counter to ensure unique IDs */
 var ID_COUNTER = 0;
@@ -799,12 +799,14 @@ function media(parent, id, xml, options, preload) {
             });
         }
     }
-    else if (self.mediaType == "image") {
+    else if (self.mediaType === "image") {
         preload.addFiles(tmpUrl);
         media.css("background-image", "url('" + tmpUrl + "')");
-        if (self.options['scaletype'] == 'stretch')
-            media.css("background-size", "cover");
-        else {
+        if (self.options['scaletype'] === 'stretch') {
+          media.css('background-size', '100% 100%');
+        } else if (self.options['scaletype'] === 'fit') {
+          media.css('background-size', 'cover');
+        } else {
             // Center scale type, do we have align or valign?
             var align = (self.options['align'] == "") ? "center" : self.options['align'];
             var valign = (self.options['valign'] == "" || self.options['valign'] == "middle") ? "center" : self.options['valign'];

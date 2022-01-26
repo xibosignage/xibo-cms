@@ -620,7 +620,6 @@ class Calendar extends ModuleWidget
             'rangeEnd' => $this->getOption('rangeEnd'),
             'startTime' => $this->getOption('startTime'),
             'endTime' => $this->getOption('endTime'),
-            'endTime' => $this->getOption('endTime'),
             'noEventsMessage' => $this->getOption('noEventsMessage'),
             'textScale' => $this->getOption('textScale'),
             'weekdayNameLength' => $this->getOption('weekdayNameLength'),
