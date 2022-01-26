@@ -309,6 +309,7 @@ function XiboInitialise(scope) {
 
     $(scope + ' .dateTimePicker:not(.datePickerHelper)').each(function() {
         var enableSeconds = dateFormat.includes('s');
+        var enable24 = !dateFormat.includes('A');
 
         if(calendarType == 'Jalali') {
             initDatePicker(
@@ -331,7 +332,7 @@ function XiboInitialise(scope) {
                 jsDateFormat,
                 {
                     enableTime: true,
-                    time_24hr: true,
+                    time_24hr: enable24,
                     enableSeconds: enableSeconds,
                     altFormat: jsDateFormat
                 }
