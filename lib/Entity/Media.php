@@ -730,13 +730,16 @@ class Media implements \JsonSerializable
             $saveName = $this->mediaId . '.' . strtolower(substr($lastPeriod, 1));
         }
 
-        if(isset($this->urlDownload) && $this->urlDownload === true) {
-
+        if (isset($this->urlDownload) && $this->urlDownload === true) {
             // for upload via URL, handle cases where URL do not have specified extension in url
             // we either have a long string after lastPeriod or nothing
-
             if (isset($this->extension) && (strlen($lastPeriod) > 3 || $lastPeriod === false)) {
                 $saveName = $this->mediaId . '.' . $this->extension;
+            }
+
+            // if needed strip any not needed characters from the storedAs, this should be just <mediaId>.<extension>
+            if (strpos(basename($saveName), '?')) {
+                $saveName = substr(basename($saveName), 0, strpos(basename($saveName), '?'));
             }
 
             $this->storedAs = $saveName;
@@ -748,25 +751,24 @@ class Media implements \JsonSerializable
 
         // If the storesAs is empty, then set it to be the moved file name
         if (empty($this->storedAs) && !$this->alwaysCopy) {
-
             // We could be a fresh file entirely, or we could be a clone
             if ($this->cloned) {
                 $this->getLog()->debug('Copying cloned file: ' . $libraryFolder . $this->fileName);
                 // Copy the file into the library
-                if (!@copy($libraryFolder . $this->fileName, $libraryFolder . $saveName))
+                if (!@copy($libraryFolder . $this->fileName, $libraryFolder . $saveName)) {
                     throw new ConfigurationException(__('Problem copying file in the Library Folder'));
-
+                }
             } else {
                 $this->getLog()->debug('Moving temporary file: ' . $libraryFolder . 'temp/' . $this->fileName);
                 // Move the file into the library
-                if (!$this->moveFile($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $saveName))
+                if (!$this->moveFile($libraryFolder . 'temp/' . $this->fileName, $libraryFolder . $saveName)) {
                     throw new ConfigurationException(__('Problem moving uploaded file into the Library Folder'));
+                }
             }
 
             // Set the storedAs
             $this->storedAs = $saveName;
-        }
-        else {
+        } else {
             // We have pre-defined where we want this to be stored
             if (empty($this->storedAs)) {
                 // Assume we want to set this automatically (i.e. we are set to always copy)
@@ -777,13 +779,14 @@ class Media implements \JsonSerializable
                 $this->getLog()->debug('Moving temporary file: ' . $libraryFolder . 'temp/' . $this->name);
 
                 // Move the file into the library
-                if (!$this->moveFile($libraryFolder . 'temp/' . $this->name, $libraryFolder . $this->storedAs))
+                if (!$this->moveFile($libraryFolder . 'temp/' . $this->name, $libraryFolder . $this->storedAs)) {
                     throw new ConfigurationException(__('Problem moving downloaded file into the Library Folder'));
+                }
             } else {
                 $this->getLog()->debug('Copying specified file: ' . $this->fileName);
 
                 if (!@copy($this->fileName, $libraryFolder . $this->storedAs)) {
-                    $this->getLog()->error('Cannot copy %s to %s', $this->fileName, $libraryFolder . $this->storedAs);
+                    $this->getLog()->error(sprintf('Cannot copy %s to %s', $this->fileName, $libraryFolder . $this->storedAs));
                     throw new ConfigurationException(__('Problem copying provided file into the Library Folder'));
                 }
             }
@@ -959,5 +962,26 @@ class Media implements \JsonSerializable
     public function downloadRequestOptions()
     {
         return $this->requestOptions;
+    }
+
+    /**
+     * Update Media duration.
+     * This is called on processDownloads when uploading video/audio from url
+     * Real duration can be determined in determineRealDuration function in MediaFactory
+     * @param int $realDuration
+     * @return Media
+     */
+    public function updateDuration(int $realDuration)
+    {
+        $this->getLog()->debug('Updating duration for MediaId '. $this->mediaId);
+
+        $this->getStore()->update('UPDATE `media` SET duration = :duration WHERE mediaId = :mediaId', [
+            'duration' => $realDuration,
+            'mediaId' => $this->mediaId
+        ]);
+
+        $this->duration = $realDuration;
+
+        return $this;
     }
 }
