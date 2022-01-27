@@ -183,7 +183,7 @@ class PixabayConnector implements ConnectorInterface
                 $searchResult->type = 'video';
                 $searchResult->thumbnail = $result->videos->tiny->url;
                 $searchResult->duration = $result->duration;
-                $searchResult->pictureId = $result->picture_id;
+                $searchResult->videoThumbnailUrl = str_replace('pictureId', $result->picture_id, 'https://i.vimeocdn.com/video/pictureId_960x540.png');
                 if (!empty($result->videos->large)) {
                     $searchResult->download = $result->videos->large->url;
                     $searchResult->width = $result->videos->large->width;

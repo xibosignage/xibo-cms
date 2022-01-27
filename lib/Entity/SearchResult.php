@@ -39,7 +39,7 @@ class SearchResult implements \JsonSerializable
     public $width;
     public $height;
     public $duration;
-    public $pictureId;
+    public $videoThumbnailUrl;
 
     /** @var ProviderDetails */
     public $provider;
@@ -59,7 +59,7 @@ class SearchResult implements \JsonSerializable
             'width' => $this->width,
             'height' => $this->height,
             'fileSize' => $this->fileSize,
-            'pictureId' => $this->pictureId
+            'videoThumbnailUrl' => $this->videoThumbnailUrl
         ];
     }
 }

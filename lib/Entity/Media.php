@@ -803,20 +803,14 @@ class Media implements \JsonSerializable
         // This also sets orientation
         $this->assessDimensions();
 
-        // when added from URL, make sure we have correct duration in Media table for this record
-        if (($this->mediaType === 'video' || $this->mediaType === 'audio') && $this->duration === 0) {
-            $this->duration = $this->mediaFactory->determineRealDuration($this);
-        }
-
         // Update the MD5 and storedAs to suit
-        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, orientation = :orientation, duration = :duration, valid = 1 WHERE mediaId = :mediaId', [
+        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, orientation = :orientation, valid = 1 WHERE mediaId = :mediaId', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
             'expires' => $this->expires,
             'released' => $this->released,
             'orientation' => $this->orientation,
-            'duration' => $this->duration,
             'mediaId' => $this->mediaId
         ]);
     }
@@ -968,5 +962,21 @@ class Media implements \JsonSerializable
     public function downloadRequestOptions()
     {
         return $this->requestOptions;
+    }
+
+    /**
+     * Update Media duration.
+     * This is called on processDownloads when uploading video/audio from url
+     * Real duration can be determined in determineRealDuration function in MediaFactory
+     * @param int $realDuration
+     */
+    public function updateDuration(int $realDuration)
+    {
+        $this->getStore()->update('UPDATE `media` SET duration = :duration WHERE mediaId = :mediaId', [
+            'duration' => $realDuration,
+            'mediaId' => $this->mediaId
+        ]);
+
+        $this->getLog()->debug('Updating duration for MediaId '. $this->mediaId);
     }
 }

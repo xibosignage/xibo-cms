@@ -2374,9 +2374,15 @@ class Library extends Base
                 'permissionsFolderId' => $permissionsFolderId
             ]
         );
-        $this->mediaFactory->processDownloads(function($media) {
+        $this->mediaFactory->processDownloads(function (Media $media) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
+            if ($media->mediaType === 'video' || $media->mediaType === 'audio') {
+                $realDuration = $this->mediaFactory->determineRealDuration($media);
+                if ($realDuration !== $media->duration) {
+                    $media->updateDuration($realDuration);
+                }
+            }
         });
 
         // Return
@@ -2581,7 +2587,7 @@ class Library extends Base
             $import->searchResult->type = $item['type'];
             $import->searchResult->download = $item['download'];
             $import->searchResult->duration = (int)$item['duration'];
-            $import->searchResult->pictureId = $item['pictureId'];
+            $import->searchResult->videoThumbnailUrl = $item['videoThumbnailUrl'];
             $importQueue[] = $import;
         }
         $event = new LibraryProviderImportEvent($importQueue);
@@ -2622,23 +2628,28 @@ class Library extends Base
 
         // Process all of those downloads
         $this->mediaFactory->processDownloads(
-            function ($media) use ($importQueue, $libraryLocation) {
+            function (Media $media) use ($importQueue, $libraryLocation) {
                 // Success
-                // if we have pictureId (pixabay) get the thumbnail for the video and save it to library
+                // if we have video thumbnail url from provider, download it now
                 foreach ($importQueue as $import) {
                     /** @var ProviderImport $import */
-                    if ($import->media->getId() === $media->getId() && $media->mediaType === 'video' && !empty($import->searchResult->pictureId)) {
+                    if ($import->media->getId() === $media->getId() && $media->mediaType === 'video' && !empty($import->searchResult->videoThumbnailUrl)) {
                         try {
                             $client = new Client();
                             $client->request(
                                 'GET',
-                                str_replace('pictureId', $import->searchResult->pictureId, 'https://i.vimeocdn.com/video/pictureId_960x540.png'),
+                                $import->searchResult->videoThumbnailUrl,
                                 ['sink' => $libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png']
                             );
                         } catch (\Exception $exception) {
                             // if we failed, corrupted file might still be created, remove it here
                             unlink($libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png');
-                            $this->getLog()->error(sprintf('Downloading thumbnail for video %s failed with message %s', $media->name, $exception->getMessage()));
+                            $this->getLog()->error(sprintf(
+                                'Downloading thumbnail for video %s, from url %s, failed with message %s',
+                                $media->name,
+                                $import->searchResult->videoThumbnailUrl,
+                                $exception->getMessage()
+                            ));
                         }
                     }
                 }
