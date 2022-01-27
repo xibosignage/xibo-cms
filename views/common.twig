@@ -76,6 +76,10 @@
                     url: "{{ url_for("layout.discard", {id: ':id'}) }}",
                     type: 'PUT'
                 },
+                delete: {
+                    url: "{{ url_for("layout.delete", {id: ':id'}) }}",
+                    type: 'DELETE'
+                },
                 unlock: {
                     url: "{{ url_for("layout.lock.release", {id: ':id'}) }}",
                     type: 'PUT'
@@ -103,6 +107,10 @@
                 },
                 discardForm: {
                     url: "{{ url_for("layout.discard.form", {id: ':id'}) }}",
+                    type: 'GET'
+                },
+                deleteForm: {
+                    url: "{{ url_for("layout.delete.form", {id: ':id'}) }}",
                     type: 'GET'
                 },
                 addActionForm: {
@@ -286,6 +294,7 @@
                 resetTourNotification: "{{ "Layout Designer Tour enabled!" |trans }}",
                 tooltipsDisabled: "{{ "Tooltips disabled!" |trans }}",
                 tooltipsEnabled: "{{ "Tooltips enabled!" |trans }}",
+                retire: "{{ "Retire" |trans }}",
                 publish: "{{ "Publish" |trans }}",
                 discard: "{{ "Discard"|trans }}",
                 copyToClipboard: "{{ "Copy to Clipboard"|trans }}",

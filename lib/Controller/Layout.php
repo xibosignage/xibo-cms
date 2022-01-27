@@ -1555,6 +1555,9 @@ class Layout extends Base
             $layout->publishedStatusFuture = __('Publishing %s');
             $layout->publishedStatusFailed = __('Publish failed ');
 
+            // Check if user has delete permissions - for layout designer to show/hide Delete button
+            $layout->deletePermission = $this->getUser()->featureEnabled('layout.modify');
+
             // Check if user has view permissions to the schedule now page - for layout designer to show/hide Schedule Now button
             $layout->scheduleNowPermission = $this->getUser()->featureEnabled('schedule.now');
 
