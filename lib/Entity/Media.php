@@ -969,14 +969,19 @@ class Media implements \JsonSerializable
      * This is called on processDownloads when uploading video/audio from url
      * Real duration can be determined in determineRealDuration function in MediaFactory
      * @param int $realDuration
+     * @return Media
      */
     public function updateDuration(int $realDuration)
     {
+        $this->getLog()->debug('Updating duration for MediaId '. $this->mediaId);
+
         $this->getStore()->update('UPDATE `media` SET duration = :duration WHERE mediaId = :mediaId', [
             'duration' => $realDuration,
             'mediaId' => $this->mediaId
         ]);
 
-        $this->getLog()->debug('Updating duration for MediaId '. $this->mediaId);
+        $this->duration = $realDuration;
+
+        return $this;
     }
 }
