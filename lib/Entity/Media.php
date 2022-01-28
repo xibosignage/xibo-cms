@@ -1093,7 +1093,7 @@ class Media implements \JsonSerializable
      * @param int $realDuration
      * @return Media
      */
-    public function updateDuration(int $realDuration)
+    public function updateDuration(int $realDuration): Media
     {
         $this->getLog()->debug('Updating duration for MediaId '. $this->mediaId);
 

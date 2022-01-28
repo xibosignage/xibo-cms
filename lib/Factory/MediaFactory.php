@@ -839,7 +839,7 @@ class MediaFactory extends BaseFactory
      * @param Media $media
      * @return int
      */
-    public function determineRealDuration(Media $media)
+    public function determineRealDuration(Media $media): int
     {
         $libraryFolder = $this->config->getSetting('LIBRARY_LOCATION');
         $this->getLog()->debug('Determine Duration from ' . $media->name);
