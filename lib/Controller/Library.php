@@ -365,16 +365,44 @@ class Library extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function displayPage(Request $request, Response $response)
+    public function displayPage(Request $request, Response $response)
     {
-        // Users we have permission to see
-        $this->getState()->template = 'library-page';
-        $this->getState()->setData([
-            'users' => $this->userFactory->query(),
-            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1, 'notSavedReport' => 1]),
-            'groups' => $this->userGroupFactory->query(),
-            'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
-        ]);
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
+        $mediaId = $sanitizedParams->getInt('mediaId');
+
+        if ($mediaId !== null) {
+            $media = $this->mediaFactory->getById($mediaId);
+            $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+            $filePath = $libraryLocation . $media->storedAs;
+
+            if (!$this->getUser()->checkViewable($media)) {
+                throw new AccessDeniedException();
+            }
+
+            // Thumbnail
+            $module = $this->moduleFactory->createWithMedia($media);
+            $media->thumbnail = '';
+            if ($module->hasThumbnail()) {
+                $media->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1]);
+            }
+            $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
+            list($imgWidth, $imgHeight) = @getimagesize($filePath);
+            $media->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
+
+            $this->getState()->template = 'library-direct-media-details';
+            $this->getState()->setData([
+                'media' => $media
+            ]);
+        } else {
+            // Users we have permission to see
+            $this->getState()->template = 'library-page';
+            $this->getState()->setData([
+                'users' => $this->userFactory->query(),
+                'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1, 'notSavedReport' => 1]),
+                'groups' => $this->userGroupFactory->query(),
+                'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
+            ]);
+        }
 
         return $this->render($request,$response);
     }
