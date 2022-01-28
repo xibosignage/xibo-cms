@@ -373,7 +373,6 @@ class Library extends Base
         if ($mediaId !== null) {
             $media = $this->mediaFactory->getById($mediaId);
             $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-            $filePath = $libraryLocation . $media->storedAs;
 
             if (!$this->getUser()->checkViewable($media)) {
                 throw new AccessDeniedException();
@@ -382,12 +381,21 @@ class Library extends Base
             // Thumbnail
             $module = $this->moduleFactory->createWithMedia($media);
             $media->thumbnail = '';
+
             if ($module->hasThumbnail()) {
                 $media->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1]);
+
+                if ($media->mediaType === 'video') {
+                    $filePath = $libraryLocation . $media->mediaId . '_videocover.png';
+                } else {
+                    $filePath = $libraryLocation . $media->storedAs;
+                }
+
+                list($imgWidth, $imgHeight) = @getimagesize($filePath);
+                $media->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
             }
+
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
-            list($imgWidth, $imgHeight) = @getimagesize($filePath);
-            $media->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
 
             $this->getState()->template = 'library-direct-media-details';
             $this->getState()->setData([
