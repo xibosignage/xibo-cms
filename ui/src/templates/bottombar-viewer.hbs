@@ -3,7 +3,7 @@
     <div class="pull-left">
         {{#if renderLayout}}
             <button type="button" id="play-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{ trans.playPreviewLayout }}">
-                <i class="fa fa-play-circle"></i>
+                <i class="fa fa-play-circle" data-toggle="popover" title="{{ trans.playPreviewLayoutPOTitle }}" data-content="{{ trans.playPreviewLayoutPOMessage }}" data-placement="top"></i>
             </button>
             {{#unless readOnlyModeOn}}
                 <button type="button" id="navigator-edit-btn" class="btn btn-sm hide-on-fs" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{ trans.editLayout }}">

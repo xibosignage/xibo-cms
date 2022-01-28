@@ -356,6 +356,12 @@ $(document).ready(function() {
         // Redirect to the layout grid
         window.location.href = urlsForApi.layout.list.url;
     });
+
+    if (window.addEventListener) {
+        window.addEventListener("message", lD.handleMessage);
+    } else {
+        window.attachEvent("onmessage", lD.handleMessage);
+    }
 });
 
 /**
@@ -2232,3 +2238,18 @@ lD.upgradeBreadcrumbTrail = function() {
         ($(this).hasClass('bc-layout')) ? lD.selectObject() : lD.selectObject($('#' + $(this).data('id')), true);
     });
 };
+
+/**
+ * Handle messages coming other windows (iframe)
+ * @param {object} event 
+ */
+lD.handleMessage = function(event) {
+    var messageFromSender = event.data;
+    if (messageFromSender == "viewerStoppedPlaying") {
+        // Refresh designer
+        lD.refreshDesigner();
+
+        // Show tooltip on play button
+        lD.bottombar.showPlayMessage();
+    }
+}
