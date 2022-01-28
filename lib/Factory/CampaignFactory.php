@@ -187,7 +187,7 @@ class CampaignFactory extends BaseFactory
             ) as tags
         ';
 
-        $body  = "
+        $body  = '
             FROM `campaign`
               LEFT OUTER JOIN `lkcampaignlayout`
               ON lkcampaignlayout.CampaignID = campaign.CampaignID
@@ -196,7 +196,7 @@ class CampaignFactory extends BaseFactory
               INNER JOIN `user`
               ON user.userId = campaign.userId 
            WHERE 1 = 1
-        ";
+        ';
 
         if ($sanitizedFilter->getInt('isLayoutSpecific', ['default' => 0]) != -1) {
             // Exclude layout specific campaigns
