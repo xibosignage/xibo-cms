@@ -2642,6 +2642,12 @@ class Library extends Base
         $this->mediaFactory->processDownloads(function($media) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
+            if ($media->mediaType === 'video' || $media->mediaType === 'audio') {
+                $realDuration = $this->mediaFactory->determineRealDuration($media);
+                if ($realDuration !== $media->duration) {
+                    $media->updateDuration($realDuration);
+                }
+            }
         });
 
         // get our uploaded media
