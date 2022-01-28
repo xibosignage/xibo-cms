@@ -22,6 +22,7 @@
 namespace Xibo\Controller;
 
 use Carbon\Carbon;
+use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
@@ -287,18 +288,41 @@ class Library extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function displayPage(Request $request, Response $response)
+    public function displayPage(Request $request, Response $response)
     {
-        // Users we have permission to see
-        $this->getState()->template = 'library-page';
-        $this->getState()->setData([
-            'users' => $this->userFactory->query(),
-            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1, 'notSavedReport' => 1]),
-            'groups' => $this->userGroupFactory->query(),
-            'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
-        ]);
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
+        $mediaId = $sanitizedParams->getInt('mediaId');
 
-        return $this->render($request,$response);
+        if ($mediaId !== null) {
+            $media = $this->mediaFactory->getById($mediaId);
+            if (!$this->getUser()->checkViewable($media)) {
+                throw new AccessDeniedException();
+            }
+
+            // Thumbnail
+            $module = $this->moduleFactory->createWithMedia($media);
+            $media->thumbnail = '';
+            if ($module->hasThumbnail()) {
+                $media->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1]);
+            }
+            $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
+
+            $this->getState()->template = 'library-direct-media-details';
+            $this->getState()->setData([
+                'media' => $media
+            ]);
+        } else {
+            // Users we have permission to see
+            $this->getState()->template = 'library-page';
+            $this->getState()->setData([
+                'users' => $this->userFactory->query(),
+                'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1, 'notSavedReport' => 1]),
+                'groups' => $this->userGroupFactory->query(),
+                'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
+            ]);
+        }
+
+        return $this->render($request, $response);
     }
 
     /**
@@ -2373,9 +2397,15 @@ class Library extends Base
                 'permissionsFolderId' => $permissionsFolderId
             ]
         );
-        $this->mediaFactory->processDownloads(function($media) {
+        $this->mediaFactory->processDownloads(function (Media $media) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
+            if ($media->mediaType === 'video' || $media->mediaType === 'audio') {
+                $realDuration = $this->mediaFactory->determineRealDuration($media);
+                if ($realDuration !== $media->duration) {
+                    $media->updateDuration($realDuration);
+                }
+            }
         });
 
         // Return
@@ -2566,6 +2596,8 @@ class Library extends Base
             ->initLibrary()
             ->checkLibraryOrQuotaFull(true);
 
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
         // Hand these off to the connector to format into a downloadable response.
         $importQueue = [];
         foreach ($items as $item) {
@@ -2577,6 +2609,8 @@ class Library extends Base
             $import->searchResult->id = $item['id'];
             $import->searchResult->type = $item['type'];
             $import->searchResult->download = $item['download'];
+            $import->searchResult->duration = (int)$item['duration'];
+            $import->searchResult->videoThumbnailUrl = $item['videoThumbnailUrl'];
             $importQueue[] = $import;
         }
         $event = new LibraryProviderImportEvent($importQueue);
@@ -2601,7 +2635,7 @@ class Library extends Base
                         0,
                         [
                             'fileType' => strtolower($module->getModuleType()),
-                            'duration' => $module->determineDuration(),
+                            'duration' => !(empty($import->searchResult->duration)) ? $import->searchResult->duration : $module->determineDuration(),
                             'enableStat' => $enableStat,
                             'folderId' => $folderId,
                             'permissionsFolderId' => $permissionsFolderId
@@ -2616,16 +2650,48 @@ class Library extends Base
         }
 
         // Process all of those downloads
-        $this->mediaFactory->processDownloads(null, function ($media) use ($importQueue) {
-            // Failure
-            // Pull out the import which failed.
-            foreach ($importQueue as $import) {
-                /** @var ProviderImport $import */
-                if ($import->media->getId() === $media->getId()) {
-                    $import->setError(__('Download failed'));
+        $this->mediaFactory->processDownloads(
+            function (Media $media) use ($importQueue, $libraryLocation) {
+                // Success
+                // if we have video thumbnail url from provider, download it now
+                foreach ($importQueue as $import) {
+                    /** @var ProviderImport $import */
+                    if ($import->media->getId() === $media->getId() && $media->mediaType === 'video' && !empty($import->searchResult->videoThumbnailUrl)) {
+                        try {
+                            $filePath = $libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png';
+                            $client = new Client();
+                            $client->request(
+                                'GET',
+                                $import->searchResult->videoThumbnailUrl,
+                                ['sink' => $filePath]
+                            );
+
+                            list($imgWidth, $imgHeight) = @getimagesize($filePath);
+                            $media->updateOrientation(($imgWidth >= $imgHeight) ? 'landscape' : 'portrait');
+                        } catch (\Exception $exception) {
+                            // if we failed, corrupted file might still be created, remove it here
+                            unlink($libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png');
+                            $this->getLog()->error(sprintf(
+                                'Downloading thumbnail for video %s, from url %s, failed with message %s',
+                                $media->name,
+                                $import->searchResult->videoThumbnailUrl,
+                                $exception->getMessage()
+                            ));
+                        }
+                    }
+                }
+            },
+            function ($media) use ($importQueue) {
+                // Failure
+                // Pull out the import which failed.
+                foreach ($importQueue as $import) {
+                    /** @var ProviderImport $import */
+                    if ($import->media->getId() === $media->getId()) {
+                        $import->setError(__('Download failed'));
+                    }
                 }
             }
-        });
+        );
 
         // Return
         $this->getState()->hydrate([
