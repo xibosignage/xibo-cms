@@ -2658,12 +2658,16 @@ class Library extends Base
                     /** @var ProviderImport $import */
                     if ($import->media->getId() === $media->getId() && $media->mediaType === 'video' && !empty($import->searchResult->videoThumbnailUrl)) {
                         try {
+                            $filePath = $libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png';
                             $client = new Client();
                             $client->request(
                                 'GET',
                                 $import->searchResult->videoThumbnailUrl,
-                                ['sink' => $libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png']
+                                ['sink' => $filePath]
                             );
+
+                            list($imgWidth, $imgHeight) = @getimagesize($filePath);
+                            $media->updateOrientation(($imgWidth >= $imgHeight) ? 'landscape' : 'portrait');
                         } catch (\Exception $exception) {
                             // if we failed, corrupted file might still be created, remove it here
                             unlink($libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png');
