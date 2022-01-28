@@ -971,7 +971,7 @@ class Media implements \JsonSerializable
      * @param int $realDuration
      * @return Media
      */
-    public function updateDuration(int $realDuration)
+    public function updateDuration(int $realDuration): Media
     {
         $this->getLog()->debug('Updating duration for MediaId '. $this->mediaId);
 
@@ -981,6 +981,26 @@ class Media implements \JsonSerializable
         ]);
 
         $this->duration = $realDuration;
+
+        return $this;
+    }
+
+    /**
+     * Update Media orientation.
+     * For videos from Library connectors, update the orientation once we have the the cover image saved.
+     * @param string $orientation
+     * @return Media
+     */
+    public function updateOrientation(string $orientation): Media
+    {
+        $this->getLog()->debug('Updating duration for MediaId '. $this->mediaId);
+
+        $this->getStore()->update('UPDATE `media` SET orientation = :orientation WHERE mediaId = :mediaId', [
+            'orientation' => $orientation,
+            'mediaId' => $this->mediaId
+        ]);
+
+        $this->orientation = $orientation;
 
         return $this;
     }
