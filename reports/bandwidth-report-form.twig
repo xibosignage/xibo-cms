@@ -24,6 +24,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{% trans "Report: Bandwidth" %} | {% endblock %}
+
 {% block actionMenu %}
     {% include "report-schedule-buttons.twig" %}
 {% endblock %}

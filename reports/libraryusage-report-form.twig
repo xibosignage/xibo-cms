@@ -24,6 +24,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{% trans "Report: Library Usage" %} | {% endblock %}
+
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
         <button class="btn btn-success XiboFormButton" title="Schedule" id="reportAddBtn" href="{{ url_for("reportschedule.add.form") }}?reportName=libraryusage"><i class="fa fa-plus-circle" aria-hidden="true"></i> {% trans "Schedule" %}</button>
