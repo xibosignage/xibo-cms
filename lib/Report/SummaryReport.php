@@ -1,5 +1,24 @@
 <?php
-
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 namespace Xibo\Report;
 
 use Carbon\Carbon;
@@ -27,6 +46,7 @@ use Xibo\Support\Sanitizer\SanitizerInterface;
 class SummaryReport implements ReportInterface
 {
     use ReportDefaultTrait;
+    use SummaryDistributionCommonTrait;
 
     /**
      * @var DisplayFactory
@@ -114,16 +134,18 @@ class SummaryReport implements ReportInterface
 
         if ($type == 'layout') {
             $selectedId = $sanitizedParams->getInt('layoutId');
-            $title = __('Add Report Schedule for '). $type. ' - '.
-                $this->layoutFactory->getById($selectedId)->layout;
+            $title = __('Add Report Schedule for ') . $type
+                . ' - ' . $this->layoutFactory->getById($selectedId)->layout;
         } elseif ($type == 'media') {
             $selectedId = $sanitizedParams->getInt('mediaId');
-            $title = __('Add Report Schedule for '). $type. ' - '.
-                $this->mediaFactory->getById($selectedId)->name;
+            $title = __('Add Report Schedule for '). $type
+                . ' - '. $this->mediaFactory->getById($selectedId)->name;
         } elseif ($type == 'event') {
             $selectedId = 0; // we only need eventTag
             $eventTag = $sanitizedParams->getString('eventTag');
-            $title = __('Add Report Schedule for '). $type. ' - '. $eventTag;
+            $title = __('Add Report Schedule for ') . $type . ' - '. $eventTag;
+        } else {
+            throw new InvalidArgumentException(__('Unknown type ') . $type, 'type');
         }
 
         $data = ['filters' => []];
@@ -135,10 +157,10 @@ class SummaryReport implements ReportInterface
 
         $data['formTitle'] = $title;
 
-        $data['hiddenFields'] =  json_encode([
+        $data['hiddenFields'] = json_encode([
             'type' => $type,
-            'selectedId' => (int) $selectedId,
-            'eventTag' => isset($eventTag) ? $eventTag : null
+            'selectedId' => $selectedId,
+            'eventTag' => $eventTag ?? null
         ]);
 
         $data['reportName'] = 'summaryReport';
@@ -204,6 +226,7 @@ class SummaryReport implements ReportInterface
         $type = $sanitizedParams->getString('type');
         $filter = $sanitizedParams->getString('filter');
 
+        $saveAs = null;
         if ($type == 'layout') {
             try {
                 $layout = $this->layoutFactory->getById($sanitizedParams->getInt('layoutId'));
@@ -213,92 +236,19 @@ class SummaryReport implements ReportInterface
                 $layoutId = $this->layoutFactory->getLatestLayoutIdFromLayoutHistory($campaignId);
                 $layout = $this->layoutFactory->getById($layoutId);
             }
-            $saveAs = sprintf(__('%s report for Layout %s', ucfirst($filter), $layout->layout));
+            $saveAs = sprintf(__('%s report for Layout %s'), ucfirst($filter), $layout->layout);
         } elseif ($type == 'media') {
             try {
                 $media = $this->mediaFactory->getById($sanitizedParams->getInt('mediaId'));
-                $saveAs = sprintf(__('%s report for Media ', ucfirst($filter), $media->name));
+                $saveAs = sprintf(__('%s report for Media'), ucfirst($filter), $media->name);
             } catch (NotFoundException $error) {
                 $saveAs = __('Media not found');
             }
         } elseif ($type == 'event') {
-            $saveAs = sprintf(__('%s report for Event %s', ucfirst($filter), $sanitizedParams->getString('eventTag')));
+            $saveAs = sprintf(__('%s report for Event %s'), ucfirst($filter), $sanitizedParams->getString('eventTag'));
         }
 
         return $saveAs;
-    }
-
-    /** @inheritDoc */
-    public function restructureSavedReportOldJson($result)
-    {
-        $durationData = $result['durationData'];
-        $countData = $result['countData'];
-        $labels = $result['labels'];
-        $backgroundColor = $result['backgroundColor'];
-        $borderColor = $result['borderColor'];
-        $periodStart = $result['periodStart'];
-        $periodEnd = $result['periodEnd'];
-
-        // Return data to build chart
-        // this is my structure which gets saved
-        return [
-            'hasData' => count($durationData) > 0 && count($countData) > 0,
-            'chart' => [
-                'type' => 'bar',
-                'data' => [
-                    'labels' => $labels,
-                    'datasets' => [
-                        [
-                            'label' => __('Total duration'),
-                            'yAxisID' => 'Duration',
-                            'backgroundColor' => $backgroundColor,
-                            'data' => $durationData
-                        ],
-                        [
-                            'label' => __('Total count'),
-                            'yAxisID' => 'Count',
-                            'borderColor' => $borderColor,
-                            'type' => 'line',
-                            'fill' => false,
-                            'data' =>  $countData
-                        ]
-                    ]
-                ],
-                'options' => [
-                    'scales' => [
-                        'yAxes' => [
-                            [
-                                'id' => 'Duration',
-                                'type' => 'linear',
-                                'position' =>  'left',
-                                'display' =>  true,
-                                'scaleLabel' =>  [
-                                    'display' =>  true,
-                                    'labelString' => __('Duration(s)')
-                                ],
-                                'ticks' =>  [
-                                    'beginAtZero' => true
-                                ]
-                            ], [
-                                'id' => 'Count',
-                                'type' => 'linear',
-                                'position' =>  'right',
-                                'display' =>  true,
-                                'scaleLabel' =>  [
-                                    'display' =>  true,
-                                    'labelString' => __('Count')
-                                ],
-                                'ticks' =>  [
-                                    'beginAtZero' => true
-                                ]
-                            ]
-                        ]
-                    ]
-                ]
-            ],
-            'periodStart' => $periodStart,
-            'periodEnd' => $periodEnd,
-        ];
     }
 
     /** @inheritdoc */
@@ -327,11 +277,22 @@ class SummaryReport implements ReportInterface
         $layoutId = $sanitizedParams->getInt('layoutId');
         $mediaId = $sanitizedParams->getInt('mediaId');
         $eventTag = $sanitizedParams->getString('eventTag');
-        // Get an array of display id this user has access to.
-        $displayIds = [];
 
-        foreach ($this->displayFactory->query() as $display) {
-            $displayIds[] = $display->displayId;
+        // Filter by displayId?
+        $displayIds = [];
+        $displayId = $sanitizedParams->getInt('displayId');
+
+        if ($displayId !== null) {
+            $display = $this->displayFactory->getById($displayId);
+            if ($this->getUser()->checkViewable($display)) {
+                $displayIds[] = $displayId;
+            }
+        } else {
+            // Get an array of display id this user has access to.
+            // we cannot rely on the logged-in user because this will be run by the task runner which is a sysadmin
+            foreach ($this->displayFactory->query(null, ['userCheckUserId' => $this->getUser()->userId]) as $display) {
+                $displayIds[] = $display->displayId;
+            }
         }
 
         if (count($displayIds) <= 0) {
@@ -415,7 +376,8 @@ class SummaryReport implements ReportInterface
                 $toDt->addDay()->startOfDay();
 
                 // What if the fromdt and todt are exactly the same?
-                // in this case assume an entire day from midnight on the fromdt to midnight on the todt (i.e. add a day to the todt)
+                // in this case assume an entire day from midnight on the fromdt to midnight on the todt
+                // (i.e. add a day to the todt)
                 if ($fromDt == $toDt) {
                     $toDt->addDay();
                 }
@@ -433,9 +395,27 @@ class SummaryReport implements ReportInterface
         $this->getLog()->debug('Timeseries store is ' . $timeSeriesStore);
 
         if ($timeSeriesStore == 'mongodb') {
-            $result = $this->getSummaryReportMongoDb($fromDt, $toDt, $groupByFilter, $displayIds, $type, $layoutId, $mediaId, $eventTag, $reportFilter);
+            $result = $this->getSummaryReportMongoDb(
+                $fromDt,
+                $toDt,
+                $groupByFilter,
+                $displayIds,
+                $type,
+                $layoutId,
+                $mediaId,
+                $eventTag,
+                $reportFilter
+            );
         } else {
-            $result = $this->getSummaryReportMySql($fromDt, $toDt, $groupByFilter, $displayIds, $type, $layoutId, $mediaId, $eventTag);
+            $result = $this->getSummaryReportMySql($fromDt,
+                $toDt,
+                $groupByFilter,
+                $displayIds,
+                $type,
+                $layoutId,
+                $mediaId,
+                $eventTag
+            );
         }
 
         //
@@ -549,9 +529,9 @@ class SummaryReport implements ReportInterface
     private function getSummaryReportMySql($fromDt, $toDt, $groupByFilter, $displayIds, $type, $layoutId, $mediaId, $eventTag)
     {
         // Only return something if we have the necessary options selected.
-        if ((($type == 'media') && ($mediaId != ''))
-            || (($type == 'layout') && ($layoutId != ''))
-            || (($type == 'event') && ($eventTag != ''))
+        if (($type == 'media' && $mediaId != '')
+            || ($type == 'layout' && $layoutId != '')
+            || ($type == 'event' && $eventTag != '')
         ) {
             // Create periods covering the from/to dates
             // -----------------------------------------

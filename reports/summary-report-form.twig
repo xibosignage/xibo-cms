@@ -1,7 +1,7 @@
 {#
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -20,7 +20,6 @@
  *
  */
 #}
-
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
@@ -127,6 +126,20 @@
                             {% set title %}{% trans "Tag" %} *{% endset %}
                             {% set helpText %}{% trans "This field is required when the Type selected is Event" %}{% endset %}
                             {{ inline.input("eventTag", title, "", helpText, "tag-text") }}
+
+                            {% set title %}{% trans "Display" %}{% endset %}
+                            {% set attributes = [
+                                { name: "data-width", value: "200px" },
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("display.search") },
+                                { name: "data-search-term", value: "display" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-id-property", value: "displayId" },
+                                { name: "data-text-property", value: "display" }
+                            ] %}
+                            {{ inline.dropdown("displayId", "single", title, "", null, "displayId", "display", "", "pagedSelect", "", "d", "", attributes) }}
 
                             <div class="w-100">
                                 <a id="applyBtn" class="btn btn-success">

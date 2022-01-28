@@ -138,12 +138,20 @@ class ReportScheduleTask implements TaskInterface
 
                 try {
                     // Get the generated saved as report name
-                    $saveAs = $this->reportService->generateSavedReportName($reportSchedule->reportName, $reportSchedule->filterCriteria);
+                    $saveAs = $this->reportService->generateSavedReportName(
+                        $reportSchedule->reportName,
+                        $reportSchedule->filterCriteria
+                    );
 
                     // Run the report to get results
-                    $result =  $this->reportService->runReport($reportSchedule->reportName, $reportSchedule->filterCriteria, $reportSchedule->userId);
-                    $this->log->debug(__('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT)));
+                    // pass in the user who saved the report
+                    $result = $this->reportService->runReport(
+                        $reportSchedule->reportName,
+                        $reportSchedule->filterCriteria,
+                        $this->userFactory->getById($reportSchedule->userId)
+                    );
 
+                    $this->log->debug(__('Run report results: %s.', json_encode($result, JSON_PRETTY_PRINT)));
 
                     //  Save the result in a json file
                     $fileName = tempnam($this->config->getSetting('LIBRARY_LOCATION') . '/temp/', 'reportschedule');

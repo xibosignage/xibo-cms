@@ -345,13 +345,7 @@ class ProofOfPlay implements ReportInterface
         $displayIds = [];
 
         // Get user
-        $userId = $this->getUserId();
-
-        if ($userId == null) {
-            $user = $this->userFactory->getUser();
-        } else {
-            $user = $this->userFactory->getById($userId);
-        }
+        $user = $this->getUser();
 
         $displayFactory = clone $this->displayFactory;
         $displayFactory->setAclDependencies($user, $this->userFactory);

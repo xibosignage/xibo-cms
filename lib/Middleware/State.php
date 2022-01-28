@@ -78,7 +78,8 @@ class State implements Middleware
             throw new InstanceSuspendedException();
         }
 
-        // Get to see if upgrade is pending, we don't want to throw this when we are on error page, causes redirect problems with error handler.
+        // Get to see if upgrade is pending, we don't want to throw this when we are on error page, causes
+        // redirect problems with error handler.
         if (Environment::migrationPending() && $request->getUri()->getPath() != '/error') {
             throw new UpgradePendingException();
         }
@@ -90,7 +91,7 @@ class State implements Middleware
         // If we are behind a load balancer we should look at HTTP_X_FORWARDED_PROTO
         // if a whitelist of IP address is provided, we should check it, otherwise trust
         $whiteListLoadBalancers = $container->get('configService')->getSetting('WHITELIST_LOAD_BALANCERS');
-        $originIp = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+        $originIp = $_SERVER['REMOTE_ADDR'] ?? '';
         $forwardedProtoHttps = (
             strtolower($request->getHeaderLine('HTTP_X_FORWARDED_PROTO')) === 'https'
             && $originIp != ''
@@ -164,7 +165,6 @@ class State implements Middleware
         $container->set('reportService', function (ContainerInterface $container) {
             return new ReportService(
                 $container,
-                $container->get('state'),
                 $container->get('store'),
                 $container->get('timeSeriesStore'),
                 $container->get('logService'),

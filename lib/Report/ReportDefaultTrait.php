@@ -26,9 +26,7 @@ use Carbon\Carbon;
 use Psr\Log\NullLogger;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\ReportResult;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\Translate;
-use Xibo\Middleware\State;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Storage\TimeSeriesStoreInterface;
@@ -61,7 +59,8 @@ trait ReportDefaultTrait
      */
     private $request;
 
-    private $userId;
+    /** @var \Xibo\Entity\User */
+    private $user;
 
     /**
      * Set common dependencies.
@@ -116,21 +115,22 @@ trait ReportDefaultTrait
     }
 
     /**
-     * Get user Id
+     * @return \Xibo\Entity\User
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getUserId()
+    public function getUser()
     {
-        return $this->userId;
+        return $this->user;
     }
 
     /**
      * Set user Id
-     * @param $userId
+     * @param \Xibo\Entity\User $user
      * @return $this
      */
-    public function setUserId($userId)
+    public function setUser($user)
     {
-        $this->userId = $userId;
+        $this->user = $user;
         return $this;
     }
 
@@ -151,7 +151,7 @@ trait ReportDefaultTrait
      */
     public function generateSavedReportName(SanitizerInterface $sanitizedParams)
     {
-        $saveAs = sprintf(__('%s report', ucfirst($sanitizedParams->getString('filter'))));
+        $saveAs = sprintf(__('%s report'), ucfirst($sanitizedParams->getString('filter')));
 
         return $saveAs. ' '. Carbon::now()->format('Y-m-d');
     }

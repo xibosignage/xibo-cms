@@ -221,7 +221,7 @@ class Bandwidth implements ReportInterface
         }
 
         // For user with limited access, return only data for displays this user has permissions to.
-        $joinType = ($this->userFactory->getById($this->getUserId())->isSuperAdmin()) ? 'LEFT OUTER JOIN' : 'INNER JOIN';
+        $joinType = ($this->getUser()->isSuperAdmin()) ? 'LEFT OUTER JOIN' : 'INNER JOIN';
 
         $SQL .= ' FROM `bandwidth` ' .
                 $joinType . ' `display`
