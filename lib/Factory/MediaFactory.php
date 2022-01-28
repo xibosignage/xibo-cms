@@ -816,6 +816,6 @@ class MediaFactory extends BaseFactory
         $this->getLog()->debug('Determine Duration from ' . $media->name);
         $info = new \getID3();
         $file = $info->analyze($libraryFolder . $media->storedAs);
-        return intval($this->getSanitizer($file)->getDouble('playtime_seconds', ['default' => 0]));
+        return intval($this->getSanitizer()->getDouble('playtime_seconds', 0, $file));
     }
 }
