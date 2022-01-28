@@ -2232,6 +2232,20 @@ lD.upgradeBreadcrumbTrail = function() {
     // Append loading html to the main div
     $breadcrumbContainer.html(breadcrumbTemplate(data));
 
+    // Handle breadcrumb toggle
+    $breadcrumbContainer.find('.bc-toggle').on('click', function() {
+        $breadcrumbContent = $breadcrumbContainer.find('.bc-content');
+
+        // Is the content visible
+        const isVisible = $breadcrumbContent.is(':visible');
+
+        // Toggle breadcrumb content
+        $breadcrumbContainer.find('.bc-content').toggle('fast');
+
+        // Change button status
+        $breadcrumbContainer.find('.bc-toggle').toggleClass('active', !isVisible);
+    });
+
     // Handle cell click
     $breadcrumbContainer.find('.bc-link').on('click', function() {
         // Select object

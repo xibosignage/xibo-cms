@@ -368,9 +368,30 @@ body, .page-content {
         font-size: 1rem;
         display: flex;
 
-        i.fa {
+        .bc-arrow {
             color: $xibo-color-white;
             margin: 4px;
+        }
+
+        .bc-toggle {
+            margin-right: 6px;
+            opacity: 0.9;
+            font-size: 1rem;
+            background-color: $xibo-color-white-pure;
+            color: $xibo-color-gray-darker;
+    
+            &:hover {
+                opacity: 1;
+            }
+
+            &.active {
+                color: $xibo-color-blue;
+            }
+        }
+
+        .bc-content {
+            display: flex;
+            align-items: center;
         }
 
         .bc-element {
