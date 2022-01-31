@@ -81,7 +81,6 @@ class Campaign implements \JsonSerializable
     public $totalDuration;
 
     public $tags = [];
-    public $tagValues;
 
     /**
      * @SWG\Property(description="The id of the Folder this Campaign belongs to")

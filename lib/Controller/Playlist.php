@@ -692,8 +692,7 @@ class Playlist extends Base
 
         $this->getState()->template = 'playlist-form-edit';
         $this->getState()->setData([
-            'playlist' => $playlist,
-            'tags' => $this->tagFactory->getTagsWithValues($playlist)
+            'playlist' => $playlist
         ]);
 
         return $this->render($request, $response);
@@ -1001,9 +1000,7 @@ class Playlist extends Base
         }
 
         // Handle tags
-        $tags = $this->tagFactory->getTagsWithValues($playlist);
-
-        $playlist->replaceTags($this->tagFactory->tagsFromString($tags));
+        $playlist->replaceTags($this->tagFactory->tagsFromString($playlist->tags));
 
         // Set from global setting
         if ($playlist->enableStat == null) {

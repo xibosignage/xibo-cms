@@ -270,10 +270,8 @@ class LibraryTest extends LocalWebTestCase
         $this->assertSame('PHPUNIT URL upload video', $response['data']['name']);
         $this->assertNotEmpty($response['data']['mediaId'], 'Not successful, MediaId is empty');
 
-        $module = $this->getEntityProvider()->get('/module', ['name' => 'Video']);
-        $moduleDefaultDuration = $module[0]['defaultDuration'];
-
-        $this->assertSame($response['data']['duration'], $moduleDefaultDuration);
+        // for videos we expect the Media duration to be the actual video duration.
+        $this->assertSame($response['data']['duration'], 78);
 
         shell_exec('rm -r ' . PROJECT_ROOT . '/web/HLH264.mp4');
     }

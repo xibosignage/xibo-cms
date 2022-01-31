@@ -350,15 +350,18 @@ class LibraryUsage implements ReportInterface
               WHERE 1 = 1
         ';
 
+        $userId = $this->getUserId();
+        $user = $this->userFactory->getById($userId);
+
         // Restrict on the users we have permission to see
         // Normal users can only see themselves
         $permissions = '';
-        if ($this->userFactory->getUser()->userTypeId == 3) {
+        if ($user->userTypeId == 3) {
             $permissions .= ' AND user.userId = :currentUserId ';
-            $filterBy['currentUserId'] = $this->userFactory->getUser()->userId;
+            $filterBy['currentUserId'] = $this->getUserId();
         }
         // Group admins can only see users from their groups.
-        else if ($this->userFactory->getUser()->userTypeId == 2) {
+        else if ($user->userTypeId == 2) {
             $permissions .= '
                 AND user.userId IN (
                     SELECT `otherUserLinks`.userId
@@ -371,7 +374,7 @@ class LibraryUsage implements ReportInterface
                      WHERE `lkusergroup`.userId = :currentUserId
                 )
             ';
-            $params['currentUserId'] = $this->userFactory->getUser()->userId;
+            $params['currentUserId'] = $this->getUserId();
         }
 
         // Filter by userId
@@ -454,8 +457,8 @@ class LibraryUsage implements ReportInterface
 
         // Widget for the library usage pie chart
         try {
-            if ($this->userFactory->getUser()->libraryQuota != 0) {
-                $libraryLimit = $this->userFactory->getUser()->libraryQuota * 1024;
+            if ($user->libraryQuota != 0) {
+                $libraryLimit = $user->libraryQuota * 1024;
             } else {
                 $libraryLimit = $this->getConfig()->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
             }
@@ -463,7 +466,17 @@ class LibraryUsage implements ReportInterface
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            $this->mediaFactory->viewPermissionSql(
+                'Xibo\Entity\Media',
+                $sql,
+                $params,
+                '`media`.mediaId',
+                '`media`.userId',
+                [
+                    'userCheckUserId' => $this->getUserId()
+                ]
+            );
+
             $sql .= ' GROUP BY type ';
 
             $sth = $this->store->getConnection()->prepare($sql);

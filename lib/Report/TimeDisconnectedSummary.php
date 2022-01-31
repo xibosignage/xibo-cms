@@ -263,7 +263,7 @@ class TimeDisconnectedSummary implements ReportInterface
         // Get an array of display id this user has access to.
         $displayIds = [];
 
-        foreach ($this->displayFactory->query() as $display) {
+        foreach ($this->displayFactory->query(null, ['userCheckUserId' => $this->getUserId()]) as $display) {
             $displayIds[] = $display->displayId;
         }
 
@@ -274,7 +274,7 @@ class TimeDisconnectedSummary implements ReportInterface
         // Get an array of display groups this user has access to
         $displayGroupIds = [];
 
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1, 'userCheckUserId' => $this->getUserId()]) as $displayGroup) {
             $displayGroupIds[] = $displayGroup->displayGroupId;
         }
 
@@ -377,7 +377,7 @@ class TimeDisconnectedSummary implements ReportInterface
         }
 
         $body .= '
-            GROUP BY display.display
+            GROUP BY display.display, display.displayId
         ';
 
         // Sorting?

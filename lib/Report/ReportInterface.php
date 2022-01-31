@@ -100,4 +100,15 @@ interface ReportInterface
      * @return array
      */
     public function restructureSavedReportOldJson($json);
+
+    /**
+     * @return int
+     */
+    public function getUserId();
+
+    /**
+     * @param $userId
+     * @return $this
+     */
+    public function setUserId($userId);
 }

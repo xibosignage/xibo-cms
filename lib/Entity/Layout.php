@@ -282,8 +282,6 @@ class Layout implements \JsonSerializable
     public $owner;
     public $groupsWithPermissions;
 
-    public $tagValues;
-
     /**
      * @SWG\Property(description="The id of the Folder this Layout belongs to")
      * @var int

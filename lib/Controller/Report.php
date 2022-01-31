@@ -1247,6 +1247,7 @@ class Report extends Base
         // Create the report object
         $object = $this->reportService->createReportObject($className);
 
+        $object->setUserId($this->getUser()->userId);
         $filterCriteria = $request->getParams();
 
         // Return data to build chart

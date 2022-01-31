@@ -1,0 +1,14 @@
+{% extends "authed.twig" %}
+{% block pageContent %}
+    <div class="card mx-auto my-auto" {% if media.orientation == 'landscape' %} style="max-width: 50%;" {% else %} style="max-width: 30%;" {% endif %}>
+        {% if media.thumbnail %}<img src="{{ media.thumbnail }}" class="card-img-top" alt="{{ media.name }}">{% endif %}
+        <div class="card-body">
+            <h5 class="card-title">{% trans "Name" %} : {{ media.name }}</h5>
+            <p class="card-text">{% trans "Tags" %} : {{ media.tags }}</p>
+            <p class="card-text">{% trans "Type" %} : {{ media.mediaType }}</p>
+            {% if media.orientation %}<p class="card-text">{% trans "Orientation" %} : {{ media.orientation }}</p>{% endif %}
+            <p class="card-text">{% trans "File Size" %} : {{ media.fileSizeFormatted }}</p>
+            <a href="{{ url_for("library.view")}}" class="btn btn-primary">{% trans "Go back to Library page" %}</a>
+        </div>
+    </div>
+{% endblock %}

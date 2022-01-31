@@ -365,16 +365,52 @@ class Library extends Base
      * @throws GeneralException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function displayPage(Request $request, Response $response)
+    public function displayPage(Request $request, Response $response)
     {
-        // Users we have permission to see
-        $this->getState()->template = 'library-page';
-        $this->getState()->setData([
-            'users' => $this->userFactory->query(),
-            'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1, 'notSavedReport' => 1]),
-            'groups' => $this->userGroupFactory->query(),
-            'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
-        ]);
+        $sanitizedParams = $this->getSanitizer($request->getQueryParams());
+        $mediaId = $sanitizedParams->getInt('mediaId');
+
+        if ($mediaId !== null) {
+            $media = $this->mediaFactory->getById($mediaId);
+            $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+
+            if (!$this->getUser()->checkViewable($media)) {
+                throw new AccessDeniedException();
+            }
+
+            // Thumbnail
+            $module = $this->moduleFactory->createWithMedia($media);
+            $media->thumbnail = '';
+
+            if ($module->hasThumbnail()) {
+                $media->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1]);
+
+                if ($media->mediaType === 'video') {
+                    $filePath = $libraryLocation . $media->mediaId . '_videocover.png';
+                } else {
+                    $filePath = $libraryLocation . $media->storedAs;
+                }
+
+                list($imgWidth, $imgHeight) = @getimagesize($filePath);
+                $media->orientation = ($imgWidth >= $imgHeight) ? 'landscape' : 'portrait';
+            }
+
+            $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
+
+            $this->getState()->template = 'library-direct-media-details';
+            $this->getState()->setData([
+                'media' => $media
+            ]);
+        } else {
+            // Users we have permission to see
+            $this->getState()->template = 'library-page';
+            $this->getState()->setData([
+                'users' => $this->userFactory->query(),
+                'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1, 'notSavedReport' => 1]),
+                'groups' => $this->userGroupFactory->query(),
+                'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
+            ]);
+        }
 
         return $this->render($request,$response);
     }
@@ -1120,7 +1156,6 @@ class Library extends Base
             'media' => $media,
             'validExtensions' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $media->mediaType])),
             'help' => $this->getHelp()->link('Library', 'Edit'),
-            'tags' => $this->tagFactory->getTagsWithValues($media),
             'expiryDate' => ($media->expires == 0 ) ? null : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat(), $media->expires)
         ]);
 
@@ -2269,8 +2304,7 @@ class Library extends Base
         $this->getState()->template = 'library-form-copy';
         $this->getState()->setData([
             'media' => $media,
-            'help' => $this->getHelp()->link('Media', 'Copy'),
-            'tags' => $this->tagFactory->getTagsWithValues($media)
+            'help' => $this->getHelp()->link('Media', 'Copy')
         ]);
 
         return $this->render($request, $response);
@@ -2613,9 +2647,14 @@ class Library extends Base
 
         // add our media to queueDownload and process the downloads
         $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), $expires, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat, 'folderId' => $folderId, 'permissionsFolderId' => $permissionsFolderId]);
-        $this->mediaFactory->processDownloads(function($media) {
+        $this->mediaFactory->processDownloads(function (Media $media) use ($module) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
+            $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+            $realDuration = $module->determineDuration($libraryFolder . $media->storedAs);
+            if ($realDuration !== $media->duration) {
+                $media->updateDuration($realDuration);
+            }
         });
 
         // get our uploaded media

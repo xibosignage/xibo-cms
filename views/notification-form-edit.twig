@@ -87,7 +87,7 @@
 
                         {% set title %}{% trans "Non users" %}{% endset %}
                         {% set helpText %}{% trans "Additional emails separated by a comma." %}{% endset %}
-                        {{ forms.inputWithTags("nonusers", title, notification.nonusers, helpText) }}
+                        {{ forms.inputWithTags("nonusers", title, notification.nonusers, helpText, "", "", "", 0) }}
 
                         {% set title %}{% trans "Displays" %}{% endset %}
                         {% set helpText %}{% trans "Please select one or more displays / groups for this notification to be shown on - Layouts will need the notification widget." %}{% endset %}

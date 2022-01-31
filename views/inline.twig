@@ -45,12 +45,12 @@
     </div>
 {% endmacro %}
 
-{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle) %}
+{% macro inputWithTags(name, title, value, helpText, groupClass, validation, accessKey, exactTag, exactTagTitle, autoCompleteEnabled = 1) %}
     <div class="form-group mr-1 mb-1 {{ groupClass }}">
         <label class="control-label mr-1" title="{{ helpText }}" for="{{ name }}" accesskey="{{ accessKey }}">{{ title }}</label>
         {% if exactTag %}
             <div class="input-group input-group-tags-exact">
-                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {{ validation }} />
+                <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" {% if autoCompleteEnabled == 1 %} data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {% endif %}  {{ validation }} />
                 <div class="input-group-append input-group-addon">
                     <div class="input-group-text">
                         <input title="{{ exactTagTitle }}" type="checkbox" id="{{ exactTag }}" name="{{ exactTag }}">
@@ -58,7 +58,7 @@
                 </div>
             </div>
         {% else %}
-            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {{ validation }} />
+            <input class="form-control" name="{{ name }}" type="text" id="{{ name }}" value="{{ value }}" data-role="tagsInputInline" {% if autoCompleteEnabled == 1 %} data-auto-complete-url="{{ url_for('tag.search') }}?allTags=1" {% endif %}  {{ validation }} />
         {% endif %}
     </div>
 {% endmacro %}
