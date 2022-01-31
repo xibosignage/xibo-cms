@@ -237,20 +237,15 @@ class TimeDisconnectedSummary implements ReportInterface
         }
 
         // Get an array of display id this user has access to.
-        $displayIds = [];
-
-        foreach ($this->displayFactory->query() as $display) {
-            $displayIds[] = $display->displayId;
-        }
-
-        if (count($displayIds) <= 0) {
-            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
-        }
+        $displayIds = $this->getDisplayIdFilter($sanitizedParams);
 
         // Get an array of display groups this user has access to
         $displayGroupIds = [];
 
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(null, [
+            'isDisplaySpecific' => -1,
+            'userCheckUserId' => $this->getUser()->userId
+        ]) as $displayGroup) {
             $displayGroupIds[] = $displayGroup->displayGroupId;
         }
 

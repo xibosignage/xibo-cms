@@ -3,9 +3,7 @@
 namespace Xibo\Report;
 
 use Carbon\Carbon;
-use MongoDB\BSON\UTCDateTime;
 use Psr\Container\ContainerInterface;
-use Slim\Http\ServerRequest as Request;
 use Xibo\Controller\DataTablesDotNetTrait;
 use Xibo\Entity\ReportForm;
 use Xibo\Entity\ReportResult;
@@ -130,8 +128,8 @@ class LibraryUsage implements ReportInterface
 
         // Widget for the library usage pie chart
         try {
-            if ($this->userFactory->getUser()->libraryQuota != 0) {
-                $libraryLimit = $this->userFactory->getUser()->libraryQuota * 1024;
+            if ($this->getUser()->libraryQuota != 0) {
+                $libraryLimit = $this->getUser()->libraryQuota * 1024;
             } else {
                 $libraryLimit = $this->configService->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
             }
@@ -139,7 +137,16 @@ class LibraryUsage implements ReportInterface
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            $this->mediaFactory->viewPermissionSql(
+                'Xibo\Entity\Media',
+                $sql,
+                $params,
+                '`media`.mediaId',
+                '`media`.userId',
+                [
+                    'userCheckUserId' => $this->getUser()->userId
+                ]
+            );
             $sql .= ' GROUP BY type ';
 
             $sth = $this->store->getConnection()->prepare($sql);
@@ -195,6 +202,7 @@ class LibraryUsage implements ReportInterface
             $this->getLog()->error('Error rendering the library stats page widget');
         }
 
+        // Note: getReportForm is only run by the web UI and therefore the logged-in users permissions are checked here
         $data['users'] = $this->userFactory->query();
         $data['groups'] = $this->userGroupFactory->query();
         $data['availableReports'] = $this->reportService->listReports();
@@ -216,6 +224,8 @@ class LibraryUsage implements ReportInterface
 
         $data['formTitle'] = $title;
         $data['reportName'] = 'libraryusage';
+        // Note: getReportScheduleFormData is only run by the web UI and therefore the logged-in users permissions
+        // are checked here
         $data['users'] = $this->userFactory->query();
         $data['groups'] = $this->userGroupFactory->query();
 
@@ -365,12 +375,11 @@ class LibraryUsage implements ReportInterface
         // Restrict on the users we have permission to see
         // Normal users can only see themselves
         $permissions = '';
-        if ($this->userFactory->getUser()->userTypeId == 3) {
+        if ($this->getUser()->userTypeId == 3) {
             $permissions .= ' AND user.userId = :currentUserId ';
-            $filterBy['currentUserId'] = $this->userFactory->getUser()->userId;
-        }
-        // Group admins can only see users from their groups.
-        elseif ($this->userFactory->getUser()->userTypeId == 2) {
+            $filterBy['currentUserId'] = $this->getUser()->userId;
+        } elseif ($this->getUser()->userTypeId == 2) {
+            // Group admins can only see users from their groups.
             $permissions .= '
                 AND user.userId IN (
                     SELECT `otherUserLinks`.userId
@@ -383,7 +392,7 @@ class LibraryUsage implements ReportInterface
                      WHERE `lkusergroup`.userId = :currentUserId
                 )
             ';
-            $params['currentUserId'] = $this->userFactory->getUser()->userId;
+            $params['currentUserId'] = $this->getUser()->userId;
         }
 
         // Filter by userId
@@ -430,8 +439,12 @@ class LibraryUsage implements ReportInterface
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $sanitizedParams->getInt('start') !== null && $sanitizedParams->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($sanitizedParams->getInt('start'), 0) . ', ' . $sanitizedParams->getInt('length', ['default' => 10]);
+        if ($filterBy !== null
+            && $sanitizedParams->getInt('start') !== null
+            && $sanitizedParams->getInt('length') !== null
+        ) {
+            $limit = ' LIMIT ' . $sanitizedParams->getInt('start', ['default' => 0])
+                . ', ' . $sanitizedParams->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;
@@ -464,7 +477,7 @@ class LibraryUsage implements ReportInterface
 
         // Widget for the library usage pie chart
         try {
-            if ($this->userFactory->getUser()->libraryQuota != 0) {
+            if ($this->getUser()->libraryQuota != 0) {
                 $libraryLimit = $this->userFactory->getUser()->libraryQuota * 1024;
             } else {
                 $libraryLimit = $this->configService->getSetting('LIBRARY_SIZE_LIMIT_KB') * 1024;
@@ -473,7 +486,16 @@ class LibraryUsage implements ReportInterface
             // Library Size in Bytes
             $params = [];
             $sql = 'SELECT IFNULL(SUM(FileSize), 0) AS SumSize, type FROM `media` WHERE 1 = 1 ';
-            $this->mediaFactory->viewPermissionSql('Xibo\Entity\Media', $sql, $params, '`media`.mediaId', '`media`.userId');
+            $this->mediaFactory->viewPermissionSql(
+                'Xibo\Entity\Media',
+                $sql,
+                $params,
+                '`media`.mediaId',
+                '`media`.userId',
+                [
+                    'userCheckUserId' => $this->getUser()->userId
+                ]
+            );
             $sql .= ' GROUP BY type ';
 
             $sth = $this->store->getConnection()->prepare($sql);
@@ -550,7 +572,8 @@ class LibraryUsage implements ReportInterface
         }
 
         $chart = [
-            'User_Percentage_Usage' => [ // we will use User_Percentage_Usage as report name when we export/email pdf
+            // we will use User_Percentage_Usage as report name when we export/email pdf
+            'User_Percentage_Usage' => [
                 'type' => 'pie',
                 'data' => [
                     'labels' => $userLabels,
@@ -588,8 +611,8 @@ class LibraryUsage implements ReportInterface
         // This will get saved to a json file when schedule runs
         return new ReportResult(
             [
-                'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-                'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+                'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
             ],
             $rows,
             $recordsTotal,

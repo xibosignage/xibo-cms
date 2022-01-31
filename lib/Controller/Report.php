@@ -67,6 +67,9 @@ class Report extends Base
 
         // Create the report object
         $object = $this->reportService->createReportObject($className);
+        
+        // We assert the user so that we can use getUser in the report class
+        $object->setUser($this->getUser());
 
         // Get the twig file template and required data of the report form
         $form =  $object->getReportForm();

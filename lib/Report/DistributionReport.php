@@ -287,34 +287,16 @@ class DistributionReport implements ReportInterface
         $mediaId = $sanitizedParams->getInt('mediaId');
         $eventTag = $sanitizedParams->getString('eventTag');
 
-        $displayId = $sanitizedParams->getInt('displayId');
-        $displayGroupId = $sanitizedParams->getInt('displayGroupId');
-
-        // Get an array of display id this user has access to.
-        $displayIds = [];
-
-        // Get an array of display id this user has access to.
-        foreach ($this->displayFactory->query() as $display) {
-            $displayIds[] = $display->displayId;
-        }
-
-        // Set displayIds as [-1] if the user selected a display for which they don't have permission
-        if ($displayId != 0) {
-            if (!in_array($displayId, $displayIds)) {
-                $displayIds = [-1];
-            } else {
-                $displayIds = [$displayId];
-            }
-        }
-
-        if (count($displayIds) <= 0) {
-            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
-        }
+        // Filter by displayId?
+        $displayIds = $this->getDisplayIdFilter($sanitizedParams);
 
         // Get an array of display groups this user has access to
         $displayGroupIds = [];
 
-        foreach ($this->displayGroupFactory->query(null, ['isDisplaySpecific' => -1]) as $displayGroup) {
+        foreach ($this->displayGroupFactory->query(null, [
+            'isDisplaySpecific' => -1,
+            'userCheckUserId' => $this->getUser()->userId
+        ]) as $displayGroup) {
             $displayGroupIds[] = $displayGroup->displayGroupId;
         }
 
@@ -322,10 +304,9 @@ class DistributionReport implements ReportInterface
             throw new InvalidArgumentException(__('No display groups with View permissions'), 'displayGroup');
         }
 
-        //
         // From and To Date Selection
         // --------------------------
-        // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
+        // Our report has a range filter which determins whether the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
         $reportFilter = $sanitizedParams->getString('reportFilter');
         // Use the current date as a helper
@@ -399,9 +380,29 @@ class DistributionReport implements ReportInterface
         // -------------
         $timeSeriesStore = $this->getTimeSeriesStore()->getEngine();
         if ($timeSeriesStore == 'mongodb') {
-            $result = $this->getDistributionReportMongoDb($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag);
+            $result = $this->getDistributionReportMongoDb(
+                $fromDt,
+                $toDt,
+                $groupByFilter,
+                $displayIds,
+                $displayGroupIds,
+                $type,
+                $layoutId,
+                $mediaId,
+                $eventTag
+            );
         } else {
-            $result = $this->getDistributionReportMySql($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag);
+            $result = $this->getDistributionReportMySql(
+                $fromDt,
+                $toDt,
+                $groupByFilter,
+                $displayIds,
+                $displayGroupIds,
+                $type,
+                $layoutId,
+                $mediaId,
+                $eventTag
+            );
         }
 
         //
@@ -490,8 +491,8 @@ class DistributionReport implements ReportInterface
         // This will get saved to a json file when schedule runs
         return new ReportResult(
             [
-                'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-                'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+                'periodStart' => $fromDt->format(DateFormatHelper::getSystemFormat()),
+                'periodEnd' => $toDt->format(DateFormatHelper::getSystemFormat()),
             ],
             [],
             0,
@@ -513,12 +514,21 @@ class DistributionReport implements ReportInterface
      * @param $eventTag
      * @return array
      */
-    private function getDistributionReportMySql($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag)
-    {
+    private function getDistributionReportMySql(
+        $fromDt,
+        $toDt,
+        $groupByFilter,
+        $displayIds,
+        $displayGroupIds,
+        $type,
+        $layoutId,
+        $mediaId,
+        $eventTag
+    ) {
         // Only return something if we have the necessary options selected.
-        if ((($type == 'media') && ($mediaId != ''))
-            || (($type == 'layout') && ($layoutId != ''))
-            || (($type == 'event') && ($eventTag != ''))
+        if (($type == 'media' && $mediaId != '')
+            || ($type == 'layout' && $layoutId != '')
+            || ($type == 'event' && $eventTag != '')
         ) {
             // Create periods covering the from/to dates
             // -----------------------------------------
@@ -531,15 +541,21 @@ class DistributionReport implements ReportInterface
             // Join in stats
             // -------------
             $select = '                      
-            SELECT start, end, periodsWithStats.id, periodsWithStats.label,
-                SUM(count) as NumberPlays, 
+            SELECT periodsWithStats.id,
+                MIN(periodsWithStats.start) AS start,
+                MAX(periodsWithStats.end) AS end, 
+                MAX(periodsWithStats.label) AS label,
+                SUM(numberOfPlays) as NumberPlays, 
                 CONVERT(SUM(periodsWithStats.actualDiff), SIGNED INTEGER) as Duration
              FROM (
                 SELECT
-                     *,
-                    GREATEST(periods.start, statStart, :fromDt) AS actualStart,
-                    LEAST(periods.end, statEnd, :toDt) AS actualEnd,
-                    LEAST(stat.duration, LEAST(periods.end, statEnd, :toDt) - GREATEST(periods.start, statStart, :fromDt)) AS actualDiff
+                    periods.id,
+                    periods.label,
+                    periods.start,
+                    periods.end,
+                    stat.count AS numberOfPlays,
+                    LEAST(stat.duration, LEAST(periods.end, statEnd, :toDt) 
+                                             - GREATEST(periods.start, statStart, :fromDt)) AS actualDiff
                  FROM `' . $periods . '` AS periods
                     LEFT OUTER JOIN (
                         SELECT 
@@ -577,20 +593,20 @@ class DistributionReport implements ReportInterface
             }
 
             // Type filter
-            if (($type == 'layout') && ($layoutId != '')) {
+            if ($type == 'layout' && $layoutId != '') {
                 // Filter by Layout
                 $select .= ' 
                     AND `stat`.type = \'layout\' 
                     AND `stat`.campaignId = (SELECT campaignId FROM layouthistory WHERE layoutId = :layoutId) 
                 ';
                 $params['layoutId'] = $layoutId;
-            } elseif (($type == 'media') && ($mediaId != '')) {
+            } elseif ($type == 'media' && $mediaId != '') {
                 // Filter by Media
                 $select .= '
                     AND `stat`.type = \'media\' AND IFNULL(`media`.mediaId, 0) <> 0 
                     AND `stat`.mediaId = :mediaId ';
                 $params['mediaId'] = $mediaId;
-            } elseif (($type == 'event') && ($eventTag != '')) {
+            } elseif ($type == 'event' && $eventTag != '') {
                 // Filter by Event
                 $select .= '
                     AND `stat`.type = \'event\'  
@@ -605,7 +621,7 @@ class DistributionReport implements ReportInterface
             ';
 
             // Periods and Stats tables are joined, we should only have periods we're interested in, but it
-            // wont hurt to restrict them
+            // won't hurt to restrict them
             $select .= ' 
              WHERE periods.`start` >= :fromDt
                 AND periods.`end` <= :toDt ';
@@ -613,7 +629,7 @@ class DistributionReport implements ReportInterface
             // Close out our containing view and group things together
             $select .= '
                 ) periodsWithStats 
-            GROUP BY periodsWithStats.id, periodsWithStats.label, start, end
+            GROUP BY periodsWithStats.id, periodsWithStats.label
             ORDER BY periodsWithStats.id
             ';
 
