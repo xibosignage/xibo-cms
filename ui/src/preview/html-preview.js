@@ -280,6 +280,9 @@ function Layout(id, options, preload, layoutPreview) {
     };
     
     self.end = function() {
+        // Send message to parent window
+        parent.postMessage('viewerStoppedPlaying');
+
         /* Ask the layout to gracefully stop running now */
         for (var i = 0; i < self.regionObjects.length; i++) {
             self.regionObjects[i].end();

@@ -213,6 +213,17 @@ $(document).ready(function() {
                             inactiveCheckClass: 'd-none',
                         },
                         {
+                            id: 'deleteLayout',
+                            title: layoutEditorTrans.deleteTitle,
+                            logo: 'fa-times-circle-o',
+                            class: 'btn-danger',
+                            action: lD.showDeleteScreen,
+                            inactiveCheck: function() {
+                                return (lD.layout.editable == true || lD.layout.deletePermission == false);
+                            },
+                            inactiveCheckClass: 'd-none',
+                        },
+                        {
                             id: 'scheduleLayout',
                             title: layoutEditorTrans.scheduleTitle,
                             logo: 'fa-clock-o',
@@ -345,6 +356,12 @@ $(document).ready(function() {
         // Redirect to the layout grid
         window.location.href = urlsForApi.layout.list.url;
     });
+
+    if (window.addEventListener) {
+        window.addEventListener("message", lD.handleMessage);
+    } else {
+        window.attachEvent("onmessage", lD.handleMessage);
+    }
 });
 
 /**
@@ -749,6 +766,60 @@ lD.discardLayout = function() {
     });
 }
 
+
+/**
+ * Discard layout
+ */
+ lD.deleteLayout = function() {
+    const linkToAPI = urlsForApi.layout.delete;
+    let requestPath = linkToAPI.url;
+
+    lD.common.showLoadingScreen();
+
+    // Deselect previous selected object
+    lD.selectObject();
+
+    // replace id if necessary/exists
+    requestPath = requestPath.replace(':id', lD.layout.layoutId);
+
+    const serializedData = $('#layoutDeleteForm').serialize();
+
+    $.ajax({
+        url: requestPath,
+        type: linkToAPI.type,
+        data: serializedData
+    }).done(function(res) {
+
+        if(res.success) {
+            bootbox.hideAll();
+
+            toastr.success(res.message);
+
+            // Redirect to the layout grid
+            window.location.href = urlsForApi.layout.list.url;
+        } else {
+
+            // Login Form needed?
+            if(res.login) {
+                window.location.href = window.location.href;
+                location.reload();
+            } else {
+                toastr.error(res.message);
+
+                // Close dialog
+                bootbox.hideAll();
+            }
+        }
+
+        lD.common.hideLoadingScreen();
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+        lD.common.hideLoadingScreen();
+
+        // Output error to console
+        console.error(jqXHR, textStatus, errorThrown);
+    });
+}
+
 /**
  * Read Only Mode
  */
@@ -943,6 +1014,13 @@ lD.showScheduleScreen = function() {
 };
 
 /**
+ * Layout delete screen
+ */
+ lD.showDeleteScreen = function() {
+    lD.loadFormFromAPI('deleteForm', lD.layout.layoutId, '', 'lD.deleteLayout();', [editorsTrans.retire]);
+};
+
+/**
  * Layout save template screen
  */
 lD.showSaveTemplateScreen = function() {
@@ -952,10 +1030,7 @@ lD.showSaveTemplateScreen = function() {
 /**
  * Load form from the API
  */
-lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActionCallback = null) {
-
-    const self = this;
-
+lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActionCallback = null, buttonsToRemove = []) {
     // Load form the API
     const linkToAPI = urlsForApi.layout[type];
 
@@ -974,7 +1049,6 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
         url: requestPath,
         type: linkToAPI.type
     }).done(function(res) {
-
         if(res.success) {
             // Create buttons
             let generatedButtons = {
@@ -987,29 +1061,34 @@ lD.loadFormFromAPI = function(type, id = null, apiFormCallback = null, mainActio
             // Get buttons from form
             for(var button in res.buttons) {
                 if(res.buttons.hasOwnProperty(button)) {
-                    if(button != translations.cancel) {
+                    if (res.buttons[button] != "XiboDialogClose()") {
                         let buttonType = 'btn-white';
+                        let mainButtonAction = false;
 
-                        if(button === translations.save || button === editorsTrans.publish || button === editorsTrans.discard) {
+                        if(button === translations.save || button === editorsTrans.publish || button === editorsTrans.discard || button === editorsTrans.yes) {
                             buttonType = 'btn-primary';
+                            mainButtonAction = true;
                         }
 
                         let url = res.buttons[button];
 
-                        generatedButtons[button] = {
-                            label: button,
-                            className: buttonType + ' btn-bb-' + button,
-                            callback: function(result) {
-                                // Call global function by the function name
-                                if (mainActionCallback != null) {
-                                    eval(mainActionCallback);
-                                } else {
-                                    eval(url);
+                        // Only add button if it's not in the buttons to remove list
+                        if (buttonsToRemove.indexOf(button) == -1) {
+                            generatedButtons[button] = {
+                                label: button,
+                                className: buttonType + ' btn-bb-' + button,
+                                callback: function() {
+                                    // Call global function by the function name
+                                    if (mainActionCallback != null && mainButtonAction) {
+                                        eval(mainActionCallback);
+                                    } else {
+                                        eval(url);
+                                    }
+    
+                                    return false;
                                 }
-
-                                return false;
-                            }
-                        };
+                            };
+                        }
                     }
                 }
             }
@@ -2153,9 +2232,38 @@ lD.upgradeBreadcrumbTrail = function() {
     // Append loading html to the main div
     $breadcrumbContainer.html(breadcrumbTemplate(data));
 
+    // Handle breadcrumb toggle
+    $breadcrumbContainer.find('.bc-toggle').on('click', function() {
+        $breadcrumbContent = $breadcrumbContainer.find('.bc-content');
+
+        // Is the content visible
+        const isVisible = $breadcrumbContent.is(':visible');
+
+        // Toggle breadcrumb content
+        $breadcrumbContainer.find('.bc-content').toggle('fast');
+
+        // Change button status
+        $breadcrumbContainer.find('.bc-toggle').toggleClass('active', !isVisible);
+    });
+
     // Handle cell click
     $breadcrumbContainer.find('.bc-link').on('click', function() {
         // Select object
         ($(this).hasClass('bc-layout')) ? lD.selectObject() : lD.selectObject($('#' + $(this).data('id')), true);
     });
 };
+
+/**
+ * Handle messages coming other windows (iframe)
+ * @param {object} event 
+ */
+lD.handleMessage = function(event) {
+    var messageFromSender = event.data;
+    if (messageFromSender == "viewerStoppedPlaying") {
+        // Refresh designer
+        lD.refreshDesigner();
+
+        // Show tooltip on play button
+        lD.bottombar.showPlayMessage();
+    }
+}
