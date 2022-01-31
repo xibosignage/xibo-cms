@@ -839,6 +839,7 @@ class Report extends Base
 
         // Create the report object
         $object = $this->reportService->createReportObject($className);
+        $object->setUserId($this->getUser()->userId);
 
         // Return data to build chart
         $results =  $object->getResults(null);
