@@ -39,6 +39,12 @@ width: {{ durationPercentage }}%;">
             data-title="{{expireStatusTitle}}"
             data-property="Expiry"></i>
         {{/gt}}
+
+        {{#each transitions}}
+            <i class="fa fa-sign-{{@key}} editProperty d-none"
+            data-property="Transition"
+            data-property-type="{{@key}}"></i>
+        {{/each}}
     </div>
 </div>
 

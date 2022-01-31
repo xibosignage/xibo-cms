@@ -936,7 +936,16 @@ body, .page-content {
             }
 
             @include set-transparent-color(background, $xibo-color-gray, 0.6);
-            @include box-shadow(0 0 4px 0px $xibo-color-black);
+
+            &::after {
+                content: ' ';
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                height: 100%;
+                @include box-shadow(inset 0 0 2px 0px $xibo-color-black);
+            }
 
             .loading-icon {
                 font-size: inherit;
@@ -1003,7 +1012,10 @@ body, .page-content {
             
             &:hover {
                 @include set-transparent-color(background, $xibo-color-white, 0.5);
-                @include box-shadow(0 0 4px 2px $xibo-color-black);
+                
+                &::after {
+                    @include box-shadow(inset 0 0 2px 1px $xibo-color-black);
+                }
 
                 .preview-paging.active {
                     opacity: 0.9;
@@ -1414,27 +1426,15 @@ body, .page-content {
 
     .layout {
         overflow: hidden;
-        @include box-shadow(inset 0 0 3px 1px $navigator-shadow-colour);
+        @include box-shadow(inset 0 0 2px 1px $navigator-shadow-colour);
     }
 
     .designer-region {
-        @include box-shadow(inset 0 0 3px 1px $navigator-shadow-colour);
+        @include box-shadow(inset 0 0 2px 0px $navigator-shadow-colour);
     }
 
     .designer-region:not(.editable) {
-        @include box-shadow(inset 0 0 3px 1px $navigator-non-editable-shadow-colour);
-    }
-
-    .layout {
-        @include box-shadow(inset 0 0 3px 1px $navigator-shadow-colour);
-    }
-
-    .designer-region {
-        @include box-shadow(inset 0 0 3px 1px $navigator-shadow-colour);
-    }
-
-    .designer-region:not(.editable) {
-        @include box-shadow(inset 0 0 3px 1px $navigator-non-editable-shadow-colour);
+        @include box-shadow(inset 0 0 2px 0px $navigator-non-editable-shadow-colour);
     }
 
     #layout-navigator-content {
