@@ -359,22 +359,9 @@ class Campaign extends Base
     {
         $campaign = $this->campaignFactory->getById($campaignId);
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $campaign->tags));
-        $arrayOfTagValues = array_filter(explode(',', $campaign->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] != 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
-        if (!$this->getUser()->checkEditable($campaign))
+        if (!$this->getUser()->checkEditable($campaign)) {
             throw new AccessDeniedException();
+        }
 
         // Load layouts
         $layouts = [];
@@ -397,7 +384,7 @@ class Campaign extends Base
             'campaign' => $campaign,
             'layouts' => $layouts,
             'help' => $this->getHelp()->link('Campaign', 'Edit'),
-            'tags' => $tags
+            'tags' => $campaign->tags
         ]);
     }
 

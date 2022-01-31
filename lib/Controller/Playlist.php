@@ -581,27 +581,13 @@ class Playlist extends Base
     public function editForm($playlistId)
     {
         $playlist = $this->playlistFactory->getById($playlistId);
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $playlist->tags));
-        $arrayOfTagValues = array_filter(explode(',', $playlist->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
 
         if (!$this->getUser()->checkEditable($playlist))
             throw new AccessDeniedException();
 
         $this->getState()->template = 'playlist-form-edit';
         $this->getState()->setData([
-            'playlist' => $playlist,
-            'tags' => $tags
+            'playlist' => $playlist
         ]);
     }
 
@@ -818,9 +804,6 @@ class Playlist extends Base
         // Clone the original
         $playlist = clone $originalPlaylist;
 
-        // Handle tags
-        $tags = $this->tagFactory->getTagsWithValues($playlist);
-
         $playlist->name = $this->getSanitizer()->getString('name');
         $playlist->setOwner($this->getUser()->userId);
 
@@ -841,7 +824,7 @@ class Playlist extends Base
             }
         }
 
-        $playlist->replaceTags($this->tagFactory->tagsFromString($tags));
+        $playlist->replaceTags($this->tagFactory->tagsFromString($playlist->tags));
 
         // Set from global setting
         if ($playlist->enableStat == null) {

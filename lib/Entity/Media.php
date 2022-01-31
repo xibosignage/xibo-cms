@@ -99,7 +99,6 @@ class Media implements \JsonSerializable
      * @var Tag[]
      */
     public $tags = [];
-    public $tagValues;
 
     /**
      * @SWG\Property(description="The file size in bytes")
@@ -816,13 +815,18 @@ class Media implements \JsonSerializable
             $saveName = $this->mediaId . '.' . strtolower(substr($lastPeriod, 1));
         }
 
-        if(isset($this->urlDownload) && $this->urlDownload === true) {
+        if (isset($this->urlDownload) && $this->urlDownload === true) {
 
             // for upload via URL, handle cases where URL do not have specified extension in url
             // we either have a long string after lastPeriod or nothing
 
             if (isset($this->extension) && (strlen($lastPeriod) > 3 || $lastPeriod === false)) {
                 $saveName = $this->mediaId . '.' . $this->extension;
+            }
+
+            // if needed strip any not needed characters from the storedAs, this should be just <mediaId>.<extension>
+            if (strpos(basename($saveName), '?')) {
+                $saveName = substr(basename($saveName), 0, strpos(basename($saveName), '?'));
             }
 
             $this->storedAs = $saveName;
@@ -1034,5 +1038,26 @@ class Media implements \JsonSerializable
     public function downloadRequestOptions()
     {
         return $this->requestOptions;
+    }
+
+    /**
+     * Update Media duration.
+     * This is called on processDownloads when uploading video/audio from url
+     * Real duration can be determined in determineRealDuration function in MediaFactory
+     * @param int $realDuration
+     * @return Media
+     */
+    public function updateDuration(int $realDuration): Media
+    {
+        $this->getLog()->debug('Updating duration for MediaId '. $this->mediaId);
+
+        $this->getStore()->update('UPDATE `media` SET duration = :duration WHERE mediaId = :mediaId', [
+            'duration' => $realDuration,
+            'mediaId' => $this->mediaId
+        ]);
+
+        $this->duration = $realDuration;
+
+        return $this;
     }
 }
