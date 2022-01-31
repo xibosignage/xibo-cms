@@ -22,25 +22,10 @@
 
 namespace Xibo\Controller;
 
-use Carbon\Carbon;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Entity\Media;
-use Xibo\Entity\ReportResult;
-use Xibo\Entity\ReportSchedule;
-use Xibo\Factory\MediaFactory;
-use Xibo\Factory\ReportScheduleFactory;
-use Xibo\Factory\SavedReportFactory;
-use Xibo\Factory\UserFactory;
-use Xibo\Helper\DateFormatHelper;
-use Xibo\Helper\SendFile;
 use Xibo\Service\ReportServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
-use Xibo\Storage\TimeSeriesStoreInterface;
-use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
-use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Report
@@ -82,6 +67,9 @@ class Report extends Base
 
         // Create the report object
         $object = $this->reportService->createReportObject($className);
+        
+        // We assert the user so that we can use getUser in the report class
+        $object->setUser($this->getUser());
 
         // Get the twig file template and required data of the report form
         $form =  $object->getReportForm();
@@ -116,12 +104,11 @@ class Report extends Base
         $className = $this->reportService->getReportClass($name);
 
         // Create the report object
-        $object = $this->reportService->createReportObject($className);
+        $object = $this->reportService->createReportObject($className)->setUser($this->getUser());
 
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
         // Return data to build chart/table
-        /* @var ReportResult $result */
         $result =  $object->getResults($sanitizedParams);
 
         //

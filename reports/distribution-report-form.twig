@@ -24,6 +24,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{% trans "Report: Distribution by Layout, Media or Event" %} | {% endblock %}
+
 {% block actionMenu %}
     {% include "report-schedule-buttons.twig" %}
 {% endblock %}

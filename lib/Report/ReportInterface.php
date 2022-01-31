@@ -41,6 +41,20 @@ interface ReportInterface
     public function setFactories(ContainerInterface $container);
 
     /**
+     * Set user Id
+     * @param \Xibo\Entity\User $user
+     * @return $this
+     */
+    public function setUser($user);
+
+    /**
+     * Get the user
+     * @return \Xibo\Entity\User
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getUser();
+
+    /**
      * Get chart script
      * @param ReportResult $results
      * @return string
@@ -107,6 +121,7 @@ interface ReportInterface
      * This result will get saved to a json if schedule report runs
      * @param SanitizerInterface $sanitizedParams
      * @return ReportResult
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function getResults(SanitizerInterface $sanitizedParams);
 }

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -32,7 +32,6 @@ use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
-use Xibo\Factory\UserFactory;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\SanitizerService;
@@ -79,11 +78,6 @@ class ProofOfPlay implements ReportInterface
      */
     private $state;
 
-    /**
-     * @var UserFactory
-     */
-    private $userFactory;
-
     private $table = 'stat';
 
     private $tagsType = [
@@ -99,7 +93,6 @@ class ProofOfPlay implements ReportInterface
         $this->mediaFactory = $container->get('mediaFactory');
         $this->layoutFactory = $container->get('layoutFactory');
         $this->reportScheduleFactory = $container->get('reportScheduleFactory');
-        $this->userFactory = $container->get('userFactory');
         $this->sanitizer = $container->get('sanitizerService');
 
         return $this;
@@ -161,24 +154,19 @@ class ProofOfPlay implements ReportInterface
     /** @inheritdoc */
     public function setReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
-        // We use the following variables in temp array
         $filter = $sanitizedParams->getString('filter');
-        $displayId = $sanitizedParams->getInt('displayId');
-        $layoutIds = $sanitizedParams->getIntArray('layoutId');
-        $mediaIds = $sanitizedParams->getIntArray('mediaId');
-        $type = $sanitizedParams->getString('type');
-        $sortBy = $sanitizedParams->getString('sortBy');
-        $tagsType = $sanitizedParams->getString('tagsType');
-        $tags = $sanitizedParams->getString('tags');
-        $exactTags = $sanitizedParams->getCheckbox('exactTags');
-        $logicalOperator = $sanitizedParams->getString('logicalOperator');
-
-        $temp = ['filter', 'displayId', 'layoutIds', 'mediaIds', 'type', 'sortBy', 'tagsType', 'tags', 'exactTags', 'logicalOperator'];
-
-        $filterCriteria = [];
-        foreach ($temp as $value) {
-            $filterCriteria[$value] = $$value;
-        }
+        $filterCriteria = [
+            'filter' => $filter,
+            'displayId' => $sanitizedParams->getInt('displayId'),
+            'layoutIds' => $sanitizedParams->getIntArray('layoutId'),
+            'mediaIds' => $sanitizedParams->getIntArray('mediaId'),
+            'type' => $sanitizedParams->getString('type'),
+            'sortBy' => $sanitizedParams->getString('sortBy'),
+            'tagsType' => $sanitizedParams->getString('tagsType'),
+            'tags' => $sanitizedParams->getString('tags'),
+            'exactTags' => $sanitizedParams->getCheckbox('exactTags'),
+            'logicalOperator' => $sanitizedParams->getString('logicalOperator')
+        ];
 
         $schedule = '';
         if ($filter == 'daily') {
@@ -345,39 +333,20 @@ class ProofOfPlay implements ReportInterface
         $displayIds = [];
 
         // Get user
-        $userId = $this->getUserId();
+        $user = $this->getUser();
 
-        if ($userId == null) {
-            $user = $this->userFactory->getUser();
-        } else {
-            $user = $this->userFactory->getById($userId);
-        }
-
-        $displayFactory = clone $this->displayFactory;
-        $displayFactory->setAclDependencies($user, $this->userFactory);
-
-        if ($user->userTypeId != 1) {
+        // Disply filter.
+        if (!$user->isSuperAdmin()) {
             // Get an array of display id this user has access to.
-            foreach ($displayFactory->query() as $display) {
-                $displayIds[] = $display->displayId;
-            }
+            $displayIds = $this->getDisplayIdFilter($sanitizedParams);
 
+            // If we don't have permission to any displays, then filter by one we know not to exist.
             if (count($displayIds) <= 0) {
-                throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
+                $displayIds = [-1];
             }
-
-            // Set displayIds as [-1] if the user selected a display for which they don't have permission
-            if ($displayId != 0) {
-                if (!in_array($displayId, $displayIds)) {
-                    $displayIds = [-1];
-                } else {
-                    $displayIds = [$displayId];
-                }
-            }
-        } else {
-            if ($displayId != 0) {
-                $displayIds = [$displayId];
-            }
+        } else if ($displayId !== null) {
+            // Super admin, so only filter if we've selected one.
+            $displayIds[] = $displayId;
         }
 
         // web
@@ -405,7 +374,7 @@ class ProofOfPlay implements ReportInterface
         //
         // From and To Date Selection
         // --------------------------
-        // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
+        // Our report has a range filter which determins whether the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
         $reportFilter = $sanitizedParams->getString('reportFilter');
 
@@ -487,9 +456,37 @@ class ProofOfPlay implements ReportInterface
         // -------------
         $timeSeriesStore = $this->getTimeSeriesStore()->getEngine();
         if ($timeSeriesStore == 'mongodb') {
-            $result = $this->getProofOfPlayReportMongoDb($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $operator, $start, $length);
+            $result = $this->getProofOfPlayReportMongoDb(
+                $fromDt,
+                $toDt,
+                $displayIds,
+                $layoutIds,
+                $mediaIds,
+                $type,
+                $columns,
+                $tags,
+                $tagsType,
+                $exactTags,
+                $operator,
+                $start,
+                $length
+            );
         } else {
-            $result = $this->getProofOfPlayReportMySql($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $operator, $start, $length);
+            $result = $this->getProofOfPlayReportMySql(
+                $fromDt,
+                $toDt,
+                $displayIds,
+                $layoutIds,
+                $mediaIds,
+                $type,
+                $columns,
+                $tags,
+                $tagsType,
+                $exactTags,
+                $operator,
+                $start,
+                $length
+            );
         }
 
         // Sanitize results
@@ -562,9 +559,21 @@ class ProofOfPlay implements ReportInterface
      * @param $length int
      * @return array[array result, date periodStart, date periodEnd, int count, int totalStats]
      */
-    private function getProofOfPlayReportMySql($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $logicalOperator, $start, $length)
-    {
-
+    private function getProofOfPlayReportMySql(
+        $fromDt,
+        $toDt,
+        $displayIds,
+        $layoutIds,
+        $mediaIds,
+        $type,
+        $columns,
+        $tags,
+        $tagsType,
+        $exactTags,
+        $logicalOperator,
+        $start,
+        $length
+    ) {
         $fromDt = $fromDt->format('U');
         $toDt = $toDt->format('U');
 
@@ -722,7 +731,16 @@ class ProofOfPlay implements ReportInterface
                 }
                 $tagsFilter = explode(',', $tags);
                 // pass to BaseFactory tagFilter, it does not matter from which factory we do that.
-                $this->layoutFactory->tagFilter($tagsFilter, $lkTagTable, $lkTagTableIdColumn, $idColumn, $logicalOperator, $operator, $body, $params);
+                $this->layoutFactory->tagFilter(
+                    $tagsFilter,
+                    $lkTagTable,
+                    $lkTagTableIdColumn,
+                    $idColumn,
+                    $logicalOperator,
+                    $operator,
+                    $body,
+                    $params
+                );
 
                 if ($tagsType === 'layout') {
                     $body .= ' B
@@ -753,7 +771,8 @@ class ProofOfPlay implements ReportInterface
                 $params['layoutId_' . $i] = $layoutId;
             }
 
-            $body .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN (' . trim($layoutSql, ',') . ')) ';
+            $body .= '  AND `stat`.campaignId IN (SELECT campaignId from layouthistory where layoutId IN ('
+                . trim($layoutSql, ',') . ')) ';
         }
 
         // Media Filter
@@ -832,7 +851,7 @@ class ProofOfPlay implements ReportInterface
             'periodStart' => Carbon::createFromTimestamp($fromDt)->format(DateFormatHelper::getSystemFormat()),
             'periodEnd' => Carbon::createFromTimestamp($toDt)->format(DateFormatHelper::getSystemFormat()),
             'count' => count($rows),
-            'totalStats' => isset($results[0]['total']) ? $results[0]['total'] : 0,
+            'totalStats' => $results[0]['total'] ?? 0,
         ];
     }
 
@@ -854,10 +873,23 @@ class ProofOfPlay implements ReportInterface
      * @throws InvalidArgumentException
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    private function getProofOfPlayReportMongoDb($fromDt, $toDt, $displayIds, $layoutIds, $mediaIds, $type, $columns, $tags, $tagsType, $exactTags, $operator, $start, $length)
-    {
-        $fromDt = new UTCDateTime($fromDt->format('U')*1000);
-        $toDt = new UTCDateTime($toDt->format('U')*1000);
+    private function getProofOfPlayReportMongoDb(
+        $filterFromDt,
+        $filterToDt,
+        $displayIds,
+        $layoutIds,
+        $mediaIds,
+        $type,
+        $columns,
+        $tags,
+        $tagsType,
+        $exactTags,
+        $operator,
+        $start,
+        $length
+    ) {
+        $fromDt = new UTCDateTime($filterFromDt->format('U')*1000);
+        $toDt = new UTCDateTime($filterToDt->format('U')*1000);
 
         // Filters the documents to pass only the documents that
         // match the specified condition(s) to the next pipeline stage.
@@ -1114,8 +1146,8 @@ class ProofOfPlay implements ReportInterface
 
         return [
             'result' => $rows,
-            'periodStart' => Carbon::createFromTimestamp($fromDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
-            'periodEnd' => Carbon::createFromTimestamp($toDt->toDateTime()->format('U'))->format(DateFormatHelper::getSystemFormat()),
+            'periodStart' => $filterFromDt->format(DateFormatHelper::getSystemFormat()),
+            'periodEnd' => $filterToDt->format(DateFormatHelper::getSystemFormat()),
             'count' => count($rows),
             'totalStats' => $totalStats,
         ];

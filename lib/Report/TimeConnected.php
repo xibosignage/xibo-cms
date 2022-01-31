@@ -207,9 +207,7 @@ class TimeConnected implements ReportInterface
         $displayIds = [];
 
         // Get an array of display id this user has access to.
-        foreach ($this->displayFactory->query() as $display) {
-            $accessibleDisplayIds[] = $display->displayId;
-        }
+        $accessibleDisplayIds[] = $this->getDisplayIdFilter($sanitizedParams);
 
         if (count($displayGroupIds) > 0) {
             foreach ($displayGroupIds as $displayGroupId) {

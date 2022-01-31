@@ -9,7 +9,6 @@ use Xibo\Entity\ReportResult;
 use Xibo\Entity\ReportSchedule;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Helper\DateFormatHelper;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -192,17 +191,8 @@ class Bandwidth implements ReportInterface
                 break;
         }
 
-
         // Get an array of display id this user has access to.
-        $displayIds = [];
-
-        foreach ($this->displayFactory->query(null, []) as $display) {
-            $displayIds[] = $display->displayId;
-        }
-
-        if (count($displayIds) <= 0) {
-            throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
-        }
+        $displayIds = $this->getDisplayIdFilter($sanitizedParams);
 
         // Get some data for a bandwidth chart
         $dbh = $this->store->getConnection();
@@ -221,7 +211,7 @@ class Bandwidth implements ReportInterface
         }
 
         // For user with limited access, return only data for displays this user has permissions to.
-        $joinType = ($this->userFactory->getById($this->getUserId())->isSuperAdmin()) ? 'LEFT OUTER JOIN' : 'INNER JOIN';
+        $joinType = ($this->getUser()->isSuperAdmin()) ? 'LEFT OUTER JOIN' : 'INNER JOIN';
 
         $SQL .= ' FROM `bandwidth` ' .
                 $joinType . ' `display`
