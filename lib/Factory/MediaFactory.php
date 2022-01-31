@@ -830,21 +830,4 @@ class MediaFactory extends BaseFactory
 
         return $entries;
     }
-
-    /**
-     * This is called for video or audio on process downloads
-     * When uploading from URL the duration is set to 0 (module default)
-     * When processing successful downloads we can get the real duration from the file in the library and update the record
-     *
-     * @param Media $media
-     * @return int
-     */
-    public function determineRealDuration(Media $media): int
-    {
-        $libraryFolder = $this->config->getSetting('LIBRARY_LOCATION');
-        $this->getLog()->debug('Determine Duration from ' . $media->name);
-        $info = new \getID3();
-        $file = $info->analyze($libraryFolder . $media->storedAs);
-        return intval($this->getSanitizer($file)->getDouble('playtime_seconds', ['default' => 0]));
-    }
 }

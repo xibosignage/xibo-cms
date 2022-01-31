@@ -2647,14 +2647,13 @@ class Library extends Base
 
         // add our media to queueDownload and process the downloads
         $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), $expires, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat, 'folderId' => $folderId, 'permissionsFolderId' => $permissionsFolderId]);
-        $this->mediaFactory->processDownloads(function($media) {
+        $this->mediaFactory->processDownloads(function (Media $media) use ($module) {
             // Success
             $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
-            if ($media->mediaType === 'video' || $media->mediaType === 'audio') {
-                $realDuration = $this->mediaFactory->determineRealDuration($media);
-                if ($realDuration !== $media->duration) {
-                    $media->updateDuration($realDuration);
-                }
+            $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+            $realDuration = $module->determineDuration($libraryFolder . $media->storedAs);
+            if ($realDuration !== $media->duration) {
+                $media->updateDuration($realDuration);
             }
         });
 
