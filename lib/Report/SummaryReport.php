@@ -270,7 +270,7 @@ class SummaryReport implements ReportInterface
         // Get an array of display id this user has access to.
         $displayIds = [];
 
-        foreach ($this->displayFactory->query() as $display) {
+        foreach ($this->displayFactory->query(null, ['userCheckUserId' => $this->getUserId()]) as $display) {
             $displayIds[] = $display->displayId;
         }
 
