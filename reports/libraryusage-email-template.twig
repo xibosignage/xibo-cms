@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,38 +20,34 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 #}
+{% extends "base-report.twig" %}
 
-<div>
-    <img class="logo right" src="{{ logo }}">
-</div>
-<div class="header">{{ header }}</div>
-<div class="title">{{ title }} <span class="small">({% trans "Generated on: " %}{{ metadata.generatedOn }})</span></div>
-<div>
-    <span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span>
-</div>
+{% block content %}
+    <div>
+        <span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span>
+    </div>
 
-<table class="saved-report-table">
-    <tr>
-        <th>{% trans "ID" %}</th>
-        <th>{% trans "User" %}</th>
-        <th>{% trans "Usage" %}</th>
-        <th>{% trans "Count Files" %}</th>
-    </tr>
-    {% for item in tableData %}
+    <table class="saved-report-table">
         <tr>
-            <td>{{ item.userId }}</td>
-            <td>{{ item.userName }}</td>
-            <td>{{ item.bytesUsedFormatted }}</td>
-            <td>{{ item.numFiles }}</td>
+            <th>{% trans "ID" %}</th>
+            <th>{% trans "User" %}</th>
+            <th>{% trans "Usage" %}</th>
+            <th>{% trans "Count Files" %}</th>
         </tr>
+        {% for item in tableData %}
+            <tr>
+                <td>{{ item.userId }}</td>
+                <td>{{ item.userName }}</td>
+                <td>{{ item.bytesUsedFormatted }}</td>
+                <td>{{ item.numFiles }}</td>
+            </tr>
+        {% endfor %}
+    </table>
+
+    {% for key,item in multipleCharts %}
+        <div style="text-align: center">{{ key|replace({'_': " "}) }}</div>
+        <img src="{{ item|raw }}" >
+        <p></p>
     {% endfor %}
-</table>
 
-{% for key,item in multipleCharts %}
-    <div style="text-align: center">{{ key|replace({'_': " "}) }}</div>
-    <img src="{{ item|raw }}" >
-    <p></p>
-{% endfor %}
-
-
-
+{% endblock %}

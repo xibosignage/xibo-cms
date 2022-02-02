@@ -1,5 +1,5 @@
-{#
-/**
+<?php
+/*
  * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
@@ -19,13 +19,29 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-#}
-{% extends "base-report.twig" %}
 
-{% block content %}
-<div>
-    <span class="small">{% trans "From" %} {{ metadata.periodStart }} {% trans "To" %} {{ metadata.periodEnd }}</span>
-</div>
-<p></p>
-<span>{{ placeholder }}</span>
-<img src="{{ src|raw }}" >
+use Phinx\Migration\AbstractMigration;
+
+/**
+ * Report Logo Migration
+ * ---------------------
+ * Add a setting for whether to show the logo on PDF exports
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
+class ReportLogoMigration extends AbstractMigration
+{
+    /**
+     * @inheritDoc
+     */
+    public function change()
+    {
+        $this->table('setting')
+            ->insert([
+                'setting' => 'REPORTS_EXPORT_SHOW_LOGO',
+                'value' => 1,
+                'userSee' => 1,
+                'userChange' => 1
+            ])
+            ->save();
+    }
+}

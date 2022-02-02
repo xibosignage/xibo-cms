@@ -23,6 +23,8 @@
 namespace Xibo\XTR;
 
 use Carbon\Carbon;
+use Mpdf\Mpdf;
+use Mpdf\Output\Destination;
 use Slim\Views\Twig;
 use Xibo\Entity\ReportResult;
 use Xibo\Factory\MediaFactory;
@@ -215,22 +217,32 @@ class ReportScheduleTask implements TaskInterface
     private function createPdfAndNotification($reportSchedule, $savedReport, $media)
     {
         /* @var ReportResult $savedReportData */
-        $savedReportData = $this->reportService->getSavedReportResults($savedReport->savedReportId, $reportSchedule->reportName);
+        $savedReportData = $this->reportService->getSavedReportResults(
+            $savedReport->savedReportId,
+            $reportSchedule->reportName
+        );
 
         // Get the report config
         $report = $this->reportService->getReportByName($reportSchedule->reportName);
 
         if ($report->output_type == 'both' || $report->output_type == 'chart') {
-            if (!empty($this->config->getSetting('QUICK_CHART_URL'))) {
-                $quickChartUrl = $this->config->getSetting('QUICK_CHART_URL') . '/chart?width=1000&height=300&c=';
-                $script = str_replace('"', '\'', $this->reportService->getReportChartScript($savedReport->savedReportId, $reportSchedule->reportName));
-                $src = $quickChartUrl . $script;
+            $quickChartUrl = $this->config->getSetting('QUICK_CHART_URL');
+            if (!empty($quickChartUrl)) {
+                $quickChartUrl .= '/chart?width=1000&height=300&c=';
+
+                $chartScript = $this->reportService->getReportChartScript(
+                    $savedReport->savedReportId,
+                    $reportSchedule->reportName
+                );
+
+                // Replace " with ' for the quick chart URL
+                $src = $quickChartUrl . str_replace('"', '\'', $chartScript);
 
                 // If multiple charts needs to be displayed
                 $multipleCharts = [];
-                $chartScriptArray = json_decode($script, true);
+                $chartScriptArray = json_decode($chartScript, true);
                 foreach ($chartScriptArray as $key => $chartData) {
-                    $multipleCharts[$key] = $quickChartUrl . json_encode($chartData);
+                    $multipleCharts[$key] = $quickChartUrl . str_replace('"', '\'', json_encode($chartData));
                 }
             } else {
                 $placeholder = __('Chart could not be drawn because the CMS has not been configured with a Quick Chart URL.');
@@ -254,17 +266,17 @@ class ReportScheduleTask implements TaskInterface
                     'logo' => $this->config->uri('img/xibologo.png', true),
                     'title' => $savedReport->saveAs,
                     'metadata' => $savedReportData->metadata,
-                    'tableData' => isset($tableData) ? $tableData : null,
-                    'src' => isset($src) ? $src : null,
-                    'multipleCharts' => isset($multipleCharts) ? $multipleCharts : null,
-                    'placeholder' => isset($placeholder) ? $placeholder : null
+                    'tableData' => $tableData ?? null,
+                    'src' => $src ?? null,
+                    'multipleCharts' => $multipleCharts ?? null,
+                    'placeholder' => $placeholder ?? null
                 ]
             );
             $body = ob_get_contents();
             ob_end_clean();
 
             try {
-                $mpdf = new \Mpdf\Mpdf([
+                $mpdf = new Mpdf([
                     'tempDir' => $this->config->getSetting('LIBRARY_LOCATION') . '/temp',
                     'orientation' => 'L',
                     'mode' => 'c',
@@ -280,12 +292,15 @@ class ReportScheduleTask implements TaskInterface
                 $stylesheet =  file_get_contents($this->config->uri('css/email-report.css', true));
                 $mpdf->WriteHTML($stylesheet, 1);
                 $mpdf->WriteHTML($body);
-                $mpdf->Output($this->config->getSetting('LIBRARY_LOCATION'). 'attachment/filename-'.$media->mediaId.'.pdf', \Mpdf\Output\Destination::FILE);
+                $mpdf->Output(
+                    $this->config->getSetting('LIBRARY_LOCATION') . 'attachment/filename-'.$media->mediaId.'.pdf',
+                    Destination::FILE
+                );
 
                 // Create email notification with attachment
                 $filters = json_decode($reportSchedule->filterCriteria, true);
-                $sendEmail = isset($filters['sendEmail']) ? $filters['sendEmail'] : null;
-                $nonusers = isset($filters['nonusers']) ? $filters['nonusers'] : null;
+                $sendEmail = $filters['sendEmail'] ?? null;
+                $nonusers = $filters['nonusers'] ?? null;
                 if ($sendEmail) {
                     $notification = $this->notificationFactory->createEmpty();
                     $notification->subject = $report->description;
