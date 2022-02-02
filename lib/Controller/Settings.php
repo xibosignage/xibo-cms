@@ -513,6 +513,19 @@ class Settings extends Base
             $this->getConfig()->changeSetting('LATEST_NEWS_URL', $sanitizedParams->getString('LATEST_NEWS_URL'));
         }
 
+        if ($this->getConfig()->isSettingEditable('REPORTS_EXPORT_SHOW_LOGO')) {
+            $this->handleChangedSettings(
+                'REPORTS_EXPORT_SHOW_LOGO',
+                $this->getConfig()->getSetting('REPORTS_EXPORT_SHOW_LOGO'),
+                $sanitizedParams->getCheckbox('REPORTS_EXPORT_SHOW_LOGO'),
+                $changedSettings
+            );
+            $this->getConfig()->changeSetting(
+                'REPORTS_EXPORT_SHOW_LOGO',
+                $sanitizedParams->getCheckbox('REPORTS_EXPORT_SHOW_LOGO')
+            );
+        }
+
         if ($this->getConfig()->isSettingEditable('MAINTENANCE_ENABLED')) {
             $this->handleChangedSettings('MAINTENANCE_ENABLED', $this->getConfig()->getSetting('MAINTENANCE_ENABLED'), $sanitizedParams->getString('MAINTENANCE_ENABLED'), $changedSettings);
             $this->getConfig()->changeSetting('MAINTENANCE_ENABLED', $sanitizedParams->getString('MAINTENANCE_ENABLED'));

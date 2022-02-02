@@ -131,35 +131,19 @@ class SummaryReport implements ReportInterface
     public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
         $type = $sanitizedParams->getString('type');
-
-        if ($type == 'layout') {
-            $selectedId = $sanitizedParams->getInt('layoutId');
-            $title = __('Add Report Schedule for ') . $type
-                . ' - ' . $this->layoutFactory->getById($selectedId)->layout;
-        } elseif ($type == 'media') {
-            $selectedId = $sanitizedParams->getInt('mediaId');
-            $title = __('Add Report Schedule for '). $type
-                . ' - '. $this->mediaFactory->getById($selectedId)->name;
-        } elseif ($type == 'event') {
-            $selectedId = 0; // we only need eventTag
-            $eventTag = $sanitizedParams->getString('eventTag');
-            $title = __('Add Report Schedule for ') . $type . ' - '. $eventTag;
-        } else {
-            throw new InvalidArgumentException(__('Unknown type ') . $type, 'type');
-        }
+        $formParams = $this->getReportScheduleFormTitle($sanitizedParams);
 
         $data = ['filters' => []];
-
         $data['filters'][] = ['name'=> 'Daily', 'filter'=> 'daily'];
         $data['filters'][] = ['name'=> 'Weekly', 'filter'=> 'weekly'];
         $data['filters'][] = ['name'=> 'Monthly', 'filter'=> 'monthly'];
         $data['filters'][] = ['name'=> 'Yearly', 'filter'=> 'yearly'];
 
-        $data['formTitle'] = $title;
+        $data['formTitle'] = $formParams['title'];
 
         $data['hiddenFields'] = json_encode([
             'type' => $type,
-            'selectedId' => $selectedId,
+            'selectedId' => $formParams['selectedId'],
             'eventTag' => $eventTag ?? null
         ]);
 

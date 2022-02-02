@@ -134,30 +134,15 @@ class DistributionReport implements ReportInterface
     {
         $type = $sanitizedParams->getString('type');
 
-        if ($type == 'layout') {
-            $selectedId = $sanitizedParams->getInt('layoutId');
-            $title = __('Add Report Schedule for '). $type. ' - '.
-                $this->layoutFactory->getById($selectedId)->layout;
-        } elseif ($type == 'media') {
-            $selectedId = $sanitizedParams->getInt('mediaId');
-            $title = __('Add Report Schedule for '). $type. ' - '.
-                $this->mediaFactory->getById($selectedId)->name;
-        } elseif ($type == 'event') {
-            $selectedId = 0; // we only need eventTag
-            $eventTag = $sanitizedParams->getString('eventTag');
-            $title = __('Add Report Schedule for '). $type. ' - '. $eventTag;
-        }
+        $formParams = $this->getReportScheduleFormTitle($sanitizedParams);
 
         $data = [];
-
-        $data['formTitle'] = $title;
-
-        $data['hiddenFields'] =  json_encode([
+        $data['formTitle'] = $formParams['title'];
+        $data['hiddenFields'] = json_encode([
             'type' => $type,
-            'selectedId' => (int) $selectedId,
-            'eventTag' => isset($eventTag) ? $eventTag : null
+            'selectedId' => $formParams['selectedId'],
+            'eventTag' => $eventTag ?? null
         ]);
-
         $data['reportName'] = 'distributionReport';
 
         return [

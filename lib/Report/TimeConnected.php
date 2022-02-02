@@ -93,13 +93,7 @@ class TimeConnected implements ReportInterface
     /** @inheritdoc */
     public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
-        $data = [];
-
-        $data['formTitle'] = 'Add Report Schedule';
-
-        $data['hiddenFields'] =  json_encode([
-        ]);
-
+        $data['hiddenFields'] = '{}';
         $data['reportName'] = 'timeconnected';
 
         $groups = [];

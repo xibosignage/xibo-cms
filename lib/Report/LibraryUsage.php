@@ -218,12 +218,9 @@ class LibraryUsage implements ReportInterface
     /** @inheritdoc */
     public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
-        $title = __('Add Report Schedule');
-
         $data = [];
-
-        $data['formTitle'] = $title;
         $data['reportName'] = 'libraryusage';
+        
         // Note: getReportScheduleFormData is only run by the web UI and therefore the logged-in users permissions
         // are checked here
         $data['users'] = $this->userFactory->query();

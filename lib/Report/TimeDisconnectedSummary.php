@@ -91,11 +91,7 @@ class TimeDisconnectedSummary implements ReportInterface
     /** @inheritdoc */
     public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
-        $title = __('Add Report Schedule');
-
         $data = [];
-
-        $data['formTitle'] = $title;
         $data['reportName'] = 'timedisconnectedsummary';
 
         return [
