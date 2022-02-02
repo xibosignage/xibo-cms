@@ -670,13 +670,15 @@ abstract class ModuleWidget implements ModuleInterface
             'real' => false
         ], $options);
 
-        if ($options['real']) {
+        $isRegionSpecific = ($this->module !== null && $this->module->regionSpecific === 1);
+
+        if ($options['real'] && !$isRegionSpecific) {
             try {
                 // Get the duration from the parent media record.
                 return $this->getMedia()->duration;
-            }
-            catch (NotFoundException $e) {
-                $this->getLog()->error('Tried to get real duration from a widget without media. widgetId: ' . $this->getWidgetId());
+            } catch (NotFoundException $e) {
+                $this->getLog()->error('Tried to get real duration from a widget without media. widgetId: '
+                    . $this->getWidgetId());
                 // Do nothing - drop out
             }
         } else if ($this->widget->duration === null && $this->module !== null) {
