@@ -650,7 +650,6 @@ class Widget implements \JsonSerializable
         if ($this->type === 'subplaylist') {
             // We use the module to calculate the duration
             $this->calculatedDuration = $module->getSubPlaylistResolvedDuration();
-
         } else if ($this->getOptionValue('durationIsPerItem', 0) == 1 && $numItems > 1) {
             // If we have paging involved then work out the page count.
             $itemsPerPage = $this->getOptionValue('itemsPerPage', 0);
@@ -661,24 +660,24 @@ class Widget implements \JsonSerializable
             // For import
             // in the layout.xml file the duration associated with widget that has all the above parameters
             // will already be the calculatedDuration ie $this->duration from xml is duration * (numItems/itemsPerPage)
-            // since we preserve the itemsPerPage, durationIsPerItem and numItems on imported layout, we need to ensure we set the duration correctly
+            // since we preserve the itemsPerPage, durationIsPerItem and numItems on imported layout, we need to
+            // ensure we set the duration correctly
             // this will ensure that both, the widget duration and calculatedDuration will be correct on import.
             if ($import) {
-                $this->duration = (($this->useDuration == 1) ? $this->duration / $numItems : $module->getModule()->defaultDuration);
+                $this->duration = (($this->useDuration == 1)
+                    ? $this->duration / $numItems
+                    : $module->getModule()->defaultDuration);
             }
 
-            $this->calculatedDuration = (($this->useDuration == 1) ? $this->duration : $module->getModule()->defaultDuration) * $numItems;
+            $this->calculatedDuration = (($this->useDuration == 1)
+                    ? $this->duration
+                    : $module->getModule()->defaultDuration) * $numItems;
         } else if ($this->useDuration == 1) {
             // Widget duration is as specified
             $this->calculatedDuration = $this->duration;
-
-        } else if ($this->type === 'video' || $this->type === 'audio') {
-            // The calculated duration is the "real" duration (caters for 0 videos)
-            $this->calculatedDuration = $module->getDuration(['real' => true]);
-
         } else {
-            // The module default duration.
-            $this->calculatedDuration = $module->getModule()->defaultDuration;
+            // Ask the module what duration we should be.
+            $this->calculatedDuration = $module->getDuration(['real' => true]);
         }
 
         $this->getLog()->debug('Set to ' . $this->calculatedDuration);
