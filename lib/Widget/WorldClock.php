@@ -155,6 +155,7 @@ class WorldClock extends ModuleWidget
         } elseif ($this->getOption('clockType') == 2) {
             // Analogue clock
             $this->setOption('bgColor', $sanitizedParams->getString('bgColor'));
+            $this->setOption('faceColor', $sanitizedParams->getString('faceColor'));
             $this->setOption('caseColor', $sanitizedParams->getString('caseColor'));
             $this->setOption('hourHandColor', $sanitizedParams->getString('hourHandColor'));
             $this->setOption('minuteHandColor', $sanitizedParams->getString('minuteHandColor'));
@@ -290,8 +291,12 @@ class WorldClock extends ModuleWidget
             // Build stylesheet
             // Main clock CSS
             $styleSheet = '
-                .analogue-clock {
+                body {
                     background: ' . $this->getOption('bgColor') . ';
+                }
+
+                .analogue-clock {
+                    background: ' . $this->getOption('faceColor') . ';
                     position: relative;
                     text-align: center;
                     box-sizing: border-box;

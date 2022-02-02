@@ -42,6 +42,9 @@
 
         // set date range fields
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDateRange', '.date-range', '.interval');
+
+        // Setup background color picker
+        createColorPicker($(this).find('#backgroundColor'), {format: 'hex'});
     }
 
     // Runs before form submit

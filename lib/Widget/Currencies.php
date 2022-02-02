@@ -82,7 +82,6 @@ class Currencies extends AlphaVantageBase
 
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-finance-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
     }
 
 
@@ -800,8 +799,7 @@ class Currencies extends AlphaVantageBase
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {

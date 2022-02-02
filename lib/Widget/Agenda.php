@@ -322,6 +322,13 @@ class Agenda extends ModuleWidget
      *      type="string",
      *      required=false
      *  ),
+     *  @SWG\Parameter(
+     *      name="backgroundColor",
+     *      in="formData",
+     *      description="A HEX color to use as the background color of this widget",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -342,6 +349,7 @@ class Agenda extends ModuleWidget
         $this->setOption('eventLabelNow', $sanitizedParams->getString('eventLabelNow'));
 
         // Other options
+        $this->setOption('backgroundColor', $sanitizedParams->getString('backgroundColor'));
         $this->setOption('dateFormat', $sanitizedParams->getString('dateFormat', ['defaultOnEmptyString' => true]));
         $this->setOption('numItems', $sanitizedParams->getInt('numItems'));
         $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage'));

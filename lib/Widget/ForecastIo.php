@@ -106,7 +106,6 @@ class ForecastIo extends ModuleWidget
         parent::installFiles();
         
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
 
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */
@@ -623,7 +622,6 @@ class ForecastIo extends ModuleWidget
         );
 
         $headContent = '
-            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('forecastio/weather-icons.min.css') . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('forecastio/font-awesome.min.css')  . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('forecastio/animate.css')  . '" rel="stylesheet" media="screen">
