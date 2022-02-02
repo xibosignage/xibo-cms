@@ -30,6 +30,24 @@ fi
 echo "MySQL started"
 sleep 1
 
+# Write a /root/.my.cnf file
+echo "Configuring MySQL cnf file"
+echo "[client]" > /root/.my.cnf
+echo "host = $MYSQL_HOST" >> /root/.my.cnf
+echo "port = $MYSQL_PORT" >> /root/.my.cnf
+echo "user = $MYSQL_USER" >> /root/.my.cnf
+echo "password = $MYSQL_PASSWORD" >> /root/.my.cnf
+
+if [ ! "$MYSQL_ATTR_SSL_CA" == "none" ]
+then
+  echo "ssl_ca = $MYSQL_ATTR_SSL_CA" >> /root/.my.cnf
+
+  if [ "$MYSQL_ATTR_SSL_VERIFY_SERVER_CERT" == "true" ]
+  then
+    echo "ssl_mode = VERIFY_IDENTITY" >> /root/.my.cnf
+  fi
+fi
+
 # Check to see if we have a settings.php file in this container
 # if we don't, then we will need to create one here (it only contains the $_SERVER environment
 # variables we've already set
@@ -70,33 +88,33 @@ then
   echo "Attempting to import database"
   
   echo "Importing Database" 
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SOURCE /var/www/backup/import.sql"
+  mysql -D $MYSQL_DATABASE -e "SOURCE /var/www/backup/import.sql"
 
   echo "Configuring Database Settings"
   # Set LIBRARY_LOCATION
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='/var/www/cms/library/', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='LIBRARY_LOCATION' LIMIT 1"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='Apache', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='SENDFILE_MODE' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='/var/www/cms/library/', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='LIBRARY_LOCATION' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='Apache', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='SENDFILE_MODE' LIMIT 1"
 
   # Set XMR public/private address
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='tcp://$XMR_HOST:50001', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='XMR_ADDRESS' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='tcp://$XMR_HOST:50001', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='XMR_ADDRESS' LIMIT 1"
 
   # Configure Maintenance
   echo "Setting up Maintenance"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='Protected' WHERE \`setting\`='MAINTENANCE_ENABLED' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='Protected' WHERE \`setting\`='MAINTENANCE_ENABLED' LIMIT 1"
 
   MAINTENANCE_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
 
   # Configure Quick Chart
   echo "Setting up Quickchart"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$CMS_QUICK_CHART_URL', userSee=0 WHERE \`setting\`='QUICK_CHART_URL' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='$CMS_QUICK_CHART_URL', userSee=0 WHERE \`setting\`='QUICK_CHART_URL' LIMIT 1"
 
   mv /var/www/backup/import.sql /var/www/backup/import.sql.done
 fi
 
 DB_EXISTS=0
 # Check if the database exists already
-if mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "SELECT settingId FROM \`setting\` LIMIT 1"
+if mysql -D $MYSQL_DATABASE -e "SELECT settingId FROM \`setting\` LIMIT 1"
 then
   # Database exists.
   DB_EXISTS=1
@@ -136,7 +154,7 @@ then
   echo "Provisioning Database"
 
   # Create the database if it doesn't exist
-  mysql -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;"
+  mysql -e "CREATE DATABASE IF NOT EXISTS $MYSQL_DATABASE;"
 
   # Populate the database
   php /var/www/cms/vendor/bin/phinx migrate -c "/var/www/cms/phinx.php"
@@ -145,18 +163,18 @@ then
 
   echo "Configuring Database Settings"
   # Set LIBRARY_LOCATION
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='/var/www/cms/library/', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='LIBRARY_LOCATION' LIMIT 1"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='Apache', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='SENDFILE_MODE' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='/var/www/cms/library/', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='LIBRARY_LOCATION' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='Apache', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='SENDFILE_MODE' LIMIT 1"
 
   # Set admin username/password
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`user\` SET \`UserName\`='xibo_admin', \`UserPassword\`='5f4dcc3b5aa765d61d8327deb882cf99' WHERE \`UserID\` = 1 LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`user\` SET \`UserName\`='xibo_admin', \`UserPassword\`='5f4dcc3b5aa765d61d8327deb882cf99' WHERE \`UserID\` = 1 LIMIT 1"
 
   # Set XMR public/private address
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='tcp://$XMR_HOST:50001', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='XMR_ADDRESS' LIMIT 1"
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='tcp://cms.example.org:9505' WHERE \`setting\`='XMR_PUB_ADDRESS' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='tcp://$XMR_HOST:50001', \`userChange\`=0, \`userSee\`=0 WHERE \`setting\`='XMR_ADDRESS' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='tcp://cms.example.org:9505' WHERE \`setting\`='XMR_PUB_ADDRESS' LIMIT 1"
 
   # Set CMS Key
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$CMS_KEY' WHERE \`setting\`='SERVER_KEY' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='$CMS_KEY' WHERE \`setting\`='SERVER_KEY' LIMIT 1"
 
   # Configure Maintenance
   echo "Setting up Maintenance"
@@ -164,11 +182,11 @@ then
   if [ "$CMS_DEV_MODE" == "false" ]
   then
     echo "Protected Maintenance"
-    mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='Protected' WHERE \`setting\`='MAINTENANCE_ENABLED' LIMIT 1"
+    mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='Protected' WHERE \`setting\`='MAINTENANCE_ENABLED' LIMIT 1"
   fi
 
   MAINTENANCE_KEY=$(head /dev/urandom | tr -dc A-Za-z0-9 | head -c 16)
-  mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='$MAINTENANCE_KEY' WHERE \`setting\`='MAINTENANCE_KEY' LIMIT 1"
 fi
 
 if [ "$CMS_DEV_MODE" == "false" ]
@@ -181,17 +199,13 @@ then
 
     # Configure Quick Chart
     echo "Setting up Quickchart"
-    mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`setting\` SET \`value\`='$CMS_QUICK_CHART_URL', userSee=0 WHERE \`setting\`='QUICK_CHART_URL' LIMIT 1"
+    mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='$CMS_QUICK_CHART_URL', userSee=0 WHERE \`setting\`='QUICK_CHART_URL' LIMIT 1"
 
     # Set the daily maintenance task to run
-    mysql -D $MYSQL_DATABASE -u $MYSQL_USER -p$MYSQL_PASSWORD -h $MYSQL_HOST -P $MYSQL_PORT -e "UPDATE \`task\` SET \`runNow\`=1 WHERE \`taskId\`='1' LIMIT 1"
+    mysql -D $MYSQL_DATABASE -e "UPDATE \`task\` SET \`runNow\`=1 WHERE \`taskId\`='1' LIMIT 1"
 
     # Update /etc/periodic/15min/cms-db-backup with current environment (for cron)
     /bin/sed -i "s/^MYSQL_BACKUP_ENABLED=.*$/MYSQL_BACKUP_ENABLED=$MYSQL_BACKUP_ENABLED/" /etc/periodic/15min/cms-db-backup
-    /bin/sed -i "s/^MYSQL_USER=.*$/MYSQL_USER=$MYSQL_USER/" /etc/periodic/15min/cms-db-backup
-    /bin/sed -i "s/^MYSQL_PASSWORD=.*$/MYSQL_PASSWORD=$MYSQL_PASSWORD/" /etc/periodic/15min/cms-db-backup
-    /bin/sed -i "s/^MYSQL_HOST=.*$/MYSQL_HOST=$MYSQL_HOST/" /etc/periodic/15min/cms-db-backup
-    /bin/sed -i "s/^MYSQL_PORT=.*$/MYSQL_PORT=$MYSQL_PORT/" /etc/periodic/15min/cms-db-backup
     /bin/sed -i "s/^MYSQL_DATABASE=.*$/MYSQL_DATABASE=$MYSQL_DATABASE/" /etc/periodic/15min/cms-db-backup
 
     # Update /var/www/maintenance with current environment (for cron)

@@ -14,11 +14,14 @@ global $dbhost;
 global $dbuser;
 global $dbpass;
 global $dbname;
+global $dbssl;
+global $dbsslverify;
 
 $dbhost = $_SERVER['MYSQL_HOST'] . ':' . $_SERVER['MYSQL_PORT'];
 $dbuser = $_SERVER['MYSQL_USER'];
 $dbpass = $_SERVER['MYSQL_PASSWORD'];
-$dbname = $_SERVER['MYSQL_DATABASE'];
+$dbssl = $_SERVER['MYSQL_ATTR_SSL_CA'];
+$dbsslverify = $_SERVER['MYSQL_ATTR_SSL_VERIFY_SERVER_CERT'];
 
 if (!defined('SECRET_KEY')) {
     define('SECRET_KEY','');
