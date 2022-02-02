@@ -131,4 +131,20 @@ Bottombar.prototype.render = function(element, data) {
     });
 };
 
+/**
+ * Show message on play button
+ */
+Bottombar.prototype.showPlayMessage = function() {
+    const self = this;
+    const $target = self.DOMObject.find('#play-btn i');
+
+    // Show popover
+    $target.popover('show');
+
+    // Destroy popover after some time
+    setTimeout(function() {
+        $target.popover('dispose');
+    }, 4000);
+};
+
 module.exports = Bottombar;
