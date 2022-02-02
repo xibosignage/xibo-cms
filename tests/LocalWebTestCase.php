@@ -287,7 +287,6 @@ class LocalWebTestCase extends PHPUnit_TestCase
             $container->set('reportService', function (ContainerInterface $c) {
                 return new ReportService(
                     $c,
-                    $c->get('state'),
                     $c->get('store'),
                     $c->get('timeSeriesStore'),
                     $c->get('logService'),

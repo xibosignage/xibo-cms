@@ -292,7 +292,8 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
      */
     this.isRegionSpecific = function() {
         const self = this;
-        let regionSpecific = false;
+        // Set default as true, so a non existing module would have the same rules as a region specific one 
+        let regionSpecific = true;
 
         Object.keys(modulesList).forEach(function(item) {
             if(modulesList[item].type == self.subType) {

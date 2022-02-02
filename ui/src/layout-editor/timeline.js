@@ -811,6 +811,22 @@ Timeline.prototype.render = function(layout) {
         }
     }, 500));
 
+    // If a transition is too small, show icon instead
+    const TRANSITION_MIN_WIDTH = 60;
+    this.DOMObject.find('.widget-transition-container').each(function() {
+        const $el = $(this);
+        if ($el.outerWidth() < TRANSITION_MIN_WIDTH) {
+            // Hide transition
+            $el.addClass('d-none');
+
+            // Get type
+            const type = $el.find('.editProperty').data('propertyType');
+
+            // Show transition as an icon
+            $el.parent().find('.widgetProperties i[data-property-type="' + type + '"]').removeClass('d-none');
+        }
+    });
+
     // Scroll to widget on load
     if(!$.isEmptyObject(this.scrollOnLoad)) {
         this.scrollToWidget(this.scrollOnLoad);

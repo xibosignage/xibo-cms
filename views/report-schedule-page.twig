@@ -1,7 +1,7 @@
 {#
 /*
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -61,13 +61,21 @@
 
                             {% set title %}{% trans "Owner" %}{% endset %}
                             {% set helpText %}{% trans "Show items owned by the selected User." %}{% endset %}
-                            {% set users = [{userId: null, userName: ""}]|merge(users) %}
+                            {% set attributes = [
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                            ] %}
                             {{ inline.dropdown("userId", "single", title, null, users, "userId", "userName", helpText, "selectPicker", "", "", "", attributes) }}
 
                             {% set title %}{% trans "Type" %}{% endset %}
                             {% set helpText %}{% trans "Show items belong to a report." %}{% endset %}
-                            {% set reports = [{name: null, description: ""}]|merge(availableReports) %}
-                            {{ inline.dropdown("reportName", "single", title, null, reports, "name", "description", helpText, "selectPicker", "", "", "", attributes) }}
+                            {% set attributes = [
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                            ] %}
+                            {{ inline.dropdown("reportName", "single", title, null, availableReports, "name", "description", helpText, "selectPicker", "", "", "", attributes) }}
 
                             {% set title %}{% trans "Only my schedules?" %}{% endset %}
                             {{ inline.checkbox("onlyMySchedules", title, 1) }}

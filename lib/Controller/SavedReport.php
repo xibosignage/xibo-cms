@@ -24,17 +24,13 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\ReportResult;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ReportScheduleFactory;
 use Xibo\Factory\SavedReportFactory;
 use Xibo\Factory\UserFactory;
-use Xibo\Helper\SanitizerService;
 use Xibo\Helper\SendFile;
-use Xibo\Service\ConfigServiceInterface;
-use Xibo\Service\LogServiceInterface;
 use Xibo\Service\ReportServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
@@ -350,10 +346,13 @@ class SavedReport extends Base
         // Get the report config
         $report = $this->reportService->getReportByName($name);
         if ($report->output_type == 'both' || $report->output_type == 'chart') {
-            if (!empty($this->getConfig()->getSetting('QUICK_CHART_URL'))) {
-                $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL') . '/chart?width=1000&height=300&c=';
+            $quickChartUrl = $this->getConfig()->getSetting('QUICK_CHART_URL');
+            if (!empty($quickChartUrl)) {
+                $quickChartUrl .= '/chart?width=1000&height=300&c=';
 
                 $script = $this->reportService->getReportChartScript($id, $name);
+
+                // Replace " with ' for the quick chart URL
                 $src = $quickChartUrl . str_replace('"', '\'', $script);
 
                 // If multiple charts needs to be displayed
@@ -376,23 +375,20 @@ class SavedReport extends Base
 
         if (!empty($emailTemplate)) {
             // Save PDF attachment
-            ob_start();
-            // Render the template
-            echo $this->getView()->fetch(
+            $showLogo = $this->getConfig()->getSetting('REPORTS_EXPORT_SHOW_LOGO', 1) == 1;
+            $body = $this->getView()->fetch(
                 $emailTemplate,
                 [
                     'header' => $report->description,
-                    'logo' => $this->getConfig()->uri('img/xibologo.png', true),
+                    'logo' => ($showLogo) ? $this->getConfig()->uri('img/xibologo.png', true) : null,
                     'title' => $savedReport->saveAs,
                     'metadata' => $results->metadata,
-                    'tableData' => isset($tableData) ? $tableData : null,
-                    'src' => isset($src) ? $src : null,
-                    'multipleCharts' => isset($multipleCharts) ? $multipleCharts : null,
-                    'placeholder' => isset($placeholder) ? $placeholder : null
+                    'tableData' => $tableData ?? null,
+                    'src' => $src ?? null,
+                    'multipleCharts' => $multipleCharts ?? null,
+                    'placeholder' => $placeholder ?? null
                 ]
             );
-            $body = ob_get_contents();
-            ob_end_clean();
 
             $fileName = $this->getConfig()->getSetting('LIBRARY_LOCATION') . 'temp/saved_report_' . $id . '.pdf';
 

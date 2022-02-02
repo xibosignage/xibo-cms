@@ -46,10 +46,6 @@ class ReportService implements ReportServiceInterface
     public $container;
 
     /**
-     * @var \Xibo\Helper\ApplicationState
-     */
-    private $state;
-    /**
      * @var StorageServiceInterface
      */
     private $store;
@@ -82,10 +78,9 @@ class ReportService implements ReportServiceInterface
     /**
      * @inheritdoc
      */
-    public function __construct($container, $state, $store, $timeSeriesStore, $log, $config, $sanitizer, $savedReportFactory)
+    public function __construct($container, $store, $timeSeriesStore, $log, $config, $sanitizer, $savedReportFactory)
     {
         $this->container = $container;
-        $this->state = $state;
         $this->store = $store;
         $this->timeSeriesStore = $timeSeriesStore;
         $this->log = $log;
@@ -196,14 +191,15 @@ class ReportService implements ReportServiceInterface
             throw new NotFoundException(__('Class %s not found', $className));
         }
 
+        /** @var ReportInterface $object */
         $object = new $className();
-
-        $object->setCommonDependencies(
-            $this->store,
-            $this->timeSeriesStore
-        );
-
-        $object->useLogger($this->log)->setFactories($this->container);
+        $object
+            ->setCommonDependencies(
+                $this->store,
+                $this->timeSeriesStore
+            )
+            ->useLogger($this->log)
+            ->setFactories($this->container);
 
         return $object;
     }
@@ -339,15 +335,12 @@ class ReportService implements ReportServiceInterface
 
         // Remove the JSON file
         unlink($fileName);
-
-        // Return success
-        return;
     }
 
     /**
      * @inheritdoc
      */
-    public function runReport($reportName, $filterCriteria, $userId)
+    public function runReport($reportName, $filterCriteria, $user)
     {
         $this->log->debug('Run the report to get results');
 
@@ -356,7 +349,8 @@ class ReportService implements ReportServiceInterface
         $object = $this->createReportObject($className);
 
         // Set userId
-        $object->setUserId($userId);
+        $object->setUser($user);
+
         $filterCriteria = json_decode($filterCriteria, true);
 
         // Retrieve the result array

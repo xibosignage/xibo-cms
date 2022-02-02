@@ -181,7 +181,7 @@
         dataTableAddButtons(table, $('#tasks_wrapper').find('.dataTables_buttons'));
 
         $("#refreshLog").click(function () {
-            table.ajax.reload();
+            table.ajax.reload(null, false);
         });
     </script>
 {% endblock %}

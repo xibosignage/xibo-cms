@@ -24,6 +24,8 @@
 {% extends "authed.twig" %}
 {% import "inline.twig" as inline %}
 
+{% block title %}{% trans "Report: Time Connected Summary" %} | {% endblock %}
+
 {% block actionMenu %}
     {% include "report-schedule-buttons.twig" %}
 {% endblock %}

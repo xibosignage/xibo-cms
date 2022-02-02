@@ -13,7 +13,10 @@ let Layout = function(id, data) {
     this.editable = (data.publishedStatusId == 2);
 
     // Does user have permission to schedule now page?
-    this.scheduleNowPermission = (data.scheduleNowPermission);
+    this.scheduleNowPermission = data.scheduleNowPermission;
+
+    // Does user have permission to delete layout
+    this.deletePermission = data.deletePermission;
 
     // Parent Id
     this.parentLayoutId = data.parentId;
