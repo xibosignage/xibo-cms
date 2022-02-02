@@ -129,15 +129,11 @@ class ProofOfPlay implements ReportInterface
     public function getReportScheduleFormData(SanitizerInterface $sanitizedParams)
     {
         $data = [];
-
-        $title = 'Add Report Schedule';
-        $data['formTitle'] = $title;
-
         $data['type'] = $sanitizedParams->getString('type');
         $data['tagsType'] = $sanitizedParams->getString('tagsType');
 
         $exactTags = $sanitizedParams->getCheckbox('exactTags');
-        $data['exactTags'] = ($exactTags == 'true') ? true : false;
+        $data['exactTags'] = $exactTags == 'true';
 
         $tags = $sanitizedParams->getString('tags');
         $data['tags'] = $tags;
