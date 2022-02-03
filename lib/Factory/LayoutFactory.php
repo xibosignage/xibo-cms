@@ -27,6 +27,7 @@ use Stash\Invalidation;
 use Stash\Pool;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
+use Xibo\Entity\Folder;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
@@ -764,7 +765,7 @@ class LayoutFactory extends BaseFactory
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false, $importTags = false, $folderId = 1)
+    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false, $importTags = false, Folder $folder)
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
@@ -820,7 +821,7 @@ class LayoutFactory extends BaseFactory
                 $oldIds[] = $newPlaylist->playlistId;
                 $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
 
-                $this->setOwnerAndSavePlaylist($newPlaylist, $folderId);
+                $this->setOwnerAndSavePlaylist($newPlaylist, $folder);
 
                 $newIds[] = $newPlaylist->playlistId;
             }
@@ -837,7 +838,7 @@ class LayoutFactory extends BaseFactory
         $drawers = (array_key_exists('drawers', $layoutJson['layoutDefinitions'])) ? $layoutJson['layoutDefinitions']['drawers'] : [];
 
         // merge Layout Regions and Drawers into one array.
-        $allRegions = array_merge($layoutJson['layoutDefinitions']['regions'], $drawers );
+        $allRegions = array_merge($layoutJson['layoutDefinitions']['regions'], $drawers);
 
         // Populate Region Nodes
         foreach ($allRegions as $regionJson) {
@@ -887,7 +888,6 @@ class LayoutFactory extends BaseFactory
 
             // Get all widgets
             foreach ($regionJson['regionPlaylist']['widgets'] as $mediaNode) {
-
                 $mediaOwnerId = $mediaNode['ownerId'];
                 if ($mediaOwnerId == null) {
                     $mediaOwnerId = $regionOwnerId;
@@ -923,7 +923,6 @@ class LayoutFactory extends BaseFactory
                 //
                 $layoutSubPlaylistId = null;
                 foreach ($mediaNode['widgetOptions'] as $optionsNode) {
-
                     if ($optionsNode['option'] == 'subPlaylistOptions') {
                         $subPlaylistOptions = json_decode($optionsNode['value']);
                     }
@@ -972,14 +971,12 @@ class LayoutFactory extends BaseFactory
 
                 // Sub-Playlist widgets with Playlists
                 if ($widget->type == 'subplaylist') {
-
                     $layoutSubPlaylistIds = [];
                     $subPlaylistOptionsUpdated = [];
                     $widgets = [];
                     $this->getLog()->debug('Layout import, creating layout Playlists from JSON, there are ' . count($playlistJson) . ' Playlists to create');
 
                     foreach ($playlistJson as $playlistDetail) {
-
                         $newPlaylist = $this->playlistFactory->createEmpty()->hydrate($playlistDetail);
                         $newPlaylist->tags = [];
 
@@ -994,7 +991,6 @@ class LayoutFactory extends BaseFactory
 
                         // Check to see if it matches our Sub-Playlist widget config
                         if (in_array($newPlaylist->playlistId, $layoutSubPlaylistId)) {
-
                             // Store the oldId to swap permissions later
                             $oldIds[] = $newPlaylist->playlistId;
 
@@ -1002,7 +998,7 @@ class LayoutFactory extends BaseFactory
                             $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
 
                             // Save a new Playlist and capture the Id
-                            $this->setOwnerAndSavePlaylist($newPlaylist, $folderId);
+                            $this->setOwnerAndSavePlaylist($newPlaylist, $folder);
 
                             $newIds[] = $newPlaylist->playlistId;
                         }
@@ -1022,9 +1018,7 @@ class LayoutFactory extends BaseFactory
                     $widget->setOptionValue('subPlaylistIds', 'attrib', json_encode($layoutSubPlaylistIds));
 
                     foreach ($layoutSubPlaylistIds as $value) {
-
                         foreach ($subPlaylistOptions as $playlistId => $options) {
-
                             foreach ($options as $optionName => $optionValue) {
                                 if ($optionName == 'subPlaylistIdSpots') {
                                     $spots = $optionValue;
@@ -1081,7 +1075,6 @@ class LayoutFactory extends BaseFactory
                 $layout->tags[] = $this->tagFactory->tagFromString(
                     $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
                 );
-
             }
         }
 
@@ -1134,6 +1127,7 @@ class LayoutFactory extends BaseFactory
         // Get the Playlist details
         $playlistDetails = $zip->getFromName('playlist.json');
         $nestedPlaylistDetails = $zip->getFromName('nestedPlaylist.json');
+        $folder = $this->folderFactory->getById($folderId);
 
         // for old imports it may not exist and would error out without this check.
         if (array_key_exists('layoutDefinitions', $layoutDetails)) {
@@ -1146,7 +1140,7 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true, $importTags, $folderId);
+            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true, $importTags, $folder);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
@@ -1318,8 +1312,6 @@ class LayoutFactory extends BaseFactory
                 }
 
                 $media->tags[] = $this->tagFactory->tagFromString('imported');
-
-                $folder = $this->folderFactory->getById($folderId);
                 $media->folderId = $folder->id;
                 $media->permissionsFolderId =
                     ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
@@ -1352,7 +1344,6 @@ class LayoutFactory extends BaseFactory
                     $this->getLog()->debug(sprintf('Checking Widget for the old mediaID [%d] so we can replace it with the new mediaId [%d] and storedAs [%s]. Media assigned to widget %s.', $oldMediaId, $newMediaId, $media->storedAs, json_encode($widget->mediaIds)));
 
                     if (in_array($oldMediaId, $widget->mediaIds)) {
-
                         $this->getLog()->debug(sprintf('Removing %d and replacing with %d', $oldMediaId, $newMediaId));
 
                         // Are we an audio record?
@@ -1364,7 +1355,6 @@ class LayoutFactory extends BaseFactory
                                     break;
                                 }
                             }
-
                         } else {
                             // Non audio
                             $widget->setOptionValue('uri', 'attrib', $media->storedAs);
@@ -1396,7 +1386,6 @@ class LayoutFactory extends BaseFactory
 
                         if (in_array($oldMediaId, $widget->mediaIds)) {
                             $this->getLog()->debug(sprintf('Playlist import Removing %d and replacing with %d', $oldMediaId, $newMediaId));
-
                             // Are we an audio record?
                             if (in_array($oldMediaId, $audioIds)) {
                                 // Swap the mediaId on the audio record
@@ -1496,6 +1485,9 @@ class LayoutFactory extends BaseFactory
                     // we will need to make sure we clear the ID's and save it
                     $existingDataSet = clone $dataSet;
                     $existingDataSet->userId = $this->getUser()->userId;
+                    $existingDataSet->folderId = $folder->id;
+                    $existingDataSet->permissionsFolderId =
+                        ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
                     $existingDataSet->save();
 
                     // Do we need to add data
@@ -1504,8 +1496,9 @@ class LayoutFactory extends BaseFactory
                         $this->getLog()->debug(sprintf('Importing data into new DataSet %d', $existingDataSet->dataSetId));
 
                         foreach ($item['data'] as $itemData) {
-                            if (isset($itemData['id']))
+                            if (isset($itemData['id'])) {
                                 unset($itemData['id']);
+                            }
 
                             $existingDataSet->addRow($itemData);
                         }
@@ -2317,13 +2310,13 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param \Xibo\Entity\Playlist $newPlaylist
-     * @param int $folderId
+     * @param Folder $folder
      * @return \Xibo\Entity\Playlist
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    private function setOwnerAndSavePlaylist($newPlaylist, int $folderId)
+    private function setOwnerAndSavePlaylist($newPlaylist, Folder $folder)
     {
         // try to save with the name from import, if it already exists add "imported - "  to the name
         try {
@@ -2331,7 +2324,6 @@ class LayoutFactory extends BaseFactory
             $newPlaylist->ownerId = $this->getUser()->getId();
             $newPlaylist->playlistId = null;
             $newPlaylist->widgets = [];
-            $folder = $this->folderFactory->getById($folderId);
             $newPlaylist->folderId = $folder->id;
             $newPlaylist->permissionsFolderId =
                 ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
