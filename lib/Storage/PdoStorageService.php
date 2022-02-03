@@ -36,13 +36,13 @@ class PdoStorageService implements StorageServiceInterface
     /**
      * @var \PDO[] The connection
      */
-	private $conn = [];
+    private $conn = [];
 
     /** @var array Statistics */
     private static $stats = [];
 
     /** @var  string */
-    private static $_version;
+    private static $version;
 
     /**
      * Logger
@@ -54,7 +54,7 @@ class PdoStorageService implements StorageServiceInterface
      * PDOConnect constructor.
      * @param LogService $logger
      */
-	public function __construct($logger = null)
+    public function __construct($logger = null)
     {
         $this->log = $logger;
     }
@@ -84,7 +84,7 @@ class PdoStorageService implements StorageServiceInterface
     /**
      * Create a DSN from the host/db name
      * @param string $host
-     * @param string[Optional] $name
+     * @param string|null $name
      * @return string
      */
     private static function createDsn($host, $name = null)
@@ -92,13 +92,13 @@ class PdoStorageService implements StorageServiceInterface
         if (strstr($host, ':')) {
             $hostParts = explode(':', $host);
             $dsn = 'mysql:host=' . $hostParts[0] . ';port=' . $hostParts[1] . ';';
-        }
-        else {
+        } else {
             $dsn = 'mysql:host=' . $host . ';';
         }
 
-        if ($name != null)
+        if ($name != null) {
             $dsn .= 'dbname=' . $name . ';';
+        }
 
         return $dsn;
     }
@@ -107,47 +107,59 @@ class PdoStorageService implements StorageServiceInterface
      * Open a new connection using the stored details
      * @return \PDO
      */
-	public static function newConnection()
+    public static function newConnection()
     {
         $dsn = PdoStorageService::createDsn(ConfigService::$dbConfig['host'], ConfigService::$dbConfig['name']);
 
-		// Open the connection and set the error mode
-		$conn = new \PDO($dsn, ConfigService::$dbConfig['user'], ConfigService::$dbConfig['password']);
-		$conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $opts = [];
+        if (!empty(ConfigService::$dbConfig['ssl']) && ConfigService::$dbConfig['ssl'] !== 'none') {
+            $opts[\PDO::MYSQL_ATTR_SSL_CA] = ConfigService::$dbConfig['ssl'];
+            $opts[\PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = ConfigService::$dbConfig['sslVerify'];
+        }
 
-		$conn->query("SET NAMES 'utf8'");
+        // Open the connection and set the error mode
+        $conn = new \PDO(
+            $dsn,
+            ConfigService::$dbConfig['user'],
+            ConfigService::$dbConfig['password'],
+            $opts
+        );
+        $conn->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
 
-		return $conn;
-	}
+        $conn->query("SET NAMES 'utf8'");
 
-    /**
-     * Open a connection with the specified details
-     * @param string $host
-     * @param string $user
-     * @param string $pass
-     * @param string[Optional] $name
-     * @return \PDO
-     */
-	public function connect($host, $user, $pass, $name = null)
+        return $conn;
+    }
+
+    /** @inheritDoc */
+    public function connect($host, $user, $pass, $name = null, $ssl = null, $sslVerify = true)
     {
-        if (!isset($this->conn['default']))
-		    $this->close('default');
+        if (!isset($this->conn['default'])) {
+            $this->close('default');
+        }
 
         $dsn = PdoStorageService::createDsn($host, $name);
 
-        // Open the connection and set the error mode
-		$this->conn['default'] = new \PDO($dsn, $user, $pass);
-		$this->conn['default']->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
-		$this->conn['default']->query("SET NAMES 'utf8'");
+        $opts = [];
+        if (!empty($ssl) && $ssl !== 'none') {
+            $opts[\PDO::MYSQL_ATTR_SSL_CA] = $ssl;
+            $opts[\PDO::MYSQL_ATTR_SSL_VERIFY_SERVER_CERT] = $sslVerify;
+        }
 
-		return $this->conn['default'];
-	}
+        // Open the connection and set the error mode
+        $this->conn['default'] = new \PDO($dsn, $user, $pass, $opts);
+        $this->conn['default']->setAttribute(\PDO::ATTR_ERRMODE, \PDO::ERRMODE_EXCEPTION);
+        $this->conn['default']->query("SET NAMES 'utf8'");
+
+        return $this->conn['default'];
+    }
 
     /** @inheritdoc */
     public function getConnection($name = 'default')
     {
-        if (!isset($this->conn[$name]))
+        if (!isset($this->conn[$name])) {
             $this->conn[$name] = PdoStorageService::newConnection();
+        }
 
         return $this->conn[$name];
     }
@@ -155,11 +167,13 @@ class PdoStorageService implements StorageServiceInterface
     /** @inheritdoc */
     public function exists($sql, $params, $connection = null, $reconnect = false)
     {
-        if ($this->log != null)
+        if ($this->log != null) {
             $this->log->sql($sql, $params);
+        }
 
-        if ($connection === null)
+        if ($connection === null) {
             $connection = 'default';
+        }
 
         try {
             $sth = $this->getConnection($connection)->prepare($sql);
@@ -167,17 +181,18 @@ class PdoStorageService implements StorageServiceInterface
 
             $this->incrementStat($connection, 'exists');
 
-            if ($sth->fetch())
+            if ($sth->fetch()) {
                 return true;
-            else
+            } else {
                 return false;
-
+            }
         } catch (\PDOException $PDOException) {
             // Throw if we're not expected to reconnect.
-            if (!$reconnect)
+            if (!$reconnect) {
                 throw $PDOException;
+            }
 
-            $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+            $errorCode = $PDOException->errorInfo[1] ?? $PDOException->getCode();
 
             if ($errorCode != 2006) {
                 throw $PDOException;
@@ -200,12 +215,14 @@ class PdoStorageService implements StorageServiceInterface
 
     /** @inheritdoc */
     public function insert($sql, $params, $connection = null, $reconnect = false)
-	{
-        if ($this->log != null)
+    {
+        if ($this->log != null) {
             $this->log->sql($sql, $params);
+        }
 
-        if ($connection === null)
+        if ($connection === null) {
             $connection = 'default';
+        }
 
         try {
             if (!$this->getConnection($connection)->inTransaction()) {
@@ -218,13 +235,13 @@ class PdoStorageService implements StorageServiceInterface
             $this->incrementStat($connection, 'insert');
 
             return intval($this->getConnection($connection)->lastInsertId());
-
         } catch (\PDOException $PDOException) {
             // Throw if we're not expected to reconnect.
-            if (!$reconnect)
+            if (!$reconnect) {
                 throw $PDOException;
+            }
 
-            $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+            $errorCode = $PDOException->errorInfo[1] ?? $PDOException->getCode();
 
             if ($errorCode != 2006) {
                 throw $PDOException;
@@ -245,18 +262,21 @@ class PdoStorageService implements StorageServiceInterface
         }
     }
 
-	/** @inheritdoc */
-	public function update($sql, $params, $connection = null, $reconnect = false)
-	{
-        if ($this->log != null)
+    /** @inheritdoc */
+    public function update($sql, $params, $connection = null, $reconnect = false)
+    {
+        if ($this->log != null) {
             $this->log->sql($sql, $params);
+        }
 
-        if ($connection === null)
+        if ($connection === null) {
             $connection = 'default';
+        }
 
         try {
-            if (!$this->getConnection($connection)->inTransaction())
+            if (!$this->getConnection($connection)->inTransaction()) {
                 $this->getConnection($connection)->beginTransaction();
+            }
 
             $sth = $this->getConnection($connection)->prepare($sql);
 
@@ -267,13 +287,13 @@ class PdoStorageService implements StorageServiceInterface
             $this->incrementStat($connection, 'update');
 
             return $rows;
-
         } catch (\PDOException $PDOException) {
             // Throw if we're not expected to reconnect.
-            if (!$reconnect)
+            if (!$reconnect) {
                 throw $PDOException;
+            }
 
-            $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+            $errorCode = $PDOException->errorInfo[1] ?? $PDOException->getCode();
 
             if ($errorCode != 2006) {
                 throw $PDOException;
@@ -292,16 +312,18 @@ class PdoStorageService implements StorageServiceInterface
             $this->close($connection);
             return $this->update($sql, $params, $connection, false);
         }
-	}
+    }
 
     /** @inheritdoc */
-	public function select($sql, $params, $connection = null, $reconnect = false)
-	{
-        if ($this->log != null)
+    public function select($sql, $params, $connection = null, $reconnect = false)
+    {
+        if ($this->log != null) {
             $this->log->sql($sql, $params);
+        }
 
-        if ($connection === null)
+        if ($connection === null) {
             $connection = 'default';
+        }
 
         try {
             $sth = $this->getConnection($connection)->prepare($sql);
@@ -314,10 +336,11 @@ class PdoStorageService implements StorageServiceInterface
 
         } catch (\PDOException $PDOException) {
             // Throw if we're not expected to reconnect.
-            if (!$reconnect)
+            if (!$reconnect) {
                 throw $PDOException;
+            }
 
-            $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+            $errorCode = $PDOException->errorInfo[1] ?? $PDOException->getCode();
 
             if ($errorCode != 2006) {
                 throw $PDOException;
@@ -336,17 +359,19 @@ class PdoStorageService implements StorageServiceInterface
             $this->close($connection);
             return $this->select($sql, $params, $connection, false);
         }
-	}
+    }
 
-	/** @inheritdoc */
-	public function isolated($sql, $params, $connection = null, $reconnect = false)
+    /** @inheritdoc */
+    public function isolated($sql, $params, $connection = null, $reconnect = false)
     {
         // Should we log?
-        if ($this->log != null)
+        if ($this->log != null) {
             $this->log->sql($sql, $params);
+        }
 
-        if ($connection === null)
+        if ($connection === null) {
             $connection = 'isolated';
+        }
 
         try {
             $sth = $this->getConnection($connection)->prepare($sql);
@@ -354,13 +379,13 @@ class PdoStorageService implements StorageServiceInterface
             $sth->execute($params);
 
             $this->incrementStat('isolated', 'update');
-
         } catch (\PDOException $PDOException) {
             // Throw if we're not expected to reconnect.
-            if (!$reconnect)
+            if (!$reconnect) {
                 throw $PDOException;
+            }
 
-            $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+            $errorCode = $PDOException->errorInfo[1] ?? $PDOException->getCode();
 
             if ($errorCode != 2006) {
                 throw $PDOException;
@@ -387,11 +412,13 @@ class PdoStorageService implements StorageServiceInterface
         $maxRetries = 2;
 
         // Should we log?
-        if ($this->log != null)
+        if ($this->log != null) {
             $this->log->sql($sql, $params);
+        }
 
-        if ($connection === null)
+        if ($connection === null) {
             $connection = 'isolated';
+        }
 
         // Prepare the statement
         $statement = $this->getConnection($connection)->prepare($sql);
@@ -405,26 +432,32 @@ class PdoStorageService implements StorageServiceInterface
                 $statement->execute($params);
                 // Successful
                 $success = true;
-
             } catch (\PDOException $PDOException) {
-                $errorCode = isset($PDOException->errorInfo[1]) ? $PDOException->errorInfo[1] : $PDOException->getCode();
+                $errorCode = $PDOException->errorInfo[1] ?? $PDOException->getCode();
 
-                if ($errorCode != 1213 && $errorCode != 1205)
+                if ($errorCode != 1213 && $errorCode != 1205) {
                     throw $PDOException;
+                }
             }
 
-            if ($success)
+            if ($success) {
                 break;
+            }
 
             // Sleep a bit, give the DB time to breathe
             $queryHash = substr($sql, 0, 15) . '... [' . md5($sql . json_encode($params)) . ']';
-            $this->log->debug('Retrying query after a short nap, try: ' . (3 - $retries) . '. Query Hash: ' . $queryHash);
-            usleep(10000);
+            $this->log->debug('Retrying query after a short nap, try: ' . (3 - $retries)
+                . '. Query Hash: ' . $queryHash);
 
+            usleep(10000);
         } while ($retries--);
 
-        if (!$success)
-            throw new DeadlockException(__('Failed to write to database after %d retries. Please try again later.', $maxRetries));
+        if (!$success) {
+            throw new DeadlockException(sprintf(
+                __('Failed to write to database after %d retries. Please try again later.'),
+                $maxRetries
+            ));
+        }
     }
 
     /** @inheritdoc */
@@ -446,7 +479,7 @@ class PdoStorageService implements StorageServiceInterface
         $this->getConnection($connection)->query('SET time_zone = \'' . $timeZone . '\';');
 
         $this->incrementStat($connection, 'utility');
-	}
+    }
 
     /**
      * PDO stats
@@ -480,16 +513,16 @@ class PdoStorageService implements StorageServiceInterface
      */
     public function getVersion()
     {
-        if (self::$_version === null) {
-
+        if (self::$version === null) {
             $results = $this->select('SELECT version() AS v', []);
 
-            if (count($results) <= 0)
+            if (count($results) <= 0) {
                 return null;
+            }
 
-            self::$_version = explode('-', $results[0]['v'])[0];
+            self::$version = explode('-', $results[0]['v'])[0];
         }
 
-        return self::$_version;
+        return self::$version;
     }
 }

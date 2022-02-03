@@ -211,7 +211,9 @@ class ConfigService implements ConfigServiceInterface
             'host' => $dbhost,
             'user' => $dbuser,
             'password' => $dbpass,
-            'name' => $dbname
+            'name' => $dbname,
+            'ssl' => $dbssl ?? null,
+            'sslVerify' => $dbsslverify ?? null
         ];
 
         // Pull in other settings

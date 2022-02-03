@@ -45,6 +45,14 @@
                         {% set title %}{% trans "Database Password" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a password for this user." %}{% endset %}
                         {{ forms.password("db_password",  title, session['new_db_pass'], helpText) }}
+
+                        {% set title %}{% trans "CA File" %}{% endset %}
+                        {% set helpText %}{% trans "To connect to a MySQL server over SSL, enter the path to the CA file." %}{% endset %}
+                        {{ forms.input("db_ssl_ca",  title, session['new_db_ssl_ca'], helpText) }}
+
+                        {% set title %}{% trans "Verify CA Identity?" %}{% endset %}
+                        {% set helpText %}{% trans "Turn this off for self-signed certificates." %}{% endset %}
+                        {{ forms.checkbox("db_ssl_verify", title, session['new_db_ssl_verify'], helpText) }}
                     </div>
                     <div class="tab-pane" id="existing">
                         {% set title %}{% trans "Use an existing database" %}{% endset %}
@@ -66,6 +74,14 @@
                         {% set title %}{% trans "Database Password" %}{% endset %}
                         {% set helpText %}{% trans "Please enter a password for this user." %}{% endset %}
                         {{ forms.password("existing_db_password",  title, session['existing_db_pass'], helpText) }}
+
+                        {% set title %}{% trans "CA File" %}{% endset %}
+                        {% set helpText %}{% trans "To connect to a MySQL server over SSL, enter the path to the CA file." %}{% endset %}
+                        {{ forms.input("existing_db_ssl_ca",  title, session['existing_db_ssl_ca'], helpText) }}
+
+                        {% set title %}{% trans "Verify CA Identity?" %}{% endset %}
+                        {% set helpText %}{% trans "Turn this off for self-signed certificates." %}{% endset %}
+                        {{ forms.checkbox("existing_db_ssl_verify", title, session['existing_db_ssl_verify'], helpText) }}
                     </div>
                 </div>
 

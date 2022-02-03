@@ -1,7 +1,7 @@
 <?php
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2006-2018 Spring Signage Ltd
+ * Copyright (C) 2006-2022 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -42,6 +42,21 @@ if (strstr($dbhost, ':')) {
     $dbport = 3306;
 }
 
+$db = [
+    'adapter' => 'mysql',
+    'charset' => 'utf8',
+    'host' => $dbhost,
+    'port' => $dbport,
+    'name' => $dbname,
+    'user' => $dbuser,
+    'pass' => $dbpass,
+];
+
+if (!empty($dbssl) && $dbssl !== 'none') {
+    $db['mysql_attr_ssl_ca'] = $dbssl;
+    $db['mysql_attr_ssl_verify_server_cert'] = $dbsslverify;
+}
+
 // Phinx formatted config array using the settings we've harvested from our settings.php file
 return [
     'paths' => [
@@ -49,14 +64,6 @@ return [
     ],
     'environments' => [
         'default_database' => 'production',
-        'production' => [
-            'adapter' => 'mysql',
-            'charset' => 'utf8',
-            'host' => $dbhost,
-            'port' => $dbport,
-            'name' => $dbname,
-            'user' => $dbuser,
-            'pass' => $dbpass,
-        ]
+        'production' => $db
     ]
 ];

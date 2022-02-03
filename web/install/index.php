@@ -82,7 +82,9 @@ if (file_exists(PROJECT_ROOT . '/web/settings.php')) {
         'host' => $dbhost,
         'user' => $dbuser,
         'password' => $dbpass,
-        'name' => $dbname
+        'name' => $dbname,
+        'ssl' => $dbssl ?? null,
+        'sslVerify' => $dbsslverify ?? null
     ];
 
     // Set-up the translations for get text
