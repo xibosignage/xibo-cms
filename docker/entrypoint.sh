@@ -48,6 +48,9 @@ then
   fi
 fi
 
+# Set permissions on the new cnf file.
+chmod 0600 /root/.my.cnf
+
 # Check to see if we have a settings.php file in this container
 # if we don't, then we will need to create one here (it only contains the $_SERVER environment
 # variables we've already set

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -48,7 +48,6 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
     $view = $container->get('view');
 
     $twigEnvironment = $view->getEnvironment();
-    $twigEnvironment->addGlobal('session', $_SESSION);
     $twigEnvironment->enableAutoReload();
 
     $container->get('logService')->info('Installer Step %s', $step);
@@ -59,7 +58,6 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
     $data = [];
 
     switch ($step) {
-
         case 1:
             if ($settingsExists) {
                 throw new InstallationError(__('The CMS has already been installed. Please contact your system administrator.'));
@@ -97,8 +95,7 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
                 $install->step3($request, $response);
                 // Redirect to step 4
                 return $response->withRedirect($routeParser->urlFor('install', ['step' => 4]));
-            }
-            catch (InstallationError $e) {
+            } catch (InstallationError $e) {
                 $container->get('logService')->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
                 $_SESSION['error'] = $e->getMessage();
@@ -127,9 +124,7 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
             try {
                 $install->step5($request, $response);
                 return $response->withRedirect($routeParser->urlFor('install', ['step' => 6]));
-            }
-            catch (InstallationError $e) {
-
+            } catch (InstallationError $e) {
                 $container->get('logService')->error('Installation Exception on Step %d: %s', $step, $e->getMessage());
 
                 $_SESSION['error'] = $e->getMessage();
@@ -169,6 +164,9 @@ $app->map(['GET', 'POST'],'/{step}', function(Request $request, Response $respon
             }
             break;
     }
+
+    // Add in our session object
+    $data['session'] = $_SESSION;
 
     // Render
     return $view->render($response, $template . '.twig', $data);
