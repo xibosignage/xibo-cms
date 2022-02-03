@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,9 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Middleware;
-
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -81,7 +79,8 @@ class Actions implements Middleware
                             $container->get('dataSetFactory'),
                             null,
                             $routeContext->getRouteParser(),
-                            $container->get('mediaService')
+                            $container->get('mediaService'),
+                            1
                         );
                         $layout->save([
                             'audit' => false,

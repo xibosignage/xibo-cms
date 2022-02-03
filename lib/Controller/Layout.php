@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -382,7 +382,8 @@ class Layout extends Base
                 $this->getDataSetFactory(),
                 '',
                 RouteContext::fromRequest($request)->getRouteParser(),
-                $this->mediaService
+                $this->mediaService,
+                $folderId
             );
 
             $layout->managePlaylistClosureTable();
