@@ -116,6 +116,8 @@ class WorldClock extends ModuleWidget
         $this->setOption('clockType', $sanitizedParams->getInt('clockType', ['default' => 1]));
         $this->setOption('clockCols', $sanitizedParams->getInt('clockCols', ['default' => 1]));
         $this->setOption('clockRows', $sanitizedParams->getInt('clockRows', ['default' => 1]));
+        $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
 
         // Clocks
         $clockTimezones = $sanitizedParams->getArray('clockTimezone');
@@ -519,7 +521,9 @@ class WorldClock extends ModuleWidget
             'widgetDesignHeight'=> $widgetOriginalHeight,
             'worldClocks' => $worldClocks,
             'numCols' => $clockCols,
-            'numRows' => $clockRows
+            'numRows' => $clockRows,
+            'alignmentH' => $this->getOption('alignH'),
+            'alignmentV' => $this->getOption('alignV')
         );
 
         // Replace the head content

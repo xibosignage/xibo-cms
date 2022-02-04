@@ -298,6 +298,20 @@ class MenuBoard extends ModuleWidget
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="alignH",
+     *      in="formData",
+     *      description="Horizontal alignment - left, center, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alignV",
+     *      in="formData",
+     *      description="Vertical alignment - top, middle, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -385,6 +399,8 @@ class MenuBoard extends ModuleWidget
             $this->setDuration($sanitizedParams->getInt('duration', ['default' => $this->getDuration()]));
             $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
             $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
+            $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+            $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
 
             // Template options
             $templateInfo = $this->getTemplateInfo();
@@ -470,7 +486,9 @@ class MenuBoard extends ModuleWidget
                 'originalHeight' => $this->region->height,
                 'widgetDesignWidth' => $widgetOriginalWidth,
                 'widgetDesignHeight' => $widgetOriginalHeight,
-                'generatedOn' => Carbon::now()->format('c')
+                'generatedOn' => Carbon::now()->format('c'),
+                'alignmentH' => $this->getOption('alignH'),
+                'alignmentV' => $this->getOption('alignV')
             ])
             ->appendJavaScript('
                 $(document).ready(function() {

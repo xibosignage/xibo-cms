@@ -383,6 +383,20 @@ class Weather extends ModuleWidget
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="alignH",
+     *      in="formData",
+     *      description="Horizontal alignment - left, center, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alignV",
+     *      in="formData",
+     *      description="Vertical alignment - top, middle, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -411,6 +425,8 @@ class Weather extends ModuleWidget
         $this->setOption('dayConditionsOnly', $sanitizedParams->getCheckbox('dayConditionsOnly'));
         $this->setOption('weatherType', $sanitizedParams->getString('weatherType'));
         $this->setOption('showMainBackground', $sanitizedParams->getCheckbox('showMainBackground'));
+        $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
 
         // Background images
         foreach (self::WEATHER_BACKGROUNDS as $background) {
@@ -877,7 +893,9 @@ class Weather extends ModuleWidget
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'widgetDesignWidth' => $widgetOriginalWidth,
-            'widgetDesignHeight'=> $widgetOriginalHeight
+            'widgetDesignHeight'=> $widgetOriginalHeight,
+            'alignmentH' => $this->getOption('alignH'),
+            'alignmentV' => $this->getOption('alignV')
         );
 
         if($this->getOption('weatherType') == 'forecast') {

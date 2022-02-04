@@ -319,6 +319,20 @@ class Currencies extends AlphaVantageBase
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="alignH",
+     *      in="formData",
+     *      description="Horizontal alignment - left, center, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alignV",
+     *      in="formData",
+     *      description="Vertical alignment - top, middle, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -348,6 +362,8 @@ class Currencies extends AlphaVantageBase
         $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
         $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
 
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('mainTemplate', $request->getParam('mainTemplate', $request->getParam('mainTemplate', null)));
@@ -781,7 +797,9 @@ class Currencies extends AlphaVantageBase
             'originalHeight' => $this->region->height,
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
-            'maxItemsPerPage' => $maxItemsPerPage
+            'maxItemsPerPage' => $maxItemsPerPage,
+            'alignmentH' => $this->getOption('alignH'),
+            'alignmentV' => $this->getOption('alignV')
         ];
 
         $itemsPerPage = $options['maxItemsPerPage'];

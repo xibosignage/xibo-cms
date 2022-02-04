@@ -222,6 +222,20 @@ class Countdown extends ModuleWidget
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="alignH",
+     *      in="formData",
+     *      description="Horizontal alignment - left, center, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alignV",
+     *      in="formData",
+     *      description="Vertical alignment - top, middle, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -245,6 +259,8 @@ class Countdown extends ModuleWidget
         $this->setOption('countdownWarningDuration', $sanitizedParams->getString('countdownWarningDuration', ['default' => 0]));
         $this->setOption('countdownDate', $sanitizedParams->getDate('countdownDate'));
         $this->setOption('countdownWarningDate', $sanitizedParams->getDate('countdownWarningDate'));
+        $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
 
         $this->setOption('templateId', $sanitizedParams->getString('templateId'));
         $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
@@ -322,7 +338,9 @@ class Countdown extends ModuleWidget
             'countdownDuration' => $this->getOption('countdownDuration'),
             'countdownDate' => $this->getOption('countdownDate'),
             'countdownWarningDuration' => $this->getOption('countdownWarningDuration'),
-            'countdownWarningDate' => $this->getOption('countdownWarningDate')
+            'countdownWarningDate' => $this->getOption('countdownWarningDate'),
+            'alignmentH' => $this->getOption('alignH'),
+            'alignmentV' => $this->getOption('alignV')
         );
 
         // Replace the head content
