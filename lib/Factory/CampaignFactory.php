@@ -302,19 +302,24 @@ class CampaignFactory extends BaseFactory
             $limit = ' LIMIT ' . intval($sanitizedFilter->getInt('start'), 0) . ', ' . $sanitizedFilter->getInt('length', ['default' => 10]);
         }
 
-        $intProperties = ['intProperties' => ['numberLayouts', 'isLayoutSpecific']];
-
         // Layout durations
         if ($sanitizedFilter->getInt('totalDuration', ['default' => 0]) != 0) {
             $select .= ", SUM(`layout`.duration) AS totalDuration";
-            $intProperties = ['intProperties' => ['numberLayouts', 'totalDuration', 'displayOrder', 'cyclePlaybackEnabled', 'playCount']];
         }
 
         $sql = $select . $body . $group . $order . $limit;
 
-
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $campaigns[] = $this->createEmpty()->hydrate($row, $intProperties);
+            $campaigns[] = $this->createEmpty()->hydrate($row, [
+                'intProperties' => [
+                    'numberLayouts',
+                    'isLayoutSpecific',
+                    'totalDuration',
+                    'displayOrder',
+                    'cyclePlaybackEnabled',
+                    'playCount'
+                ]
+            ]);
         }
 
         // Paging
