@@ -1672,7 +1672,7 @@ lD.checkLayoutStatus = function() {
             }
         } else {
             // Update layout status
-            lD.layout.updateStatus(res.extra.status, res.html, res.extra.statusMessage);
+            lD.layout.updateStatus(res.extra.status, res.html, res.extra.statusMessage, res.extra.duration);
 
             if((Array.isArray(res.extra.isLocked) && res.extra.isLocked.length == 0)) {
                 // isLocked is not defined
