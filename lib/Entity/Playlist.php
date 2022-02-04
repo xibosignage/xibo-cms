@@ -949,14 +949,14 @@ class Playlist implements \JsonSerializable
 
         // Start with our own Widgets
         foreach ($this->widgets as $widget) {
-
             // some basic checking on whether this widets date/time are conductive to it being added to the
             // list. This is really an "expires" check, because we will rely on the player otherwise
-            if ($widget->isExpired())
+            if ($widget->isExpired()) {
                 continue;
+            }
 
             // Persist the parentWidgetId in a temporary variable
-            // if we have a parentWidgetId of 0, then we are top-level and we should use our widgetId
+            // if we have a parentWidgetId of 0, then we are top-level, and we should use our widgetId
             $widget->tempId = $parentWidgetId == 0 ? $widget->widgetId : $parentWidgetId;
 
             // If we're a standard widget, add right away
@@ -964,11 +964,42 @@ class Playlist implements \JsonSerializable
                 $widgets[] = $widget;
             } else {
                 if ($expandSubplaylists === true) {
+                    $this->getLog()->debug('expandWidgets: processing sub-playlist ' . $widget->widgetId
+                        . ', parentWidgetId is ' . $parentWidgetId);
+
                     /** @var SubPlaylist $module */
                     $module = $this->moduleFactory->createWithWidget($widget);
                     $module->isValid();
 
-                    $widgets = array_merge($widgets, $module->getSubPlaylistResolvedWidgets($widget->tempId));
+                    // Get the sub-playlist widgets
+                    $subPlaylistWidgets = $module->getSubPlaylistResolvedWidgets($widget->tempId);
+
+                    // Are we the top level sub-playlist, and do we have cycle playback enabled?
+                    if ($parentWidgetId === 0 && $module->getOption('cyclePlaybackEnabled', 0) === 1) {
+                        $this->getLog()->debug('expandWidgets: cyclePlaybackEnabled on ' . $widget->widgetId);
+
+                        // Work out the average duration
+                        $totalDuration = 0.0;
+                        foreach ($subPlaylistWidgets as $subPlaylistWidget) {
+                            $totalDuration += $subPlaylistWidget->calculatedDuration;
+                        }
+
+                        // We split the average across all widgets so that when we add them up again it works out.
+                        $averageDuration = $totalDuration / count($subPlaylistWidgets);
+                        $cycleDuration = $averageDuration / count($subPlaylistWidgets);
+
+                        $this->getLog()->debug('expandWidgets: cycleDuration is ' . $cycleDuration
+                            . ', averageDuration is ' . $averageDuration
+                            . ', totalDuration is ' . $totalDuration);
+
+                        foreach ($subPlaylistWidgets as $subPlaylistWidget) {
+                            $subPlaylistWidget->calculatedDuration = $cycleDuration;
+                            $widgets[] = $subPlaylistWidget;
+                        }
+                    } else {
+                        // Join the sub playlist widgets to the current list we have
+                        $widgets = array_merge($widgets, $subPlaylistWidgets);
+                    }
                 }
             }
         }
