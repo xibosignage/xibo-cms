@@ -67,7 +67,7 @@
         <div class="widget-title">{% trans "Connectors" %}</div>
         <div class="widget-body">
             <div id="connectors" class="card-deck">
-                <div class="card w-25 p3" style="max-width: 250px;">
+                <div class="card p3 mt-2" style="min-width: 250px; max-width: 250px;">
                     <img class="card-img-top" style="max-height: 250px" src="{{ theme.rootUri() }}theme/default/img/connectors/canva_logo.png" alt="Canva">
                     <div class="card-body">
                         <h5 class="card-title">Canva</h5>
@@ -77,6 +77,8 @@
                             <br/>
                             This connector is configured in Canva using the "Publish menu".
                         </p>
+                    </div>
+                    <div class="card-footer">
                         <a class="btn btn-primary" href="https://canva.com" target="_blank">Visit Canva</a>
                     </div>
                 </div>
@@ -133,7 +135,7 @@
           $connectorContainer.find('.connector').remove();
           $.ajax({
             type: 'GET',
-            url: '{{ url_for("connector.search") }}?isVisible=1',
+            url: '{{ url_for("connector.search") }}?isVisible=1&showUninstalled=1',
             cache: false,
             dataType:"json",
             success: function(xhr, textStatus, error) {
@@ -211,7 +213,7 @@
 
     {% verbatim %}
     <script type="text/x-handlebars-template" id="template-connector-cards">
-        <div class="connector card w-25 p3" style="max-width: 300px;">
+        <div class="connector card p3 mt-2" style="min-width: 250px; max-width: 250px;">
             {{#if thumbnail}}<img class="card-img-top" style="max-height: 250px" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
             <div class="card-body">
                 <h5 class="card-title">{{ title }}</h5>
@@ -219,9 +221,18 @@
                 {{ description }}
                 <br/>
                 <br/>
-                Enabled: <span class="fa {{ enabledIcon }}"></span>
+                {{#if isInstalled }}
+                {% endverbatim %}{{ "Enabled"|trans }}{% verbatim %}: <span class="fa {{ enabledIcon }}"></span>
+                {{/if}}
+                {{#unless isInstalled }}
+                {% endverbatim %}{{ "Installed"|trans }}{% verbatim %}: <span class="fa fa-times"></span>
+                {{/unless}}
                 </p>
-                <button class="btn btn-primary XiboFormButton" href="{{ configureUrl }}">Configure</button>
+            </div>
+            <div class="card-footer">
+                <button class="btn btn-primary XiboFormButton" href="{{ configureUrl }}">
+                    {% endverbatim %}{{ "Configure"|trans }}{% verbatim %}
+                </button>
             </div>
         </div>
     </script>

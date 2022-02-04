@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -46,6 +46,16 @@
                 {% set title %}{% trans "Enabled?" %}{% endset %}
                 {% set helpText %}{% trans "When enabled, this Connector will start providing the services it lists in its description." %}{% endset %}
                 {{ forms.checkbox("isEnabled", title, connector.isEnabled, helpText) }}
+
+                {% if not connector.isSystem %}
+                    {% if connector.isInstalled %}
+                        {% set title %}{% trans "Uninstall?" %}{% endset %}
+                        {% set helpText %}{% trans "Tick to uninstall this Connector. All settings will be removed." %}{% endset %}
+                        {{ forms.checkbox("shouldUninstall", title, false, helpText) }}
+                    {% else %}
+                        {{ forms.message("This connector will be installed when you save."|trans, "", "alert alert-info") }}
+                    {% endif %}
+                {% endif %}
             </form>
         </div>
     </div>

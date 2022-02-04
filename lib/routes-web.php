@@ -519,7 +519,8 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
 
     // We can only view/edit these through the web app
     $group->get('/connectors', ['\Xibo\Controller\Connector','grid'])->setName('connector.search');
-    $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])->setName('connector.edit.form');
+    $group->get('/connectors/form/edit/{id}', ['\Xibo\Controller\Connector','editForm'])
+        ->setName('connector.edit.form');
     $group->put('/connectors/{id}', ['\Xibo\Controller\Connector','edit'])->setName('connector.edit');
 })->addMiddleware(new SuperAdminAuth($app->getContainer()));
 

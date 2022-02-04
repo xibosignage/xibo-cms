@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 use Xibo\Connector\ConnectorInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
+use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
  * Represents the database object for a Connector
@@ -34,6 +35,10 @@ use Xibo\Storage\StorageServiceInterface;
 class Connector implements \JsonSerializable
 {
     use EntityTrait;
+
+    // Status properties
+    public $isInstalled = true;
+    public $isSystem = true;
 
     // Database properties
     public $connectorId;
@@ -81,8 +86,8 @@ class Connector implements \JsonSerializable
     private function add()
     {
         $this->connectorId = $this->getStore()->insert('
-          INSERT INTO `connectors` (`className`, `isEnabled`, `settings`)
-            VALUES (:className, :isEnabled, :settings)
+          INSERT INTO `connectors` (`className`, `isEnabled`, `isVisible`, `settings`)
+            VALUES (:className, :isEnabled, :isVisible, :settings)
         ', [
             'className' => $this->className,
             'isEnabled' => $this->isEnabled,
@@ -106,6 +111,21 @@ class Connector implements \JsonSerializable
             'isEnabled' => $this->isEnabled,
             'isVisible' => $this->isVisible,
             'settings' => json_encode($this->settings)
+        ]);
+    }
+
+    /**
+     * @return void
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function delete()
+    {
+        if ($this->isSystem) {
+            throw new InvalidArgumentException(__('Sorry we cannot delete a system connector.'), 'isSystem');
+        }
+
+        $this->getStore()->update('DELETE FROM `connectors` WHERE connectorId = :connectorId', [
+            'connectorId' => $this->connectorId
         ]);
     }
 }
