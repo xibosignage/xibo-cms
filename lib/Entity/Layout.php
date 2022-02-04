@@ -2037,8 +2037,7 @@ class Layout implements \JsonSerializable
                     // this case.
                     $this->getLog()->debug('Layout is set to Publish manually on a date further than 30 min'
                         . ' from now, do not update');
-                } else if (
-                    $parent->publishedDate != null
+                } else if ($parent->publishedDate != null
                     && $layoutCurrentPublishedDate < Carbon::now()->subMinutes(5)
                 ) {
                     // Layout is set to Publish manually at least 5 min in the past at the moment, we expect the
