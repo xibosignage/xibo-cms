@@ -565,9 +565,9 @@ class LayoutFactory extends BaseFactory
 
             // Get the ownerId
             $regionOwnerId = $regionNode->getAttribute('userId');
-            if ($regionOwnerId == null)
+            if ($regionOwnerId == null) {
                 $regionOwnerId = $layout->ownerId;
-
+            }
             // Create the region
             $region = $this->regionFactory->create(
                 $regionOwnerId,
@@ -577,7 +577,7 @@ class LayoutFactory extends BaseFactory
                 (double)$regionNode->getAttribute('top'),
                 (double)$regionNode->getAttribute('left'),
                 (int)$regionNode->getAttribute('zindex')
-                );
+            );
 
             // Use the regionId locally to parse the rest of the XLF
             $region->tempId = $regionNode->getAttribute('id');
@@ -605,9 +605,9 @@ class LayoutFactory extends BaseFactory
                 /* @var \DOMElement $mediaNode */
 
                 $mediaOwnerId = $mediaNode->getAttribute('userId');
-                if ($mediaOwnerId == null)
+                if ($mediaOwnerId == null) {
                     $mediaOwnerId = $regionOwnerId;
-
+                }
                 $widget = $this->widgetFactory->createEmpty();
                 $widget->type = $mediaNode->getAttribute('type');
                 $widget->ownerId = $mediaOwnerId;
@@ -684,9 +684,9 @@ class LayoutFactory extends BaseFactory
                     // Get children
                     foreach ($rawNode->childNodes as $mediaOption) {
                         /* @var \DOMElement $mediaOption */
-                        if ($mediaOption->textContent == null)
+                        if ($mediaOption->textContent == null) {
                             continue;
-
+                        }
                         $widgetOption = $this->widgetOptionFactory->createEmpty();
                         $widgetOption->type = 'cdata';
                         $widgetOption->option = $mediaOption->nodeName;
@@ -704,9 +704,9 @@ class LayoutFactory extends BaseFactory
                     // Get children
                     foreach ($rawNode->childNodes as $audioNode) {
                         /* @var \DOMElement $audioNode */
-                        if ($audioNode->textContent == null)
+                        if ($audioNode->textContent == null) {
                             continue;
-
+                        }
                         $audioMediaId = $audioNode->getAttribute('mediaId');
 
                         if (empty($audioMediaId)) {
@@ -743,9 +743,9 @@ class LayoutFactory extends BaseFactory
 
         foreach ($xpath->query('//tags/tag') as $tagNode) {
             /* @var \DOMElement $tagNode */
-            if (trim($tagNode->textContent) == '')
+            if (trim($tagNode->textContent) == '') {
                 continue;
-
+            }
             $layout->tags[] = $this->tagFactory->tagFromString($tagNode->textContent);
         }
 
@@ -755,27 +755,24 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param $layoutJson
+     * @param $playlistJson
+     * @param $nestedPlaylistJson
+     * @param Folder $folder
      * @param null $layout
-     * @param null $playlistJson
-     * @param null $nestedPlaylistJson
-     * @param bool $useJson
      * @param bool $importTags
      * @return array
      * @throws DuplicateEntityException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false, $importTags = false, Folder $folder)
+    public function loadByJson($layoutJson, $playlistJson, $nestedPlaylistJson, Folder $folder, $layout = null, $importTags = false): array
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
         // New Layout
         if ($layout == null) {
             $layout = $this->createEmpty();
-        }
-
-        if ($useJson == false) {
-            throw new InvalidArgumentException(__('playlist.json not found in the archive'), 'playlistJson');
         }
 
         $playlists = [];
@@ -1140,7 +1137,7 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true, $importTags, $folder);
+            $jsonResults = $this->loadByJson($layoutDetails, $playlistDetails, $nestedPlaylistDetails, $folder, null, $importTags);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
