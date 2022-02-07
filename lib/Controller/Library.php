@@ -2647,15 +2647,22 @@ class Library extends Base
 
         // add our media to queueDownload and process the downloads
         $this->mediaFactory->queueDownload($name, str_replace(' ', '%20', htmlspecialchars_decode($url)), $expires, ['fileType' => strtolower($module->getModuleType()), 'duration' => $module->determineDuration(), 'extension' => $ext, 'enableStat' => $enableStat, 'folderId' => $folderId, 'permissionsFolderId' => $permissionsFolderId]);
-        $this->mediaFactory->processDownloads(function (Media $media) use ($module) {
-            // Success
-            $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
-            $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-            $realDuration = $module->determineDuration($libraryFolder . $media->storedAs);
-            if ($realDuration !== $media->duration) {
-                $media->updateDuration($realDuration);
+        $this->mediaFactory->processDownloads(
+            function (Media $media) use ($module) {
+                // Success
+                $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
+                $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+                $realDuration = $module->determineDuration($libraryFolder . $media->storedAs);
+                if ($realDuration !== $media->duration) {
+                    $media->updateDuration($realDuration);
+                }
+            },
+            null,
+            function ($message) {
+                // Download rejected.
+                throw new InvalidArgumentException(sprintf(__('Download rejected due to %s'), $message));
             }
-        });
+        );
 
         // get our uploaded media
         $media = $this->mediaFactory->getByName($name);
@@ -2682,10 +2689,15 @@ class Library extends Base
 
         try {
             $head = $guzzle->head($url);
-            $contentLength = $head->getHeader('Content-Length');
 
-            foreach ($contentLength as $value) {
-                $size = $value;
+            // First chance at getting the content length so that we can fail early.
+            // Will fail for downloads with redirects.
+            if ($head->hasHeader('Content-Length')) {
+                $contentLength = $head->getHeader('Content-Length');
+
+                foreach ($contentLength as $value) {
+                    $size = $value;
+                }
             }
 
             if ($extension == '') {
