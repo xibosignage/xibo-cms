@@ -310,8 +310,7 @@ class MediaFactory extends BaseFactory
                             if ($response->getStatusCode() < 299) {
                                 $this->getLog()->debug('DEBUG: ' . var_export($response->getHeaders(), true));
                                 $contentLength = $response->getHeaderLine('Content-Length');
-                                if (
-                                    empty($contentLength)
+                                if (empty($contentLength)
                                     || intval($contentLength) > ByteFormatter::toBytes(Environment::getMaxUploadSize())
                                 ) {
                                     throw new \Exception(__('File too large'));
