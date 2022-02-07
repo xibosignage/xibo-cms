@@ -155,8 +155,6 @@ class Playlist implements \JsonSerializable
      */
     public $tempId = null;
 
-    public $tagValues;
-
     // Read only properties
     public $owner;
     public $groupsWithPermissions;

@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,9 +20,7 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Middleware;
-
 
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
@@ -71,9 +69,21 @@ class Actions implements Middleware
                 if (stripos($file, '.zip')) {
                     try {
                         /** @var \Xibo\Entity\Layout $layout */
-                        $layout = $container->get('layoutFactory')->createFromZip($folder . '/' . $file, null,
-                            $container->get('userFactory')->getSystemUser()->getId(), false, false, true, false,
-                            true, $container->get('\Xibo\Controller\Library'), null, $routeContext->getRouteParser());
+                        $layout = $container->get('layoutFactory')->createFromZip(
+                            $folder . '/' . $file,
+                            null,
+                            $container->get('userFactory')->getSystemUser()->getId(),
+                            false,
+                            false,
+                            true,
+                            false,
+                            true,
+                            $container->get('\Xibo\Controller\Library'),
+                            null,
+                            $routeContext->getRouteParser(),
+                            1
+                        );
+
                         $layout->save([
                             'audit' => false,
                             'import' => true

@@ -374,19 +374,11 @@ class ProofOfPlay implements ReportInterface
 
         // Get user
         $userId = $this->getUserId();
+        $user = $this->userFactory->getById($userId);
 
-        if ($userId == null) {
-            $user = $this->userFactory->getUser();
-        } else {
-            $user = $this->userFactory->getById($userId);
-        }
-
-        $displayFactory = clone $this->displayFactory;
-        $displayFactory->setAclDependencies($user, $this->userFactory);
-
-        if ($user->userTypeId != 1) {
+        if (!$user->isSuperAdmin()) {
             // Get an array of display id this user has access to.
-            foreach ($displayFactory->query() as $display) {
+            foreach ($this->displayFactory->query(null, ['userCheckUserId' => $this->getUserId()]) as $display) {
                 $displayIds[] = $display->displayId;
             }
 
