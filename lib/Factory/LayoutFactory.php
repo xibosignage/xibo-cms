@@ -726,7 +726,7 @@ class LayoutFactory extends BaseFactory
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function loadByJson($layoutJson, $playlistJson, $nestedPlaylistJson, Folder $folder,  $layout = null, $importTags = false): array
+    public function loadByJson($layoutJson, $playlistJson, $nestedPlaylistJson, Folder $folder, $layout = null, $importTags = false): array
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
