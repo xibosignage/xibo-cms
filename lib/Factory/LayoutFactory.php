@@ -715,29 +715,24 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param $layoutJson
-     * @param null $layout
-     * @param null $playlistJson
-     * @param null $nestedPlaylistJson
-     * @param bool $useJson
-     * @param bool $importTags
+     * @param $playlistJson
+     * @param $nestedPlaylistJson
      * @param Folder $folder
+     * @param null $layout
+     * @param bool $importTags
      * @return array
      * @throws DuplicateEntityException
      * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false, $importTags = false, Folder $folder)
+    public function loadByJson($layoutJson, $playlistJson, $nestedPlaylistJson, Folder $folder,  $layout = null, $importTags = false): array
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
         // New Layout
         if ($layout == null) {
             $layout = $this->createEmpty();
-        }
-
-        if ($useJson == false) {
-            throw new InvalidArgumentException(__('playlist.json not found in the archive'), 'playlistJson');
         }
 
         $playlists = [];
@@ -1109,7 +1104,7 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true, $importTags, $folder);
+            $jsonResults = $this->loadByJson($layoutDetails, $playlistDetails, $nestedPlaylistDetails, $folder, null, $importTags);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
