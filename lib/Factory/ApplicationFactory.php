@@ -283,7 +283,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
         $this->getLog()->debug('Adding approved Access for Application ' . $clientId . ' for User ' . $userId);
 
         $this->getStore()->insert('
-            INSERT INTO `oauth_lkClientUser` (`clientId`, `userId`, `approvedDate`, `approvedIp`)
+            INSERT INTO `oauth_lkclientuser` (`clientId`, `userId`, `approvedDate`, `approvedIp`)
               VALUES (:clientId, :userId, :approvedDate, :approvedIp)
             ON DUPLICATE KEY UPDATE clientId = clientId, userId = userId, approvedDate = :approvedDate, approvedIp = :approvedIp
 
@@ -303,7 +303,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
      */
     public function checkAuthorised($clientId, $userId): bool
     {
-        $results = $this->getStore()->select('SELECT clientId, userId FROM `oauth_lkClientUser` WHERE clientId = :clientId AND userId = :userId', [
+        $results = $this->getStore()->select('SELECT clientId, userId FROM `oauth_lkclientuser` WHERE clientId = :clientId AND userId = :userId', [
             'userId' => $userId,
             'clientId' => $clientId
         ]);
@@ -322,7 +322,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
      */
     public function getAuthorisedByUserId($userId): array
     {
-        return $this->getStore()->select('SELECT oauth_clients.name, oauth_clients.id, approvedDate, approvedIp FROM `oauth_lkClientUser` INNER JOIN oauth_clients on oauth_lkClientUser.clientId = oauth_clients.id WHERE `oauth_lkClientUser`.userId = :userId', [
+        return $this->getStore()->select('SELECT oauth_clients.name, oauth_clients.id, approvedDate, approvedIp FROM `oauth_lkclientuser` INNER JOIN `oauth_clients` on `oauth_lkclientuser`.clientId = `oauth_clients`.id WHERE `oauth_lkclientuser`.userId = :userId', [
             'userId' => $userId
         ]);
     }
@@ -334,7 +334,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
      */
     public function revokeAuthorised($userId, $clientId)
     {
-        $this->getStore()->update('DELETE FROM `oauth_lkClientUser` WHERE clientId = :clientId AND userId = :userId', [
+        $this->getStore()->update('DELETE FROM `oauth_lkclientuser` WHERE clientId = :clientId AND userId = :userId', [
             'userId' => $userId,
             'clientId' => $clientId
         ]);

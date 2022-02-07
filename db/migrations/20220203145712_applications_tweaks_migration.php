@@ -34,7 +34,7 @@ class ApplicationsTweaksMigration extends AbstractMigration
 {
     public function change()
     {
-        $this->table('oauth_lkClientUser', ['id' => 'lkClientUserId'])
+        $this->table('oauth_lkclientuser', ['id' => 'lkClientUserId'])
             ->addColumn('clientId', 'string')
             ->addColumn('userId', 'integer')
             ->addColumn('approvedDate', 'datetime', ['null' => true, 'default' => null])
