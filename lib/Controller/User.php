@@ -2057,7 +2057,7 @@ class User extends Base
     {
         $this->getState()->template = 'user-applications-form';
         $this->getState()->setData([
-            'applications' => $this->applicationFactory->getByUserId($this->getUser()->userId),
+            'applications' => $this->applicationFactory->getAuthorisedByUserId($this->getUser()->userId),
             'help' => $this->getHelp()->link('User', 'Applications')
         ]);
 

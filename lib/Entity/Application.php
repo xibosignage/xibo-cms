@@ -22,6 +22,7 @@
 
 
 namespace Xibo\Entity;
+
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
@@ -112,6 +113,37 @@ class Application implements \JsonSerializable, ClientEntityInterface
     /** * @var ApplicationScope[] */
     public $scopes = [];
 
+    /**
+     * @SWG\Property(description="Application description")
+     * @var string
+     */
+    public $description;
+    /**
+     * @SWG\Property(description="Path to Application logo")
+     * @var string
+     */
+    public $logo;
+    /**
+     * @SWG\Property(description="Path to Application Cover Image")
+     * @var string
+     */
+    public $coverImage;
+    /**
+     * @SWG\Property(description="Company name associated with this Application")
+     * @var string
+     */
+    public $companyName;
+    /**
+     * @SWG\Property(description="URL to Application terms")
+     * @var string
+     */
+    public $termsUrl;
+    /**
+     * @SWG\Property(description="URL to Application privacy policy")
+     * @var string
+     */
+    public $privacyUrl;
+
     /** @var ApplicationRedirectUriFactory */
     private $applicationRedirectUriFactory;
 
@@ -168,21 +200,21 @@ class Application implements \JsonSerializable, ClientEntityInterface
     /**
      * @param ApplicationScope $scope
      */
-    public function assignScope($scope) {
-        $this->load();
-
+    public function assignScope($scope)
+    {
         if (!in_array($scope, $this->scopes)) {
             $this->scopes[] = $scope;
         }
+
+        return $this;
     }
 
     /**
      * @param ApplicationScope $scope
      */
-    public function unassignScope($scope) {
-        $this->load();
-
-        $this->scopes = array_udiff($this->scopes, [$scope], function($a, $b) {
+    public function unassignScope($scope)
+    {
+        $this->scopes = array_udiff($this->scopes, [$scope], function ($a, $b) {
             /**
              * @var ApplicationScope $a
              * @var ApplicationScope $b
@@ -258,6 +290,9 @@ class Application implements \JsonSerializable, ClientEntityInterface
             $redirectUri->delete();
         }
 
+        // Clear link table for this Application
+        $this->getStore()->update('DELETE FROM `lkClientUser` WHERE clientId = :id', ['id' => $this->key]);
+
         // Clear out everything owned by this client
         $this->getStore()->update('DELETE FROM `oauth_client_scopes` WHERE `clientId` = :id', ['id' => $this->key]);
         $this->getStore()->update('DELETE FROM `oauth_clients` WHERE `id` = :id', ['id' => $this->key]);
@@ -278,8 +313,8 @@ class Application implements \JsonSerializable, ClientEntityInterface
 
         // Simple Insert for now
         $this->getStore()->insert('
-            INSERT INTO `oauth_clients` (`id`, `secret`, `name`, `userId`, `authCode`, `clientCredentials`, `isConfidential`)
-              VALUES (:id, :secret, :name, :userId, :authCode, :clientCredentials, :isConfidential)
+            INSERT INTO `oauth_clients` (`id`, `secret`, `name`, `userId`, `authCode`, `clientCredentials`, `isConfidential`, `description`, `logo`, `coverImage`, `companyName`, `termsUrl`, `privacyUrl`)
+              VALUES (:id, :secret, :name, :userId, :authCode, :clientCredentials, :isConfidential, :description, :logo, :coverImage, :companyName, :termsUrl, :privacyUrl)
         ', [
             'id' => $this->key,
             'secret' => $this->secret,
@@ -287,7 +322,13 @@ class Application implements \JsonSerializable, ClientEntityInterface
             'userId' => $this->userId,
             'authCode' => $this->authCode,
             'clientCredentials' => $this->clientCredentials,
-            'isConfidential' => $this->isConfidential
+            'isConfidential' => $this->isConfidential,
+            'description' => $this->description,
+            'logo' => $this->logo,
+            'coverImage' => $this->coverImage,
+            'companyName' => $this->companyName,
+            'termsUrl' => $this->termsUrl,
+            'privacyUrl' => $this->privacyUrl
         ]);
     }
 
@@ -301,7 +342,13 @@ class Application implements \JsonSerializable, ClientEntityInterface
               `userId` = :userId,
               `authCode` = :authCode,
               `clientCredentials` = :clientCredentials,
-              `isConfidential` = :isConfidential
+              `isConfidential` = :isConfidential,
+              `description` = :description,
+              `logo` = :logo,
+              `coverImage` = :coverImage,
+              `companyName` = :companyName,
+              `termsUrl` = :termsUrl,
+              `privacyUrl` = :privacyUrl
              WHERE `id` = :id
         ', [
             'id' => $this->key,
@@ -310,7 +357,13 @@ class Application implements \JsonSerializable, ClientEntityInterface
             'userId' => $this->userId,
             'authCode' => $this->authCode,
             'clientCredentials' => $this->clientCredentials,
-            'isConfidential' => $this->isConfidential
+            'isConfidential' => $this->isConfidential,
+            'description' => $this->description,
+            'logo' => $this->logo,
+            'coverImage' => $this->coverImage,
+            'companyName' => $this->companyName,
+            'termsUrl' => $this->termsUrl,
+            'privacyUrl' => $this->privacyUrl
         ]);
     }
 

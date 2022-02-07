@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -76,7 +76,7 @@ class ApiAuthorization implements Middleware
             // oAuth Resource
             $apiKeyPaths = $container->get('configService')->getApiKeyDetails();
 
-            $accessTokenRepository = new AccessTokenRepository($logger);
+            $accessTokenRepository = new AccessTokenRepository($logger, $container->get('pool'), $container->get('applicationFactory'));
             return new ResourceServer(
                 $accessTokenRepository,
                 $apiKeyPaths['publicKeyPath']
@@ -122,6 +122,8 @@ class ApiAuthorization implements Middleware
 
             $logger->debug('Scopes provided with request: ' . count($scopes));
 
+            //iterator, as we need to check all scopes in the request before we deny access.
+            $i = 0;
             // Only validate scopes if we have been provided some.
             if (is_array($scopes) && count($scopes) > 0) {
                 foreach ($scopes as $scope) {
@@ -138,9 +140,21 @@ class ApiAuthorization implements Middleware
 
                         // Check the route and request method
                         try {
-                            $applicationScopeFactory->getById($scope)->checkRoute($request->getMethod(), $resource);
-                        } catch (NotFoundException $notFoundException) {
-                            throw new AccessDeniedException();
+                            $i++;
+                            $checkRoute = $applicationScopeFactory->getById($scope)->checkRoute($request->getMethod(), $resource);
+
+                            // if we have access to the requested route, break the loop
+                            if ($checkRoute) {
+                                break;
+                            }
+                        } catch (AccessDeniedException $notFoundException) {
+                            // if we have more scopes, make sure to check all of them for the requested route
+                            // if all scopes were checked and we still don't have access, then throw exception
+                            if ($i === count($scopes)) {
+                                throw new AccessDeniedException(__('Access to this route is denied for this scope'));
+                            } else {
+                                continue;
+                            }
                         }
                     }
                 }

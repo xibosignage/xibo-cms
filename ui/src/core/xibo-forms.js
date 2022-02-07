@@ -1414,3 +1414,25 @@ function setCheckboxState(count, countTotal, $selector, checkboxClass)
             .prop("indeterminate", true);
     }
 }
+
+function userApprovedApplicationsFormOpen(dialog) {
+    $('.revokeAccess').on('click', function (e) {
+        var $this = $(this);
+        var clientKey = $this.data('applicationKey');
+        var userId = $this.data('applicationUser');
+
+        $.ajax({
+            url: revokeApplicationAccess.replace(':id', clientKey).replace(':userId', userId),
+            type: "DELETE",
+            success: function (res) {
+                if (res.success) {
+                    $this.closest('tr').remove();
+                    toastr.success(res.message);
+                } else {
+                    toastr.error(res.message);
+                }
+            }
+        });
+    })
+
+}

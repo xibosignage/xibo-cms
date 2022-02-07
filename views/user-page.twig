@@ -35,7 +35,6 @@
             {% endif %}
             <button id="user-add-button" class="btn btn-success XiboFormButton" title="{% trans "Add a new User" %}" href="{{ addUserFormUrl }}"><i class="fa fa-user-plus" aria-hidden="true"></i> {% trans "Add User" %}</button>
         {% endif %}
-        <button class="btn btn-info XiboFormButton" title="{% trans "View my authenticated applications" %}" href="{{ url_for("user.applications") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "My Applications" %}</button>
         <button class="btn btn-primary refresh-grid" title="{% trans "Refresh the Table" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
     </div>
 {% endblock %}

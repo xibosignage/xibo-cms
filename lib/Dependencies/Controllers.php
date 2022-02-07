@@ -49,7 +49,8 @@ class Controllers
                     $c->get('applicationFactory'),
                     $c->get('applicationRedirectUriFactory'),
                     $c->get('applicationScopeFactory'),
-                    $c->get('userFactory')
+                    $c->get('userFactory'),
+                    $c->get('pool')
                 );
 
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));

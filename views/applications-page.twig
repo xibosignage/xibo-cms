@@ -163,7 +163,7 @@
             }).submit();
         }
         
-        function copyFromSecretInput() {
+        function copyFromSecretInput(dialog) {
             // Initialize the tooltip.
             $('#copy-button').tooltip();
 
@@ -202,6 +202,23 @@
                     $self.tooltip('hide').attr('data-original-title', copyToClipboardTrans);
                 }, 1000);
             });
+
+            // Auth Code change
+            onAuthCodeChanged(dialog);
+            $(dialog).find('#authCode').on('change', function() {
+                onAuthCodeChanged(dialog);
+            });
+        }
+
+        function onAuthCodeChanged(dialog) {
+            var authCode = $(dialog).find("#authCode").is(":checked");
+            var $authCodeTab = $(dialog).find(".tabForAuthCode");
+
+            if (authCode) {
+                $authCodeTab.removeClass("d-none");
+            } else {
+                $authCodeTab.addClass("d-none");
+            }
         }
     </script>
 {% endblock %}

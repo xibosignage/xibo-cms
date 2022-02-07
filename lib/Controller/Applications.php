@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,17 +21,20 @@
  */
 namespace Xibo\Controller;
 
+use Carbon\Carbon;
 use League\OAuth2\Server\AuthorizationServer;
 use League\OAuth2\Server\Exception\OAuthServerException;
 use League\OAuth2\Server\Grant\AuthCodeGrant;
 use League\OAuth2\Server\RequestTypes\AuthorizationRequest;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ApplicationScope;
 use Xibo\Factory\ApplicationFactory;
 use Xibo\Factory\ApplicationRedirectUriFactory;
 use Xibo\Factory\ApplicationScopeFactory;
 use Xibo\Factory\UserFactory;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Session;
 use Xibo\OAuth\AuthCodeRepository;
 use Xibo\OAuth\RefreshTokenRepository;
@@ -65,6 +68,9 @@ class Applications extends Base
     /** @var  UserFactory */
     private $userFactory;
 
+    /** @var PoolInterface */
+    private $pool;
+
     /**
      * Set common dependencies.
      * @param Session $session
@@ -73,13 +79,14 @@ class Applications extends Base
      * @param $applicationScopeFactory
      * @param UserFactory $userFactory
      */
-    public function __construct($session, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory)
+    public function __construct($session, $applicationFactory, $applicationRedirectUriFactory, $applicationScopeFactory, $userFactory, $pool)
     {
         $this->session = $session;
         $this->applicationFactory = $applicationFactory;
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;
         $this->userFactory = $userFactory;
+        $this->pool = $pool;
     }
 
     /**
@@ -165,6 +172,10 @@ class Applications extends Base
             throw new InvalidArgumentException(__('Authorisation Parameters missing from session.'), 'authParams');
         }
 
+        if ($this->applicationFactory->checkAuthorised($authParams->getClient()->getIdentifier(), $this->getUser()->userId)) {
+            return $this->authorize($request->withParsedBody(['authorization' => 'Approve']), $response);
+        }
+
         // Process any scopes.
         $scopes = [];
         $authScopes = $authParams->getScopes();
@@ -180,15 +191,18 @@ class Applications extends Base
             $scopes[] = $this->applicationScopeFactory->getById('all');
         }
 
+        $client = $this->applicationFactory->getClientEntity($authParams->getClient()->getIdentifier());
+
         // Get, show page
         $this->getState()->template = 'applications-authorize-page';
         $this->getState()->setData([
             'forceHide' => true,
             'authParams' => $authParams,
-            'scopes' => $scopes
+            'scopes' => $scopes,
+            'application' => $client
         ]);
 
-       return $this->render($request, $response);
+        return $this->render($request, $response);
     }
 
     /**
@@ -215,7 +229,7 @@ class Applications extends Base
 
         $server = new AuthorizationServer(
             $this->applicationFactory,
-            new \Xibo\OAuth\AccessTokenRepository($this->getLog()),
+            new \Xibo\OAuth\AccessTokenRepository($this->getLog(), $this->pool, $this->applicationFactory),
             $this->applicationScopeFactory,
             $privateKey,
             $encryptionKey
@@ -224,7 +238,7 @@ class Applications extends Base
         $server->enableGrantType(
             new AuthCodeGrant(
                 new AuthCodeRepository(),
-                new RefreshTokenRepository(),
+                new RefreshTokenRepository($this->getLog(), $this->pool),
                 new \DateInterval('PT10M')
             ),
             new \DateInterval('PT1H')
@@ -239,6 +253,13 @@ class Applications extends Base
         // We are authorized
         if ($sanitizedQueryParams->getString('authorization') === 'Approve') {
             $authRequest->setAuthorizationApproved(true);
+
+            $this->applicationFactory->setApplicationApproved(
+                $authRequest->getClient()->getIdentifier(),
+                $authRequest->getUser()->getIdentifier(),
+                Carbon::now()->format(DateFormatHelper::getSystemFormat()),
+                $request->getAttribute('ip_address')
+            );
         } else {
             $authRequest->setAuthorizationApproved(false);
         }
@@ -339,8 +360,9 @@ class Applications extends Base
         // Get the client
         $client = $this->applicationFactory->getById($id);
 
-        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1)
+        if ($client->userId != $this->getUser()->userId && $this->getUser()->getUserTypeId() != 1) {
             throw new AccessDeniedException();
+        }
 
         $this->getState()->template = 'applications-form-delete';
         $this->getState()->setData([
@@ -366,7 +388,7 @@ class Applications extends Base
         $application = $this->applicationFactory->create();
         $application->name = $sanitizedParams->getString('name');
 
-        if ($application->name == '' ) {
+        if ($application->name == '') {
             throw new InvalidArgumentException(__('Please enter Application name'), 'name');
         }
 
@@ -413,20 +435,20 @@ class Applications extends Base
      */
     public function addDooh(Request $request, Response $response)
     {
-        $sanitizedParams = $this->getSanitizer($request->getParams());;
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $application = $this->applicationFactory->create();
         $application->name = $sanitizedParams->getString('name');
         $application->userId = $sanitizedParams->getInt('userId');
 
-        if ($application->name == '' ) {
+        if ($application->name == '') {
             throw new InvalidArgumentException(__('Please enter Application name'), 'name');
         }
 
-        if ($application->userId == null ) {
+        if ($application->userId == null) {
             throw new InvalidArgumentException(__('Please select user'), 'userId');
         }
 
-        if ($this->userFactory->getById($application->userId)->userTypeId != 4 ) {
+        if ($this->userFactory->getById($application->userId)->userTypeId != 4) {
             throw new InvalidArgumentException(__('Invalid user type'), 'userTypeId');
         }
 
@@ -473,7 +495,7 @@ class Applications extends Base
             throw new AccessDeniedException();
         }
 
-        $sanitizedParams = $this->getSanitizer($request->getParams());;
+        $sanitizedParams = $this->getSanitizer($request->getParams());
         $client->name = $sanitizedParams->getString('name');
         $client->authCode = $sanitizedParams->getCheckbox('authCode');
         $client->clientCredentials = $sanitizedParams->getCheckbox('clientCredentials');
@@ -481,6 +503,16 @@ class Applications extends Base
 
         if ($sanitizedParams->getCheckbox('resetKeys') == 1) {
             $client->resetSecret();
+            $this->pool->getItem('C_' . $client->key)->clear();
+        }
+
+        if ($client->authCode === 1) {
+            $client->description = $sanitizedParams->getString('description');
+            $client->logo = $sanitizedParams->getString('logo');
+            $client->coverImage = $sanitizedParams->getString('coverImage');
+            $client->companyName = $sanitizedParams->getString('companyName');
+            $client->termsUrl = $sanitizedParams->getString('termsUrl');
+            $client->privacyUrl = $sanitizedParams->getString('privacyUrl');
         }
 
         // Delete all the redirect urls and add them again
@@ -505,27 +537,18 @@ class Applications extends Base
             $client->assignRedirectUri($redirect);
         }
 
+        // clear scopes
+        $client->scopes = [];
+
         // API Scopes
         foreach ($this->applicationScopeFactory->query() as $scope) {
             /** @var ApplicationScope $scope */
-
             // See if this has been checked this time
             $checked = $sanitizedParams->getCheckbox('scope_' . $scope->id);
 
-            // Does this scope already exist?
-            $found = false;
-            foreach ($client->scopes as $existingScope) {
-                if ($scope->id == $existingScope->id) {
-                    $found = true;
-                    break;
-                }
-            }
-
-            // Assign or unassign as necessary
-            if ($checked && !$found) {
+            // Assign scopes
+            if ($checked) {
                 $client->assignScope($scope);
-            } else if (!$checked && $found) {
-                $client->unassignScope($scope);
             }
         }
 
@@ -576,10 +599,36 @@ class Applications extends Base
         }
 
         $client->delete();
+        $this->pool->getItem('C_' . $client->key)->clear();
 
         $this->getState()->hydrate([
             'httpStatus' => 204,
             'message' => sprintf(__('Deleted %s'), $client->name)
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    public function revokeAccess(Request $request, Response $response, $id, $userId)
+    {
+        if ($userId === null) {
+            throw new InvalidArgumentException(__('No User ID provided'));
+        }
+
+        if (empty($id)) {
+            throw new InvalidArgumentException(__('No Client id provided'));
+        }
+
+        $client = $this->applicationFactory->getClientEntity($id);
+
+        // remove record in lk table
+        $this->applicationFactory->revokeAuthorised($userId, $client->key);
+        // clear cache for this clientId/userId pair, this is how we know the application is no longer approved
+        $this->pool->getItem('C_' . $client->key . '/' . $userId)->clear();
+
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => sprintf(__('Access to %s revoked'), $client->name)
         ]);
 
         return $this->render($request, $response);

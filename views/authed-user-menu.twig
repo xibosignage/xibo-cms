@@ -13,6 +13,10 @@
             <a class="dropdown-item XiboFormButton" href="{{ url_for("user.edit.profile.form") }}" title="{% trans "Edit Profile" %}">{% trans "Edit Profile" %}</a>
         {% endif %}
 
+        {% if currentUser.featureEnabled("application.view") %}
+            <a class="dropdown-item XiboFormButton" href="{{ url_for("user.applications") }}" title="{% trans "View my authenticated applications" %}">{% trans "My Approved Applications" %}</a>
+        {% endif %}
+
         <div class="dropdown-divider"></div>
         <a class="dropdown-item" id="reshowWelcomeMenuItem" href="{{ url_for("welcome.view") }}">{% trans "Reshow welcome" %}</a>
         {% if horizontalNav %}

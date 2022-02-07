@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,6 +25,7 @@ namespace Xibo\Entity;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class ApplicationScope
@@ -45,6 +46,11 @@ class ApplicationScope implements \JsonSerializable
     public $description;
 
     /**
+     * @var int
+     */
+    public $useRegex;
+
+    /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
@@ -63,6 +69,11 @@ class ApplicationScope implements \JsonSerializable
         return $this->id;
     }
 
+    public function getSqlOperator()
+    {
+        return ($this->useRegex) ? 'RLIKE' : '=';
+    }
+
     /**
      * Check whether this scope has permission for this route
      * @param $method
@@ -71,19 +82,24 @@ class ApplicationScope implements \JsonSerializable
      */
     public function checkRoute($method, $route)
     {
+        $operator = $this->getSqlOperator();
+
         $route = $this->getStore()->select('
             SELECT *
               FROM `oauth_scope_routes`
              WHERE scopeId = :scope
-              AND method = :method
-              AND route = :route
+              AND method '.$operator.' :method
+              AND route '.$operator.' :route
         ', [
             'scope' => $this->getId(),
             'method' => $method,
             'route' => $route
         ]);
 
-        if (count($route) <= 0)
-            throw new AccessDeniedException(__('Access to this route is denied for this scope'));
+        if (count($route) <= 0) {
+            throw new AccessDeniedException();
+        } else {
+            return true;
+        }
     }
 }
