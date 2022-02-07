@@ -291,7 +291,7 @@ class Application implements \JsonSerializable, ClientEntityInterface
         }
 
         // Clear link table for this Application
-        $this->getStore()->update('DELETE FROM `lkClientUser` WHERE clientId = :id', ['id' => $this->key]);
+        $this->getStore()->update('DELETE FROM `oauth_lkClientUser` WHERE clientId = :id', ['id' => $this->key]);
 
         // Clear out everything owned by this client
         $this->getStore()->update('DELETE FROM `oauth_client_scopes` WHERE `clientId` = :id', ['id' => $this->key]);

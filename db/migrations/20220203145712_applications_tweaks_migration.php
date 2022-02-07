@@ -34,8 +34,7 @@ class ApplicationsTweaksMigration extends AbstractMigration
 {
     public function change()
     {
-
-        $this->table('lkClientUser', ['id' => 'lkClientUserId'])
+        $this->table('oauth_lkClientUser', ['id' => 'lkClientUserId'])
             ->addColumn('clientId', 'string')
             ->addColumn('userId', 'integer')
             ->addColumn('approvedDate', 'datetime', ['null' => true, 'default' => null])
@@ -43,7 +42,7 @@ class ApplicationsTweaksMigration extends AbstractMigration
             ->addIndex(['clientId', 'userId'], ['unique' => true])
             ->addForeignKey('clientId', 'oauth_clients', 'id')
             ->addForeignKey('userId', 'user', 'userId')
-            ->save();
+            ->create();
 
         $this->table('oauth_scopes')
             ->addColumn('useRegex', 'integer', ['limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY, 'default' => 0])
@@ -96,20 +95,20 @@ class ApplicationsTweaksMigration extends AbstractMigration
 
         $this->table('oauth_scope_routes')
             ->insert([
-                ['scopeId' => 'design', 'route' => '/library', 'method' => 'GET,POST,PUT', 'useRegex' => 1],
-                ['scopeId' => 'design', 'route' => '/layout', 'method' => 'GET,POST,PUT', 'useRegex' => 1],
-                ['scopeId' => 'design', 'route' => '/playlist', 'method' => 'GET,POST,PUT', 'useRegex' => 1],
-                ['scopeId' => 'designDelete', 'route' => '/library', 'method' => 'DELETE', 'useRegex' => 1],
-                ['scopeId' => 'designDelete', 'route' => '/layout', 'method' => 'DELETE', 'useRegex' => 1],
-                ['scopeId' => 'designDelete', 'route' => '/playlist', 'method' => 'DELETE', 'useRegex' => 1],
-                ['scopeId' => 'displays', 'route' => '/display', 'method' => 'GET,POST,PUT', 'useRegex' => 1],
-                ['scopeId' => 'displays', 'route' => '/displaygroup', 'method' => 'GET,POST,PUT', 'useRegex' => 1],
-                ['scopeId' => 'displaysDelete', 'route' => '/display/{id}', 'method' => 'DELETE', 'useRegex' => 0],
-                ['scopeId' => 'displaysDelete', 'route' => '/displaygroup/{id}', 'method' => 'DELETE', 'useRegex' => 0],
-                ['scopeId' => 'schedule', 'route' => '/schedule', 'method' => 'GET,POST,PUT', 'useRegex' => 1],
-                ['scopeId' => 'scheduleDelete', 'route' => '/schedule', 'method' => 'DELETE', 'useRegex' => 1],
-                ['scopeId' => 'datasets', 'route' => '/dataset', 'method' => 'GET,POST,PUT', 'useRegex' => 1],
-                ['scopeId' => 'datasetsDelete', 'route' => '/dataset', 'method' => 'DELETE', 'useRegex' => 1]
+                ['scopeId' => 'design', 'route' => '/library', 'method' => 'GET,POST,PUT'],
+                ['scopeId' => 'design', 'route' => '/layout', 'method' => 'GET,POST,PUT'],
+                ['scopeId' => 'design', 'route' => '/playlist', 'method' => 'GET,POST,PUT'],
+                ['scopeId' => 'designDelete', 'route' => '/library', 'method' => 'DELETE'],
+                ['scopeId' => 'designDelete', 'route' => '/layout', 'method' => 'DELETE'],
+                ['scopeId' => 'designDelete', 'route' => '/playlist', 'method' => 'DELETE'],
+                ['scopeId' => 'displays', 'route' => '/display', 'method' => 'GET,POST,PUT'],
+                ['scopeId' => 'displays', 'route' => '/displaygroup', 'method' => 'GET,POST,PUT'],
+                ['scopeId' => 'displaysDelete', 'route' => '/display/{id}', 'method' => 'DELETE'],
+                ['scopeId' => 'displaysDelete', 'route' => '/displaygroup/{id}', 'method' => 'DELETE'],
+                ['scopeId' => 'schedule', 'route' => '/schedule', 'method' => 'GET,POST,PUT'],
+                ['scopeId' => 'scheduleDelete', 'route' => '/schedule', 'method' => 'DELETE'],
+                ['scopeId' => 'datasets', 'route' => '/dataset', 'method' => 'GET,POST,PUT'],
+                ['scopeId' => 'datasetsDelete', 'route' => '/dataset', 'method' => 'DELETE']
             ])->save();
 
         $this->table('oauth_clients')
