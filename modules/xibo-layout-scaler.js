@@ -27,7 +27,9 @@ jQuery.fn.extend({
           "widgetDesignWidth": 0,
           "widgetDesignHeight": 0,
           "widgetDesignPadding": 0,
-          "itemsPerPage": 0
+          "itemsPerPage": 0,
+          "alignmentH": "center",
+          "alignmentV": "middle"
         };
 
         options = $.extend({}, defaults, options);
@@ -67,8 +69,8 @@ jQuery.fn.extend({
             var widgetRatio = Math.min(newWidth / options.widgetDesignWidth, newHeight / options.widgetDesignHeight);
 
             ratio = ratio * widgetRatio;
-            newWidth = width / ratio;
-            newHeight = height / ratio;
+            newWidth = options.widgetDesignWidth;
+            newHeight = options.widgetDesignHeight;
         }
 
         // Multiple element options
@@ -87,10 +89,13 @@ jQuery.fn.extend({
         // Apply these details
         $(this).each(function() {
             if(!$.isEmptyObject(mElOptions)) {
-                $(this).find('#content').css('transform-origin', 'top left');
-                $(this).find('#content').css('transform', 'scale(' + ratio * Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY) + ')');
-                $(this).find('#content').width(mElOptions.contentWidth);
-                $(this).find('#content').height(mElOptions.contentHeight);
+                // calculate/update ratio
+                ratio = ratio * Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY);
+
+                $(this).css('transform-origin', '0 0');
+                $(this).css('transform', 'scale(' + ratio + ')');
+                $(this).width(mElOptions.contentWidth);
+                $(this).height(mElOptions.contentHeight);
 
                 $(this).find('.multi-element').css({
                     overflow: 'hidden',
@@ -117,6 +122,21 @@ jQuery.fn.extend({
                         "transform-origin": "0 0"
                     });
                 }
+            }
+
+            // Handle alignment
+            //  Horizontal alignment
+            if (options.alignmentH == 'right') {
+                $(this).css('margin-left', width - ($(this).width() * ratio));
+            } else if (options.alignmentH == 'center') {
+                $(this).css('margin-left', (width / 2) - ($(this).width() * ratio) / 2);
+            }
+
+            //  Vertical alignment
+            if (options.alignmentV == 'bottom') {
+                $(this).css('margin-top', height - ($(this).height() * ratio));
+            } else if (options.alignmentV == 'middle') {
+                $(this).css('margin-top', (height / 2) - ($(this).height() * ratio) / 2);
             }
         });
 

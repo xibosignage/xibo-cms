@@ -537,7 +537,7 @@ lD.refreshDesigner = function(renderToolbar = false) {
  * Reload API data and replace the layout structure with the new value
  * @param {object} layout - previous layout
  */
-lD.reloadData = function(layout, refreshBeforeSelect = false) {
+lD.reloadData = function(layout, refreshBeforeSelect = false, captureThumbnail = false) {
 
     const layoutId = (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
 
@@ -576,6 +576,9 @@ lD.reloadData = function(layout, refreshBeforeSelect = false) {
 
                 // Check layout status
                 lD.checkLayoutStatus();
+
+                // Add thumbnail
+                captureThumbnail && lD.uploadThumbnail();
             } else {
                 // Login Form needed?
                 if(res.login) {
@@ -632,15 +635,12 @@ lD.checkoutLayout = function() {
             lD.editorContainer.find('#read-only-message').remove();
             
             // Reload layout
-            lD.reloadData(res.data);
+            lD.reloadData(res.data, false, true);
 
             // Refresh toolbar
             lD.toolbar.render();
 
             lD.common.hideLoadingScreen();
-
-            // Add thumbnail
-            setTimeout(lD.uploadThumbnail, 1000 * 5);
         } else {
             // Login Form needed?
             if(res.login) {
@@ -670,8 +670,8 @@ lD.publishLayout = function() {
 
     lD.common.showLoadingScreen();
 
-    // Deselect previous selected object
-    lD.selectObject();
+    // Upload thumbnail
+    lD.uploadThumbnail();
 
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
@@ -996,7 +996,10 @@ lD.showCheckoutScreen = function() {
  * Layout publish screen
  */
 lD.showPublishScreen = function() {
-    lD.loadFormFromAPI('publishForm', lD.layout.parentLayoutId, "formHelpers.setupCheckboxInputFields($('#layoutPublishForm'), '#publishNow', '', '.publish-date-control')", "lD.publishLayout();");
+    // Deselect all objects before opening the form
+    lD.selectObject();
+    
+    lD.loadFormFromAPI('publishForm', lD.layout.parentLayoutId, "formHelpers.setupCheckboxInputFields($('#layoutPublishForm'), '#publishNow', '', '.publish-date-control');", "lD.publishLayout();");
 };
 
 /**

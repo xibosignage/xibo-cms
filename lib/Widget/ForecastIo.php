@@ -106,7 +106,6 @@ class ForecastIo extends ModuleWidget
         parent::installFiles();
         
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
 
         foreach ($this->mediaFactory->createModuleFileFromFolder($this->resourceFolder) as $media) {
             /* @var Media $media */
@@ -309,6 +308,20 @@ class ForecastIo extends ModuleWidget
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="alignH",
+     *      in="formData",
+     *      description="Horizontal alignment - left, center, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alignV",
+     *      in="formData",
+     *      description="Vertical alignment - top, middle, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=200,
      *      description="successful operation",
@@ -335,6 +348,8 @@ class ForecastIo extends ModuleWidget
         $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 60]));
         $this->setOption('lang', $sanitizedParams->getString('lang', ['default' => 'en']));
         $this->setOption('dayConditionsOnly', $sanitizedParams->getCheckbox('dayConditionsOnly'));
+        $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
         
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('styleSheet', $request->getParam('styleSheet', null));
@@ -623,7 +638,6 @@ class ForecastIo extends ModuleWidget
         );
 
         $headContent = '
-            <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('forecastio/weather-icons.min.css') . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('forecastio/font-awesome.min.css')  . '" rel="stylesheet" media="screen">
             <link href="' . $this->getResourceUrl('forecastio/animate.css')  . '" rel="stylesheet" media="screen">
@@ -688,7 +702,9 @@ class ForecastIo extends ModuleWidget
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
             'widgetDesignWidth' => $widgetOriginalWidth,
-            'widgetDesignHeight'=> $widgetOriginalHeight
+            'widgetDesignHeight'=> $widgetOriginalHeight,
+            'alignmentH' => $this->getOption('alignH'),
+            'alignmentV' => $this->getOption('alignV')
         );
 
         $javaScriptContent = '<script type="text/javascript" src="' . $this->getResourceUrl('vendor/jquery.min.js') . '"></script>';

@@ -116,6 +116,8 @@ class WorldClock extends ModuleWidget
         $this->setOption('clockType', $sanitizedParams->getInt('clockType', ['default' => 1]));
         $this->setOption('clockCols', $sanitizedParams->getInt('clockCols', ['default' => 1]));
         $this->setOption('clockRows', $sanitizedParams->getInt('clockRows', ['default' => 1]));
+        $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
 
         // Clocks
         $clockTimezones = $sanitizedParams->getArray('clockTimezone');
@@ -155,6 +157,7 @@ class WorldClock extends ModuleWidget
         } elseif ($this->getOption('clockType') == 2) {
             // Analogue clock
             $this->setOption('bgColor', $sanitizedParams->getString('bgColor'));
+            $this->setOption('faceColor', $sanitizedParams->getString('faceColor'));
             $this->setOption('caseColor', $sanitizedParams->getString('caseColor'));
             $this->setOption('hourHandColor', $sanitizedParams->getString('hourHandColor'));
             $this->setOption('minuteHandColor', $sanitizedParams->getString('minuteHandColor'));
@@ -290,8 +293,12 @@ class WorldClock extends ModuleWidget
             // Build stylesheet
             // Main clock CSS
             $styleSheet = '
-                .analogue-clock {
+                body {
                     background: ' . $this->getOption('bgColor') . ';
+                }
+
+                .analogue-clock {
+                    background: ' . $this->getOption('faceColor') . ';
                     position: relative;
                     text-align: center;
                     box-sizing: border-box;
@@ -514,7 +521,9 @@ class WorldClock extends ModuleWidget
             'widgetDesignHeight'=> $widgetOriginalHeight,
             'worldClocks' => $worldClocks,
             'numCols' => $clockCols,
-            'numRows' => $clockRows
+            'numRows' => $clockRows,
+            'alignmentH' => $this->getOption('alignH'),
+            'alignmentV' => $this->getOption('alignV')
         );
 
         // Replace the head content

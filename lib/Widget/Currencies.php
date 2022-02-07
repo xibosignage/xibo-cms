@@ -82,7 +82,6 @@ class Currencies extends AlphaVantageBase
 
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-finance-render.js')->save();
         $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/xibo-image-render.js')->save();
-        $this->mediaFactory->createModuleSystemFile(PROJECT_ROOT . '/modules/vendor/bootstrap.min.css')->save();
     }
 
 
@@ -320,6 +319,20 @@ class Currencies extends AlphaVantageBase
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="alignH",
+     *      in="formData",
+     *      description="Horizontal alignment - left, center, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alignV",
+     *      in="formData",
+     *      description="Vertical alignment - top, middle, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -349,6 +362,8 @@ class Currencies extends AlphaVantageBase
         $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
         $this->setOption('overrideTemplate', $sanitizedParams->getCheckbox('overrideTemplate'));
         $this->setOption('enableStat', $sanitizedParams->getString('enableStat'));
+        $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
 
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('mainTemplate', $request->getParam('mainTemplate', $request->getParam('mainTemplate', null)));
@@ -782,7 +797,9 @@ class Currencies extends AlphaVantageBase
             'originalHeight' => $this->region->height,
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
-            'maxItemsPerPage' => $maxItemsPerPage
+            'maxItemsPerPage' => $maxItemsPerPage,
+            'alignmentH' => $this->getOption('alignH'),
+            'alignmentV' => $this->getOption('alignV')
         ];
 
         $itemsPerPage = $options['maxItemsPerPage'];
@@ -800,8 +817,7 @@ class Currencies extends AlphaVantageBase
         $headContent = '';
 
         // Add our fonts.css file
-        $headContent .= '<link href="' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">
-        <link href="' . $this->getResourceUrl('vendor/bootstrap.min.css')  . '" rel="stylesheet" media="screen">';
+        $headContent .= '<link href="' . ($this->isPreview() ? $this->urlFor('library.font.css') : 'fonts.css') . '" rel="stylesheet" media="screen">';
         
         $backgroundColor = $this->getOption('backgroundColor');
         if ($backgroundColor != '') {
