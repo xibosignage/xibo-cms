@@ -2312,7 +2312,6 @@ class Layout extends Base
         }
 
         switch ($layout->status) {
-
             case ModuleWidget::$STATUS_VALID:
                 $status = __('This Layout is ready to play');
                 break;
@@ -2331,16 +2330,13 @@ class Layout extends Base
 
         // We want a different return depending on whether we are arriving through the API or WEB routes
         if ($this->isApi($request)) {
-
             $this->getState()->hydrate([
                 'httpStatus' => 200,
                 'message' => $status,
                 'id' => $layout->status,
                 'data' => $layout
             ]);
-
         } else {
-
             $this->getState()->html = $status;
             $this->getState()->extra = [
                 'status' => $layout->status,

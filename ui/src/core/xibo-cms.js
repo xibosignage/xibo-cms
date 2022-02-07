@@ -1670,7 +1670,15 @@ function dataTableAddButtons(table, filter, allButtons) {
                                     return data;
                             }
                         }
+                    },
+                  customize: function (win) {
+                    let table = $(win.document.body).find('table');
+                    table.removeClass('nowrap responsive dataTable no-footer dtr-inline');
+                    if (table.find('th').length > 16) {
+                      table.addClass('table-sm');
+                      table.css('font-size', '6px');
                     }
+                  }
                 },
                 {
                     extend: 'csv',

@@ -752,7 +752,7 @@
                             <% } %> 
                             
                             <td><%= layout.layoutDuration %></td>
-                            <% if (layout.shareOfVoice) { %>
+                            <% if (layouts.type == 4) { %>
                             <td><%= layout.shareOfVoice %></td>
                             <% } %>
                             <td><%= layout.layoutDisplayOrder %></td>
@@ -807,12 +807,13 @@
                 {% endverbatim %}
                 <thead>
                     <tr class="table-title">
-                        <th colspan="3">{% trans "Campaigns" %}</th>
+                        <th colspan="4">{% trans "Campaigns" %}</th>
                     </tr>
                     <tr>
                         <th></th>
                         <th>{% trans "ID" %}</th>
                         <th>{% trans "Name" %}</th>
+                        <th>{% trans "Cycle Playback?" %}</th>
                     </tr>
                 </thead>
                 {% verbatim %}
@@ -822,6 +823,14 @@
                             <td></td>
                             <td><%= campaign.campaignId %></td>
                             <td><%= campaign.campaign %></td>
+                            <%
+                                var icon = "";
+                                if (campaign.cyclePlaybackEnabled == 0)
+                                    icon = "fa-times";
+                                else
+                                    icon = "fa-check";
+                            %>
+                            <td><span class="fa <%= icon %>"></span></td>
                         </tr>
                     <% }); %>
                 </tbody>
