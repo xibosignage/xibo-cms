@@ -2361,7 +2361,8 @@ class Library extends Base
             ->checkLibraryOrQuotaFull(true)
             ->checkMaxUploadSize($downloadInfo['size']);
 
-        // check if we have type provided in the request (available via API), if not get the module type from the extension
+        // check if we have type provided in the request (available via API), if not get the module type from
+        // the extension
         if (!empty($type)) {
             $module = $this->getModuleFactory()->create($type);
         } else {
@@ -2396,16 +2397,25 @@ class Library extends Base
                 'permissionsFolderId' => $permissionsFolderId
             ]
         );
-        $this->mediaFactory->processDownloads(function (Media $media) {
-            // Success
-            $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
-            if ($media->mediaType === 'video' || $media->mediaType === 'audio') {
-                $realDuration = $this->mediaFactory->determineRealDuration($media);
-                if ($realDuration !== $media->duration) {
-                    $media->updateDuration($realDuration);
+        $this->mediaFactory->processDownloads(
+            function (Media $media) {
+                // Success
+                $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
+                if ($media->mediaType === 'video' || $media->mediaType === 'audio') {
+                    $realDuration = $this->mediaFactory->determineRealDuration($media);
+                    if ($realDuration !== $media->duration) {
+                        $media->updateDuration($realDuration);
+                    }
                 }
+            },
+            function (Media $media) {
+                throw new InvalidArgumentException(__('Download rejected for an unknown reason.'));
+            },
+            function ($message) {
+                // Download rejected.
+                throw new InvalidArgumentException(sprintf(__('Download rejected due to %s'), $message));
             }
-        });
+        );
 
         // Return
         $this->getState()->hydrate([
@@ -2655,10 +2665,15 @@ class Library extends Base
                 // if we have video thumbnail url from provider, download it now
                 foreach ($importQueue as $import) {
                     /** @var ProviderImport $import */
-                    if ($import->media->getId() === $media->getId() && $media->mediaType === 'video' && !empty($import->searchResult->videoThumbnailUrl)) {
+                    if ($import->media->getId() === $media->getId()
+                        && $media->mediaType === 'video'
+                        && !empty($import->searchResult->videoThumbnailUrl)
+                    ) {
                         try {
                             $filePath = $libraryLocation . $media->getId() . '_' . $media->mediaType . 'cover.png';
-                            $client = new Client();
+
+                            // Expect a quick download.
+                            $client = new Client($this->getConfig()->getGuzzleProxy(['timeout' => 20]));
                             $client->request(
                                 'GET',
                                 $import->searchResult->videoThumbnailUrl,

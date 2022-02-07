@@ -26,8 +26,11 @@ namespace Xibo\Factory;
 use GuzzleHttp\Client;
 use GuzzleHttp\Exception\RequestException;
 use GuzzleHttp\Pool;
+use Psr\Http\Message\ResponseInterface;
 use Xibo\Entity\Media;
 use Xibo\Entity\User;
+use Xibo\Helper\ByteFormatter;
+use Xibo\Helper\Environment;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
@@ -284,8 +287,9 @@ class MediaFactory extends BaseFactory
      * Process the queue of downloads
      * @param null|callable $success success callable
      * @param null|callable $failure failure callable
+     * @param null|callable $rejected rejected callable
      */
-    public function processDownloads($success = null, $failure = null)
+    public function processDownloads($success = null, $failure = null, $rejected = null)
     {
         if (count($this->remoteDownloadQueue) > 0) {
             $this->getLog()->debug('Processing Queue of ' . count($this->remoteDownloadQueue) . ' downloads.');
@@ -299,7 +303,22 @@ class MediaFactory extends BaseFactory
                 foreach ($queue as $media) {
                     $url = $media->downloadUrl();
                     $sink = $media->downloadSink();
-                    $requestOptions = array_merge($media->downloadRequestOptions(), ['save_to' => $sink]);
+                    $requestOptions = array_merge($media->downloadRequestOptions(), [
+                        'sink' => $sink,
+                        'on_headers' => function (ResponseInterface $response) {
+                            $this->getLog()->debug('DEBUG: ' . $response->getStatusCode());
+                            if ($response->getStatusCode() < 299) {
+                                $this->getLog()->debug('DEBUG: ' . var_export($response->getHeaders(), true));
+                                $contentLength = $response->getHeaderLine('Content-Length');
+                                if (
+                                    empty($contentLength)
+                                    || intval($contentLength) > ByteFormatter::toBytes(Environment::getMaxUploadSize())
+                                ) {
+                                    throw new \Exception(__('File too large'));
+                                }
+                            }
+                        }
+                    ]);
 
                     yield function () use ($client, $url, $requestOptions) {
                         return $client->getAsync($url, $requestOptions);
@@ -310,7 +329,6 @@ class MediaFactory extends BaseFactory
             $pool = new Pool($client, $downloads(), [
                 'concurrency' => 5,
                 'fulfilled' => function ($response, $index) use ($log, $queue, $success, $failure) {
-                    /** @var Media $item */
                     $item = $queue[$index];
 
                     // File is downloaded, call save to move it appropriately
@@ -333,9 +351,26 @@ class MediaFactory extends BaseFactory
                         }
                     }
                 },
-                'rejected' => function ($reason, $index) use ($log) {
+                'rejected' => function ($reason, $index) use ($log, $rejected) {
                     /* @var RequestException $reason */
-                    $log->error(sprintf('Rejected Request %d to %s because %s', $index, $reason->getRequest()->getUri(), $reason->getMessage()));
+                    $log->error(
+                        sprintf(
+                            'Rejected Request %d to %s because %s',
+                            $index,
+                            $reason->getRequest()->getUri(),
+                            $reason->getMessage()
+                        )
+                    );
+
+                    // If a failure callback has been provided, call it
+                    if ($rejected !== null && is_callable($rejected)) {
+                        // Do we have a wrapped exception?
+                        $reasonMessage = $reason->getPrevious() !== null
+                            ? $reason->getPrevious()->getMessage()
+                            : $reason->getMessage();
+
+                        call_user_func($rejected, $reasonMessage);
+                    }
                 }
             ]);
 
