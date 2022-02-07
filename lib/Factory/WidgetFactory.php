@@ -115,7 +115,7 @@ class WidgetFactory extends BaseFactory
      * Load widgets by MediaId
      * @param int $mediaId
      * @param int|null $isDynamicPlaylist
-     * @return array[Widget]
+     * @return Widget[]
      * @throws NotFoundException
      */
     public function getByMediaId($mediaId, $isDynamicPlaylist = null)

@@ -30,7 +30,6 @@
 
 {% block formHtml %}
     <div class="row">
-
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
             <li class="nav-item"><a class="nav-link" href="#configurationTab" role="tab" data-toggle="tab"><span>{% trans "Configuration" %}</span></a></li>
@@ -134,6 +133,11 @@
                     </div>
 
                     <div class="tab-pane" id="appearanceTab">
+
+                        {% set title %}{% trans "Background Color" %}{% endset %}
+                        {% set helpText %}{% trans "Select an optional background colour to put behind the agenda, leaving this blank will make the graph transparent." %}{% endset %}
+                        {{ forms.input("backgroundColor", title, module.getOption("backgroundColor"), helpText, "background-color-group") }}
+
                         {% set title %}{% trans "Date Format" %}{% endset %}
                         {% set manualUrl %}{{ helpService.address("media_module_calendar.html") }}{% endset %}
                         {% set helpText %}{% trans %}The format to apply to dates. See the <a href="{{ manualUrl }}">Manual</a> for allowed formats.{% endtrans %}{% endset %}

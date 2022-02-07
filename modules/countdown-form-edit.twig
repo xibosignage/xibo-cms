@@ -104,6 +104,30 @@
                         {% set title %}{% trans "Warning Date" %}{% endset %}
                         {% set helpText %}{% trans "The countdown will show in a warning mode from the warning date entered." %}{% endset %}
                         {{ forms.dateTime("countdownWarningDate", title, module.getOption("countdownWarningDate"), helpText, "date-group") }}
+
+                        {% set title %}{% trans "Horizontal Align" %}{% endset %}
+                        {% set helpText %}{% trans "How should this widget be aligned?" %}{% endset %}
+                        {% set left %}{% trans "Left" %}{% endset %}
+                        {% set center %}{% trans "Centre" %}{% endset %}
+                        {% set right %}{% trans "Right" %}{% endset %}
+                        {% set options = [
+                        { alignH: "left", align: left },
+                        { alignH: "center", align: center },
+                        { alignH: "right", align: right }
+                        ] %}
+                        {{ forms.dropdown("alignH", "single", title, module.getOption("alignH","center"), options, "alignH", "align", helpText, "align-fields") }}
+
+                        {% set title %}{% trans "Vertical Align" %}{% endset %}
+                        {% set helpText %}{% trans "How should this widget be vertically aligned?" %}{% endset %}
+                        {% set top %}{% trans "Top" %}{% endset %}
+                        {% set middle %}{% trans "Middle" %}{% endset %}
+                        {% set bottom %}{% trans "Bottom" %}{% endset %}
+                        {% set options = [
+                        { alignV: "top", valign: top },
+                        { alignV: "middle", valign: middle },
+                        { alignV: "bottom", valign: bottom }
+                        ] %}
+                        {{ forms.dropdown("alignV", "single", title, module.getoption("alignV", "middle"), options, "alignV", "valign", helpText, "align-fields") }}
                     </div>
 
                     <div class="tab-pane" id="templatePreset">

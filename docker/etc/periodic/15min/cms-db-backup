@@ -4,10 +4,6 @@
 age=86401
 
 MYSQL_BACKUP_ENABLED=
-MYSQL_USER= 
-MYSQL_PASSWORD= 
-MYSQL_HOST= 
-MYSQL_PORT=
 MYSQL_DATABASE= 
 
 # Is this enabled?
@@ -49,7 +45,7 @@ then
     # That way we can detect if mysqldump errors or is killed etc
     set -o pipefail
     
-    /usr/bin/mysqldump --single-transaction -u "$MYSQL_USER" -p"$MYSQL_PASSWORD" -h $MYSQL_HOST -P $MYSQL_PORT $MYSQL_DATABASE | gzip > /var/www/backup/db/backup.sql.gz
+    /usr/bin/mysqldump --single-transaction $MYSQL_DATABASE | gzip > /var/www/backup/db/backup.sql.gz
     RESULT=$?
     
     if [ $RESULT -eq 0 ] && [ -e /var/www/backup/db/backup.sql.gz ]

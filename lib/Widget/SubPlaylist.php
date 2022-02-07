@@ -229,8 +229,12 @@ class SubPlaylist extends ModuleWidget
 
         // Cycle based playback options
         $this->setOption('cyclePlaybackEnabled', $sanitizedParams->getCheckbox('cyclePlaybackEnabled'));
-        $this->setOption('playCount', $sanitizedParams->getCheckbox('cyclePlaybackEnabled') ? $sanitizedParams->getInt('playCount') : null);
-        $this->setOption('cycleRandomWidget', $sanitizedParams->getCheckbox('cyclePlaybackEnabled') ? $sanitizedParams->getCheckbox('cycleRandomWidget') : 0);
+        $this->setOption('playCount', $sanitizedParams->getCheckbox('cyclePlaybackEnabled')
+            ? $sanitizedParams->getInt('playCount')
+            : null);
+        $this->setOption('cycleRandomWidget', $sanitizedParams->getCheckbox('cyclePlaybackEnabled')
+            ? $sanitizedParams->getCheckbox('cycleRandomWidget')
+            : 0);
 
         if ($sanitizedParams->getCheckbox('cyclePlaybackEnabled') && empty($sanitizedParams->getInt('playCount'))) {
             throw new InvalidArgumentException(__('Please enter Play Count.'), 'playCount');
@@ -425,7 +429,8 @@ class SubPlaylist extends ModuleWidget
         $playCount = $this->getOption('playCount', 0);
         $isRandom = $this->getOption('cycleRandomWidget', 0);
 
-        $this->getLog()->debug('Resolve widgets for Sub-Playlist ' . $this->getWidgetId() . ' with arrangement ' . $arrangement . ' and remainder ' . $remainder);
+        $this->getLog()->debug('Resolve widgets for Sub-Playlist ' . $this->getWidgetId()
+            . ' with arrangement ' . $arrangement . ' and remainder ' . $remainder);
 
         // As a first step, get all of our playlists widgets loaded into an array
         /** @var Widget[] $resolvedWidgets */
@@ -461,7 +466,8 @@ class SubPlaylist extends ModuleWidget
                 );
 
                 if ($subPlaylistWidgetEnableStat == 'Inherit') {
-                    $this->getLog()->debug('For widget ID ' . $subPlaylistWidget->widgetId . ' enableStat was Inherit, changed to Playlist enableStat value - ' . $playlistEnableStat);
+                    $this->getLog()->debug('For widget ID ' . $subPlaylistWidget->widgetId
+                        . ' enableStat was Inherit, changed to Playlist enableStat value - ' . $playlistEnableStat);
                     $subPlaylistWidget->setOptionValue('enableStat', 'attrib', $playlistEnableStat);
                 }
 
@@ -483,7 +489,8 @@ class SubPlaylist extends ModuleWidget
                 // We do need to do something!
                 $spots = intval($spots);
 
-                $this->getLog()->debug('There are ' . count($expanded) . ' Widgets in the list and we want ' . $spots . ' fill is ' . $spotFill);
+                $this->getLog()->debug('There are ' . count($expanded) . ' Widgets in the list and we want '
+                    . $spots . ' fill is ' . $spotFill);
 
                 // If our spot size is 0, then we deliberately do not add to the final widgets array
                 if ($spots == 0) {
@@ -591,7 +598,8 @@ class SubPlaylist extends ModuleWidget
             $widgets[$playlistId] = $expanded;
         }
 
-        $this->getLog()->debug('Finished parsing all sub-playlists, smallest list is ' . $smallestListCount . ' widgets in size, largest is ' . $largestListCount);
+        $this->getLog()->debug('Finished parsing all sub-playlists, smallest list is ' . $smallestListCount
+            . ' widgets in size, largest is ' . $largestListCount);
 
         if ($smallestListCount == 0 && $largestListCount == 0) {
             $this->getLog()->debug('No Widgets to order');
@@ -615,7 +623,7 @@ class SubPlaylist extends ModuleWidget
                 $lastTakeIndices[$playlistId] = -1;
             }
         } else {
-            // On a standard round robin, we take every 1 item (i.e. one from each).
+            // On a standard round-robin, we take every 1 item (i.e. one from each).
             foreach (array_keys($widgets) as $playlistId) {
                 $takeIndices[$playlistId] = 1;
                 $lastTakeIndices[$playlistId] = -1;
@@ -624,7 +632,7 @@ class SubPlaylist extends ModuleWidget
 
         $this->getLog()->debug('Take Indices: ' . json_encode($takeIndices));
 
-        // Round robin or sequentially
+        // Round-robin or sequentially
         if ($arrangement === 'roundrobin') {
             // Round Robin
             // Take 1 from each until we have run out, use the smallest list as the "key"
@@ -640,7 +648,8 @@ class SubPlaylist extends ModuleWidget
                     $takeEvery = $takeIndices[$playlistId];
                     $countInList = count($widgets[$playlistId]);
 
-                    $this->getLog()->debug('Assessing playlistId ' . $playlistId . ' which has ' . $countInList . ' widgets.');
+                    $this->getLog()->debug('Assessing playlistId ' . $playlistId . ' which has '
+                        . $countInList . ' widgets.');
 
                     for ($count = 1; $count <= $takeEvery; $count++) {
                         // Increment the last index we consumed from this list each time
@@ -649,7 +658,8 @@ class SubPlaylist extends ModuleWidget
                         // Does this key actually have this many items?
                         if ($index >= $countInList) {
                             // it does not :o
-                            $this->getLog()->debug('Index ' . $index . ' is higher than the count of widgets in the list ' . $countInList);
+                            $this->getLog()->debug('Index ' . $index
+                                . ' is higher than the count of widgets in the list ' . $countInList);
                             // what we do depends on our remainder setting
                             // if we drop, we stop, otherwise we skip
                             if ($remainder === 'drop') {
@@ -664,7 +674,8 @@ class SubPlaylist extends ModuleWidget
                             }
                         }
 
-                        $this->getLog()->debug('Selecting widget at position ' . $index . ' from playlistId ' . $playlistId);
+                        $this->getLog()->debug('Selecting widget at position ' . $index
+                            . ' from playlistId ' . $playlistId);
 
                         // Append the key at the position
                         $resolvedWidgets[] = $widgets[$playlistId][$index];
@@ -678,11 +689,12 @@ class SubPlaylist extends ModuleWidget
             }
         } else {
             // None
-            // If the arrangement is none we just add all of the widgets together
+            // If the arrangement is none we just add all the widgets together
             // Merge the arrays together for returning
             foreach ($widgets as $playlistId => $items) {
                 if ($remainder === 'drop') {
-                    $this->getLog()->debug('Dropping list of ' . count($items) . ' widgets down to ' . $smallestListCount);
+                    $this->getLog()->debug('Dropping list of ' . count($items)
+                        . ' widgets down to ' . $smallestListCount);
 
                     // We trim all arrays down to the smallest of them
                     $items = array_slice($items, 0, $smallestListCount);
@@ -733,7 +745,7 @@ class SubPlaylist extends ModuleWidget
     public function getSubPlaylistResolvedDuration()
     {
         $duration = 0;
-        // Add all of the sub-playlists widgets too
+        // Add all the sub-playlists widgets too
         foreach ($this->getSubPlaylistResolvedWidgets() as $widget) {
             $duration += $widget->calculatedDuration;
         }

@@ -25,7 +25,6 @@ use Intervention\Image\Exception\NotReadableException;
 use Intervention\Image\ImageManagerStatic as Img;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Xibo\Helper\HttpCacheProvider;
 use Xibo\Support\Exception\InvalidArgumentException;
 
 /**
@@ -216,8 +215,9 @@ class Video extends ModuleWidget
     public function determineDuration($fileName = null)
     {
         // If we don't have a file name, then we use the default duration of 0 (end-detect)
-        if ($fileName === null)
+        if ($fileName === null) {
             return 0;
+        }
 
         $this->getLog()->debug('Determine Duration from ' . $fileName);
         $info = new \getID3();

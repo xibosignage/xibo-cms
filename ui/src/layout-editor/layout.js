@@ -319,14 +319,18 @@ Layout.prototype.savePlaylistOrder = function(playlist, widgets) {
  * @param {int} status - Status code
  * @param {string} statusFeedback - Status feedback message
  * @param {string[]} statusMessages - Status messages array
+ * @param {int} updatedLayoutDuration - Update Layout duration
  */
-Layout.prototype.updateStatus = function(status, statusFeedback, statusMessages) {
+Layout.prototype.updateStatus = function(status, statusFeedback, statusMessages, updatedLayoutDuration) {
     // Update status property
     this.status = {
         code: status,
         description: statusFeedback,
         messages: statusMessages
     };
+
+    // Update layout duration
+    this.duration = Math.round(Number(updatedLayoutDuration)*100)/100;
 
     // Update layout status
     lD.topbar.updateLayoutStatus();

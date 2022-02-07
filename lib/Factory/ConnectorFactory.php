@@ -22,6 +22,7 @@
 
 namespace Xibo\Factory;
 
+use Illuminate\Support\Str;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Connector\ConnectorInterface;
 use Xibo\Entity\Connector;
@@ -96,6 +97,15 @@ class ConnectorFactory extends BaseFactory
     }
 
     /**
+     * @param $className
+     * @return \Xibo\Entity\Connector[]
+     */
+    public function getByClassName($className): array
+    {
+        return $this->query(['className' => $className]);
+    }
+
+    /**
      * @return Connector[]
      */
     public function query($filterBy): array
@@ -121,6 +131,11 @@ class ConnectorFactory extends BaseFactory
             $params['isVisible'] = $sanitizedFilter->getCheckbox('isVisible');
         }
 
+        if ($sanitizedFilter->hasParam('className')) {
+            $sql .= ' AND `className` = :className ';
+            $params['className'] = $sanitizedFilter->getString('className');
+        }
+
         foreach ($this->getStore()->select($sql, $params) as $row) {
             // Construct the class
             $entries[] = $this->hydrate($row);
@@ -140,7 +155,7 @@ class ConnectorFactory extends BaseFactory
     {
         $connector = new Connector($this->getStore(), $this->getLog());
         $connector->hydrate($row, [
-            'intProperties' => ['isEnabled']
+            'intProperties' => ['isEnabled', 'isVisible']
         ]);
 
         if (empty($row['settings'])) {
@@ -148,6 +163,66 @@ class ConnectorFactory extends BaseFactory
         } else {
             $connector->settings = json_decode($row['settings'], true);
         }
+
+        $connector->isSystem = !Str::contains(strtolower($connector->className), '\\custom\\');
+
+        return $connector;
+    }
+
+    /**
+     * @return Connector[]
+     */
+    public function getUninstalled(): array
+    {
+        $connectors = [];
+
+        // Any system connectors are installed by default, so we're only concerned here with custom connectors
+        // which we would expect to me in the custom folder.
+        foreach (glob(PROJECT_ROOT . '/custom/*.connector') as $file) {
+            $config = json_decode(file_get_contents($file), true);
+            if (!is_array($config)) {
+                $this->getLog()->error('Problem with connector config: '
+                    . json_last_error_msg() . ' ' . var_export($config, true));
+                continue;
+            }
+            $connector = $this->hydrate($config);
+
+            // Is this connector already installed?
+            if (count($this->getByClassName($connector->className)) > 0) {
+                continue;
+            }
+
+            $connector->connectorId = str_replace([' ', '.'], '-', basename($file));
+            $connector->isInstalled = false;
+            $connector->isVisible = 1;
+            $connector->isEnabled = 0;
+            if (empty($connector->settings)) {
+                $connector->settings = [];
+            }
+            $connectors[] = $connector;
+        }
+
+        return $connectors;
+    }
+
+    /**
+     * @param string $id
+     * @return \Xibo\Entity\Connector
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getUninstalledById(string $id): Connector
+    {
+        $connector = null;
+        foreach ($this->getUninstalled() as $item) {
+            if ($item->connectorId === $id) {
+                $connector = $item;
+                break;
+            }
+        }
+        if ($connector === null) {
+            throw new NotFoundException(__('Connector not found'), 'id');
+        }
+
         return $connector;
     }
 }

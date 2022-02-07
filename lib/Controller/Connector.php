@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -31,7 +31,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
- * Connector controller to view, active and install connectors.
+ * Connector controller to view, activate and install connectors.
  */
 class Connector extends Base
 {
@@ -52,7 +52,15 @@ class Connector extends Base
      */
     public function grid(Request $request, Response $response)
     {
+        $params = $this->getSanitizer($request->getParams());
+
         $connectors = $this->connectorFactory->query($request->getParams());
+
+        // Should we show uninstalled connectors?
+        if ($params->getCheckbox('showUninstalled')) {
+            $connectors = array_merge($connectors, $this->connectorFactory->getUninstalled());
+        }
+
         foreach ($connectors as $connector) {
             // Instantiate and decorate the entity
             try {
@@ -64,7 +72,7 @@ class Connector extends Base
         }
 
         $this->getState()->template = 'grid';
-        $this->getState()->recordsTotal = $this->connectorFactory->countLast();
+        $this->getState()->recordsTotal = count($connectors);
         $this->getState()->setData($connectors);
 
         return $this->render($request, $response);
@@ -83,10 +91,15 @@ class Connector extends Base
      */
     public function editForm(Request $request, Response $response, $id)
     {
-        $connector = $this->connectorFactory->getById($id);
+        // Is this an installed connector, or not.
+        if (is_numeric($id)) {
+            $connector = $this->connectorFactory->getById($id);
+        } else {
+            $connector = $this->connectorFactory->getUninstalledById($id);
+        }
         $interface = $this->connectorFactory->create($connector);
 
-        $this->getState()->template = $interface->getSettingsFormTwig() ?? 'connector-form-edit';
+        $this->getState()->template = $interface->getSettingsFormTwig() ?: 'connector-form-edit';
         $this->getState()->setData([
             'connector' => $connector,
             'interface' => $interface
@@ -108,21 +121,38 @@ class Connector extends Base
      */
     public function edit(Request $request, Response $response, $id)
     {
-        $connector = $this->connectorFactory->getById($id);
+        $params = $this->getSanitizer($request->getParams());
+        if (is_numeric($id)) {
+            $connector = $this->connectorFactory->getById($id);
+        } else {
+            $connector = $this->connectorFactory->getUninstalledById($id);
+
+            // Null the connectorId so that we add this to the database.
+            $connector->connectorId = null;
+        }
         $interface = $this->connectorFactory->create($connector);
 
-        // Core properties
-        $params = $this->getSanitizer($request->getParams());
-        $connector->isEnabled = $params->getCheckbox('isEnabled');
-        $connector->settings = $interface->processSettingsForm($params, $connector->settings);
-        $connector->save();
+        // Is this an uninstallation request
+        if ($params->getCheckbox('shouldUninstall')) {
+            $connector->delete();
 
-        // Successful
-        $this->getState()->hydrate([
-            'message' => sprintf(__('Edited %s'), $interface->getTitle()),
-            'id' => $id,
-            'data' => $connector
-        ]);
+            // Successful
+            $this->getState()->hydrate([
+                'message' => sprintf(__('Uninstalled %s'), $interface->getTitle())
+            ]);
+        } else {
+            // Core properties
+            $connector->isEnabled = $params->getCheckbox('isEnabled');
+            $connector->settings = $interface->processSettingsForm($params, $connector->settings);
+            $connector->save();
+
+            // Successful
+            $this->getState()->hydrate([
+                'message' => sprintf(__('Edited %s'), $interface->getTitle()),
+                'id' => $id,
+                'data' => $connector
+            ]);
+        }
 
         return $this->render($request, $response);
     }

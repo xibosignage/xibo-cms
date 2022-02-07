@@ -35,7 +35,6 @@ use Xibo\Connector\ProviderImport;
 use Xibo\Entity\Media;
 use Xibo\Entity\SearchResult;
 use Xibo\Entity\SearchResults;
-use Xibo\Entity\Widget;
 use Xibo\Event\LibraryProviderEvent;
 use Xibo\Event\LibraryProviderImportEvent;
 use Xibo\Event\MediaDeleteEvent;
@@ -1296,11 +1295,12 @@ class Library extends Base
 
         if ($media->hasPropertyChanged('folderId')) {
             $folder = $this->folderFactory->getById($media->folderId);
-            $media->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
+            $media->permissionsFolderId = ($folder->getPermissionFolderId() == null)
+                ? $folder->id
+                : $folder->getPermissionFolderId();
         }
 
-        if ($sanitizedParams->getDate('expires') != null ) {
-
+        if ($sanitizedParams->getDate('expires') != null) {
             if ($sanitizedParams->getDate('expires')->format('U') > Carbon::now()->format('U')) {
                 $media->expires = $sanitizedParams->getDate('expires')->format('U');
             } else {
@@ -1313,8 +1313,7 @@ class Library extends Base
         // Should we update the media in all layouts?
         if ($sanitizedParams->getCheckbox('updateInLayouts') == 1 || $media->hasPropertyChanged('enableStat')) {
             foreach ($this->widgetFactory->getByMediaId($media->mediaId, 0) as $widget) {
-                /* @var Widget $widget */
-                $widget->duration = $media->duration;
+                $widget->calculateDuration($this->moduleFactory->createWithWidget($widget));
                 $widget->save();
             }
         }

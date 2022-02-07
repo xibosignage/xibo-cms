@@ -1430,7 +1430,8 @@ class Layout implements \JsonSerializable
 
             // Check for empty Region, exclude Drawers from this check.
             if ($countWidgets <= 0 && $region->isDrawer == 0) {
-                $this->getLog()->info('Layout has empty region - ' . $countWidgets . ' widgets. playlistId = ' . $region->getPlaylist()->getId());
+                $this->getLog()->info('Layout has empty region - ' . $countWidgets . ' widgets. playlistId = '
+                    . $region->getPlaylist()->getId());
                 $this->hasEmptyRegion = true;
             }
 
@@ -1485,7 +1486,6 @@ class Layout implements \JsonSerializable
                     // Region duration
                     $region->duration = $region->duration + $widget->calculatedDuration;
 
-
                     // We also want to add any transition OUT duration
                     // only the OUT duration because IN durations do not get added to the widget duration by the player
                     // https://github.com/xibosignage/xibo/issues/705
@@ -1517,7 +1517,10 @@ class Layout implements \JsonSerializable
                 }
 
                 // Set the duration according to whether we are using widget duration or not
-                $isEndDetectVideoWidget = (($widget->type === 'video' || $widget->type === 'audio') && $widget->useDuration === 0);
+                $isEndDetectVideoWidget = (
+                    ($widget->type === 'video' || $widget->type === 'audio')
+                    && $widget->useDuration === 0
+                );
                 $mediaNode->setAttribute('duration', ($isEndDetectVideoWidget ? 0 : $widgetDuration));
                 $mediaNode->setAttribute('useDuration', $widget->useDuration);
                 $widgetActionNode = null;
@@ -1547,48 +1550,48 @@ class Layout implements \JsonSerializable
                     $mediaNode->setAttribute('toDt', Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat()));
                 }
 
-//                Logic Table
-//
-//                Widget With Media
-//                LAYOUT	MEDIA	WIDGET	Media stats collected?
-//                    ON	ON	    ON	    YES     Widget takes precedence     // Match - 1
-//                    ON	OFF	    ON	    YES     Widget takes precedence     // Match - 1
-//                    ON	INHERIT	ON	    YES     Widget takes precedence     // Match - 1
-//
-//                    OFF	ON	    ON	    YES     Widget takes precedence     // Match - 1
-//                    OFF	OFF	    ON	    YES     Widget takes precedence     // Match - 1
-//                    OFF	INHERIT	ON	    YES     Widget takes precedence     // Match - 1
-//
-//                    ON	ON	    OFF	    NO      Widget takes precedence     // Match - 2
-//                    ON	OFF	    OFF	    NO      Widget takes precedence     // Match - 2
-//                    ON	INHERIT	OFF	    NO      Widget takes precedence     // Match - 2
-//
-//                    OFF	ON	    OFF	    NO      Widget takes precedence     // Match - 2
-//                    OFF	OFF	    OFF	    NO      Widget takes precedence     // Match - 2
-//                    OFF	INHERIT	OFF	    NO      Widget takes precedence     // Match - 2
-//
-//                    ON	ON	    INHERIT	YES     Media takes precedence      // Match - 3
-//                    ON	OFF	    INHERIT	NO      Media takes precedence      // Match - 4
-//                    ON	INHERIT	INHERIT	YES     Media takes precedence and Inherited from Layout        // Match - 5
-//
-//                    OFF	ON	    INHERIT	YES     Media takes precedence      // Match - 3
-//                    OFF	OFF	    INHERIT	NO      Media takes precedence      // Match - 4
-//                    OFF	INHERIT	INHERIT	NO      Media takes precedence and Inherited from Layout        // Match - 6
-//
-//                Widget Without Media
-//                LAYOUT	WIDGET		Widget stats collected?
-//                    ON	ON		    YES	    Widget takes precedence     // Match - 1
-//                    ON	OFF		    NO	    Widget takes precedence     // Match - 2
-//                    ON	INHERIT		YES	    Inherited from Layout       // Match - 7
-//                    OFF	ON		    YES	    Widget takes precedence     // Match - 1
-//                    OFF	OFF		    NO	    Widget takes precedence     // Match - 2
-//                    OFF	INHERIT		NO	    Inherited from Layout       // Match - 8
-
+                // <editor-fold desc="Proof of Play stats collection">
+                // Logic Table
+                // -----------
+                // Widget With Media
+                // LAYOUT   MEDIA   WIDGET  Media stats collected?
+                // ON       ON      ON      YES     Widget takes precedence // Match - 1
+                // ON       OFF     ON      YES     Widget takes precedence // Match - 1
+                // ON       INHERIT ON      YES     Widget takes precedence // Match - 1
+                //
+                // OFF      ON      ON      YES     Widget takes precedence // Match - 1
+                // OFF      OFF     ON      YES     Widget takes precedence // Match - 1
+                // OFF      INHERIT ON      YES     Widget takes precedence // Match - 1
+                //
+                // ON       ON      OFF     NO      Widget takes precedence // Match - 2
+                // ON       OFF     OFF     NO      Widget takes precedence // Match - 2
+                // ON       INHERIT OFF     NO      Widget takes precedence // Match - 2
+                //
+                // OFF      ON      OFF     NO      Widget takes precedence // Match - 2
+                // OFF      OFF     OFF     NO      Widget takes precedence // Match - 2
+                // OFF      INHERIT OFF     NO      Widget takes precedence // Match - 2
+                //
+                // ON       ON      INHERIT YES     Media takes precedence  // Match - 3
+                // ON       OFF     INHERIT NO      Media takes precedence  // Match - 4
+                // ON       INHERIT INHERIT YES     Media takes precedence and Inherited from Layout // Match - 5
+                //
+                // OFF      ON      INHERIT YES     Media takes precedence  // Match - 3
+                // OFF      OFF     INHERIT NO      Media takes precedence  // Match - 4
+                // OFF      INHERIT INHERIT NO      Media takes precedence and Inherited from Layout // Match - 6
+                //
+                // Widget Without Media
+                // LAYOUT   WIDGET      Widget stats collected?
+                // ON       ON          YES     Widget takes precedence // Match - 1
+                // ON       OFF         NO      Widget takes precedence // Match - 2
+                // ON       INHERIT     YES     Inherited from Layout   // Match - 7
+                // OFF      ON          YES     Widget takes precedence // Match - 1
+                // OFF      OFF         NO      Widget takes precedence // Match - 2
+                // OFF      INHERIT     NO      Inherited from Layout   // Match - 8
 
                 // Widget stat collection flag
                 $widgetEnableStat = $widget->getOptionValue('enableStat', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
 
-                if(($widgetEnableStat === null) || ($widgetEnableStat === "")) {
+                if ($widgetEnableStat === null || $widgetEnableStat === '') {
                     $widgetEnableStat = $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT');
                 }
 
@@ -1601,7 +1604,6 @@ class Layout implements \JsonSerializable
                     $enableStat = 0; // Match - 2
                     $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
                 } else if ($widgetEnableStat == 'Inherit') {
-
                     try {
                         // Media enable stat flag - WIDGET WITH MEDIA
                         $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
@@ -1646,6 +1648,7 @@ class Layout implements \JsonSerializable
 
                 // Set enable stat collection flag
                 $mediaNode->setAttribute('enableStat', $enableStat);
+                // </editor-fold>
 
                 // Create options nodes
                 $optionsNode = $document->createElement('options');
@@ -1666,25 +1669,24 @@ class Layout implements \JsonSerializable
                     $mediaNode->setAttribute('fileId', $media->mediaId);
                 }
 
-                // Tracker whether or not we have an updateInterval configured.
+                // Tracker whether we have an updateInterval configured.
                 $hasUpdatedInterval = false;
 
                 foreach ($widget->widgetOptions as $option) {
-
                     /* @var WidgetOption $option */
-                    if (trim($option->value) === '')
+                    if (trim($option->value) === '') {
                         continue;
+                    }
 
                     if ($option->type == 'cdata') {
                         $optionNode = $document->createElement($option->option);
                         $cdata = $document->createCDATASection($option->value);
                         $optionNode->appendChild($cdata);
                         $rawNode->appendChild($optionNode);
-                    }
-                    else if ($option->type == 'attrib' || $option->type == 'attribute') {
-
-                        if ($uriInjected && $option->option == 'uri')
+                    } else if ($option->type == 'attrib' || $option->type == 'attribute') {
+                        if ($uriInjected && $option->option == 'uri') {
                             continue;
+                        }
 
                         $optionNode = $document->createElement($option->option, $option->value);
                         $optionsNode->appendChild($optionNode);
@@ -1709,8 +1711,9 @@ class Layout implements \JsonSerializable
                 $audioNodes = null;
                 foreach ($widget->audio as $audio) {
                     /** @var WidgetAudio $audio */
-                    if ($audioNodes == null)
+                    if ($audioNodes == null) {
                         $audioNodes = $document->createElement('audio');
+                    }
 
                     // Get the full media node for this audio element
                     $audioMedia = $this->mediaFactory->getById($audio->mediaId);
@@ -1729,7 +1732,8 @@ class Layout implements \JsonSerializable
                 $regionNode->appendChild($mediaNode);
             }
 
-            $this->getLog()->debug('Region duration on layout ' . $this->layoutId . ' is ' . $region->duration . '. Comparing to ' . $this->duration);
+            $this->getLog()->debug('Region duration on layout ' . $this->layoutId . ' is ' . $region->duration
+                . '. Comparing to ' . $this->duration);
 
             // Track the max duration within the layout
             // Test this duration against the layout duration
@@ -2020,22 +2024,25 @@ class Layout implements \JsonSerializable
 
             // Layout auto Publish
             if ($this->config->getSetting('DEFAULT_LAYOUT_AUTO_PUBLISH_CHECKB') == 1 && $this->isChild()) {
-
-                // we are editing a draft layout, the published date is set on the original layout, therefore we need our parent.
+                // we are editing a draft layout, the published date is set on the original layout, therefore we
+                // need our parent.
                 $parent = $this->layoutFactory->loadById($this->parentId);
 
                 $layoutCurrentPublishedDate = Carbon::createFromTimestamp($parent->publishedDate);
                 $newPublishDateString =  Carbon::now()->addMinutes(30)->format(DateFormatHelper::getSystemFormat());
                 $newPublishDate = Carbon::createFromTimeString($newPublishDateString);
 
-                if ($layoutCurrentPublishedDate->format('U') > $newPublishDate->format('U')) {
-                    // Layout is set to Publish manually on a date further than 30 min from now, we don't touch it in this case.
-                    $this->getLog()->debug('Layout is set to Publish manually on a date further than 30 min from now, do not update');
-
-                }  elseif ($parent->publishedDate != null &&  $layoutCurrentPublishedDate->format('U') < Carbon::now()->subMinutes(5)->format('U')) {
-                    // Layout is set to Publish manually at least 5 min in the past at the moment, we expect the Regular Maintenance to build it before that happens
+                if ($layoutCurrentPublishedDate > $newPublishDate) {
+                    // Layout is set to Publish manually on a date further than 30 min from now, we don't touch it in
+                    // this case.
+                    $this->getLog()->debug('Layout is set to Publish manually on a date further than 30 min'
+                        . ' from now, do not update');
+                } else if ($parent->publishedDate != null
+                    && $layoutCurrentPublishedDate < Carbon::now()->subMinutes(5)
+                ) {
+                    // Layout is set to Publish manually at least 5 min in the past at the moment, we expect the
+                    // Regular Maintenance to build it before that happens
                     $this->getLog()->debug('Layout should be built by Regular Maintenance');
-
                 } else {
                     $parent->setPublishedDate($newPublishDateString);
                     $this->getLog()->debug('Layout set to automatically Publish on ' . $newPublishDateString);
@@ -2072,12 +2079,17 @@ class Layout implements \JsonSerializable
                     || ($options['exceptionOnEmptyRegion'] && $this->hasEmptyRegion())
                 ) {
                     $this->audit($this->layoutId, 'Publish layout failed, rollback', ['layoutId' => $this->layoutId]);
-                    throw new InvalidArgumentException(__('There is an error with this Layout: %s',
-                        implode(',', $this->getStatusMessage())), 'status');
+                    throw new InvalidArgumentException(
+                        sprintf(
+                            __('There is an error with this Layout: %s'),
+                            implode(',', $this->getStatusMessage())
+                        ),
+                        'status'
+                    );
                 }
             }
 
-            // If we have an empty region and we've not exceptioned, then we need to record that in our status
+            // If we have an empty region, and we've not exceptioned, then we need to record that in our status
             if ($this->hasEmptyRegion()) {
                 $this->status = ModuleWidget::$STATUS_INVALID;
                 $this->pushStatusMessage(__('Empty Region'));

@@ -397,6 +397,20 @@ class Twitter extends TwitterBase
      *      type="string",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="alignH",
+     *      in="formData",
+     *      description="Horizontal alignment - left, center, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="alignV",
+     *      in="formData",
+     *      description="Vertical alignment - top, middle, bottom",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=204,
      *      description="successful operation"
@@ -432,6 +446,8 @@ class Twitter extends TwitterBase
         $this->setOption('durationIsPerItem', $sanitizedParams->getCheckbox('durationIsPerItem'));
         $this->setOption('itemsPerPage', $sanitizedParams->getInt('itemsPerPage', ['default' => 5]));
         $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
+        $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
 
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('template', $request->getParam('ta_text', $request->getParam('template', null)));
@@ -811,7 +827,9 @@ class Twitter extends TwitterBase
             'widgetDesignPadding' => $widgetOriginalPadding,
             'widgetDesignWidth' => $widgetOriginalWidth,
             'widgetDesignHeight'=> $widgetOriginalHeight,
-            'itemsPerPage' => intval($this->getOption('itemsPerPage', 5))
+            'itemsPerPage' => intval($this->getOption('itemsPerPage', 5)),
+            'alignmentH' => $this->getOption('alignH'),
+            'alignmentV' => $this->getOption('alignV')
         );
 
         // Work out how many pages we will be showing.

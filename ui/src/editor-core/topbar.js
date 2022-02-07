@@ -370,6 +370,9 @@ Topbar.prototype.updateLayoutStatus = function() {
     // Change Icon
     let iconType = (iconCodes[lD.layout.status.code] != undefined) ? iconCodes[lD.layout.status.code] : iconCodes[''];
     statusContainer.find('i').removeClass().addClass('fa fa-' + iconType);
+
+    // Update duration
+    this.DOMObject.find('.layout-info-duration-value').html(lD.layout.duration);
 };
 
 module.exports = Topbar;

@@ -11,7 +11,7 @@
 
         {# Import CSS bundle from dist #}
         <script src="{{ theme.rootUri() }}dist/style.bundle.min.js?v={{ version }}&rev={{revision}}"></script>
-
+        <link href="{{ theme.uri("css/xibo.css") }}?v={{ version }}&rev={{revision}}" rel="stylesheet" media="screen">
         <link href="{{ theme.uri("css/install.css") }}" rel="stylesheet" media="screen">
     </head>
 
