@@ -251,6 +251,20 @@
                         "type": "string"
                     },
                     {
+                        "name": "exactTags",
+                        "in": "query",
+                        "description": "A flag indicating whether to treat the tags filter as an exact match",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "hasLayouts",
                         "in": "query",
                         "description": "Filter by has layouts",
@@ -1522,6 +1536,13 @@
                         "description": "Flag indicating whether value must be provided for this Column.",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "PHP date format for the dates in the source of the remote DataSet",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -1639,6 +1660,13 @@
                         "description": "Flag indicating whether value must be provided for this Column.",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "dateFormat",
+                        "in": "formData",
+                        "description": "PHP date format for the dates in the source of the remote DataSet",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -2274,6 +2302,27 @@
                         "type": "string"
                     },
                     {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Filter by tags",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "query",
+                        "description": "A flag indicating whether to treat the tags filter as an exact match",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "macAddress",
                         "in": "query",
                         "description": "Filter by Mac Address",
@@ -2817,6 +2866,27 @@
                         "type": "string"
                     },
                     {
+                        "name": "tags",
+                        "in": "query",
+                        "description": "Filter by tags",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "query",
+                        "description": "A flag indicating whether to treat the tags filter as an exact match",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "isDisplaySpecific",
                         "in": "query",
                         "description": "Filter by whether the Display Group belongs to a Display or is user created",
@@ -2900,6 +2970,27 @@
                         "type": "string"
                     },
                     {
+                        "name": "dynamicCriteriaTags",
+                        "in": "formData",
+                        "description": "The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "formData",
+                        "description": "When filtering by Tags, should we use exact match?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "formData",
+                        "description": "When filtering by Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "folderId",
                         "in": "formData",
                         "description": "Folder ID to which this object should be assigned to",
@@ -2971,6 +3062,27 @@
                         "name": "dynamicCriteria",
                         "in": "formData",
                         "description": "The filter criteria for this dynamic group. A command separated set of regular expressions to apply",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "dynamicCriteriaTags",
+                        "in": "formData",
+                        "description": "The filter criteria for this dynamic group. A comma separated set of regular expressions to apply",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "formData",
+                        "description": "When filtering by Tags, should we use exact match?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "formData",
+                        "description": "When filtering by Tags, which logical operator should be used? AND|OR",
                         "required": false,
                         "type": "string"
                     },
@@ -4060,6 +4172,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "ownerUserGroupId",
                         "in": "query",
                         "description": "Filter by users in this UserGroupId",
@@ -4749,6 +4868,13 @@
                         "description": "A flag indicating whether to treat the tags filter as an exact match",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "duration",
@@ -5455,6 +5581,13 @@
                         "description": "Filter by name",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Filter by code",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -5490,6 +5623,13 @@
                         "name": "description",
                         "in": "formData",
                         "description": "Menu Board description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board code identifier",
                         "required": false,
                         "type": "string"
                     },
@@ -5544,6 +5684,13 @@
                         "name": "description",
                         "in": "formData",
                         "description": "Menu Board description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board code identifier",
                         "required": false,
                         "type": "string"
                     },
@@ -5647,6 +5794,13 @@
                         "description": "Filter by name",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Filter by code",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -5691,6 +5845,13 @@
                         "description": "Media ID associated with this Menu Board Category",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board Category code identifier",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -5738,6 +5899,13 @@
                         "description": "Media ID from CMS Library to associate with this Menu Board Category",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board Category code identifier",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -5798,6 +5966,13 @@
                         "description": "Filter by name",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "code",
+                        "in": "query",
+                        "description": "Filter by code",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -5830,11 +6005,66 @@
                         "type": "string"
                     },
                     {
-                        "name": "mediaId",
+                        "name": "description",
                         "in": "formData",
-                        "description": "Media ID associated with this Menu Board Product",
+                        "description": "Menu Board Product description",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "price",
+                        "in": "formData",
+                        "description": "Menu Board Product price, including the currency symbol if needed",
+                        "required": true,
+                        "type": "string"
+                    },
+                    {
+                        "name": "allergyInfo",
+                        "in": "formData",
+                        "description": "Menu Board Product allergyInfo",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "availability",
+                        "in": "formData",
+                        "description": "Menu Board Product availability",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "mediaId",
+                        "in": "formData",
+                        "description": "Media ID from CMS Library to associate with this Menu Board Product",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board Product code",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "productOptions",
+                        "in": "formData",
+                        "description": "An array of optional Product Option names",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "productValues",
+                        "in": "formData",
+                        "description": "An array of optional Product Option values",
+                        "required": false,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
                     }
                 ],
                 "responses": {
@@ -5910,6 +6140,13 @@
                         "description": "Media ID from CMS Library to associate with this Menu Board Product",
                         "required": false,
                         "type": "integer"
+                    },
+                    {
+                        "name": "code",
+                        "in": "formData",
+                        "description": "Menu Board Product code",
+                        "required": false,
+                        "type": "string"
                     },
                     {
                         "name": "productOptions",
@@ -6593,6 +6830,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "logicalOperator",
+                        "in": "query",
+                        "description": "When filtering by multiple Tags, which logical operator should be used? AND|OR",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "ownerUserGroupId",
                         "in": "query",
                         "description": "Filter by users in this UserGroupId",
@@ -6666,6 +6910,20 @@
                         "name": "filterMediaTag",
                         "in": "formData",
                         "description": "Add Library Media matching the tag filter provided",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "formData",
+                        "description": "When filtering by Tags, should we use exact match?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "formData",
+                        "description": "When filtering by Tags, which logical operator should be used? AND|OR",
                         "required": false,
                         "type": "string"
                     },
@@ -6748,6 +7006,20 @@
                         "name": "filterMediaTag",
                         "in": "formData",
                         "description": "Add Library Media matching the tag filter provided",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "exactTags",
+                        "in": "formData",
+                        "description": "When filtering by Tags, should we use exact match?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "logicalOperator",
+                        "in": "formData",
+                        "description": "When filtering by Tags, which logical operator should be used? AND|OR",
                         "required": false,
                         "type": "string"
                     },
@@ -7367,6 +7639,13 @@
                         "name": "resolution",
                         "in": "query",
                         "description": "Filter by Resolution Name",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "partialResolution",
+                        "in": "query",
+                        "description": "Filter by Partial Resolution Name",
                         "required": false,
                         "type": "string"
                     },
@@ -9806,6 +10085,13 @@
                         "description": "Trigger code for a current event action",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "backgroundColor",
+                        "in": "formData",
+                        "description": "A HEX color to use as the background color of this widget",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -10676,6 +10962,20 @@
                         "description": "Optional StyleSheet Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -10873,6 +11173,20 @@
                         "name": "javaScript",
                         "in": "formData",
                         "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
                         "required": false,
                         "type": "string"
                     }
@@ -11534,6 +11848,20 @@
                         "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -11961,6 +12289,20 @@
                         "name": "enableStat",
                         "in": "formData",
                         "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
                         "required": false,
                         "type": "string"
                     }
@@ -12438,6 +12780,20 @@
                         "name": "javaScript",
                         "in": "formData",
                         "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
                         "required": false,
                         "type": "string"
                     }
@@ -13101,6 +13457,20 @@
                         "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -13584,6 +13954,20 @@
                         "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "alignH",
+                        "in": "formData",
+                        "description": "Horizontal alignment - left, center, bottom",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "alignV",
+                        "in": "formData",
+                        "description": "Vertical alignment - top, middle, bottom",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -13967,6 +14351,30 @@
                 "isConfidential": {
                     "description": "Flag indicating whether this Application will be confidential or not (can it keep a secret?)",
                     "type": "integer"
+                },
+                "description": {
+                    "description": "Application description",
+                    "type": "string"
+                },
+                "logo": {
+                    "description": "Path to Application logo",
+                    "type": "string"
+                },
+                "coverImage": {
+                    "description": "Path to Application Cover Image",
+                    "type": "string"
+                },
+                "companyName": {
+                    "description": "Company name associated with this Application",
+                    "type": "string"
+                },
+                "termsUrl": {
+                    "description": "URL to Application terms",
+                    "type": "string"
+                },
+                "privacyUrl": {
+                    "description": "URL to Application privacy policy",
+                    "type": "string"
                 }
             }
         },
@@ -14308,6 +14716,10 @@
                 "isRequired": {
                     "description": "Flag indicating whether value must be provided for this Column.",
                     "type": "integer"
+                },
+                "dateFormat": {
+                    "description": "Date format of dates in the source for remote DataSet.",
+                    "type": "string"
                 }
             }
         },
@@ -14619,6 +15031,14 @@
                 },
                 "dynamicCriteriaTags": {
                     "description": "Criteria for this dynamic group. A comma separated set of tags to apply",
+                    "type": "string"
+                },
+                "dynamicCriteriaExactTags": {
+                    "description": "Flag indicating whether to filter by exact Tag match",
+                    "type": "integer"
+                },
+                "dynamicCriteriaLogicalOperator": {
+                    "description": "Which logical operator should be used when filtering by multiple Tags? OR|AND",
                     "type": "string"
                 },
                 "userId": {
@@ -15037,6 +15457,10 @@
                     "description": "The Menu Board description",
                     "type": "string"
                 },
+                "code": {
+                    "description": "The Menu Board code identifier",
+                    "type": "string"
+                },
                 "userId": {
                     "description": "The Menu Board owner Id",
                     "type": "integer"
@@ -15073,6 +15497,10 @@
                     "description": "The Menu Board Category name",
                     "type": "string"
                 },
+                "code": {
+                    "description": "The Menu Board Category code identifier",
+                    "type": "string"
+                },
                 "mediaId": {
                     "description": "The Menu Board Category associated mediaId",
                     "type": "integer"
@@ -15103,6 +15531,10 @@
                 },
                 "description": {
                     "description": "The Menu Board Product description",
+                    "type": "string"
+                },
+                "code": {
+                    "description": "The Menu Board Product code identifier",
                     "type": "string"
                 },
                 "availability": {
@@ -15447,6 +15879,14 @@
                 },
                 "filterMediaTags": {
                     "description": "Filter Tags for a Dynamic Playlist",
+                    "type": "string"
+                },
+                "filterExactTags": {
+                    "description": "Flag indicating whether to filter by exact Tag match",
+                    "type": "integer"
+                },
+                "filterLogicalOperator": {
+                    "description": "Which logical operator should be used when filtering by multiple Tags? OR|AND",
                     "type": "string"
                 },
                 "maxNumberOfItems": {

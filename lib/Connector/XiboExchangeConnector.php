@@ -101,8 +101,7 @@ class XiboExchangeConnector implements ConnectorInterface
             $this->getLogger()->debug('onTemplateProvider: cache miss, generating.');
 
             // Make the request
-            $client = new Client();
-            $request = $client->request('GET', $uri);
+            $request = $this->getClient()->request('GET', $uri);
 
             $body = $request->getBody()->getContents();
             if (empty($body)) {

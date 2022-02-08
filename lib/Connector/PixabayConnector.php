@@ -23,7 +23,6 @@
 namespace Xibo\Connector;
 
 use Carbon\Carbon;
-use GuzzleHttp\Client;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\SearchResult;
 use Xibo\Event\LibraryProviderEvent;
@@ -84,6 +83,12 @@ class PixabayConnector implements ConnectorInterface
     {
         $this->getLogger()->debug('onLibraryProvider');
 
+        // Do we have an alternative URL (we may proxy requests for cache)
+        $baseUrl = $this->getSetting('proxyUri');
+        if (empty($baseUrl)) {
+            $baseUrl = 'https://pixabay.com/api/';
+        }
+
         // Do we have an API key?
         $apiKey = $this->getSetting('apiKey');
         if (empty($apiKey)) {
@@ -138,9 +143,7 @@ class PixabayConnector implements ConnectorInterface
             $this->getLogger()->debug('onLibraryProvider: cache miss, generating.');
 
             // Make the request
-            $client = new Client();
-            $uri = $type === 'video' ? 'https://pixabay.com/api/videos' : 'https://pixabay.com/api/';
-            $request = $client->request('GET', $uri, [
+            $request = $this->getClient()->request('GET', $baseUrl . ($type === 'video' ? 'videos' : ''), [
                 'query' => $query
             ]);
 
