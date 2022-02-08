@@ -330,7 +330,9 @@ Layout.prototype.updateStatus = function(status, statusFeedback, statusMessages,
     };
 
     // Update layout duration
-    this.duration = Math.round(Number(updatedLayoutDuration)*100)/100;
+    if (updatedLayoutDuration) {
+        this.duration = Math.round(Number(updatedLayoutDuration) * 100) / 100;
+    }
 
     // Update layout status
     lD.topbar.updateLayoutStatus();
