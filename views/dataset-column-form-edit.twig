@@ -34,16 +34,18 @@
     {% trans "Save" %}, $("#dataSetColumnEditForm").submit()    
 {% endblock %}
 
+{% block callBack %}dataSetColumnFormOpen{% endblock %}
+
 {% block formFieldActions %}
 [
     {
       "field": "dataSetColumnTypeId", "trigger": "init",
       "operation": "equals", "value": "1",
-      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "" }, ".remoteField": { "display": "none" }, , ".helperFields": { "display": "" } }
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "" }, ".remoteField": { "display": "none" }, ".helperFields": { "display": "" } }
     },{
       "field": "dataSetColumnTypeId", "trigger": "change",
       "operation": "equals", "value": "1",
-      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "" }, ".remoteField": { "display": "none" }, , ".helperFields": { "display": "" } }
+      "actions": { ".formula": { "display": "none" }, ".listContent": { "display": "" }, ".remoteField": { "display": "none" }, ".helperFields": { "display": "" } }
     },
     {
       "field": "dataSetColumnTypeId", "trigger": "init",
@@ -109,6 +111,15 @@
                 {% set title %}{% trans "Filter?" %}{% endset %}
                 {% set helpText %}{% trans "Show as a filter option on the Data Entry Page?" %}{% endset %}
                 {{ forms.checkbox("showFilter", title, dataSetColumn.showFilter, helpText) }}
+
+                {% set title %}{% trans "Date Format" %}
+                    <span class="fa fa-info-circle date-format-table"
+                          data-toggle="popover"
+                          data-trigger="hover">
+                            </span>
+                {% endset %}
+                {% set helpText %}{% trans "Enter a PHP date format to parse the dates from the source." %}{% endset %}
+                {{ forms.input("dateFormat", title, dataSetColumn.dateFormat, helpText, 'dateFormat') }}
 
                 {% set title %}{% trans "Sort?" %}{% endset %}
                 {% set helpText %}{% trans "Enable sorting on the Data Entry Page? We recommend that the number of sortable columns is kept to a minimum." %}{% endset %}

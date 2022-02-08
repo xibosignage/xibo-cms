@@ -149,7 +149,14 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
                 `oauth_clients`.authCode,
                 `oauth_clients`.clientCredentials,
                 `oauth_clients`.userId, 
-                `oauth_clients`.isConfidential';
+                `oauth_clients`.isConfidential,
+                `oauth_clients`.description,
+                `oauth_clients`.logo,
+                `oauth_clients`.coverImage,
+                `oauth_clients`.companyName,
+                `oauth_clients`.termsUrl,
+                `oauth_clients`.privacyUrl
+            ';
 
         $body = ' FROM `oauth_clients` ';
         $body .= ' INNER JOIN `user` ON `user`.userId = `oauth_clients`.userId ';
@@ -187,7 +194,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $entries[] = $this->createEmpty()->hydrate($row, [
-                'intProperties' => ['isConfidential']
+                'intProperties' => ['isConfidential', 'authCode', 'clientCredentials']
             ]);
         }
 
@@ -228,8 +235,7 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
             return false;
         }
 
-        if (
-            $client->isConfidential() === true
+        if ($client->isConfidential() === true
             && password_verify($clientSecret, $client->getHash()) === false
         ) {
             $this->getLog()->debug('Client secret does not match');
@@ -240,7 +246,6 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
 
         // Check to see if this grant_type is allowed for this client
         switch ($grantType) {
-
             case 'authorization_code':
             case 'refresh_token':
                 if ($client->authCode != 1) {
@@ -264,5 +269,74 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
         $this->getLog()->debug('Grant Type is allowed.');
 
         return true;
+    }
+
+    /**
+     * Insert approval record for provided clientId/userId pair with current date and IP address
+     * @param $clientId
+     * @param $userId
+     * @param $approvedDate
+     * @param $approvedIp
+     */
+    public function setApplicationApproved($clientId, $userId, $approvedDate, $approvedIp)
+    {
+        $this->getLog()->debug('Adding approved Access for Application ' . $clientId . ' for User ' . $userId);
+
+        $this->getStore()->insert('
+            INSERT INTO `oauth_lkclientuser` (`clientId`, `userId`, `approvedDate`, `approvedIp`)
+              VALUES (:clientId, :userId, :approvedDate, :approvedIp)
+            ON DUPLICATE KEY UPDATE clientId = clientId, userId = userId, approvedDate = :approvedDate, approvedIp = :approvedIp
+
+        ', [
+            'clientId' => $clientId,
+            'userId' => $userId,
+            'approvedDate' => $approvedDate,
+            'approvedIp' => $approvedIp
+        ]);
+    }
+
+    /**
+     * Check if provided clientId and userId pair are still authorised
+     * @param $clientId
+     * @param $userId
+     * @return bool
+     */
+    public function checkAuthorised($clientId, $userId): bool
+    {
+        $results = $this->getStore()->select('SELECT clientId, userId FROM `oauth_lkclientuser` WHERE clientId = :clientId AND userId = :userId', [
+            'userId' => $userId,
+            'clientId' => $clientId
+        ]);
+
+        if (count($results) <= 0) {
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * Get applications authorised by specific user
+     * @param $userId
+     * @return array
+     */
+    public function getAuthorisedByUserId($userId): array
+    {
+        return $this->getStore()->select('SELECT oauth_clients.name, oauth_clients.id, approvedDate, approvedIp FROM `oauth_lkclientuser` INNER JOIN `oauth_clients` on `oauth_lkclientuser`.clientId = `oauth_clients`.id WHERE `oauth_lkclientuser`.userId = :userId', [
+            'userId' => $userId
+        ]);
+    }
+
+    /**
+     * Remove provided clientId and userId pair from link table
+     * @param $userId
+     * @param $clientId
+     */
+    public function revokeAuthorised($userId, $clientId)
+    {
+        $this->getStore()->update('DELETE FROM `oauth_lkclientuser` WHERE clientId = :clientId AND userId = :userId', [
+            'userId' => $userId,
+            'clientId' => $clientId
+        ]);
     }
 }

@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,27 +24,39 @@
 {% import "inline.twig" as inline %}
 
 {% block pageContent %}
-    <div class="widget w-50 mx-auto">
-        <div class="widget-title">{% trans "Authorize Request" %}</div>
-        <div class="widget-body">
-            <h1>{{ authParams.client.getName() }}</h1>
-            <h5>{{ "would like access to the following scopes"|trans }}:</h5>
-
-            <ul>
-                {% for scope in scopes %}
-                <li>
-                    {{ scope.description }}
-                </li>
-                {% endfor %}
-            </ul>
-
-            <form method="post" action="{{ url_for("application.authorize") }}">
-                <div class="text-right">
-                    <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
-                    <input type="submit" class="btn btn-danger" value="Deny" name="authorization">
-                    <input type="submit" class="btn btn-success" value="Approve" name="authorization">
+        <div class="widget w-50 mx-auto">
+            <div class="widget-title">{% trans "Authorize Request" %}</div>
+            <div class="widget-body">
+                <div class="card mx-auto my-auto">
+                    {% if application.coverImage %}<img class="card-img" style="opacity: 0.4; object-fit: cover" src="{{ application.coverImage }}" alt="Card image">
+                    <div class="card-img-overlay" style="opacity: unset">
+                    {% endif %}
+                        <div class="card-body">
+                    {% if application.logo %}<div class="logo" style="margin-bottom: 30px"><img src="{{ application.logo }}" class="card-img-top" alt="{{ application.getName() }}" style="width: 150px;"></div>{% endif %}
+                        <h3 class="card-title">{% if application.companyName %} {{ application.companyName }} - {% endif %} {{ authParams.client.getName() }}</h3>
+                        <h5 class="card-text">{{ "would like access to the following scopes"|trans }}:</h5>
+                        <ul class="card-text" style="margin-bottom: 50px">
+                            {% for scope in scopes %}
+                            <li>
+                                {{ scope.description }}
+                            </li>
+                            {% endfor %}
+                        </ul>
+                        {% if application.description %}<h5 class="card-text" style="margin-bottom: 30px">{{ application.description }}</h5>{% endif %}
+                        {% if application.termsUrl %}<h5 class="card-text"><a href="{{ application.termsUrl }}">{% trans "Terms" %}</a></h5>{% endif %}
+                        {% if application.privacyUrl %}<h5 class="card-text"><a href="{{ application.privacyUrl }}">{% trans "Privacy Policy" %}</a></h5>{% endif %}
+                        </div>
+                    {% if application.coverImage %}<img class="card-img" style="opacity: 0.4; object-fit: cover" src="{{ application.coverImage }}" alt="Card image">
+                    </div>
+                    {% endif %}
                 </div>
-            </form>
+                 <form method="post" action="{{ url_for("application.authorize") }}" {% if approved %}style="display: none"{% endif %}>
+                    <div class="text-right">
+                        <input type="hidden" name="{{ csrfKey }}" value="{{ csrfToken }}" />
+                        <input type="submit" id="deny" class="btn btn-danger" value="Deny" name="authorization">
+                        <input type="submit" id="approve" class="btn btn-success" value="Approve" name="authorization">
+                    </div>
+                </form>
+            </div>
         </div>
-    </div>
 {% endblock %}

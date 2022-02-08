@@ -1,12 +1,27 @@
 <?php
-/*
- * Spring Signage Ltd - http://www.springsignage.com
- * Copyright (C) 2021 Xibo Signage Ltd
- * (ApplicationScopeFactory.php)
+/**
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Factory;
+
 use League\OAuth2\Server\Entities\ClientEntityInterface;
 use League\OAuth2\Server\Repositories\ScopeRepositoryInterface;
 use Xibo\Entity\ApplicationScope;
@@ -36,13 +51,13 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
      */
     public function getById($id)
     {
-        $clientRedirectUri = $this->query(null, ['id' => $id]);
+        $scope = $this->query(null, ['id' => $id]);
 
-        if (count($clientRedirectUri) <= 0) {
+        if (count($scope) <= 0) {
             throw new NotFoundException();
         }
 
-        return $clientRedirectUri[0];
+        return $scope[0];
     }
 
     /**
@@ -67,7 +82,7 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
         $entries = [];
         $params = [];
 
-        $select = 'SELECT `oauth_scopes`.id, `oauth_scopes`.description';
+        $select = 'SELECT `oauth_scopes`.id, `oauth_scopes`.description, `oauth_scopes`.useRegex';
 
         $body = '  FROM `oauth_scopes`';
 
@@ -90,9 +105,9 @@ class ApplicationScopeFactory extends BaseFactory implements ScopeRepositoryInte
 
         // Sorting?
         $order = '';
-        if (is_array($sortOrder))
+        if (is_array($sortOrder)) {
             $order .= 'ORDER BY ' . implode(',', $sortOrder);
-
+        }
         $limit = '';
         // Paging
         if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length') !== null) {

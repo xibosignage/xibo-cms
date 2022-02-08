@@ -115,5 +115,34 @@
         table.on('draw', dataTableDraw);
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#datasets_wrapper').find('.dataTables_buttons'));
+
+        function dataSetColumnFormOpen(dialog) {
+            formHelpers.setupPhpDateFormatPopover(dialog)
+
+            // remote DataSet source
+            onDataTypeChanged(dialog);
+            $(dialog).find('#dataTypeId, #dataSetColumnTypeId').on('change', function() {
+                onDataTypeChanged(dialog);
+            });
+        }
+
+        function onDataTypeChanged(dialog)
+        {
+            var dataTypeId = $(dialog).find('#dataTypeId').val();
+            var dataSetColumnTypeId = $(dialog).find('#dataSetColumnTypeId').val();
+            var $dateFormat = $(dialog).find('.dateFormat');
+
+            if (dataSetColumnTypeId == 3 && dataTypeId == 3) {
+                $dateFormat.removeClass('d-none')
+            } else {
+                $dateFormat.addClass('d-none')
+            }
+        }
     </script>
+
+    <style>
+        .popover{
+            max-width: 70%;
+        }
+    </style>
 {% endblock %}

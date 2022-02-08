@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -73,10 +73,9 @@ class ApiAuthentication implements Middleware
             $encryptionKey = $apiKeyPaths['encryptionKey'];
 
             try {
-
                 $server = new \League\OAuth2\Server\AuthorizationServer(
                     $container->get('applicationFactory'),
-                    new \Xibo\OAuth\AccessTokenRepository($logger),
+                    new \Xibo\OAuth\AccessTokenRepository($logger, $container->get('pool'), $container->get('applicationFactory')),
                     $container->get('applicationScopeFactory'),
                     $privateKey,
                     $encryptionKey
@@ -95,13 +94,13 @@ class ApiAuthentication implements Middleware
                 $server->enableGrantType(
                     new AuthCodeGrant(
                         new \Xibo\OAuth\AuthCodeRepository(),
-                        new \Xibo\OAuth\RefreshTokenRepository(),
+                        new \Xibo\OAuth\RefreshTokenRepository($logger, $container->get('pool')),
                         new \DateInterval('PT10M')
                     ),
                     new \DateInterval('PT1H')
                 );
 
-                $server->enableGrantType(new RefreshTokenGrant(new RefreshTokenRepository()));
+                $server->enableGrantType(new RefreshTokenGrant(new RefreshTokenRepository($logger, $container->get('pool'))));
 
                 return $server;
             } catch (\LogicException $exception) {

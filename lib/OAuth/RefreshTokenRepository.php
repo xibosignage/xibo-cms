@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,15 +24,43 @@ namespace Xibo\OAuth;
 
 use League\OAuth2\Server\Entities\RefreshTokenEntityInterface;
 use League\OAuth2\Server\Repositories\RefreshTokenRepositoryInterface;
+use Stash\Interfaces\PoolInterface;
 
 class RefreshTokenRepository implements RefreshTokenRepositoryInterface
 {
+    /**
+     * @var \Xibo\Service\LogServiceInterface
+     */
+    private $logger;
+    /**
+     * @var PoolInterface
+     */
+    private $pool;
+
+    /**
+     * AccessTokenRepository constructor.
+     * @param \Xibo\Service\LogServiceInterface $logger
+     */
+    public function __construct(\Xibo\Service\LogServiceInterface $logger, PoolInterface $pool)
+    {
+        $this->logger = $logger;
+        $this->pool = $pool;
+    }
+
     /**
      * {@inheritdoc}
      */
     public function persistNewRefreshToken(RefreshTokenEntityInterface $refreshTokenEntity)
     {
-        // Some logic to persist the refresh token in a database
+        // cache with refresh token identifier
+        $cache = $this->pool->getItem('R_' . $refreshTokenEntity->getIdentifier());
+        $cache->set(
+            [
+                'accessToken' => $refreshTokenEntity->getAccessToken()->getIdentifier(),
+            ]
+        );
+        $cache->expiresAt($refreshTokenEntity->getExpiryDateTime());
+        $this->pool->saveDeferred($cache);
     }
 
     /**
@@ -40,7 +68,7 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
      */
     public function revokeRefreshToken($tokenId)
     {
-        // Some logic to revoke the refresh token in a database
+        $this->pool->getItem('R_' . $tokenId)->clear();
     }
 
     /**
@@ -48,6 +76,27 @@ class RefreshTokenRepository implements RefreshTokenRepositoryInterface
      */
     public function isRefreshTokenRevoked($tokenId)
     {
+        // get cache by refresh token identifier
+        $cache = $this->pool->getItem('R_' . $tokenId);
+        $refreshTokenData = $cache->get();
+
+        if ($cache->isMiss() || empty($refreshTokenData)) {
+            return true;
+        }
+
+        // get access token cache by access token identifier
+        $tokenCache = $this->pool->getItem('C_' . $refreshTokenData['accessToken']);
+        $tokenCacheData = $tokenCache->get();
+
+        // check access token cache by client and user identifiers
+        // (see if application got changed secret/revoked access)
+        $cache2 = $this->pool->getItem('C_' . $tokenCacheData['client'] . '/' . $tokenCacheData['userIdentifier']);
+        $data2 = $cache2->get();
+
+        if ($cache2->isMiss() || empty($data2)) {
+            return true;
+        }
+
         return false; // The refresh token has not been revoked
     }
 

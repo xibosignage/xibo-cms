@@ -318,6 +318,13 @@ class DataSetColumn extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="dateFormat",
+     *      in="formData",
+     *      description="PHP date format for the dates in the source of the remote DataSet",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -352,8 +359,9 @@ class DataSetColumn extends Base
         $column->showSort = $sanitizedParams->getCheckbox('showSort');
         $column->tooltip = $sanitizedParams->getString('tooltip');
         $column->isRequired = $sanitizedParams->getCheckbox('isRequired', ['default' => 0]);
+        $column->dateFormat = $sanitizedParams->getString('dateFormat', ['default' => null]);
 
-        if ($column->dataSetColumnTypeId == 3){
+        if ($column->dataSetColumnTypeId == 3) {
             $this->pool->deleteItem('/dataset/cache/' . $dataSet->dataSetId);
             $this->getLog()->debug('New remote column detected, clear cache for remote dataSet ID ' . $dataSet->dataSetId);
         }
@@ -519,6 +527,13 @@ class DataSetColumn extends Base
      *      type="integer",
      *      required=false
      *   ),
+     *  @SWG\Parameter(
+     *      name="dateFormat",
+     *      in="formData",
+     *      description="PHP date format for the dates in the source of the remote DataSet",
+     *      type="string",
+     *      required=false
+     *   ),
      *  @SWG\Response(
      *      response=201,
      *      description="successful operation",
@@ -553,9 +568,10 @@ class DataSetColumn extends Base
         $column->showSort = $sanitizedParams->getCheckbox('showSort');
         $column->tooltip = $sanitizedParams->getString('tooltip');
         $column->isRequired = $sanitizedParams->getCheckbox('isRequired');
+        $column->dateFormat = $sanitizedParams->getString('dateFormat', ['default' => null]);
         $column->save();
 
-        if ($column->dataSetColumnTypeId == 3 && $column->hasPropertyChanged('remoteField')){
+        if ($column->dataSetColumnTypeId == 3 && $column->hasPropertyChanged('remoteField')) {
             $this->pool->deleteItem('/dataset/cache/' . $dataSet->dataSetId);
             $this->getLog()->debug('Edited remoteField detected, clear cache for remote dataSet ID ' . $dataSet->dataSetId);
         }

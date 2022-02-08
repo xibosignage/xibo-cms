@@ -114,7 +114,8 @@ class DataSetColumnFactory extends BaseFactory
                 showFilter, 
                 showSort,
                 tooltip,
-                isRequired
+                isRequired,
+                dateFormat
             ';
 
         $body = '

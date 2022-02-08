@@ -2397,15 +2397,15 @@ class Library extends Base
                 'permissionsFolderId' => $permissionsFolderId
             ]
         );
+
         $this->mediaFactory->processDownloads(
-            function (Media $media) {
+            function (Media $media) use ($module) {
                 // Success
                 $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
-                if ($media->mediaType === 'video' || $media->mediaType === 'audio') {
-                    $realDuration = $this->mediaFactory->determineRealDuration($media);
-                    if ($realDuration !== $media->duration) {
-                        $media->updateDuration($realDuration);
-                    }
+                $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
+                $realDuration = $module->determineDuration($libraryFolder . $media->storedAs);
+                if ($realDuration !== $media->duration) {
+                    $media->updateDuration($realDuration);
                 }
             },
             function (Media $media) {

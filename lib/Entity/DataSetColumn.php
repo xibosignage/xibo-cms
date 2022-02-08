@@ -131,6 +131,12 @@ class DataSetColumn implements \JsonSerializable
      */
     public $isRequired = 0;
 
+    /**
+     * @SWG\Property(description="Date format of dates in the source for remote DataSet.")
+     * @var string
+     */
+    public $dateFormat;
+
     /** @var  DataSetColumnFactory */
     private $dataSetColumnFactory;
 
@@ -314,8 +320,8 @@ class DataSetColumn implements \JsonSerializable
     private function add()
     {
         $this->dataSetColumnId = $this->getStore()->insert('
-        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula, RemoteField, `showFilter`, `showSort`, `tooltip`, `isRequired`)
-          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula, :remoteField, :showFilter, :showSort, :tooltip, :isRequired)
+        INSERT INTO `datasetcolumn` (DataSetID, Heading, DataTypeID, ListContent, ColumnOrder, DataSetColumnTypeID, Formula, RemoteField, `showFilter`, `showSort`, `tooltip`, `isRequired`, `dateFormat`)
+          VALUES (:dataSetId, :heading, :dataTypeId, :listContent, :columnOrder, :dataSetColumnTypeId, :formula, :remoteField, :showFilter, :showSort, :tooltip, :isRequired, :dateFormat)
         ', [
             'dataSetId' => $this->dataSetId,
             'heading' => $this->heading,
@@ -328,7 +334,8 @@ class DataSetColumn implements \JsonSerializable
             'showFilter' => $this->showFilter,
             'showSort' => $this->showSort,
             'tooltip' => $this->tooltip,
-            'isRequired' => $this->isRequired
+            'isRequired' => $this->isRequired,
+            'dateFormat' => $this->dateFormat
         ]);
 
         // Add Column to Underlying Table
@@ -358,7 +365,8 @@ class DataSetColumn implements \JsonSerializable
             'showFilter' => $this->showFilter,
             'showSort' => $this->showSort,
             'tooltip' => $this->tooltip,
-            'isRequired' => $this->isRequired
+            'isRequired' => $this->isRequired,
+            'dateFormat' => $this->dateFormat
         ];
 
         $sql = '
@@ -374,7 +382,8 @@ class DataSetColumn implements \JsonSerializable
             `showFilter` = :showFilter, 
             `showSort` = :showSort,
             `tooltip` = :tooltip,
-            `isRequired` = :isRequired
+            `isRequired` = :isRequired,
+            `dateFormat` = :dateFormat                         
          WHERE dataSetColumnId = :dataSetColumnId 
         ';
 
