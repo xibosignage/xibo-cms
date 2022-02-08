@@ -84,7 +84,7 @@ class PixabayConnector implements ConnectorInterface
         $this->getLogger()->debug('onLibraryProvider');
 
         // Do we have an alternative URL (we may proxy requests for cache)
-        $baseUrl = $this->getSetting('proxyUri');
+        $baseUrl = $this->getSetting('baseUrl');
         if (empty($baseUrl)) {
             $baseUrl = 'https://pixabay.com/api/';
         }
