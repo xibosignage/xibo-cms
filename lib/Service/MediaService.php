@@ -174,10 +174,15 @@ class MediaService implements MediaServiceInterface
 
         try {
             $head = $guzzle->head($url);
-            $contentLength = $head->getHeader('Content-Length');
 
-            foreach ($contentLength as $value) {
-                $size = $value;
+            // First chance at getting the content length so that we can fail early.
+            // Will fail for downloads with redirects.
+            if ($head->hasHeader('Content-Length')) {
+                $contentLength = $head->getHeader('Content-Length');
+
+                foreach ($contentLength as $value) {
+                    $size = $value;
+                }
             }
 
             if (empty($extension)) {
@@ -195,7 +200,8 @@ class MediaService implements MediaServiceInterface
                 $extension = $mimeTypes->getExtension($extension);
             }
         } catch (RequestException $e) {
-            $this->log->debug('Upload from url head request failed for URL ' . $url . ' with following message ' . $e->getMessage());
+            $this->log->debug('Upload from url head request failed for URL ' . $url
+                . ' with following message ' . $e->getMessage());
         }
 
         $downloadInfo['size'] = $size;
