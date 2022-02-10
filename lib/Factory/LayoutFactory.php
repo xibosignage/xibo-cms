@@ -582,7 +582,7 @@ class LayoutFactory extends BaseFactory
                 $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('fromDt');
                 $widget->toDt = ($mediaNode->getAttribute('toDt') === '') ? Widget::$DATE_MAX : $mediaNode->getAttribute('toDt');
 
-                $this->setWidgetExpiryDatesOrDefault($widget);
+                $this->setWidgetExpiryDatesOrDefault($widget, false);
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
@@ -748,6 +748,7 @@ class LayoutFactory extends BaseFactory
         $layout->backgroundColor = $layoutJson['layoutDefinitions']['backgroundColor'];
         $layout->backgroundzIndex = (int)$layoutJson['layoutDefinitions']['backgroundzIndex'];
         $layout->actions = [];
+        $layout->autoApplyTransitions = $layoutJson['layoutDefinitions']['autoApplyTransitions'] ?? 0;
         $actions = $layoutJson['layoutDefinitions']['actions'] ?? [];
 
         foreach ($actions as $action) {
@@ -863,7 +864,7 @@ class LayoutFactory extends BaseFactory
                 $widget->fromDt = ($mediaNode['fromDt'] === '') ? Widget::$DATE_MIN : $mediaNode['fromDt'];
                 $widget->toDt = ($mediaNode['toDt'] === '') ? Widget::$DATE_MAX : $mediaNode['toDt'];
 
-                $this->setWidgetExpiryDatesOrDefault($widget);
+                $this->setWidgetExpiryDatesOrDefault($widget, true);
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
@@ -2235,28 +2236,37 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param \Xibo\Entity\Widget $widget
+     * @param $jsonImport
      * @return \Xibo\Entity\Widget
      */
-    private function setWidgetExpiryDatesOrDefault($widget)
+    private function setWidgetExpiryDatesOrDefault($widget, $jsonImport)
     {
         $minSubYear = Carbon::createFromTimestamp(Widget::$DATE_MIN)->subYear()->format('U');
         $minAddYear = Carbon::createFromTimestamp(Widget::$DATE_MIN)->addYear()->format('U');
         $maxSubYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->subYear()->format('U');
         $maxAddYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->addYear()->format('U');
 
-        // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
-        // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
-
-        if ($widget->fromDt === Widget::$DATE_MIN || (Carbon::createFromTimeString($widget->fromDt)->format('U') > $minSubYear && Carbon::createFromTimeString($widget->fromDt)->format('U') < $minAddYear)) {
-            $widget->fromDt = Widget::$DATE_MIN;
+        // if we are importing from layout.json the Widget from/to expiry dates are already timestamps
+        if ($jsonImport) {
+            $timestampFromDt = $widget->fromDt;
+            $timestampToDt = $widget->toDt;
         } else {
-            $widget->fromDt = Carbon::createFromTimeString($widget->fromDt)->format('U');
+            $timestampFromDt = Carbon::createFromTimeString($widget->fromDt)->format('U');
+            $timestampToDt = Carbon::createFromTimeString($widget->toDt)->format('U');
         }
 
-        if ($widget->toDt === Widget::$DATE_MAX || (Carbon::createFromTimeString($widget->toDt)->format('U') > $maxSubYear && Carbon::createFromTimeString($widget->toDt)->format('U') < $maxAddYear)) {
+        // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
+        // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
+        if ($widget->fromDt === Widget::$DATE_MIN || ($timestampFromDt > $minSubYear && $timestampFromDt < $minAddYear)) {
+            $widget->fromDt = Widget::$DATE_MIN;
+        } else {
+            $widget->fromDt = $timestampFromDt;
+        }
+
+        if ($widget->toDt === Widget::$DATE_MAX || ($timestampToDt > $maxSubYear && $timestampToDt < $maxAddYear)) {
             $widget->toDt = Widget::$DATE_MAX;
         } else {
-            $widget->toDt = Carbon::createFromTimeString($widget->toDt)->format('U');
+            $widget->toDt = $timestampToDt;
         }
 
         return $widget;
