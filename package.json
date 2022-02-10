@@ -91,7 +91,7 @@
     "moment": "~2.20.1",
     "moment-jalaali": "~0.7.2",
     "moment-timezone": "^0.5.28",
-    "node-sass": "^4.13.1",
+    "node-sass": "^7.0.0",
     "persian-date": "^0.3.1-b",
     "persian-datepicker": "^1.2.0",
     "popper.js": "^1.16.1",
