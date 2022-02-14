@@ -131,3 +131,18 @@ echo __('Access to deleting Displays and Display Groups');
 echo __('Media Conversion as a Service');
 echo __('Access to Scheduling');
 echo __('Access to deleting Scheduled Events');
+
+// Widget Templates
+echo __('Primary');
+echo __('Secondary');
+echo __('Background');
+echo __('Header color');
+echo __('Header text');
+echo __('Disabled item text');
+echo __('Highlighted item text');
+echo __('Show product images?');
+echo __('Show category images?');
+echo __('Show header?');
+echo __('Product border colour');
+echo __('Title');
+echo __('Description');
