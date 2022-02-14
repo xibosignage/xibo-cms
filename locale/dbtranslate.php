@@ -119,3 +119,18 @@ echo __('December');
 echo __('Icon Dashboard');
 echo __('Status Dashboard');
 echo __('Media Dashboard');
+
+// Widget Templates
+echo __('Primary');
+echo __('Secondary');
+echo __('Background');
+echo __('Header color');
+echo __('Header text');
+echo __('Disabled item text');
+echo __('Highlighted item text');
+echo __('Show product images?');
+echo __('Show category images?');
+echo __('Show header?');
+echo __('Product border colour');
+echo __('Title');
+echo __('Description');

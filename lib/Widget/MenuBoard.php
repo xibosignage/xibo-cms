@@ -214,6 +214,11 @@ class MenuBoard extends ModuleWidget
         $templateFlex = array_key_exists('flex-template', $templateInfo) ? $templateInfo['flex-template'] : '';
         $templateFlexSize = array_key_exists('flex-size', $templateInfo) ? $templateInfo['flex-size'] : '';
 
+        // Translate name for each option
+        foreach ($templateOptions as $key => $option) {
+            $templateOptions[$key]['name'] = __($option['name']);
+        }
+
         return [
             'menuBoard' => $menuBoard,
             'menuCategories' => $menuBoardCategories,
@@ -720,6 +725,10 @@ class MenuBoard extends ModuleWidget
         }
     }
 
+    /**
+     * Parse CSS properties and build CSS based on them
+     * @return string
+     */
     private function parseCSSProperties($css)
     {
         // Get template option property

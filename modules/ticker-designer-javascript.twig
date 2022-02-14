@@ -57,7 +57,11 @@
             });
         }
 
+        $(this).find('#templateId').on('change', updateTemplateOptions.bind($(this)));
+
         formHelpers.setupPhpDateFormatPopover($(this))
+
+        updateTemplateOptions.bind($(this))();
     }
 
     // Runs before form submit
@@ -67,6 +71,26 @@
         formHelpers.updateCKEditor();
     }
 
+    function updateTemplateOptions() {
+        var templates = $(this).data().extra.templates;
+        var templateId = $(this).find('#templateId').val();
+        var $form = $(this);
+
+        // Hide all options first
+        $form.find('.template-option').addClass('d-none');
+
+        // Options from template handling
+        $.each(templates, function(templateIndex, template) {
+            if(template.id == templateId) {
+                for (const key in template.options) {
+                    if (Object.hasOwnProperty.call(template.options, key)) {
+                        var element = template.options[key];
+                        $form.find('.template-option-' + key).toggleClass('d-none', !template.options[key]);
+                    }
+                }
+            }
+        });
+    }
 </script>
 
 <style>
