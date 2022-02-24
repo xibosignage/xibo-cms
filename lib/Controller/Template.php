@@ -358,7 +358,11 @@ class Template extends Base
 
         if ($provider === 'both' || $provider === 'remote') {
             // Hand off to any other providers that may want to provide results.
-            $event = new TemplateProviderEvent($searchResults);
+            $event = new TemplateProviderEvent(
+                $searchResults,
+                $sanitizedQueryParams->getInt('start', ['default' => 0]),
+                $sanitizedQueryParams->getInt('length', ['default' => 15])
+            );
 
             $this->getLog()->debug('Dispatching event. ' . $event->getName());
             try {
