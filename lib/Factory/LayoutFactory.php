@@ -622,7 +622,7 @@ class LayoutFactory extends BaseFactory
                 $widget->fromDt = ($mediaNode->getAttribute('fromDt') === '') ? Widget::$DATE_MIN : $mediaNode->getAttribute('fromDt');
                 $widget->toDt = ($mediaNode->getAttribute('toDt') === '') ? Widget::$DATE_MAX : $mediaNode->getAttribute('toDt');
 
-                $this->setWidgetExpiryDatesOrDefault($widget, false);
+                $this->setWidgetExpiryDatesOrDefault($widget);
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
@@ -903,7 +903,7 @@ class LayoutFactory extends BaseFactory
                 $widget->fromDt = ($mediaNode['fromDt'] === '') ? Widget::$DATE_MIN : $mediaNode['fromDt'];
                 $widget->toDt = ($mediaNode['toDt'] === '') ? Widget::$DATE_MAX : $mediaNode['toDt'];
 
-                $this->setWidgetExpiryDatesOrDefault($widget, true);
+                $this->setWidgetExpiryDatesOrDefault($widget);
 
                 $this->getLog()->debug('Adding Widget to object model. ' . $widget);
 
@@ -2279,10 +2279,9 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param \Xibo\Entity\Widget $widget
-     * @param $jsonImport
      * @return \Xibo\Entity\Widget
      */
-    private function setWidgetExpiryDatesOrDefault($widget, $jsonImport)
+    private function setWidgetExpiryDatesOrDefault($widget)
     {
         $minSubYear = Carbon::createFromTimestamp(Widget::$DATE_MIN)->subYear()->format('U');
         $minAddYear = Carbon::createFromTimestamp(Widget::$DATE_MIN)->addYear()->format('U');
@@ -2290,13 +2289,9 @@ class LayoutFactory extends BaseFactory
         $maxAddYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->addYear()->format('U');
 
         // if we are importing from layout.json the Widget from/to expiry dates are already timestamps
-        if ($jsonImport) {
-            $timestampFromDt = $widget->fromDt;
-            $timestampToDt = $widget->toDt;
-        } else {
-            $timestampFromDt = Carbon::createFromTimeString($widget->fromDt)->format('U');
-            $timestampToDt = Carbon::createFromTimeString($widget->toDt)->format('U');
-        }
+        // for old Layouts when the Widget from/to dt are missing we set them to timestamps as well.
+        $timestampFromDt = is_integer($widget->fromDt) ? $widget->fromDt : Carbon::createFromTimeString($widget->fromDt)->format('U');
+        $timestampToDt =  is_integer($widget->toDt) ? $widget->toDt : Carbon::createFromTimeString($widget->toDt)->format('U');
 
         // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
         // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
