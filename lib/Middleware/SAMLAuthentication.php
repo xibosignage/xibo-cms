@@ -196,7 +196,12 @@ class SAMLAuthentication extends AuthenticationBase
 
                         // Home page
                         if (isset($samlSettings['workflow']['homePage'])) {
-                            $user->homePageId = $this->getUserGroupFactory()->getHomepageByName($samlSettings['workflow']['homePage']);
+                            try{
+                                $user->homePageId = $this->getUserGroupFactory()->getHomepageByName($samlSettings['workflow']['homePage'])->homepage;
+                            } catch (NotFoundException $exception) {
+                                $this->getLog()->error(sprintf('Requested homepage %s not found, setting homepage to icondashboard', $samlSettings['workflow']['homePage']));
+                                $user->homePageId = 'icondashboard.view';
+                            }
                         } else {
                             $user->homePageId = 'icondashboard.view';
                         }

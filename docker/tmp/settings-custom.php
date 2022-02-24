@@ -18,7 +18,7 @@
 #        // Initial User Group
 #        'group' => 'Users',
 #        // Home Page
-#        'homePage' => 'icondashboard',
+#        'homePage' => 'icondashboard.view',
 #        // Enable/Disable Single Logout
 #        'slo' => true,
 #        // Attribute mapping between XIBO-CMS and the IdP
