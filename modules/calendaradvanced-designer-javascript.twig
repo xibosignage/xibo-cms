@@ -1,0 +1,86 @@
+{#
+/**
+ * Copyright (C) 2020 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+#}
+
+<script type="text/javascript">
+    // Runs after form opens
+    function calendaradvanced_form_edit_open() {
+        var self = this;
+
+        var updateColors = function() {
+            var CALENDAR_TYPE_NAMES = [
+                'custom',
+                'schedule',
+                'daily',
+                'weekly',
+                'monthly'
+            ];
+            var overrideTemplate = $(self).find('#overrideColorTemplate').prop('checked');
+            var calendarType = CALENDAR_TYPE_NAMES[$(self).find('#calendarType').val()];
+            var templates = $(self).data().extra.templates;
+            var $templateThemePicker = $(self).find('#templateTheme');
+
+            // Toggle elements
+            $(self).find('.template-colors-select').toggle(!overrideTemplate);
+            $(self).find('.template-colors-custom').toggle(overrideTemplate);
+
+            if(!overrideTemplate) {
+                var templateColors;
+
+                // Get the current template id and fill the text field with its colour values
+                for(var i = 0;i < templates.length;i++) {
+                    if(templates[i].id == calendarType) {
+                        templateColors = templates[i][$templateThemePicker.val()];
+                        break;
+                    }
+                }
+
+                // Use template colors for the input fields
+                for (var name in templateColors) {
+                    if (templateColors.hasOwnProperty(name)) {
+                        $(self).find('#' + name).val(templateColors[name]);
+                    }
+                }
+            }
+        }
+
+        // Set duration field, using the helper
+        formHelpers.setupCheckboxInputFields($(self).find('form'), '#useDuration', '.duration-fields');
+
+        // Set clock type input field, using the helper ()
+        formHelpers.setupObjectValueInputFields($(self), '#calendarType', ['.custom-control-group', '.schedule-control-group', '.daily-control-group', '.weekly-control-group', '.monthly-control-group'], [0, 1, 2, 3, 4]);
+
+        // set date range fields
+        formHelpers.setupCheckboxInputFields($(self).find('form'), '#useDateRange', '.date-range', '.interval');
+
+        $(self).find('#overrideColorTemplate, #templateTheme, #calendarType').on('change', updateColors);
+        updateColors();
+    }
+
+    // Runs before form submit
+    function calendaradvanced_form_edit_submit() {
+
+        // Update text callback fields
+        formHelpers.updateCKEditor();
+    }
+
+</script>

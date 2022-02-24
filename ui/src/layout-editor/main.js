@@ -670,9 +670,6 @@ lD.publishLayout = function() {
 
     lD.common.showLoadingScreen();
 
-    // Upload thumbnail
-    lD.uploadThumbnail();
-
     // replace id if necessary/exists
     requestPath = requestPath.replace(':id', lD.layout.parentLayoutId);
 
@@ -999,7 +996,7 @@ lD.showPublishScreen = function() {
     // Deselect all objects before opening the form
     lD.selectObject();
     
-    lD.loadFormFromAPI('publishForm', lD.layout.parentLayoutId, "formHelpers.setupCheckboxInputFields($('#layoutPublishForm'), '#publishNow', '', '.publish-date-control');", "lD.publishLayout();");
+    lD.loadFormFromAPI('publishForm', lD.layout.parentLayoutId, "formHelpers.setupCheckboxInputFields($('#layoutPublishForm'), '#publishNow', '', '.publish-date-control'); lD.uploadThumbnail($('#layoutPublishForm #publishPreview'));", "lD.publishLayout();");
 };
 
 /**
@@ -2117,8 +2114,9 @@ lD.importFromProvider = function(items) {
 
 /**
  * Take and upload a thumbnail
+ * @param {object} targetToAttach DOM object to attach the thumbnail to
  */
-lD.uploadThumbnail = function() {
+lD.uploadThumbnail = function(targetToAttach) {
     const linkToAPI = urlsForApi.layout.addThumbnail;
     const $viewer = lD.editorContainer.find('#layout-viewer');
     const $player = $viewer.find('.layout-player');
@@ -2132,12 +2130,23 @@ lD.uploadThumbnail = function() {
             Math.ceil($player.width()),
             Math.ceil($player.height())].join();
 
+        
+        if ($(targetToAttach).length > 0) {
+            $(targetToAttach).append($('<div class="thumb-preview" style="padding: 2rem 0; font-weight: bold;">').html('Loading Preview...'));
+            $(targetToAttach).removeClass('d-none');
+        }
+
         htmlToImage.toPng($viewer[0]).then(function(dataUrl) {
             $.ajax({
                 url: requestPath,
                 type: "POST",
                 data: dataUrl
             })
+
+            // Attach to target
+            if ($(targetToAttach).length > 0) {
+                $(targetToAttach).find('.thumb-preview').replaceWith($('<img style="max-width: 150px; max-height: 100%;">').attr('src', dataUrl));
+            }
         });
     } else {
         console.log("Viewer not ready");

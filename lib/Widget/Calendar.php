@@ -62,7 +62,7 @@ class Calendar extends ModuleWidget
             // Install
             $module = $moduleFactory->createEmpty();
             $module->name = 'Calendar';
-            $module->type = 'calendar';
+            $module->type = 'calendaradvanced';
             $module->class = '\Xibo\Widget\Calendar';
             $module->description = 'Display content from a Calendar';
             $module->enabled = 1;
@@ -73,7 +73,7 @@ class Calendar extends ModuleWidget
             $module->schemaVersion = 1;
             $module->defaultDuration = 60;
             $module->settings = [];
-            $module->installName = 'calendar';
+            $module->installName = 'calendaradvanced';
 
             $this->setModule($module);
             $this->installModule();
@@ -97,7 +97,7 @@ class Calendar extends ModuleWidget
     /** @inheritdoc */
     public function layoutDesignerJavaScript()
     {
-        return 'calendar-designer-javascript';
+        return 'calendaradvanced-designer-javascript';
     }
 
     /**

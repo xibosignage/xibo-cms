@@ -53,7 +53,7 @@ class Agenda extends ModuleWidget
             // Install
             $module = $moduleFactory->createEmpty();
             $module->name = 'Agenda';
-            $module->type = 'agenda';
+            $module->type = 'calendar';
             $module->class = '\Xibo\Widget\Agenda';
             $module->description = 'Display content from an Agenda';
             $module->enabled = 1;
@@ -64,7 +64,7 @@ class Agenda extends ModuleWidget
             $module->schemaVersion = 1;
             $module->defaultDuration = 60;
             $module->settings = [];
-            $module->installName = 'agenda';
+            $module->installName = 'calendar';
 
             $this->setModule($module);
             $this->installModule();
@@ -87,7 +87,7 @@ class Agenda extends ModuleWidget
     /** @inheritdoc */
     public function layoutDesignerJavaScript()
     {
-        return 'agenda-designer-javascript';
+        return 'calendar-designer-javascript';
     }
 
     /**
@@ -193,6 +193,13 @@ class Agenda extends ModuleWidget
      *      name="useCurrentTemplate",
      *      in="formData",
      *      description="A flag (0, 1), Should current event use different template?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
+     *      name="excludeOnlyCurrent",
+     *      in="formData",
+     *      description="A flag (0, 1), Exclude no current events results?",
      *      type="integer",
      *      required=false
      *   ),
@@ -358,6 +365,7 @@ class Agenda extends ModuleWidget
         $this->setOption('itemsSideBySide', $sanitizedParams->getCheckbox('itemsSideBySide'));
         $this->setOption('useCurrentTemplate', $sanitizedParams->getCheckbox('useCurrentTemplate'));
 
+        $this->setOption('excludeOnlyCurrent', $sanitizedParams->getCheckbox('excludeOnlyCurrent'));
         $this->setOption('excludeCurrent', $sanitizedParams->getCheckbox('excludeCurrent'));
         $this->setOption('excludeAllDay', $sanitizedParams->getCheckbox('excludeAllDay'));
         $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
@@ -497,6 +505,7 @@ class Agenda extends ModuleWidget
             ])
             ->appendJavaScript('
                 $(document).ready(function() {
+                    var showOnlyCurrent = ' . ($this->getOption('excludeOnlyCurrent', 0) == 0 ? 'false' : 'true') . ';
                     var excludeCurrent = ' . ($this->getOption('excludeCurrent', 0) == 0 ? 'false' : 'true') . ';
                     var parsedItems = [];
                     var now = moment();
@@ -523,11 +532,13 @@ class Agenda extends ModuleWidget
                         if (endDate.isAfter(now)) {
                             if (moment(element.startDate).isBefore(now)) {
                                 // This is a currently active event - do we want to add or exclude these?
-                                if (!excludeCurrent) {
+                                if (!excludeCurrent || showOnlyCurrent) {
                                     parsedItems.push(element.currentEventItem);
                                 }
                             } else {
-                                parsedItems.push(element.item);
+                                if (!showOnlyCurrent) {
+                                    parsedItems.push(element.item);
+                                }
                             }
                         }
                     });
