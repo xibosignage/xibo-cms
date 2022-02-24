@@ -135,8 +135,13 @@ class Template extends Base
                 ]);
             }
 
-            if ($this->isApi($request))
-                break;
+            // Published status, draft with set publishedDate
+            $template->publishedStatusFuture = __('Publishing %s');
+            $template->publishedStatusFailed = __('Publish failed ');
+
+            if ($this->isApi($request)) {
+                continue;
+            }
 
             $template->includeProperty('buttons');
 
@@ -156,9 +161,43 @@ class Template extends Base
                 $template->buttons[] = array(
                     'id' => 'layout_button_design',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request,'layout.designer', array('id' => $template->layoutId)),
+                    'url' => $this->urlFor($request, 'layout.designer', array('id' => $template->layoutId)),
                     'text' => __('Alter Template')
                 );
+
+                if ($template->isEditable()) {
+                    $template->buttons[] = ['divider' => true];
+
+                    $template->buttons[] = array(
+                        'id' => 'layout_button_publish',
+                        'url' => $this->urlFor($request, 'layout.publish.form', ['id' => $template->layoutId]),
+                        'text' => __('Publish')
+                    );
+
+                    $template->buttons[] = array(
+                        'id' => 'layout_button_discard',
+                        'url' => $this->urlFor($request, 'layout.discard.form', ['id' => $template->layoutId]),
+                        'text' => __('Discard')
+                    );
+
+                    $template->buttons[] = ['divider' => true];
+                } else {
+                    $template->buttons[] = ['divider' => true];
+
+                    // Checkout Button
+                    $template->buttons[] = array(
+                        'id' => 'layout_button_checkout',
+                        'url' => $this->urlFor($request, 'layout.checkout.form', ['id' => $template->layoutId]),
+                        'text' => __('Checkout'),
+                        'dataAttributes' => [
+                            ['name' => 'auto-submit', 'value' => true],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.checkout', ['id' => $template->layoutId])],
+                            ['name' => 'commit-method', 'value' => 'PUT']
+                        ]
+                    );
+
+                    $template->buttons[] = ['divider' => true];
+                }
 
                 // Edit Button
                 $template->buttons[] = array(
@@ -188,7 +227,7 @@ class Template extends Base
                 // Copy Button
                 $template->buttons[] = array(
                     'id' => 'layout_button_copy',
-                    'url' => $this->urlFor($request,'layout.copy.form', ['id' => $template->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.copy.form', ['id' => $template->layoutId]),
                     'text' => __('Copy')
                 );
             }
@@ -199,11 +238,11 @@ class Template extends Base
                 // Delete Button
                 $template->buttons[] = [
                     'id' => 'layout_button_delete',
-                    'url' => $this->urlFor($request,'layout.delete.form', ['id' => $template->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.delete.form', ['id' => $template->layoutId]),
                     'text' => __('Delete'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $template->layoutId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.delete', ['id' => $template->layoutId])],
                         ['name' => 'commit-method', 'value' => 'delete'],
                         ['name' => 'id', 'value' => 'layout_button_delete'],
                         ['name' => 'text', 'value' => __('Delete')],
@@ -225,14 +264,14 @@ class Template extends Base
                     'text' => __('Share'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $template->campaignId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'Campaign', 'id' => $template->campaignId])],
                         ['name' => 'commit-method', 'value' => 'post'],
                         ['name' => 'id', 'value' => 'layout_button_permissions'],
                         ['name' => 'text', 'value' => __('Share')],
                         ['name' => 'rowtitle', 'value' => $template->layout],
                         ['name' => 'sort-group', 'value' => 2],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])],
+                        ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'Campaign'])],
                         ['name' => 'content-id-name', 'value' => 'campaignId']
                     ]
                 ];
@@ -292,7 +331,8 @@ class Template extends Base
             $templates = $this->layoutFactory->query(['layout'], $this->gridRenderFilter([
                 'excludeTemplates' => 0,
                 'layout' => $sanitizedQueryParams->getString('template'),
-                'folderId' => $sanitizedQueryParams->getInt('folderId')
+                'folderId' => $sanitizedQueryParams->getInt('folderId'),
+                'publishedStatusId' => 1
             ], $sanitizedQueryParams));
 
             foreach ($templates as $template) {
