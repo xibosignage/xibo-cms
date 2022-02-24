@@ -142,7 +142,7 @@
                         {% set navLayout %}{% trans "Navigate to Layout" %}{% endset %}
                         {% set command %}{% trans "Command" %}{% endset %}
                         {% set options = [
-                            { typeid: "navToLayout", type: navLayout },
+                            { typeid: "navLayout", type: navLayout },
                             { typeid: "command", type: command },
                         ] %}
                         {{ forms.dropdown("actionType", "single", title,"", options, "typeid","type", helpText, 'action-control') }}
