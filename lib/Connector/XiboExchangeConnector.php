@@ -122,10 +122,16 @@ class XiboExchangeConnector implements ConnectorInterface
             $this->getLogger()->debug('onTemplateProvider: serving from cache.');
         }
 
+        $providerDetails = new ProviderDetails();
+        $providerDetails->id = $this->getSourceName();
+        $providerDetails->logoUrl = $this->getThumbnail();
+        $providerDetails->message = $this->getTitle();
+        $providerDetails->backgroundColor = '';
+
         foreach ($body as $template) {
             $searchResult = new SearchResult();
             $searchResult->id = $template->fileName;
-            $searchResult->provider = $this->getSourceName();
+            $searchResult->provider = $providerDetails;
             $searchResult->source = 'remote';
             $searchResult->title = $template->title;
             $searchResult->description = $template->description;
