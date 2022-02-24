@@ -120,6 +120,10 @@ trait ConnectorTrait
         return $this;
     }
 
+    /**
+     * Get an HTTP client with the default proxy settings, etc
+     * @return \GuzzleHttp\Client
+     */
     public function getClient(): Client
     {
         return new Client($this->httpOptions);
