@@ -58,18 +58,17 @@ class XiboExchangeConnector implements ConnectorInterface
 
     public function getTitle(): string
     {
-        return 'Xibo Layout Exchange';
+        return 'Xibo Exchange';
     }
 
     public function getDescription(): string
     {
-        return 'Show Layout Templates provided by Xibo Layout Exchange in the add new Layout form.';
+        return 'Show Templates provided by the Xibo Exchange in the add new Layout form.';
     }
 
     public function getThumbnail(): string
     {
-        // TODO change this placeholder to Layout Exchange logo.
-        return 'theme/default/img/thumbs/placeholder.png';
+        return 'theme/default/img/connectors/xibo-exchange.png';
     }
 
     public function getSettingsFormTwig(): string
