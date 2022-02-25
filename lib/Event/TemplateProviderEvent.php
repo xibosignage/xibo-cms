@@ -34,23 +34,60 @@ class TemplateProviderEvent extends Event
 
     /** @var \Xibo\Entity\SearchResults */
     private $results;
+    /**
+     * @var int
+     */
+    private $start;
+    /**
+     * @var int
+     */
+    private $length;
 
     /**
      * @param \Xibo\Entity\SearchResults $results
+     * @param int $start
+     * @param int $length
      */
-    public function __construct(SearchResults $results)
+    public function __construct(SearchResults $results, int $start, int $length)
     {
         $this->results = $results;
+        $this->start = $start;
+        $this->length = $length;
     }
 
+    /**
+     * @param SearchResult $result
+     * @return $this
+     */
     public function addResult(SearchResult $result): TemplateProviderEvent
     {
         $this->results->data[] = $result;
         return $this;
     }
 
+    /**
+     * @return SearchResults
+     */
     public function getResults(): SearchResults
     {
         return $this->results;
+    }
+
+    /**
+     * Get starting record
+     * @return int
+     */
+    public function getStart(): int
+    {
+        return $this->start;
+    }
+
+    /**
+     * Get number of records to return
+     * @return int
+     */
+    public function getLength(): int
+    {
+        return $this->length;
     }
 }

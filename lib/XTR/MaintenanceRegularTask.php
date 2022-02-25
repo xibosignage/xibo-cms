@@ -402,7 +402,7 @@ class MaintenanceRegularTask implements TaskInterface
     {
         $this->runMessage .= '## ' . __('Publishing layouts with set publish dates') . PHP_EOL;
 
-        $layouts = $this->layoutFactory->query(null, ['havePublishDate' => 1, 'disableUserCheck' => 1]);
+        $layouts = $this->layoutFactory->query(null, ['havePublishDate' => 1, 'disableUserCheck' => 1, 'excludeTemplates' => -1]);
 
         // check if we have any layouts with set publish date
         if (count($layouts) > 0) {

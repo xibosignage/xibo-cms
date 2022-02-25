@@ -74,6 +74,7 @@
                                 <thead>
                                     <tr>
                                         <th>{% trans "Name" %}</th>
+                                        <th>{% trans "Status" %}</th>
                                         <th>{% trans "Owner" %}</th>
                                         <th>{% trans "Description" %}</th>
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
@@ -119,6 +120,27 @@
             },
             "columns": [
                 { "data": "layout", responsivePriority: 2},
+                {
+                    "name": "publishedStatus",
+                    responsivePriority: 2,
+                    "data": function (data, type) {
+                        if (data.publishedDate != null) {
+                            var now = moment();
+                            var published = moment(data.publishedDate);
+                            var differenceMinutes = published.diff(now, 'minutes');
+                            var momentDifference = moment(now).to(published);
+
+                            if (differenceMinutes < -5) {
+                                return data.publishedStatus.concat(" - ", translations.publishedStatusFailed);
+                            } else {
+                                return data.publishedStatus.concat(" - ", translations.publishedStatusFuture + " " + momentDifference);
+                            }
+                        } else {
+                            return data.publishedStatus;
+                        }
+
+                    }
+                },
                 { "data": "owner", responsivePriority: 3},
                 {
                     "name": "description",

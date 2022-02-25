@@ -62,8 +62,8 @@
                     {{ forms.dropdown("showContentFrom", "single", title, currentUser.showContentFrom, options, "id", "value", helpText) }}
                 {% endif %}
             
-                {% set title %}{% trans "Use Library duration?" %}{% endset %}
-                {% set helpText %}{% trans "Assign all Media items based on their Library duration. Leave this option unticked to use the Default Module duration." %}{% endset %}
+                {% set title %}{% trans "Force current Library duration?" %}{% endset %}
+                {% set helpText %}{% trans "Assign all Media items based on their Library duration, and make it sticky so that changes in the library are not pulled into this Layout." %}{% endset %}
                 {{ forms.checkbox("useLibraryDuration", title, currentUser.getOptionValue("useLibraryDuration", 0), helpText) }}
 
                 {% set title %}{% trans "Auto show thumbnail column?" %}{% endset %}
