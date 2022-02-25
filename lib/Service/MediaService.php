@@ -335,6 +335,12 @@ class MediaService implements MediaServiceInterface
                 $cssItem->set($cssDetails);
                 $cssItem->expiresAfter(new \DateInterval('P30D'));
                 $this->pool->saveDeferred($cssItem);
+            } else {
+                $cssDetails = [
+                    'css' => '',
+                    'ckeditor' => '',
+                    'list' => []
+                ];
             }
         } else {
             $this->log->debug('CMS font CSS returned from Cache.');

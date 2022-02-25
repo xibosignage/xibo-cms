@@ -58,18 +58,17 @@ class XiboExchangeConnector implements ConnectorInterface
 
     public function getTitle(): string
     {
-        return 'Xibo Layout Exchange';
+        return 'Xibo Exchange';
     }
 
     public function getDescription(): string
     {
-        return 'Show Layout Templates provided by Xibo Layout Exchange in the add new Layout form.';
+        return 'Show Templates provided by the Xibo Exchange in the add new Layout form.';
     }
 
     public function getThumbnail(): string
     {
-        // TODO change this placeholder to Layout Exchange logo.
-        return 'theme/default/img/thumbs/placeholder.png';
+        return 'theme/default/img/connectors/xibo-exchange.png';
     }
 
     public function getSettingsFormTwig(): string
@@ -130,11 +129,18 @@ class XiboExchangeConnector implements ConnectorInterface
             $this->getLogger()->debug('onTemplateProvider: serving from cache.');
         }
 
+        $providerDetails = new ProviderDetails();
+        $providerDetails->id = $this->getSourceName();
+        $providerDetails->logoUrl = $this->getThumbnail();
+        $providerDetails->message = $this->getTitle();
+        $providerDetails->backgroundColor = '';
+
         foreach ($body as $i => $template) {
             if (($page === 1 && $i <= $perPage) ||
                 ($page !== 1 && $i >= $start && $i <= $perPage)
             ) {
                 $searchResult = $this->createSearchResult($template);
+                $searchResult->provider = $providerDetails;
                 $event->addResult($searchResult);
             }
         }
@@ -163,7 +169,6 @@ class XiboExchangeConnector implements ConnectorInterface
     {
         $searchResult = new SearchResult();
         $searchResult->id = $template->fileName;
-        $searchResult->provider = $this->getSourceName();
         $searchResult->source = 'remote';
         $searchResult->title = $template->title;
         $searchResult->description = $template->description;
