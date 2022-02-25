@@ -119,3 +119,15 @@ echo __('December');
 echo __('Icon Dashboard');
 echo __('Status Dashboard');
 echo __('Media Dashboard');
+
+// Application Scopes
+echo __('Full account access');
+echo __('Access to DataSets');
+echo __('Access to deleting DataSets');
+echo __('Access to Library, Layouts, Playlists, Widgets and Resolutions');
+echo __('Access to deleting content from Library, Layouts, Playlists, Widgets and Resolutions');
+echo __('Access to Displays and Display Groups');
+echo __('Access to deleting Displays and Display Groups');
+echo __('Media Conversion as a Service');
+echo __('Access to Scheduling');
+echo __('Access to deleting Scheduled Events');

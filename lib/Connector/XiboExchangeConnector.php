@@ -92,6 +92,13 @@ class XiboExchangeConnector implements ConnectorInterface
         $this->getLogger()->debug('XiboExchangeConnector: onTemplateProvider');
 
         $uri = 'https://download.xibosignage.com/layouts.json';
+        $start = $event->getStart();
+        $perPage = $event->getLength();
+        if ($start == 0) {
+            $page = 1;
+        } else {
+            $page = floor($start / $perPage) + 1;
+        }
 
         $key = md5($uri);
         $cache = $this->getPool()->getItem($key);
@@ -123,19 +130,13 @@ class XiboExchangeConnector implements ConnectorInterface
             $this->getLogger()->debug('onTemplateProvider: serving from cache.');
         }
 
-        foreach ($body as $template) {
-            $searchResult = new SearchResult();
-            $searchResult->id = $template->fileName;
-            $searchResult->provider = $this->getSourceName();
-            $searchResult->source = 'remote';
-            $searchResult->title = $template->title;
-            $searchResult->description = $template->description;
-
-            // Thumbnail
-            $searchResult->thumbnail = $template->thumbnailUrl;
-            $searchResult->download = $template->downloadUrl;
-
-            $event->addResult($searchResult);
+        foreach ($body as $i => $template) {
+            if (($page === 1 && $i <= $perPage) ||
+                ($page !== 1 && $i >= $start && $i <= $perPage)
+            ) {
+                $searchResult = $this->createSearchResult($template);
+                $event->addResult($searchResult);
+            }
         }
     }
 
@@ -152,5 +153,24 @@ class XiboExchangeConnector implements ConnectorInterface
         $tempFile = $event->getLibraryLocation() . 'temp/' . $event->getFileName();
         $client->request('GET', $downloadUrl, ['sink' => $tempFile]);
         $event->setFilePath($tempFile);
+    }
+
+    /**
+     * @param $template
+     * @return SearchResult
+     */
+    private function createSearchResult($template) : SearchResult
+    {
+        $searchResult = new SearchResult();
+        $searchResult->id = $template->fileName;
+        $searchResult->provider = $this->getSourceName();
+        $searchResult->source = 'remote';
+        $searchResult->title = $template->title;
+        $searchResult->description = $template->description;
+
+        // Thumbnail
+        $searchResult->thumbnail = $template->thumbnailUrl;
+        $searchResult->download = $template->downloadUrl;
+        return $searchResult;
     }
 }

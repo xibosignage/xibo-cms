@@ -66,7 +66,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $importTags = isset($_REQUEST['importTags']) ? $_REQUEST['importTags'][$index] : 0;
             $useExistingDataSets = isset($_REQUEST['useExistingDataSets']) ? $_REQUEST['useExistingDataSets'][$index] : 0;
             $importDataSetData = isset($_REQUEST['importDataSetData']) ? $_REQUEST['importDataSetData'][$index] : 0;
-            $folderId = $_REQUEST['folderId'] ?? 1;
+            $folderId = !empty($_REQUEST['folderId']) ? $_REQUEST['folderId'] : 1;
 
             /* @var Layout $layout */
             $layout = $controller->getLayoutFactory()->createFromZip(

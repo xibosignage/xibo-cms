@@ -207,9 +207,9 @@
                                 var momentDifference = moment(now).to(published);
 
                                 if (differenceMinutes < -5) {
-                                    return data.publishedStatus.concat(" - ", data.publishedStatusFailed);
+                                    return data.publishedStatus.concat(" - ", translations.publishedStatusFailed);
                                 } else {
-                                    return data.publishedStatus.concat(" - ", data.publishedStatusFuture.replace('%s', momentDifference));
+                                    return data.publishedStatus.concat(" - ", translations.publishedStatusFuture + " " + momentDifference);
                                 }
                             } else {
                                 return data.publishedStatus;

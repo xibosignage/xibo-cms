@@ -38,7 +38,7 @@
                         <ul class="card-text" style="margin-bottom: 50px">
                             {% for scope in scopes %}
                             <li>
-                                {{ scope.description }}
+                                {{ scope.description|trans|raw }}
                             </li>
                             {% endfor %}
                         </ul>

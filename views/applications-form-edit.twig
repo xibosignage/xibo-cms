@@ -90,7 +90,7 @@
                         {{ forms.message(message, "alert alert-info") }}
 
                         {% set title %}{% trans "Application Description" %}{% endset %}
-                        {{ forms.textarea("description", title, client.description) }}
+                        {{ forms.textarea("description", title, client.description, title) }}
 
                         {% set title %}{% trans "Logo" %}{% endset %}
                         {% set helpText %}{% trans "Url pointing to the logo" %}{% endset %}
@@ -100,7 +100,7 @@
                         {% set helpText %}{% trans "Url pointing to the Cover Image" %}{% endset %}
                         {{ forms.input("coverImage", title, client.coverImage, helpText) }}
 
-                        {% set title %}{% trans "Compnay Name" %}{% endset %}
+                        {% set title %}{% trans "Company Name" %}{% endset %}
                         {{ forms.input("companyName", title, client.companyName) }}
 
                         {% set title %}{% trans "Terms URL" %}{% endset %}
@@ -113,7 +113,11 @@
                     </div>
                     <div class="tab-pane" id="scopes">
                         {% set message %}{% trans "Select sharing to grant to this application (scopes)." %}{% endset %}
-                        {{ forms.message(message) }}
+                        {{ forms.message(message, 'alert alert-info') }}
+                        {% set message2 %}{% trans "Scopes grant the Application access to specific routes, all GET,POST and PUT calls for the selected scopes, will be available to use by this Application." %}{% endset %}
+                        {{ forms.message(message2, 'alert alert-info') }}
+                        {% set message3 %}{% trans "The delete scopes are separate, without these Application will not have access to delete any existing content" %}{% endset %}
+                        {{ forms.message(message3, 'alert alert-info') }}
 
                         <div class="form-group row">
                             <span class="control-label col-sm-2">{{ "Scopes"|trans }}:</span>
