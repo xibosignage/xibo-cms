@@ -21,10 +21,44 @@
  */
 #}
 <script type="text/javascript">
-
     // Runs after form opens
     function forecastio_form_edit_open() {
-        
+        // Update form fields based on template options
+        var updateTemplateOptions = function() {
+            var templates = $(this).data().extra;
+            var templateId = $(this).find('#templateId').val();
+            var $form = $(this);
+
+            // Hide all options first
+            $form.find('.template-option').addClass('d-none');
+
+            // Options from template handling
+            $.each(templates, function(templateIndex, template) {
+                if(template.id == templateId) {
+                    for (const key in template.options) {
+                        if (Object.hasOwnProperty.call(template.options, key)) {
+                            var element = template.options[key];
+                            $form.find('.template-option-' + key).toggleClass('d-none', !template.options[key]);
+                        }
+                    }
+                }
+            });
+        }.bind(this);
+
+        var filterTemplates = function (refresh) {
+            // Get filter value
+            var templateTypeValue = $(this).find('#templateType').val();
+            var templateOrientationValue = $(this).find('#templateOrientation').val();
+
+            // Set dropdown filter option
+            $(this).find('#templateId').data('filterClass', [templateTypeValue, templateOrientationValue]);
+
+            // Clear template id if it's not selected
+            if(refresh && $(this).find('#overrideTemplate').is(':checked') == false) {
+                $(this).find('#templateId').val(null).trigger('change');
+            }
+        }.bind(this);
+
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
@@ -45,7 +79,19 @@
                 '#dailyTemplate': 'daily',
                 '#styleSheet': 'css',
                 '#widgetOriginalWidth': 'widgetOriginalWidth',
-                '#widgetOriginalHeight': 'widgetOriginalHeight'
+                '#widgetOriginalHeight': 'widgetOriginalHeight',
+                '#showBackground': 'background'
             });
+
+        // Trigger set filter on weather type change
+        $(this).find('#templateOrientation, #templateType').on('change input', function () {
+            filterTemplates(true);
+            updateTemplateOptions();
+        });
+
+        $(this).find('#templateId').on('change', updateTemplateOptions);
+
+        filterTemplates(false);
+        updateTemplateOptions();
     }
 </script>
