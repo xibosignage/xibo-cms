@@ -24,6 +24,28 @@
 
     // Runs after form opens
     function ticker_form_edit_open() {
+        // Update form fields based on template options
+        var updateTemplateOptions = function() {
+            var templates = $(this).data().extra.templates;
+            var templateId = $(this).find('#templateId').val();
+            var $form = $(this);
+
+            // Hide all options first
+            $form.find('.template-option').addClass('d-none');
+
+            // Options from template handling
+            $.each(templates, function(templateIndex, template) {
+                if(template.id == templateId) {
+                    for (const key in template.options) {
+                        if (Object.hasOwnProperty.call(template.options, key)) {
+                            var element = template.options[key];
+                            $form.find('.template-option-' + key).toggleClass('d-none', !template.options[key]);
+                        }
+                    }
+                }
+            });
+        }.bind(this);
+
         // Set duration field, using the helper ()
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDuration', '.duration-fields');
 
@@ -57,11 +79,11 @@
             });
         }
 
-        $(this).find('#templateId').on('change', updateTemplateOptions.bind($(this)));
+        $(this).find('#templateId').on('change', updateTemplateOptions);
 
         formHelpers.setupPhpDateFormatPopover($(this))
 
-        updateTemplateOptions.bind($(this))();
+        updateTemplateOptions();
     }
 
     // Runs before form submit
@@ -69,27 +91,6 @@
 
         // Update text callback fields
         formHelpers.updateCKEditor();
-    }
-
-    function updateTemplateOptions() {
-        var templates = $(this).data().extra.templates;
-        var templateId = $(this).find('#templateId').val();
-        var $form = $(this);
-
-        // Hide all options first
-        $form.find('.template-option').addClass('d-none');
-
-        // Options from template handling
-        $.each(templates, function(templateIndex, template) {
-            if(template.id == templateId) {
-                for (const key in template.options) {
-                    if (Object.hasOwnProperty.call(template.options, key)) {
-                        var element = template.options[key];
-                        $form.find('.template-option-' + key).toggleClass('d-none', !template.options[key]);
-                    }
-                }
-            }
-        });
     }
 </script>
 
