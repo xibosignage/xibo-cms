@@ -573,7 +573,7 @@ class Schedule implements \JsonSerializable
                 if (!v::intType()->notEmpty()->validate($this->commandId)) {
                     throw new InvalidArgumentException(__('Please select a Command for this event.'), 'commandId');
                 }
-            } elseif ($this->actionType === 'navToLayout') {
+            } elseif ($this->actionType === 'navLayout') {
                 if (!v::stringType()->notEmpty()->validate($this->actionLayoutCode)) {
                     throw new InvalidArgumentException(__('Please select a Layout code for this event.'), 'actionLayoutCode');
                 }

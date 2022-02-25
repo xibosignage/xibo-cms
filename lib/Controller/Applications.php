@@ -176,22 +176,33 @@ class Applications extends Base
             return $this->authorize($request->withParsedBody(['authorization' => 'Approve']), $response);
         }
 
+        $client = $this->applicationFactory->getClientEntity($authParams->getClient()->getIdentifier())->load();
+
         // Process any scopes.
         $scopes = [];
         $authScopes = $authParams->getScopes();
+
+        // if we have scopes in the request, make sure we only add the valid ones.
+        // the default scope is all, if it's not set on the Application, $scopes will still be empty here.
         if ($authScopes !== null) {
-            foreach ($authScopes as $scope) {
-                $this->getLog()->debug('Loading scope: ' . $scope->getIdentifier());
+            $validScopes = $this->applicationScopeFactory->finalizeScopes($authScopes, $authParams->getGrantTypeId(), $client);
+            // get all the valid scopes by their ID, we need to do this to present more details on the authorize form.
+            foreach ($validScopes as $scope) {
                 $scopes[] = $this->applicationScopeFactory->getById($scope->getIdentifier());
             }
         }
 
-        // `all` is the default scope
+        // if the request does not contain any valid scopes, default to all scopes assigned to this Application.
         if (count($scopes) <= 0) {
-            $scopes[] = $this->applicationScopeFactory->getById('all');
+            $validScopes = $client->getScopes();
+            foreach ($validScopes as $scope) {
+                $scopes[] = $this->applicationScopeFactory->getById($scope->getIdentifier());
+            }
         }
 
-        $client = $this->applicationFactory->getClientEntity($authParams->getClient()->getIdentifier());
+        // update scopes in auth request in session to scopes we actually present for approval
+        $authParams->setScopes($validScopes);
+        $this->session->set('authParams', $authParams);
 
         // Get, show page
         $this->getState()->template = 'applications-authorize-page';

@@ -58,18 +58,17 @@ class XiboExchangeConnector implements ConnectorInterface
 
     public function getTitle(): string
     {
-        return 'Xibo Layout Exchange';
+        return 'Xibo Exchange';
     }
 
     public function getDescription(): string
     {
-        return 'Show Layout Templates provided by Xibo Layout Exchange in the add new Layout form.';
+        return 'Show Templates provided by the Xibo Exchange in the add new Layout form.';
     }
 
     public function getThumbnail(): string
     {
-        // TODO change this placeholder to Layout Exchange logo.
-        return 'theme/default/img/thumbs/placeholder.png';
+        return 'theme/default/img/connectors/xibo-exchange.png';
     }
 
     public function getSettingsFormTwig(): string
@@ -92,6 +91,13 @@ class XiboExchangeConnector implements ConnectorInterface
         $this->getLogger()->debug('XiboExchangeConnector: onTemplateProvider');
 
         $uri = 'https://download.xibosignage.com/layouts.json';
+        $start = $event->getStart();
+        $perPage = $event->getLength();
+        if ($start == 0) {
+            $page = 1;
+        } else {
+            $page = floor($start / $perPage) + 1;
+        }
 
         $key = md5($uri);
         $cache = $this->getPool()->getItem($key);
@@ -101,8 +107,7 @@ class XiboExchangeConnector implements ConnectorInterface
             $this->getLogger()->debug('onTemplateProvider: cache miss, generating.');
 
             // Make the request
-            $client = new Client();
-            $request = $client->request('GET', $uri);
+            $request = $this->getClient()->request('GET', $uri);
 
             $body = $request->getBody()->getContents();
             if (empty($body)) {
@@ -124,19 +129,20 @@ class XiboExchangeConnector implements ConnectorInterface
             $this->getLogger()->debug('onTemplateProvider: serving from cache.');
         }
 
-        foreach ($body as $template) {
-            $searchResult = new SearchResult();
-            $searchResult->id = $template->fileName;
-            $searchResult->provider = $this->getSourceName();
-            $searchResult->source = 'remote';
-            $searchResult->title = $template->title;
-            $searchResult->description = $template->description;
+        $providerDetails = new ProviderDetails();
+        $providerDetails->id = $this->getSourceName();
+        $providerDetails->logoUrl = $this->getThumbnail();
+        $providerDetails->message = $this->getTitle();
+        $providerDetails->backgroundColor = '';
 
-            // Thumbnail
-            $searchResult->thumbnail = $template->thumbnailUrl;
-            $searchResult->download = $template->downloadUrl;
-
-            $event->addResult($searchResult);
+        foreach ($body as $i => $template) {
+            if (($page === 1 && $i <= $perPage) ||
+                ($page !== 1 && $i >= $start && $i <= $perPage)
+            ) {
+                $searchResult = $this->createSearchResult($template);
+                $searchResult->provider = $providerDetails;
+                $event->addResult($searchResult);
+            }
         }
     }
 
@@ -153,5 +159,23 @@ class XiboExchangeConnector implements ConnectorInterface
         $tempFile = $event->getLibraryLocation() . 'temp/' . $event->getFileName();
         $client->request('GET', $downloadUrl, ['sink' => $tempFile]);
         $event->setFilePath($tempFile);
+    }
+
+    /**
+     * @param $template
+     * @return SearchResult
+     */
+    private function createSearchResult($template) : SearchResult
+    {
+        $searchResult = new SearchResult();
+        $searchResult->id = $template->fileName;
+        $searchResult->source = 'remote';
+        $searchResult->title = $template->title;
+        $searchResult->description = $template->description;
+
+        // Thumbnail
+        $searchResult->thumbnail = $template->thumbnailUrl;
+        $searchResult->download = $template->downloadUrl;
+        return $searchResult;
     }
 }

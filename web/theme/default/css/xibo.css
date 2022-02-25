@@ -1493,3 +1493,8 @@ div.dataTables_wrapper div.dataTables_info {
     max-width: 120px;
     max-height: 80px;
 }
+
+.provider-image {
+    width: 25px;
+    float: right;
+}

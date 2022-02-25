@@ -786,7 +786,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
+     *      description="The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
      *      type="integer",
      *      required=true
      *  ),
@@ -917,6 +917,27 @@ class Schedule extends Base
      *      name="geoLocationJson",
      *      in="formData",
      *      description="Valid GeoJSON string, use as an alternative to geoLocation parameter",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="actionType",
+     *      in="formData",
+     *      description="For Action eventTypeId, the type of the action - command or navLayout",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="actionTriggerCode",
+     *      in="formData",
+     *      description="For Action eventTypeId, the webhook trigger code for the Action",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="actionLayoutCode",
+     *      in="formData",
+     *      description="For Action eventTypeId and navLayout actionType, the Layout Code identifier",
      *      type="string",
      *      required=false
      *   ),
@@ -1308,7 +1329,7 @@ class Schedule extends Base
      *  @SWG\Parameter(
      *      name="eventTypeId",
      *      in="formData",
-     *      description="The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
+     *      description="The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
      *      type="integer",
      *      required=true
      *  ),
@@ -1439,6 +1460,27 @@ class Schedule extends Base
      *      name="geoLocationJson",
      *      in="formData",
      *      description="Valid GeoJSON string, use as an alternative to geoLocation parameter",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="actionType",
+     *      in="formData",
+     *      description="For Action eventTypeId, the type of the action - command or navLayout",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="actionTriggerCode",
+     *      in="formData",
+     *      description="For Action eventTypeId, the webhook trigger code for the Action",
+     *      type="string",
+     *      required=false
+     *   ),
+     *   @SWG\Parameter(
+     *      name="actionLayoutCode",
+     *      in="formData",
+     *      description="For Action eventTypeId and navLayout actionType, the Layout Code identifier",
      *      type="string",
      *      required=false
      *   ),

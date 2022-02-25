@@ -134,3 +134,15 @@ echo __('Show header?');
 echo __('Product border colour');
 echo __('Title');
 echo __('Description');
+
+// Application Scopes
+echo __('Full account access');
+echo __('Access to DataSets');
+echo __('Access to deleting DataSets');
+echo __('Access to Library, Layouts, Playlists, Widgets and Resolutions');
+echo __('Access to deleting content from Library, Layouts, Playlists, Widgets and Resolutions');
+echo __('Access to Displays and Display Groups');
+echo __('Access to deleting Displays and Display Groups');
+echo __('Media Conversion as a Service');
+echo __('Access to Scheduling');
+echo __('Access to deleting Scheduled Events');
