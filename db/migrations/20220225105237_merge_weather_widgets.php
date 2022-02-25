@@ -1,6 +1,6 @@
-{#
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+<?php
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -19,16 +19,18 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-#}
 
-{% extends "form-base.twig" %}
-{% import "forms.twig" as forms %}
+use Phinx\Migration\AbstractMigration;
 
-{% block formHtml %}
-    <div class="row">
-        <div class="col-md-12">
-            <h4>{% trans "Exported Template" %}</h4>
-            <pre>{{ template }}</pre>
-        </div>
-    </div>
-{% endblock %}
+/**
+ * Remove weather tiles module to merge both weather widgets into one
+ * @phpcs:disable PSR1.Classes.ClassDeclaration.MissingNamespace
+ */
+class MergeWeatherWidgets extends AbstractMigration
+{
+    public function change()
+    {
+        // Delete weather tiles table
+        $this->execute('DELETE FROM `module` WHERE module = \'weather\' ');
+    }
+}

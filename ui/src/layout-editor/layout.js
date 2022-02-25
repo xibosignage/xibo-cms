@@ -435,6 +435,9 @@ Layout.prototype.createDrawer = function(drawerData) {
         // calculate expire status
         newWidget.calculateExpireStatus();
 
+        // Check if widget is enabled
+        newWidget.checkIfEnabled();
+
         // update duration
         newWidget.getDuration();
 

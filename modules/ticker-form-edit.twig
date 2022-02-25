@@ -233,6 +233,39 @@
                            {% trans "With Override the Template selected enter your own text, html and css by using the Templates drop down menu in the tab header above." %}                     
                         {% endset %}
                         {{ forms.message(useTemplatesMessage, 'template-override-controls') }}
+
+                        <div class="template-options template-selector-control">
+                            {% set useTemplatesOptionsMessage %}
+                            {% trans "You can change the appearance of this template using the options below." %}                     
+                            {% endset %}
+                            {{ forms.message(useTemplatesOptionsMessage, '') }}
+
+                            {% set name %}{% trans "Background" %}{% endset %}
+                            {{ forms.colorPicker("background-color", name, module.getOption("background-color"), "", "template-option template-option-background-color d-none") }}
+
+                            {% set name %}{% trans "Title" %}{% endset %}
+                            {{ forms.colorPicker("title-color", name, module.getOption("title-color"), "", "template-option template-option-title-color d-none") }}
+
+                            {% set name %}{% trans "Name" %}{% endset %}
+                            {{ forms.colorPicker("name-color", name, module.getOption("name-color"), "", "template-option template-option-name-color d-none") }}
+
+                            {% set name %}{% trans "Description" %}{% endset %}
+                            {{ forms.colorPicker("description-color", name, module.getOption("description-color"), "", "template-option template-option-description-color d-none") }}
+
+                            {% set name %}{% trans "Font Size" %}{% endset %}
+                            {{ forms.number("font-size", name, module.getOption("font-size"), "", "template-option template-option-font-size d-none") }}
+
+                            {% set title %}{% trans "Image Fit" %}{% endset %}
+                            {% set containText %}{% trans "Contain" %}{% endset %}
+                            {% set coverText %}{% trans "Cover" %}{% endset %}
+                            {% set fillText %}{% trans "Fill" %}{% endset %}
+                            {% set options = [
+                                { id: "contain", value: containText },
+                                { id: "cover", value: coverText },
+                                { id: "fill", value: fillText }
+                            ] %}
+                            {{ forms.dropdown("image-fit", "single", title, module.getOption("image-fit", "contain"), options, "id", "value", "", "template-option template-option-image-fit d-none") }}
+                        </div>
                     </div>
 
                     <div class="tab-pane" id="templateTab">

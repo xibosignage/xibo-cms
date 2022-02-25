@@ -232,10 +232,6 @@
                         {% endif %}
                     {% endif %}
 
-                    {% if optionFilter %}
-                        {% set itemOptionType = attribute(option, optionFilter) %}
-                    {% endif %}
-
                     {% if type == "dropdownmulti" %}
                         {% set selected = (itemOptionId in value) %}
                     {% else %}
@@ -246,8 +242,15 @@
                             {% if itemOptionImageValue %}
                                 data-content="<span class='media'><span class='media-left mr-2'><img style='max-width: 100px; max-height: 80px;' src='{{ itemOptionImageValue }}' /></span> <span class='media-body'>{{ itemOptionValue }}</span></span>"
                             {% endif %}
-                            {% if itemOptionType %}
-                                data-filter-class="{{ itemOptionType }}"
+
+                            {% if optionFilter %}
+                                {% if optionFilter[0] is not defined %}
+                                    data-filter-class="{{ attribute(option, optionFilter) }}" 
+                                {% else %}
+                                    {% for filter in optionFilter %}
+                                        data-filter{{ loop.index0 }}-class="{{  attribute(option, filter) }}" 
+                                    {% endfor %}
+                                {% endif %}
                             {% endif %}
                     >{{ itemOptionValue }}</option>
                 {% endfor %}
