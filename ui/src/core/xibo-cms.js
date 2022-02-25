@@ -3125,15 +3125,30 @@ function makeLocalSelect(element, parent) {
     element.select2({
         dropdownParent: ((parent == null) ? $("body") : $(parent)),
         matcher: function(params, data) {
+
+            var testElementFilter = function (filter, elementFilterClassName) {
+                var elementFilterClass = $(data.element).data()[elementFilterClassName];
+
+                // Get element class array ( one or more elements split by comma)
+                var elementClassArray = (elementFilterClass != undefined ) ? elementFilterClass.replace(' ', '').split(',') : [];
+
+                // If filter exists and it's not in one of the element filters, return empty data
+                return (filter != undefined && filter != '' && !elementClassArray.includes(filter));
+            };
+
             // If filterClass is defined, try to filter the elements by it
             var mainFilterClass = $(data.element.parentElement).data().filterClass;
 
-            // Get element class array ( one or more elements split by comma)
-            var elementClassArray = ($(data.element).data().filterClass != undefined ) ? $(data.element).data().filterClass.replace(' ', '').split(',') : [];
-
-            // If filter exists and it's not in one of the element filters, return empty data
-            if(mainFilterClass != undefined && mainFilterClass != '' && !elementClassArray.includes(mainFilterClass)) {
-                return null;
+            if(Array.isArray(mainFilterClass)) {
+                for(var index = 0;index < mainFilterClass.length; index++) {
+                    if (testElementFilter(mainFilterClass[index], 'filter' + index + 'Class')) {
+                        return null
+                    }
+                }
+            } else {
+                if (testElementFilter(mainFilterClass, 'filterClass')) {
+                    return null
+                }
             }
 
             // If there are no search terms, return all of the data
