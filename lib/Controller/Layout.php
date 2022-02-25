@@ -1341,7 +1341,7 @@ class Layout extends Base
      * @throws \Xibo\Support\Exception\ConfigurationException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response)
     {
         $this->getState()->template = 'grid';
 
@@ -1403,7 +1403,7 @@ class Layout extends Base
             $layout = $this->layoutFactory->decorateLockedProperties($layout);
 
             // Annotate each Widget with its validity, tags and permissions
-            if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) { 
+            if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) {
                 foreach ($layout->getAllWidgets() as $widget) {
                     try {
                         $module = $this->moduleFactory->createWithWidget($widget);
@@ -1482,7 +1482,6 @@ class Layout extends Base
                         $region->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($region);
                     }
                 }
-
             }
 
             if ($this->isApi($request)) {
@@ -1520,12 +1519,13 @@ class Layout extends Base
                 }
 
                 // provide our layout object to a template to render immediately
-                $layout->descriptionFormatted = $this->renderTemplateToString('layout-page-grid-widgetlist',
-                    (array)$layout);
+                $layout->descriptionFormatted = $this->renderTemplateToString(
+                    'layout-page-grid-widgetlist',
+                    (array)$layout
+                );
             }
 
             switch ($layout->status) {
-
                 case ModuleWidget::$STATUS_VALID:
                     $layout->statusDescription = __('This Layout is ready to play');
                     break;
@@ -1543,7 +1543,6 @@ class Layout extends Base
             }
 
             switch ($layout->enableStat) {
-
                 case 1:
                     $layout->enableStatDescription = __('This Layout has enable stat collection set to ON');
                     break;
@@ -1551,10 +1550,6 @@ class Layout extends Base
                 default:
                     $layout->enableStatDescription = __('This Layout has enable stat collection set to OFF');
             }
-
-            // Published status, draft with set publishedDate
-            $layout->publishedStatusFuture = __('Publishing %s');
-            $layout->publishedStatusFailed = __('Publish failed ');
 
             // Check if user has delete permissions - for layout designer to show/hide Delete button
             $layout->deletePermission = $this->getUser()->featureEnabled('layout.modify');
@@ -1570,24 +1565,23 @@ class Layout extends Base
                 $layout->buttons[] = array(
                     'id' => 'layout_button_design',
                     'linkType' => '_self', 'external' => true,
-                    'url' => $this->urlFor($request,'layout.designer', array('id' => $layout->layoutId)),
+                    'url' => $this->urlFor($request, 'layout.designer', array('id' => $layout->layoutId)),
                     'text' => __('Design')
                 );
 
                 // Should we show a publish/discard button?
                 if ($layout->isEditable()) {
-
                     $layout->buttons[] = ['divider' => true];
 
                     $layout->buttons[] = array(
                         'id' => 'layout_button_publish',
-                        'url' => $this->urlFor($request,'layout.publish.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.publish.form', ['id' => $layout->layoutId]),
                         'text' => __('Publish')
                     );
 
                     $layout->buttons[] = array(
                         'id' => 'layout_button_discard',
-                        'url' => $this->urlFor($request,'layout.discard.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.discard.form', ['id' => $layout->layoutId]),
                         'text' => __('Discard')
                     );
 
@@ -1598,11 +1592,11 @@ class Layout extends Base
                     // Checkout Button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_checkout',
-                        'url' => $this->urlFor($request,'layout.checkout.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.checkout.form', ['id' => $layout->layoutId]),
                         'text' => __('Checkout'),
                         'dataAttributes' => [
                             ['name' => 'auto-submit', 'value' => true],
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.checkout', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.checkout', ['id' => $layout->layoutId])],
                             ['name' => 'commit-method', 'value' => 'PUT']
                         ]
                     );
@@ -1639,7 +1633,7 @@ class Layout extends Base
             if ($this->getUser()->featureEnabled('schedule.now')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_schedulenow',
-                    'url' => $this->urlFor($request,'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Layout']),
+                    'url' => $this->urlFor($request, 'schedule.now.form', ['id' => $layout->campaignId, 'from' => 'Layout']),
                     'text' => __('Schedule Now')
                 );
             }
@@ -1648,7 +1642,7 @@ class Layout extends Base
             if ($this->getUser()->featureEnabled('campaign.modify')) {
                 $layout->buttons[] = array(
                     'id' => 'layout_button_assignTo_campaign',
-                    'url' => $this->urlFor($request,'layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.assignTo.campaign.form', ['id' => $layout->layoutId]),
                     'text' => __('Assign to Campaign')
                 );
             }
@@ -1691,7 +1685,7 @@ class Layout extends Base
                 // Edit Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_edit',
-                    'url' => $this->urlFor($request,'layout.edit.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.edit.form', ['id' => $layout->layoutId]),
                     'text' => __('Edit')
                 );
 
@@ -1699,11 +1693,11 @@ class Layout extends Base
                     // Select Folder
                     $layout->buttons[] = [
                         'id' => 'campaign_button_selectfolder',
-                        'url' => $this->urlFor($request,'campaign.selectfolder.form', ['id' => $layout->campaignId]),
+                        'url' => $this->urlFor($request, 'campaign.selectfolder.form', ['id' => $layout->campaignId]),
                         'text' => __('Select Folder'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'campaign.selectfolder', ['id' => $layout->campaignId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'campaign.selectfolder', ['id' => $layout->campaignId])],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'campaign_button_selectfolder'],
                             ['name' => 'text', 'value' => __('Move to Folder')],
@@ -1716,7 +1710,7 @@ class Layout extends Base
                 // Copy Button
                 $layout->buttons[] = array(
                     'id' => 'layout_button_copy',
-                    'url' => $this->urlFor($request,'layout.copy.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.copy.form', ['id' => $layout->layoutId]),
                     'text' => __('Copy')
                 );
 
@@ -1724,11 +1718,11 @@ class Layout extends Base
                 if ($layout->retired == 0) {
                     $layout->buttons[] = [
                         'id' => 'layout_button_retire',
-                        'url' => $this->urlFor($request,'layout.retire.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.retire.form', ['id' => $layout->layoutId]),
                         'text' => __('Retire'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.retire', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.retire', ['id' => $layout->layoutId])],
                             ['name' => 'commit-method', 'value' => 'put'],
                             ['name' => 'id', 'value' => 'layout_button_retire'],
                             ['name' => 'text', 'value' => __('Retire')],
@@ -1739,7 +1733,7 @@ class Layout extends Base
                 } else {
                     $layout->buttons[] = array(
                         'id' => 'layout_button_unretire',
-                        'url' => $this->urlFor($request,'layout.unretire.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.unretire.form', ['id' => $layout->layoutId]),
                         'text' => __('Unretire'),
                     );
                 }
@@ -1749,11 +1743,11 @@ class Layout extends Base
                     // Delete Button
                     $layout->buttons[] = [
                         'id' => 'layout_button_delete',
-                        'url' => $this->urlFor($request,'layout.delete.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'layout.delete.form', ['id' => $layout->layoutId]),
                         'text' => __('Delete'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.delete', ['id' => $layout->layoutId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.delete', ['id' => $layout->layoutId])],
                             ['name' => 'commit-method', 'value' => 'delete'],
                             ['name' => 'id', 'value' => 'layout_button_delete'],
                             ['name' => 'text', 'value' => __('Delete')],
@@ -1766,11 +1760,11 @@ class Layout extends Base
                 // Set Enable Stat
                 $layout->buttons[] = [
                     'id' => 'layout_button_setenablestat',
-                    'url' => $this->urlFor($request,'layout.setenablestat.form', ['id' => $layout->layoutId]),
+                    'url' => $this->urlFor($request, 'layout.setenablestat.form', ['id' => $layout->layoutId]),
                     'text' => __('Enable stats collection?'),
                     'multi-select' => true,
                     'dataAttributes' => [
-                        ['name' => 'commit-url', 'value' => $this->urlFor($request,'layout.setenablestat', ['id' => $layout->layoutId])],
+                        ['name' => 'commit-url', 'value' => $this->urlFor($request, 'layout.setenablestat', ['id' => $layout->layoutId])],
                         ['name' => 'commit-method', 'value' => 'put'],
                         ['name' => 'id', 'value' => 'layout_button_setenablestat'],
                         ['name' => 'text', 'value' => __('Enable stats collection?')],
@@ -1785,7 +1779,7 @@ class Layout extends Base
                     // Save template button
                     $layout->buttons[] = array(
                         'id' => 'layout_button_save_template',
-                        'url' => $this->urlFor($request,'template.from.layout.form', ['id' => $layout->layoutId]),
+                        'url' => $this->urlFor($request, 'template.from.layout.form', ['id' => $layout->layoutId]),
                         'text' => __('Save Template')
                     );
                 }
@@ -1804,18 +1798,18 @@ class Layout extends Base
                     // Permissions button
                     $layout->buttons[] = [
                         'id' => 'layout_button_permissions',
-                        'url' => $this->urlFor($request,'user.permissions.form', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
+                        'url' => $this->urlFor($request, 'user.permissions.form', ['entity' => 'Campaign', 'id' => $layout->campaignId]),
                         'text' => __('Share'),
                         'multi-select' => true,
                         'dataAttributes' => [
-                            ['name' => 'commit-url', 'value' => $this->urlFor($request,'user.permissions.multi', ['entity' => 'Campaign', 'id' => $layout->campaignId])],
+                            ['name' => 'commit-url', 'value' => $this->urlFor($request, 'user.permissions.multi', ['entity' => 'Campaign', 'id' => $layout->campaignId])],
                             ['name' => 'commit-method', 'value' => 'post'],
                             ['name' => 'id', 'value' => 'layout_button_permissions'],
                             ['name' => 'text', 'value' => __('Share')],
                             ['name' => 'rowtitle', 'value' => $layout->layout],
                             ['name' => 'sort-group', 'value' => 2],
                             ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
-                            ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'user.permissions.multi.form', ['entity' => 'Campaign'])],
+                            ['name' => 'custom-handler-url', 'value' => $this->urlFor($request, 'user.permissions.multi.form', ['entity' => 'Campaign'])],
                             ['name' => 'content-id-name', 'value' => 'campaignId']
                         ]
                     ];

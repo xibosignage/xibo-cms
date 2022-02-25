@@ -108,7 +108,7 @@ class Template extends Base
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response)
     {
         $sanitizedQueryParams = $this->getSanitizer($request->getQueryParams());
         // Embed?
@@ -134,10 +134,6 @@ class Template extends Base
                     'loadWidgets' => in_array('widgets', $embed)
                 ]);
             }
-
-            // Published status, draft with set publishedDate
-            $template->publishedStatusFuture = __('Publishing %s');
-            $template->publishedStatusFailed = __('Publish failed ');
 
             if ($this->isApi($request)) {
                 continue;
