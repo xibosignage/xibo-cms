@@ -54,16 +54,16 @@ use Xibo\Weather\OpenWeatherMapProvider;
 class ForecastIo extends ModuleWidget
 {
     const WEATHER_BACKGROUNDS = array(
-        "cloudy-image",
-        "day-cloudy-image",
-        "day-sunny-image",
-        "fog-image",
-        "hail-image",
-        "night-clear-image",
-        "night-partly-cloudy-image",
-        "rain-image",
-        "snow-image",
-        "windy-image"
+        'cloudy-image',
+        'day-cloudy-image',
+        'day-sunny-image',
+        'fog-image',
+        'hail-image',
+        'night-clear-image',
+        'night-partly-cloudy-image',
+        'rain-image',
+        'snow-image',
+        'windy-image'
     );
 
     const WEATHER_SNIPPETS_CURRENT = array(
@@ -461,7 +461,7 @@ class ForecastIo extends ModuleWidget
         // Background images
         foreach (self::WEATHER_BACKGROUNDS as $background) {
             $this->setOption($background, $sanitizedParams->getString($background));
-            if($sanitizedParams->getString($background) != '') {
+            if ($sanitizedParams->getString($background) != '') {
                 $this->setOption($background, $sanitizedParams->getString($background));
             } else {
                 $this->setOption($background, $background);
@@ -685,7 +685,7 @@ class ForecastIo extends ModuleWidget
     {
         $body = null;
         $dailyTemplate = null;
-        $styleSheet = "";
+        $styleSheet = '';
         $widgetOriginalWidth = null;
         $widgetOriginalHeight = null;
 
@@ -743,12 +743,12 @@ class ForecastIo extends ModuleWidget
             $showBackground = $this->getOption('showBackground');
         }
 
-        if($showBackground != 1) {
-            $styleSheet .= "
+        if ($showBackground != 1) {
+            $styleSheet .= '
             .bg-cloudy, .bg-partly-cloudy-day, .bg-clear-day, .bg-fog, .bg-sleet, .bg-clear-night, .bg-partly-cloudy-night, .bg-rain, .bg-snow, .bg-wind {
                     background-image: none;
                 }
-            ";
+            ';
         } else {
             // Custom backgrounds
             $styleSheet .= "
@@ -1050,7 +1050,7 @@ class ForecastIo extends ModuleWidget
         $initBackgrounds = [];
 
         foreach (self::WEATHER_BACKGROUNDS as $background) {
-            if($this->getOption($background) != $background) {
+            if ($this->getOption($background) != $background) {
                 $initBackgrounds[] = $this->getOption($background);
             }
         }
