@@ -30,8 +30,6 @@
 {% block extra %}{{ module.getExtra()|json_encode|raw }}{% endblock %}
 
 {% block formHtml %}
-    {% set templateOptions = module.getExtra().templateOptions %}
-
     <div class="row">
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item"><a class="nav-link active" href="#general" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
