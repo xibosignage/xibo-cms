@@ -559,9 +559,9 @@
                                     {% set helpText %}{% trans "The URL to connect to to PHONE_HOME (if enabled)" %}{% endset %}
 
                                     {% if theme.isSettingEditable("PHONE_HOME_URL") %}
-                                        {{ forms.input("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "http://www.xibo.org.uk/stats/track.php"), helpText) }}
+                                        {{ forms.input("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "https://xibo.org.uk/api/stats/track"), helpText) }}
                                     {% else %}
-                                        {{ forms.disabled("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "http://www.xibo.org.uk/stats/track.php"), helpText) }}
+                                        {{ forms.disabled("PHONE_HOME_URL", title, theme.getSetting("PHONE_HOME_URL", "https://xibo.org.uk/api/stats/track"), helpText) }}
                                     {% endif %}
                                 {% endif %}
 

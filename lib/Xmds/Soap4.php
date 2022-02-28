@@ -277,6 +277,9 @@ class Soap4 extends Soap
 
         // Audit our return
         $this->getLog()->debug($returnXml);
+        
+        // Phone Home?
+        $this->phoneHome();
 
         return $returnXml;
     }

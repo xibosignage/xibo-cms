@@ -115,6 +115,7 @@ ARG GIT_COMMIT=ci
 
 # Set some environment variables
 ENV CMS_DEV_MODE=true \
+    INSTALL_TYPE=ci \
     MYSQL_HOST=db \
     MYSQL_PORT=3306 \
     MYSQL_USER=root \
@@ -144,6 +145,7 @@ ENV CMS_DEV_MODE=true \
     CMS_USE_MEMCACHED=false \
     MEMCACHED_HOST=memcached \
     MEMCACHED_PORT=11211 \
+    CMS_USAGE_REPORT=false \
     XTR_ENABLED=true \
     GIT_COMMIT=$GIT_COMMIT
 
