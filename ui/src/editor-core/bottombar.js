@@ -30,14 +30,6 @@ Bottombar.prototype.render = function(element, data) {
             }
         ));
 
-        // Navbar buttons
-        this.DOMObject.find('#close-btn').click(function() {
-            if (self.DOMObject.parent().remove('fullscreen')) {
-                self.DOMObject.parent().removeClass('fullscreen')
-            }
-            lD.toggleNavigatorEditing(false);
-        });
-
         this.DOMObject.find('#add-btn').click(lD.addRegion);
     } else {
         if(element.type == 'widget') {
@@ -109,11 +101,6 @@ Bottombar.prototype.render = function(element, data) {
                 }
             ));
         }
-
-        // Handle back button
-        this.DOMObject.find('#back-btn').click(function() {
-            lD.selectObject();
-        }.bind(this));
     }
 
     // Button handlers
