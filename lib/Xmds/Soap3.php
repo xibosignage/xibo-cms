@@ -86,6 +86,9 @@ class Soap3 extends Soap
             $this->logBandwidth($display->displayId, Bandwidth::$REGISTER, strlen($active));
 
             $this->getLog()->debug($active, $display->displayId);
+            
+            // Phone Home?
+            $this->phoneHome();
 
             return $active;
 

@@ -121,6 +121,7 @@ ARG GIT_COMMIT=prod
 
 # Setup persistent environment variables
 ENV CMS_DEV_MODE=false \
+    INSTALL_TYPE=docker \
     XMR_HOST=xmr \
     CMS_SERVER_NAME=localhost \
     MYSQL_HOST=mysql \
@@ -160,6 +161,7 @@ ENV CMS_DEV_MODE=false \
     CMS_USE_MEMCACHED=false \
     MEMCACHED_HOST=memcached \
     MEMCACHED_PORT=11211 \
+    CMS_USAGE_REPORT=true \
     XTR_ENABLED=true \
     GIT_COMMIT=$GIT_COMMIT
 

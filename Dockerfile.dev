@@ -84,6 +84,7 @@ ARG GIT_COMMIT=dev
 
 # Set some environment variables
 ENV CMS_DEV_MODE=true \
+    INSTALL_TYPE=dev \
     XMR_HOST=xmr \
     MYSQL_HOST=db \
     MYSQL_PORT=3306 \
@@ -114,6 +115,7 @@ ENV CMS_DEV_MODE=true \
     CMS_USE_MEMCACHED=true \
     MEMCACHED_HOST=memcached \
     MEMCACHED_PORT=11211 \
+    CMS_USAGE_REPORT=true \
     XTR_ENABLED=false \
     GIT_COMMIT=$GIT_COMMIT
 

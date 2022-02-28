@@ -382,6 +382,9 @@ class Soap5 extends Soap4
         // Audit our return
         $this->getLog()->debug($returnXml);
 
+        // Phone Home?
+        $this->phoneHome();
+
         return $returnXml;
     }
 

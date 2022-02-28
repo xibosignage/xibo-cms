@@ -310,6 +310,19 @@ then
     fi
 fi
 
+# Configure Anonymous usage reporting
+if [ "$CMS_USAGE_REPORT" == "true" ]
+then
+  # Turn on
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='1', userChange=0 WHERE \`setting\`='PHONE_HOME' LIMIT 1"
+fi
+
+if [ "$CMS_USAGE_REPORT" == "false" ]
+then
+  # Turn off
+  mysql -D $MYSQL_DATABASE -e "UPDATE \`setting\` SET \`value\`='0', userChange=0 WHERE \`setting\`='PHONE_HOME' LIMIT 1"
+fi
+
 # Configure PHP session.gc_maxlifetime
 sed -i "s/session.gc_maxlifetime = .*$/session.gc_maxlifetime = $CMS_PHP_SESSION_GC_MAXLIFETIME/" /etc/php7/php.ini
 sed -i "s/post_max_size = .*$/post_max_size = $CMS_PHP_POST_MAX_SIZE/" /etc/php7/php.ini

@@ -869,9 +869,6 @@ class Soap
             'displayId' => $this->display->displayId
         ]);
 
-        // Phone Home?
-        $this->phoneHome();
-
         // Log Bandwidth
         $this->logBandwidth($this->display->displayId, Bandwidth::$RF, strlen($output));
 
@@ -1937,38 +1934,70 @@ class Soap
     protected function phoneHome()
     {
         if ($this->getConfig()->getSetting('PHONE_HOME') == 1) {
-            // Find out when we last PHONED_HOME :D
-            // If it's been > 28 days since last PHONE_HOME then
-            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < Carbon::now()->subSeconds(60 * 60 * 24 * 28)->format('U')) {
-
+            // If it's been > 1 week since last PHONE_HOME then send a new report
+            $oneWeekAgo = Carbon::now()->subWeek()->format('U');
+            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < $oneWeekAgo) {
                 if ($this->display->isAuditing()) {
                     $this->getLog()->debug('Phone Home required for displayId ' . $this->display->displayId);
                 }
 
                 try {
-                    $dbh = $this->getStore()->getConnection();
+                    // What type of install are we?
+                    $type = 'custom';
+                    if (isset($_SERVER['INSTALL_TYPE'])) {
+                        $type = $_SERVER['INSTALL_TYPE'];
+                    } else if ($this->getConfig()->getSetting('cloud_demo') !== null) {
+                        $type = 'cloud';
+                    }
 
-                    // Retrieve number of displays
-                    $sth = $dbh->prepare('SELECT COUNT(*) AS Cnt FROM `display` WHERE `licensed` = 1');
-                    $sth->execute();
+                    // Make sure we have a key
+                    $key = $this->getConfig()->getSetting('PHONE_HOME_KEY');
+                    if (empty($key)) {
+                        $this->getConfig()->changeSetting('PHONE_HOME_KEY', bin2hex(random_bytes(16)));
+                    }
 
                     // Set PHONE_HOME_TIME to NOW.
-                    $update = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
-                    $update->execute(array(
-                        'time' => Carbon::now()->format('U'),
-                        'setting' => 'PHONE_HOME_DATE'
-                    ));
+                    $this->getConfig()->changeSetting('PHONE_HOME_DATE', Carbon::now()->format('U'));
+
+                    // Retrieve number of displays
+                    $stats = $this->getStore()->select('
+                        SELECT client_type, COUNT(*) AS cnt
+                          FROM `display`
+                         WHERE licensed = 1
+                        GROUP BY client_type
+                    ', []);
+
+                    $counts = [
+                        'total' => 0,
+                        'android' => 0,
+                        'windows' => 0,
+                        'linux' => 0,
+                        'webos' => 0,
+                        'tizen' => 0,
+                    ];
+                    foreach ($stats as $stat) {
+                        $counts['total'] += intval($stat['cnt']);
+                        $counts[$stat['client_type']] += intval($stat['cnt']);
+                    }
 
                     // Use Guzzle to phone home.
                     // we don't care about the response
-                    (new Client())->get($this->getConfig()->getSetting('PHONE_HOME_URL'), $this->getConfig()->getGuzzleProxy([
-                        'query' => [
-                            'id' => $this->getConfig()->getSetting('PHONE_HOME_KEY'),
-                            'version' => Environment::$WEBSITE_VERSION_NAME,
-                            'numClients' => $sth->fetchColumn()
-                        ]
-                    ]));
-
+                    (new Client())->get(
+                        $this->getConfig()->getSetting('PHONE_HOME_URL'),
+                        $this->getConfig()->getGuzzleProxy([
+                            'query' => [
+                                'id' => $key,
+                                'version' => Environment::$WEBSITE_VERSION_NAME,
+                                'type' => $type,
+                                'numClients' => $counts['total'],
+                                'windows' => $counts['windows'],
+                                'android' => $counts['android'],
+                                'linux' => $counts['linux'],
+                                'webos' => $counts['webos'],
+                                'tizen' => $counts['tizen']
+                            ]
+                        ])
+                    );
                 } catch (\Exception $e) {
                     $this->getLog()->error('Phone Home: ' . $e->getMessage());
                 }

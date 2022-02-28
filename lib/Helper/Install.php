@@ -430,11 +430,9 @@ class Install
 
             // Phone Home
             $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'PHONE_HOME\' LIMIT 1');
-            $sth->execute(array('value' => (($stats == 1) ? 'On' : 'Off')));
-
-            // Phone Home Key
-            $sth = $dbh->prepare('UPDATE `setting` SET `value` = :value WHERE `setting`.`setting` = \'PHONE_HOME_KEY\' LIMIT 1');
-            $sth->execute(array('value' => md5(uniqid(rand(), true))));
+            $sth->execute([
+                'value' => $stats
+            ]);
         } catch (\PDOException $e) {
             throw new InstallationError(sprintf(__('An error occurred updating these settings. This is an unexpected error, please contact support. Error Message = [%s]'), $e->getMessage()));
         }
