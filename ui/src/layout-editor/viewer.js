@@ -103,6 +103,14 @@ Viewer.prototype.render = function(element) {
     this.DOMObject.parent().find('#fullscreenBtn').off().click(function() {
         this.toggleFullscreen();
     }.bind(this));
+
+    // Handle back button
+    this.DOMObject.parent().find('#goBackBtn').off().click(function() {
+        lD.selectObject();
+    }.bind(this));
+
+    // Back button visibility
+    this.DOMObject.parent().find('#goBackBtn').toggle(element.type != 'layout');
 };
 
 /**
@@ -302,9 +310,6 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
                 if(res.extra.number_items > 1) {
                     // Select paged widget
                     lD.selectObject($('#widget_' + targetElement.regionId + '_' + res.extra.tempId));
-                } else {
-                    // Select region
-                    lD.selectObject($('#' + targetElement.id));
                 }
             });
         } else {

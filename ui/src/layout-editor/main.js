@@ -27,7 +27,6 @@ const messageTemplate = require('../templates/message.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 const contextMenuTemplate = require('../templates/context-menu.hbs');
 const deleteElementModalContentTemplate = require('../templates/delete-element-modal-content.hbs');
-const breadcrumbTemplate = require('../templates/breadcrumb-trail.hbs');
 
 // Include modules
 const Layout = require('../layout-editor/layout.js');
@@ -126,7 +125,14 @@ $(document).ready(function() {
 
             if(res.data != null && res.data.length > 0) {
                 // Append layout html to the main div
-                lD.editorContainer.html(designerMainTemplate({trans: layoutEditorTrans}));
+                lD.editorContainer.html(
+                    designerMainTemplate(
+                        {
+                            trans: layoutEditorTrans,
+                            exitURL: urlsForApi.layout.list.url
+                        }
+                    )
+                );
 
                 // Create layout
                 lD.layout = new Layout(layoutId, res.data[0]);
@@ -351,12 +357,6 @@ $(document).ready(function() {
         }
     }, 250));
 
-    // Handle back button
-    lD.editorContainer.on('click', '#backBtn', function() {
-        // Redirect to the layout grid
-        window.location.href = urlsForApi.layout.list.url;
-    });
-
     if (window.addEventListener) {
         window.addEventListener("message", lD.handleMessage);
     } else {
@@ -473,13 +473,11 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                         }
                     }
                 } else {
-                    if(!this.navigatorMode) {
-                        // If we select region when on viewer mode, turn on the navigator first
-                        this.toggleNavigatorEditing(true, true);
+                    // Only select a region if we're in navigator mode
+                    if(this.navigatorMode) {
+                        this.layout.regions[newSelectedId].selected = true;
+                        this.selectedObject = this.layout.regions[newSelectedId];
                     }
-
-                    this.layout.regions[newSelectedId].selected = true;
-                    this.selectedObject = this.layout.regions[newSelectedId];
                 }
             } else if(newSelectedType === 'widget') {
                 // Close navigator mode when selecting a widget
@@ -494,16 +492,10 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                     this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId].selected = true;
                     this.selectedObject = this.layout.regions[obj.data('widgetRegion')].widgets[newSelectedId];
                 }
-            } else if(newSelectedType === 'layout' && this.navigatorMode) {
-                // If we select the layout and are in region edit mode, move to normal view/mode
-                lD.toggleNavigatorEditing(false, false);
             }
 
             this.selectedObject.type = newSelectedType;
         }
-
-        // Upgrade breadcrumb navigation based on the selected object
-        lD.upgradeBreadcrumbTrail();
 
         // Refresh the designer containers
         lD.refreshDesigner();
@@ -2189,80 +2181,6 @@ lD.addRegion = function () {
 
         toastr.error(errorMessagesTrans.createRegionFailed.replace('%error%', errorMessage));
     });  
-};
-
-/**
- * Updare breadcrumb trail
- */
-lD.upgradeBreadcrumbTrail = function() {
-    const selectedObject = lD.selectedObject;
-    const $parentContainer = (lD.navigatorMode) ? lD.navigator.DOMObject : lD.viewer.DOMObject;
-    const $breadcrumbContainer = $parentContainer.siblings('.breadcrumb-trail');
-    const data = {
-        layout: null,
-        region: null,
-        widget: null,
-    };
-
-    // Don't show if we're rendering the layout
-    if(selectedObject.type === 'layout' || selectedObject.drawerWidget) {
-        // Clear breadcrumb
-        $($breadcrumbContainer).empty();
-        return;
-    }
-
-    // Get layout info
-    data.layout = {
-        name: lD.layout.name,
-        id: lD.layout.id
-    };
-
-    // Get region info
-    if(selectedObject.type === 'region') {
-        data.region = {
-            name: selectedObject.name,
-            id: selectedObject.id
-        };
-    }
-
-    // Get widget and region info
-    if(selectedObject.type === 'widget') {
-        data.region = {
-            name: lD.getElementByTypeAndId('region', selectedObject.regionId).name,
-            id: selectedObject.regionId
-        };
-
-        data.widget = {
-            id: selectedObject.id,
-            name: selectedObject.widgetName
-        };
-    }
-
-    // Add translation
-    data.trans = editorsTrans.breadcrumb;
-
-    // Append loading html to the main div
-    $breadcrumbContainer.html(breadcrumbTemplate(data));
-
-    // Handle breadcrumb toggle
-    $breadcrumbContainer.find('.bc-toggle').on('click', function() {
-        $breadcrumbContent = $breadcrumbContainer.find('.bc-content');
-
-        // Is the content visible
-        const isVisible = $breadcrumbContent.is(':visible');
-
-        // Toggle breadcrumb content
-        $breadcrumbContainer.find('.bc-content').toggle('fast');
-
-        // Change button status
-        $breadcrumbContainer.find('.bc-toggle').toggleClass('active', !isVisible);
-    });
-
-    // Handle cell click
-    $breadcrumbContainer.find('.bc-link').on('click', function() {
-        // Select object
-        ($(this).hasClass('bc-layout')) ? lD.selectObject() : lD.selectObject($('#' + $(this).data('id')), true);
-    });
 };
 
 /**

@@ -186,6 +186,20 @@ Navigator.prototype.render = function() {
         }
     }.bind(this));
 
+    // Handle back button
+    this.DOMObject.parent().find('#goBackBtn').off().click(function() {
+        if(lD.selectedObject.type == 'region') {
+            self.saveRegionPropertiesPanel();
+        }
+
+        if (self.DOMObject.parent().remove('fullscreen')) {
+            self.DOMObject.parent().removeClass('fullscreen')
+        }
+
+        // Close navigator
+        lD.toggleNavigatorEditing(false, true);
+    }.bind(this));
+
     // Handle fullscreen button
     this.DOMObject.parent().find('#fullscreenBtn').off().click(function() {
         this.toggleFullscreen();

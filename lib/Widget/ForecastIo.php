@@ -150,7 +150,7 @@ class ForecastIo extends ModuleWidget
     /** @inheritDoc */
     public function init()
     {
-        $this->resourceFolder = PROJECT_ROOT . '/modules/weather/player';
+        $this->resourceFolder = PROJECT_ROOT . '/modules/forecastio/player';
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');

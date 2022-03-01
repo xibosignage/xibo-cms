@@ -1,8 +1,8 @@
 <div class="back-button">
-    <button id="backBtn" class="btn btn-primary">
+    <a id="backBtn" class="btn btn-primary" href="{{ exitURL }}">
         <i class="fa fa-angle-left"></i>
-        <span>{{trans.back}}</span>
-    </button>
+        <span>{{trans.exit}}</span>
+    </a>
 </div>
 
 <div id="layout-editor-topbar" class="editor-toolbar editor-top-bar">
@@ -35,8 +35,10 @@
                             <i class="fas fa-compress-arrows-alt show-on-fs"></i>
                         </button>
 
-                        {{!-- Breadcrumb trail--}}
-                        <div class="breadcrumb-trail"></div>
+                        <button type="button" id="goBackBtn" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
+                            data-title="{{ trans.backToLayout }}">
+                            <i class="fas fa-arrow-left hide-on-fs"></i>
+                        </button>
                     </div>
                 </div>
 
@@ -53,8 +55,10 @@
                             <i class="fas fa-compress-arrows-alt show-on-fs"></i>
                         </button>
 
-                        {{!-- Breadcrumb trail--}}
-                        <div class="breadcrumb-trail"></div>
+                        <button type="button" id="goBackBtn" class="btn btn-sm btn-light" data-toggle="tooltip" data-placement="bottom"
+                            data-title="{{ trans.backToLayout }}">
+                            <i class="fas fa-arrow-left hide-on-fs"></i>
+                        </button>
                     </div>
                 </div>
             </div>  
