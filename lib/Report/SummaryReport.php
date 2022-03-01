@@ -606,7 +606,7 @@ class SummaryReport implements ReportInterface
         $select .= '
             ) periodsWithStats 
         GROUP BY periodsWithStats.id, start, end
-        ORDER BY periodsWithStats.id
+        ORDER BY periodsWithStats.start
         ';
 
         return [
