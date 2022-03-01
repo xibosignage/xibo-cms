@@ -193,12 +193,13 @@
         table.on('draw', function(e, settings) {
           $('#' + e.target.id + ' .generate-layout-thumbnail').on('click', function(e) {
             e.preventDefault();
+            var $anchor = $(this);
             $.ajax({
-              url: $(this).attr('href'),
+              url: $anchor.attr('href'),
               method: 'POST',
               success: function() {
-                // Reload
-                table.ajax.reload();
+                $anchor.find('img').attr('src', $anchor.attr('href'));
+                $anchor.removeClass('generate-layout-thumbnail').attr('data-toggle', 'lightbox');
               }
             });
           });
