@@ -337,6 +337,18 @@ class Template extends Base
                 $searchResult->source = 'local';
                 $searchResult->title = $template->layout;
                 $searchResult->description = $template->description;
+                $searchResult->orientation = $template->orientation;
+                $searchResult->width = $template->width;
+                $searchResult->height = $template->height;
+
+                if (!empty($template->tags)) {
+                    foreach ($template->getTags() as $tag) {
+                        if ($tag->tag === 'template') {
+                            continue;
+                        }
+                        $searchResult->tags[] = $tag->tag;
+                    }
+                }
 
                 // Thumbnail
                 $searchResult->thumbnail = '';

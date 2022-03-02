@@ -38,8 +38,10 @@ class SearchResult implements \JsonSerializable
     public $fileSize;
     public $width;
     public $height;
+    public $orientation;
     public $duration;
     public $videoThumbnailUrl;
+    public $tags = [];
 
     /** @var ProviderDetails */
     public $provider;
@@ -58,8 +60,10 @@ class SearchResult implements \JsonSerializable
             'provider' => $this->provider,
             'width' => $this->width,
             'height' => $this->height,
+            'orientation' => $this->orientation,
             'fileSize' => $this->fileSize,
-            'videoThumbnailUrl' => $this->videoThumbnailUrl
+            'videoThumbnailUrl' => $this->videoThumbnailUrl,
+            'tags' => $this->tags
         ];
     }
 }

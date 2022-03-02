@@ -78,6 +78,7 @@
                                         <th>{% trans "Owner" %}</th>
                                         <th>{% trans "Description" %}</th>
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
+                                        <th>{% trans "Orientation" %}</th>
                                         <th>{% trans "Thumbnail" %}</th>
                                         <th>{% trans "Sharing" %}</th>
                                         <th class="rowMenu"></th>
@@ -154,6 +155,7 @@
                     "data": dataTableCreateTags,
                     responsivePriority: 3
                 },{% endif %}
+                { data: 'orientation', responsivePriority: 10, visible: false},
                 {
                     responsivePriority: 3,
                     data: 'thumbnail',

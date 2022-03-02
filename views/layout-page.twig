@@ -138,6 +138,7 @@
                                         <th>{% trans "Description" %}</th>
                                         <th>{% trans "Duration" %}</th>
                                         {% if currentUser.featureEnabled("tag.tagging") %}<th>{% trans "Tags" %}</th>{% endif %}
+                                        <th>{% trans "Orientation" %}</th>
                                         <th>{% trans "Thumbnail" %}</th>
                                         <th>{% trans "Owner" %}</th>
                                         <th>{% trans "Sharing" %}</th>
@@ -239,6 +240,7 @@
                         responsivePriority: 3,
                         "data": dataTableCreateTags
                     },{% endif %}
+                    { data: 'orientation', responsivePriority: 10, visible: false},
                     {
                         responsivePriority: 5,
                         data: 'thumbnail',
@@ -619,7 +621,7 @@
                 });
 
               } else {
-                toastr.info('{{ "You have reached the end"|trans }}');
+                toastr.info('{{ "There are no more templates to show"|trans }}');
               }
               spinner.addClass('d-none');
               moreButton.prop('disabled', false);
@@ -633,16 +635,17 @@
         }
 
         function addTemplateCard(cardsTemplate, cardColumn, el) {
+          el.showFooter = el.orientation || (el.provider && el.provider.logoUrl) || (el.tags && el.tags.length > 0);
           el.thumbnail = el.thumbnail || '{{ theme.rootUri() }}theme/default/img/thumbs/placeholder.png';
           var $element = $(cardsTemplate(el));
-          $element.on('click', function(e) {
+          $element.find('.card').on('click', function(e) {
             e.preventDefault();
             // Remove all selections.
-            cardColumn.find('.bg-info').removeClass('bg-info');
+            cardColumn.find('.border-success').removeClass('border-success');
 
             // Select this one.
             var $that = $(this);
-            $that.addClass('bg-info');
+            $that.addClass('border-success');
             $('#layout-create-stepper-next-button').removeClass('disabled');
 
             // If source is local and layoutId is 0, then show the resolution filter otherwise don't
@@ -712,14 +715,26 @@
 
     {% verbatim %}
     <script type="text/x-handlebars-template" id="template-layout-add-template-cards">
-        <div class="card w-25 p-3 mb-0" data-layout-id="{{ id }}" data-source="{{ source }}" data-download="{{ download }}">
-            {{#if thumbnail}}<img class="card-img-top" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
-            <div class="card-body">
-                {{#if provider.logoUrl}}
-                    <img class="provider-image" src="{% endverbatim %}{{ theme.rootUri() }}{% verbatim %}{{ provider.logoUrl }}" alt="{{ provider.message }}">
+        <div class="template-card w-25 p-2">
+            <div class="card" data-layout-id="{{ id }}" data-source="{{ source }}" data-download="{{ download }}">
+                {{#if thumbnail}}<img class="card-img-top" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
+                <div class="card-body">
+                    <h5 class="card-title">{{ title }}</h5>
+                    {{#if description}}<p class="card-text"><span class="text-muted">{{ description }}</span></p>{{/if}}
+                </div>
+                {{#if showFooter }}
+                <div class="card-footer">
+                    {{#if orientation}}
+                        <span class="badge badge-pill badge-primary">{{orientation}}</span>
+                    {{/if}}
+                    {{#each tags}}
+                        <span class="badge badge-pill badge-info">{{this}}</span>
+                    {{/each}}
+                    {{#if provider.logoUrl}}
+                        <img class="provider-image" src="{% endverbatim %}{{ theme.rootUri() }}{% verbatim %}{{ provider.logoUrl }}" alt="{{ provider.message }}">
+                    {{/if}}
+                </div>
                 {{/if}}
-                <h5 class="card-title">{{ title }}</h5>
-                {{#if description}}<p class="card-text"><span class="text-muted">{{ description }}</span></p>{{/if}}
             </div>
         </div>
     </script>
