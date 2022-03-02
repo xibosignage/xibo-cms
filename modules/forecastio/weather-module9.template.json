@@ -9,7 +9,7 @@
     "image": "modules/forecastio/template-thumbs/weather9.png",
     "type": "current",
     "orientation": "scale",
-    "background": true,
+    "background": "cover",
     "options": {
         "footer-color": true,
         "footer-text-color": true

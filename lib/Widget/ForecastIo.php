@@ -457,6 +457,7 @@ class ForecastIo extends ModuleWidget
         $this->setOption('dayConditionsOnly', $sanitizedParams->getCheckbox('dayConditionsOnly'));
         $this->setOption('alignH', $sanitizedParams->getString('alignH', ['default' => 'center']));
         $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'middle']));
+        $this->setOption('background-image', $sanitizedParams->getString('background-image'));
 
         // Background images
         foreach (self::WEATHER_BACKGROUNDS as $background) {
@@ -476,7 +477,6 @@ class ForecastIo extends ModuleWidget
             $this->setOption('dailyTemplate_advanced', $sanitizedParams->getCheckbox('dailyTemplate_advanced'));
             $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
             $this->setOption('widgetOriginalHeight', $sanitizedParams->getInt('widgetOriginalHeight'));
-            $this->setOption('showBackground', $sanitizedParams->getCheckbox('showBackground'));
         } else {
             // Template options
             $templateOptions = $this->getTemplateOptions();
@@ -688,6 +688,7 @@ class ForecastIo extends ModuleWidget
         $styleSheet = '';
         $widgetOriginalWidth = null;
         $widgetOriginalHeight = null;
+        $backgroundImage = null;
 
         // Behave exactly like the client.
         try {
@@ -721,6 +722,9 @@ class ForecastIo extends ModuleWidget
         if ($this->getOption('overrideTemplate') == 0) {
             // Get CSS and HTML from the default templates
             $template = $this->getTemplateById($this->getOption('templateId'));
+
+            $this->getLog()->debug('--- Get template');
+            $this->getLog()->debug(json_encode($template));
             
             if (isset($template)) {
                 $body = $template['main'];
@@ -728,7 +732,7 @@ class ForecastIo extends ModuleWidget
                 $styleSheet .= $template['css'];
                 $widgetOriginalWidth = $template['widgetOriginalWidth'];
                 $widgetOriginalHeight = $template['widgetOriginalHeight'];
-                $showBackground = $template['background'];
+                $backgroundImage = $template['background'];
             } else {
                 throw new InvalidArgumentException(__('Template not found, please edit the Widget and select another.'), 'templateId');
             }
@@ -740,10 +744,10 @@ class ForecastIo extends ModuleWidget
             $styleSheet .= $this->getRawNode('styleSheet', '');
             $widgetOriginalWidth = intval($this->getOption('widgetOriginalWidth'));
             $widgetOriginalHeight = intval($this->getOption('widgetOriginalHeight'));
-            $showBackground = $this->getOption('showBackground');
+            $backgroundImage = $this->getOption('background-image');
         }
 
-        if ($showBackground != 1) {
+        if ($backgroundImage == 'none') {
             $styleSheet .= '
             .bg-cloudy, .bg-partly-cloudy-day, .bg-clear-day, .bg-fog, .bg-sleet, .bg-clear-night, .bg-partly-cloudy-night, .bg-rain, .bg-snow, .bg-wind {
                     background-image: none;
@@ -753,48 +757,48 @@ class ForecastIo extends ModuleWidget
             // Custom backgrounds
             $styleSheet .= "
                 .bg-cloudy {
-                    background-image: url('[" . $this->getOption('cloudy-image') . "]');
+                    background-image: url('[" . $this->getOption('cloudy-image', 'cloudy-image') . "]');
                 }
 
                 .bg-partly-cloudy-day {
-                    background-image: url('[" . $this->getOption('day-cloudy-image') . "]');
+                    background-image: url('[" . $this->getOption('day-cloudy-image', 'day-cloudy-image') . "]');
                 }
 
                 .bg-clear-day {
-                    background-image: url('[" . $this->getOption('day-sunny-image') . "]');
+                    background-image: url('[" . $this->getOption('day-sunny-image', 'day-sunny-image') . "]');
                 }
 
                 .bg-fog {
-                    background-image: url('[" . $this->getOption('fog-image') . "]');
+                    background-image: url('[" . $this->getOption('fog-image', 'fog-image') . "]');
                 }
 
                 .bg-sleet {
-                    background-image: url('[" . $this->getOption('hail-image') . "]');
+                    background-image: url('[" . $this->getOption('hail-image', 'hail-image') . "]');
                 }
 
                 .bg-clear-night {
-                    background-image: url('[" . $this->getOption('night-clear-image') . "]');
+                    background-image: url('[" . $this->getOption('night-clear-image', 'night-clear-image') . "]');
                 }
 
                 .bg-partly-cloudy-night {
-                    background-image: url('[" . $this->getOption('night-partly-cloudy-image') . "]');
+                    background-image: url('[" . $this->getOption('night-partly-cloudy-image', 'night-partly-cloudy-image') . "]');
                 }
 
                 .bg-rain {
-                    background-image: url('[" . $this->getOption('rain-image') . "]');
+                    background-image: url('[" . $this->getOption('rain-image', 'rain-image') . "]');
                 }
 
                 .bg-snow {
-                    background-image: url('[" . $this->getOption('snow-image') . "]');
+                    background-image: url('[" . $this->getOption('snow-image', 'snow-image') . "]');
                 }
 
                 .bg-wind {
-                    background-image: url('[" . $this->getOption('windy-image') . "]');
+                    background-image: url('[" . $this->getOption('windy-image', 'windy-image') . "]');
                 }
 
                 .bg-cloudy, .bg-partly-cloudy-day, .bg-clear-day, .bg-fog, .bg-sleet, .bg-clear-night, .bg-partly-cloudy-night, .bg-rain, .bg-snow, .bg-wind {
                     background-position: center;
-                    background-size: cover;
+                    background-size: " . $backgroundImage . ";
                     background-repeat: no-repeat;
                 }
             ";
@@ -942,9 +946,6 @@ class ForecastIo extends ModuleWidget
             }
 
             switch ($key) {
-                case 'background-size':
-                    $css .= ' .bg-cloudy, .bg-partly-cloudy-day, .bg-clear-day, .bg-fog, .bg-sleet, .bg-clear-night, .bg-partly-cloudy-night, .bg-rain, .bg-snow, .bg-wind { background-size: ' . $this->getOption($key) . ' !important; } ';
-                    break;
                 case 'background-color':
                     $css .= ' #content { background-color: ' . $this->getOption($key) . ' !important; } ';
                     break;

@@ -23,11 +23,12 @@
 <script type="text/javascript">
     // Runs after form opens
     function forecastio_form_edit_open() {
+        var $form = $(this);
+
         // Update form fields based on template options
-        var updateTemplateOptions = function() {
+        var updateTemplateOptions = function(updateImage) {
             var templates = $(this).data().extra;
             var templateId = $(this).find('#templateId').val();
-            var $form = $(this);
 
             // Hide all options first
             $form.find('.template-option').addClass('d-none');
@@ -35,11 +36,18 @@
             // Options from template handling
             $.each(templates, function(templateIndex, template) {
                 if(template.id == templateId) {
+                    // Dynamic options
                     for (const key in template.options) {
                         if (Object.hasOwnProperty.call(template.options, key)) {
                             var element = template.options[key];
                             $form.find('.template-option-' + key).toggleClass('d-none', !template.options[key]);
                         }
+                    }
+
+                    // Upgrade background image option based on
+                    if(updateImage) {
+                        $form.find('#background-image').val(template.background);
+                        handleBackgroundOverride();
                     }
                 }
             });
@@ -57,6 +65,10 @@
             if(refresh && $(this).find('#overrideTemplate').is(':checked') == false) {
                 $(this).find('#templateId').val(null).trigger('change');
             }
+        }.bind(this);
+
+        var handleBackgroundOverride = function () {
+            $form.find('.background-select-list').toggle($(this).find('#background-image').val() != 'none');
         }.bind(this);
 
         // Set duration field, using the helper ()
@@ -79,8 +91,7 @@
                 '#dailyTemplate': 'daily',
                 '#styleSheet': 'css',
                 '#widgetOriginalWidth': 'widgetOriginalWidth',
-                '#widgetOriginalHeight': 'widgetOriginalHeight',
-                '#showBackground': 'background'
+                '#widgetOriginalHeight': 'widgetOriginalHeight'
             });
 
         // Trigger set filter on weather type change
@@ -89,9 +100,17 @@
             updateTemplateOptions();
         });
 
-        $(this).find('#templateId').on('change', updateTemplateOptions);
+        $(this).find('#templateId').on('change', function() {
+            updateTemplateOptions(true);
+        });
+
+        // Handle background size select
+        $(this).find('#background-image').on('change', function () {
+            handleBackgroundOverride();
+        });
 
         filterTemplates(false);
         updateTemplateOptions();
+        handleBackgroundOverride();
     }
 </script>
