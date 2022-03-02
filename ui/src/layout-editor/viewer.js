@@ -307,7 +307,7 @@ Viewer.prototype.renderRegion = function(element, container, smallPreview = fals
 
             // Click element to select it
             container.find('.preview-select').off('click').on('click', function() {
-                if(res.extra.number_items > 1) {
+                if(res.extra.number_items > 0) {
                     // Select paged widget
                     lD.selectObject($('#widget_' + targetElement.regionId + '_' + res.extra.tempId));
                 }

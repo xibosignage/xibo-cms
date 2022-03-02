@@ -51,7 +51,6 @@
                     <a class="dropdown-item template-override-controls" href="#currentForecastTab"  role="tab" data-toggle="tab"><span>{% trans "Current Forecast" %}</span></a>
                     <a class="dropdown-item template-override-controls" href="#dailyForecastTab"  role="tab" data-toggle="tab"><span>{% trans "Daily Forecast" %}</span></a>
                     <a class="dropdown-item template-override-controls" href="#optionalStylesheetTab"  role="tab" data-toggle="tab"><span>{% trans "Style Sheet" %}</span></a>
-                    <a class="dropdown-item template-override-controls" href="#backgroundTab" role="tab" data-toggle="tab"><span>{% trans "Backgrounds" %}</span></a>
                     <a class="dropdown-item" href="#optionalJavascript" role="tab" data-toggle="tab"><span>{% trans "Optional JavaScript" %}</span></a>
                 </div>
             </li>
@@ -138,56 +137,6 @@
                         {{ forms.dropdown("alignV", "single", title, module.getoption("alignV", "middle"), options, "alignV", "valign", helpText, "align-fields") }}
                     </div>
 
-                    <div class="tab-pane" id="backgroundTab">
-                        {% set title %}{% trans "Show main background?" %}{% endset %}
-                        {% set nameDefault %}{% trans "Default" %}{% endset %}
-                        {% set helpText %}{% trans "Show background in the correspondent container." %}{% endset %}
-                        {{ forms.checkbox("showBackground", title, module.getOption("showBackground", 0), helpText) }}
-
-                        {% set attributes = [
-                            { name: "data-allow-clear", value: "true" },
-                            { name: "data-placeholder--id", value: null },
-                            { name: "data-placeholder--value", value: "" },
-                            { name: "data-search-url", value: url_for("library.search") },
-                            { name: "data-search-term", value: "media" },
-                            { name: "data-search-term-tags", value: "tags" },
-                            { name: "data-width", value: "100%" },
-                            { name: "data-id-property", value: "mediaId" },
-                            { name: "data-text-property", value: "name" },
-                            { name: "data-filter-options", value: '{"type":"image"}' }
-                        ] %}
-
-                        {% set backgroundTranslations = {
-                            "cloudy-image": "Cloudy"|trans,
-                            "day-cloudy-image": "Cloudy day"|trans,
-                            "day-sunny-image": "Clear"|trans,
-                            "fog-image": "Fog"|trans,
-                            "hail-image": "Hail"|trans,
-                            "night-clear-image": "Clear night"|trans,
-                            "night-partly-cloudy-image": "Cloudy night"|trans,
-                            "rain-image": "Raining"|trans,
-                            "snow-image": "Snowing"|trans,
-                            "windy-image": "Windy"|trans
-                        } %}
-
-                        {% set backgroundOptions = [{"mediaId": "", "name": ""}]|merge(module.getBackgroundOptions()) %}
-                        {% set getBackgroundList = module.getBackgroundList() %}
-
-                        {% set backgroundListMessage %}{% trans "Select images from the media library to replace the default weather backgrounds. The images will be used both for main background and daily backgrounds ( use bg-[icon] class in Current or Daily templates to use this feature )." %}{% endset %}
-                        {{ forms.message(backgroundListMessage, "") }}
-
-                        {% for backgroundEl in getBackgroundList %}
-                            {% if module.getOption(backgroundEl) != backgroundEl %}
-                                {% set elOption = module.getOption(backgroundEl) %}
-                            {% else %}
-                                {% set elOption = "" %}
-                            {% endif %} 
-
-                            {% set title = attribute(backgroundTranslations, backgroundEl) %}
-                            {{ forms.dropdown(backgroundEl, "single", title, elOption, backgroundOptions, "mediaId", "name", "", "pagedSelect", "", "", "", attributes) }}
-                        {% endfor %}
-                    </div>
-
                     <div class="tab-pane" id="templatePreset">
                         {% set title %}{% trans "Type" %}{% endset %}
                         {% set helpText %}{% trans "Choose the type of template" %}{% endset %}
@@ -264,17 +213,64 @@
 
                             {% set name %}{% trans "Footer Icons" %}{% endset %}
                             {{ forms.colorPicker("footer-icons-color", name, module.getOption("footer-icons-color"), "", "template-option template-option-footer-icons-color d-none") }}
+                        </div>
 
-                            {% set title %}{% trans "Background Size" %}{% endset %}
-                            {% set autoText %}{% trans "Auto" %}{% endset %}
-                            {% set containText %}{% trans "Contain" %}{% endset %}
-                            {% set coverText %}{% trans "Cover" %}{% endset %}
-                            {% set options = [
-                                { id: "cover", value: coverText },
-                                { id: "contain", value: containText },
-                                { id: "auto", value: autoText }
+                        {% set title %}{% trans "Background Image" %}{% endset %}
+                        {% set noneText %}{% trans "None" %}{% endset %}
+                        {% set autoText %}{% trans "Auto" %}{% endset %}
+                        {% set containText %}{% trans "Contain" %}{% endset %}
+                        {% set coverText %}{% trans "Cover" %}{% endset %}
+                        {% set options = [
+                            { id: "none", value: noneText },
+                            { id: "cover", value: coverText },
+                            { id: "contain", value: containText },
+                            { id: "auto", value: autoText }
+                        ] %}
+                        {{ forms.dropdown("background-image", "single", title, module.getOption("background-image", "contain"), options, "id", "value", "", "") }}
+
+                        <div class="background-select-list">
+                            {% set attributes = [
+                                { name: "data-allow-clear", value: "true" },
+                                { name: "data-placeholder--id", value: null },
+                                { name: "data-placeholder--value", value: "" },
+                                { name: "data-search-url", value: url_for("library.search") },
+                                { name: "data-search-term", value: "media" },
+                                { name: "data-search-term-tags", value: "tags" },
+                                { name: "data-width", value: "100%" },
+                                { name: "data-id-property", value: "mediaId" },
+                                { name: "data-text-property", value: "name" },
+                                { name: "data-filter-options", value: '{"type":"image"}' }
                             ] %}
-                            {{ forms.dropdown("background-size", "single", title, module.getOption("background-size", "contain"), options, "id", "value", "", "template-option template-option-background-size d-none") }}
+
+                            {% set backgroundTranslations = {
+                                "cloudy-image": "Cloudy"|trans,
+                                "day-cloudy-image": "Cloudy day"|trans,
+                                "day-sunny-image": "Clear"|trans,
+                                "fog-image": "Fog"|trans,
+                                "hail-image": "Hail"|trans,
+                                "night-clear-image": "Clear night"|trans,
+                                "night-partly-cloudy-image": "Cloudy night"|trans,
+                                "rain-image": "Raining"|trans,
+                                "snow-image": "Snowing"|trans,
+                                "windy-image": "Windy"|trans
+                            } %}
+
+                            {% set backgroundOptions = [{"mediaId": "", "name": ""}]|merge(module.getBackgroundOptions()) %}
+                            {% set getBackgroundList = module.getBackgroundList() %}
+
+                            {% set backgroundListMessage %}{% trans "Select images from the media library to replace the default weather backgrounds. The images will be used both for main background and daily backgrounds ( use bg-[icon] class in Current or Daily templates to use this feature )." %}{% endset %}
+                            {{ forms.message(backgroundListMessage, "") }}
+
+                            {% for backgroundEl in getBackgroundList %}
+                                {% if module.getOption(backgroundEl) != backgroundEl %}
+                                    {% set elOption = module.getOption(backgroundEl) %}
+                                {% else %}
+                                    {% set elOption = "" %}
+                                {% endif %} 
+
+                                {% set title = attribute(backgroundTranslations, backgroundEl) %}
+                                {{ forms.dropdown(backgroundEl, "single", title, elOption, backgroundOptions, "mediaId", "name", "", "pagedSelect", "", "", "", attributes) }}
+                            {% endfor %}
                         </div>
                     </div>
 

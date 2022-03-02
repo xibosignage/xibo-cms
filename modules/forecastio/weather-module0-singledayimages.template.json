@@ -9,12 +9,11 @@
     "image": "modules/forecastio/template-thumbs/weather0-1d_2.png",
     "type": "current",
     "orientation": "landscape",
-    "background": false,
+    "background": "none",
     "options": {
         "text-color": true,
         "icons-color": true,
         "background-color": true,
-        "background-size": false,
         "shadow-color": true
     }
 }
