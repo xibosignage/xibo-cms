@@ -755,53 +755,53 @@ class ForecastIo extends ModuleWidget
             ';
         } else {
             // Custom backgrounds
-            $styleSheet .= "
+            $styleSheet .= '
                 .bg-cloudy {
-                    background-image: url('[" . $this->getOption('cloudy-image', 'cloudy-image') . "]');
+                    background-image: url("[' . $this->getOption('cloudy-image', 'cloudy-image') . ']");
                 }
 
                 .bg-partly-cloudy-day {
-                    background-image: url('[" . $this->getOption('day-cloudy-image', 'day-cloudy-image') . "]');
+                    background-image: url("[' . $this->getOption('day-cloudy-image', 'day-cloudy-image') . ']");
                 }
 
                 .bg-clear-day {
-                    background-image: url('[" . $this->getOption('day-sunny-image', 'day-sunny-image') . "]');
+                    background-image: url("[' . $this->getOption('day-sunny-image', 'day-sunny-image') . ']");
                 }
 
                 .bg-fog {
-                    background-image: url('[" . $this->getOption('fog-image', 'fog-image') . "]');
+                    background-image: url("[' . $this->getOption('fog-image', 'fog-image') . ']");
                 }
 
                 .bg-sleet {
-                    background-image: url('[" . $this->getOption('hail-image', 'hail-image') . "]');
+                    background-image: url("[' . $this->getOption('hail-image', 'hail-image') . ']");
                 }
 
                 .bg-clear-night {
-                    background-image: url('[" . $this->getOption('night-clear-image', 'night-clear-image') . "]');
+                    background-image: url("[' . $this->getOption('night-clear-image', 'night-clear-image') . ']");
                 }
 
                 .bg-partly-cloudy-night {
-                    background-image: url('[" . $this->getOption('night-partly-cloudy-image', 'night-partly-cloudy-image') . "]');
+                    background-image: url("[' . $this->getOption('night-partly-cloudy-image', 'night-partly-cloudy-image') . ']");
                 }
 
                 .bg-rain {
-                    background-image: url('[" . $this->getOption('rain-image', 'rain-image') . "]');
+                    background-image: url("[' . $this->getOption('rain-image', 'rain-image') . ']");
                 }
 
                 .bg-snow {
-                    background-image: url('[" . $this->getOption('snow-image', 'snow-image') . "]');
+                    background-image: url("[' . $this->getOption('snow-image', 'snow-image') . ']");
                 }
 
                 .bg-wind {
-                    background-image: url('[" . $this->getOption('windy-image', 'windy-image') . "]');
+                    background-image: url("[' . $this->getOption('windy-image', 'windy-image') . ']");
                 }
 
                 .bg-cloudy, .bg-partly-cloudy-day, .bg-clear-day, .bg-fog, .bg-sleet, .bg-clear-night, .bg-partly-cloudy-night, .bg-rain, .bg-snow, .bg-wind {
                     background-position: center;
-                    background-size: " . $backgroundImage . ";
+                    background-size: ' . $backgroundImage . ';
                     background-repeat: no-repeat;
                 }
-            ";
+            ';
         }
         
         // Parse library references
