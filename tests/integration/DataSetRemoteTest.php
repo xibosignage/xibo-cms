@@ -109,7 +109,7 @@ class DataSetRemoteTest extends LocalWebTestCase
     public function testRemoteDataSetData()
     {
         // call the remote dataSet test
-        $response = $this->sendRequest('POST','/dataset/remote/test', [
+        $response = $this->sendRequest('POST', '/dataset/remote/test', [
             'testDataSetId' => $this->dataSet->dataSetId,
             'dataSet' => $this->dataSet->dataSet,
             'code' => 'remote',
@@ -146,12 +146,12 @@ class DataSetRemoteTest extends LocalWebTestCase
         // First record
         $this->assertSame(1, $object->data->processed[0][0]->identifier);
         $this->assertSame('Title 1', $object->data->processed[0][0]->title);
-        $this->assertSame('2019-07-29T20:11:00.000000Z', $object->data->processed[0][0]->date);
+        $this->assertSame('2019-07-29 13:11:00', $object->data->processed[0][0]->date);
 
         // Second record
         $this->assertSame(2, $object->data->processed[0][1]->identifier);
         $this->assertFalse(property_exists($object->data->processed[0][1], 'title'));
-        $this->assertSame('2019-07-30T10:04:00.000000Z', $object->data->processed[0][1]->date);
+        $this->assertSame('2019-07-30 03:04:00', $object->data->processed[0][1]->date);
 
         // Third record
         $this->assertSame(3, $object->data->processed[0][2]->identifier);
