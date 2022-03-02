@@ -2109,40 +2109,22 @@ lD.importFromProvider = function(items) {
  * @param {object} targetToAttach DOM object to attach the thumbnail to
  */
 lD.uploadThumbnail = function(targetToAttach) {
-    const linkToAPI = urlsForApi.layout.addThumbnail;
-    const $viewer = lD.editorContainer.find('#layout-viewer');
-    const $player = $viewer.find('.layout-player');
-    if ($player.length > 0) {
-        const top = Math.floor($player.offset().top - $viewer.offset().top);
-        const left = Math.floor($player.offset().left - $viewer.offset().left);
-        let requestPath = linkToAPI.url.replace(':id', lD.layout.layoutId);
-        requestPath += '?trim=' + [
-            top,
-            left,
-            Math.ceil($player.width()),
-            Math.ceil($player.height())].join();
-
-        
-        if ($(targetToAttach).length > 0) {
-            $(targetToAttach).append($('<div class="thumb-preview" style="padding: 2rem 0; font-weight: bold;">').html('Loading Preview...'));
-            $(targetToAttach).removeClass('d-none');
-        }
-
-        htmlToImage.toPng($viewer[0]).then(function(dataUrl) {
-            $.ajax({
-                url: requestPath,
-                type: "POST",
-                data: dataUrl
-            })
-
-            // Attach to target
-            if ($(targetToAttach).length > 0) {
-                $(targetToAttach).find('.thumb-preview').replaceWith($('<img style="max-width: 150px; max-height: 100%;">').attr('src', dataUrl));
-            }
-        });
-    } else {
-        console.log("Viewer not ready");
+  if ($(targetToAttach).length > 0) {
+    $(targetToAttach).append($('<div class="thumb-preview" style="padding: 2rem 0; font-weight: bold;">').html('Loading Preview...'));
+    $(targetToAttach).removeClass('d-none');
+  }
+  const linkToAPI = urlsForApi.layout.addThumbnail;
+  let requestPath = linkToAPI.url.replace(':id', lD.layout.layoutId);
+  $.ajax({
+    url: requestPath,
+    type: 'POST',
+    success: function() {
+      // Attach to target
+      if ($(targetToAttach).length > 0) {
+        $(targetToAttach).find('.thumb-preview').replaceWith($('<img style="max-width: 150px; max-height: 100%;">').attr('src', requestPath));
+      }
     }
+  });
 };
 
 /**

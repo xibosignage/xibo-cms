@@ -21,6 +21,7 @@
  */
 namespace Xibo\Widget;
 
+use Illuminate\Support\Str;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
@@ -137,11 +138,22 @@ class LocalVideo extends ModuleWidget
     public function isValid()
     {
         // Validate
-        if (!v::stringType()->notEmpty()->validate(urldecode($this->getOption('uri'))))
-            throw new InvalidArgumentException(__('Please enter a full path name giving the location of this video on the client'), 'uri');
+        $url = urldecode($this->getOption('uri'));
+        if (!v::stringType()->notEmpty()->validate($url)) {
+            throw new InvalidArgumentException(
+                __('Please enter a full path name giving the location of this video on the client'),
+                'uri'
+            );
+        }
 
-        if ($this->getUseDuration() == 1 && !v::intType()->min(1)->validate($this->getDuration()))
+        // Allow a 0 duration for locally stored files, but not for remote streams, etc.
+        if ($this->getUseDuration() == 1
+            && !v::intType()->min(1)->validate($this->getDuration())
+            && !Str::startsWith($url, 'file://')
+            && Str::contains($url, '://')
+        ) {
             throw new InvalidArgumentException(__('You must enter a duration.'), 'duration');
+        }
 
         return self::$STATUS_PLAYER;
     }

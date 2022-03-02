@@ -2957,22 +2957,6 @@ class Layout extends Base
             throw new AccessDeniedException();
         }
 
-        // Do we want to trim?
-        $params = $this->getSanitizer($request->getParams());
-        $trim = $params->getString('trim');
-        if (!empty($trim)) {
-            $trim = explode(',', $trim);
-            $top = $trim[0];
-            $left = $trim[1];
-            $width = $trim[2];
-            $height = $trim[3];
-        } else {
-            $top = 0;
-            $left = 0;
-            $width = 0;
-            $height = 0;
-        }
-
         // Where would we save this to?
         if ($layout->isChild()) {
             // A draft
@@ -2984,15 +2968,131 @@ class Layout extends Base
             $saveTo = $libraryLocation . 'thumbs/' . $layout->campaignId . '_campaign_thumb.png';
         }
 
-        // Base64 encoded thumbnail image.
+        // Load this Layout
+        $layout->load();
+
+        // Create a thumbnail image
         try {
             Img::configure(['driver' => 'gd']);
-            $image = Img::make($request->getBody()->getContents());
 
-            // Do we need to crop this image at all?
-            if ($width !== 0 && $height !== 0 && ($top !== 0 || $left !== 0)) {
-                $image->crop($width, $height, $left, $top);
+            if ($layout->backgroundImageId !== null && $layout->backgroundImageId !== 0) {
+                // Start from a background image
+                $media = $this->mediaFactory->getById($layout->backgroundImageId);
+                $image = Img::make($libraryLocation . $media->storedAs);
+
+                // Resize this image (without cropping it) to the size of this layout
+                $image->resize($layout->width, $layout->height);
+            } else {
+                // Start from a Canvas
+                $image = Img::canvas($layout->width, $layout->height, $layout->backgroundColor);
             }
+
+            // Draw some regions on it.
+            foreach ($layout->regions as $region) {
+                try {
+                    // Get widgets in this region
+                    $widgets = $region->regionPlaylist->expandWidgets();
+
+                    if (count($widgets) <= 0) {
+                        // Render the region (draw a grey box)
+                        $image->rectangle(
+                            $region->left,
+                            $region->top,
+                            $region->left + $region->width,
+                            $region->top + $region->height,
+                            function ($draw) {
+                                $draw->background('rgba(196, 196, 196, 0.6)');
+                            }
+                        );
+                        $image->text(
+                            __('Empty Region'),
+                            $region->left + ($region->width / 2),
+                            $region->top + ($region->height / 2),
+                            function ($font) {
+                                $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
+                                $font->size(84);
+                                $font->color('#000000');
+                                $font->align('center');
+                                $font->valign('center');
+                            }
+                        );
+                    } else {
+                        // Render just the first widget in the appropriate place
+                        $module = $this->moduleFactory->createWithWidget($widgets[0], $region);
+                        if ($module->getModuleType() === 'image') {
+                            $cover = Img::make($libraryLocation . $module->getMedia()->storedAs);
+                            $proportional = $module->getOption('scaleType') !== 'stretch';
+                            $fit = $module->getOption('scaleType') === 'fit';
+
+                            if ($fit) {
+                                $cover->fit($region->width, $region->height);
+                            } else {
+                                $cover->resize(
+                                    $region->width,
+                                    $region->height,
+                                    function ($constraint) use ($proportional) {
+                                        if ($proportional) {
+                                            $constraint->aspectRatio();
+                                        }
+                                    }
+                                );
+                            }
+                            $image->insert($cover, 'top-left', $region->left, $region->top);
+                        } else if ($module->getModuleType() === 'video'
+                            && file_exists($libraryLocation . $module->getMediaId() . '_videocover.png')
+                        ) {
+                            // Render the video cover
+                            $cover = Img::make($libraryLocation . $module->getMediaId() . '_videocover.png');
+                            $cover->resize($region->width, $region->height, function ($constraint) {
+                                $constraint->aspectRatio();
+                            });
+                            $image->insert($cover, 'top-left', $region->left, $region->top);
+                        } else {
+                            // Draw the region in the widget colouring
+                            $image->rectangle(
+                                $region->left,
+                                $region->top,
+                                $region->left + $region->width,
+                                $region->top + $region->height,
+                                function ($draw) {
+                                    $draw->background('rgba(196, 196, 196, 0.6)');
+                                }
+                            );
+                            $image->text(
+                                $module->getModule()->name,
+                                $region->left + ($region->width / 2),
+                                $region->top + ($region->height / 2),
+                                function ($font) {
+                                    $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
+                                    $font->size(84);
+                                    $font->color('#000000');
+                                    $font->align('center');
+                                    $font->valign('center');
+                                }
+                            );
+                        }
+
+                        // Put a number of widgets counter in the bottom
+                        $image->text(
+                            '1 / ' . count($widgets),
+                            $region->left + $region->width - 10,
+                            $region->top + $region->height - 10,
+                            function ($font) {
+                                $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
+                                $font->size(36);
+                                $font->color('#000000');
+                                $font->align('right');
+                                $font->valign('bottom');
+                            }
+                        );
+                    }
+                } catch (\Exception $e) {
+                    $this->getLog()->error('Problem generating region in thumbnail. e: ' . $e->getMessage());
+                }
+            }
+
+            // Resize the entire layout down to a thumbnail
+            $image->widen(1080);
 
             // Save the file
             $image->save($saveTo);

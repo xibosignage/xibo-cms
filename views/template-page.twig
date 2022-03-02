@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -163,8 +163,13 @@
                         }
                         if (data) {
                             return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' + data + '">' +
-                                '<img class="img-fluid img-thumbnail" src="' + data + '" alt="{{ "Thumbnail"|trans }}" />' +
+                                '<img class="img-fluid" src="' + data + '" alt="{{ "Thumbnail"|trans }}" />' +
                                 '</a>';
+                        } else {
+                          var addUrl = '{{ url_for("layout.thumbnail.add", {id: ":id"}) }}'.replace(':id', row.layoutId);
+                          return '<a class="img-replace generate-layout-thumbnail" href="' + addUrl + '">' +
+                              '<img class="img-fluid" src="{{ theme.uri("img/thumbs/placeholder.png") }}" alt="{{ "Add Thumbnail"|trans }}" />' +
+                              '</a>';
                         }
                         return '';
                     },
@@ -185,6 +190,20 @@
 
         table.on('draw', dataTableDraw);
         table.on('draw', { form: $("#templates").closest(".XiboGrid").find(".FilterDiv form") } ,dataTableCreateTagEvents);
+        table.on('draw', function(e, settings) {
+          $('#' + e.target.id + ' .generate-layout-thumbnail').on('click', function(e) {
+            e.preventDefault();
+            var $anchor = $(this);
+            $.ajax({
+              url: $anchor.attr('href'),
+              method: 'POST',
+              success: function() {
+                $anchor.find('img').attr('src', $anchor.attr('href'));
+                $anchor.removeClass('generate-layout-thumbnail').attr('data-toggle', 'lightbox');
+              }
+            });
+          });
+        });
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#templates_wrapper').find('.dataTables_buttons'));
 

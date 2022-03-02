@@ -2820,7 +2820,7 @@ class Layout implements \JsonSerializable
     public function getThumbnailUri(): string
     {
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
-        if ($this->isEditable()) {
+        if ($this->isChild()) {
             return $libraryLocation . 'thumbs/' . $this->campaignId . '_layout_thumb.png';
         } else {
             return $libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png';

@@ -220,7 +220,7 @@
                     {
                         "name": "description",
                         "data": null,
-                        responsivePriority: 5,
+                        responsivePriority: 10,
                         "render": {"_": "description", "display": "descriptionFormatted", "sort": "description"}
                     },
                     {
@@ -249,6 +249,11 @@
                           if (data) {
                             return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' + data + '">' +
                                 '<img class="img-fluid" src="' + data + '" alt="{{ "Thumbnail"|trans }}" />' +
+                                '</a>';
+                          } else {
+                            var addUrl = '{{ url_for("layout.thumbnail.add", {id: ":id"}) }}'.replace(':id', row.layoutId);
+                            return '<a class="img-replace generate-layout-thumbnail" data-type="image" href="' + addUrl + '">' +
+                                '<img class="img-fluid" src="{{ theme.uri("img/thumbs/placeholder.png") }}" alt="{{ "Add Thumbnail"|trans }}" />' +
                                 '</a>';
                           }
                           return '';
@@ -318,6 +323,20 @@
 
             table.on('draw', dataTableDraw);
             table.on('draw', { form: $("#layouts").closest(".XiboGrid").find(".FilterDiv form") }, dataTableCreateTagEvents);
+            table.on('draw', function(e, settings) {
+              $('#' + e.target.id + ' .generate-layout-thumbnail').on('click', function(e) {
+                e.preventDefault();
+                var $anchor = $(this);
+                $.ajax({
+                  url: $anchor.attr('href'),
+                  method: 'POST',
+                  success: function() {
+                    $anchor.find('img').attr('src', $anchor.attr('href'));
+                    $anchor.removeClass('generate-layout-thumbnail').attr('data-toggle', 'lightbox');
+                  }
+                });
+              });
+            });
             table.on('processing.dt', dataTableProcessing);
             dataTableAddButtons(table, $('#layouts_wrapper').find('.dataTables_buttons'));
         });
