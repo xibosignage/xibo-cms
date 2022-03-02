@@ -130,6 +130,14 @@ class BaseFactory
     }
 
     /**
+     * @return \Xibo\Support\Validator\ValidatorInterface
+     */
+    protected function getValidator()
+    {
+        return $this->getSanitizerService()->getValidator();
+    }
+
+    /**
      * Get User
      * @return User
      */
