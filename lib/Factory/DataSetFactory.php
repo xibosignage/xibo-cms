@@ -708,7 +708,11 @@ class DataSetFactory extends BaseFactory
                             // Date
                             // This expects an ISO date
                             try {
-                                $result[$column->heading] = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $value[1]);
+                                // This seems odd, parsing to a Carbon instance and then converting back to the system format
+                                // all we're really doing here is validating that the date is in the expected format
+                                // so that we know we can save
+                                $result[$column->heading] = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $value[1])
+                                    ->format(DateFormatHelper::getSystemFormat());
                             } catch (\Exception $e) {
                                 $this->getLog()->error(sprintf('Incorrect date provided %s, expected date format Y-m-d H:i:s ', $value[1]));
                             }
