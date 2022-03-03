@@ -82,15 +82,15 @@ jQuery.fn.extend({
             mElOptions.contentWidth = (options.numCols > 1) ? (options.widgetDesignWidth * options.numCols) : options.widgetDesignWidth;
             mElOptions.contentHeight = (options.numRows > 1) ? (options.widgetDesignHeight * options.numRows) : options.widgetDesignHeight;
 
-            mElOptions.contentScaleX = newWidth/ mElOptions.contentWidth;
-            mElOptions.contentScaleY = newHeight/ mElOptions.contentHeight;
+            mElOptions.contentScaleX = width / mElOptions.contentWidth;
+            mElOptions.contentScaleY = height / mElOptions.contentHeight;
         }
 
         // Apply these details
         $(this).each(function() {
             if(!$.isEmptyObject(mElOptions)) {
                 // calculate/update ratio
-                ratio = ratio * Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY);
+                ratio = Math.min(mElOptions.contentScaleX, mElOptions.contentScaleY);
 
                 $(this).css('transform-origin', '0 0');
                 $(this).css('transform', 'scale(' + ratio + ')');
@@ -126,17 +126,18 @@ jQuery.fn.extend({
 
             // Handle alignment
             //  Horizontal alignment
+            $(this).css('position', 'absolute');
             if (options.alignmentH == 'right') {
-                $(this).css('margin-left', width - ($(this).width() * ratio));
+                $(this).css('left', width - ($(this).width() * ratio));
             } else if (options.alignmentH == 'center') {
-                $(this).css('margin-left', (width / 2) - ($(this).width() * ratio) / 2);
+                $(this).css('left', (width / 2) - ($(this).width() * ratio) / 2);
             }
 
             //  Vertical alignment
             if (options.alignmentV == 'bottom') {
-                $(this).css('margin-top', height - ($(this).height() * ratio));
+                $(this).css('top', height - ($(this).height() * ratio));
             } else if (options.alignmentV == 'middle') {
-                $(this).css('margin-top', (height / 2) - ($(this).height() * ratio) / 2);
+                $(this).css('top', (height / 2) - ($(this).height() * ratio) / 2);
             }
         });
 

@@ -217,14 +217,14 @@
 
                         {% set title %}{% trans "Background Image" %}{% endset %}
                         {% set noneText %}{% trans "None" %}{% endset %}
-                        {% set autoText %}{% trans "Auto" %}{% endset %}
-                        {% set containText %}{% trans "Contain" %}{% endset %}
-                        {% set coverText %}{% trans "Cover" %}{% endset %}
+                        {% set centerText %}{% trans "Center" %}{% endset %}
+                        {% set stretchText %}{% trans "Stretch" %}{% endset %}
+                        {% set fitText %}{% trans "Fit" %}{% endset %}
                         {% set options = [
                             { id: "none", value: noneText },
-                            { id: "cover", value: coverText },
-                            { id: "contain", value: containText },
-                            { id: "auto", value: autoText }
+                            { id: "fit", value: fitText },
+                            { id: "stretch", value: stretchText },
+                            { id: "center", value: centerText }
                         ] %}
                         {{ forms.dropdown("background-image", "single", title, module.getOption("background-image", "contain"), options, "id", "value", "", "") }}
 
@@ -258,7 +258,7 @@
                             {% set backgroundOptions = [{"mediaId": "", "name": ""}]|merge(module.getBackgroundOptions()) %}
                             {% set getBackgroundList = module.getBackgroundList() %}
 
-                            {% set backgroundListMessage %}{% trans "Select images from the media library to replace the default weather backgrounds. The images will be used both for main background and daily backgrounds ( use bg-[icon] class in Current or Daily templates to use this feature )." %}{% endset %}
+                            {% set backgroundListMessage %}{% trans "Select images from the media library to replace the default weather backgrounds." %}{% endset %}
                             {{ forms.message(backgroundListMessage, "") }}
 
                             {% for backgroundEl in getBackgroundList %}

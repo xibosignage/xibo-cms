@@ -10,16 +10,28 @@ const MediaPlayerTemplate = require('../templates/toolbar-media-preview.hbs');
 const MediaInfoTemplate = require('../templates/toolbar-media-preview-info.hbs');
 
 const moduleListFiltered = [];
+const moduleListOtherFiltered = [];
 const usersListFiltered = [];
 
 // Filter module list to create the types for the filter
 modulesList.forEach((element) => {
+    // Create new list with "other" modules
     if (element.assignable == 1 && element.regionSpecific == 0 && ['image', 'audio', 'video'].indexOf(element.type) == -1) {
-        moduleListFiltered.push({
+        moduleListOtherFiltered.push({
             type: element.type,
             name: element.name,
         });
     }
+    
+    // Filter out image/audio/video
+    if(['image', 'audio', 'video'].indexOf(element.type) == -1) {
+        moduleListFiltered.push(element);
+    }
+});
+
+// Sort modules by name
+moduleListFiltered.sort(function(a, b) {
+    return (a.name < b.name) ? -1 : 1;
 });
 
 usersList.forEach((element) => {
@@ -171,7 +183,7 @@ const defaultMenuItems = [
             },
             type: {
                 value: '',
-                values: moduleListFiltered,
+                values: moduleListOtherFiltered,
             },
             owner: {
                 value: '',
@@ -242,7 +254,7 @@ const Toolbar = function(parent, container, customActions = {}, showOptions = fa
     // Options menu
     this.showOptions = showOptions;
 
-    this.customModuleList = modulesList;
+    this.customModuleList = moduleListFiltered;
 };
 
 /**
@@ -830,7 +842,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         const filter = self.DOMObject.find('#media-container-' + menu + ' .media-search-form').serializeObject();
 
         if(menu == self.libraryMenuIndex && filter.type == '') {
-            filter.types = moduleListFiltered.map(el => el.type);
+            filter.types = moduleListOtherFiltered.map(el => el.type);
         }
 
         // Manage request length

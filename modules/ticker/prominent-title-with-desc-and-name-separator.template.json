@@ -2,7 +2,7 @@
  "id":"prominent-title-with-desc-and-name-separator",
  "value":"Prominent title with description and name separator",
  "template":"<p><span class=\"name\">[Name]</span></p>\n<p><span class=\"title\"><strong>[Title]</strong></span></p>\n<p><span class=\"description\">[Description]</span></p>",
- "css":"html {\n /* Global font size, change for font scale */\n font-size: 16px;\n }\n\n.item {\n padding: 1rem;\n }\n\n p {\n  font-family: Arial, Verdana, sans-serif;\n}\n\n.name {\n  font-size: 2rem;\n}\n\n.description, .title {\n  font-size: 3rem;\n}",
+ "css":"html {\n /* Global font size, change for font scale */\n font-size: 16px;\n }\n\n.item {\n padding: 1rem;\n }\n\n.item.cycle-slide {\n width: calc(100% - 2rem) !important;\n }\n\n p {\n  font-family: Arial, Verdana, sans-serif;\n}\n\n.name {\n  font-size: 2rem;\n}\n\n.description, .title {\n  font-size: 3rem;\n}",
  "image":"modules/ticker/prominent-title-with-desc-and-name-separator.png",
  "defaultVisualEditor": false,
  "options": {
