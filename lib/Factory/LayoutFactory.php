@@ -2201,8 +2201,11 @@ class LayoutFactory extends BaseFactory
         }
 
         if ($parsedFilter->getString('orientation') !== null) {
-            $body .= ' AND layout.orientation = :orientation ';
-            $params['orientation'] = $parsedFilter->getString('orientation');
+            if ($parsedFilter->getString('orientation') === 'portrait') {
+                $body .= ' AND layout.width < layout.height ';
+            } else {
+                $body .= ' AND layout.width >= layout.height ';
+            }
         }
 
         // Logged in user view permissions
@@ -2247,7 +2250,7 @@ class LayoutFactory extends BaseFactory
             $layout->backgroundzIndex = $parsedRow->getInt('backgroundzIndex');
             $layout->width = $parsedRow->getDouble('width');
             $layout->height = $parsedRow->getDouble('height');
-            $layout->orientation = $parsedRow->getString('orientation');
+            $layout->orientation = $layout->width >= $layout->height ? 'landscape' : 'portrait';
             $layout->createdDt = $parsedRow->getDate('createdDt');
             $layout->modifiedDt = $parsedRow->getDate('modifiedDt');
             $layout->displayOrder = $parsedRow->getInt('displayOrder');

@@ -173,6 +173,15 @@ class XiboExchangeConnector implements ConnectorInterface
         $searchResult->title = $template->title;
         $searchResult->description = $template->description;
 
+        // Optional data
+        if (property_exists($template, 'tags') && count($template->tags) > 0) {
+            $searchResult->tags = $template->tags;
+        }
+
+        if (property_exists($template, 'orientation')) {
+            $searchResult->orientation = $template->orientation;
+        }
+
         // Thumbnail
         $searchResult->thumbnail = $template->thumbnailUrl;
         $searchResult->download = $template->downloadUrl;
