@@ -722,9 +722,6 @@ class ForecastIo extends ModuleWidget
         if ($this->getOption('overrideTemplate') == 0) {
             // Get CSS and HTML from the default templates
             $template = $this->getTemplateById($this->getOption('templateId'));
-
-            $this->getLog()->debug('--- Get template');
-            $this->getLog()->debug(json_encode($template));
             
             if (isset($template)) {
                 $body = $template['main'];
@@ -732,7 +729,6 @@ class ForecastIo extends ModuleWidget
                 $styleSheet .= $template['css'];
                 $widgetOriginalWidth = $template['widgetOriginalWidth'];
                 $widgetOriginalHeight = $template['widgetOriginalHeight'];
-                $backgroundImage = $template['background'];
             } else {
                 throw new InvalidArgumentException(__('Template not found, please edit the Widget and select another.'), 'templateId');
             }
@@ -744,8 +740,10 @@ class ForecastIo extends ModuleWidget
             $styleSheet .= $this->getRawNode('styleSheet', '');
             $widgetOriginalWidth = intval($this->getOption('widgetOriginalWidth'));
             $widgetOriginalHeight = intval($this->getOption('widgetOriginalHeight'));
-            $backgroundImage = $this->getOption('background-image');
         }
+
+        // Get background image option
+        $backgroundImage = $this->getOption('background-image');
 
         if ($backgroundImage == 'none') {
             $styleSheet .= '
@@ -754,6 +752,19 @@ class ForecastIo extends ModuleWidget
                 }
             ';
         } else {
+            // Prepend background to body if exists
+            $body = '<div class="bg-[icon]"></div>' . $body;
+
+            // Create CSS for image size
+            if($backgroundImage == 'center') {
+                $backgroundImageCSS = 'contain';
+            } else if($backgroundImage == 'stretch') {
+                $backgroundImageCSS = '100% 100%';
+            } else {
+                // Fit or default
+                $backgroundImageCSS = 'cover';
+            }
+
             // Custom backgrounds
             $styleSheet .= '
                 .bg-cloudy {
@@ -798,8 +809,11 @@ class ForecastIo extends ModuleWidget
 
                 .bg-cloudy, .bg-partly-cloudy-day, .bg-clear-day, .bg-fog, .bg-sleet, .bg-clear-night, .bg-partly-cloudy-night, .bg-rain, .bg-snow, .bg-wind {
                     background-position: center;
-                    background-size: ' . $backgroundImage . ';
+                    background-size: ' . $backgroundImageCSS . ';
                     background-repeat: no-repeat;
+                    width: 100%;
+                    height: 100%;
+                    position: absolute;
                 }
             ';
         }
@@ -916,7 +930,7 @@ class ForecastIo extends ModuleWidget
             var options = ' . json_encode($options) . '
 
             $(document).ready(function() {
-                $("body").xiboLayoutScaler(options);
+                $(".container").xiboLayoutScaler(options);
                 $("#content").find("img").xiboImageRender(options);
             });
         </script>';
