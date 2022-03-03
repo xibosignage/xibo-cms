@@ -756,9 +756,9 @@ class ForecastIo extends ModuleWidget
             $body = '<div class="bg-[icon]"></div>' . $body;
 
             // Create CSS for image size
-            if($backgroundImage == 'center') {
+            if ($backgroundImage == 'center') {
                 $backgroundImageCSS = 'contain';
-            } else if($backgroundImage == 'stretch') {
+            } else if ($backgroundImage == 'stretch') {
                 $backgroundImageCSS = '100% 100%';
             } else {
                 // Fit or default
