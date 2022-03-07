@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-02-07 08:32+0000\n"
+"POT-Creation-Date: 2022-03-07 12:10+0000\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -5685,7 +5685,7 @@ msgid "Report an application fault"
 msgstr ""
 
 #: cache/e2/e2d892a2c4fe7900e283ff1bd59ca08efbe58b3f86c5b024434e6d6724a53687.php:113
-#: lib/Middleware/Actions.php:137
+#: lib/Middleware/Actions.php:147
 msgid ""
 "CMS configuration warning, it is very unlikely that /web/ should be in the "
 "URL. This usually means that the DocumentRoot of the web server is wrong and "
@@ -17681,7 +17681,7 @@ msgstr ""
 msgid "Tidy Cache"
 msgstr ""
 
-#: lib/XTR/MaintenanceDailyTask.php:110 lib/XTR/MaintenanceDailyTask.php:161
+#: lib/XTR/MaintenanceDailyTask.php:110 lib/XTR/MaintenanceDailyTask.php:162
 #: lib/XTR/StatsMigrationTask.php:225 lib/XTR/StatsMigrationTask.php:366
 #: lib/XTR/StatsMigrationTask.php:468 lib/XTR/StatsMigrationTask.php:638
 #: lib/XTR/ClearCachedMediaDataTask.php:81
@@ -17692,7 +17692,7 @@ msgstr ""
 msgid "Import Layouts"
 msgstr ""
 
-#: lib/XTR/MaintenanceDailyTask.php:163
+#: lib/XTR/MaintenanceDailyTask.php:164
 msgid "Not Required."
 msgstr ""
 
@@ -17948,7 +17948,7 @@ msgid ""
 "Time provisioning is disabled"
 msgstr ""
 
-#: lib/Middleware/Actions.php:128
+#: lib/Middleware/Actions.php:138
 msgid ""
 "There is a problem with this installation. \"install.php\" should be deleted."
 msgstr ""
@@ -18398,15 +18398,20 @@ msgid ""
 "extension"
 msgstr ""
 
-#: lib/Controller/Library.php:2666
+#: lib/Controller/Library.php:2663
+#, php-format
+msgid "Download rejected due to %s"
+msgstr ""
+
+#: lib/Controller/Library.php:2673
 msgid "Media upload from URL was successful"
 msgstr ""
 
-#: lib/Controller/Library.php:2750
+#: lib/Controller/Library.php:2762
 msgid "Invalid image data"
 msgstr ""
 
-#: lib/Controller/Library.php:2848
+#: lib/Controller/Library.php:2860
 #, php-format
 msgid "Media %s moved to Folder %s"
 msgstr ""
@@ -19273,7 +19278,7 @@ msgstr ""
 msgid "Malformed JSON body, rows and uniqueKeys are required"
 msgstr ""
 
-#: lib/Controller/DataSet.php:1290 lib/Factory/DataSetFactory.php:701
+#: lib/Controller/DataSet.php:1290
 #, php-format
 msgid "Incorrect date provided %s, expected date format Y-m-d H:i:s "
 msgstr ""
@@ -19650,50 +19655,50 @@ msgid ""
 "empty"
 msgstr ""
 
-#: lib/Factory/DataSetFactory.php:409
+#: lib/Factory/DataSetFactory.php:410
 #, php-format
 msgid ""
 "The request %d is too large to fit inside the configured memory limit. %d"
 msgstr ""
 
-#: lib/Factory/DataSetFactory.php:478
+#: lib/Factory/DataSetFactory.php:479
 #, php-format
 msgid "Unable to get Data for %s because the response was not valid JSON."
 msgstr ""
 
-#: lib/Factory/DataSetFactory.php:507
+#: lib/Factory/DataSetFactory.php:508
 #, php-format
 msgid "Unable to get Data for %s because %s."
 msgstr ""
 
-#: lib/Factory/DataSetFactory.php:553
+#: lib/Factory/DataSetFactory.php:554
 #, php-format
 msgid "Processing %d results into %d potential columns"
 msgstr ""
 
-#: lib/Factory/DataSetFactory.php:557
+#: lib/Factory/DataSetFactory.php:558
 #, php-format
 msgid "Processing Result with Data Root %s"
 msgstr ""
 
-#: lib/Factory/DataSetFactory.php:600
+#: lib/Factory/DataSetFactory.php:601
 msgid "Processing as a Single Row"
 msgstr ""
 
-#: lib/Factory/DataSetFactory.php:606
+#: lib/Factory/DataSetFactory.php:607
 msgid "Processing as Multiple Rows"
 msgstr ""
 
-#: lib/Factory/DataSetFactory.php:617
+#: lib/Factory/DataSetFactory.php:618
 #, php-format
 msgid "No data found at the DataRoot %s"
 msgstr ""
 
-#: lib/Factory/DataSetFactory.php:620
+#: lib/Factory/DataSetFactory.php:621
 msgid "Consolidating entries"
 msgstr ""
 
-#: lib/Factory/DataSetFactory.php:625
+#: lib/Factory/DataSetFactory.php:626
 #, php-format
 msgid "There are %d entries in total"
 msgstr ""
@@ -19702,9 +19707,9 @@ msgstr ""
 msgid "Widget not found"
 msgstr ""
 
-#: lib/Factory/PlayerVersionFactory.php:111 lib/Factory/MediaFactory.php:372
-#: lib/Factory/MediaFactory.php:388 lib/Factory/MediaFactory.php:404
-#: lib/Factory/MediaFactory.php:421
+#: lib/Factory/PlayerVersionFactory.php:111 lib/Factory/MediaFactory.php:401
+#: lib/Factory/MediaFactory.php:417 lib/Factory/MediaFactory.php:433
+#: lib/Factory/MediaFactory.php:450
 msgid "Cannot find media"
 msgstr ""
 
@@ -20228,30 +20233,26 @@ msgstr ""
 msgid "Campaign not found"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:259
+#: lib/Factory/LayoutFactory.php:260
 msgid "LayoutId is 0"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:265 lib/Factory/LayoutFactory.php:307
-#: lib/Factory/LayoutFactory.php:352 lib/Factory/LayoutFactory.php:373
-#: lib/Factory/LayoutFactory.php:428 lib/Factory/LayoutFactory.php:478
+#: lib/Factory/LayoutFactory.php:266 lib/Factory/LayoutFactory.php:308
+#: lib/Factory/LayoutFactory.php:353 lib/Factory/LayoutFactory.php:374
+#: lib/Factory/LayoutFactory.php:429 lib/Factory/LayoutFactory.php:479
 msgid "Layout not found"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:282 lib/Factory/LayoutFactory.php:324
+#: lib/Factory/LayoutFactory.php:283 lib/Factory/LayoutFactory.php:325
 msgid "Invalid Input"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:288 lib/Factory/LayoutFactory.php:330
+#: lib/Factory/LayoutFactory.php:289 lib/Factory/LayoutFactory.php:331
 msgid "Layout does not exist"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:508
+#: lib/Factory/LayoutFactory.php:509
 msgid "Layout import failed, invalid xlf supplied"
-msgstr ""
-
-#: lib/Factory/LayoutFactory.php:737
-msgid "playlist.json not found in the archive"
 msgstr ""
 
 #: lib/Factory/LayoutFactory.php:1080 lib/Service/ReportService.php:277
@@ -20264,11 +20265,11 @@ msgstr ""
 msgid "Unable to open ZIP"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1228
+#: lib/Factory/LayoutFactory.php:1229
 msgid "Empty file in ZIP"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:1233
+#: lib/Factory/LayoutFactory.php:1234
 msgid "Cannot save media file from ZIP file"
 msgstr ""
 
@@ -20281,7 +20282,7 @@ msgstr ""
 msgid "DataSets have different column names"
 msgstr ""
 
-#: lib/Factory/LayoutFactory.php:2319 lib/Factory/LayoutFactory.php:2335
+#: lib/Factory/LayoutFactory.php:2317 lib/Factory/LayoutFactory.php:2333
 msgid "Draft"
 msgstr ""
 
@@ -20294,8 +20295,12 @@ msgstr ""
 msgid "Tag not found"
 msgstr ""
 
-#: lib/Factory/MediaFactory.php:180
+#: lib/Factory/MediaFactory.php:183
 msgid "Not a folder"
+msgstr ""
+
+#: lib/Factory/MediaFactory.php:316
+msgid "File too large"
 msgstr ""
 
 #: lib/Factory/SavedReportFactory.php:111
@@ -20660,17 +20665,17 @@ msgstr ""
 msgid "Unknown FileType Requested."
 msgstr ""
 
-#: lib/Xmds/Soap.php:2075
+#: lib/Xmds/Soap.php:2080
 #, php-format
 msgid "Recovery for Display %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2076
+#: lib/Xmds/Soap.php:2081
 #, php-format
 msgid "Display ID %d is now back online %s"
 msgstr ""
 
-#: lib/Xmds/Soap.php:2147
+#: lib/Xmds/Soap.php:2152
 msgid "Bandwidth allowance exceeded"
 msgstr ""
 
