@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -49,8 +49,9 @@ class LayoutUploadHandler extends BlueImpUploadHandler
         // Upload and Save
         try {
             // Check Library
-            if ($this->options['libraryQuotaFull'])
+            if ($this->options['libraryQuotaFull']) {
                 throw new LibraryFullException(sprintf(__('Your library is full. Library Limit: %s K'), $this->options['libraryLimit']));
+            }
 
             // Check for a user quota
             $controller->getUser()->isQuotaFullByUser();
@@ -65,7 +66,7 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             $importTags = isset($_REQUEST['importTags']) ? $_REQUEST['importTags'][$index] : 0;
             $useExistingDataSets = isset($_REQUEST['useExistingDataSets']) ? $_REQUEST['useExistingDataSets'][$index] : 0;
             $importDataSetData = isset($_REQUEST['importDataSetData']) ? $_REQUEST['importDataSetData'][$index] : 0;
-            $folderId = isset($_REQUEST['folderId']) ? $_REQUEST['folderId'] : 1;
+            $folderId = !empty($_REQUEST['folderId']) ? $_REQUEST['folderId'] : 1;
 
             /* @var Layout $layout */
             $layout = $controller->getLayoutFactory()->createFromZip(
@@ -79,7 +80,8 @@ class LayoutUploadHandler extends BlueImpUploadHandler
                 $importDataSetData,
                 $this->options['libraryController'],
                 $tags,
-                $this->options['routeParser']
+                $this->options['routeParser'],
+                $folderId
             );
 
             // set folderId, permissionFolderId is handled on Layout specific Campaign record.
@@ -94,7 +96,6 @@ class LayoutUploadHandler extends BlueImpUploadHandler
             // Set the name for the return
             $file->name = $layout->layout;
             $file->id = $layout->layoutId;
-
         } catch (Exception $e) {
             $controller->getLog()->error(sprintf('Error importing Layout: %s', $e->getMessage()));
             $controller->getLog()->debug($e->getTraceAsString());

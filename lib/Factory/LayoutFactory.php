@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,6 +28,7 @@ use Stash\Pool;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\DataSet;
 use Xibo\Entity\DataSetColumn;
+use Xibo\Entity\Folder;
 use Xibo\Entity\Layout;
 use Xibo\Entity\Playlist;
 use Xibo\Entity\Region;
@@ -714,27 +715,24 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param $layoutJson
+     * @param $playlistJson
+     * @param $nestedPlaylistJson
+     * @param Folder $folder
      * @param null $layout
-     * @param null $playlistJson
-     * @param null $nestedPlaylistJson
-     * @param bool $useJson
      * @param bool $importTags
      * @return array
      * @throws DuplicateEntityException
+     * @throws GeneralException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    public function loadByJson($layoutJson, $layout = null, $playlistJson, $nestedPlaylistJson, $useJson = false, $importTags = false)
+    public function loadByJson($layoutJson, $playlistJson, $nestedPlaylistJson, Folder $folder, $layout = null, $importTags = false): array
     {
         $this->getLog()->debug('Loading Layout by JSON');
 
         // New Layout
         if ($layout == null) {
             $layout = $this->createEmpty();
-        }
-
-        if ($useJson == false) {
-            throw new InvalidArgumentException(__('playlist.json not found in the archive'), 'playlistJson');
         }
 
         $playlists = [];
@@ -750,6 +748,7 @@ class LayoutFactory extends BaseFactory
         $layout->backgroundColor = $layoutJson['layoutDefinitions']['backgroundColor'];
         $layout->backgroundzIndex = (int)$layoutJson['layoutDefinitions']['backgroundzIndex'];
         $layout->actions = [];
+        $layout->autoApplyTransitions = $layoutJson['layoutDefinitions']['autoApplyTransitions'] ?? 0;
         $actions = $layoutJson['layoutDefinitions']['actions'] ?? [];
 
         foreach ($actions as $action) {
@@ -780,7 +779,7 @@ class LayoutFactory extends BaseFactory
                 $oldIds[] = $newPlaylist->playlistId;
                 $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
 
-                $this->setOwnerAndSavePlaylist($newPlaylist);
+                $this->setOwnerAndSavePlaylist($newPlaylist, $folder);
 
                 $newIds[] = $newPlaylist->playlistId;
             }
@@ -962,7 +961,7 @@ class LayoutFactory extends BaseFactory
                             $widgets[$newPlaylist->playlistId] = $newPlaylist->widgets;
 
                             // Save a new Playlist and capture the Id
-                            $this->setOwnerAndSavePlaylist($newPlaylist);
+                            $this->setOwnerAndSavePlaylist($newPlaylist, $folder);
 
                             $newIds[] = $newPlaylist->playlistId;
                         }
@@ -1062,6 +1061,7 @@ class LayoutFactory extends BaseFactory
      * @param \Xibo\Controller\Library $libraryController
      * @param string $tags
      * @param \Slim\Interfaces\RouteParserInterface $routeParser $routeParser
+     * @param int $folderId
      * @return Layout
      * @throws DuplicateEntityException
      * @throws GeneralException
@@ -1069,7 +1069,7 @@ class LayoutFactory extends BaseFactory
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ConfigurationException
      */
-    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, $tags, $routeParser)
+    public function createFromZip($zipFile, $layoutName, $userId, $template, $replaceExisting, $importTags, $useExistingDataSets, $importDataSetData, $libraryController, $tags, $routeParser, int $folderId)
     {
         $this->getLog()->debug(sprintf('Create Layout from ZIP File: %s, imported name will be %s.', $zipFile, $layoutName));
 
@@ -1092,6 +1092,7 @@ class LayoutFactory extends BaseFactory
         // Get the Playlist details
         $playlistDetails = $zip->getFromName('playlist.json');
         $nestedPlaylistDetails = $zip->getFromName('nestedPlaylist.json');
+        $folder = $this->folderFactory->getById($folderId);
 
         // for old imports it may not exist and would error out without this check.
         if (array_key_exists('layoutDefinitions', $layoutDetails)) {
@@ -1104,7 +1105,7 @@ class LayoutFactory extends BaseFactory
                 $nestedPlaylistDetails = json_decode($nestedPlaylistDetails, true);
             }
 
-            $jsonResults = $this->loadByJson($layoutDetails, null, $playlistDetails, $nestedPlaylistDetails, true, $importTags);
+            $jsonResults = $this->loadByJson($layoutDetails, $playlistDetails, $nestedPlaylistDetails, $folder, null, $importTags);
             $layout = $jsonResults[0];
             $playlists = $jsonResults[1];
 
@@ -1277,6 +1278,9 @@ class LayoutFactory extends BaseFactory
 
                 $media->tags[] = $this->tagFactory->tagFromString('imported');
 
+                $media->folderId = $folder->id;
+                $media->permissionsFolderId =
+                    ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
                 // Get global stat setting of media to set to on/off/inherit
                 $media->enableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                 $media->save();
@@ -1340,7 +1344,8 @@ class LayoutFactory extends BaseFactory
             }
 
             // Playlists with media widgets
-            // We will iterate through all Playlists we've created during layout import here and replace any mediaIds if needed
+            // We will iterate through all Playlists we've created during layout import here and
+            // replace any mediaIds if needed
             if (isset($playlists) && $playlistDetails !== false) {
                 foreach ($playlists as $playlist) {
                     /** @var $playlist Playlist */
@@ -1348,7 +1353,6 @@ class LayoutFactory extends BaseFactory
                         $audioIds = $widget->getAudioIds();
 
                         if (in_array($oldMediaId, $widget->mediaIds)) {
-
                             $this->getLog()->debug('Playlist import Removing %d and replacing with %d', $oldMediaId, $newMediaId);
 
                             // Are we an audio record?
@@ -1360,7 +1364,6 @@ class LayoutFactory extends BaseFactory
                                         break;
                                     }
                                 }
-
                             } else {
                                 // Non audio
                                 $widget->setOptionValue('uri', 'attrib', $media->storedAs);
@@ -1400,7 +1403,6 @@ class LayoutFactory extends BaseFactory
         $dataSets = $zip->getFromName('dataSet.json');
 
         if ($dataSets !== false) {
-
             $dataSets = json_decode($dataSets, true);
 
             $this->getLog()->debug('There are ' . count($dataSets) . ' DataSets to import.');
@@ -1432,7 +1434,6 @@ class LayoutFactory extends BaseFactory
                             $existingDataSet = $libraryController->getDataSetFactory()->getByCode($dataSet->code);
                         } catch (NotFoundException $e) {
                             $this->getLog()->debug('Existing dataset not found with code %s', $dataSet->code);
-
                         }
                     }
 
@@ -1447,18 +1448,19 @@ class LayoutFactory extends BaseFactory
                 }
 
                 if ($existingDataSet === null) {
-
                     $this->getLog()->debug('Matching DataSet not found, will need to add one. useExistingDataSets = %s', $useExistingDataSets);
 
                     // We want to add the dataset we have as a new dataset.
                     // we will need to make sure we clear the ID's and save it
                     $existingDataSet = clone $dataSet;
                     $existingDataSet->userId = $this->getUser()->userId;
+                    $existingDataSet->folderId = $folder->id;
+                    $existingDataSet->permissionsFolderId =
+                        ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
                     $existingDataSet->save();
 
                     // Do we need to add data
                     if ($importDataSetData) {
-
                         // Import the data here
                         $this->getLog()->debug('Importing data into new DataSet %d', $existingDataSet->dataSetId);
 
@@ -1469,9 +1471,7 @@ class LayoutFactory extends BaseFactory
                             $existingDataSet->addRow($itemData);
                         }
                     }
-
                 } else {
-
                     $this->getLog()->debug('Matching DataSet found, validating the columns');
 
                     // Load the existing dataset
@@ -1539,9 +1539,7 @@ class LayoutFactory extends BaseFactory
                                 $columns = implode(',', $columns);
 
                                 $widget->setOptionValue('columns', 'attrib', $columns);
-
                                 $this->getLog()->debug('Replaced columns with %s', $columns);
-
                             } else if ($widget->type == 'datasetticker') {
                                 // Get the template option
                                 $template = $widget->getOptionValue('template', '');
@@ -1565,10 +1563,8 @@ class LayoutFactory extends BaseFactory
                                 // go through the chart config and our dataSet
                                 foreach ($oldConfig as $config) {
                                     foreach ($existingDataSet->columns as $column) {
-
                                         // replace with this condition to avoid double replacements
                                         if ($config['dataSetColumnId'] == $column->priorDatasetColumnId) {
-
                                             // create our new config, with replaced dataSetColumnIds
                                             $newConfig[] = [
                                                 'columnType' => $config['columnType'],
@@ -1629,7 +1625,6 @@ class LayoutFactory extends BaseFactory
     public function createNestedPlaylistWidgets($widgets, $combined, &$playlists)
     {
         foreach ($widgets as $playlistId => $widgetsDetails ) {
-
             foreach ($combined as $old => $new) {
                 if ($old == $playlistId) {
                     $playlistId = $new;
@@ -1639,7 +1634,6 @@ class LayoutFactory extends BaseFactory
             $playlist = $this->playlistFactory->getById($playlistId);
 
             foreach ($widgetsDetails as $widgetsDetail) {
-
                 $modules = $this->moduleFactory->get();
                 $playlistWidget = $this->widgetFactory->createEmpty();
                 $playlistWidget->playlistId = $playlistId;
@@ -1661,7 +1655,6 @@ class LayoutFactory extends BaseFactory
 
                 foreach ($widgetsDetail['widgetOptions'] as $widgetOptionE) {
                     if ($playlistWidget->type == 'subplaylist') {
-
                         if ($widgetOptionE['option'] == 'subPlaylistOptions') {
                             $nestedSubPlaylistOptions = json_decode($widgetOptionE['value']);
                         }
@@ -1695,19 +1688,16 @@ class LayoutFactory extends BaseFactory
                     $playlistWidget->setOptionValue('subPlaylistIds', 'attrib', json_encode($subPlaylistIds));
 
                     foreach ($subPlaylistIds as $value) {
-
                         foreach ($nestedSubPlaylistOptions as $playlistId => $options) {
-
-                                foreach ($options as $optionName => $optionValue) {
-                                    if ($optionName == 'subPlaylistIdSpots') {
-                                        $spots = $optionValue;
-                                    } elseif ($optionName == 'subPlaylistIdSpotLength') {
-                                        $spotsLength = $optionValue;
-                                    } elseif ($optionName == 'subPlaylistIdSpotFill') {
-                                        $spotFill = $optionValue;
-                                    }
+                            foreach ($options as $optionName => $optionValue) {
+                                if ($optionName == 'subPlaylistIdSpots') {
+                                    $spots = $optionValue;
+                                } elseif ($optionName == 'subPlaylistIdSpotLength') {
+                                    $spotsLength = $optionValue;
+                                } elseif ($optionName == 'subPlaylistIdSpotFill') {
+                                    $spotFill = $optionValue;
                                 }
-
+                            }
                         }
 
                         $nestedPlaylistOptionsUpdated[$value] = [
@@ -2255,19 +2245,23 @@ class LayoutFactory extends BaseFactory
         $maxSubYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->subYear()->format('U');
         $maxAddYear = Carbon::createFromTimestamp(Widget::$DATE_MAX)->addYear()->format('U');
 
+        // if we are importing from layout.json the Widget from/to expiry dates are already timestamps
+        // for old Layouts when the Widget from/to dt are missing we set them to timestamps as well.
+        $timestampFromDt = is_integer($widget->fromDt) ? $widget->fromDt : Carbon::createFromTimeString($widget->fromDt)->format('U');
+        $timestampToDt =  is_integer($widget->toDt) ? $widget->toDt : Carbon::createFromTimeString($widget->toDt)->format('U');
+
         // convert the date string to a unix timestamp, if the layout xlf does not contain dates, then set it to the $DATE_MIN / $DATE_MAX which are already unix timestamps, don't attempt to convert them
         // we need to check if provided from and to dates are within $DATE_MIN +- year to avoid issues with CMS Instances in different timezones https://github.com/xibosignage/xibo/issues/1934
-
-        if ($widget->fromDt === Widget::$DATE_MIN || (Carbon::createFromTimeString($widget->fromDt)->format('U') > $minSubYear && Carbon::createFromTimeString($widget->fromDt)->format('U') < $minAddYear)) {
+        if ($widget->fromDt === Widget::$DATE_MIN || ($timestampFromDt > $minSubYear && $timestampFromDt < $minAddYear)) {
             $widget->fromDt = Widget::$DATE_MIN;
         } else {
-            $widget->fromDt = Carbon::createFromTimeString($widget->fromDt)->format('U');
+            $widget->fromDt = $timestampFromDt;
         }
 
-        if ($widget->toDt === Widget::$DATE_MAX || (Carbon::createFromTimeString($widget->toDt)->format('U') > $maxSubYear && Carbon::createFromTimeString($widget->toDt)->format('U') < $maxAddYear)) {
+        if ($widget->toDt === Widget::$DATE_MAX || ($timestampToDt > $maxSubYear && $timestampToDt < $maxAddYear)) {
             $widget->toDt = Widget::$DATE_MAX;
         } else {
-            $widget->toDt = Carbon::createFromTimeString($widget->toDt)->format('U');
+            $widget->toDt = $timestampToDt;
         }
 
         return $widget;
@@ -2275,12 +2269,13 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param \Xibo\Entity\Playlist $newPlaylist
+     * @param Folder $folderId
      * @return \Xibo\Entity\Playlist
      * @throws DuplicateEntityException
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
-    private function setOwnerAndSavePlaylist($newPlaylist)
+    private function setOwnerAndSavePlaylist($newPlaylist, Folder $folder)
     {
         // try to save with the name from import, if it already exists add "imported - "  to the name
         try {
@@ -2288,6 +2283,9 @@ class LayoutFactory extends BaseFactory
             $newPlaylist->ownerId = $this->getUser()->getId();
             $newPlaylist->playlistId = null;
             $newPlaylist->widgets = [];
+            $newPlaylist->folderId = $folder->id;
+            $newPlaylist->permissionsFolderId =
+                ($folder->permissionsFolderId == null) ? $folder->id : $folder->permissionsFolderId;
             $newPlaylist->save();
         } catch (DuplicateEntityException $e) {
             $newPlaylist->name = 'imported - ' . $newPlaylist->name;
