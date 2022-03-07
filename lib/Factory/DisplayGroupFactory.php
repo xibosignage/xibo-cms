@@ -238,21 +238,13 @@ class DisplayGroupFactory extends BaseFactory
                 `displaygroup`.bandwidthLimit,
                 `displaygroup`.userId,
                 (
-                  SELECT GROUP_CONCAT(DISTINCT tag) 
+                SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value)) 
                     FROM tag 
                       INNER JOIN lktagdisplaygroup 
                       ON lktagdisplaygroup.tagId = tag.tagId 
                    WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
                   GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tags,
-                (
-                  SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tagValues  
+                ) AS tags
         ';
 
         $body = '
@@ -360,7 +352,7 @@ class DisplayGroupFactory extends BaseFactory
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $this->getSanitizer()->getCheckbox('exactTags', $filterBy) == 1 ? '=' : 'LIKE';
 
                 $body .= " AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId

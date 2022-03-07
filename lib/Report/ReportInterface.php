@@ -88,4 +88,15 @@ interface ReportInterface
      * @return array
      */
     public function getResults($filterCriteria);
+
+    /**
+     * @return int
+     */
+    public function getUserId();
+
+    /**
+     * @param $userId
+     * @return $this
+     */
+    public function setUserId($userId);
 }

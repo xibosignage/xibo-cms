@@ -103,7 +103,6 @@ class DisplayGroup implements \JsonSerializable
      * @var Tag[]
      */
     public $tags = [];
-    public $tagValues;
 
     /**
      * @SWG\Property(description="The display bandwidth limit")

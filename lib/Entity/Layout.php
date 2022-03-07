@@ -264,8 +264,6 @@ class Layout implements \JsonSerializable
     public $owner;
     public $groupsWithPermissions;
 
-    public $tagValues;
-
     // Private
     private $unassignTags = [];
 
@@ -477,6 +475,27 @@ class Layout implements \JsonSerializable
      */
     public function hasEmptyRegion()
     {
+        return $this->hasEmptyRegion;
+    }
+
+    /**
+     * Helper function that checks if Layout has an empty Region
+     * without building it.
+     */
+    public function checkForEmptyRegion()
+    {
+        $this->load();
+
+        foreach ($this->regions as $region) {
+            $widgets = $region->getPlaylist()->setModuleFactory($this->moduleFactory)->expandWidgets();
+            $countWidgets = count($widgets);
+
+            if ($countWidgets <= 0) {
+                $this->hasEmptyRegion = true;
+                break;
+            }
+        }
+
         return $this->hasEmptyRegion;
     }
 
@@ -1166,7 +1185,7 @@ class Layout implements \JsonSerializable
                 $mediaNode->setAttribute('render', ($renderAs == '') ? 'native' : $renderAs);
 
                 // Set the duration according to whether we are using widget duration or not
-                $isEndDetectVideoWidget = ($widget->type === 'video' && $widget->useDuration === 0);
+                $isEndDetectVideoWidget = (($widget->type === 'video' || $widget->type === 'audio') && $widget->useDuration === 0);
                 $mediaNode->setAttribute('duration', ($isEndDetectVideoWidget ? 0 : $widgetDuration));
                 $mediaNode->setAttribute('useDuration', $widget->useDuration);
 

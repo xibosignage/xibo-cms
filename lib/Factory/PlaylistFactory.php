@@ -192,23 +192,13 @@ class PlaylistFactory extends BaseFactory
                 `playlist`.requiresDurationUpdate,
                 `playlist`.enableStat,
                 (
-                SELECT GROUP_CONCAT(DISTINCT tag) 
+                SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value)) 
                   FROM tag 
                     INNER JOIN lktagplaylist 
                     ON lktagplaylist.tagId = tag.tagId 
                  WHERE lktagplaylist.playlistId = playlist.playlistId 
                 GROUP BY lktagplaylist.playlistId
                 ) AS tags,
-                
-                (
-                SELECT GROUP_CONCAT(IFNULL(value, \'NULL\')) 
-                  FROM tag 
-                    INNER JOIN lktagplaylist 
-                    ON lktagplaylist.tagId = tag.tagId 
-                 WHERE lktagplaylist.playlistId = playlist.playlistId 
-                GROUP BY lktagplaylist.playlistId
-                ) AS tagValues,
-                
                 (
                 SELECT GROUP_CONCAT(DISTINCT `group`.group)
                   FROM `permission`
@@ -352,7 +342,7 @@ class PlaylistFactory extends BaseFactory
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $this->getSanitizer()->getCheckbox('exactTags', $filterBy) == 1 ? '=' : 'LIKE';
 
                 $body .= " AND `playlist`.playlistID IN (
                 SELECT lktagplaylist.playlistId

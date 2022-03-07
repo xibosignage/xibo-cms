@@ -241,7 +241,7 @@ class DisplayFactory extends BaseFactory
         if ($this->getSanitizer()->getCheckbox('showTags', $filterBy) === 1) {
             $select .= ', 
                 (
-                  SELECT GROUP_CONCAT(DISTINCT tag) 
+                 SELECT GROUP_CONCAT(CONCAT_WS(\'|\', tag, value)) 
                     FROM tag 
                       INNER JOIN lktagdisplaygroup 
                       ON lktagdisplaygroup.tagId = tag.tagId 
@@ -249,17 +249,6 @@ class DisplayFactory extends BaseFactory
                   GROUP BY lktagdisplaygroup.displayGroupId
                 ) AS tags
             ';
-
-            $select .= ", 
-                (
-                  SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) 
-                    FROM tag 
-                      INNER JOIN lktagdisplaygroup 
-                      ON lktagdisplaygroup.tagId = tag.tagId 
-                   WHERE lktagdisplaygroup.displayGroupId = displaygroup.displayGroupID 
-                  GROUP BY lktagdisplaygroup.displayGroupId
-                ) AS tagValues
-            ";
         }
 
         $body = '
@@ -451,7 +440,7 @@ class DisplayFactory extends BaseFactory
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $this->getSanitizer()->getCheckbox('exactTags', $filterBy) == 1 ? '=' : 'LIKE';
 
                 $body .= " AND `displaygroup`.displaygroupId IN (
                 SELECT `lktagdisplaygroup`.displaygroupId

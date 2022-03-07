@@ -105,7 +105,10 @@
                     "data": dataTableCreateTags
                 },
                 { "data": "thumbnail"},
-                { "data": "permissions", "sortable": false},
+                {
+                    "data": "groupsWithPermissions",
+                    "render": dataTableCreatePermissions
+                },
                 {
                     "orderable": false,
                     "data": dataTableButtonsColumn

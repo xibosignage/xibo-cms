@@ -81,7 +81,6 @@ class Campaign implements \JsonSerializable
     public $totalDuration;
 
     public $tags = [];
-    public $tagValues;
 
     /**
      * @var Layout[]

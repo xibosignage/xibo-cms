@@ -873,20 +873,6 @@ class Display extends Base
         // We have permission - load
         $display->load();
 
-        $tags = '';
-
-        $arrayOfTags = array_filter(explode(',', $display->tags));
-        $arrayOfTagValues = array_filter(explode(',', $display->tagValues));
-
-        for ($i=0; $i<count($arrayOfTags); $i++) {
-            if (isset($arrayOfTags[$i]) && (isset($arrayOfTagValues[$i]) && $arrayOfTagValues[$i] !== 'NULL' )) {
-                $tags .= $arrayOfTags[$i] . '|' . $arrayOfTagValues[$i];
-                $tags .= ',';
-            } else {
-                $tags .= $arrayOfTags[$i] . ',';
-            }
-        }
-
         // Dates
         $display->auditingUntilIso = $this->getDate()->getLocalDate($display->auditingUntil);
 
@@ -973,7 +959,6 @@ class Display extends Base
             'displayLockName' => ($this->getConfig()->getSetting('DISPLAY_LOCK_NAME_TO_DEVICENAME') == 1),
             'help' => $this->getHelp()->link('Display', 'Edit'),
             'versions' => $playerVersions,
-            'tags' => $tags,
             'dayParts' => $dayparts,
             // These are temporary additions and will be removed in v3
             'teamViewerSerial' => $teamViewerSerial,
@@ -1919,7 +1904,7 @@ class Display extends Base
         $authenticationCode = $this->getSanitizer()->getString('twoFactorCode', '');
 
         $tfa = new TwoFactorAuth($issuer);
-        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode);
+        $result = $tfa->verifyCode($this->getUser()->twoFactorSecret, $authenticationCode, 3);
 
         if ($result) {
 

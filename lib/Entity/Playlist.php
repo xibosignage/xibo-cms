@@ -153,8 +153,6 @@ class Playlist implements \JsonSerializable
      */
     public $tempId = null;
 
-    public $tagValues;
-
     // Read only properties
     public $owner;
     public $groupsWithPermissions;
@@ -310,7 +308,7 @@ class Playlist implements \JsonSerializable
     {
         // check for duplicates,
         // we check for empty playlist name due to layouts existing in the CMS before upgrade to v2
-        if ($this->name != '') {
+        if ($this->name != '' && !$this->isRegionPlaylist()) {
             $duplicates = $this->playlistFactory->query(null, [
                 'userId' => $this->ownerId,
                 'playlistExact' => $this->name,

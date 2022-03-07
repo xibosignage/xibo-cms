@@ -480,7 +480,9 @@ class LayoutFactory extends BaseFactory
 
         // Parse the XML and fill in the details for this layout
         $document = new \DOMDocument();
-        $document->loadXML($layoutXlf);
+        if ($document->loadXML($layoutXlf) === false) {
+            throw new InvalidArgumentException(__('Layout import failed, invalid xlf supplied'), null);
+        }
 
         $layout->schemaVersion = (int)$document->documentElement->getAttribute('schemaVersion');
         $layout->width = $document->documentElement->getAttribute('width');
@@ -1655,8 +1657,7 @@ class LayoutFactory extends BaseFactory
         $select .= "        layout.retired, ";
         $select .= "        layout.createdDt, ";
         $select .= "        layout.modifiedDt, ";
-        $select .= " (SELECT GROUP_CONCAT(DISTINCT tag) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
-        $select .= " (SELECT GROUP_CONCAT(IFNULL(value, 'NULL')) FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tagValues, ";
+        $select .= "        (SELECT GROUP_CONCAT(CONCAT_WS('|', tag, value))  FROM tag INNER JOIN lktaglayout ON lktaglayout.tagId = tag.tagId WHERE lktaglayout.layoutId = layout.LayoutID GROUP BY lktaglayout.layoutId) AS tags, ";
         $select .= "        layout.backgroundImageId, ";
         $select .= "        layout.backgroundColor, ";
         $select .= "        layout.backgroundzIndex, ";
@@ -1909,7 +1910,7 @@ class LayoutFactory extends BaseFactory
                     )
                 ';
             } else {
-                $operator = $this->getSanitizer()->getCheckbox('exactTags') == 1 ? '=' : 'LIKE';
+                $operator = $this->getSanitizer()->getCheckbox('exactTags', $filterBy) == 1 ? '=' : 'LIKE';
 
                 $body .= " AND layout.layoutID IN (
                 SELECT lktaglayout.layoutId
@@ -2013,7 +2014,6 @@ class LayoutFactory extends BaseFactory
             $layout->description = $this->getSanitizer()->string($row['description']);
             $layout->duration = $this->getSanitizer()->int($row['duration']);
             $layout->tags = $this->getSanitizer()->string($row['tags']);
-            $layout->tagValues = $this->getSanitizer()->string($row['tagValues']);
             $layout->backgroundColor = $this->getSanitizer()->string($row['backgroundColor']);
             $layout->owner = $this->getSanitizer()->string($row['owner']);
             $layout->ownerId = $this->getSanitizer()->int($row['userID']);
