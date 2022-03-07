@@ -59,6 +59,7 @@ class DataSetFactory extends BaseFactory
     /** @var  DisplayFactory */
     private $displayFactory;
 
+    /** @var \Xibo\Helper\SanitizerService */
     private $sanitizerService;
 
     /**
@@ -660,7 +661,6 @@ class DataSetFactory extends BaseFactory
      * @param array $entry The Data from the remote system
      * @param DataSetColumn[] $dataSetColumns The configured Columns form the current DataSet
      * @return array The processed $entry as a List of Fields from $columns
-     * @throws InvalidArgumentException
      */
     private function processEntry(array $entry, array $dataSetColumns) {
         $result = [];
@@ -684,32 +684,58 @@ class DataSetFactory extends BaseFactory
                 }
 
                 $this->getLog()->debug('Resolved value: ' . var_export($value, true));
-                $sanitizer = $this->getSanitizer($value);
-                // Only add it to the result if we where able to process the field
-                if (($value != null) && ($value[1] !== null)) {
+
+                // Only add it to the result if we were able to process the field
+                if ($value != null && $value[1] !== null) {
+                    // 1,String
+                    // 2,Number
+                    // 3,Date
+                    // 4,External Image
+                    // 5,Library Image
+                    // 6,HTML
+                    $validator = $this->sanitizerService->getValidator();
+
                     switch ($column->dataTypeId) {
                         case 2:
-                            $result[$column->heading] = $sanitizer->getDouble(1);
+                            // Number
+                            if (empty($value[1]) || !($validator->double($value[1]) || $validator->int($value[1]))) {
+                                $result[$column->heading] = 0;
+                            } else {
+                                $result[$column->heading] = doubleval($value[1]);
+                            }
                             break;
                         case 3:
+                            // Date
                             // This expects an ISO date
-                            $date =  $sanitizer->getDate(1);
                             try {
-                                $result[$column->heading] = $date->format(DateFormatHelper::getSystemFormat());
+                                // This seems odd, parsing to a Carbon instance and then converting back to the system format
+                                // all we're really doing here is validating that the date is in the expected format
+                                // so that we know we can save
+                                $result[$column->heading] = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $value[1])
+                                    ->format(DateFormatHelper::getSystemFormat());
                             } catch (\Exception $e) {
-                                $this->getLog()->error(sprintf('Incorrect date provided %s, expected date format Y-m-d H:i:s ', $date));
-                                throw new InvalidArgumentException(sprintf(__('Incorrect date provided %s, expected date format Y-m-d H:i:s '), $date), 'date');
+                                $this->getLog()->error(sprintf('Incorrect date provided %s, expected date format Y-m-d H:i:s ', $value[1]));
                             }
                             break;
                         case 5:
-                            $result[$column->heading] = $sanitizer->getInt(1);
+                            // Library Image
+                            if (empty($value[1]) || !$validator->int($value[1])) {
+                                $result[$column->heading] = 0;
+                            } else {
+                                $result[$column->heading] = intval($value[1]);
+                            }
                             break;
                         case 6:
                             // HTML, without any sanitization
                             $result[$column->heading] = $value[1];
                             break;
                         default:
-                            $result[$column->heading] = $sanitizer->getString(1);
+                            // Default value, assume it will be a string and filter it accordingly.
+                            $result[$column->heading] = filter_var(
+                                $value[1],
+                                FILTER_SANITIZE_STRING,
+                                FILTER_FLAG_NO_ENCODE_QUOTES
+                            );
                     }
                 }
             } else {

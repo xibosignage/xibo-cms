@@ -6,14 +6,14 @@
             "title": "Title 1"
         },
         {
-            "id": 2,
+            "id": "2",
             "Date": "2019-07-30 03:04:00",
-            "title": "Title 2"
+            "title": null
         },
         {
             "id": 3,
-            "Date": "2019-07-31 06:51:00",
-            "title": "Title 3"
+            "Date": "31-07-2019 06:51 AM",
+            "title": true
         }
     ]
 }

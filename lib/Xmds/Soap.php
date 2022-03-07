@@ -1945,10 +1945,9 @@ class Soap
     protected function phoneHome()
     {
         if ($this->getConfig()->getSetting('PHONE_HOME') == 1) {
-            // Find out when we last PHONED_HOME :D
-            // If it's been > 28 days since last PHONE_HOME then
-            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < Carbon::now()->subSeconds(60 * 60 * 24 * 28)->format('U')) {
-
+            // If it's been > 1 week since last PHONE_HOME then send a new report
+            $oneWeekAgo = Carbon::now()->subWeek()->format('U');
+            if ($this->getConfig()->getSetting('PHONE_HOME_DATE') < $oneWeekAgo) {
                 if ($this->display->isAuditing()) {
                     $this->getLog()->debug('Phone Home required for displayId ' . $this->display->displayId);
                 }
@@ -1959,6 +1958,12 @@ class Soap
                     // Retrieve number of displays
                     $sth = $dbh->prepare('SELECT COUNT(*) AS Cnt FROM `display` WHERE `licensed` = 1');
                     $sth->execute();
+
+                    // Make sure we have a key
+                    $key = $this->getConfig()->getSetting('PHONE_HOME_KEY');
+                    if (empty($key)) {
+                        $this->getConfig()->changeSetting('PHONE_HOME_KEY', bin2hex(random_bytes(16)));
+                    }
 
                     // Set PHONE_HOME_TIME to NOW.
                     $update = $dbh->prepare('UPDATE `setting` SET `value` = :time WHERE `setting`.`setting` = :setting LIMIT 1');
