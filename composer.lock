@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "12b2f521a05e26bc8d93589f7977b503",
+    "content-hash": "7dcb20289efdf715cd9765439fb8247a",
     "packages": [
         {
             "name": "abraham/twitteroauth",
@@ -157,6 +157,75 @@
                 "jasig"
             ],
             "time": "2019-08-18T20:01:55+00:00"
+        },
+        {
+            "name": "composer/package-versions-deprecated",
+            "version": "1.11.99.5",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/composer/package-versions-deprecated.git",
+                "reference": "b4f54f74ef3453349c24a845d22392cd31e65f1d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/composer/package-versions-deprecated/zipball/b4f54f74ef3453349c24a845d22392cd31e65f1d",
+                "reference": "b4f54f74ef3453349c24a845d22392cd31e65f1d",
+                "shasum": ""
+            },
+            "require": {
+                "composer-plugin-api": "^1.1.0 || ^2.0",
+                "php": "^7 || ^8"
+            },
+            "replace": {
+                "ocramius/package-versions": "1.11.99"
+            },
+            "require-dev": {
+                "composer/composer": "^1.9.3 || ^2.0@dev",
+                "ext-zip": "^1.13",
+                "phpunit/phpunit": "^6.5 || ^7"
+            },
+            "type": "composer-plugin",
+            "extra": {
+                "class": "PackageVersions\\Installer",
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "PackageVersions\\": "src/PackageVersions"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Marco Pivetta",
+                    "email": "ocramius@gmail.com"
+                },
+                {
+                    "name": "Jordi Boggiano",
+                    "email": "j.boggiano@seld.be"
+                }
+            ],
+            "description": "Composer plugin that provides efficient querying for installed package versions (no runtime IO)",
+            "funding": [
+                {
+                    "url": "https://packagist.com",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/composer",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/composer/composer",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2022-01-17T14:14:24+00:00"
         },
         {
             "name": "doctrine/inflector",
@@ -1311,6 +1380,57 @@
             "time": "2019-12-17T21:17:26+00:00"
         },
         {
+            "name": "jean85/pretty-package-versions",
+            "version": "1.6.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/Jean85/pretty-package-versions.git",
+                "reference": "1e0104b46f045868f11942aea058cd7186d6c303"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/Jean85/pretty-package-versions/zipball/1e0104b46f045868f11942aea058cd7186d6c303",
+                "reference": "1e0104b46f045868f11942aea058cd7186d6c303",
+                "shasum": ""
+            },
+            "require": {
+                "composer/package-versions-deprecated": "^1.8.0",
+                "php": "^7.0|^8.0"
+            },
+            "require-dev": {
+                "phpunit/phpunit": "^6.0|^8.5|^9.2"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.x-dev"
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "Jean85\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Alessandro Lai",
+                    "email": "alessandro.lai85@gmail.com"
+                }
+            ],
+            "description": "A wrapper for ocramius/package-versions to get pretty versions strings",
+            "keywords": [
+                "composer",
+                "package",
+                "release",
+                "versions"
+            ],
+            "time": "2021-02-04T16:20:16+00:00"
+        },
+        {
             "name": "jenssegers/date",
             "version": "v3.5.0",
             "source": {
@@ -1718,35 +1838,43 @@
         },
         {
             "name": "mongodb/mongodb",
-            "version": "1.4.3",
+            "version": "1.8.0",
             "source": {
                 "type": "git",
                 "url": "https://github.com/mongodb/mongo-php-library.git",
-                "reference": "18fca8cc8d0c2cc07f76605760d20632bb3dab96"
+                "reference": "953dbc19443aa9314c44b7217a16873347e6840d"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/mongodb/mongo-php-library/zipball/18fca8cc8d0c2cc07f76605760d20632bb3dab96",
-                "reference": "18fca8cc8d0c2cc07f76605760d20632bb3dab96",
+                "url": "https://api.github.com/repos/mongodb/mongo-php-library/zipball/953dbc19443aa9314c44b7217a16873347e6840d",
+                "reference": "953dbc19443aa9314c44b7217a16873347e6840d",
                 "shasum": ""
             },
             "require": {
                 "ext-hash": "*",
                 "ext-json": "*",
-                "ext-mongodb": "^1.5.0",
-                "php": ">=5.5"
+                "ext-mongodb": "^1.8.1",
+                "jean85/pretty-package-versions": "^1.2",
+                "php": "^7.0 || ^8.0",
+                "symfony/polyfill-php80": "^1.19"
             },
             "require-dev": {
-                "phpunit/phpunit": "^4.8.36 || ^6.4"
+                "squizlabs/php_codesniffer": "^3.5, <3.5.5",
+                "symfony/phpunit-bridge": "5.x-dev"
             },
             "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-master": "1.8.x-dev"
+                }
+            },
             "autoload": {
-                "psr-4": {
-                    "MongoDB\\": "src/"
-                },
                 "files": [
                     "src/functions.php"
-                ]
+                ],
+                "psr-4": {
+                    "MongoDB\\": "src/"
+                }
             },
             "notification-url": "https://packagist.org/downloads/",
             "license": [
@@ -1754,16 +1882,12 @@
             ],
             "authors": [
                 {
+                    "name": "Andreas Braun",
+                    "email": "andreas.braun@mongodb.com"
+                },
+                {
                     "name": "Jeremy Mikola",
                     "email": "jmikola@gmail.com"
-                },
-                {
-                    "name": "Derick Rethans",
-                    "email": "github@derickrethans.nl"
-                },
-                {
-                    "name": "Katherine Walker",
-                    "email": "katherine.walker@mongodb.com"
                 }
             ],
             "description": "MongoDB driver library",
@@ -1774,7 +1898,7 @@
                 "mongodb",
                 "persistence"
             ],
-            "time": "2019-07-02T18:04:14+00:00"
+            "time": "2020-11-25T12:26:02+00:00"
         },
         {
             "name": "monolog/monolog",
@@ -3969,6 +4093,86 @@
             "time": "2020-05-12T16:47:27+00:00"
         },
         {
+            "name": "symfony/polyfill-php80",
+            "version": "v1.19.0",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/symfony/polyfill-php80.git",
+                "reference": "f54ef00f4678f348f133097fa8c3701d197ff44d"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/symfony/polyfill-php80/zipball/f54ef00f4678f348f133097fa8c3701d197ff44d",
+                "reference": "f54ef00f4678f348f133097fa8c3701d197ff44d",
+                "shasum": ""
+            },
+            "require": {
+                "php": ">=7.0.8"
+            },
+            "type": "library",
+            "extra": {
+                "branch-alias": {
+                    "dev-main": "1.19-dev"
+                },
+                "thanks": {
+                    "name": "symfony/polyfill",
+                    "url": "https://github.com/symfony/polyfill"
+                }
+            },
+            "autoload": {
+                "files": [
+                    "bootstrap.php"
+                ],
+                "psr-4": {
+                    "Symfony\\Polyfill\\Php80\\": ""
+                },
+                "classmap": [
+                    "Resources/stubs"
+                ]
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "authors": [
+                {
+                    "name": "Ion Bazan",
+                    "email": "ion.bazan@gmail.com"
+                },
+                {
+                    "name": "Nicolas Grekas",
+                    "email": "p@tchwork.com"
+                },
+                {
+                    "name": "Symfony Community",
+                    "homepage": "https://symfony.com/contributors"
+                }
+            ],
+            "description": "Symfony polyfill backporting some PHP 8.0+ features to lower PHP versions",
+            "homepage": "https://symfony.com",
+            "keywords": [
+                "compatibility",
+                "polyfill",
+                "portable",
+                "shim"
+            ],
+            "funding": [
+                {
+                    "url": "https://symfony.com/sponsor",
+                    "type": "custom"
+                },
+                {
+                    "url": "https://github.com/fabpot",
+                    "type": "github"
+                },
+                {
+                    "url": "https://tidelift.com/funding/github/packagist/symfony/symfony",
+                    "type": "tidelift"
+                }
+            ],
+            "time": "2020-10-23T09:01:57+00:00"
+        },
+        {
             "name": "symfony/polyfill-util",
             "version": "v1.17.0",
             "source": {
@@ -5126,6 +5330,7 @@
             "keywords": [
                 "tokenizer"
             ],
+            "abandoned": true,
             "time": "2017-11-27T05:48:46+00:00"
         },
         {
@@ -5839,12 +6044,12 @@
             "version": "1.8.0",
             "source": {
                 "type": "git",
-                "url": "https://github.com/webmozart/assert.git",
+                "url": "https://github.com/webmozarts/assert.git",
                 "reference": "ab2cb0b3b559010b75981b1bdce728da3ee90ad6"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/webmozart/assert/zipball/ab2cb0b3b559010b75981b1bdce728da3ee90ad6",
+                "url": "https://api.github.com/repos/webmozarts/assert/zipball/ab2cb0b3b559010b75981b1bdce728da3ee90ad6",
                 "reference": "ab2cb0b3b559010b75981b1bdce728da3ee90ad6",
                 "shasum": ""
             },
@@ -5965,7 +6170,8 @@
     "platform-overrides": {
         "php": "7.0.8",
         "ext-zmq": "1",
-        "ext-mongodb": "1.5.0",
+        "ext-mongodb": "1.9.2",
         "ext-gd": "1"
-    }
+    },
+    "plugin-api-version": "1.1.0"
 }
