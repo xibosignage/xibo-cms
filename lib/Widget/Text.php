@@ -172,6 +172,7 @@ class Text extends ModuleWidget
         $this->setRawNode('text', $request->getParam('ta_text', $request->getParam('text', null)));
         $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
         $this->setRawNode('javaScript', $request->getParam('javaScript', ''));
+        $this->setOption('alignV', $sanitizedParams->getString('alignV', ['default' => 'top']));
 
         // Save the widget
         $this->isValid();
@@ -219,7 +220,8 @@ class Text extends ModuleWidget
             'speed' => $this->getOption('speed', 0),
             'originalWidth' => $this->region->width,
             'originalHeight' => $this->region->height,
-            'marqueeInlineSelector' => $this->getOption('marqueeInlineSelector', '.item, .item p')
+            'marqueeInlineSelector' => $this->getOption('marqueeInlineSelector', '.item, .item p'),
+            'alignmentV' => $this->getOption('alignV', 'top')
         ]);
 
         // Pull out our text
