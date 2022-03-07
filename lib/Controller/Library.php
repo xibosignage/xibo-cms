@@ -2211,11 +2211,11 @@ class Library extends Base
 
         } catch (RequestException $e) {
             $this->getLog()->debug('Upload from url failed for URL ' . $url . ' with following message ' . $e->getMessage());
-            throw new InvalidArgumentException(('File not found'), 'url');
+            throw new InvalidArgumentException(__('File not found'), 'url');
         }
 
         if ($size <= 0) {
-            throw new InvalidArgumentException(('Cannot determine the file size'), 'size');
+            throw new InvalidArgumentException(__('Cannot determine the file size'), 'size');
         }
 
         return (int)$size;
@@ -2251,7 +2251,7 @@ class Library extends Base
 
          // if we could not determine the file extension at this point, throw an error
         if ($extension == '') {
-            throw new InvalidArgumentException(('Cannot determine the file extension'), 'extension');
+            throw new InvalidArgumentException(__('Cannot determine the file extension'), 'extension');
         }
 
         return $extension;
