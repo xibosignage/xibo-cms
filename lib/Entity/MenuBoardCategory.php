@@ -148,19 +148,26 @@ class MenuBoardCategory implements \JsonSerializable
     }
 
     /**
+     * @param array|null $sort The sort order to be applied
      * @return MenuBoardProduct[]
      */
-    public function getProducts()
+    public function getProducts($sort = null): array
     {
-        return $this->menuCategoryFactory->getProductData(null, ['menuCategoryId' => $this->menuCategoryId]);
+        return $this->menuCategoryFactory->getProductData($sort, [
+            'menuCategoryId' => $this->menuCategoryId
+        ]);
     }
 
     /**
+     * @param array|null $sort The sort order to be applied
      * @return MenuBoardProduct[]
      */
-    public function getAvailableProducts()
+    public function getAvailableProducts($sort = null): array
     {
-        return $this->menuCategoryFactory->getProductData(null, ['menuCategoryId' => $this->menuCategoryId, 'availability' => 1]);
+        return $this->menuCategoryFactory->getProductData($sort, [
+            'menuCategoryId' => $this->menuCategoryId,
+            'availability' => 1
+        ]);
     }
 
     /**

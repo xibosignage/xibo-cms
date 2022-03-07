@@ -272,7 +272,7 @@ class MenuBoardCategoryFactory extends BaseFactory
     public function getProductData($sortOrder = null, $filterBy = [])
     {
         if ($sortOrder === null) {
-            $sortOrder = ['availability DESC, menuProductId DESC'];
+            $sortOrder = ['availability DESC, menuProductId'];
         }
 
         $sanitizedFilter = $this->getSanitizer($filterBy);
