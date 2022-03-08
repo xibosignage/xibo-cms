@@ -21,6 +21,7 @@
  */
 namespace Xibo\Controller;
 
+use Parsedown;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Entity\SearchResult;
@@ -148,7 +149,7 @@ class Template extends Base
             }
 
             // Parse down for description
-            $template->descriptionWithMarkup = \Parsedown::instance()->text($template->description);
+            $template->descriptionWithMarkup = Parsedown::instance()->text($template->description);
 
             if ($this->getUser()->featureEnabled('template.modify')
                 && $this->getUser()->checkEditable($template)
@@ -336,7 +337,12 @@ class Template extends Base
                 $searchResult->id = $template->layoutId;
                 $searchResult->source = 'local';
                 $searchResult->title = $template->layout;
-                $searchResult->description = $template->description;
+
+                // Handle the description
+                $searchResult->description = '';
+                if (!empty($template->description)) {
+                    $searchResult->description = Parsedown::instance()->line($template->description);
+                }
                 $searchResult->orientation = $template->orientation;
                 $searchResult->width = $template->width;
                 $searchResult->height = $template->height;

@@ -34,7 +34,8 @@ jQuery.fn.extend({
             "previewHeight": 0,
             "scaleOverride": 0,
             "randomiseItems": 0,
-            "marqueeInlineSelector": ".item, .item p"
+            "marqueeInlineSelector": ".item, .item p",
+            "alignmentV": "top"
         };
 
         options = $.extend({}, defaults, options);
@@ -307,6 +308,15 @@ jQuery.fn.extend({
                 $(".page .item:last-child").css("padding", 0);
                 $("#content .item:last-child").css("padding", 0);
             }
+
+          // Align the whole thing according to vAlignment
+          if (options.type === 'text') {
+            if (options.alignmentV === 'bottom') {
+              $(this).css('margin-top', $(window).height() - ($(this).height() * $('body').data().ratio));
+            } else if (options.alignmentV === 'middle') {
+              $(this).css('margin-top', ($(window).height() - ($(this).height() * $('body').data().ratio)) / 2);
+            }
+          }
         });
 
         return $(this);

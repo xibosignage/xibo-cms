@@ -56,10 +56,10 @@ class WorldClock extends ModuleWidget
         if ($this->module == null) {
             // Install
             $module = $moduleFactory->createEmpty();
-            $module->name = 'WorldClock';
+            $module->name = 'World Clock';
             $module->type = 'worldclock';
             $module->class = 'Xibo\Widget\WorldClock';
-            $module->description = 'WorldClock Module';
+            $module->description = 'World Clock Module';
             $module->enabled = 1;
             $module->previewEnabled = 1;
             $module->assignable = 1;

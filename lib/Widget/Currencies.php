@@ -431,7 +431,8 @@ class Currencies extends AlphaVantageBase
         // Each item we want is a call to the results API
         try {
             foreach ($items as $currency) {
-                // Remove the multiplier if there's one (this is handled when we substitute the results into the template)
+                // Remove the multiplier if there's one (this is handled when we substitute the results into
+                // the template)
                 $currency = explode('|', $currency)[0];
 
                 // Do we need to reverse the from/to currency for this comparison?
@@ -442,6 +443,10 @@ class Currencies extends AlphaVantageBase
                 }
 
                 $this->getLog()->debug('Results are: ' . var_export($result, true));
+                
+                if (!array_key_exists('Realtime Currency Exchange Rate', $result)) {
+                    throw new InvalidArgumentException(__('Currency data invalid'), 'Realtime Currency Exchange Rate');
+                }
 
                 $parsedResult = [
                     'time' => $result['Realtime Currency Exchange Rate']['6. Last Refreshed'],

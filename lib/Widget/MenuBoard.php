@@ -568,9 +568,9 @@ class MenuBoard extends ModuleWidget
 
                     // get category products, depending on the showUnavailable fetch all or only available products
                     if ($this->getOption('showUnavailable') == 0) {
-                        $categoryProductsData = $category->getAvailableProducts();
+                        $categoryProductsData = $category->getAvailableProducts(['name']);
                     } else {
-                        $categoryProductsData = $category->getProducts();
+                        $categoryProductsData = $category->getProducts(['name']);
                     }
 
                     // Category header

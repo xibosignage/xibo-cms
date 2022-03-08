@@ -206,7 +206,7 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-file-audio;
 }
 
-.module-icon-calendar {
+.module-icon-calendar, .module-icon-calendaradvanced {
     @extend .fa-calendar-alt;
 }
 

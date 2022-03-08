@@ -124,20 +124,26 @@ jQuery.fn.extend({
                 }
             }
 
-            // Handle alignment
-            //  Horizontal alignment
-            $(this).css('position', 'absolute');
-            if (options.alignmentH == 'right') {
-                $(this).css('left', width - ($(this).width() * ratio));
-            } else if (options.alignmentH == 'center') {
-                $(this).css('left', (width / 2) - ($(this).width() * ratio) / 2);
-            }
+            // Set ratio on the body incase we want to get it easily
+            $(this).data('ratio', ratio);
 
-            //  Vertical alignment
-            if (options.alignmentV == 'bottom') {
+            // Handle alignment (do not add position absolute unless needed)
+            if (options.type && options.type !== 'text') {
+              $(this).css('position', 'absolute');
+
+              //  Horizontal alignment
+              if (options.alignmentH === 'right') {
+                $(this).css('left', width - ($(this).width() * ratio));
+              } else if (options.alignmentH === 'center') {
+                $(this).css('left', (width / 2) - ($(this).width() * ratio) / 2);
+              }
+
+              //  Vertical alignment
+              if (options.alignmentV === 'bottom') {
                 $(this).css('top', height - ($(this).height() * ratio));
-            } else if (options.alignmentV == 'middle') {
+              } else if (options.alignmentV === 'middle') {
                 $(this).css('top', (height / 2) - ($(this).height() * ratio) / 2);
+              }
             }
         });
 
