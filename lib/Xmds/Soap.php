@@ -1972,8 +1972,8 @@ class Soap
                         'android' => 0,
                         'windows' => 0,
                         'linux' => 0,
-                        'webos' => 0,
-                        'tizen' => 0,
+                        'lg' => 0,
+                        'sssp' => 0,
                     ];
                     foreach ($stats as $stat) {
                         $counts['total'] += intval($stat['cnt']);
@@ -1993,8 +1993,8 @@ class Soap
                                 'windows' => $counts['windows'],
                                 'android' => $counts['android'],
                                 'linux' => $counts['linux'],
-                                'webos' => $counts['webos'],
-                                'tizen' => $counts['tizen']
+                                'webos' => $counts['lg'],
+                                'tizen' => $counts['sssp']
                             ]
                         ])
                     );
