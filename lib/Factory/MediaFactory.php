@@ -892,7 +892,7 @@ class MediaFactory extends BaseFactory
         foreach ($this->getStore()->select($sql, $params) as $row) {
             $media = $this->createEmpty()->hydrate($row, [
                 'intProperties' => [
-                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited', 'expires'
+                    'duration', 'size', 'released', 'moduleSystemFile', 'isEdited', 'expires', 'valid'
                 ]
             ]);
             $media->excludeProperty('layoutBackgroundImages');
