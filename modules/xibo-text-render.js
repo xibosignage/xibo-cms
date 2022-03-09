@@ -1,6 +1,6 @@
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2020 Xibo Signage Ltd
+ * Copyright (C) 2009-2022 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -310,12 +310,14 @@ jQuery.fn.extend({
             }
 
           // Align the whole thing according to vAlignment
-          if (options.type === 'text') {
-            if (options.alignmentV === 'bottom') {
-              $(this).css('margin-top', $(window).height() - ($(this).height() * $('body').data().ratio));
-            } else if (options.alignmentV === 'middle') {
-              $(this).css('margin-top', ($(window).height() - ($(this).height() * $('body').data().ratio)) / 2);
-            }
+          if (options.type && options.type === 'text') {
+            setTimeout(function () {
+              if (options.alignmentV === 'bottom') {
+                $(this).css('margin-top', $(window).height() - ($(this).height() * $('body').data().ratio));
+              } else if (options.alignmentV === 'middle') {
+                $(this).css('margin-top', ($(window).height() - ($(this).height() * $('body').data().ratio)) / 2);
+              }
+            }, 150);
           }
         });
 

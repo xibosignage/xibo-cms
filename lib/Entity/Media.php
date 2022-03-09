@@ -112,7 +112,7 @@ class Media implements \JsonSerializable
      * @SWG\Property(description="Flag indicating whether this media is valid.")
      * @var int
      */
-    public $valid = 1;
+    public $valid = 0;
 
     /**
      * @SWG\Property(description="Flag indicating whether this media is a system file or not")
@@ -646,7 +646,7 @@ class Media implements \JsonSerializable
             'moduleSystemFile' => (($this->moduleSystemFile) ? 1 : 0),
             'released' => $this->released,
             'apiRef' => $this->apiRef,
-            'valid' => 0,
+            'valid' => $this->valid,
             'createdDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),
             'enableStat' => $this->enableStat,
@@ -804,13 +804,24 @@ class Media implements \JsonSerializable
         $this->assessDimensions();
 
         // Update the MD5 and storedAs to suit
-        $this->getStore()->update('UPDATE `media` SET md5 = :md5, fileSize = :fileSize, storedAs = :storedAs, expires = :expires, released = :released, orientation = :orientation, valid = 1 WHERE mediaId = :mediaId', [
+        $this->getStore()->update('
+            UPDATE `media` 
+                SET md5 = :md5,
+                    fileSize = :fileSize,
+                    storedAs = :storedAs,
+                    expires = :expires,
+                    released = :released,
+                    orientation = :orientation,
+                    valid = :valid 
+             WHERE mediaId = :mediaId
+        ', [
             'fileSize' => $this->fileSize,
             'md5' => $this->md5,
             'storedAs' => $this->storedAs,
             'expires' => $this->expires,
             'released' => $this->released,
             'orientation' => $this->orientation,
+            'valid' => $this->valid,
             'mediaId' => $this->mediaId
         ]);
     }

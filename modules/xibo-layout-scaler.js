@@ -1,5 +1,5 @@
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -128,7 +128,7 @@ jQuery.fn.extend({
             $(this).data('ratio', ratio);
 
             // Handle alignment (do not add position absolute unless needed)
-            if (options.type && options.type !== 'text') {
+            if (!options.type || options.type !== 'text') {
               $(this).css('position', 'absolute');
 
               //  Horizontal alignment
