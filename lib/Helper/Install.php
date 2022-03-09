@@ -84,7 +84,8 @@ class Install
     public function step1(): array
     {
         return [
-            'config' => $this->container->get('configService')
+            'config' => $this->container->get('configService'),
+            'isSettingsPathWriteable' => Environment::checkSettingsFileSystemPermissions()
         ];
     }
 
