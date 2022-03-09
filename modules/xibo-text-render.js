@@ -311,13 +311,15 @@ jQuery.fn.extend({
 
           // Align the whole thing according to vAlignment
           if (options.type && options.type === 'text') {
+            var $textContent = $(this);
+            // The timeout just yields a bit to let our content get rendered
             setTimeout(function () {
               if (options.alignmentV === 'bottom') {
-                $(this).css('margin-top', $(window).height() - ($(this).height() * $('body').data().ratio));
+                $textContent.css('margin-top', $(window).height() - ($textContent.height() * $('body').data().ratio));
               } else if (options.alignmentV === 'middle') {
-                $(this).css('margin-top', ($(window).height() - ($(this).height() * $('body').data().ratio)) / 2);
+                $textContent.css('margin-top', ($(window).height() - ($textContent.height() * $('body').data().ratio)) / 2);
               }
-            }, 150);
+            }, 50);
           }
         });
 
