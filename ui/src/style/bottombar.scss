@@ -2,7 +2,7 @@
 
 #layout-editor-bottombar  {
     flex: 1 100%;
-    height: 38px;
+    height: 40px;
     
     nav {
         border: none;
@@ -21,11 +21,19 @@
             font-size: 1rem;
         }
 
+        .divider {
+            display: inline-block;
+            height: 40px;
+            vertical-align: middle;
+            border-right: 3px solid $xibo-color-white;
+            margin: 0 3px;
+        }
+
         .btn {
             color: $xibo-color-blue-pastel;
-            height: 38px;
-            width: 38px;
-            font-size: 1.2rem;
+            height: 40px;
+            width: 40px;
+            font-size: 1.35rem;
             border: none;
             border-radius: 0;
 
@@ -36,6 +44,15 @@
 
             &:disables, &.disabled {
                 opacity: 0.4;
+            }
+
+            &#delete-btn {
+                color: $xibo-color-red;
+
+                &:hover {
+                    color: $xibo-color-white;
+                    background-color: $xibo-color-red;
+                }
             }
         }
 
