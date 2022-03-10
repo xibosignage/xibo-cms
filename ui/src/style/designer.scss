@@ -971,7 +971,7 @@ body, .page-content {
         left: 0;
         top: 0;
         padding: 0;
-        height: calc(100% - 38px);
+        height: calc(100% - 40px);
         width: 100%;
 
         #inline-editor-templates, #fullscreenBtn {
@@ -1390,7 +1390,7 @@ body, .page-content {
         top: 0;
         width: 100%;
         padding: 0;
-        height: calc(100% - 38px);
+        height: calc(100% - 40px);
 
         #fullscreenBtn {
             z-index: calc(#{$designer-overlay-z-index} + 10);

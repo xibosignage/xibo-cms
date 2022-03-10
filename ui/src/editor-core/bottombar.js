@@ -20,13 +20,29 @@ Bottombar.prototype.render = function(element, data) {
     const self = this;
     const app = this.parent;
     const readOnlyModeOn = (app.readOnlyMode != undefined && app.readOnlyMode === true);
+
+    // Get topbar trans
+    let newBottomBarTrans = $.extend(toolbarTrans, topbarTrans);
+
+    const checkHistory = app.checkHistory();
+    newBottomBarTrans.undoActiveTitle = (checkHistory) ? checkHistory.undoActiveTitle : '';
+
+    // Check if trash bin is active
+    let trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
+
+    // Get text for bin tooltip
+    newBottomBarTrans.trashBinActiveTitle = (trashBinActive) ? newBottomBarTrans.deleteObject.replace('%object%', app.selectedObject.type) : '';
+
     
     if(app.navigatorMode) {
         this.DOMObject.html(BottomBarNavigatorTemplate(
             {
-                trans: bottombarTrans,
+                trans: newBottomBarTrans,
                 readOnlyModeOn: readOnlyModeOn,
-                element: element
+                element: element,
+                undoActive: checkHistory.undoActive,
+                trashActive: trashBinActive,
+                showDivider: checkHistory.undoActive || trashBinActive
             }
         ));
 
@@ -44,9 +60,12 @@ Bottombar.prototype.render = function(element, data) {
                     totalItems: totalItems,
                     extra: data.extra,
                     pagingEnable: (totalItems > 1),
-                    trans: bottombarTrans,
+                    trans: newBottomBarTrans,
                     readOnlyModeOn: readOnlyModeOn,
-                    element: element
+                    element: element,
+                    undoActive: checkHistory.undoActive,
+                    trashActive: trashBinActive,
+                    showDivider: checkHistory.undoActive || trashBinActive
                 }
             ));
 
@@ -64,10 +83,13 @@ Bottombar.prototype.render = function(element, data) {
             // Render layout  toolbar
             this.DOMObject.html(BottomBarViewerTemplate(
                 {
-                    trans: bottombarTrans,
+                    trans: newBottomBarTrans,
                     readOnlyModeOn: readOnlyModeOn,
                     renderLayout: true,
-                    element: element
+                    element: element,
+                    undoActive: checkHistory.undoActive,
+                    trashActive: trashBinActive,
+                    showDivider: checkHistory.undoActive || trashBinActive
                 }
             ));
 
@@ -95,9 +117,12 @@ Bottombar.prototype.render = function(element, data) {
             // Render region toolbar
             this.DOMObject.html(BottomBarViewerTemplate(
                 {
-                    trans: bottombarTrans,
+                    trans: newBottomBarTrans,
                     readOnlyModeOn: readOnlyModeOn,
-                    element: element
+                    element: element,
+                    undoActive: checkHistory.undoActive,
+                    trashActive: trashBinActive,
+                    showDivider: checkHistory.undoActive || trashBinActive
                 }
             ));
         }
@@ -107,9 +132,11 @@ Bottombar.prototype.render = function(element, data) {
     this.DOMObject.find('#delete-btn').click(function() {
         if(element.isDeletable) {
             lD.deleteSelectedObject();
-        } else {
-            console.log('prevent delete');
         }
+    });
+
+    this.DOMObject.find('#undo-btn').click(function() {
+        app.undoLastAction();
     });
 
     this.DOMObject.find('.properties-btn').click(function() {
