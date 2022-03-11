@@ -311,6 +311,9 @@ $(document).ready(function() {
 
                 // Refresh the designer containers
                 lD.refreshDesigner(true);
+
+                // Load preferences
+                lD.loadPrefs();
             } else {
                 // Login Form needed?
                 if(res.login) {
@@ -2014,8 +2017,8 @@ lD.checkHistory = function() {
  * Toggle panel and refresh view containers
  * @param {jquery object} $panel 
  */
-lD.togglePanel = function($panel) {
-    $panel.toggleClass('opened');
+lD.togglePanel = function($panel, forceToggle) {
+    $panel.toggleClass('opened', forceToggle);
 
     // Refresh navigators and viewer
     if (lD.navigatorMode) {
@@ -2181,3 +2184,111 @@ lD.handleMessage = function(event) {
         lD.bottombar.showPlayMessage();
     }
 }
+
+
+/**
+ * Load user preferences
+ */
+ lD.loadPrefs = function() {
+    // Load using the API
+    const linkToAPI = urlsForApi.user.getPref;
+
+    // Request elements based on filters
+    const self = this;
+    $.ajax({
+        url: linkToAPI.url + '?preference=editor',
+        type: linkToAPI.type,
+    }).done(function(res) {
+        if (res.success) {
+            const loadedData = JSON.parse(res.data.value);
+
+            // Timeline
+            const $timeLineToggle = self.timeline.DOMObject.parents('.toggle-panel');
+            if(loadedData.timelineStatus != undefined && loadedData.timelineStatus != $timeLineToggle.hasClass('opened')) {
+                self.togglePanel($timeLineToggle, loadedData.timelineStatus);
+            }
+
+            // Properties Panel
+            const propertiesPanelToggle = self.propertiesPanel.DOMObject.parents('.toggle-panel');
+            if(loadedData.propertiesPanelStatus != undefined && loadedData.propertiesPanelStatus != propertiesPanelToggle.hasClass('opened')) {
+                self.togglePanel(propertiesPanelToggle, loadedData.propertiesPanelStatus);
+            }
+            
+            self.common.displayTooltips = (loadedData.displayTooltips == 1 || loadedData.displayTooltips == undefined);
+        } else {
+            // Login Form needed?
+            if (res.login) {
+                window.location.href = window.location.href;
+                location.reload();
+            } else {
+                // Just an error we dont know about
+                if (res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+            }
+        }
+    }).catch(function(jqXHR, textStatus, errorThrown) {
+        console.error(jqXHR, textStatus, errorThrown);
+        toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
+    });
+};
+
+/**
+ * Save user preferences
+ * @param {bool=} [clearPrefs = false] - Force reseting user prefs
+ */
+ lD.savePrefs = function(clearPrefs = false) {
+    // Get current values
+    let timelineStatus = this.timeline.DOMObject.parents('.toggle-panel').hasClass('opened');
+    let propertiesPanelStatus = this.propertiesPanel.DOMObject.parents('.toggle-panel').hasClass('opened');
+
+    // Clear values to defaults
+    if (clearPrefs) {
+        timelineStatus = false;
+        propertiesPanelStatus = true;
+    }
+
+    const dataToSave = {
+        preference: [
+            {
+                option: 'editor',
+                value: JSON.stringify({
+                    timelineStatus: timelineStatus,
+                    propertiesPanelStatus: propertiesPanelStatus
+                }),
+            },
+        ],
+    };
+
+    // Save using the API
+    const linkToAPI = urlsForApi.user.savePref;
+
+    // Request elements based on filters
+    $.ajax({
+        url: linkToAPI.url,
+        type: linkToAPI.type,
+        data: dataToSave,
+    }).done(function(res) {
+        if (!res.success) {
+            // Login Form needed?
+            if (res.login) {
+                window.location.href = window.location.href;
+                location.reload();
+            } else {
+                toastr.error(errorMessagesTrans.userSavePreferencesFailed);
+
+                // Just an error we dont know about
+                if (res.message == undefined) {
+                    console.error(res);
+                } else {
+                    console.error(res.message);
+                }
+            }
+        }
+    }).catch(function(jqXHR, textStatus, errorThrown) {
+        console.error(jqXHR, textStatus, errorThrown);
+        toastr.error(errorMessagesTrans.userSavePreferencesFailed);
+    });
+};
