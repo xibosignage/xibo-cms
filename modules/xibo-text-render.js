@@ -1,6 +1,6 @@
 /**
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * Copyright (C) 2009-2020 Xibo Signage Ltd
+ * Copyright (C) 2009-2022 Xibo Signage Ltd
  *
  * This file is part of Xibo.
  *
@@ -34,7 +34,8 @@ jQuery.fn.extend({
             "previewHeight": 0,
             "scaleOverride": 0,
             "randomiseItems": 0,
-            "marqueeInlineSelector": ".item, .item p"
+            "marqueeInlineSelector": ".item, .item p",
+            "alignmentV": "top"
         };
 
         options = $.extend({}, defaults, options);
@@ -307,6 +308,19 @@ jQuery.fn.extend({
                 $(".page .item:last-child").css("padding", 0);
                 $("#content .item:last-child").css("padding", 0);
             }
+
+          // Align the whole thing according to vAlignment
+          if (options.type && options.type === 'text') {
+            var $textContent = $(this);
+            // The timeout just yields a bit to let our content get rendered
+            setTimeout(function () {
+              if (options.alignmentV === 'bottom') {
+                $textContent.css('margin-top', $(window).height() - ($textContent.height() * $('body').data().ratio));
+              } else if (options.alignmentV === 'middle') {
+                $textContent.css('margin-top', ($(window).height() - ($textContent.height() * $('body').data().ratio)) / 2);
+              }
+            }, 50);
+          }
         });
 
         return $(this);

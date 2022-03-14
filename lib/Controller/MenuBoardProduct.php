@@ -227,6 +227,7 @@ class MenuBoardProduct extends Base
         $categories = $parsedParams->getString('categories');
 
         $filter = [
+            'menuId' => $parsedParams->getInt('menuId'),
             'menuProductId' => $parsedParams->getInt('menuProductId'),
             'menuCategoryId' => $parsedParams->getInt('menuCategoryId'),
             'name' => $parsedParams->getString('name'),

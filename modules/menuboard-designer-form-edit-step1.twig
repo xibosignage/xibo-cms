@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -33,11 +33,11 @@
             <form id="menuBoardEditFormStep1" class="XiboForm pt-4 form-horizontal" data-form-step="1" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}"
                   data-next-form-url="{{ url_for("module.widget.edit.form", {id: module.widget.widgetId}) }}?step=2">
 
-                {% set message %}{% trans "Selected target Menu Board and the template to be rendered as." %}{% endset %}
+                {% set message %}{% trans "Choose a menu and template for this Menu Board Widget" %}{% endset %}
                 {{ forms.message(message) }}
 
-                {% set title %}{% trans "Menu Board" %}{% endset %}
-                {% set helpText %}{% trans "Please select the Menu Board to use as a source of data for this Widget." %}{% endset %}
+                {% set title %}{% trans "Menu" %}{% endset %}
+                {% set helpText %}{% trans "Please select the menu to use" %}{% endset %}
                 {% set attributes = [
                     { name: "data-width", value: "200px" },
                     { name: "data-allow-clear", value: "true" },

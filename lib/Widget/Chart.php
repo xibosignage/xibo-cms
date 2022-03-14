@@ -714,11 +714,29 @@ class Chart extends ModuleWidget
                     if ($seriesIdentifier !== null) {
                         foreach ($seriesIdentifier as $identifier) {
                             // Keep track of the axis we're on
-                            $axisDataTemp[$row[$identifier]][$key] = (isset($axisDataTemp[$row[$identifier]][$key])) ? $axisDataTemp[$row[$identifier]][$key] + $row[$axis] : $row[$axis];
+                            if (isset($axisDataTemp[$row[$identifier]][$key])) {
+                                // Can we add them together?
+                                if (is_numeric($axisDataTemp[$row[$identifier]][$key]) && is_numeric($row[$axis])) {
+                                    $axisDataTemp[$row[$identifier]][$key] = $axisDataTemp[$row[$identifier]][$key]
+                                        + $row[$axis];
+                                } else {
+                                    $this->getLog()->debug('Cannot add non-numeric series together');
+                                }
+                            } else {
+                                $axisDataTemp[$row[$identifier]][$key] = $row[$axis];
+                            }
                         }
                     } else {
                         // Keep track of the axis we're on
-                        $axisDataTemp[$key] = (isset($axisDataTemp[$key])) ? $axisDataTemp[$key] + $row[$axis] : $row[$axis];
+                        if (isset($axisDataTemp[$key])) {
+                            if (is_numeric($axisDataTemp[$key]) && is_numeric($row[$axis])) {
+                                $axisDataTemp[$key] = $axisDataTemp[$key] + $row[$axis];
+                            } else {
+                                $this->getLog()->debug('Cannot add non-numeric series together');
+                            }
+                        } else {
+                            $axisDataTemp[$key] = $row[$axis];
+                        }
                     }
                 }
             }

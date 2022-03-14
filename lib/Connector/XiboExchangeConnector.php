@@ -24,6 +24,7 @@ namespace Xibo\Connector;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Parsedown;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\SearchResult;
 use Xibo\Event\TemplateProviderEvent;
@@ -90,15 +91,8 @@ class XiboExchangeConnector implements ConnectorInterface
     {
         $this->getLogger()->debug('XiboExchangeConnector: onTemplateProvider');
 
+        // Get a cache of the layouts.json file, or request one from download.
         $uri = 'https://download.xibosignage.com/layouts.json';
-        $start = $event->getStart();
-        $perPage = $event->getLength();
-        if ($start == 0) {
-            $page = 1;
-        } else {
-            $page = floor($start / $perPage) + 1;
-        }
-
         $key = md5($uri);
         $cache = $this->getPool()->getItem($key);
         $body = $cache->get();
@@ -129,20 +123,21 @@ class XiboExchangeConnector implements ConnectorInterface
             $this->getLogger()->debug('onTemplateProvider: serving from cache.');
         }
 
+        // We have the whole file locally, so handle paging
+        $start = $event->getStart();
+        $perPage = $event->getLength();
+
+        // Create a provider to add to each search result
         $providerDetails = new ProviderDetails();
         $providerDetails->id = $this->getSourceName();
         $providerDetails->logoUrl = $this->getThumbnail();
         $providerDetails->message = $this->getTitle();
         $providerDetails->backgroundColor = '';
 
-        foreach ($body as $i => $template) {
-            if (($page === 1 && $i <= $perPage) ||
-                ($page !== 1 && $i >= $start && $i <= $perPage)
-            ) {
-                $searchResult = $this->createSearchResult($template);
-                $searchResult->provider = $providerDetails;
-                $event->addResult($searchResult);
-            }
+        for ($i = $start; $i < ($start + $perPage - 1) && $i < count($body); $i++) {
+            $searchResult = $this->createSearchResult($body[$i]);
+            $searchResult->provider = $providerDetails;
+            $event->addResult($searchResult);
         }
     }
 
@@ -171,7 +166,9 @@ class XiboExchangeConnector implements ConnectorInterface
         $searchResult->id = $template->fileName;
         $searchResult->source = 'remote';
         $searchResult->title = $template->title;
-        $searchResult->description = $template->description;
+        $searchResult->description = empty($template->description)
+            ? null
+            : Parsedown::instance()->line($template->description);
 
         // Optional data
         if (property_exists($template, 'tags') && count($template->tags) > 0) {

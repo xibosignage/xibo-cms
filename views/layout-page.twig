@@ -720,7 +720,7 @@
                 {{#if thumbnail}}<img class="card-img-top" src="{{ thumbnail }}" alt="{{ title }}">{{/if}}
                 <div class="card-body">
                     <h5 class="card-title">{{ title }}</h5>
-                    {{#if description}}<p class="card-text"><span class="text-muted">{{ description }}</span></p>{{/if}}
+                    {{#if description}}<p class="card-text" style="max-height:200px; overflow-y: auto"><span class="text-muted">{{{description}}}</span></p>{{/if}}
                 </div>
                 {{#if showFooter }}
                 <div class="card-footer">

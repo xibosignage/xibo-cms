@@ -226,7 +226,7 @@
                             { id: "stretch", value: stretchText },
                             { id: "center", value: centerText }
                         ] %}
-                        {{ forms.dropdown("background-image", "single", title, module.getOption("background-image", "contain"), options, "id", "value", "", "") }}
+                        {{ forms.dropdown("background-image", "single", title, module.getOption("background-image", "fit"), options, "id", "value", "", "") }}
 
                         <div class="background-select-list">
                             {% set attributes = [

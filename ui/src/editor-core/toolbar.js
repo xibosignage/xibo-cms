@@ -418,15 +418,10 @@ Toolbar.prototype.render = function() {
     const trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
 
     // Get text for bin tooltip
-    if (trashBinActive) {
-        newToolbarTrans.trashBinActiveTitle = toolbarTrans.deleteObject.replace('%object%', app.selectedObject.type);
-    }
+    newToolbarTrans.trashBinActiveTitle = (trashBinActive) ? toolbarTrans.deleteObject.replace('%object%', app.selectedObject.type) : '';
 
     const checkHistory = app.checkHistory();
-
-    if (checkHistory) {
-        newToolbarTrans.undoActiveTitle = checkHistory.undoActiveTitle;
-    }
+    newToolbarTrans.undoActiveTitle = (checkHistory) ? checkHistory.undoActiveTitle : '';
 
     const toolbarOpened = (this.openedMenu != -1) && (app.readOnlyMode === undefined || app.readOnlyMode === false);
 

@@ -198,15 +198,15 @@ $fa-font-path: "~font-awesome/fonts";
 }
 
 /* Modules icons */
-.module-icon-agenda {
-    @extend .fa-calendar-o;
-}
-
 .module-icon-audio, .media-icon-audio {
     @extend .fa-file-audio;
 }
 
 .module-icon-calendar {
+    @extend .fa-calendar-o;
+}
+
+.module-icon-calendaradvanced {
     @extend .fa-calendar-alt;
 }
 
@@ -238,7 +238,7 @@ $fa-font-path: "~font-awesome/fonts";
     @extend .fa-code;
 }
 
-.module-icon-flash {
+.module-icon-flash, .media-icon-flash {
     @extend .fa-flash;
 }
 
