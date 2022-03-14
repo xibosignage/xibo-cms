@@ -706,7 +706,7 @@ class Library extends Base
             $media->buttons[] = array(
                 'id' => 'content_button_download',
                 'linkType' => '_self', 'external' => true,
-                'url' => $this->urlFor($request,'library.download', ['id' => $media->mediaId]) . '?attachment=' . urlencode($media->fileName),
+                'url' => $this->urlFor($request, 'library.download', ['id' => $media->mediaId]) . '?attachment=' . urlencode($media->fileName),
                 'text' => __('Download')
             );
 
