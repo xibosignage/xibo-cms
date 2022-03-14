@@ -926,7 +926,7 @@ var processScheduleFormElements = function(el) {
 
         case 'actionType' :
             console.log('Action type changed');
-            var layoutCodeControl = (fieldVal == 'navToLayout' && el.is(":visible")) ? "" : "none";
+            var layoutCodeControl = (fieldVal == 'navLayout' && el.is(":visible")) ? "" : "none";
             commandControlDisplay = (fieldVal == 'command') ? "" : "none";
 
             $('.layout-code-control').css('display', layoutCodeControl);
