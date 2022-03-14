@@ -169,7 +169,7 @@ class MediaService implements MediaServiceInterface
 
         // first try to get the extension from pathinfo
         $info = pathinfo(parse_url($url, PHP_URL_PATH));
-        $extension = $info['extension'];
+        $extension = $info['extension'] ?? '';
         $size = -1;
 
         try {
