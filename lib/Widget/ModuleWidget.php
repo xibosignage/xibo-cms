@@ -1158,7 +1158,7 @@ abstract class ModuleWidget implements ModuleInterface
         } else {
             // This widget is expected to output a file - usually this is for file based media
             // Get the name with library
-            $attachmentName = $sanitizedParams->getString('attachment', ['default' => (($attachment == null) ? $media->storedAs : $attachment)]);
+            $attachmentName = empty($attachment) ? $media->storedAs : $attachment;
 
             $httpCache = $this->cacheProvider;
             // Issue some headers
