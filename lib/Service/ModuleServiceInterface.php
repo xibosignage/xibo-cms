@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -34,6 +34,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Factory\MenuBoardFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
 use Xibo\Factory\ScheduleFactory;
@@ -75,6 +76,7 @@ interface ModuleServiceInterface
      * @param PlaylistFactory $playlistFactory
      * @param MenuBoardFactory $menuBoardFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
+     * @param NotificationFactory $notificationFactory
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
      * @return ModuleWidget
@@ -95,6 +97,7 @@ interface ModuleServiceInterface
         $playlistFactory,
         $menuBoardFactory,
         $menuBoardCategoryFactory,
+        $notificationFactory,
         $view,
         HttpCacheProvider $cacheProvider
     );
@@ -114,6 +117,7 @@ interface ModuleServiceInterface
      * @param PlaylistFactory $playlistFactory
      * @param MenuBoardFactory $menuBoardFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
+     * @param NotificationFactory $notificationFactory
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
      * @return ModuleWidget
@@ -134,6 +138,7 @@ interface ModuleServiceInterface
         $playlistFactory,
         $menuBoardFactory,
         $menuBoardCategoryFactory,
+        $notificationFactory,
         $view,
         HttpCacheProvider $cacheProvider
     );

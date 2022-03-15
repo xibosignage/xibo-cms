@@ -46,6 +46,7 @@ use Xibo\Factory\MediaFactory;
 use Xibo\Factory\MenuBoardCategoryFactory;
 use Xibo\Factory\MenuBoardFactory;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\NotificationFactory;
 use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlayerVersionFactory;
 use Xibo\Factory\PlaylistFactory;
@@ -213,6 +214,9 @@ abstract class ModuleWidget implements ModuleInterface
     /** @var MenuBoardCategoryFactory */
     protected $menuBoardCategoryFactory;
 
+    /** @var NotificationFactory */
+    protected $notificationFactory;
+
     /** @var Twig */
     protected $view;
 
@@ -241,10 +245,11 @@ abstract class ModuleWidget implements ModuleInterface
      * @param PlaylistFactory $playlistFactory
      * @param MenuBoardFactory $menuBoardFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
+     * @param NotificationFactory $notificationFactory
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
      */
-    public function __construct($store, $pool, $log, $config, $sanitizer, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, Twig $view, HttpCacheProvider $cacheProvider)
+    public function __construct($store, $pool, $log, $config, $sanitizer, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $notificationFactory, Twig $view, HttpCacheProvider $cacheProvider)
     {
         $this->store = $store;
         $this->pool = $pool;
@@ -265,6 +270,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->playlistFactory = $playlistFactory;
         $this->menuBoardFactory = $menuBoardFactory;
         $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
+        $this->notificationFactory = $notificationFactory;
         $this->view = $view;
         $this->cacheProvider = $cacheProvider;
 
