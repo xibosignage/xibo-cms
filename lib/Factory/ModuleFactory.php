@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,7 +22,6 @@
 
 
 namespace Xibo\Factory;
-
 
 use Illuminate\Support\Str;
 use Slim\Views\Twig;
@@ -108,6 +107,9 @@ class ModuleFactory extends BaseFactory
     /** @var MenuBoardCategoryFactory */
     protected $menuBoardCategoryFactory;
 
+    /** @var NotificationFactory */
+    protected $notificationFactory;
+
     /** @var Twig */
     protected $view;
 
@@ -133,6 +135,7 @@ class ModuleFactory extends BaseFactory
      * @param UserGroupFactory $userGroupFactory
      * @param MenuBoardFactory $menuBoardFactory
      * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
+     * @param NotificationFactory $notificationFactory
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
      */
@@ -154,6 +157,7 @@ class ModuleFactory extends BaseFactory
         $userGroupFactory,
         $menuBoardFactory,
         $menuBoardCategoryFactory,
+        $notificationFactory,
         $view,
         HttpCacheProvider $cacheProvider
     ) {
@@ -174,6 +178,7 @@ class ModuleFactory extends BaseFactory
         $this->userGroupFactory = $userGroupFactory;
         $this->menuBoardFactory = $menuBoardFactory;
         $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
+        $this->notificationFactory = $notificationFactory;
         $this->view = $view;
         $this->cacheProvider = $cacheProvider;
     }
@@ -229,6 +234,7 @@ class ModuleFactory extends BaseFactory
             $this->playlistFactory,
             $this->menuBoardFactory,
             $this->menuBoardCategoryFactory,
+            $this->notificationFactory,
             $this->view,
             $this->cacheProvider
         );
@@ -277,6 +283,7 @@ class ModuleFactory extends BaseFactory
             $this->playlistFactory,
             $this->menuBoardFactory,
             $this->menuBoardCategoryFactory,
+            $this->notificationFactory,
             $this->view,
             $this->cacheProvider
         );
@@ -305,6 +312,7 @@ class ModuleFactory extends BaseFactory
             $this->playlistFactory,
             $this->menuBoardFactory,
             $this->menuBoardCategoryFactory,
+            $this->notificationFactory,
             $this->view,
             $this->cacheProvider
         );
@@ -333,6 +341,7 @@ class ModuleFactory extends BaseFactory
             $this->playlistFactory,
             $this->menuBoardFactory,
             $this->menuBoardCategoryFactory,
+            $this->notificationFactory,
             $this->view,
             $this->cacheProvider
         );
@@ -374,6 +383,7 @@ class ModuleFactory extends BaseFactory
             $this->playlistFactory,
             $this->menuBoardFactory,
             $this->menuBoardCategoryFactory,
+            $this->notificationFactory,
             $this->view,
             $this->cacheProvider
         );
