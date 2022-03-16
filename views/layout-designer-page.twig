@@ -166,20 +166,23 @@
              * Setup the background form.
              */
             function backGroundFormSetup(dialog) {
-                var backgroundImageList = $('#backgroundImageId');
+                var $backgroundImageId = $('#backgroundImageId');
                 var notFoundIcon = $('#bg_not_found_icon');
                 var backgroundImage = $('#bg_image_image');
-                var initialBackgroundImageId = backgroundImageList.val();
+                var initialBackgroundImageId = $backgroundImageId.val();
                 var backgroundChanged = false;
 
                 function backgroundImageChange() {
                     // Want to attach an onchange event to the drop down for the bg-image
-                    var id = backgroundImageList.val();
-
+                    var id = $backgroundImageId.val();
                     var src;
-                    // If the image is not defined
-                    if ([0, ''].indexOf(id) !== -1) {
+                    var isNotDefined = [0, ''].indexOf(id) !== -1;
 
+                    // Disable remove button if no image is defined
+                    $('#backgroundRemoveButton').toggleClass('disabled', isNotDefined);
+
+                    // If the image is not defined
+                    if (isNotDefined) {
                         // Show not found icon and hide image
                         notFoundIcon.show();
                         backgroundImage.hide();
@@ -199,13 +202,56 @@
                     }
                 }
 
-                backgroundImageList.change(backgroundImageChange);
+                function backgroundImageHandleDrop(mediaToAdd, fromProvider) {
+                    if(fromProvider) {
+                        lD.importFromProvider([mediaToAdd]).then((res) =>  {
+                            $backgroundImageId.val(res[0]).trigger('change');
+                        }).catch(function() {
+                            toastr.error(errorMessagesTrans.importingMediaFailed);
+                        });
+                    } else {
+                        $backgroundImageId.val(mediaToAdd).trigger('change');
+                    }
+                    // Deselect drop zones after adding
+                    lD.toolbar.deselectCardsAndDropZones();
+                }
 
+                // Handle id change
+                $backgroundImageId.change(backgroundImageChange);
+
+                // Call change on form load
                 backgroundImageChange();
 
-                // Bind to the background add button click
-                $("#backgroundAddButton").on("click", function(e) {
+                // Bind to the background add and remove button click
+                $('#backgroundUploadButton').on('click', function(e) {
                     layoutEditBackgroundButtonClicked(e, dialog);
+                });
+
+                $('#backgroundRemoveButton:not(.disabled)').on('click', function(e) {
+                    $backgroundImageId.val('').trigger('change');
+                });
+
+                // Handle droppable area
+                $('.background-image-add').droppable({
+                    greedy: true,
+                    tolerance: 'pointer',
+                    accept: function(el) {
+                        return ($(el).data('type') === 'media' && $(el).data('subType') === 'image');
+                    },
+                    drop: _.debounce(function(event, ui) {
+                        var $draggable = $(ui.draggable[0]);
+                        if($draggable.hasClass('from-provider')) {
+                            backgroundImageHandleDrop($draggable.data('providerData'), true);
+                        } else {
+                            backgroundImageHandleDrop($draggable.data('mediaId'));
+                        }
+                    }, 200)
+                });
+
+                // Handle click to add
+                $('.background-image-drop').on('click', function() {
+                    var selected = lD.toolbar.selectedQueue[0];
+                    backgroundImageHandleDrop(selected, !(typeof selected == 'number'));
                 });
 
                 // Bind to the layout form submit

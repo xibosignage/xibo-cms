@@ -49,46 +49,41 @@
                         {% set helpText %}{% trans "Use the colour picker to select the background colour" %}{% endset %}
                         {{ forms.colorPicker("backgroundColor", title, layout.backgroundColor, helpText) }}
 
-                        {% set attributes = [
-                            { name: "data-allow-clear", value: "true" },
-                            { name: "data-placeholder--id", value: null },
-                            { name: "data-placeholder--value", value: "" },
-                            { name: "data-search-url", value: url_for("library.search") },
-                            { name: "data-search-term", value: "media" },
-                            { name: "data-search-term-tags", value: "tags" },
-                            { name: "data-width", value: "100%" },
-                            { name: "data-id-property", value: "mediaId" },
-                            { name: "data-text-property", value: "name" },
-                            { name: "data-filter-options", value: '{"type":"image"}' }
-                        ] %}
+                        <div class="form-group row">
 
-                        {% set title %}{% trans "Background Image" %}{% endset %}
-                        {% set helpText %}{% trans "Pick an image from the Library to use as your background. Please note that Windows Players only support JPG image files." %}{% endset %}
-                        {% set noneMessage %}{% trans "None" %}{% endset %}
-                        {% set backgrounds = [{mediaId: null, name: noneMessage}]|merge(backgrounds) %}
-                        {{ forms.dropdown("backgroundImageId", "single", title, backgroundId, backgrounds, "mediaId", "name", helpText, "pagedSelect background-image-fields", "", "b", "", attributes) }}
+                            <label class="col-sm-2 control-label">
+                                {% trans "Background Image" %}
+                            </label>
 
-                        <div class="text-center">
-                            <div id="bg_not_found_icon">
-                                <i class="fa bg_not_found_icon fa-2x"></i>
-                                <span>{% trans "No Background Image" %}</span>
-                            </div>
+                            <div class="col-sm-10">
+                                <div class="text-center background-image-add editable" data-add-new-background-url="{{ url_for("library.add") }}">
+                                    <div id="bg_not_found_icon">
+                                        <i class="fa bg_not_found_icon"></i>
+                                        <div>{% trans "No Image set, add from Toolbar or Upload!" %}</div>
+                                    </div>
 
-                            <img id="bg_image_image" data-url="{{ url_for("library.download", {id: ':id'}) }}?preview=1&width=200&height=100" alt="{% trans "Background thumbnail" %}" />
-                        </div>
+                                    <img id="bg_image_image" data-url="{{ url_for("library.download", {id: ':id'}) }}?preview=1&width=200&height=100" alt="{% trans "Background thumbnail" %}" />
+                                    <div class="background-image-drop">{% trans "Add background image" %}</div>
+                                </div>
 
-                        <div class="row background-image-fields background-image-add-button text-center">
-                            <div class="col-12">
-                                <button id="backgroundAddButton" class="btn btn-white" type="button"
-                                        data-add-new-background-url="{{ url_for("library.add") }}">
-                                    <i class="fa fa-plus"></i>
-                                    {% trans "Add a new background image?" %}
-                                </button>
+                                <div class="background-image-actions text-center">
+                                    <div class="btn-group">
+                                        <button id="backgroundUploadButton" class="btn btn-outline-secondary" type="button">
+                                            <i class="fa fa-upload"></i>
+                                            {% trans "Upload" %}
+                                        </button>
+
+                                        <button id="backgroundRemoveButton" class="btn btn-outline-danger" type="button">
+                                            <i class="fa fa-remove"></i>
+                                            {% trans "Remove" %}
+                                        </button>
+                                    </div>
+                                </div>
                             </div>
                         </div>
 
                         <div class="form-group">
-                            <div id="layoutEditFormBackgroundUpload" style="display: none;"></div>
+                            {{ forms.hidden("backgroundImageId", backgroundId) }}
                         </div>
 
                         {% set title %}{% trans "Resolution" %}{% endset %}
