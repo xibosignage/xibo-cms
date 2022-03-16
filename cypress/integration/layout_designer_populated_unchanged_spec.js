@@ -23,7 +23,7 @@ describe('Layout Designer (Populated/Unchanged)', function() {
 
         // Check if the basic elements of the designer loaded
         cy.get('#layout-editor').should('be.visible');
-        cy.get('#layout-timeline').should('be.visible');
+        cy.get('.timeline-panel').should('be.visible');
         cy.get('#layout-viewer-container').should('be.visible');
         cy.get('#properties-panel').should('be.visible');
     });

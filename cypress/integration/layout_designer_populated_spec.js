@@ -108,33 +108,32 @@ describe('Layout Designer (Populated)', function() {
         // Create and alias for reload layout
         cy.server();
         cy.route('/layout?layoutId=*').as('reloadLayout');
+        cy.route('/library/search?assignable=1&retired=0&*').as('mediaLoad');
 
-        cy.get('#properties-panel #select2-backgroundImageId-container').click();
+        cy.get('#properties-panel #backgroundRemoveButton').click();
 
-        // Select the last image option available ( avoid result and message "options")
-        cy.get('.select2-container .select2-results .select2-results__option:not(.select2-results__option--load-more):not(.loading-results):not(.select2-results__message):first').click();
+        // Open library search tab
+        cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
 
-        // Save form
-        cy.get('#properties-panel button[data-action="save"]').click();
+        cy.wait('@mediaLoad');
 
-        cy.wait('@reloadLayout');
+        cy.get('#layout-editor-bottombar #navigator-edit-btn').click({force: true});
 
-        // Change background image
-        cy.get('#properties-panel #select2-backgroundImageId-container').should('have.attr', 'title').then((title) => {
-            cy.get('#properties-panel #select2-backgroundImageId-container').click();
+        cy.get('#layout-editor-toolbar #media-content-1 .toolbar-card:nth-of-type(2)').find("img").should('be.visible');
 
-            // Select the last image option available ( avoid result and message "options")
-            cy.get('.select2-container .select2-results .select2-results__option:not(.select2-results__option--load-more):not(.loading-results):not(.select2-results__message):last').click();
+        // Get a table row, select it and add to the region
+        cy.get('#layout-editor-toolbar #media-content-1 .toolbar-card:nth-of-type(2) .select-button').click({force: true}).then(() => {
+            cy.get('#properties-panel-container .background-image-drop').click({force: true}).then(() => {
 
-            // Save form
-            cy.get('#properties-panel button[data-action="save"]').click();
+                // Save form
+                cy.get('#properties-panel button[data-action="save"]').click();
 
-            // Should show a notification for the successful save
-            cy.get('.toast-success').contains('Edited');
+                // Should show a notification for the successful save
+                cy.get('.toast-success').contains('Edited');
 
-            // Check if the values are the same entered after reload
-            cy.wait('@reloadLayout').then(() => {
-                cy.get('#properties-panel #select2-backgroundImageId-container').should('have.attr', 'title').and('not.include', title);
+                // Check if the background field has an image
+                cy.get('#properties-panel .background-image-add img#bg_image_image').should('be.visible');
             });
         });
     });
