@@ -1,17 +1,17 @@
 # Introduction
 Xibo - Digital Signage - https://xibo.org.uk
-Copyright (C) 2006-2021 Xibo Signage Ltd and Contributors.
+Copyright (C) 2006-2022 Xibo Signage Ltd and Contributors.
 
 
 
 #### Branches
 
-- develop: Work in progress toward 3.1
-- master: Currently 3.0
-- release30: Release preparation for 3.0.x
+- develop: Work in progress toward 4.0
+- master: Currently 3.1
+- release31: Release preparation for 3.1.x
+- release30: Bug fixes 3.0
 - release23: Bug fixes for 2.3
-- release22: Bug fixes for 2.2
-- release18: Work in progress toward the next 1.8
+- release18: Archive of 1.8
 - release17: Archive of 1.7
 - release1.6.4: Archive of 1.6
 
@@ -149,7 +149,7 @@ find ./locale ./cache ./lib ./web  -iname "*.php" -print0 | xargs -0 xgettext --
 To import translations:
 
 ```bash
-bzr pull lp:~dangarner/xibo/swift-translations
+bzr pull lp:~dangarner/xibo/holmes-translations
 ```
 
 Convert to `mo` format:
