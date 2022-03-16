@@ -285,24 +285,10 @@ class Currencies extends AlphaVantageBase
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="mainTemplate_advanced",
-     *      in="formData",
-     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
      *      name="itemtemplate",
      *      in="formData",
      *      description="Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 ",
      *      type="string",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
-     *      name="itemtemplate_advanced",
-     *      in="formData",
-     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
-     *      type="integer",
      *      required=false
      *   ),
      *  @SWG\Parameter(
@@ -367,11 +353,7 @@ class Currencies extends AlphaVantageBase
 
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('mainTemplate', $request->getParam('mainTemplate', $request->getParam('mainTemplate', null)));
-            $this->setOption('mainTemplate_advanced', $sanitizedParams->getCheckbox('mainTemplate_advanced'));
-            
-            $this->setRawNode('itemTemplate', $request->getParam('itemTemplate', $request->getParam('itemTemplate', null)));
-            $this->setOption('itemTemplate_advanced', $sanitizedParams->getCheckbox('itemTemplate_advanced'));
-            
+            $this->setRawNode('itemTemplate', $request->getParam('itemTemplate', $request->getParam('itemTemplate', null))); 
             $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
             $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
             $this->setOption('widgetOriginalHeight', $sanitizedParams->getInt('widgetOriginalHeight'));

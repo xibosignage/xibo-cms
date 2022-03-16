@@ -33,7 +33,7 @@
         <ul class="nav nav-tabs" role="tablist">
             <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "General" %}</span></a></li>
             <li class="nav-item"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{% trans "Appearance" %}</span></a></li>
-            <li class="nav-item"><a class="nav-link" href="#editorTab" class="digital-control-group" role="tab" data-toggle="tab"><span>{% trans "Editor" %}</span></a></li>
+            <li class="nav-item template-tab"><a class="nav-link" href="#editorTab" class="digital-control-group" role="tab" data-toggle="tab"><span>{% trans "Editor" %}</span></a></li>
         </ul>
         <div class="col-md-12">
             <form id="clockFormEdit" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.edit", {id: module.widget.widgetId}) }}">

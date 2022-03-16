@@ -40,9 +40,11 @@
             if(!$(self).data('formEditorOnly')) {
                 if($(form).find('form #clockTypeId').val() !== '2') {
                     $(form).data().viewerObject.setupInlineEditor('ta_text', false);
+                    $(form).find('.template-tab').hide();
                 } else {
                     var isChecked = $(form).find('#ta_text_advanced').is(':checked');
                     $(form).data().viewerObject.setupInlineEditor('ta_text', isChecked);
+                    $(form).find('.template-tab').show();
                 }
             }
         };
