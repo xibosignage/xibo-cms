@@ -353,7 +353,7 @@ class Currencies extends AlphaVantageBase
 
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('mainTemplate', $request->getParam('mainTemplate', $request->getParam('mainTemplate', null)));
-            $this->setRawNode('itemTemplate', $request->getParam('itemTemplate', $request->getParam('itemTemplate', null))); 
+            $this->setRawNode('itemTemplate', $request->getParam('itemTemplate', $request->getParam('itemTemplate', null)));
             $this->setRawNode('styleSheet', $request->getParam('styleSheet', $request->getParam('styleSheet', null)));
             $this->setOption('widgetOriginalWidth', $sanitizedParams->getInt('widgetOriginalWidth'));
             $this->setOption('widgetOriginalHeight', $sanitizedParams->getInt('widgetOriginalHeight'));
