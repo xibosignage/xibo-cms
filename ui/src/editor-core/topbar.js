@@ -46,26 +46,10 @@ Topbar.prototype.render = function() {
     // Get topbar trans
     let newTopbarTrans = $.extend(toolbarTrans, topbarTrans);
 
-    const checkHistory = app.checkHistory();
-
-    if(checkHistory) {
-        newTopbarTrans.undoActiveTitle = checkHistory.undoActiveTitle;
-    }
-
-    // Check if trash bin is active
-    let trashBinActive = app.selectedObject.isDeletable && (app.readOnlyMode === undefined || app.readOnlyMode === false);
-
-    // Get text for bin tooltip
-    if(trashBinActive) {
-        newTopbarTrans.trashBinActiveTitle = newTopbarTrans.deleteObject.replace('%object%', app.selectedObject.type);
-    }
-
     // Compile layout template with data
     const html = TopbarTemplate({
         customDropdownOptions: this.customDropdownOptions,
         displayTooltips: app.common.displayTooltips,
-        undoActive: checkHistory.undoActive,
-        trashActive: trashBinActive,
         trans: newTopbarTrans,
         mainObject: mainObject,
         showOptions: self.showOptions
@@ -108,20 +92,6 @@ Topbar.prototype.render = function() {
 
         self.DOMObject.find('.dropdown.navbar-submenu:not(.navbar-submenu-options)').toggle(activeDropdown);
     }
-
-    // Delete object
-    this.DOMObject.find('.trash-container').click(function() {
-        if($(this).hasClass('active')) {
-            app.deleteSelectedObject();
-        }
-    });
-
-    // Revert last action
-    this.DOMObject.find('.undo-container').off().click(function() {
-        if($(this).hasClass('active')) {
-            app.undoLastAction();
-        }
-    });
 
     // Jump to actions
     this.DOMObject.find('.layout-info-actions').off().click(function() {

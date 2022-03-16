@@ -50,11 +50,22 @@
                     </button>
                 {{/if}}
             {{/eq}}
-                    
-            {{#if element.isDeletable}}
+
+            {{#if showDivider}}
+                <div class="divider"></div>
+            {{/if}}
+
+            {{#if trashActive}}
                 <button type="button" id="delete-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
-                    data-title="{{trans.deleteRegion}}">
+                    data-title="{{trans.trashBinActiveTitle}}">
                     <i class="fa fa-trash"></i>
+                </button>
+            {{/if}}
+
+            {{#if undoActive}}
+                <button type="button" id="undo-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
+                    data-title="{{trans.undoActiveTitle}}">
+                    <i class="fa fa-undo"></i>
                 </button>
             {{/if}}
         {{/unless}}

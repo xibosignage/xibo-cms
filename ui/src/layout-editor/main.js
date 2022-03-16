@@ -473,11 +473,13 @@ lD.selectObject = function(obj = null, forceSelect = false, {positionToAdd = nul
                         }
                     }
                 } else {
-                    // Only select a region if we're in navigator mode
                     if(this.navigatorMode) {
+                        // In navigator mode, the region is marked as selected, viewer mode we only
+                        // use the region as selected Object to handle widget selection
                         this.layout.regions[newSelectedId].selected = true;
-                        this.selectedObject = this.layout.regions[newSelectedId];
                     }
+                    
+                    this.selectedObject = this.layout.regions[newSelectedId];
                 }
             } else if(newSelectedType === 'widget') {
                 // Close navigator mode when selecting a widget

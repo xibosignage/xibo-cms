@@ -281,6 +281,7 @@ class Factories
                     $c->get('userGroupFactory'),
                     $c->get('menuBoardFactory'),
                     $c->get('menuBoardCategoryFactory'),
+                    $c->get('notificationFactory'),
                     $c->get('view'),
                     $c->get('httpCache')
                 );

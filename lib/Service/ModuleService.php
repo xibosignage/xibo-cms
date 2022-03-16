@@ -91,6 +91,7 @@ class ModuleService implements ModuleServiceInterface
         $playlistFactory,
         $menuBoardFactory,
         $menuBoardCategoryFactory,
+        $notificationFactory,
         $view,
         HttpCacheProvider $cacheProvider
     ) {
@@ -109,6 +110,7 @@ class ModuleService implements ModuleServiceInterface
             $playlistFactory,
             $menuBoardFactory,
             $menuBoardCategoryFactory,
+            $notificationFactory,
             $view,
             $cacheProvider
         );
@@ -136,6 +138,7 @@ class ModuleService implements ModuleServiceInterface
         $playlistFactory,
         $menuBoardFactory,
         $menuBoardCategoryFactory,
+        $notificationFactory,
         $view,
         HttpCacheProvider $cacheProvider
     ) {
@@ -163,6 +166,7 @@ class ModuleService implements ModuleServiceInterface
             $playlistFactory,
             $menuBoardFactory,
             $menuBoardCategoryFactory,
+            $notificationFactory,
             $view,
             $cacheProvider
         );
