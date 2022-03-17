@@ -541,6 +541,7 @@ Timeline.prototype.render = function(layout) {
     this.DOMObject.parents('.toggle-panel').find('.toggle').off().click(function(e) {
         e.stopPropagation();
         lD.togglePanel($(this).parents('.toggle-panel'));
+        lD.savePrefs();
     });
 
     // Enable hover and select for each layout/region
@@ -784,6 +785,7 @@ Timeline.prototype.render = function(layout) {
         // Open timeline if there are no regions
         if(noRegions && !this.DOMObject.parents('.toggle-panel').hasClass('opened')) {
             lD.togglePanel(this.DOMObject.parents('.toggle-panel'));
+            lD.savePrefs();
         }
     }
     

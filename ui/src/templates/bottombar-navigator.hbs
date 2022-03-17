@@ -1,4 +1,4 @@
-<nav class="navbar navigator-navbar">
+<nav class="navbar navigator-navbar designer-{{element.type}}">
     <div class="pull-left">
         <button type="button" id="add-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
             data-title="{{trans.addRegionDesc}}">
@@ -11,22 +11,20 @@
                 <i class="fa tool-icon-permissions card-icon"></i>
             </button>
         {{/if}}
+    </div>
 
-        {{#if showDivider}}
-            <div class="divider"></div>
+    <div class="pull-right">
+        {{#if undoActive}}
+            <button type="button" id="undo-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
+                data-title="{{trans.undoActiveTitle}}">
+                <i class="fa fa-undo"></i>
+            </button>
         {{/if}}
 
         {{#if trashActive}}
             <button type="button" id="delete-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
                 data-title="{{trans.trashBinActiveTitle}}">
                 <i class="fa fa-trash"></i>
-            </button>
-        {{/if}}
-
-        {{#if undoActive}}
-            <button type="button" id="undo-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
-                data-title="{{trans.undoActiveTitle}}">
-                <i class="fa fa-undo"></i>
             </button>
         {{/if}}
     </div>

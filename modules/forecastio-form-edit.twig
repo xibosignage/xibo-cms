@@ -276,15 +276,7 @@
 
                     <div class="tab-pane" id="currentForecastTab">
                         <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "Current Forecast Template" %}</h4>
-                            <div class="col-6 text-right">
-                                <input type="checkbox" class="bootstrap-switch-target" id="currentTemplate_advanced" name="currentTemplate_advanced" {% if module.getOption("currentTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                    data-size="small" 
-                                    data-label-text="{% trans "Visual editor" %}" 
-                                    data-label-width="80px" 
-                                    data-on-text="{% trans "On" %}" 
-                                    data-off-text="{% trans "Off" %}">
-                            </div>
+                            <h4 class="col-12 text-left">{% trans "Current Forecast Template" %}</h4>
                         </div>
 
                         <div class="ckeditor_controls inline-editor-hide container-fluid" data-linked-to="currentTemplate">
@@ -311,13 +303,7 @@
                             {% set simpleTextEditorMessage %}
                                 {% trans "Enter text or HTML in the box below." %}<br>
                             {% endset %}
-                            {{ forms.message(simpleTextEditorMessage, 'currentTemplate-advanced-editor-hide') }}
-
-                            {% set simpleTextEditorMessage2 %}
-                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
-                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(simpleTextEditorMessage2, 'currentTemplate-advanced-editor-show') }}
+                            {{ forms.message(simpleTextEditorMessage) }}
                         </div>
 
                         {% set helpText %}{% trans "Enter the template for the current forecast. For a list of substitutions click Get Forecast below." %}{% endset %}
@@ -326,15 +312,7 @@
 
                     <div class="tab-pane" id="dailyForecastTab">
                         <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "Daily Forecast Template" %}</h4>
-                            <div class="col-6 text-right">
-                                <input type="checkbox" class="bootstrap-switch-target" id="dailyTemplate_advanced" name="dailyTemplate_advanced" {% if module.getOption("dailyTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                    data-size="small" 
-                                    data-label-text="{% trans "Visual editor" %}" 
-                                    data-label-width="80px" 
-                                    data-on-text="{% trans "On" %}" 
-                                    data-off-text="{% trans "Off" %}">
-                            </div>
+                            <h4 class="col-12 text-left">{% trans "Daily Forecast Template" %}</h4>
                         </div>
 
                         <div class="ckeditor_controls inline-editor-hide container-fluid" data-linked-to="currentTemplate">
@@ -361,13 +339,7 @@
                             {% set simpleTextEditorMessage %}
                                 {% trans "Enter text or HTML in the box below." %}<br>
                             {% endset %}
-                            {{ forms.message(simpleTextEditorMessage, 'dailyTemplate-advanced-editor-hide') }}
-
-                            {% set simpleTextEditorMessage2 %}
-                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
-                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(simpleTextEditorMessage2, 'dailyTemplate-advanced-editor-show') }}
+                            {{ forms.message(simpleTextEditorMessage) }}
                         </div>
 
                         {% set helpText %}{% trans "Enter the template for the daily forecast. Replaces [dailyForecast] in main template." %}{% endset %}

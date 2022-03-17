@@ -33,7 +33,6 @@ Bottombar.prototype.render = function(element, data) {
     // Get text for bin tooltip
     newBottomBarTrans.trashBinActiveTitle = (trashBinActive) ? newBottomBarTrans.deleteObject.replace('%object%', app.selectedObject.type) : '';
 
-    
     if(app.navigatorMode) {
         this.DOMObject.html(BottomBarNavigatorTemplate(
             {
@@ -41,8 +40,7 @@ Bottombar.prototype.render = function(element, data) {
                 readOnlyModeOn: readOnlyModeOn,
                 element: element,
                 undoActive: checkHistory.undoActive,
-                trashActive: trashBinActive,
-                showDivider: checkHistory.undoActive || trashBinActive
+                trashActive: trashBinActive
             }
         ));
 
@@ -59,13 +57,13 @@ Bottombar.prototype.render = function(element, data) {
                     currentItem: currentItem,
                     totalItems: totalItems,
                     extra: data.extra,
+                    regionName: (parentRegion) ? parentRegion.name : '',
                     pagingEnable: (totalItems > 1),
                     trans: newBottomBarTrans,
                     readOnlyModeOn: readOnlyModeOn,
                     element: element,
                     undoActive: checkHistory.undoActive,
-                    trashActive: trashBinActive,
-                    showDivider: checkHistory.undoActive || trashBinActive
+                    trashActive: trashBinActive
                 }
             ));
 
@@ -88,8 +86,7 @@ Bottombar.prototype.render = function(element, data) {
                     renderLayout: true,
                     element: element,
                     undoActive: checkHistory.undoActive,
-                    trashActive: trashBinActive,
-                    showDivider: checkHistory.undoActive || trashBinActive
+                    trashActive: trashBinActive
                 }
             ));
 
@@ -121,8 +118,7 @@ Bottombar.prototype.render = function(element, data) {
                     readOnlyModeOn: readOnlyModeOn,
                     element: element,
                     undoActive: checkHistory.undoActive,
-                    trashActive: trashBinActive,
-                    showDivider: checkHistory.undoActive || trashBinActive
+                    trashActive: trashBinActive
                 }
             ));
         }

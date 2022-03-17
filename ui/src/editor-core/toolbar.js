@@ -1040,6 +1040,10 @@ Toolbar.prototype.updateQueue = function(menu, mediaQueue) {
         this.queueToggleOverlays(menu, false);
     }
 
+    // Show layout background overlay if there's
+    // only one element and it's an image
+    $('.background-image-add').toggleClass('ui-droppable-active', (mediaQueue.length == 1 && this.menuItems[menu].name == 'image'));
+
     $mediaPane.data('mediaQueue', mediaQueue)
 
     // Save backup

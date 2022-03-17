@@ -81,8 +81,8 @@
         formHelpers.setupCheckboxInputFields($(this), '#overrideTemplate', '.template-override-controls, .reloadTemplateButton', '.template-selector-control');
 
         // Setup editors
-        formHelpers.setupDualTypeTextArea(this, 'currentTemplate');
-        formHelpers.setupDualTypeTextArea(this, 'dailyTemplate');
+        formHelpers.setupTextArea(this, 'currentTemplate');
+        formHelpers.setupTextArea(this, 'dailyTemplate');
 
         // Setup template override
         formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId', 
