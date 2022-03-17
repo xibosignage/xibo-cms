@@ -3136,7 +3136,7 @@ class Layout extends Base
         if ($sendFileMode == 'Apache') {
             $response = $response->withHeader('X-Sendfile', $uri);
         } else if ($sendFileMode == 'Nginx') {
-            $response = $response->withHeader('X-Accel-Redirect', '/download/' . basename($uri));
+            $response = $response->withHeader('X-Accel-Redirect', '/download/thumbs/' . basename($uri));
         } else {
             // Return the file with PHP
             $response = $response->withBody(new Stream(fopen($uri, 'r')));
