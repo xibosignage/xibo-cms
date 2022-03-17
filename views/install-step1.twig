@@ -29,6 +29,17 @@
                 </tr>
                 </thead>
                 <tbody>
+                    <tr>
+                        <td>{{ "Settings File System Permissions"|trans }}</td>
+                        <td>
+                            {% if isSettingsPathWriteable %}
+                                <span class="fa fa-times"></span>
+                            {% else %}
+                                <span class="fa fa-check"></span>
+                            {% endif %}
+                        </td>
+                        <td>{{ "Write permissions are required for web/settings.php"|trans }}</td>
+                    </tr>
                 {% for check in config.CheckEnvironment() %}
                     <tr>
                         <td>{{ check.item }}</td>
@@ -46,12 +57,12 @@
                 {% endfor %}
                 </tbody>
             </table>
-            {% if config.EnvironmentFault() %}
+            {% if config.environmentFault() %}
                 <form action="{{ url_for("install", {step: 1}) }}" class="form-inline">
                     {% set title %}{% trans "Retest" %}{% endset %}
                     {{ forms.button(title, "submit") }}
                 </form>
-            {% elseif config.EnvironmentWarning() %}
+            {% elseif config.environmentWarning() %}
                 <form action="{{ url_for("install", {step: 2}) }}" class="form-inline">
                     {% set title %}{% trans "Retest" %}{% endset %}
                     {% set link = url_for("install", {step: 1}) %}

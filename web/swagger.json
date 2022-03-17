@@ -7886,7 +7886,7 @@
                     {
                         "name": "eventTypeId",
                         "in": "formData",
-                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
+                        "description": "The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
                         "required": true,
                         "type": "integer"
                     },
@@ -8033,6 +8033,27 @@
                         "description": "Valid GeoJSON string, use as an alternative to geoLocation parameter",
                         "required": false,
                         "type": "string"
+                    },
+                    {
+                        "name": "actionType",
+                        "in": "formData",
+                        "description": "For Action eventTypeId, the type of the action - command or navLayout",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionTriggerCode",
+                        "in": "formData",
+                        "description": "For Action eventTypeId, the webhook trigger code for the Action",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionLayoutCode",
+                        "in": "formData",
+                        "description": "For Action eventTypeId and navLayout actionType, the Layout Code identifier",
+                        "required": false,
+                        "type": "string"
                     }
                 ],
                 "responses": {
@@ -8094,7 +8115,7 @@
                     {
                         "name": "eventTypeId",
                         "in": "formData",
-                        "description": "The Event Type Id to use for this Event. 1=Campaign, 2=Command, 3=Overlay",
+                        "description": "The Event Type Id to use for this Event. 1=Layout, 2=Command, 3=Overlay, 4=Interrupt, 5=Campaign, 6=Action",
                         "required": true,
                         "type": "integer"
                     },
@@ -8239,6 +8260,27 @@
                         "name": "geoLocationJson",
                         "in": "formData",
                         "description": "Valid GeoJSON string, use as an alternative to geoLocation parameter",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionType",
+                        "in": "formData",
+                        "description": "For Action eventTypeId, the type of the action - command or navLayout",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionTriggerCode",
+                        "in": "formData",
+                        "description": "For Action eventTypeId, the webhook trigger code for the Action",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "actionLayoutCode",
+                        "in": "formData",
+                        "description": "For Action eventTypeId and navLayout actionType, the Layout Code identifier",
                         "required": false,
                         "type": "string"
                     }
@@ -9957,6 +9999,13 @@
                         "name": "useCurrentTemplate",
                         "in": "formData",
                         "description": "A flag (0, 1), Should current event use different template?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
+                        "name": "excludeOnlyCurrent",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Exclude no current events results?",
                         "required": false,
                         "type": "integer"
                     },
@@ -11752,9 +11801,23 @@
                         "type": "number"
                     },
                     {
+                        "name": "templateOrientation",
+                        "in": "formData",
+                        "description": "Filter templates by orientation, available options: all, squared, landscape, portrait, scale",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
+                        "name": "templateType",
+                        "in": "formData",
+                        "description": "Filter templates by weather type, available options: all, current, forecast",
+                        "required": false,
+                        "type": "string"
+                    },
+                    {
                         "name": "templateId",
                         "in": "formData",
-                        "description": "Use pre-configured templates, available options: weather-module0-5day, weather-module0-singleday, weather-module0-singleday2, weather-module1l, weather-module1p, weather-module2l, weather-module2p, weather-module3l, weather-module3p, weather-module4l, weather-module4p, weather-module5l, weather-module6v, weather-module6h",
+                        "description": "Use pre-configured templates",
                         "required": false,
                         "type": "string"
                     },
@@ -13809,173 +13872,6 @@
                 "responses": {
                     "201": {
                         "description": "successful operation"
-                    }
-                }
-            }
-        },
-        "/playlist/widget/{widgetId}?weatherTiles": {
-            "put": {
-                "tags": [
-                    "widget"
-                ],
-                "summary": "Edit Weather Tiles Widget",
-                "description": "Edit Weather Tiles Widget. This call will replace existing Widget object, all not supplied parameters will be set to default.",
-                "operationId": "WidgetWeatherTilesEdit",
-                "parameters": [
-                    {
-                        "name": "widgetId",
-                        "in": "path",
-                        "description": "The WidgetId to Edit",
-                        "required": true,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "name",
-                        "in": "formData",
-                        "description": "Optional Widget Name",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "duration",
-                        "in": "formData",
-                        "description": "Widget Duration",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "useDuration",
-                        "in": "formData",
-                        "description": "(0, 1) Select 1 only if you will provide duration parameter as well",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "enableStat",
-                        "in": "formData",
-                        "description": "The option (On, Off, Inherit) to enable the collection of Widget Proof of Play statistics",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "useDisplayLocation",
-                        "in": "formData",
-                        "description": "Flag (0, 1) Use the location configured on display",
-                        "required": true,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "longitude",
-                        "in": "formData",
-                        "description": "The longitude for this weather widget, only pass if useDisplayLocation set to 0",
-                        "required": false,
-                        "type": "number"
-                    },
-                    {
-                        "name": "latitude",
-                        "in": "formData",
-                        "description": "The latitude for this weather widget, only pass if useDisplayLocation set to 0",
-                        "required": false,
-                        "type": "number"
-                    },
-                    {
-                        "name": "templateId",
-                        "in": "formData",
-                        "description": "Use pre-configured templates, available options: weather-module0-5day, weather-module0-singleday, weather-module0-singleday2, weather-module1l, weather-module1p, weather-module2l, weather-module2p, weather-module3l, weather-module3p, weather-module4l, weather-module4p, weather-module5l, weather-module6v, weather-module6h",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "units",
-                        "in": "formData",
-                        "description": "Units you would like to use, available options: auto, ca, si, uk2, us",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "updateInterval",
-                        "in": "formData",
-                        "description": "Update interval in minutes, should be kept as high as possible, if data change once per hour, this should be set to 60",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "lang",
-                        "in": "formData",
-                        "description": "Language you'd like to use, supported languages ar, az, be, bs, cs, de, en, el, es, fr, hr, hu, id, it, is, kw, nb, nl, pl, pt, ru, sk, sr, sv, tet, tr, uk, x-pig-latin, zh, zh-tw",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "dayConditionsOnly",
-                        "in": "formData",
-                        "description": "Flag (0, 1) Would you like to only show the Daytime weather conditions",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "overrideTemplate",
-                        "in": "formData",
-                        "description": "flag (0, 1) set to 0 and use templateId or set to 1 and provide whole template in the next parameters",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "widgetOriginalWidth",
-                        "in": "formData",
-                        "description": "This is the intended Width of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "widgetOriginalHeight",
-                        "in": "formData",
-                        "description": "This is the intended Height of the template and is used to scale the Widget within it's region when the template is applied, Pass only with overrideTemplate set to 1",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
-                        "name": "template",
-                        "in": "formData",
-                        "description": "Current template, Pass only with overrideTemplate set to 1 ",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "styleSheet",
-                        "in": "formData",
-                        "description": "Optional StyleSheet, Pass only with overrideTemplate set to 1 ",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "styleSheet",
-                        "in": "formData",
-                        "description": "Optional JavaScript, Pass only with overrideTemplate set to 1 ",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "alignH",
-                        "in": "formData",
-                        "description": "Horizontal alignment - left, center, bottom",
-                        "required": false,
-                        "type": "string"
-                    },
-                    {
-                        "name": "alignV",
-                        "in": "formData",
-                        "description": "Vertical alignment - top, middle, bottom",
-                        "required": false,
-                        "type": "string"
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "successful operation",
-                        "schema": {
-                            "$ref": "#/definitions/Widget"
-                        }
                     }
                 }
             }

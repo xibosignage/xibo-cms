@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -166,7 +166,7 @@
                                         {% set title %}{% trans "Tag filter" %}{% endset %}
                                         {% set exactTagTitle %}{% trans "Exact match?" %}{% endset %}
                                         {% set logicalOperatorTitle %}{% trans "When filtering by multiple Tags, which logical operator should be used?" %}{% endset %}
-                                        {% set helpText %}{% trans "A comma separated set of tags run against the Display tag to determine membership." %}{% endset %}
+                                        {% set helpText %}{% trans "A comma separated set of tags to match against tags on library media." %}{% endset %}
                                         {{ forms.inputWithTags("filterMediaTag", title, "", helpText, "", null, null, "exactTags", exactTagTitle, logicalOperatorTitle) }}
                                     {% endif %}
 

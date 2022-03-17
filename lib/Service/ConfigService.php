@@ -637,12 +637,6 @@ class ConfigService implements ConfigServiceInterface
             sprintf(__("PHP version %s or later required."), Environment::$VERSION_REQUIRED) . ' Detected ' . phpversion()
         );
 
-        $this->testItem($rows, __('Settings File System Permissions'),
-            Environment::checkSettingsFileSystemPermissions(),
-            __('Write permissions are required for web/settings.php'),
-            false
-        );
-
         $this->testItem($rows, __('Cache File System Permissions'),
             Environment::checkCacheFileSystemPermissions(),
             __('Write permissions are required for cache/')
@@ -755,7 +749,7 @@ class ConfigService implements ConfigServiceInterface
      * Is there an environment fault
      * @return bool
      */
-    public function EnvironmentFault()
+    public function environmentFault()
     {
         if (!$this->envTested) {
             $this->checkEnvironment();
@@ -768,7 +762,7 @@ class ConfigService implements ConfigServiceInterface
      * Is there an environment warning
      * @return bool
      */
-    public function EnvironmentWarning()
+    public function environmentWarning()
     {
         if (!$this->envTested) {
             $this->checkEnvironment();

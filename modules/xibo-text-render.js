@@ -319,7 +319,7 @@ jQuery.fn.extend({
               } else if (options.alignmentV === 'middle') {
                 $textContent.css('margin-top', ($(window).height() - ($textContent.height() * $('body').data().ratio)) / 2);
               }
-            }, 50);
+            }, 500);
           }
         });
 
