@@ -407,12 +407,14 @@ PropertiesPanel.prototype.render = function(element, step) {
         // Open panel if object is an invalid widget
         if(app.mainObjectType === 'layout' && element.type === 'widget' && element.isValid === 0 && !$togglePanel.hasClass('opened')) {
             app.togglePanel($togglePanel);
+            app.savePrefs();
         }
 
         // Toggler
         $togglePanel.find('.toggle').off().click(function(e) {
             e.stopPropagation();
             app.togglePanel($togglePanel);
+            app.savePrefs();
         });
 
         // Show toggler

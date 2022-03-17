@@ -246,39 +246,17 @@
 
                     <div class="tab-pane" id="templateTab">
                         <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "Main Template" %}</h4>
-                            <div class="col-6 text-right">
-                                <input type="checkbox" class="bootstrap-switch-target" id="ta_text_advanced" name="ta_text_advanced" {% if module.getOption("ta_text_advanced", 0) == 1 %}checked{% endif %} 
-                                    data-size="small" 
-                                    data-label-text="{% trans "Visual editor" %}" 
-                                    data-label-width="80px" 
-                                    data-on-text="{% trans "On" %}" 
-                                    data-off-text="{% trans "Off" %}">
-                            </div>
+                            <h4 class="col-12 text-left">{% trans "Main Template" %}</h4>
                         </div>
 
                         <div class="editor-messages">
                             {% set simpleTextEditorMessage %}
                                 {% trans "Enter text or HTML in the box below." %}<br>
                             {% endset %}
-                            {{ forms.message(simpleTextEditorMessage, 'ta_text-advanced-editor-hide inline-editor-hide') }}
-
-                            {# Layout Designer messages #}
-                            {% set layoutEditorMessage %}
-                                {% trans "Enter text to display using the inline editor which can be opened by clicking in the preview on the left." %}
-                                {% trans "When using the inline editor Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(layoutEditorMessage, 'layout-designer-message inline-editor-show') }}
-
-                            {# Playlist Editor messages #}
-                            {% set playlistEditorMessage %}
-                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
-                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(playlistEditorMessage, 'playlist-editor-message ta_text-advanced-editor-show') }}
+                            {{ forms.message(simpleTextEditorMessage) }}
                         </div>
-                        <div class="ckeditor_controls inline-editor-hide container-fluid" data-linked-to="ta_text">
-                            <div class="col-sm-6">
+                        <div class="ckeditor_controls inline-editor-hide container-fluid p-0" data-linked-to="ta_text">
+                            <div class="col-sm-12 p-0">
                                 <div class="form-group row">
                                     <label class="col-sm-4 control-label" for="ckeditor_snippets_select">{% trans "Snippets" %}</label>
                                     <div class="col-sm-8 ckeditor_select_container">

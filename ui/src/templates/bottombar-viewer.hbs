@@ -50,9 +50,17 @@
                     </button>
                 {{/if}}
             {{/eq}}
+        {{/unless}}
+    </div>
 
-            {{#if showDivider}}
-                <div class="divider"></div>
+    {{! Right region }}
+    <div class="pull-right">
+        {{#unless readOnlyModeOn}}
+            {{#if undoActive}}
+                <button type="button" id="undo-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
+                    data-title="{{trans.undoActiveTitle}}">
+                    <i class="fa fa-undo"></i>
+                </button>
             {{/if}}
 
             {{#if trashActive}}
@@ -61,25 +69,23 @@
                     <i class="fa fa-trash"></i>
                 </button>
             {{/if}}
-
-            {{#if undoActive}}
-                <button type="button" id="undo-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top"
-                    data-title="{{trans.undoActiveTitle}}">
-                    <i class="fa fa-undo"></i>
-                </button>
-            {{/if}}
         {{/unless}}
     </div>
 
-    {{! Right region }}
-    <div class="pull-right">
+    <div class="viewer-navbar-overlay">
         {{! Element Info }}
         {{#if extra}}
             <div class="info d-inline">
-                <span class="label-name align-middle" title="{{extra.moduleName}}">
+                {{#if regionName}}
+                    <span class="label-name align-middle d-inline-block" title="{{extra.moduleName}}">
+                        ["{{regionName}}"]
+                    </span>
+                    &nbsp;&nbsp;<i class="fas fa-arrow-right align-middle"></i>&nbsp;&nbsp;
+                {{/if}}
+                <span class="label-name align-middle d-inline-block" title="{{extra.moduleName}}">
                     "{{extra.moduleName}}" ({{extra.type}})
                 </span>
-                <span class="label label-time align-middle">
+                <span class="label label-time align-middle d-inline-block pl-2">
                     {{extra.duration}} / {{extra.regionDuration}}
                 </span>
             </div>
@@ -93,7 +99,7 @@
 
         {{!-- Paging controls --}}
         {{#if pagingEnable}}
-            <span class="paging pl-1">
+            <span class="paging d-inline pull-right">
                 <button type="button" id="left-btn" class="btn btn-sm" data-toggle="tooltip" data-container="#layout-editor-bottombar" data-placement="top" data-title="{{ trans.previousWidget }}">
                     <i class="fa fa-arrow-left"></i>
                 </button>

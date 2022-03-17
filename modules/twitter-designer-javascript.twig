@@ -45,12 +45,11 @@
         formHelpers.setupObjectValueInputFields($(this).find('form'), '#effect', ['.effect-controls'], ['noAnim'], true);
 
         // Setup editors
-        formHelpers.setupDualTypeTextArea(this, 'ta_text', !$(this).data('formEditorOnly'));
+        formHelpers.setupTextArea(this, 'ta_text');
 
         // Setup template override
         formHelpers.setupTemplateOverriding(this, '#overrideTemplate', '#templateId', 
             {
-                '#ta_text_advanced': 'defaultVisualEditor',
                 '#ta_text': 'template',
                 '#ta_css': 'css',
                 '#widgetOriginalWidth': 'widgetOriginalWidth',

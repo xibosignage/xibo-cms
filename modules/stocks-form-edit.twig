@@ -198,28 +198,14 @@
 
                     <div class="tab-pane" id="templateTab">
                         <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "Main Template" %}</h4>
-                            <div class="col-6 text-right">
-                                <input type="checkbox" class="bootstrap-switch-target" id="mainTemplate_advanced" name="mainTemplate_advanced" {% if module.getOption("mainTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                    data-size="small" 
-                                    data-label-text="{% trans "Visual editor" %}" 
-                                    data-label-width="80px" 
-                                    data-on-text="{% trans "On" %}" 
-                                    data-off-text="{% trans "Off" %}">
-                            </div>
+                            <h4 class="col-12 text-left">{% trans "Main Template" %}</h4>
                         </div>
                         
                         <div class="editor-messages">
                             {% set simpleTextEditorMessage %}
                                 {% trans "Enter text or HTML in the box below." %}<br>
                             {% endset %}
-                            {{ forms.message(simpleTextEditorMessage, 'mainTemplate-advanced-editor-hide') }}
-
-                            {% set simpleTextEditorMessage2 %}
-                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
-                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(simpleTextEditorMessage2, 'mainTemplate-advanced-editor-show') }}
+                            {{ forms.message(simpleTextEditorMessage) }}
                         </div>
 
                         {{ forms.textarea("mainTemplate", "",  module.getRawNode("mainTemplate"), "", "", "", 10) }}
@@ -227,28 +213,14 @@
 
                     <div class="tab-pane" id="itemTemplateTab">
                         <div class="form-content-title row">
-                            <h4 class="col-6 text-left">{% trans "Item Template" %}</h4>
-                            <div class="col-6 text-right">
-                                <input type="checkbox" class="bootstrap-switch-target" id="itemTemplate_advanced" name="itemTemplate_advanced" {% if module.getOption("itemTemplate_advanced", 0) == 1 %}checked{% endif %} 
-                                    data-size="small" 
-                                    data-label-text="{% trans "Visual editor" %}" 
-                                    data-label-width="80px" 
-                                    data-on-text="{% trans "On" %}" 
-                                    data-off-text="{% trans "Off" %}">
-                            </div>
+                            <h4 class="col-12 text-left">{% trans "Item Template" %}</h4>
                         </div>
 
                         <div class="editor-messages">
                             {% set simpleTextEditorMessage %}
                                 {% trans "Enter text or HTML in the box below." %}<br>
                             {% endset %}
-                            {{ forms.message(simpleTextEditorMessage, 'itemTemplate-advanced-editor-hide') }}
-
-                            {% set simpleTextEditorMessage2 %}
-                                {% trans "Enter the text to display. The red rectangle reflects the size of the region you are editing." %}
-                                {% trans "Shift+Enter will drop a single line. Enter alone starts a new paragraph." %}
-                            {% endset %}
-                            {{ forms.message(simpleTextEditorMessage2, 'itemTemplate-advanced-editor-show') }}
+                            {{ forms.message(simpleTextEditorMessage) }}
                         </div>
                         
                         {% set helpText %}{% trans "Enter the template for each item. Replaces [itemsTemplate] in main template." %}{% endset %}

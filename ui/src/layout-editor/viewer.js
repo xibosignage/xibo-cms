@@ -524,6 +524,9 @@ Viewer.prototype.editInlineEditorToggle = function(show = true) {
     // Toggle rendered preview
     this.DOMObject.find('#viewer-preview').toggle(!show);
     this.DOMObject.find('#inline-editor-overlay').toggle(!show);
+
+    // Viewer navbar info toggle
+    lD.editorContainer.find('.viewer-navbar-overlay').toggle(!show);
 };
 
 /**

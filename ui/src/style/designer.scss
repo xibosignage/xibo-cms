@@ -127,7 +127,7 @@ body, .page-content {
         background-color: $xibo-color-black;
         border-width: 4px;
         border-style: solid;
-        @include border-radius(4px);
+        @include border-radius(4px 4px 0 0);
     }
 }
 
@@ -771,8 +771,8 @@ body, .page-content {
 
 /* Layout Viewer */
 #layout-editor #layout-viewer-container {
-    height: 100%;
-    padding: 16px 24px 24px 16px;
+    height: calc(100% - 64px);
+    padding: 16px 24px 0px 16px;
 
     .main-panel-wrapper {
         border-color: $xibo-color-blue-pastel;
@@ -805,7 +805,7 @@ body, .page-content {
             padding: 0 !important;
 
             > div {
-                padding: 0 5px;
+                padding: 2px 5px;
                 min-width: 240px;
                 margin: 0;
             }
@@ -971,10 +971,10 @@ body, .page-content {
         left: 0;
         top: 0;
         padding: 0;
-        height: calc(100% - 40px);
+        height: calc(100% - 38px);
         width: 100%;
 
-        #inline-editor-templates, #fullscreenBtn {
+        #inline-editor-templates, #fullscreenBtn, #goBackBtn {
             z-index: calc(#{$designer-overlay-z-index} + 10);
         }
     
@@ -1356,8 +1356,8 @@ body, .page-content {
 /* Layout Navigator */
 #layout-editor #layout-navigator {
     display: none;
-    height: 100%;
-    padding: 16px 24px 24px 16px;
+    height: calc(100% - 64px);
+    padding: 16px 24px 0px 16px;
 
     .main-panel-wrapper {
         border-color: $xibo-color-orange-darker;
@@ -1390,7 +1390,7 @@ body, .page-content {
         top: 0;
         width: 100%;
         padding: 0;
-        height: calc(100% - 40px);
+        height: calc(100% - 38px);
 
         #fullscreenBtn {
             z-index: calc(#{$designer-overlay-z-index} + 10);
@@ -1868,4 +1868,56 @@ body, .page-content {
             background-color: lighten($drawer-toggle-bg-color, 20%);
         }
     }
+}
+
+/* Layout background image */
+.background-image-add {
+    position: relative;
+    min-height: 100px;
+    padding: 4px 0 7px 0;
+    background-color: $xibo-color-white;
+    border-radius: 4px 4px 0 0;
+    display: flex;
+    align-content: center;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: -3px;
+    flex-wrap: wrap;
+}
+
+.background-image-actions .btn-group {
+    width: 100%;
+    padding: 0;
+    background-color: $xibo-color-white-pure;
+    border-radius: 4px;
+}
+
+.background-image-drop {
+    display: none;
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    @include set-transparent-color(background-color, $xibo-color-blue, 0.6);
+    border-radius: 6px;
+    padding: 3rem 1rem;
+    color: $xibo-color-white;
+    border: 2px dashed $xibo-color-white;
+    border-style: dashed;
+    @include user-select-none();
+
+    &:hover {
+        @include set-transparent-color(background-color, $xibo-color-blue, 0.9);
+    }
+}
+
+.background-image-add.ui-droppable-active .background-image-drop {
+    display: block;
+    z-index: calc(#{$designer-overlay-z-index} + 10);
+}
+
+div#bg_not_found_icon {
+    width: 60%;
 }

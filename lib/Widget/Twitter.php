@@ -377,13 +377,6 @@ class Twitter extends TwitterBase
      *      required=false
      *   ),
      *  @SWG\Parameter(
-     *      name="ta_text_advanced",
-     *      in="formData",
-     *      description="A flag (0, 1), Should text area by presented as a visual editor?",
-     *      type="integer",
-     *      required=false
-     *   ),
-     *  @SWG\Parameter(
      *      name="styleSheet",
      *      in="formData",
      *      description="Optional StyleSheet Pass only with overrideTemplate set to 1 ",
@@ -451,7 +444,6 @@ class Twitter extends TwitterBase
 
         if ($this->getOption('overrideTemplate') == 1) {
             $this->setRawNode('template', $request->getParam('ta_text', $request->getParam('template', null)));
-            $this->setOption('ta_text_advanced', $sanitizedParams->getCheckbox('ta_text_advanced'));
             $this->setRawNode('styleSheet', $request->getParam('ta_css', $request->getParam('styleSheet', null)));
             $this->setOption('resultContent', $sanitizedParams->getString('resultContent'));
 
