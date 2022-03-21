@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,13 +28,19 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Exception\ValueTooLargeException;
+use Xibo\Widget\Provider\DataProviderInterface;
+use Xibo\Widget\Provider\DurationProviderInterface;
+use Xibo\Widget\Provider\WidgetProviderInterface;
+use Xibo\Widget\Provider\WidgetProviderTrait;
 
 /**
  * Class Playlist
  * @package Xibo\Widget
  */
-class SubPlaylist extends ModuleWidget
+class SubPlaylist implements WidgetProviderInterface
 {
+    use WidgetProviderTrait;
+    
     /**
      * A private cache of resolved widgets
      * @var Widget[]
@@ -738,26 +744,36 @@ class SubPlaylist extends ModuleWidget
     }
 
     /**
-     * @return int
-     * @throws NotFoundException
-     * @throws GeneralException
-     */
-    public function getSubPlaylistResolvedDuration()
-    {
-        $duration = 0;
-        // Add all the sub-playlists widgets too
-        foreach ($this->getSubPlaylistResolvedWidgets() as $widget) {
-            $duration += $widget->calculatedDuration;
-        }
-
-        return $duration;
-    }
-
-    /**
      * @inheritdoc
      */
     public function getResource($displayId = 0)
     {
         return '';
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fetchData(DataProviderInterface $dataProvider): WidgetProviderInterface
+    {
+        // Sub-Playlists do not have any data, so return without modifying the data provider.
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface
+    {
+        // We need to get the total calculated duration of this sub-playlist
+        $duration = 0;
+
+        // Add all the sub-playlists widgets too
+        foreach ($this->getSubPlaylistResolvedWidgets() as $widget) {
+            $duration += $widget->calculatedDuration;
+        }
+
+        $durationProvider->setDuration($duration);
+        return $this;
     }
 }

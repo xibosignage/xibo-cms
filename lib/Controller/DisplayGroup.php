@@ -1313,7 +1313,7 @@ class DisplayGroup extends Base
         $this->getState()->template = 'displaygroup-form-media';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'modules' => $this->moduleFactory->query(null, ['regionSpecific' => 0]),
+            'modules' => $this->moduleFactory->getLibraryModules(),
             'media' => $displayGroup->media,
             'help' => $this->getHelp()->link('DisplayGroup', 'FileAssociations')
         ]);
@@ -1523,7 +1523,6 @@ class DisplayGroup extends Base
         $this->getState()->template = 'displaygroup-form-layouts';
         $this->getState()->setData([
             'displayGroup' => $displayGroup,
-            'modules' => $this->moduleFactory->query(null, ['regionSpecific' => 0]),
             'layouts' => $this->layoutFactory->getByDisplayGroupId($displayGroup->displayGroupId),
             'help' => $this->getHelp()->link('DisplayGroup', 'FileAssociations')
         ]);

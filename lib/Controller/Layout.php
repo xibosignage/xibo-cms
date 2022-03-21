@@ -237,13 +237,11 @@ class Layout extends Base
             'layout' => $layout,
             'resolution' => $resolution,
             'isTemplate' => $isTemplate,
-            'zoom' => $sanitizedParams->getDouble('zoom', ['default' => $this->getUser()->getOptionValue('defaultDesignerZoom', 1)]),
+            'zoom' => $sanitizedParams->getDouble('zoom', [
+                'default' => $this->getUser()->getOptionValue('defaultDesignerZoom', 1)
+            ]),
             'users' => $this->userFactory->query(),
-            'modules' => array_map(function($element) use ($moduleFactory) {
-                    $module = $moduleFactory->createForInstall($element->class);
-                    $module->setModule($element);
-                    return $module;
-                }, $moduleFactory->getAssignableModules())
+            'modules' => $moduleFactory->getAssignableModules()
         ];
 
         // Call the render the template
@@ -1355,7 +1353,9 @@ class Layout extends Base
             $embed = ['regions', 'playlists', 'widgets'];
         } else {
             // Embed?
-            $embed = ($parsedQueryParams->getString('embed') != null) ? explode(',', $parsedQueryParams->getString('embed')) : [];
+            $embed = ($parsedQueryParams->getString('embed') != null)
+                ? explode(',', $parsedQueryParams->getString('embed'))
+                : [];
         }
 
         // Get all layouts
@@ -1406,7 +1406,7 @@ class Layout extends Base
             if (in_array('widget_validity', $embed) || in_array('tags', $embed) || in_array('permissions', $embed)) {
                 foreach ($layout->getAllWidgets() as $widget) {
                     try {
-                        $module = $this->moduleFactory->createWithWidget($widget);
+                        $module = $this->moduleFactory->getByType($widget->type);
                     } catch (NotFoundException $notFoundException) {
                         // This module isn't available, mark it as invalid.
                         $widget->isValid = 0;
@@ -1417,15 +1417,24 @@ class Layout extends Base
                         continue;
                     }
 
-                    $widget->name = $module->getName();
+                    $widget->moduleName = $module->name;
 
-                    // Augment with tags
-                    $widget->tags = $module->getMediaTags();
+                    if ($module->regionSpecific == 0) {
+                        // Use the media assigned to this widget
+                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                        $widget->name = $widget->getOptionValue('name', $media->name);
 
-                    // Add widget module type name
-                    $widget->moduleName = $module->getModuleName();
+                        // Augment with tags
+                        $widget->tags = $media->tags;
+                    } else {
+                        $widget->name = $widget->getOptionValue('name', $module->name);
+                        $widget->tags = [];
+                    }
 
                     if ($widget->type === 'subplaylist') {
+                        // TODO: how do we handle sub-playlists?
+                        // Sub playlists ought to be handled by a dedicated class (not a widget class).
+                        
                         $widget->calculateDuration($module);
                     }
 
@@ -1460,7 +1469,9 @@ class Layout extends Base
 
                     if (in_array('widget_validity', $embed)) {
                         try {
-                            $widget->isValid = $module->isValid();
+                            // TODO: how do we determine this?
+                            //  $module->isValid()
+                            $widget->isValid = 1;
                         } catch (GeneralException $xiboException) {
                             $widget->isValid = 0;
                         }

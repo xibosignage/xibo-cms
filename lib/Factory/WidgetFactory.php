@@ -222,6 +222,7 @@ class WidgetFactory extends BaseFactory
         $widget->type = $type;
         $widget->duration = $duration;
         $widget->displayOrder = 1;
+        $widget->useDuration = 0;
 
         return $widget;
     }

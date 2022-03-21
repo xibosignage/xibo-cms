@@ -266,7 +266,6 @@ class Factories
                 $repository = new \Xibo\Factory\ModuleFactory(
                     $c->get('user'),
                     $c->get('userFactory'),
-                    $c->get('moduleService'),
                     $c->get('widgetFactory'),
                     $c->get('regionFactory'),
                     $c->get('playlistFactory'),

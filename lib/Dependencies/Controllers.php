@@ -349,20 +349,7 @@ class Controllers
             '\Xibo\Controller\Module' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Module(
                     $c->get('store'),
-                    $c->get('moduleFactory'),
-                    $c->get('playlistFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('permissionFactory'),
-                    $c->get('userGroupFactory'),
-                    $c->get('widgetFactory'),
-                    $c->get('transitionFactory'),
-                    $c->get('regionFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('displayGroupFactory'),
-                    $c->get('widgetAudioFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('dataSetFactory'),
-                    $c->get('menuBoardFactory')
+                    $c->get('moduleFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 $controller->useDispatcher($c->get('dispatcher'));
@@ -591,6 +578,23 @@ class Controllers
                     $c->get('userFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                return $controller;
+            },
+            '\Xibo\Controller\Widget' => function (ContainerInterface $c) {
+                $controller = new \Xibo\Controller\Widget(
+                    $c->get('moduleFactory'),
+                    $c->get('playlistFactory'),
+                    $c->get('mediaFactory'),
+                    $c->get('permissionFactory'),
+                    $c->get('widgetFactory'),
+                    $c->get('transitionFactory'),
+                    $c->get('regionFactory'),
+                    $c->get('layoutFactory'),
+                    $c->get('displayGroupFactory'),
+                    $c->get('widgetAudioFactory')
+                );
+                $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                $controller->useDispatcher($c->get('dispatcher'));
                 return $controller;
             },
         ];

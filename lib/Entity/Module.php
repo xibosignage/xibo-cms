@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -20,7 +20,6 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
@@ -31,7 +30,9 @@ use Xibo\Support\Exception\InvalidArgumentException;
 /**
  * Class Module
  * @package Xibo\Entity
- *
+ * @property bool $isInstalled Is this module installed?
+ * @property bool $isError Does this module have any errors?
+ * @property string[] $errors An array of errors this module has.
  * @SWG\Definition()
  */
 class Module implements \JsonSerializable
@@ -51,16 +52,16 @@ class Module implements \JsonSerializable
     public $name;
 
     /**
+     * @SWG\Property(description="Module Author")
+     * @var string
+     */
+    public $author;
+
+    /**
      * @SWG\Property(description="Description of the Module")
      * @var string
      */
     public $description;
-
-    /**
-     * @SWG\Property(description="A comma separated list of Valid Extensions")
-     * @var string
-     */
-    public $validExtensions;
 
     /**
      * @SWG\Property(description="The type code for this module")
@@ -69,10 +70,10 @@ class Module implements \JsonSerializable
     public $type;
 
     /**
-     * @SWG\Property(description="A flag indicating whether this module is enabled")
-     * @var int
+     * @SWG\Property(description="The data type of the data expected to be returned by this modules data provider")
+     * @var string
      */
-    public $enabled;
+    public $dataType;
 
     /**
      * @SWG\Property(description="A flag indicating whether this module is specific to a Layout or can be uploaded to the Library")
@@ -81,10 +82,10 @@ class Module implements \JsonSerializable
     public $regionSpecific;
 
     /**
-     * @SWG\Property(description="A flag indicating whether the Layout designer should render a preview of this module")
+     * @SWG\Property(description="The schema version of the module")
      * @var int
      */
-    public $previewEnabled;
+    public $schemaVersion;
 
     /**
      * @SWG\Property(description="A flag indicating whether the module is assignable to a Layout")
@@ -99,47 +100,60 @@ class Module implements \JsonSerializable
     public $renderAs;
 
     /**
-     * @SWG\Property(description="The default duration for Widgets of this Module when the user has elected to not set a specific duration.")
-     * @var int
-     */
-    public $defaultDuration;
-
-    /**
-     * @SWG\Property(description="An array of additional module specific settings", type="array", @SWG\Items(type="string"))
-     * @var array
-     */
-    public $settings = [];
-
-    /**
-     * @SWG\Property(description="The schema version of the module")
-     * @var int
-     */
-    public $schemaVersion;
-
-    /**
      * @SWG\Property(description="Class Name including namespace")
      * @var string
      */
     public $class;
 
-    /**
-     * @SWG\Property(description="The Twig View path for module specific templates")
-     * @var string
-     */
-    public $viewPath = '../modules';
+    /** @var \Xibo\Widget\Definition\Stencil|null Stencil for this modules preview */
+    public $preview;
+
+    /** @var \Xibo\Widget\Definition\Stencil|null Stencil for this modules HTML cache */
+    public $stencil;
+
+    /** @var \Xibo\Widget\Definition\Property[]|null */
+    public $properties;
+
+    // <editor-fold desc="Properties recorded in the database">
 
     /**
-     * @SWG\Property(description="The original installation name of this module.")
-     * @var string
+     * @SWG\Property(description="A flag indicating whether this module is enabled")
+     * @var int
      */
-    public $installName;
+    public $enabled;
+
+    /**
+     * @SWG\Property(description="A flag indicating whether the Layout designer should render a preview of this module")
+     * @var int
+     */
+    public $previewEnabled;
+
+    /**
+     * @SWG\Property(
+     *     description="The default duration for Widgets of this Module when the user has not set a duration."
+     * )
+     * @var int
+     */
+    public $defaultDuration;
+
+    /**
+     * @SWG\Property(
+     *     description="An array of additional module specific settings",
+     *     type="array",
+     *     @SWG\Items(type="string")
+     * )
+     * @var \Xibo\Widget\Definition\Property[]
+     */
+    public $settings = [];
+
+    // </editor-fold>
 
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      */
-    public function __construct($store, $log)
+    public function __construct(StorageServiceInterface $store, LogServiceInterface $log)
     {
         $this->setCommonDependencies($store, $log);
     }
@@ -153,52 +167,68 @@ class Module implements \JsonSerializable
     }
 
     /**
-     * @throws InvalidArgumentException
+     * @param string $setting
+     * @param mixed|null $default
+     * @return mixed
+     */
+    public function getSetting(string $setting, $default = null)
+    {
+        foreach ($this->settings as $property) {
+            if ($property->id === $setting) {
+                return $property->value;
+            }
+        }
+
+        return $default;
+    }
+
+    /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function validate()
     {
         if (!v::intType()->validate($this->defaultDuration)) {
             throw new InvalidArgumentException(__('Default Duration is a required field.'), 'defaultDuration');
         }
-
-        if (!empty($this->validExtensions) && !v::alnum(',')->validate($this->validExtensions)) {
-            throw new InvalidArgumentException(__('Comma separated file extensions only please, without the .'), 'validExtensions');
-        }
     }
 
+    /**
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
     public function save()
     {
         $this->validate();
 
-        if ($this->moduleId == null || $this->moduleId == 0)
+        if (!$this->isInstalled) {
             $this->add();
-        else
+        } else {
             $this->edit();
-
+        }
     }
 
     private function add()
     {
         $this->moduleId = $this->getStore()->insert('
-          INSERT INTO `module` (`Module`, `Name`, `Enabled`, `RegionSpecific`, `Description`, `SchemaVersion`, `ValidExtensions`, `PreviewEnabled`, `assignable`, `render_as`, `settings`, `viewPath`, `class`, `defaultDuration`, `installName`)
-            VALUES (:module, :name, :enabled, :region_specific, :description,
-                :schema_version, :valid_extensions, :preview_enabled, :assignable, :render_as, :settings, :viewPath, :class, :defaultDuration, :installName)
+          INSERT INTO `module` (
+            `moduleId`,
+            `enabled`,
+            `previewEnabled`,
+            `defaultDuration`,
+            `settings`
+            )
+            VALUES (
+            :moduleId,
+            :enabled,
+            :previewEnabled,
+            :defaultDuration,
+            :settings
+            )
         ', [
-            'module' => $this->type,
-            'name' => $this->name,
+            'moduleId' => $this->moduleId,
             'enabled' => $this->enabled,
-            'region_specific' => $this->regionSpecific,
-            'description' => $this->description,
-            'schema_version' => $this->schemaVersion,
-            'valid_extensions' => $this->validExtensions,
-            'preview_enabled' => $this->previewEnabled,
-            'assignable' => $this->assignable,
-            'render_as' => $this->renderAs,
-            'settings' => json_encode($this->settings),
-            'viewPath' => $this->viewPath,
-            'class' => $this->class,
+            'previewEnabled' => $this->previewEnabled,
             'defaultDuration' => $this->defaultDuration,
-            'installName' => $this->installName
+            'settings' => json_encode($this->settings),
         ]);
     }
 
@@ -208,7 +238,6 @@ class Module implements \JsonSerializable
           UPDATE `module` SET
               enabled = :enabled,
               previewEnabled = :previewEnabled,
-              validExtensions = :validExtensions,
               defaultDuration = :defaultDuration,
               settings = :settings
            WHERE moduleid = :moduleId
@@ -216,7 +245,6 @@ class Module implements \JsonSerializable
             'moduleId' => $this->moduleId,
             'enabled' => $this->enabled,
             'previewEnabled' => $this->previewEnabled,
-            'validExtensions' => $this->validExtensions,
             'defaultDuration' => $this->defaultDuration,
             'settings' => json_encode($this->settings)
         ]);
@@ -228,6 +256,8 @@ class Module implements \JsonSerializable
      */
     public function delete()
     {
-        $this->getStore()->update('DELETE FROM `module` WHERE moduleId = :id', ['id' => $this->moduleId]);
+        $this->getStore()->update('DELETE FROM `module` WHERE moduleId = :id', [
+            'id' => $this->moduleId
+        ]);
     }
 }

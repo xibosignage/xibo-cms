@@ -541,7 +541,7 @@ class LayoutFactory extends BaseFactory
         }
 
         // Get a list of modules for us to use
-        $modules = $this->moduleFactory->get();
+        $modules = $this->moduleFactory->getKeyedArrayOfModules();
 
         // Parse the XML and fill in the details for this layout
         $document = new \DOMDocument();
@@ -780,7 +780,7 @@ class LayoutFactory extends BaseFactory
         $newIds = [];
         $widgets = [];
         // Get a list of modules for us to use
-        $modules = $this->moduleFactory->get();
+        $modules = $this->moduleFactory->getKeyedArrayOfModules();
 
         $layout->schemaVersion = (int)$layoutJson['layoutDefinitions']['schemaVersion'];
         $layout->width = $layoutJson['layoutDefinitions']['width'];
@@ -1672,7 +1672,7 @@ class LayoutFactory extends BaseFactory
             $playlist = $this->playlistFactory->getById($playlistId);
 
             foreach ($widgetsDetails as $widgetsDetail) {
-                $modules = $this->moduleFactory->get();
+                $modules = $this->moduleFactory->getKeyedArrayOfModules();
                 $playlistWidget = $this->widgetFactory->createEmpty();
                 $playlistWidget->playlistId = $playlistId;
                 $playlistWidget->widgetId = null;

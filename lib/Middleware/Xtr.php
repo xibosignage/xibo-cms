@@ -62,7 +62,7 @@ class Xtr implements Middleware
         // Provide the view path to Twig
         /* @var \Twig\Loader\FilesystemLoader $twig */
         $twig = $view->getLoader();
-        $twig->setPaths(array_merge($container->get('moduleFactory')->getViewPaths(), [PROJECT_ROOT . '/views', PROJECT_ROOT . '/custom', PROJECT_ROOT . '/reports']));
+        $twig->setPaths([PROJECT_ROOT . '/views', PROJECT_ROOT . '/custom', PROJECT_ROOT . '/reports']);
 
         // Does this theme provide an alternative view path?
         if ($container->get('configService')->getThemeConfig('view_path') != '') {

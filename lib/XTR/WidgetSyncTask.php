@@ -53,7 +53,7 @@ class WidgetSyncTask implements TaskInterface
     public function run()
     {
         // Get an array of modules to use
-        $modules = $this->moduleFactory->get();
+        $modules = $this->moduleFactory->getKeyedArrayOfModules();
 
         $currentLayoutId = 0;
         $layout = null;

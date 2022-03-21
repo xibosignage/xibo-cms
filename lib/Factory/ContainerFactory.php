@@ -35,9 +35,8 @@ use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Environment;
 use Xibo\Helper\SanitizerService;
-use Xibo\Middleware\State;
-use Xibo\Service\ConfigService;
 use Xibo\Service\BaseDependenciesService;
+use Xibo\Service\ConfigService;
 use Xibo\Service\HelpService;
 use Xibo\Service\ImageProcessingService;
 use Xibo\Service\MediaService;
@@ -149,15 +148,6 @@ class ContainerFactory
             },
             'state' => function () {
                 return new ApplicationState();
-            },
-            'moduleService' => function (ContainerInterface $c) {
-                return new ModuleService(
-                    $c->get('store'),
-                    $c->get('pool'),
-                    $c->get('logService'),
-                    $c->get('configService'),
-                    $c->get('sanitizerService')
-                );
             },
             'configService' => function (ContainerInterface $c) {
                 return ConfigService::Load($c, PROJECT_ROOT . '/web/settings.php');

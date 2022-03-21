@@ -39,29 +39,19 @@
         <div class="col-md-12">
             <form id="moduleEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.settings", {id: moduleId}) }}">
 
-                {% set title %}{% trans "Default Duration" %}{% endset %}
-                {% set helpText %}{% trans "The default duration for Widgets of this Module when the user has elected to not set a specific duration." %}{% endset %}
-                {{ forms.input("defaultDuration", title, module.module.defaultDuration, helpText) }}
-
-                {% set title %}{% trans "Valid Extensions" %}{% endset %}
-                {% set helpText %}{% trans "The Extensions allowed on files uploaded using this module. Comma Separated." %}{% endset %}
-                {{ forms.input("validExtensions", title, module.module.validExtensions, helpText) }}
-
                 {% set title %}{% trans "Preview Enabled?" %}{% endset %}
                 {% set helpText %}{% trans "When Preview is Enabled users will be able to see a preview in the layout designer." %}{% endset %}
-                {{ forms.checkbox("previewEnabled", title, module.module.previewEnabled, helpText) }}
+                {{ forms.checkbox("previewEnabled", title, module.previewEnabled, helpText) }}
 
                 {% set title %}{% trans "Enabled?" %}{% endset %}
                 {% set helpText %}{% trans "When Enabled users will be able to add media using this module." %}{% endset %}
-                {{ forms.checkbox("enabled", title, module.module.enabled, helpText) }}
+                {{ forms.checkbox("enabled", title, module.enabled, helpText) }}
 
-                {% block moduleFormFields %}
+                {% set title %}{% trans "Default Duration" %}{% endset %}
+                {% set helpText %}{% trans "The default duration for Widgets of this Module when the user has elected to not set a specific duration." %}{% endset %}
+                {{ forms.input("defaultDuration", title, module.defaultDuration, helpText) }}
 
-                {% endblock %}
-
-                {% if error %}
-                    <p class="alert alert-danger">{{ "There is an error with this module, please save to disable it."|trans }}</p>
-                {% endif %}
+                <div class="form-module-configure-fields"></div>
             </form>
         </div>
     </div>
