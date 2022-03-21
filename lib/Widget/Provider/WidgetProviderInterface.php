@@ -1,0 +1,61 @@
+<?php
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Xibo\Widget\Provider;
+
+use Psr\Log\LoggerInterface;
+
+/**
+ * The Widget Provider Interface should be implemented by any Widget which specifies a `class` in its Module
+ * configuration.
+ *
+ * The provider should be modified accordingly before returning $this
+ *
+ * If the widget does not need to fetch Data or fetch Duration, then it can return without
+ * modifying the provider.
+ */
+interface WidgetProviderInterface
+{
+    public function getLog(): LoggerInterface;
+    public function setLog(LoggerInterface $logger): WidgetProviderInterface;
+
+    /**
+     * Fetch data
+     * The widget provider must either addItems to the data provider, or indicate that data is provided by
+     * an event instead by setting isUseEvent()
+     * If data is to be provided by an event, core will raise the `widget.request.data` event with parameters
+     * indicating this widgets datatype, name, settings and currently configured options
+     * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
+     * @return \Xibo\Widget\Provider\WidgetProviderInterface
+     */
+    public function fetchData(DataProviderInterface $dataProvider): WidgetProviderInterface;
+
+    /**
+     * Fetch duration
+     * This is typically only relevant to widgets which have a media file associated, for example video or audio
+     * in cases where this is not appropriate, return without modifying to use the module default duration from
+     * module configuration.
+     * @param \Xibo\Widget\Provider\DurationProviderInterface $durationProvider
+     * @return \Xibo\Widget\Provider\WidgetProviderInterface
+     */
+    public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface;
+}

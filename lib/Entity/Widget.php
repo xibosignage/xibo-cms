@@ -635,12 +635,14 @@ class Widget implements \JsonSerializable
 
     /**
      * Calculates the duration of this widget according to some rules
-     * @param $module ModuleWidget
+     * @param $module \Xibo\Widget\Provider\WidgetProviderInterface
      * @param bool $import
      * @return $this
      */
-    public function calculateDuration($module, $import = false)
-    {
+    public function calculateDuration(
+        \Xibo\Widget\Provider\WidgetProviderInterface $module,
+        bool $import = false
+    ): Widget {
         $this->getLog()->debug('Calculating Duration - existing value is ' . $this->calculatedDuration);
 
         // Does our widget have a durationIsPerItem and a Number of Items?

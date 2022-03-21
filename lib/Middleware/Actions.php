@@ -101,9 +101,6 @@ class Actions implements Middleware
 
             // Layouts imported
             $container->get('configService')->changeSetting('DEFAULTS_IMPORTED', 1);
-
-            // Install files
-            $container->get('\Xibo\Controller\Module')->installAllModuleFiles();
         }
 
         // Do not proceed unless we have completed an upgrade

@@ -23,7 +23,6 @@
 
 namespace Xibo\Factory;
 
-use Illuminate\Support\Str;
 use Slim\Views\Twig;
 use Xibo\Entity\Media;
 use Xibo\Entity\Module;
@@ -34,6 +33,9 @@ use Xibo\Helper\HttpCacheProvider;
 use Xibo\Service\ModuleServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Definition\PlayerCompatibility;
+use Xibo\Widget\Definition\Property;
+use Xibo\Widget\Definition\Stencil;
 use Xibo\Widget\ModuleWidget;
 
 /**
@@ -42,10 +44,8 @@ use Xibo\Widget\ModuleWidget;
  */
 class ModuleFactory extends BaseFactory
 {
-    /**
-     * @var ModuleServiceInterface
-     */
-    private $moduleService;
+    /** @var Module[] all modules */
+    private $modules = null;
 
     /**
      * @var WidgetFactory
@@ -120,7 +120,6 @@ class ModuleFactory extends BaseFactory
      * Construct a factory
      * @param User $user
      * @param UserFactory $userFactory
-     * @param ModuleServiceInterface $moduleService
      * @param WidgetFactory $widgetFactory
      * @param RegionFactory $regionFactory
      * @param PlaylistFactory $playlistFactory
@@ -142,7 +141,6 @@ class ModuleFactory extends BaseFactory
     public function __construct(
         $user,
         $userFactory,
-        $moduleService,
         $widgetFactory,
         $regionFactory,
         $playlistFactory,
@@ -163,7 +161,6 @@ class ModuleFactory extends BaseFactory
     ) {
         $this->setAclDependencies($user, $userFactory);
 
-        $this->moduleService = $moduleService;
         $this->widgetFactory = $widgetFactory;
         $this->regionFactory = $regionFactory;
         $this->playlistFactory = $playlistFactory;
@@ -186,7 +183,7 @@ class ModuleFactory extends BaseFactory
     /**
      * @return Module
      */
-    public function createEmpty()
+    public function createEmpty(): Module
     {
         return new Module($this->getStore(), $this->getLog());
     }
@@ -460,93 +457,109 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @param string $key
      * @return array
      */
-    public function get($key = 'type')
+    public function getKeyedArrayOfModules(): array
     {
-        $modules = $this->query();
-
-        if ($key != null && $key != '') {
-            $keyed = [];
-            foreach ($modules as $module) {
-                /* @var Module $module */
-                $keyed[$module->type] = $module;
-            }
-
-            return $keyed;
+        $modules = [];
+        foreach ($this->load() as $module) {
+            $modules[$module->type] = $module;
         }
-
         return $modules;
     }
 
     /**
      * @return Module[]
      */
-    public function getAssignableModules()
+    public function getAssignableModules(): array
     {
-        return $this->query(null, array('assignable' => 1, 'enabled' => 1));
+        $modules = [];
+        foreach ($this->load() as $module) {
+            if ($module->enabled === 1 && $module->assignable === 1) {
+                $modules[] = $module;
+            }
+        }
+        return $modules;
+    }
+
+    /**
+     * @return Module[]
+     */
+    public function getLibraryModules(): array
+    {
+        $modules = [];
+        foreach ($this->load() as $module) {
+            if ($module->enabled == 1 && $module->regionSpecific === 0) {
+                $modules[] = $module;
+            }
+        }
+        return $modules;
     }
 
     /**
      * Get module by Id
-     * @param int $moduleId
+     * @param string $moduleId
      * @return Module
      * @throws NotFoundException
      */
-    public function getById($moduleId)
+    public function getById($moduleId): Module
     {
-        $modules = $this->query(null, array('moduleId' => $moduleId));
-
-        if (count($modules) <= 0) {
-            throw new NotFoundException();
+        foreach ($this->load() as $module) {
+            if ($module->moduleId === $moduleId) {
+                return $module;
+            }
         }
 
-        return $modules[0];
+        throw new NotFoundException();
     }
 
     /**
-     * Get module by InstallName
-     * @param string $installName
-     * @return Module
-     * @throws NotFoundException
-     */
-    public function getByInstallName($installName)
-    {
-        $modules = $this->query(null, ['installName' => $installName]);
-
-        if (count($modules) <= 0) {
-            throw new NotFoundException();
-        }
-
-        return $modules[0];
-    }
-
-
-    /**
-     * Get module by name
-     * @param string $name
-     * @return Module
-     * @throws NotFoundException
-     */
-    public function getByType($name)
-    {
-        $modules = $this->query(['enabled DESC'], ['name' => $name]);
-
-        if (count($modules) <= 0) {
-            throw new NotFoundException(sprintf(__('Module type %s does not match any enabled Module'), $name));
-        }
-
-        return $modules[0];
-    }
-
-    /**
-     * Get Enabled
+     * Get an array of all modules
      * @return Module[]
      */
-    public function getEnabled()
+    public function getAll(): array
     {
-        return $this->query(null, ['enabled' => 1]);
+        return $this->load();
+    }
+
+    /**
+     * Get an array of all enabled modules
+     * @return Module[]
+     */
+    public function getEnabled(): array
+    {
+        $modules = [];
+        foreach ($this->load() as $module) {
+            if ($module->enabled == 1) {
+                $modules[] = $module;
+            }
+        }
+        return $modules;
+    }
+
+    /**
+     * Get module by Type
+     * this should return the first module enabled by the type specified.
+     * @param string $type
+     * @return Module
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getByType(string $type): Module
+    {
+        $modules = $this->load();
+        usort($modules, function ($a, $b) {
+            /** @var Module $a */
+            /** @var Module $b */
+            return $a->enabled - $b->enabled;
+        });
+
+        foreach ($modules as $module) {
+            if ($module->type === $type) {
+                return $module;
+            }
+        }
+
+        throw new NotFoundException();
     }
 
     /**
@@ -568,18 +581,21 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Get Valid Extensions
-     * @param array[Optional] $filterBy
-     * @return array[string]
+     * @param array $filterBy
+     * @return string[]
      */
-    public function getValidExtensions($filterBy = [])
+    public function getValidExtensions($filterBy = []): array
     {
-        $modules = $this->query(null, $filterBy);
-        $extensions = array();
+        $filterBy = $this->getSanitizer($filterBy);
+        $typeFilter = $filterBy->getString('type');
+        $extensions = [];
+        foreach ($this->load() as $module) {
+            if ($typeFilter !== null && $module->type !== $typeFilter) {
+                continue;
+            }
 
-        foreach ($modules as $module) {
-            /* @var Module $module */
-            if ($module->validExtensions != '') {
-                foreach (explode(',', $module->validExtensions) as $extension) {
+            if (!empty($module->getSetting('validExtensions'))) {
+                foreach (explode(',', $module->getSetting('validExtensions')) as $extension) {
                     $extensions[] = $extension;
                 }
             }
@@ -589,176 +605,264 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * Get View Paths
-     * @return string[]
+     * Load all modules into an array for use throughout this quest
+     * @return \Xibo\Entity\Module[]
      */
-    public function getViewPaths(): array
+    private function load(): array
     {
-        $paths = [];
-        $modules = $this->query();
-        foreach ($modules as $module) {
-            $path = Str::replaceFirst('..', PROJECT_ROOT, $module->viewPath);
-            if (is_dir($path)) {
-                $paths[] = $path;
-            } else {
-                $this->getLog()->notice('View path ' . $module->viewPath . ' for module '
-                    . $module->class . ' does not exist.');
+        if ($this->modules === null) {
+            // TODO: these are the only fields we require in the settings table
+            $sql = '
+                SELECT `moduleId`, `enabled`, `previewEnabled`, `defaultDuration`, `settings`
+                 FROM `module`
+            ';
+
+            $modulesWithSettings = [];
+            foreach ($this->getStore()->select($sql, []) as $row) {
+                // Make a keyed array of these settings
+                $modulesWithSettings[$row['moduleId']] = $this->getSanitizer($row);
+            }
+
+            // Load in our file system modules.
+            // we consider modules in the module folder, and also custom modules
+            $files = array_merge(
+                glob(PROJECT_ROOT . '/modules/*.xml'),
+                glob(PROJECT_ROOT . '/custom/modules/*.xml')
+            );
+
+            foreach ($files as $file) {
+                // Create our module entity from this file
+                try {
+                    $module = $this->createFromXml($file);
+
+                    // Add in any settings we already have
+                    if (array_key_exists($module->moduleId, $modulesWithSettings)) {
+                        $moduleSettings = $modulesWithSettings[$module->moduleId];
+                        $module->isInstalled = true;
+                        $module->enabled = $moduleSettings->getInt('enabled', ['default' => 0]);
+                        $module->previewEnabled = $moduleSettings->getInt('previewEnabled', ['default' => 0]);
+                        $module->defaultDuration = $moduleSettings->getInt('defaultDuration', ['default' => 10]);
+
+                        $settings = $moduleSettings->getString('settings');
+                        if ($settings !== null) {
+                            $settings = json_decode($settings, true);
+
+                            foreach ($module->settings as $property) {
+                                foreach ($settings as $setting) {
+                                    if ($setting['id'] === $property->id) {
+                                        $property->value = $setting['value'];
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Set error state
+                    $module->isError = $module->errors !== null && count($module->errors) > 0;
+
+                    // Register
+                    $this->modules[] = $module;
+                } catch (\Exception $exception) {
+                    $this->getLog()->error('Unable to create module from '
+                        . basename($file) . ', skipping. e = ' . $exception->getMessage());
+                }
             }
         }
 
-        return $paths;
+        return $this->modules;
     }
 
     /**
-     * @param null $sortOrder
-     * @param array $filterBy
-     * @return Module[]
+     * Create a module from its XML definition
+     * @param string $file the path to the module definition
+     * @return \Xibo\Entity\Module
      */
-    public function query($sortOrder = null, $filterBy = [])
+    private function createFromXml(string $file): Module
     {
-        $parsedBody = $this->getSanitizer($filterBy);
-        
-        if ($sortOrder == null) {
-            $sortOrder = array('Module');
+        // TODO: cache this into Stash
+        $xml = new \DOMDocument();
+        $xml->load($file);
+
+        $module = new Module($this->getStore(), $this->getLog());
+        $module->moduleId = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
+        $module->name = $this->getFirstValueOrDefaultFromXmlNode($xml, 'name');
+        $module->author = $this->getFirstValueOrDefaultFromXmlNode($xml, 'author');
+        $module->description = $this->getFirstValueOrDefaultFromXmlNode($xml, 'description');
+        $module->class = $this->getFirstValueOrDefaultFromXmlNode($xml, 'class');
+        $module->type = $this->getFirstValueOrDefaultFromXmlNode($xml, 'type');
+        $module->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
+        $module->schemaVersion = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'schemaVersion'));
+        $module->assignable = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'assignable'));
+        $module->regionSpecific = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'regionSpecific'));
+        $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');
+        $module->defaultDuration = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'defaultDuration'));
+
+        // Default values for remaining expected properties
+        $module->isInstalled = false;
+        $module->isError = false;
+        $module->errors = [];
+        $module->enabled = 0;
+        $module->previewEnabled = 0;
+
+        // Parse settings/property definitions.
+        try {
+            $module->settings = $this->parseProperties($xml->getElementsByTagName('settings'));
+        } catch (\Exception $e) {
+            $module->errors[] = __('Invalid settings');
+            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid settings. e: ' .  $e->getMessage());
         }
 
-        $entries = array();
-
-        $dbh = $this->getStore()->getConnection();
-
-        $params = array();
-
-        $select = '
-            SELECT ModuleID,
-               Module,
-               Name,
-               Enabled,
-               Description,
-               render_as,
-               settings,
-               RegionSpecific,
-               ValidExtensions,
-               PreviewEnabled,
-               assignable,
-               SchemaVersion,
-                viewPath,
-               `class`,
-                `defaultDuration`,
-                IFNULL(`installName`, `module`) AS installName
-            ';
-
-        $body = '
-                  FROM `module`
-                 WHERE 1 = 1
-            ';
-
-        if ($parsedBody->getInt('moduleId') !== null) {
-            $params['moduleId'] = $parsedBody->getInt('moduleId');
-            $body .= ' AND `ModuleID` = :moduleId ';
+        try {
+            $module->properties = $this->parseProperties($xml->getElementsByTagName('properties'));
+        } catch (\Exception $e) {
+            $module->errors[] = __('Invalid properties');
+            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid properties. e: ' .  $e->getMessage());
         }
 
-        if ($parsedBody->getString('name') != '') {
-            $params['name'] = $parsedBody->getString('name');
-            $body .= ' AND `name` = :name ';
+        // Parse stencils
+        $module->preview = $this->getStencils($xml->getElementsByTagName('preview'))[0] ?? null;
+        $module->stencil = $this->getStencils($xml->getElementsByTagName('stencil'))[0] ?? null;
+
+        return $module;
+    }
+
+    /**
+     * Get stencils from a DOM node list
+     * @param \DOMNodeList $nodes
+     * @return Stencil[]
+     */
+    private function getStencils(\DOMNodeList $nodes): array
+    {
+        $stencils = [];
+
+        foreach ($nodes as $node) {
+            $stencil = new Stencil();
+
+            /** @var \DOMNode $node */
+            foreach ($node->childNodes as $childNode) {
+                /** @var \DOMNode $childNode */
+                if ($childNode->nodeName === 'twig') {
+                    $stencil->twig = $childNode->textContent;
+                } else if ($childNode->nodeName === 'hbs') {
+                    $stencil->hbs = $childNode->textContent;
+                } else if ($childNode->nodeName === 'title') {
+                    $stencil->title = $childNode->textContent;
+                } else if ($childNode->nodeName === 'properties') {
+                    $stencil->properties = $this->parseProperties([$childNode]);
+                } else if ($childNode->nodeName === 'elements') {
+                    $stencil->elements = $this->parseElements([$childNode]);
+                }
+            }
+
+            if ($stencil->twig !== null || $stencil->hbs !== null) {
+                $stencils[] = $stencil;
+            }
         }
 
-        if ($parsedBody->getString('installName') != null) {
-            $params['installName'] = $parsedBody->getString('installName');
-            $body .= ' AND `installName` = :installName ';
+        return $stencils;
+    }
+
+    /**
+     * @param \DOMNode[]|\DOMNodeList $propertyNodes
+     * @return \Xibo\Widget\Definition\Property[]
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    private function parseProperties($propertyNodes): array
+    {
+        if ($propertyNodes instanceof \DOMNodeList) {
+            // Property nodes are the parent node
+            if (count($propertyNodes) <= 0) {
+                return [];
+            }
+            $propertyNodes = $propertyNodes->item(0)->childNodes;
         }
 
-        if ($parsedBody->getString('type') != '' && $parsedBody->getInt('allowMediaTypeChange', ['default' => 0]) == 0) {
-            $params['type'] = $parsedBody->getString('type');
-            $body .= ' AND `module` = :type ';
+        $defaultValues = [];
+        $properties = [];
+        foreach ($propertyNodes as $node) {
+            if ($node->nodeType === XML_ELEMENT_NODE) {
+                /** @var \DOMElement $node */
+                $property = new Property();
+                $property->id = $node->getAttribute('id');
+                $property->type = $node->getAttribute('type');
+                $property->title = $this->getFirstValueOrDefaultFromXmlNode($node, 'title');
+                $property->helpText = $this->getFirstValueOrDefaultFromXmlNode($node, 'helpText');
+                $defaultValues[$property->id] = $this->getFirstValueOrDefaultFromXmlNode($node, 'default');
+
+                // Options
+                $options = $node->getElementsByTagName('options');
+                if (count($options) > 0) {
+                    foreach ($options->item(0)->childNodes as $optionNode) {
+                        if ($optionNode->nodeType === XML_ELEMENT_NODE) {
+                            /** @var \DOMElement $optionNode */
+                            $property->addOption(
+                                $optionNode->getAttribute('name'),
+                                $optionNode->textContent
+                            );
+                        }
+                    }
+                }
+
+                // Player compat
+                $playerCompat = $node->getElementsByTagName('playerCompatibility');
+                if (count($playerCompat) > 0) {
+                    $playerCompat = $playerCompat->item(0);
+                    if ($playerCompat->nodeType === XML_ELEMENT_NODE) {
+                        /** @var \DOMElement $playerCompat */
+                        $playerCompatibility = new PlayerCompatibility();
+                        $playerCompatibility->message = $playerCompat->textContent;
+                        $playerCompatibility->windows = $playerCompat->getAttribute('windows');
+                        $playerCompatibility->android = $playerCompat->getAttribute('android');
+                        $playerCompatibility->linux = $playerCompat->getAttribute('linux');
+                        $playerCompatibility->webos = $playerCompat->getAttribute('webos');
+                        $playerCompatibility->tizen = $playerCompat->getAttribute('tizen');
+                        $property->playerCompatability = $playerCompatibility;
+                    }
+                }
+
+                $properties[] = $property;
+            }
         }
 
-        if ($parsedBody->getString('class') != '') {
-            $params['class'] = $parsedBody->getString('class');
-            $body .= ' AND `class` = :class ';
+        // Set the default values
+        $params = $this->getSanitizer($defaultValues);
+        foreach ($properties as $property) {
+            $property->setDefaultByType($params);
         }
 
-        if ($parsedBody->getString('extension') != '') {
-            $params['extension'] = '%' . $parsedBody->getString('extension') . '%';
-            $body .= ' AND `ValidExtensions` LIKE :extension ';
+        return $properties;
+    }
+
+    /**
+     * @param \DOMNode[]|\DOMNodeList $elementNodes
+     * @return \Xibo\Widget\Definition\Property[]
+     */
+    private function parseElements($elementNodes): array
+    {
+        $elements = [];
+        foreach ($elementNodes as $node) {
+
         }
 
-        if ($parsedBody->getInt('assignable', ['default' => -1]) != -1) {
-            $body .= " AND `assignable` = :assignable ";
-            $params['assignable'] = $parsedBody->getInt('assignable');
+        return $elements;
+    }
+
+    /**
+     * Get the first node value
+     * @param \DOMDocument|\DOMElement $xml The XML document
+     * @param string $nodeName The no name
+     * @param string|null $default A default value is none is present
+     * @return string|null
+     */
+    private function getFirstValueOrDefaultFromXmlNode($xml, string $nodeName, $default = null): ?string
+    {
+        foreach ($xml->getElementsByTagName($nodeName) as $node) {
+            /** @var \DOMNode $node */
+            if ($node->nodeType === XML_ELEMENT_NODE) {
+                return $node->textContent;
+            }
         }
 
-        if ($parsedBody->getInt('enabled', ['default' => -1]) != -1) {
-            $body .= " AND `enabled` = :enabled ";
-            $params['enabled'] = $parsedBody->getInt('enabled');
-        }
-
-        if ($parsedBody->getInt('regionSpecific', ['default' => -1]) != -1) {
-            $body .= " AND `regionSpecific` = :regionSpecific ";
-            $params['regionSpecific'] = $parsedBody->getInt('regionSpecific');
-        }
-
-        if ($parsedBody->getInt('notPlayerSoftware') == 1) {
-            $body .= ' AND `module` <> \'playersoftware\' ';
-        }
-
-        if ($parsedBody->getInt('notSavedReport') == 1) {
-            $body .= ' AND `module` <> \'savedreport\' ';
-        }
-
-        // Sorting?
-        $order = '';
-        if (is_array($sortOrder)) {
-            $order .= 'ORDER BY ' . implode(',', $sortOrder);
-        }
-
-        $limit = '';
-        // Paging
-        if ($filterBy !== null && $parsedBody->getInt('start') !== null && $parsedBody->getInt('length') !== null) {
-            $limit = ' LIMIT ' . intval($parsedBody->getInt('start'), 0) . ', ' . $parsedBody->getInt('length', ['default' => 10]);
-        }
-
-        $sql = $select . $body . $order . $limit;
-
-        //
-
-        $sth = $dbh->prepare($sql);
-        $sth->execute($params);
-
-        foreach ($sth->fetchAll(\PDO::FETCH_ASSOC) as $row) {
-            $module = $this->createEmpty();
-            $parsedRow = $this->getSanitizer($row);
-
-            $module->moduleId = $parsedRow->getInt('ModuleID');
-            $module->name = $parsedRow->getString('Name');
-            $module->description = $parsedRow->getString('Description');
-            $module->validExtensions = $parsedRow->getString('ValidExtensions');
-            $module->renderAs = $parsedRow->getString('render_as');
-            $module->enabled = $parsedRow->getInt('Enabled');
-            $module->regionSpecific = $parsedRow->getInt('RegionSpecific');
-            $module->previewEnabled = $parsedRow->getInt('PreviewEnabled');
-            $module->assignable = $parsedRow->getInt('assignable');
-            $module->schemaVersion = $parsedRow->getInt('SchemaVersion');
-
-            // Identification
-            $module->type = strtolower($row['Module']);
-
-            $module->class = $parsedRow->getString('class');
-            $module->viewPath = $parsedRow->getString('viewPath');
-            $module->defaultDuration = $parsedRow->getInt('defaultDuration');
-            $module->installName = $parsedRow->getString('installName');
-
-            $settings = $row['settings'];
-            $module->settings = ($settings == '') ? array() : json_decode($settings, true);
-
-            $entries[] = $module;
-        }
-
-        // Paging
-        if ($limit != '' && count($entries) > 0) {
-            $results = $this->getStore()->select('SELECT COUNT(*) AS total ' . $body, $params);
-            $this->_countLast = intval($results[0]['total']);
-        }
-
-        return $entries;
+        return $default;
     }
 }

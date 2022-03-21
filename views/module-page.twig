@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,10 +27,6 @@
 
 {% block actionMenu %}
     <div class="widget-action-menu pull-right">
-        {% if modulesToInstall|length > 0 %}
-        <button class="btn btn-success XiboFormButton" title="{% trans "Modules available to Install" %}" href="{{ url_for("module.install.list.form") }}"><i class="fa fa-upload" aria-hidden="true"></i> {% trans "Install Module" %}</button>
-        {% endif %}
-        <button class="btn btn-info XiboFormButton" title="{% trans "Verify all modules have been installed correctly." %}" href="{{ url_for("module.verify.form") }}"><i class="fa fa-check-circle" aria-hidden="true"></i> {% trans "Verify All" %}</button>
         <button class="btn btn btn-secondary" id="refreshGrid" title="{% trans "Refresh" %}" href="#"><i class="fa fa-refresh" aria-hidden="true"></i> {% trans "Refresh" %}</button>
     </div>
 {% endblock %}
@@ -59,6 +55,7 @@
                                 <th>{% trans "Preview Enabled" %}</th>
                                 <th title="{% trans "Can this module be assigned to a Layout?" %}">{% trans "Assignable" %}</th>
                                 <th>{% trans "Enabled" %}</th>
+                                <th>{% trans "Errors" %}</th>
                                 <th class="rowMenu"></th>
                             </tr>
                         </thead>
@@ -74,10 +71,10 @@
 
 {% block javaScript %}
     <script type="text/javascript">
-        var table = $("#modules").DataTable({
-            "language": dataTablesLanguage,
+        var table = $('#modules').DataTable({
+            language: dataTablesLanguage,
             dom: dataTablesTemplate,
-            serverSide: true,
+            serverSide: false,
             stateSave: true,
             stateDuration: 0,
             responsive: true,
@@ -85,14 +82,11 @@
             stateSaveCallback: dataTableStateSaveCallback,
             filter: false,
             searchDelay: 3000,
-            "order": [[ 0, "asc"]],
+            order: [[ 0, 'asc']],
             ajax: {
-                "url": "{{ url_for("module.search") }}",
-                "data": function(d) {
-                    $.extend(d, $("#modules").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
-                }
+                url: '{{ url_for("module.search") }}'
             },
-            "columns": [
+            columns: [
                 { "data": "name" , responsivePriority: 2},
                 { "data": "description" },
                 { "data": "regionSpecific", "render": dataTableTickCrossInverseColumn },
@@ -101,6 +95,7 @@
                 { "data": "previewEnabled", "render": dataTableTickCrossColumn },
                 { "data": "assignable", "render": dataTableTickCrossColumn },
                 { "data": "enabled", "render": dataTableTickCrossColumn },
+                { "data": "errors", "render": dataTableTickCrossColumn },
                 {
                     "orderable": false,
                     responsivePriority: 1,
@@ -113,12 +108,7 @@
         table.on('processing.dt', dataTableProcessing);
         dataTableAddButtons(table, $('#modules_wrapper').find('.dataTables_buttons'));
 
-        function installModuleComplete()
-        {
-            $("#moduleInstallForm").data("refresh", true);
-        }
-
-        $("#refreshGrid").click(function () {
+        $('#refreshGrid').click(function () {
             table.ajax.reload();
         });
     </script>

@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
@@ -19,28 +19,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-namespace Xibo\Event;
+
+namespace Xibo\Widget\Provider;
 
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 
 /**
- * Widget Add
- * ----------
- * Call when a new non-file based widget is added to a Layout
+ * Xibo's default implementation of the Duration Provider
  */
-class WidgetAddEvent extends Event
+class DurationProvider implements DurationProviderInterface
 {
-    public static $NAME = 'widget.add';
-
     /** @var \Xibo\Entity\Module */
-    protected $module;
+    private $module;
 
     /** @var \Xibo\Entity\Widget */
-    protected $widget;
+    private $widget;
+
+    /** @var int Duration in seconds */
+    private $duration;
 
     /**
-     * WidgetEditEvent constructor.
+     * Constructor
      * @param \Xibo\Entity\Module $module
      * @param \Xibo\Entity\Widget $widget
      */
@@ -51,18 +51,36 @@ class WidgetAddEvent extends Event
     }
 
     /**
-     * @return \Xibo\Entity\Module
+     * @inheritDoc
      */
-    public function getModule(): Module
+    public function getProperty(string $property, $default = null)
     {
-        return $this->module;
+        $this->widget->getOptionValue($property, $default);
     }
 
     /**
-     * @return \Xibo\Entity\Widget
+     * @inheritDoc
      */
-    public function getWidget(): Widget
+    public function getFile(): string
     {
-        return $this->widget;
+        return $this->file;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setDuration(int $seconds): DurationProviderInterface
+    {
+        $this->duration = $seconds;
+        return $this;
+    }
+
+    /**
+     * Get the duration
+     * @return int the duration in seconds
+     */
+    public function getDuration(): int
+    {
+        return $this->duration;
     }
 }

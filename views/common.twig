@@ -28,7 +28,7 @@
         // MODULES LIST
         var modulesList = [];
         {% for module in modules %}
-            modulesList.push({{ module.getModule()|json_encode|raw }});
+            modulesList.push({{ module|json_encode|raw }});
         {% endfor %}
 
         // USERS LIST

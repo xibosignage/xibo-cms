@@ -654,7 +654,7 @@ class Soap
         }
 
         // Get an array of modules to use
-        $modules = $this->moduleFactory->get();
+        $modules = $this->moduleFactory->getKeyedArrayOfModules();
 
         // Reset the paths added array to start again with layouts
         $pathsAdded = [];

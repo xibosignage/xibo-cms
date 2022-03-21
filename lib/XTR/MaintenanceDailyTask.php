@@ -78,9 +78,6 @@ class MaintenanceDailyTask implements TaskInterface
         // Import layouts
         $this->importLayouts();
 
-        // Install module files
-        $this->installModuleFiles();
-
         // Tidy logs
         $this->tidyLogs();
 
@@ -173,13 +170,5 @@ class MaintenanceDailyTask implements TaskInterface
         } else {
             $this->runMessage .= ' - ' . __('Not Required.') . PHP_EOL . PHP_EOL;
         }
-    }
-
-    /**
-     * Install Module Files
-     */
-    private function installModuleFiles()
-    {
-        $this->moduleController->installAllModuleFiles();
     }
 }

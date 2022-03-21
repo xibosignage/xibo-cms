@@ -24,6 +24,7 @@ namespace Xibo\Controller;
 use Carbon\Carbon;
 use GuzzleHttp\Client;
 use GuzzleHttp\Psr7\Stream;
+use Illuminate\Support\Str;
 use Intervention\Image\ImageManagerStatic as Img;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
@@ -315,7 +316,7 @@ class Library extends Base
             $this->getState()->template = 'library-page';
             $this->getState()->setData([
                 'users' => $this->userFactory->query(),
-                'modules' => $this->moduleFactory->query(['module'], ['regionSpecific' => 0, 'enabled' => 1, 'notPlayerSoftware' => 1, 'notSavedReport' => 1]),
+                'modules' => $this->moduleFactory->getLibraryModules(),
                 'groups' => $this->userGroupFactory->query(),
                 'validExt' => implode('|', $this->moduleFactory->getValidExtensions(['notPlayerSoftware' => 1, 'notSavedReport' => 1]))
             ]);
@@ -2374,13 +2375,14 @@ class Library extends Base
         $name = empty($optionalName) ? $downloadInfo['filename'] : $optionalName;
 
         // double check that provided Module Type and Extension are valid
-        $moduleCheck = $this->getModuleFactory()->query(null, [
-            'extension' => $ext,
-            'type' => $module->getModuleType()
-        ]);
-
-        if (count($moduleCheck) <= 0) {
-            throw new NotFoundException(sprintf(__('Invalid Module type or extension. Module type %s does not allow for %s extension'), $module->getModuleType(), $ext));
+        if (!Str::contains($module->getSetting('validExtensions'), $ext)) {
+            throw new NotFoundException(
+                sprintf(
+                    __('Invalid Module type or extension. Module type %s does not allow for %s extension'),
+                    $module->getModuleType(),
+                    $ext
+                )
+            );
         }
 
         // add our media to queueDownload and process the downloads

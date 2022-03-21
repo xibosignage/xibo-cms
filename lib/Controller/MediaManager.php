@@ -76,7 +76,7 @@ class MediaManager extends Base
         $this->getState()->template .= 'media-manager-page';
         $this->getState()->setData([
             // Users we have permission to see
-            'modules' => $this->moduleFactory->query(null, ['assignable' => 1, 'enabled' => 1]),
+            'modules' => $this->moduleFactory->getAssignableModules(),
             'assignableModules' => array_map(function($element) use ($moduleFactory) { 
                     $module = $moduleFactory->createForInstall($element->class);
                     $module->setModule($element);

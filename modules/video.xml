@@ -1,0 +1,57 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<module>
+    <id>core-video</id>
+    <name>Video</name>
+    <author>Core</author>
+    <description>Video</description>
+    <class></class>
+    <type>video</type>
+    <dataType></dataType>
+    <schemaVersion>2</schemaVersion>
+    <assignable>1</assignable>
+    <regionSpecific>0</regionSpecific>
+    <renderAs>native</renderAs>
+    <defaultDuration>0</defaultDuration>
+    <settings>
+        <property id="validExtensions" type="input">
+            <title>Valid Extensions</title>
+            <helpText>The Extensions allowed on files uploaded using this module. Comma Separated.</helpText>
+            <default>mp4,wmv</default>
+        </property>
+    </settings>
+    <properties>
+        <property id="defaultMute" type="checkbox">
+            <title>Default Mute?</title>
+            <helpText>Should new Video Widgets default to Muted?</helpText>
+            <default>1</default>
+        </property>
+        <property id="defaultScaleType" type="dropdown" mode="single">
+            <title>Default Scale type</title>
+            <helpText>How should new Video Widgets be scaled by default?</helpText>
+            <default>aspect</default>
+            <options>
+                <option name="aspect">Aspect</option>
+                <option name="stretch">Stretch</option>
+            </options>
+        </property>
+    </properties>
+</module>
