@@ -300,10 +300,14 @@ class Library extends Base
             }
 
             // Thumbnail
-            $module = $this->moduleFactory->createWithMedia($media);
+            $module = $this->moduleFactory->getByType($media->mediaType);
             $media->thumbnail = '';
-            if ($module->hasThumbnail()) {
-                $media->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1]);
+            if ($module->hasThumbnail) {
+                $media->thumbnail = $this->urlFor($request, 'library.download', [
+                    'id' => $media->mediaId
+                ], [
+                    'preview' => 1
+                ]);
             }
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
 
@@ -529,7 +533,7 @@ class Library extends Base
      * @throws NotFoundException
      * @throws \Xibo\Support\Exception\ControllerNotImplemented
      */
-    function grid(Request $request, Response $response)
+    public function grid(Request $request, Response $response)
     {
         $user = $this->getUser();
 
@@ -567,10 +571,14 @@ class Library extends Base
             $media->revised = ($media->parentId != 0) ? 1 : 0;
 
             // Thumbnail
-            $module = $this->moduleFactory->createWithMedia($media);
+            $module = $this->moduleFactory->getByType($media->mediaType);
             $media->thumbnail = '';
-            if ($module->hasThumbnail()) {
-                $media->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1]);
+            if ($module->hasThumbnail) {
+                $media->thumbnail = $this->urlFor($request, 'library.download', [
+                    'id' => $media->mediaId
+                ], [
+                    'preview' => 1
+                ]);
             }
 
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
@@ -584,7 +592,9 @@ class Library extends Base
                 $media->excludeProperty('mediaExpiresIn');
                 $media->excludeProperty('mediaExpiryFailed');
                 $media->excludeProperty('mediaNoExpiryDate');
-                $media->expires = ($media->expires == 0) ? 0 : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
+                $media->expires = ($media->expires == 0)
+                    ? 0
+                    : Carbon::createFromTimestamp($media->expires)->format(DateFormatHelper::getSystemFormat());
                 continue;
             }
 
@@ -807,11 +817,14 @@ class Library extends Base
                 $searchResult->duration = $media->duration;
 
                 // Thumbnail
-                $module = $this->moduleFactory->createWithMedia($media);
-
-                if ($module->hasThumbnail()) {
-                    $searchResult->thumbnail = $this->urlFor($request, 'library.download', ['id' => $media->mediaId], ['preview' => 1])
-                        . '&isThumb=1';
+                $module = $this->moduleFactory->getByType($media->mediaType);
+                if ($module->hasThumbnail) {
+                    $searchResult->thumbnail = $this->urlFor($request, 'library.download', [
+                            'id' => $media->mediaId
+                        ], [
+                            'preview' => 1,
+                            'isThumb' => 1
+                        ]);
                 }
 
                 // Add the result
@@ -1312,9 +1325,11 @@ class Library extends Base
         }
 
         // Should we update the media in all layouts?
-        if ($sanitizedParams->getCheckbox('updateInLayouts') == 1 || $media->hasPropertyChanged('enableStat')) {
+        if ($sanitizedParams->getCheckbox('updateInLayouts') == 1
+            || $media->hasPropertyChanged('enableStat')
+        ) {
             foreach ($this->widgetFactory->getByMediaId($media->mediaId, 0) as $widget) {
-                $widget->calculateDuration($this->moduleFactory->createWithWidget($widget));
+                $widget->calculateDuration($this->moduleFactory->getByType($widget->type));
                 $widget->save();
             }
         }

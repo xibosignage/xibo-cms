@@ -1,0 +1,267 @@
+<?php
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+namespace Xibo\Widget\Render;
+
+use GuzzleHttp\Psr7\Stream;
+use Intervention\Image\ImageManagerStatic as Img;
+use Mimey\MimeTypes;
+use Psr\Log\LoggerInterface;
+use Slim\Http\Response as Response;
+use Xibo\Entity\Media;
+use Xibo\Helper\HttpCacheProvider;
+use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
+use Xibo\Support\Sanitizer\SanitizerInterface;
+
+/**
+ * A helper class to download widgets from the library (as media files)
+ */
+class WidgetDownloader
+{
+    /** @var string Library location */
+    private $libraryLocation;
+
+    /** @var string Send file mode */
+    private $sendFileMode;
+
+    /** @var LoggerInterface */
+    private $logger;
+
+    /**
+     * @param string $libraryLocation
+     * @param string $sendFileMode
+     */
+    public function __construct(
+        string $libraryLocation,
+        string $sendFileMode
+    ) {
+        $this->libraryLocation = $libraryLocation;
+        $this->sendFileMode = $sendFileMode;
+    }
+
+    /**
+     * @param \Psr\Log\LoggerInterface $logger
+     * @return $this
+     */
+    public function useLogger(LoggerInterface $logger): WidgetDownloader
+    {
+        $this->logger = $logger;
+        return $this;
+    }
+
+    /**
+     * Return File
+     * @param \Xibo\Support\Sanitizer\SanitizerInterface $params
+     * @param \Xibo\Entity\Media $media
+     * @param \Slim\Http\Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     */
+    public function download(SanitizerInterface $params, Media $media, Response $response): Response
+    {
+        $this->logger->debug('Download for mediaId ' . $media->mediaId);
+
+        $attachment = $params->getString('attachment');
+        $isPreview = ($params->getCheckbox('preview') == 1);
+
+        // The file path
+        $libraryPath = $this->libraryLocation . $media->storedAs;
+
+        // Set some headers
+        $headers = [];
+        $headers['Content-Length'] = filesize($libraryPath);
+
+        // Different behaviour depending on whether we are a preview or not.
+        if ($isPreview) {
+            // correctly grab the MIME type of the file we want to serve
+            $mimeTypes = new MimeTypes();
+            $ext = explode('.', $media->storedAs);
+            $headers['Content-Type'] = $mimeTypes->getMimeType($ext[count($ext) - 1]);
+        } else {
+            // This widget is expected to output a file - usually this is for file based media
+            // Get the name with library
+            $attachmentName = empty($attachment) ? $media->storedAs : $attachment;
+
+            // Issue some headers
+            $response = HttpCacheProvider::withEtag($response, $media->md5);
+            $response = HttpCacheProvider::withExpires($response, '+1 week');
+
+            $headers['Content-Type'] = 'application/octet-stream';
+            $headers['Content-Transfer-Encoding'] = 'Binary';
+            $headers['Content-disposition'] = 'attachment; filename="' . $attachmentName . '"';
+        }
+
+        // Output the file
+        if ($this->sendFileMode === 'Apache') {
+            // Send via Apache X-Sendfile header?
+            $headers['X-Sendfile'] = $libraryPath;
+        } else if ($this->sendFileMode === 'Nginx') {
+            // Send via Nginx X-Accel-Redirect?
+            $headers['X-Accel-Redirect'] = '/download/' . $media->storedAs;
+        }
+
+        // Add the headers we've collected to our response
+        foreach ($headers as $header => $value) {
+            $response = $response->withHeader($header, $value);
+        }
+
+        // Should we output the file via the application stack, or directly by reading the file.
+        if ($this->sendFileMode == 'Off') {
+            // Return the file with PHP
+            $response = $response->withBody(new Stream(fopen($libraryPath, 'r')));
+
+            $this->logger->debug('Returning Stream with response body, sendfile off.');
+        } else {
+            $this->logger->debug('Using sendfile to return the file, only output headers.');
+        }
+
+        return $response;
+    }
+
+    /**
+     * Download a thumbnail for the given media
+     * @param \Xibo\Entity\Media $media
+     * @param \Slim\Http\Response $response
+     * @param string|null $errorThumb
+     * @return \Slim\Http\Response
+     */
+    public function thumbnail(
+        Media $media,
+        Response $response,
+        string $errorThumb = null
+    ): Response {
+        // Our convention is to upload media covers in {mediaId}_{mediaType}cover.png
+        // and then thumbnails in tn_{mediaId}_{mediaType}cover.png
+        // unless we are an image module, which is its own image, and would then have a thumbnail in
+        // tn_{mediaId}_{mediaType}cover.png
+        try {
+            $width = 120;
+            $height = 120;
+
+            if ($media->mediaType === 'image') {
+                $filePath = $this->libraryLocation . $media->storedAs;
+                $thumbnailFilePath = $this->libraryLocation . 'tn_' . $media->storedAs;
+            } else {
+                $filePath = $this->libraryLocation . $media->mediaId . '_'
+                    . $media->mediaType . 'cover.png';
+                $thumbnailFilePath = $this->libraryLocation . 'tn_' . $media->mediaId . '_'
+                    . $media->mediaType . 'cover.png';
+
+                // A video cover might not exist
+                if (!file_exists($filePath)) {
+                    throw new NotFoundException();
+                }
+            }
+
+            // Does the thumbnail exist already?
+            Img::configure(['driver' => 'gd']);
+            $img = null;
+            $regenerate = true;
+            if (file_exists($thumbnailFilePath)) {
+                $img = Img::make($filePath);
+                if ($img->width() === $width || $img->height() === $height) {
+                    // Correct cache
+                    $regenerate = false;
+                }
+            }
+
+            if ($regenerate) {
+                // Get the full image and make a thumbnail
+                $img = Img::make($filePath);
+                $img->resize($width, $height, function ($constraint) {
+                    $constraint->aspectRatio();
+                });
+                $img->save($thumbnailFilePath);
+            }
+
+            // Output Etag
+            $response = HttpCacheProvider::withEtag($response, md5_file($thumbnailFilePath));
+
+            echo $img->encode();
+        } catch (\Exception $e) {
+            if ($errorThumb !== null) {
+                echo Img::make($errorThumb)->encode();
+            }
+        }
+
+        return $response;
+    }
+
+    /**
+     * Output an image preview
+     * @param \Xibo\Support\Sanitizer\SanitizerInterface $params
+     * @param \Xibo\Entity\Media $media
+     * @param \Slim\Http\Response $response
+     * @return \Slim\Http\Response|\Psr\Http\Message\ResponseInterface
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function imagePreview(
+        SanitizerInterface $params,
+        Media $media,
+        Response $response
+    ): Response {
+        // Image previews call for dynamically generated images as various sizes
+        // for example a background image will stretch to the entire region
+        // an image widget may be aspect, fit or scale
+        if ($media->mediaType !== 'image') {
+            throw new InvalidArgumentException(__('Expecting an image widget'), 'type');
+        }
+
+        try {
+            $filePath = $this->libraryLocation . $media->storedAs;
+            $width = intval($params->getDouble('width'));
+            $height = intval($params->getDouble('height'));
+            $proportional = !$params->hasParam('proportional')
+                || $params->getCheckbox('proportional') == 1;
+
+            $fit = $proportional && $params->getCheckbox('fit') === 1;
+
+            $this->logger->debug('Whole file: ' . $filePath
+                . ' requested with Width and Height ' . $width . ' x ' . $height
+                . ', proportional: ' . var_export($proportional, true)
+                . ', fit: ' . var_export($fit, true));
+
+            // Does the thumbnail exist already?
+            Img::configure(['driver' => 'gd']);
+            $img = Img::make($filePath);
+
+            // Output a specific width/height
+            if ($width > 0 && $height > 0) {
+                if ($fit) {
+                    $img->fit($width, $height);
+                } else {
+                    $img->resize($width, $height, function ($constraint) use ($proportional) {
+                        if ($proportional) {
+                            $constraint->aspectRatio();
+                        }
+                    });
+                }
+            }
+
+            echo $img->encode();
+            return HttpCacheProvider::withExpires($response, '+1 week');
+        } catch (\Exception $e) {
+            $this->logger->error('Cannot parse image: ' . $e->getMessage());
+            throw new InvalidArgumentException(__('Cannot parse image.'), 'storedAs');
+        }
+    }
+}

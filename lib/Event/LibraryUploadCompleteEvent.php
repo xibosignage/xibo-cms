@@ -20,29 +20,33 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-namespace Xibo\Widget\Provider;
+namespace Xibo\Event;
+
+use Xibo\Entity\Media;
 
 /**
- * A duration provider is used to return the duration for a Widget which has a media file
+ * An event fired when library media has completed upload.
  */
-interface DurationProviderInterface
+class LibraryUploadCompleteEvent extends Event
 {
-    /**
-     * Get the fully qualified path name of the file that needs its duration assessed
-     * @return string the fully qualified path to the file
-     */
-    public function getFile(): string;
+    public static $NAME = 'library.upload.complete.event';
+
+    /** @var Media */
+    protected $media;
 
     /**
-     * Get the duration
-     * @return int the duration in seconds
+     * @param \Xibo\Entity\Media $media
      */
-    public function getDuration(): int;
+    public function __construct(Media $media)
+    {
+        $this->media = $media;
+    }
 
     /**
-     * Set the duration in seconds
-     * @param int $seconds the duration in seconds
-     * @return \Xibo\Widget\Provider\DurationProviderInterface
+     * @return Media
      */
-    public function setDuration(int $seconds): DurationProviderInterface;
+    public function getMedia(): Media
+    {
+        return $this->media;
+    }
 }

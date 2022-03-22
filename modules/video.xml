@@ -31,6 +31,7 @@
     <regionSpecific>0</regionSpecific>
     <renderAs>native</renderAs>
     <defaultDuration>0</defaultDuration>
+    <hasThumbnail>1</hasThumbnail>
     <settings>
         <property id="validExtensions" type="input">
             <title>Valid Extensions</title>

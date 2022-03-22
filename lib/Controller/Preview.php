@@ -57,7 +57,7 @@ class Preview extends Base
      * @throws \Xibo\Support\Exception\GeneralException
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function show(Request $request, Response $response, $id )
+    public function show(Request $request, Response $response, $id)
     {
         $sanitizedParams = $this->getSanitizer($request->getParams());
 
@@ -83,12 +83,14 @@ class Preview extends Base
         $this->getState()->setData([
             'layout' => $layout,
             'previewOptions' => [
-                'getXlfUrl' => $this->urlFor($request,'layout.getXlf', ['id' => $layout->layoutId]),
-                'getResourceUrl' => $this->urlFor($request,'module.getResource', ['regionId' => ':regionId', 'id' => ':id']),
-                'libraryDownloadUrl' => $this->urlFor($request,'library.download', ['id' => ':id']),
-                'layoutBackgroundDownloadUrl' => $this->urlFor($request,'layout.download.background', ['id' => ':id']),
+                'getXlfUrl' => $this->urlFor($request, 'layout.getXlf', ['id' => $layout->layoutId]),
+                'getResourceUrl' => $this->urlFor($request, 'module.getResource', [
+                    'regionId' => ':regionId', 'id' => ':id'
+                ]),
+                'libraryDownloadUrl' => $this->urlFor($request, 'library.download', ['id' => ':id']),
+                'layoutBackgroundDownloadUrl' => $this->urlFor($request, 'layout.download.background', ['id' => ':id']),
                 'loaderUrl' => $this->getConfig()->uri('img/loader.gif'),
-                'layoutPreviewUrl' => $this->urlFor($request,'layout.preview', ['id' => '[layoutCode]'])
+                'layoutPreviewUrl' => $this->urlFor($request, 'layout.preview', ['id' => '[layoutCode]'])
             ]
         ]);
 

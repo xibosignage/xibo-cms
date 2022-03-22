@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Definition;
 
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Support\Exception\NotFoundException;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -34,11 +35,16 @@ class Property implements \JsonSerializable
     public $type;
     public $title;
     public $helpText;
+
+    /** @var string[] */
+    public $validation = [];
+
     public $default;
 
     /** @var \Xibo\Widget\Definition\Option[] */
     public $options;
 
+    /** @var \Xibo\Widget\Definition\PlayerCompatibility */
     public $playerCompatability;
     
     public $value;
@@ -64,6 +70,7 @@ class Property implements \JsonSerializable
             'type' => $this->type,
             'title' => $this->title,
             'helpText' => $this->helpText,
+            'validation' => $this->validation,
             'default' => $this->default,
             'options' => $this->options,
             'playerCompatibility' => $this->playerCompatability
@@ -106,6 +113,33 @@ class Property implements \JsonSerializable
     public function setValueByType(SanitizerInterface $params, string $key = null): Property
     {
         $this->value = $this->getByType($params, $key);
+        return $this;
+    }
+
+    /**
+     * @return \Xibo\Widget\Definition\Property
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function validate(): Property
+    {
+        foreach ($this->validation as $validation) {
+            switch ($validation) {
+                case 'required':
+                    try {
+                        if (empty($this->value)) {
+                            throw new NotFoundException();
+                        }
+                    } catch (NotFoundException $notFoundException) {
+                        throw new InvalidArgumentException(sprintf(
+                            __('Missing required property %s'),
+                            $this->id
+                        ));
+                    }
+                    break;
+                default:
+                    // Nothing to validate
+            }
+        }
         return $this;
     }
 

@@ -1636,7 +1636,7 @@ class LayoutFactory extends BaseFactory
 
         // We need one final pass through all widgets on the layout so that we can set the durations properly.
         foreach ($layout->getAllWidgets() as $widget) {
-            $module = $this->moduleFactory->createWithWidget($widget);
+            $module = $this->moduleFactory->getByType($widget->type);
             $widget->calculateDuration($module, true);
 
             // Get global stat setting of widget to set to on/off/inherit

@@ -25,7 +25,7 @@
 {% import "forms.twig" as forms %}
 
 {% block formTitle %}
-    {% set name = module.getName() %}
+    {% set name = module.name %}
     {% trans %}Edit {{ type }} Transition for {{ name }}{% endtrans %}
 {% endblock %}
 
@@ -74,18 +74,18 @@
 {% block formHtml %}
     <div class="row">
         <div class="col-md-12">
-            <form id="moduleTransitionEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.transition.edit", {type: type, id: module.widget.widgetId}) }}">
+            <form id="moduleTransitionEditForm" class="XiboForm form-horizontal" method="put" action="{{ url_for("module.widget.transition.edit", {type: type, id: widget.widgetId}) }}">
                 {% if type == "in" %}
                     {% set transitionsWithEmpty = [{code: "", transition: ""}]|merge(transitions.in) %}
-                    {% set trans = module.getOption("transIn", null) %}
-                    {% set transDuration = module.getOption("transInDuration", null) %}
-                    {% set transDirection = module.getOption("transInDirection") %}
+                    {% set trans = widget.getOptionValue("transIn", null) %}
+                    {% set transDuration = widget.getOptionValue("transInDuration", null) %}
+                    {% set transDirection = widget.getOptionValue("transInDirection") %}
                     {% set helpText %}{% trans "What transition should be applied when this item starts?" %}{% endset %}
                 {% elseif type == "out" %}
                     {% set transitionsWithEmpty = [{transitionId: null, transition: ""}]|merge(transitions.out) %}
-                    {% set trans = module.getOption("transOut", null) %}
-                    {% set transDuration = module.getOption("transOutDuration", null) %}
-                    {% set transDirection = module.getOption("transOutDirection") %}
+                    {% set trans = widget.getOptionValue("transOut", null) %}
+                    {% set transDuration = widget.getOptionValue("transOutDuration", null) %}
+                    {% set transDirection = widget.getOptionValue("transOutDirection") %}
                     {% set helpText %}{% trans "What transition should be applied when this item finishes?" %}{% endset %}
                 {% else %}
                     {% set message %}{% trans "Unknown Transition Type Requested" %}{% endset %}
