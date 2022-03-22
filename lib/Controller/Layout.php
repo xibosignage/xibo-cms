@@ -56,6 +56,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\ModuleWidget;
+use Xibo\Widget\Render\WidgetDownloader;
 
 /**
  * Class Layout
@@ -1431,11 +1432,19 @@ class Layout extends Base
                         $widget->tags = [];
                     }
 
+                    // Sub-playlists should calculate a fresh duration
                     if ($widget->type === 'subplaylist') {
-                        // TODO: how do we handle sub-playlists?
-                        // Sub playlists ought to be handled by a dedicated class (not a widget class).
-                        
+                        // We know we have a provider class for this module.
                         $widget->calculateDuration($module);
+                    }
+
+                    if (in_array('widget_validity', $embed)) {
+                        try {
+                            $module->validateProperties($widget);
+                            $widget->isValid = 1;
+                        } catch (GeneralException $xiboException) {
+                            $widget->isValid = 0;
+                        }
                     }
 
                     // apply default transitions to a dynamic parameters on widget object.
@@ -1465,16 +1474,6 @@ class Layout extends Base
 
                         // Augment with permissions flag
                         $widget->isPermissionsModifiable = $this->getUser()->checkPermissionsModifyable($widget);
-                    }
-
-                    if (in_array('widget_validity', $embed)) {
-                        try {
-                            // TODO: how do we determine this?
-                            //  $module->isValid()
-                            $widget->isValid = 1;
-                        } catch (GeneralException $xiboException) {
-                            $widget->isValid = 0;
-                        }
                     }
                 }
 
@@ -2535,13 +2534,21 @@ class Layout extends Base
         $media = $this->mediaFactory->getById($layout->backgroundImageId);
 
         // Make a media module
-        $widget = $this->moduleFactory->createWithMedia($media);
-
-        if ($widget->getModule()->regionSpecific == 1) {
-            throw new NotFoundException(__('Cannot download non-region specific module'));
+        if ($media->mediaType !== 'image') {
+            throw new NotFoundException(__('Layout background must be an image'));
         }
 
-        $response = $widget->download($request, $response);
+        // Hand over to the widget downloader
+        $downloader = new WidgetDownloader(
+            $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+            $this->getConfig()->getSetting('SENDFILE_MODE')
+        );
+        $downloader->useLogger($this->getLog()->getLoggerInterface());
+        $response = $downloader->imagePreview($this->getSanitizer([
+            'width' => $layout->width,
+            'height' => $layout->height,
+            'proportional' => 0
+        ]), $media, $response);
 
         $this->setNoOutput(true);
         return $this->render($request, $response);

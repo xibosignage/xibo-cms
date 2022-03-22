@@ -264,27 +264,16 @@ class Factories
             },
             'moduleFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\ModuleFactory(
-                    $c->get('user'),
-                    $c->get('userFactory'),
-                    $c->get('widgetFactory'),
-                    $c->get('regionFactory'),
-                    $c->get('playlistFactory'),
-                    $c->get('mediaFactory'),
-                    $c->get('dataSetFactory'),
-                    $c->get('dataSetColumnFactory'),
-                    $c->get('transitionFactory'),
-                    $c->get('displayFactory'),
-                    $c->get('commandFactory'),
-                    $c->get('scheduleFactory'),
-                    $c->get('permissionFactory'),
-                    $c->get('userGroupFactory'),
-                    $c->get('menuBoardFactory'),
-                    $c->get('menuBoardCategoryFactory'),
-                    $c->get('notificationFactory'),
-                    $c->get('view'),
-                    $c->get('httpCache')
+                    $c->get('config')->getSetting('LIBRARY_LOCATION') . 'widget',
+                    $c->get('pool'),
+                    $c->get('view')
                 );
-                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                $repository
+                    ->setAclDependencies(
+                        $c->get('user'),
+                        $c->get('userFactory')
+                    )
+                    ->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
             'notificationFactory' => function (ContainerInterface $c) {

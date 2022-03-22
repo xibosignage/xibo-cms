@@ -196,8 +196,13 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/playlist/widget/form/expiry/{id}', ['\Xibo\Controller\Widget','widgetExpiryForm'])->setName('module.widget.expiry.form');
 
     // Outputs
-    $group->get('/playlist/widget/resource/{regionId}/{id}', ['\Xibo\Controller\Widget','getResource'])->setName('module.getResource');
-    $group->get('/playlist/widget/form/templateimage/{type}/{templateId}', ['\Xibo\Controller\Widget','getTemplateImage'])->setName('module.getTemplateImage');
+    $group->get('/playlist/widget/resource/{regionId}[/{id}]', [
+        '\Xibo\Controller\Widget', 'getResource'
+    ])->setName('module.getResource');
+    
+    $group->get('/playlist/widget/form/templateimage/{type}/{templateId}', [
+        '\Xibo\Controller\Widget', 'getTemplateImage'
+    ])->setName('module.getTemplateImage');
 
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']));
 

@@ -20,23 +20,22 @@
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-
 namespace Xibo\Factory;
 
+use Illuminate\Support\Str;
 use Slim\Views\Twig;
-use Xibo\Entity\Media;
+use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
-use Xibo\Entity\Region;
-use Xibo\Entity\User;
 use Xibo\Entity\Widget;
-use Xibo\Helper\HttpCacheProvider;
-use Xibo\Service\ModuleServiceInterface;
-use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\Definition\PlayerCompatibility;
 use Xibo\Widget\Definition\Property;
 use Xibo\Widget\Definition\Stencil;
-use Xibo\Widget\ModuleWidget;
+use Xibo\Widget\Provider\DataProvider;
+use Xibo\Widget\Provider\DataProviderInterface;
+use Xibo\Widget\Provider\DurationProvider;
+use Xibo\Widget\Provider\DurationProviderInterface;
+use Xibo\Widget\Render\WidgetHtmlRenderer;
 
 /**
  * Class ModuleFactory
@@ -47,413 +46,55 @@ class ModuleFactory extends BaseFactory
     /** @var Module[] all modules */
     private $modules = null;
 
-    /**
-     * @var WidgetFactory
-     */
-    private $widgetFactory;
+    /** @var \Stash\Interfaces\PoolInterface */
+    private $pool;
 
-    /**
-     * @var RegionFactory
-     */
-    private $regionFactory;
+    /** @var string */
+    private $cachePath;
 
-    /**
-     * @var PlaylistFactory
-     */
-    private $playlistFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    protected $mediaFactory;
-
-    /**
-     * @var DataSetFactory
-     */
-    protected $dataSetFactory;
-
-    /**
-     * @var DataSetColumnFactory
-     */
-    protected $dataSetColumnFactory;
-
-    /**
-     * @var TransitionFactory
-     */
-    protected $transitionFactory;
-
-    /**
-     * @var DisplayFactory
-     */
-    protected $displayFactory;
-
-    /**
-     * @var CommandFactory
-     */
-    protected $commandFactory;
-
-    /** @var  ScheduleFactory */
-    protected $scheduleFactory;
-
-    /** @var  PermissionFactory */
-    protected $permissionFactory;
-
-    /** @var  UserGroupFactory */
-    protected $userGroupFactory;
-
-    /** @var MenuBoardFactory */
-    protected $menuBoardFactory;
-
-    /** @var MenuBoardCategoryFactory */
-    protected $menuBoardCategoryFactory;
-
-    /** @var NotificationFactory */
-    protected $notificationFactory;
-
-    /** @var Twig */
-    protected $view;
-
-    /** @var HttpCacheProvider */
-    private $cacheProvider;
+    /** @var \Slim\Views\Twig */
+    private $twig;
 
     /**
      * Construct a factory
-     * @param User $user
-     * @param UserFactory $userFactory
-     * @param WidgetFactory $widgetFactory
-     * @param RegionFactory $regionFactory
-     * @param PlaylistFactory $playlistFactory
-     * @param MediaFactory $mediaFactory
-     * @param DataSetFactory $dataSetFactory
-     * @param DataSetColumnFactory $dataSetColumnFactory
-     * @param TransitionFactory $transitionFactory
-     * @param DisplayFactory $displayFactory
-     * @param CommandFactory $commandFactory
-     * @param ScheduleFactory $scheduleFactory
-     * @param PermissionFactory $permissionFactory
-     * @param UserGroupFactory $userGroupFactory
-     * @param MenuBoardFactory $menuBoardFactory
-     * @param MenuBoardCategoryFactory $menuBoardCategoryFactory
-     * @param NotificationFactory $notificationFactory
-     * @param Twig $view
-     * @param HttpCacheProvider $cacheProvider
+     * @param string $cachePath
+     * @param PoolInterface $pool
+     * @param \Slim\Views\Twig $twig
      */
-    public function __construct(
-        $user,
-        $userFactory,
-        $widgetFactory,
-        $regionFactory,
-        $playlistFactory,
-        $mediaFactory,
-        $dataSetFactory,
-        $dataSetColumnFactory,
-        $transitionFactory,
-        $displayFactory,
-        $commandFactory,
-        $scheduleFactory,
-        $permissionFactory,
-        $userGroupFactory,
-        $menuBoardFactory,
-        $menuBoardCategoryFactory,
-        $notificationFactory,
-        $view,
-        HttpCacheProvider $cacheProvider
-    ) {
-        $this->setAclDependencies($user, $userFactory);
-
-        $this->widgetFactory = $widgetFactory;
-        $this->regionFactory = $regionFactory;
-        $this->playlistFactory = $playlistFactory;
-        $this->mediaFactory = $mediaFactory;
-        $this->dataSetFactory = $dataSetFactory;
-        $this->dataSetColumnFactory = $dataSetColumnFactory;
-        $this->transitionFactory = $transitionFactory;
-        $this->displayFactory = $displayFactory;
-        $this->commandFactory = $commandFactory;
-        $this->scheduleFactory = $scheduleFactory;
-        $this->permissionFactory = $permissionFactory;
-        $this->userGroupFactory = $userGroupFactory;
-        $this->menuBoardFactory = $menuBoardFactory;
-        $this->menuBoardCategoryFactory = $menuBoardCategoryFactory;
-        $this->notificationFactory = $notificationFactory;
-        $this->view = $view;
-        $this->cacheProvider = $cacheProvider;
+    public function __construct(string $cachePath, PoolInterface $pool, Twig $twig)
+    {
+        $this->cachePath = $cachePath;
+        $this->pool = $pool;
+        $this->twig = $twig;
     }
 
     /**
-     * @return Module
+     * @param \Xibo\Entity\Module $module
+     * @param \Xibo\Entity\Widget $widget
+     * @return \Xibo\Widget\Provider\DataProviderInterface
      */
-    public function createEmpty(): Module
+    public function createDataProvider(Module $module, Widget $widget): DataProviderInterface
     {
-        return new Module($this->getStore(), $this->getLog());
+        return new DataProvider($module, $widget);
     }
 
     /**
-     * Create a Module
-     * @param string $type
-     * @return ModuleWidget
-     * @throws NotFoundException
+     * @param string $file
+     * @return \Xibo\Widget\Provider\DurationProviderInterface
      */
-    public function create($type)
+    public function createDurationProvider(string $file): DurationProviderInterface
     {
-        $modules = $this->query(['enabled DESC'], array('type' => $type));
-
-        $this->getLog()->debug(sprintf(
-            'Creating %s out of possible %s',
-            $type,
-            json_encode(
-                array_map(
-                    function ($element) {
-                        return $element->class;
-                    },
-                    $modules
-                )
-            )
-        ));
-
-        if (count($modules) <= 0) {
-            throw new NotFoundException(sprintf(__('Unknown type %s'), $type));
-        }
-
-        // Create a module
-        return $this->moduleService->get(
-            $modules[0],
-            $this,
-            $this->mediaFactory,
-            $this->dataSetFactory,
-            $this->dataSetColumnFactory,
-            $this->transitionFactory,
-            $this->displayFactory,
-            $this->commandFactory,
-            $this->scheduleFactory,
-            $this->permissionFactory,
-            $this->userGroupFactory,
-            $this->playlistFactory,
-            $this->menuBoardFactory,
-            $this->menuBoardCategoryFactory,
-            $this->notificationFactory,
-            $this->view,
-            $this->cacheProvider
-        );
+        return new DurationProvider($file);
     }
 
     /**
-     * Create a Module
-     * @param string $class
-     * @return ModuleWidget
-     * @throws NotFoundException
+     * Create a widget renderer
+     * @return \Xibo\Widget\Render\WidgetHtmlRenderer
      */
-    public function createByClass($class)
+    public function createWidgetHtmlRenderer(): WidgetHtmlRenderer
     {
-        $modules = $this->query(['enabled DESC'], array('class' => $class));
-
-        $this->getLog()->debug(sprintf(
-            'Creating %s out of possible %s',
-            $class,
-            json_encode(
-                array_map(
-                    function ($element) {
-                        return $element->class;
-                    },
-                    $modules
-                )
-            )
-        ));
-
-        if (count($modules) <= 0) {
-            throw new NotFoundException(sprintf(__('Unknown class %s'), $class));
-        }
-
-        // Create a module
-        return $this->moduleService->get(
-            $modules[0],
-            $this,
-            $this->mediaFactory,
-            $this->dataSetFactory,
-            $this->dataSetColumnFactory,
-            $this->transitionFactory,
-            $this->displayFactory,
-            $this->commandFactory,
-            $this->scheduleFactory,
-            $this->permissionFactory,
-            $this->userGroupFactory,
-            $this->playlistFactory,
-            $this->menuBoardFactory,
-            $this->menuBoardCategoryFactory,
-            $this->notificationFactory,
-            $this->view,
-            $this->cacheProvider
-        );
-    }
-
-    /**
-     * Create a Module
-     * @param string $className
-     * @return ModuleWidget
-     */
-    public function createForInstall($className)
-    {
-        // Create a module
-        return $this->moduleService->getByClass(
-            $className,
-            $this,
-            $this->mediaFactory,
-            $this->dataSetFactory,
-            $this->dataSetColumnFactory,
-            $this->transitionFactory,
-            $this->displayFactory,
-            $this->commandFactory,
-            $this->scheduleFactory,
-            $this->permissionFactory,
-            $this->userGroupFactory,
-            $this->playlistFactory,
-            $this->menuBoardFactory,
-            $this->menuBoardCategoryFactory,
-            $this->notificationFactory,
-            $this->view,
-            $this->cacheProvider
-        );
-    }
-
-    /**
-     * Create a Module
-     * @param int $moduleId
-     * @return ModuleWidget
-     * @throws NotFoundException
-     */
-    public function createById(int $moduleId)
-    {
-        return $this->moduleService->get(
-            $this->getById($moduleId),
-            $this,
-            $this->mediaFactory,
-            $this->dataSetFactory,
-            $this->dataSetColumnFactory,
-            $this->transitionFactory,
-            $this->displayFactory,
-            $this->commandFactory,
-            $this->scheduleFactory,
-            $this->permissionFactory,
-            $this->userGroupFactory,
-            $this->playlistFactory,
-            $this->menuBoardFactory,
-            $this->menuBoardCategoryFactory,
-            $this->notificationFactory,
-            $this->view,
-            $this->cacheProvider
-        );
-    }
-
-    /**
-     * Create a Module with a Media Record
-     * @param Media $media
-     * @return ModuleWidget
-     * @throws NotFoundException
-     */
-    public function createWithMedia($media)
-    {
-        $modules = $this->query(null, array('type' => $media->mediaType));
-
-        if (count($modules) <= 0) {
-            throw new NotFoundException(sprintf(__('Unknown type %s'), $media->mediaType));
-        }
-
-        // Create a widget
-        $widget = $this->widgetFactory->createEmpty();
-        $widget->assignMedia($media->mediaId);
-
-        // Create a module
-        /* @var ModuleWidget $object */
-        $module = $modules[0];
-        $object = $this->moduleService->get(
-            $module,
-            $this,
-            $this->mediaFactory,
-            $this->dataSetFactory,
-            $this->dataSetColumnFactory,
-            $this->transitionFactory,
-            $this->displayFactory,
-            $this->commandFactory,
-            $this->scheduleFactory,
-            $this->permissionFactory,
-            $this->userGroupFactory,
-            $this->playlistFactory,
-            $this->menuBoardFactory,
-            $this->menuBoardCategoryFactory,
-            $this->notificationFactory,
-            $this->view,
-            $this->cacheProvider
-        );
-        $object->setWidget($widget);
-
-        return $object;
-    }
-
-    /**
-     * Create a Module for a Widget and optionally a playlist/region
-     * @param string $type
-     * @param int $widgetId
-     * @param int $ownerId
-     * @param int $playlistId
-     * @param int $regionId
-     * @return ModuleWidget
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
-     */
-    public function createForWidget($type, $widgetId = 0, $ownerId = 0, $playlistId = null, $regionId = 0)
-    {
-        $module = $this->create($type);
-
-        // Do we have a regionId
-        if ($regionId != 0) {
-            // Load the region and set
-            $region = $this->regionFactory->getById($regionId);
-            $module->setRegion($region);
-        }
-
-        // Do we have a widgetId
-        if ($widgetId == 0) {
-            // If we don't have a widget we must have a playlist
-            if ($playlistId == null) {
-                throw new InvalidArgumentException(__('Neither Playlist or Widget provided'), 'playlistId');
-            }
-
-            // Create a new widget to use
-            $widget = $this->widgetFactory->create($ownerId, $playlistId, $module->getModuleType(), null);
-            $module->setWidget($widget);
-        } else {
-            // Load the widget
-            $module->setWidget($this->widgetFactory->loadByWidgetId($widgetId));
-        }
-
-        return $module;
-    }
-
-    /**
-     * Create a Module using a Widget
-     * @param Widget $widget
-     * @param Region|null $region
-     * @return ModuleWidget
-     * @throws NotFoundException
-     */
-    public function createWithWidget($widget, $region = null)
-    {
-        $module = $this->create($widget->type);
-        $module->setWidget($widget);
-
-        if ($region != null) {
-            // Are we loading a widget from the drawer?
-            $targetRegionId = $widget->getOptionValue('targetRegionId', 0);
-            if ($targetRegionId !== 0) {
-                // Lookup the targetRegionId and use that
-                $module->setRegion($this->regionFactory->getById($targetRegionId));
-            } else {
-                // Use the source region
-                $module->setRegion($region);
-            }
-        }
-
-        return $module;
+        return (new WidgetHtmlRenderer($this->cachePath, $this->pool, $this->twig))
+            ->useLogger($this->getLog()->getLoggerInterface());
     }
 
     /**
@@ -568,15 +209,16 @@ class ModuleFactory extends BaseFactory
      * @return Module
      * @throws NotFoundException
      */
-    public function getByExtension($extension)
+    public function getByExtension(string $extension): Module
     {
-        $modules = $this->query(['enabled DESC'], array('extension' => $extension));
-
-        if (count($modules) <= 0) {
-            throw new NotFoundException(sprintf(__('Extension %s does not match any enabled Module'), $extension));
+        foreach ($this->load() as $module) {
+            $validExtensions = $module->getSetting('validExtensions');
+            if (!empty($validExtensions) && Str::contains($validExtensions, $extension)) {
+                return $module;
+            }
         }
 
-        return $modules[0];
+        throw new NotFoundException(sprintf(__('Extension %s does not match any enabled Module'), $extension));
     }
 
     /**
@@ -657,6 +299,17 @@ class ModuleFactory extends BaseFactory
                         }
                     }
 
+                    // Create a widget provider if necessary
+                    // Take our module and see if it has a class associated with it
+                    if (!empty($module->class)) {
+                        // We create a module specific provider
+                        if (!class_exists($module->class)) {
+                            $module->errors[] = 'Module class not found: ' . $module->class;
+                        }
+                        $class = $module->class;
+                        $module->setWidgetProvider(new $class());
+                    }
+
                     // Set error state
                     $module->isError = $module->errors !== null && count($module->errors) > 0;
 
@@ -683,7 +336,7 @@ class ModuleFactory extends BaseFactory
         $xml = new \DOMDocument();
         $xml->load($file);
 
-        $module = new Module($this->getStore(), $this->getLog());
+        $module = new Module($this->getStore(), $this->getLog(), $this);
         $module->moduleId = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
         $module->name = $this->getFirstValueOrDefaultFromXmlNode($xml, 'name');
         $module->author = $this->getFirstValueOrDefaultFromXmlNode($xml, 'author');
@@ -696,6 +349,7 @@ class ModuleFactory extends BaseFactory
         $module->regionSpecific = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'regionSpecific'));
         $module->renderAs = $this->getFirstValueOrDefaultFromXmlNode($xml, 'renderAs');
         $module->defaultDuration = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'defaultDuration'));
+        $module->hasThumbnail = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'hasThumbnail', 0));
 
         // Default values for remaining expected properties
         $module->isInstalled = false;
@@ -720,8 +374,13 @@ class ModuleFactory extends BaseFactory
         }
 
         // Parse stencils
-        $module->preview = $this->getStencils($xml->getElementsByTagName('preview'))[0] ?? null;
-        $module->stencil = $this->getStencils($xml->getElementsByTagName('stencil'))[0] ?? null;
+        try {
+            $module->preview = $this->getStencils($xml->getElementsByTagName('preview'))[0] ?? null;
+            $module->stencil = $this->getStencils($xml->getElementsByTagName('stencil'))[0] ?? null;
+        } catch (\Exception $e) {
+            $module->errors[] = __('Invalid stencils');
+            $this->getLog()->error('Module ' . $module->moduleId . ' has invalid stencils. e: ' .  $e->getMessage());
+        }
 
         return $module;
     }
@@ -730,6 +389,7 @@ class ModuleFactory extends BaseFactory
      * Get stencils from a DOM node list
      * @param \DOMNodeList $nodes
      * @return Stencil[]
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     private function getStencils(\DOMNodeList $nodes): array
     {
@@ -787,7 +447,17 @@ class ModuleFactory extends BaseFactory
                 $property->type = $node->getAttribute('type');
                 $property->title = $this->getFirstValueOrDefaultFromXmlNode($node, 'title');
                 $property->helpText = $this->getFirstValueOrDefaultFromXmlNode($node, 'helpText');
+
+                // Default value
                 $defaultValues[$property->id] = $this->getFirstValueOrDefaultFromXmlNode($node, 'default');
+
+                // Validation
+                $validationNodes = $node->getElementsByTagName('rule');
+                foreach ($validationNodes as $validationNode) {
+                    if ($validationNode instanceof \DOMElement) {
+                        $property->validation[] = $validationNode->textContent;
+                    }
+                }
 
                 // Options
                 $options = $node->getElementsByTagName('options');

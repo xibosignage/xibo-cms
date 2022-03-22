@@ -23,9 +23,13 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Xibo\Factory\ModuleFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
+use Xibo\Widget\Provider\DataProviderInterface;
+use Xibo\Widget\Provider\DurationProviderInterface;
+use Xibo\Widget\Provider\WidgetProviderInterface;
 
 /**
  * Class Module
@@ -94,6 +98,12 @@ class Module implements \JsonSerializable
     public $assignable;
 
     /**
+     * @SWG\Property(description="Does this module have a thumbnail to render?")
+     * @var int
+     */
+    public $hasThumbnail;
+
+    /**
      * @SWG\Property(description="A flag indicating whether the module should be rendered natively by the Player or via the CMS (native|html)")
      * @var string
      */
@@ -148,14 +158,25 @@ class Module implements \JsonSerializable
 
     // </editor-fold>
 
+    /** @var ModuleFactory */
+    private $moduleFactory;
+
+    /** @var WidgetProviderInterface */
+    private $widgetProvider;
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Xibo\Factory\ModuleFactory $moduleFactory
      */
-    public function __construct(StorageServiceInterface $store, LogServiceInterface $log)
-    {
+    public function __construct(
+        StorageServiceInterface $store,
+        LogServiceInterface $log,
+        ModuleFactory $moduleFactory
+    ) {
         $this->setCommonDependencies($store, $log);
+        $this->moduleFactory = $moduleFactory;
     }
 
     /**
@@ -164,6 +185,60 @@ class Module implements \JsonSerializable
     public function __toString()
     {
         return sprintf('%s - %s', $this->type, $this->name);
+    }
+
+    /**
+     * Get this module's widget provider, or null if there isn't one
+     * @return \Xibo\Widget\Provider\WidgetProviderInterface|null
+     */
+    public function getWidgetProviderOrNull(): ?WidgetProviderInterface
+    {
+        return $this->widgetProvider;
+    }
+
+    /**
+     * @param \Xibo\Entity\Widget $widget
+     * @return \Xibo\Widget\Provider\DataProviderInterface
+     */
+    public function createDataProvider(Widget $widget): DataProviderInterface
+    {
+        return $this->moduleFactory->createDataProvider($this, $widget);
+    }
+
+    /**
+     * @param string $file a fully qualified path to this file
+     * @return \Xibo\Widget\Provider\DurationProviderInterface
+     */
+    public function createDurationProvider(string $file): DurationProviderInterface
+    {
+        return $this->moduleFactory->createDurationProvider($file);
+    }
+
+    /**
+     * Fetch duration of a file.
+     * @param string $file
+     * @return int
+     */
+    public function fetchDurationOrDefault(string $file): int
+    {
+        if ($this->widgetProvider === null) {
+            return $this->defaultDuration;
+        }
+        $durationProvider = $this->createDurationProvider($file);
+        $this->widgetProvider->fetchDuration($durationProvider);
+
+        return $durationProvider->getDuration();
+    }
+
+    /**
+     * Sets the widget provider for this module
+     * @param \Xibo\Widget\Provider\WidgetProviderInterface $widgetProvider
+     * @return $this
+     */
+    public function setWidgetProvider(WidgetProviderInterface $widgetProvider): Module
+    {
+        $this->widgetProvider = $widgetProvider;
+        return $this;
     }
 
     /**
@@ -180,6 +255,19 @@ class Module implements \JsonSerializable
         }
 
         return $default;
+    }
+
+    /**
+     * @param \Xibo\Entity\Widget $widget
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     */
+    public function validateProperties(Widget $widget): void
+    {
+        // Go through all of our required properties, and validate that they are as they should be.
+        foreach ($this->properties as $property) {
+            $property->value = $widget->getOptionValue($property->id, null);
+            $property->validate();
+        }
     }
 
     /**

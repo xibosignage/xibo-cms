@@ -32,12 +32,9 @@ use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
-use Xibo\Factory\RegionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
@@ -635,27 +632,33 @@ class Playlist extends Base
 
         // Should we assign any existing media
         if (!empty($nameFilter) || !empty($tagFilter)) {
-            $media = $this->mediaFactory->query(null, ['name' => $nameFilter, 'tags' => $tagFilter, 'assignable' => 1, 'exactTags' => $exactTags, 'logicalOperator' => $logicalOperator]);
+            $media = $this->mediaFactory->query(null, [
+                'name' => $nameFilter,
+                'tags' => $tagFilter,
+                'assignable' => 1,
+                'exactTags' => $exactTags,
+                'logicalOperator' => $logicalOperator
+            ]);
 
             if (count($media) > 0) {
                 $widgets = [];
 
                 foreach ($media as $item) {
-                    // Create a module
-                    $module = $this->moduleFactory->create($item->mediaType);
+                    // Assign items from the library.
+                    // Get a module to use
+                    $module = $this->moduleFactory->getByType($item->mediaType);
 
-                    // Determine the duration
-                    $itemDuration = ($item->duration == 0) ? $module->determineDuration() : $item->duration;
+                    // The item duration shouldn't ever be 0 in the library, but in case it is we set to the default
+                    $itemDuration = ($item->duration == 0) ? $module->defaultDuration : $item->duration;
 
                     // Create a widget
-                    $widget = $this->widgetFactory->create($this->getUser()->userId, $playlist->playlistId, $item->mediaType, $itemDuration);
+                    $widget = $this->widgetFactory->create(
+                        $this->getUser()->userId,
+                        $playlist->playlistId,
+                        $item->mediaType,
+                        $itemDuration
+                    );
                     $widget->assignMedia($item->mediaId);
-
-                    // Assign the widget to the module
-                    $module->setWidget($widget);
-
-                    // Set default options (this sets options on the widget)
-                    $module->setDefaultWidgetOptions();
 
                     // Calculate the duration
                     $widget->calculateDuration($module);
@@ -666,7 +669,11 @@ class Playlist extends Base
                     // Add to a list of new widgets
                     $widgets[] = $widget;
                     if ($playlist->isDynamic && count($widgets) >= $playlist->maxNumberOfItems) {
-                        $this->getLog()->debug(sprintf('Dynamic Playlist ID %d, has reached the maximum number of items %d, finishing assignments', $playlist->playlistId, $playlist->maxNumberOfItems));
+                        $this->getLog()->debug(sprintf(
+                            'Dynamic Playlist ID %d, has reached the maximum number of items %d, finishing assignments',
+                            $playlist->playlistId,
+                            $playlist->maxNumberOfItems
+                        ));
                         break;
                     }
                 }
@@ -1266,36 +1273,34 @@ class Playlist extends Base
 
         // Loop through all the media
         foreach ($media as $mediaId) {
-            /* @var int $mediaId */
             $item = $this->mediaFactory->getById($mediaId);
 
-            if (!$this->getUser()->checkViewable($item))
+            if (!$this->getUser()->checkViewable($item)) {
                 throw new AccessDeniedException(__('You do not have permissions to use this media'));
+            }
 
-            if ($item->mediaType == 'genericfile' || $item->mediaType == 'font')
-                throw new InvalidArgumentException(sprintf(__('You cannot assign file type %s to a playlist'), $item->mediaType), 'mediaType');
+            if ($item->mediaType == 'genericfile' || $item->mediaType == 'font') {
+                throw new InvalidArgumentException(sprintf(
+                    __('You cannot assign file type %s to a playlist'),
+                    $item->mediaType
+                ), 'mediaType');
+            }
 
             // Create a module
-            $module = $this->moduleFactory->create($item->mediaType);
+            $module = $this->moduleFactory->getByType($item->mediaType);
 
             // Determine the duration
-            // if we have a duration provided, then use it, otherwise use the duration recorded on the library item already
+            // if we have a duration provided, then use it, otherwise use the duration recorded on the
+            // library item already
             $itemDuration = ($duration !== null) ? $duration : $item->duration;
 
-            // If the library item duration (or provided duration) is 0, then call the module to determine what the
-            // duration should be.
-            // in most cases calling the module will return the Module Default Duration as configured in settings.
-            $itemDuration = ($itemDuration == 0) ? $module->determineDuration() : $itemDuration;
+            // If the library item duration (or provided duration) is 0, then default to the Module Default
+            // Duration as configured in settings.
+            $itemDuration = ($itemDuration == 0) ? $module->defaultDuration : $itemDuration;
 
             // Create a widget
             $widget = $this->widgetFactory->create($this->getUser()->userId, $id, $item->mediaType, $itemDuration);
             $widget->assignMedia($item->mediaId);
-
-            // Assign the widget to the module
-            $module->setWidget($widget);
-
-            // Set default options (this sets options on the widget)
-            $module->setDefaultWidgetOptions();
 
             // If a duration has been provided, then we want to use it, so set useDuration to 1.
             if ($duration !== null || $sanitizedParams->getCheckbox('useDuration') == 1) {

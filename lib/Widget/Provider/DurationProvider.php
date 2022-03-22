@@ -22,40 +22,24 @@
 
 namespace Xibo\Widget\Provider;
 
-use Xibo\Entity\Module;
-use Xibo\Entity\Widget;
-
 /**
  * Xibo's default implementation of the Duration Provider
  */
 class DurationProvider implements DurationProviderInterface
 {
-    /** @var \Xibo\Entity\Module */
-    private $module;
-
-    /** @var \Xibo\Entity\Widget */
-    private $widget;
+    /** @var string */
+    private $file;
 
     /** @var int Duration in seconds */
     private $duration;
 
     /**
      * Constructor
-     * @param \Xibo\Entity\Module $module
-     * @param \Xibo\Entity\Widget $widget
+     * @param string $file
      */
-    public function __construct(Module $module, Widget $widget)
+    public function __construct(string $file)
     {
-        $this->module = $module;
-        $this->widget = $widget;
-    }
-
-    /**
-     * @inheritDoc
-     */
-    public function getProperty(string $property, $default = null)
-    {
-        $this->widget->getOptionValue($property, $default);
+        $this->file = $file;
     }
 
     /**

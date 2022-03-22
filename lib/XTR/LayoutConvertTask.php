@@ -137,8 +137,7 @@ class LayoutConvertTask implements TaskInterface
 
                 // We need one final pass through all widgets on the layout so that we can set the durations properly.
                 foreach ($layout->getRegionWidgets() as $widget) {
-                    $module = $this->moduleFactory->createWithWidget($widget);
-                    $widget->calculateDuration($module, true);
+                    $widget->calculateDuration($this->moduleFactory->getByType($widget->type), true);
 
                     // Get global stat setting of widget to set to on/off/inherit
                     $widget->setOptionValue('enableStat', 'attrib', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
