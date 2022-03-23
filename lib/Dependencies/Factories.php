@@ -264,7 +264,7 @@ class Factories
             },
             'moduleFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\ModuleFactory(
-                    $c->get('config')->getSetting('LIBRARY_LOCATION') . 'widget',
+                    $c->get('configService')->getSetting('LIBRARY_LOCATION') . 'widget',
                     $c->get('pool'),
                     $c->get('view')
                 );
@@ -274,6 +274,14 @@ class Factories
                         $c->get('userFactory')
                     )
                     ->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
+                return $repository;
+            },
+            'moduleTemplateFactory' => function (ContainerInterface $c) {
+                $repository = new \Xibo\Factory\ModuleTemplateFactory(
+                    $c->get('pool'),
+                    $c->get('view')
+                );
+                $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
             },
             'notificationFactory' => function (ContainerInterface $c) {

@@ -28,9 +28,11 @@ use Psr\Log\NullLogger;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
+use Xibo\Entity\ModuleTemplate;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
  * Class responsible for rendering out a widgets HTML, caching it if necessary
@@ -81,6 +83,52 @@ class WidgetHtmlRenderer
     }
 
     /**
+     * @param \Xibo\Entity\Module $module
+     * @param \Xibo\Entity\Region $region
+     * @param \Xibo\Entity\Widget $widget
+     * @param \Xibo\Support\Sanitizer\SanitizerInterface $params
+     * @return string
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     */
+    public function preview(
+        Module $module,
+        Region $region,
+        Widget $widget,
+        SanitizerInterface $params
+    ): string {
+        if ($module->previewEnabled == 1) {
+            $width = $params->getDouble('width', ['default' => 0]);
+            $height = $params->getDouble('height', ['default' => 0]);
+
+            if ($module->preview !== null) {
+                // Parse out our preview (which is always a stencil)
+                // TODO: perhaps this is too much power to hand off to the template
+                return $this->twig->fetchFromString($module->preview->twig, [
+                    'width' => $width,
+                    'height' => $height,
+                    'params' => $params,
+                    'widget' => $widget
+                ]);
+            } else {
+                // Modules without a preview should render out as HTML
+                return $this->twig->fetch('module-html-preview.twig', [
+                    'regionId' => $region->regionId,
+                    'widgetId' => $widget->widgetId
+                ]);
+            }
+        } else {
+            // Render an icon.
+            return $this->twig->fetch('module-icon-preview.twig', [
+                'moduleName' => $module->name,
+                'moduleType' => $module->type
+            ]);
+        }
+    }
+
+    /**
+     * @param ModuleTemplate[] $moduleTemplates
      * @throws \Twig\Error\SyntaxError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\LoaderError
@@ -89,6 +137,7 @@ class WidgetHtmlRenderer
         Module $module,
         Region $region,
         Widget $widget,
+        array $moduleTemplates,
         int $displayId
     ): string {
         $this->getLog()->debug('getResourceOrCache for displayId ' . $displayId
@@ -145,19 +194,56 @@ class WidgetHtmlRenderer
             // Build up some data for twig
             $twig = [];
             $twig['viewPortWidth'] = $displayId === 0 ? $region->width : '[[ViewPortWidth]]';
+            $twig['hbs'] = [];
+
+            // Decorate our module with the saved widget properties
+            $module->decorateProperties($widget);
 
             // What does our module have
             if ($module->stencil !== null) {
+                // Stencils have access to any module properties
                 if ($module->stencil->twig !== null) {
-                    $twig['stencil'] = $this->twig->fetchFromString($module->stencil->twig);
+                    $twig['stencil'] = $this->twig->fetchFromString(
+                        $module->stencil->twig,
+                        $module->getPropertyValues()
+                    );
                 }
                 if ($module->stencil->hbs !== null) {
-                    $twig['hbs'] = $module->stencil->hbs;
+                    $twig['hbs'][] = $module->stencil->hbs;
                 }
             }
+            
+            // Include elements/element groups - they will already be JSON encoded.
+            $twig['elementGroups'] = $widget->getOptionValue('elementGroups', null);
 
-            // What does our template have?
-
+            // If we have a static template, then render that out.
+            foreach ($moduleTemplates as $moduleTemplate) {
+                if ($moduleTemplate->type === 'static') {
+                    $moduleTemplate->decorateProperties($widget);
+                    if ($moduleTemplate->stencil !== null) {
+                        if ($moduleTemplate->stencil->twig !== null) {
+                            $twig['templateStencil'] = $this->twig->fetchFromString(
+                                $moduleTemplate->stencil->twig,
+                                $moduleTemplate->getPropertyValues()
+                            );
+                        }
+                    }
+                } else {
+                    // TODO: we need to take our element groups and use the saved data to fully
+                    //  populate this module template object.
+                    //  match the $twig['elementGroups']['element'] with this template.
+                    foreach ($twig['elementGroups']['element'] as $element) {
+                        if ($element['id'] === $moduleTemplate->templateId) {
+                            // We have a match.
+                            // TODO: what if the same template is used more than once!
+                        }
+                    }
+                }
+                
+                if ($moduleTemplate->stencil->hbs !== null) {
+                    $twig['hbs'][] = $moduleTemplate->stencil->hbs;
+                }
+            }
 
             // We use the default get resource template.
             $output = $this->twig->fetch('widget-html-render.twig', $twig);

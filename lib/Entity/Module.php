@@ -42,6 +42,7 @@ use Xibo\Widget\Provider\WidgetProviderInterface;
 class Module implements \JsonSerializable
 {
     use EntityTrait;
+    use ModulePropertyTrait;
 
     /**
      * @SWG\Property(description="The ID of this Module")
@@ -188,6 +189,15 @@ class Module implements \JsonSerializable
     }
 
     /**
+     * Is a template expected?
+     * @return bool
+     */
+    public function isTemplateExpected(): bool
+    {
+        return (!empty($this->dataType));
+    }
+
+    /**
      * Get this module's widget provider, or null if there isn't one
      * @return \Xibo\Widget\Provider\WidgetProviderInterface|null
      */
@@ -255,19 +265,6 @@ class Module implements \JsonSerializable
         }
 
         return $default;
-    }
-
-    /**
-     * @param \Xibo\Entity\Widget $widget
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     */
-    public function validateProperties(Widget $widget): void
-    {
-        // Go through all of our required properties, and validate that they are as they should be.
-        foreach ($this->properties as $property) {
-            $property->value = $widget->getOptionValue($property->id, null);
-            $property->validate();
-        }
     }
 
     /**

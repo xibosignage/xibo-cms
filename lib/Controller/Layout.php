@@ -1440,7 +1440,9 @@ class Layout extends Base
 
                     if (in_array('widget_validity', $embed)) {
                         try {
-                            $module->validateProperties($widget);
+                            $module
+                                ->decorateProperties($widget)
+                                ->validateProperties();
                             $widget->isValid = 1;
                         } catch (GeneralException $xiboException) {
                             $widget->isValid = 0;

@@ -38,8 +38,6 @@
             <helpText>The Extensions allowed on files uploaded using this module. Comma Separated.</helpText>
             <default>mp4,wmv</default>
         </property>
-    </settings>
-    <properties>
         <property id="defaultMute" type="checkbox">
             <title>Default Mute?</title>
             <helpText>Should new Video Widgets default to Muted?</helpText>
@@ -53,6 +51,42 @@
                 <option name="aspect">Aspect</option>
                 <option name="stretch">Stretch</option>
             </options>
+        </property>
+    </settings>
+    <properties>
+        <property id="message-duration" type="message">
+            <title>This video will play for %media.duration% seconds. Cut the video short by setting a shorter duration below. Wait on the last frame or set to Loop by setting a higher duration below.</title>
+        </property>
+        <property id="loop" type="checkbox">
+            <title>Loop?</title>
+            <helpText>Should the video loop if it finishes before the provided duration?</helpText>
+            <default>0</default>
+            <visibility>
+                <test type="and">
+                    <condition field="useDuration" type="eq">1</condition>
+                    <condition field="duration" type="gt">%media.duration%</condition>
+                </test>
+            </visibility>
+        </property>
+        <property id="scaleTypeId" type="dropdown" mode="single">
+            <title>Scale type</title>
+            <helpText>How should this video be scaled?</helpText>
+            <default>%defaultScaleType%</default>
+            <options>
+                <option name="aspect">Aspect</option>
+                <option name="stretch">Stretch</option>
+            </options>
+            <playerCompatibility windows="v2 R253+"></playerCompatibility>
+        </property>
+        <property id="mute" type="checkbox">
+            <title>Mute?</title>
+            <helpText>Should the video be muted?</helpText>
+            <default>%defaultMute%</default>
+        </property>
+        <property id="showFullScreen" type="checkbox">
+            <title>Show Full Screen?</title>
+            <helpText>Should the video expand over the top of existing content and show in full screen?</helpText>
+            <default>0</default>
         </property>
     </properties>
 </module>

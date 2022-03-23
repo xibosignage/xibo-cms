@@ -28,9 +28,6 @@ use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
 use Xibo\Support\Exception\NotFoundException;
-use Xibo\Widget\Definition\PlayerCompatibility;
-use Xibo\Widget\Definition\Property;
-use Xibo\Widget\Definition\Stencil;
 use Xibo\Widget\Provider\DataProvider;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProvider;
@@ -43,6 +40,8 @@ use Xibo\Widget\Render\WidgetHtmlRenderer;
  */
 class ModuleFactory extends BaseFactory
 {
+    use ModuleXmlTrait;
+
     /** @var Module[] all modules */
     private $modules = null;
 
@@ -275,29 +274,7 @@ class ModuleFactory extends BaseFactory
             foreach ($files as $file) {
                 // Create our module entity from this file
                 try {
-                    $module = $this->createFromXml($file);
-
-                    // Add in any settings we already have
-                    if (array_key_exists($module->moduleId, $modulesWithSettings)) {
-                        $moduleSettings = $modulesWithSettings[$module->moduleId];
-                        $module->isInstalled = true;
-                        $module->enabled = $moduleSettings->getInt('enabled', ['default' => 0]);
-                        $module->previewEnabled = $moduleSettings->getInt('previewEnabled', ['default' => 0]);
-                        $module->defaultDuration = $moduleSettings->getInt('defaultDuration', ['default' => 10]);
-
-                        $settings = $moduleSettings->getString('settings');
-                        if ($settings !== null) {
-                            $settings = json_decode($settings, true);
-
-                            foreach ($module->settings as $property) {
-                                foreach ($settings as $setting) {
-                                    if ($setting['id'] === $property->id) {
-                                        $property->value = $setting['value'];
-                                    }
-                                }
-                            }
-                        }
-                    }
+                    $module = $this->createFromXml($file, $modulesWithSettings);
 
                     // Create a widget provider if necessary
                     // Take our module and see if it has a class associated with it
@@ -330,7 +307,7 @@ class ModuleFactory extends BaseFactory
      * @param string $file the path to the module definition
      * @return \Xibo\Entity\Module
      */
-    private function createFromXml(string $file): Module
+    private function createFromXml(string $file, array $modulesWithSettings): Module
     {
         // TODO: cache this into Stash
         $xml = new \DOMDocument();
@@ -366,8 +343,30 @@ class ModuleFactory extends BaseFactory
             $this->getLog()->error('Module ' . $module->moduleId . ' has invalid settings. e: ' .  $e->getMessage());
         }
 
+        // Add in any settings we already have
+        if (array_key_exists($module->moduleId, $modulesWithSettings)) {
+            $moduleSettings = $modulesWithSettings[$module->moduleId];
+            $module->isInstalled = true;
+            $module->enabled = $moduleSettings->getInt('enabled', ['default' => 0]);
+            $module->previewEnabled = $moduleSettings->getInt('previewEnabled', ['default' => 0]);
+            $module->defaultDuration = $moduleSettings->getInt('defaultDuration', ['default' => 10]);
+
+            $settings = $moduleSettings->getString('settings');
+            if ($settings !== null) {
+                $settings = json_decode($settings, true);
+
+                foreach ($module->settings as $property) {
+                    foreach ($settings as $setting) {
+                        if ($setting['id'] === $property->id) {
+                            $property->value = $setting['value'];
+                        }
+                    }
+                }
+            }
+        }
+
         try {
-            $module->properties = $this->parseProperties($xml->getElementsByTagName('properties'));
+            $module->properties = $this->parseProperties($xml->getElementsByTagName('properties'), $module);
         } catch (\Exception $e) {
             $module->errors[] = __('Invalid properties');
             $this->getLog()->error('Module ' . $module->moduleId . ' has invalid properties. e: ' .  $e->getMessage());
@@ -383,156 +382,5 @@ class ModuleFactory extends BaseFactory
         }
 
         return $module;
-    }
-
-    /**
-     * Get stencils from a DOM node list
-     * @param \DOMNodeList $nodes
-     * @return Stencil[]
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     */
-    private function getStencils(\DOMNodeList $nodes): array
-    {
-        $stencils = [];
-
-        foreach ($nodes as $node) {
-            $stencil = new Stencil();
-
-            /** @var \DOMNode $node */
-            foreach ($node->childNodes as $childNode) {
-                /** @var \DOMNode $childNode */
-                if ($childNode->nodeName === 'twig') {
-                    $stencil->twig = $childNode->textContent;
-                } else if ($childNode->nodeName === 'hbs') {
-                    $stencil->hbs = $childNode->textContent;
-                } else if ($childNode->nodeName === 'title') {
-                    $stencil->title = $childNode->textContent;
-                } else if ($childNode->nodeName === 'properties') {
-                    $stencil->properties = $this->parseProperties([$childNode]);
-                } else if ($childNode->nodeName === 'elements') {
-                    $stencil->elements = $this->parseElements([$childNode]);
-                }
-            }
-
-            if ($stencil->twig !== null || $stencil->hbs !== null) {
-                $stencils[] = $stencil;
-            }
-        }
-
-        return $stencils;
-    }
-
-    /**
-     * @param \DOMNode[]|\DOMNodeList $propertyNodes
-     * @return \Xibo\Widget\Definition\Property[]
-     * @throws \Xibo\Support\Exception\InvalidArgumentException
-     */
-    private function parseProperties($propertyNodes): array
-    {
-        if ($propertyNodes instanceof \DOMNodeList) {
-            // Property nodes are the parent node
-            if (count($propertyNodes) <= 0) {
-                return [];
-            }
-            $propertyNodes = $propertyNodes->item(0)->childNodes;
-        }
-
-        $defaultValues = [];
-        $properties = [];
-        foreach ($propertyNodes as $node) {
-            if ($node->nodeType === XML_ELEMENT_NODE) {
-                /** @var \DOMElement $node */
-                $property = new Property();
-                $property->id = $node->getAttribute('id');
-                $property->type = $node->getAttribute('type');
-                $property->title = $this->getFirstValueOrDefaultFromXmlNode($node, 'title');
-                $property->helpText = $this->getFirstValueOrDefaultFromXmlNode($node, 'helpText');
-
-                // Default value
-                $defaultValues[$property->id] = $this->getFirstValueOrDefaultFromXmlNode($node, 'default');
-
-                // Validation
-                $validationNodes = $node->getElementsByTagName('rule');
-                foreach ($validationNodes as $validationNode) {
-                    if ($validationNode instanceof \DOMElement) {
-                        $property->validation[] = $validationNode->textContent;
-                    }
-                }
-
-                // Options
-                $options = $node->getElementsByTagName('options');
-                if (count($options) > 0) {
-                    foreach ($options->item(0)->childNodes as $optionNode) {
-                        if ($optionNode->nodeType === XML_ELEMENT_NODE) {
-                            /** @var \DOMElement $optionNode */
-                            $property->addOption(
-                                $optionNode->getAttribute('name'),
-                                $optionNode->textContent
-                            );
-                        }
-                    }
-                }
-
-                // Player compat
-                $playerCompat = $node->getElementsByTagName('playerCompatibility');
-                if (count($playerCompat) > 0) {
-                    $playerCompat = $playerCompat->item(0);
-                    if ($playerCompat->nodeType === XML_ELEMENT_NODE) {
-                        /** @var \DOMElement $playerCompat */
-                        $playerCompatibility = new PlayerCompatibility();
-                        $playerCompatibility->message = $playerCompat->textContent;
-                        $playerCompatibility->windows = $playerCompat->getAttribute('windows');
-                        $playerCompatibility->android = $playerCompat->getAttribute('android');
-                        $playerCompatibility->linux = $playerCompat->getAttribute('linux');
-                        $playerCompatibility->webos = $playerCompat->getAttribute('webos');
-                        $playerCompatibility->tizen = $playerCompat->getAttribute('tizen');
-                        $property->playerCompatability = $playerCompatibility;
-                    }
-                }
-
-                $properties[] = $property;
-            }
-        }
-
-        // Set the default values
-        $params = $this->getSanitizer($defaultValues);
-        foreach ($properties as $property) {
-            $property->setDefaultByType($params);
-        }
-
-        return $properties;
-    }
-
-    /**
-     * @param \DOMNode[]|\DOMNodeList $elementNodes
-     * @return \Xibo\Widget\Definition\Property[]
-     */
-    private function parseElements($elementNodes): array
-    {
-        $elements = [];
-        foreach ($elementNodes as $node) {
-
-        }
-
-        return $elements;
-    }
-
-    /**
-     * Get the first node value
-     * @param \DOMDocument|\DOMElement $xml The XML document
-     * @param string $nodeName The no name
-     * @param string|null $default A default value is none is present
-     * @return string|null
-     */
-    private function getFirstValueOrDefaultFromXmlNode($xml, string $nodeName, $default = null): ?string
-    {
-        foreach ($xml->getElementsByTagName($nodeName) as $node) {
-            /** @var \DOMNode $node */
-            if ($node->nodeType === XML_ELEMENT_NODE) {
-                return $node->textContent;
-            }
-        }
-
-        return $default;
     }
 }

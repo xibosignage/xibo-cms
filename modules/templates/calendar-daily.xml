@@ -1,0 +1,322 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template>
+        <id>daily-light</id>
+        <type>static</type>
+        <dataType>calendar-advanced</dataType>
+        <properties>
+            <property id="gridColor" type="colour">
+                <title>Grid Colour</title>
+                <default>#dadada</default>
+            </property>
+            <property id="gridTextColor" type="colour">
+                <title>Grid Text Colour</title>
+                <default>#3e4e63</default>
+            </property>
+        </properties>
+        <stencil>
+            <hbs id="calendar-daily"><![CDATA[
+{{#if}}{{/if}}
+<div class="calendar-daily calendar-container">
+    <ol class="hour-grid"></ol>
+    <ol class="day-title"></ol>
+    <ol class="day-container"></ol>
+</div>
+            ]]></hbs>
+            <twig><![CDATA[
+<style>
+:root {
+  --grid-color: {{gridColor}};
+  --grid-text-color: {{gridTextColor}};
+  --today-text-color: #fb8100;
+  --now-marker-color: #fb8100;
+  --day-bg-color: #f9f9f9;
+  --day-text-color: #3e4e63;
+  --weekdays-bg-color: #f9f9f9;
+  --weekdays-text-color: #3e4e63;
+  --event-bg-color: #4174b5;
+  --event-text-color: #fff;
+  --daily-event-bg-color: #4174b5;
+  --daily-event-text-color: #fff;
+  --multi-day-event-bg-color: #4174b5;
+  --multi-day-event-text-color: #fff;
+  --aditional-events-bg-color: #efefef;
+  --aditional-events-text-color: #3e4e63;
+  --all-day-events-container-height: 8rem;
+  font-size: 16px;
+}
+
+#content {
+  overflow: hidden;
+  height: 100%;
+}
+
+ol, li {
+  padding: 0;
+  margin: 0;
+  list-style: none;
+}
+
+.calendar-daily {
+  position: relative;
+  height: 100%;
+  background-color: var(--day-bg-color);
+}
+
+.now-marker {
+  position: absolute;
+  background-color: var(--now-marker-color);
+  height: 0.2rem;
+  margin-top: -0.1rem;
+  width: 100%;
+  z-index: 4;
+}
+
+.hour-grid {
+  position: absolute;
+  width: 100%;
+  margin-top: 4rem;
+  height: calc(100% - 4rem);
+  z-index: 1;
+}
+
+.hour-grid .hour-time {
+  line-height: 2px;
+  margin-left: 8px;
+  text-align: right;
+  width: 4rem;
+  color: var(--grid-text-color);
+}
+
+.hour-grid .hour-time:after {
+  border-top: 1px solid var(--grid-color);
+  content: "";
+  width: calc(100% - 12px - 4rem);
+  margin-left: 12px;
+  position: absolute;
+  z-index: 1;
+}
+
+.day-title {
+  color: var(--weekdays-text-color);
+  background-color: var(--weekdays-bg-color);
+  font-size: 1.75rem;
+  padding-top: 0.25rem;
+  height: 3.75rem;
+}
+
+.day-title, .day-container {
+  margin-left: 6rem;
+}
+
+.day-title > * {
+  padding-left: 1rem;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  flex-direction: row-reverse;
+  justify-content: flex-end;
+}
+
+.day-title .week-day-date {
+  font-size: 2.5rem;
+  font-weight: bold;
+  color: var(--today-text-color);
+}
+
+.day-title .week-day {
+  margin-left: 0.5rem;
+}
+
+.day-container {
+  height: calc(100% - 4rem);
+  position: relative;
+}
+
+.calendar-day {
+  position: relative;
+  height: 100%;
+  font-size: 1.2rem;
+  color: var(--day-text-color);
+  border: 1px solid var(--grid-color);
+}
+
+.calendar-day .calendar-events-container {
+  height: 100%;
+  position: relative;
+  overflow: hidden;
+}
+
+.calendar-day .calendar-all-day-events-container {
+  display: none;
+  height: var(--all-day-events-container-height);
+  font-size: 1.2rem;
+}
+
+.calendar-daily.show-all-day-events .calendar-day .calendar-events-container {
+  height: calc(100% - var(--all-day-events-container-height));
+}
+
+.calendar-daily.show-all-day-events .calendar-day .calendar-all-day-events-container {
+  display: block;
+  position: relative;
+}
+
+.calendar-daily.show-all-day-events .hour-grid {
+  margin-top: calc(4rem + var(--all-day-events-container-height));
+  height: calc(100% - calc(4rem + var(--all-day-events-container-height)));
+}
+
+.calendar-all-day-events-container .extra-events {
+  bottom: 1px;
+  opacity: 0.85;
+  z-index: 2;
+  text-align: right;
+  position: absolute;
+  font-weight: bold;
+  background-color: var(--aditional-events-bg-color);
+  color: var(--aditional-events-text-color);
+  width: 100%;
+  font-size: 1.2rem;
+  height: 1.25rem;
+}
+
+.calendar-all-day-events-container .extra-events span {
+  padding-right: 6px;
+}
+
+.calendar-event {
+  width: 100%;
+  color: var(--event-text-color);
+  background-color: var(--event-bg-color);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  position: absolute;
+  height: 1.25rem;
+  line-height: 1em;
+  z-index: 1;
+  border-radius: 6px;
+  min-height: 1em;
+  display: flex;
+  flex-direction: column;
+}
+
+.calendar-event.before-view {
+  border-top-left-radius: 0;
+  border-top-right-radius: 0;
+}
+
+.calendar-event.concurrent::after {
+  border: 1px solid var(--event-text-color);
+  content: " ";
+  width: calc(100% - 2px);
+  height: calc(100% - 2px);
+  left: 0px;
+  top: 0px;
+  position: absolute;
+  border-radius: 6px;
+}
+
+.calendar-event.concurrent.level-1 {
+  margin-left: 20%;
+  width: 80%;
+  z-index: 1;
+  filter: brightness(1.05);
+}
+
+.calendar-event.concurrent.level-2 {
+  margin-left: 40%;
+  width: 60%;
+  z-index: 2;
+  filter: brightness(1.1);
+}
+
+.calendar-event.concurrent.level-3 {
+  margin-left: 60%;
+  width: 40%;
+  z-index: 3;
+  filter: brightness(1.15);
+}
+
+.calendar-event.concurrent.level-4 {
+  margin-left: 70%;
+  width: 30%;
+  z-index: 4;
+  filter: brightness(1.2);
+}
+
+.calendar-event.concurrent.level-5 {
+  margin-left: 80%;
+  width: 20%;
+  z-index: 5;
+  filter: brightness(1.25);
+}
+
+.calendar-event.shorter-event {
+  flex-direction: row;
+}
+
+.calendar-event .event-time {
+  font-size: 0.8em;
+  margin-left: 0.25em;
+  margin-top: 2px;
+}
+
+.calendar-event .event-summary {
+  font-size: 0.9em;
+  margin-left: 0.25em;
+  font-weight: bold;
+  margin-top: 2px;
+}
+
+.calendar-event.multi-day, .calendar-event.all-day {
+  flex-direction: row;
+  padding: 0.25rem 0;
+  border-radius: 6px;
+}
+
+.calendar-event.all-day {
+  color: var(--daily-event-text-color);
+  background-color: var(--daily-event-bg-color);
+}
+
+.calendar-event.multi-day {
+  color: var(--multi-day-event-text-color);
+  background-color: var(--multi-day-event-bg-color);
+}
+
+.calendar-event.multi-day.cropped-event-start {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: -2px;
+}
+
+.calendar-event.multi-day.cropped-event-end {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+</templates>

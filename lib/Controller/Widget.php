@@ -27,8 +27,6 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\WidgetAddEvent;
-use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -53,6 +51,9 @@ class Widget extends Base
     /** @var ModuleFactory */
     private $moduleFactory;
 
+    /** @var \Xibo\Factory\ModuleTemplateFactory */
+    private $moduleTemplateFactory;
+
     /** @var PlaylistFactory */
     private $playlistFactory;
 
@@ -71,49 +72,40 @@ class Widget extends Base
     /** @var RegionFactory */
     private $regionFactory;
 
-    /** @var LayoutFactory */
-    protected $layoutFactory;
-
-    /** @var DisplayGroupFactory */
-    protected $displayGroupFactory;
-
     /** @var WidgetAudioFactory */
     protected $widgetAudioFactory;
 
     /**
      * Set common dependencies.
      * @param ModuleFactory $moduleFactory
+     * @param \Xibo\Factory\ModuleTemplateFactory $moduleTemplateFactory
      * @param PlaylistFactory $playlistFactory
      * @param MediaFactory $mediaFactory
      * @param PermissionFactory $permissionFactory
      * @param WidgetFactory $widgetFactory
      * @param TransitionFactory $transitionFactory
      * @param RegionFactory $regionFactory
-     * @param LayoutFactory $layoutFactory
-     * @param DisplayGroupFactory $displayGroupFactory
      * @param WidgetAudioFactory $widgetAudioFactory
      */
     public function __construct(
         $moduleFactory,
+        $moduleTemplateFactory,
         $playlistFactory,
         $mediaFactory,
         $permissionFactory,
         $widgetFactory,
         $transitionFactory,
         $regionFactory,
-        $layoutFactory,
-        $displayGroupFactory,
         $widgetAudioFactory
     ) {
         $this->moduleFactory = $moduleFactory;
+        $this->moduleTemplateFactory = $moduleTemplateFactory;
         $this->playlistFactory = $playlistFactory;
         $this->mediaFactory = $mediaFactory;
         $this->permissionFactory = $permissionFactory;
         $this->widgetFactory = $widgetFactory;
         $this->transitionFactory = $transitionFactory;
         $this->regionFactory = $regionFactory;
-        $this->layoutFactory = $layoutFactory;
-        $this->displayGroupFactory = $displayGroupFactory;
         $this->widgetAudioFactory = $widgetAudioFactory;
     }
     
@@ -168,8 +160,9 @@ class Widget extends Base
      */
     public function addWidget(Request $request, Response $response, $type, $id)
     {
-        $playlist = $this->playlistFactory->getById($id);
+        $params = $this->getSanitizer($request->getParams());
 
+        $playlist = $this->playlistFactory->getById($id);
         if (!$this->getUser()->checkEditable($playlist)) {
             throw new AccessDeniedException(__('This Playlist is not shared with you with edit permission'));
         }
@@ -214,8 +207,22 @@ class Widget extends Base
             $module->defaultDuration
         );
 
+        // Take in a template if the module has a datatype (which means its expecting a template)
+        if (!empty($module->dataType)) {
+            $templateId = $params->getString('templateId', [
+                'throw' => function () {
+                    throw new InvalidArgumentException(__('Please select a template for this widget'), 'templateId');
+                }
+            ]);
+
+            // Load the template and make sure its valid.
+
+
+            $widget->setOptionValue('template', 'attrib', $templateId);
+        }
+
         // Assign this module to this Playlist in the appropriate place (which could be null)
-        $displayOrder = $this->getSanitizer($request->getParams())->getInt('displayOrder');
+        $displayOrder = $params->getInt('displayOrder');
         $playlist->assignWidget($widget, $displayOrder);
 
         // Dispatch the Edit Event
@@ -273,10 +280,27 @@ class Widget extends Base
             }
         }
 
+        // Decorate the module properties with our current widgets data
+        $module->decorateProperties($widget);
+
+        // Load a template?
+        $template = null;
+        if ($module->isTemplateExpected()) {
+            $templateId = $widget->getOptionValue('templateId', null);
+            if (empty($templateId)) {
+                throw new InvalidArgumentException(__('This widget should have a template assigned'), 'templateId');
+            }
+            $template = $this->moduleTemplateFactory->getById($templateId);
+
+            // Decorate the template with any properties saved in the widget
+            $template->decorateProperties($widget);
+        }
+
         // Pass to view
         $this->getState()->template = '';
         $this->getState()->setData([
             'module' => $module,
+            'template' => $template,
             'media' => $media
         ]);
 
@@ -309,6 +333,16 @@ class Widget extends Base
 
         $module = $this->moduleFactory->getByType($widget->type);
 
+        // Load a template?
+        $template = null;
+        if ($module->isTemplateExpected()) {
+            $templateId = $widget->getOptionValue('templateId', null);
+            if (empty($templateId)) {
+                throw new InvalidArgumentException(__('This widget should have a template assigned'), 'templateId');
+            }
+            $template = $this->moduleTemplateFactory->getById($templateId);
+        }
+
         // We're expecting all of our properties to be supplied for editing.
         $params = $this->getSanitizer($request->getParams());
         foreach ($module->properties as $property) {
@@ -317,6 +351,14 @@ class Widget extends Base
 
         // Assert these properties on the widget.
         $widget->applyProperties($module->properties);
+
+        // Assert the template properties
+        if ($template !== null) {
+            foreach ($template->properties as $property) {
+                $property->setValueByType($params)->validate();
+            }
+            $widget->applyProperties($template->properties);
+        }
 
         // We've reached the end, so save
         $widget->save();
@@ -921,11 +963,28 @@ class Widget extends Base
             $downloader->useLogger($this->getLog()->getLoggerInterface());
             $response = $downloader->download($params, $media, $response);
         } else {
+            // TODO: Are we expecting this module to have a template?
+            $templates = [];
+            if (!empty($module->dataType)) {
+                // Do we have a static one?
+                $templateId = $widget->getOptionValue('templateId', null);
+                if ($templateId !== null) {
+                    $templates[] = $this->moduleTemplateFactory->getById('templateId');
+                }
+
+                // Do we have an element group?
+                $elementGroups = $widget->getOptionValue('elementGroups', null);
+                if ($elementGroups !== null) {
+                    // TODO: pull out all of the elements referenced by this group.
+                    //  grab the associated element template.
+                }
+            }
+
             // Create a renderer to deal with this.
             try {
                 $resource = $this->moduleFactory
                     ->createWidgetHtmlRenderer()
-                    ->render($module, $region, $widget, 0);
+                    ->render($module, $region, $widget, $templates, 0);
             } catch (\Exception $e) {
                 $this->getLog()->error('Failed to render widget, e: ' . $e->getMessage());
                 throw new ConfigurationException(__('Problem rendering widget'));
