@@ -25,16 +25,11 @@ namespace Xibo\Controller;
 
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
-use Xibo\Factory\ActionFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\RegionFactory;
 use Xibo\Factory\TransitionFactory;
-use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
-use Xibo\Helper\Session;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ControllerNotImplemented;
 use Xibo\Support\Exception\GeneralException;
@@ -578,8 +573,11 @@ class Region extends Base
      * @param Response $response
      * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws GeneralException
-     * @throws ControllerNotImplemented
+     * @throws \Twig\Error\LoaderError
+     * @throws \Twig\Error\RuntimeError
+     * @throws \Twig\Error\SyntaxError
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function preview(Request $request, Response $response, $id)
     {
@@ -588,9 +586,6 @@ class Region extends Base
         $widgetId = $sanitizedQuery->getInt('widgetId', ['default' => null]);
         $seqGiven = $sanitizedQuery->getInt('seq', ['default' => 1]);
         $seq = $sanitizedQuery->getInt('seq', ['default' => 1]);
-        $width = $sanitizedQuery->getDouble('width', ['default' => 0]);
-        $height = $sanitizedQuery->getDouble('height', ['default' => 0]);
-        $scaleOverride = $sanitizedQuery->getDouble('scale_override', ['default' => 0]);
 
         // Load our region
         try {
@@ -603,9 +598,7 @@ class Region extends Base
                 $widget->load();
 
                 $countWidgets = 1;
-
             } else {
-
                 // Get the first playlist we can find
                 $playlist = $region->getPlaylist()->setModuleFactory($this->moduleFactory);
 
@@ -624,33 +617,25 @@ class Region extends Base
 
                 // Select the widget at the required sequence
                 $widget = $playlist->getWidgetAt($seq, $widgets);
-                /* @var \Xibo\Entity\Widget $widget */
                 $widget->load();
             }
 
             // Output a preview
-            $module = $this->moduleFactory->createWithWidget($widget, $region);
-
-            // We need to make a route parser
-            $this->getState()->html = $module
-                ->setPreview(
-                    true,
-                    RouteContext::fromRequest($request)->getRouteParser(),
-                    $width, $height
-                )
-                ->preview($width, $height, $scaleOverride);
+            $module = $this->moduleFactory->getByType($widget->type);
+            $this->getState()->html = $this->moduleFactory
+                ->createWidgetHtmlRenderer()
+                ->preview($module, $region, $widget, $sanitizedQuery);
 
             $this->getState()->extra['empty'] = false;
             $this->getState()->extra['type'] = $widget->type;
             $this->getState()->extra['duration'] = $widget->calculatedDuration;
             $this->getState()->extra['number_items'] = $countWidgets;
             $this->getState()->extra['current_item'] = $seqGiven;
-            $this->getState()->extra['moduleName'] = $module->getName();
+            $this->getState()->extra['moduleName'] = $module->name;
             $this->getState()->extra['regionDuration'] = $region->duration;
             $this->getState()->extra['useDuration'] = $widget->useDuration;
             $this->getState()->extra['zIndex'] = $region->zIndex;
             $this->getState()->extra['tempId'] = $widget->tempId;
-
         } catch (NotFoundException $e) {
             // No media to preview
             $this->getState()->extra['empty'] = true;

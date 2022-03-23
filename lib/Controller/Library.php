@@ -67,6 +67,7 @@ use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\LibraryFullException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Render\WidgetDownloader;
 
 /**
  * Class Library
@@ -571,14 +572,18 @@ class Library extends Base
             $media->revised = ($media->parentId != 0) ? 1 : 0;
 
             // Thumbnail
-            $module = $this->moduleFactory->getByType($media->mediaType);
             $media->thumbnail = '';
-            if ($module->hasThumbnail) {
-                $media->thumbnail = $this->urlFor($request, 'library.download', [
-                    'id' => $media->mediaId
-                ], [
-                    'preview' => 1
-                ]);
+            try {
+                $module = $this->moduleFactory->getByType($media->mediaType);
+                if ($module->hasThumbnail) {
+                    $media->thumbnail = $this->urlFor($request, 'library.thumbnail', [
+                        'id' => $media->mediaId
+                    ], [
+                        'preview' => 1
+                    ]);
+                }
+            } catch (NotFoundException $notFoundException) {
+                $this->getLog()->error('Module ' . $media->mediaType . ' not found');
             }
 
             $media->fileSizeFormatted = ByteFormatter::format($media->fileSize);
@@ -601,7 +606,6 @@ class Library extends Base
             $media->includeProperty('buttons');
 
             switch ($media->released) {
-
                 case 1:
                     $media->releasedDescription = '';
                     break;
@@ -615,7 +619,6 @@ class Library extends Base
             }
 
             switch ($media->enableStat) {
-
                 case 'On':
                     $media->enableStatDescription = __('This Media has enable stat collection set to ON');
                     break;
@@ -1573,6 +1576,73 @@ class Library extends Base
 
         $this->setNoOutput(true);
 
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Get(
+     *  path="/library/thumbnail/{mediaId}",
+     *  operationId="libraryThumbnail",
+     *  tags={"library"},
+     *  summary="Download Thumbnail",
+     *  description="Download thumbnail for a Media file from the Library",
+     *  produces={"application/octet-stream"},
+     *  @SWG\Parameter(
+     *      name="mediaId",
+     *      in="path",
+     *      description="The Media ID to Download",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=200,
+     *      description="successful operation",
+     *      @SWG\Schema(type="file"),
+     *      @SWG\Header(
+     *          header="X-Sendfile",
+     *          description="Apache Send file header - if enabled.",
+     *          type="string"
+     *      ),
+     *      @SWG\Header(
+     *          header="X-Accel-Redirect",
+     *          description="nginx send file header - if enabled.",
+     *          type="string"
+     *      )
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function thumbnail(Request $request, Response $response, $id)
+    {
+        // We can download by mediaId or by mediaName.
+        if (is_numeric($id)) {
+            $media = $this->mediaFactory->getById($id);
+        } else {
+            $media = $this->mediaFactory->getByName($id);
+        }
+
+        $this->getLog()->debug('Thumbnail request for mediaId ' . $id
+            . '. Media is a ' . $media->mediaType);
+
+        // Permissions.
+        if (!$this->getUser()->checkViewable($media)) {
+            throw new AccessDeniedException();
+        }
+
+        // Hand over to the widget downloader
+        $downloader = new WidgetDownloader(
+            $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+            $this->getConfig()->getSetting('SENDFILE_MODE')
+        );
+        $downloader->useLogger($this->getLog()->getLoggerInterface());
+        $downloader->thumbnail($media, $response, $this->getConfig()->uri('img/error.png', true));
+        
+        $this->setNoOutput(true);
         return $this->render($request, $response);
     }
 

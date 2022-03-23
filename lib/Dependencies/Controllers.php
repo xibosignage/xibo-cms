@@ -583,14 +583,13 @@ class Controllers
             '\Xibo\Controller\Widget' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Widget(
                     $c->get('moduleFactory'),
+                    $c->get('moduleTemplateFactory'),
                     $c->get('playlistFactory'),
                     $c->get('mediaFactory'),
                     $c->get('permissionFactory'),
                     $c->get('widgetFactory'),
                     $c->get('transitionFactory'),
                     $c->get('regionFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('displayGroupFactory'),
                     $c->get('widgetAudioFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));

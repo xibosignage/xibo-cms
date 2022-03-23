@@ -23,23 +23,22 @@
 namespace Xibo\Widget\Definition;
 
 /**
- * A class representing an instance of an element template
+ * Represents a test/group of conditions
  */
-class Element implements \JsonSerializable
+class Test implements \JsonSerializable
 {
-    public $id;
-    public $top;
-    public $left;
-    public $properties = [];
-    
+    /** @var string */
+    public $type;
+
+    /** @var  */
+    public $conditions;
+
     /** @inheritDoc */
     public function jsonSerialize()
     {
         return [
-            'id' => $this->id,
-            'top' => $this->top,
-            'left' => $this->left,
-            'properties' => $this->properties
+            'type' => $this->type,
+            'conditions' => $this->conditions
         ];
     }
 }

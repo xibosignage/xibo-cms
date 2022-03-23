@@ -44,6 +44,9 @@ class Property implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Option[] */
     public $options;
 
+
+    public $visibility;
+
     /** @var \Xibo\Widget\Definition\PlayerCompatibility */
     public $playerCompatability;
     
@@ -89,6 +92,29 @@ class Property implements \JsonSerializable
         $option->name = $name;
         $option->title = $title;
         $this->options[] = $option;
+        return $this;
+    }
+
+    /**
+     * Add a visibility test
+     * @param string $type
+     * @param array $conditions
+     * @return $this
+     */
+    public function addVisibilityTest(string $type, array $conditions): Property
+    {
+        $test = new Test();
+        $test->type = $type;
+
+        foreach ($conditions as $item) {
+            $condition = new Condition();
+            $condition->type = $item['type'];
+            $condition->field = $item['field'];
+            $condition->value = $item['value'];
+            $test->conditions[] = $condition;
+        }
+
+        $this->visibility[] = $test;
         return $this;
     }
 
@@ -171,6 +197,10 @@ class Property implements \JsonSerializable
 
             case 'dropdown':
                 $value = $params->getString($key);
+                if ($value === null) {
+                    return null;
+                }
+
                 $found = false;
                 foreach ($this->options as $option) {
                     if ($option->name === $value) {

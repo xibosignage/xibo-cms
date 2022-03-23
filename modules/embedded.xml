@@ -45,12 +45,13 @@
             <playerCompatibility windows="v2 R253+"></playerCompatibility>
         </property>
         <property id="isPreNavigate" type="checkbox">
-            <title>Preload</title>
+            <title>Preload?</title>
             <helpText>Should this Widget be loaded entirely off screen so that it is ready when shown? Dynamic content will start running off screen.</helpText>
             <default>1</default>
         </property>
         <property id="embedHtml" type="code">
             <title>HTML to embed</title>
+            <helpText>Enter text or HTML in the box below.</helpText>
         </property>
         <property id="embedStyle" type="code">
             <title>Custom Style Sheets</title>
@@ -69,12 +70,14 @@
 <style>
 {{embedStyle}}
 </style>
+<script type="text/javascript">
 $(document).ready(function() {
   if(typeof EmbedInit === "function"){
     EmbedInit();
   }
   {% if scaleContent %}$("body").xiboLayoutScaler(options);{% endif %}
 });
+</script>
 		]]></twig>
     </stencil>
 </module>
