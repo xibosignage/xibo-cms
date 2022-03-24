@@ -576,7 +576,7 @@ class Library extends Base
             try {
                 $module = $this->moduleFactory->getByType($media->mediaType);
                 if ($module->hasThumbnail) {
-                    $media->thumbnail = $this->urlFor($request, 'library.thumbnail', [
+                    $media->thumbnail = $this->urlFor($request, 'library.download', [
                         'id' => $media->mediaId
                     ], [
                         'preview' => 1
@@ -1513,30 +1513,23 @@ class Library extends Base
      *
      * @param Request $request
      * @param Response $response
+     * @param $id
      * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws AccessDeniedException
-     * @throws GeneralException
-     * @throws NotFoundException
-     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function download(Request $request, Response $response)
+    public function download(Request $request, Response $response, $id)
     {
-        $routeContext = RouteContext::fromRequest($request);
-        $route = $routeContext->getRoute();
-        $mediaId = $route->getArgument('id');
-        $type = $route->getArgument('type');
-
         // We can download by mediaId or by mediaName.
-        if (is_numeric($mediaId)) {
-            $media = $this->mediaFactory->getById($mediaId);
+        if (is_numeric($id)) {
+            $media = $this->mediaFactory->getById($id);
         } else {
-            $media = $this->mediaFactory->getByName($mediaId);
+            $media = $this->mediaFactory->getByName($id);
         }
 
-        $this->getLog()->debug('Download request for mediaId ' . $mediaId
-            . ' and type ' . $type . '. Media is a '
-            . $media->mediaType . ', is system file:' . $media->moduleSystemFile);
+        $this->getLog()->debug('Download request for mediaId ' . $id
+            . '. Media is a ' . $media->mediaType . ', is system file:' . $media->moduleSystemFile);
 
+        // Permissions check
         if ($media->mediaType === 'module' && $media->moduleSystemFile === 1) {
             // grant permissions
             // (everyone has access to module system files)
@@ -1544,38 +1537,36 @@ class Library extends Base
             // Make sure that our user has this mediaId assigned to a Widget they can view
             // we can't test for normal media permissions, because no user has direct access to these "module" files
             // https://github.com/xibosignage/xibo/issues/1304
-            if (count($this->widgetFactory->query(null, ['mediaId' => $mediaId])) <= 0) {
+            if (count($this->widgetFactory->query(null, ['mediaId' => $id])) <= 0) {
                 throw new AccessDeniedException();
             }
         } else if (!$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
-        if ($type == null && $media->mediaType === 'module') {
-            $type = 'genericfile';
-        }
+        // Make a module
+        $module = $this->moduleFactory->getByType($media->mediaType);
 
-        if ($type != '') {
-            $widget = $this->moduleFactory->create($type);
-            $widgetOverride = $this->widgetFactory->createEmpty();
-            $widgetOverride->assignMedia($media->mediaId);
-            $widget->setWidget($widgetOverride);
-        } else {
-            // Make a media module
-            $this->getLog()->debug('Creating a module with Media: ' . $media->mediaId);
-
-            $widget = $this->moduleFactory->createWithMedia($media);
-        }
-
-        if ($widget->getModule()->regionSpecific == 1) {
+        // We are not able to download region specific modules
+        if ($module->regionSpecific == 1) {
             throw new NotFoundException(__('Cannot download region specific module'));
         }
 
-        $this->getLog()->debug('About to call download for Widget: ' . $widget->getModuleType());
-        $response = $widget->download($request, $response);
+        // Hand over to the widget downloader
+        $downloader = new WidgetDownloader(
+            $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+            $this->getConfig()->getSetting('SENDFILE_MODE')
+        );
+        $downloader->useLogger($this->getLog()->getLoggerInterface());
+
+        $params = $this->getSanitizer($request->getParams());
+        if ($params->getCheckbox('preview') == 1) {
+            $response = $downloader->download($media, $response, $media->getMimeType());
+        } else {
+            $response = $downloader->download($media, $response, null, $params->getString('attachment'));
+        }
 
         $this->setNoOutput(true);
-
         return $this->render($request, $response);
     }
 
@@ -1640,7 +1631,7 @@ class Library extends Base
             $this->getConfig()->getSetting('SENDFILE_MODE')
         );
         $downloader->useLogger($this->getLog()->getLoggerInterface());
-        $downloader->thumbnail($media, $response, $this->getConfig()->uri('img/error.png', true));
+        $response = $downloader->thumbnail($media, $response, $this->getConfig()->uri('img/error.png', true));
         
         $this->setNoOutput(true);
         return $this->render($request, $response);

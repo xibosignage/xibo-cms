@@ -225,8 +225,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/playlist/form/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolderForm'])->setName('playlist.selectfolder.form');
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.modify']));
 
-// What permissions do we need to be able to see the timeline form?
-// this can be accessed from the designer and the playlist page
 $app->get('/playlist/form/timeline/{id}', ['\Xibo\Controller\Playlist','timelineForm'])->setName('playlist.timeline.form');
 
 $app->get('/playlist/form/usage/{id}', ['\Xibo\Controller\Playlist','usageForm'])

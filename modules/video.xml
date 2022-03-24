@@ -22,7 +22,7 @@
     <id>core-video</id>
     <name>Video</name>
     <author>Core</author>
-    <description>Video</description>
+    <description>Upload Video files to assign to Layouts</description>
     <class></class>
     <type>video</type>
     <dataType></dataType>
@@ -36,7 +36,7 @@
         <property id="validExtensions" type="input">
             <title>Valid Extensions</title>
             <helpText>The Extensions allowed on files uploaded using this module. Comma Separated.</helpText>
-            <default>mp4,wmv</default>
+            <default>wmv,avi,mpg,mpeg,webm,mp4</default>
         </property>
         <property id="defaultMute" type="checkbox">
             <title>Default Mute?</title>

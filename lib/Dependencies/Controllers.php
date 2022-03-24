@@ -348,8 +348,8 @@ class Controllers
             },
             '\Xibo\Controller\Module' => function (ContainerInterface $c) {
                 $controller = new \Xibo\Controller\Module(
-                    $c->get('store'),
-                    $c->get('moduleFactory')
+                    $c->get('moduleFactory'),
+                    $c->get('moduleTemplateFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 $controller->useDispatcher($c->get('dispatcher'));

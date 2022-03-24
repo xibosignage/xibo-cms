@@ -359,6 +359,7 @@ class ModuleFactory extends BaseFactory
                     foreach ($settings as $setting) {
                         if ($setting['id'] === $property->id) {
                             $property->value = $setting['value'];
+                            break;
                         }
                     }
                 }

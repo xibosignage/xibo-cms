@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -204,7 +204,7 @@
                             }
                             if (data) {
                                 return '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' + data + '">' +
-                                    '<img class="img-fluid" src="' + data + '&isThumb=1" alt="{{ "Thumbnail"|trans }}" />' +
+                                    '<img class="img-fluid" src="' + data.replace('download', 'thumbnail') + '" alt="{{ "Thumbnail"|trans }}" />' +
                                     '</a>';
                             }
                             return '';

@@ -60,6 +60,9 @@ class WidgetFactory extends BaseFactory
     /** @var ActionFactory */
     private $actionFactory;
 
+    /** @var \Xibo\Factory\ModuleTemplateFactory */
+    private $moduleTemplateFactory;
+
     /**
      * Construct a factory
      * @param User $user
@@ -70,9 +73,19 @@ class WidgetFactory extends BaseFactory
      * @param PermissionFactory $permissionFactory
      * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param ActionFactory $actionFactory
+     * @param \Xibo\Factory\ModuleTemplateFactory $moduleTemplateFactory
      */
-    public function __construct($user, $userFactory, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayNotifyService, $actionFactory)
-    {
+    public function __construct(
+        $user,
+        $userFactory,
+        $widgetOptionFactory,
+        $widgetMediaFactory,
+        $widgetAudioFactory,
+        $permissionFactory,
+        $displayNotifyService,
+        $actionFactory,
+        $moduleTemplateFactory
+    ) {
         $this->setAclDependencies($user, $userFactory);
         $this->widgetOptionFactory = $widgetOptionFactory;
         $this->widgetMediaFactory = $widgetMediaFactory;
@@ -80,6 +93,7 @@ class WidgetFactory extends BaseFactory
         $this->permissionFactory = $permissionFactory;
         $this->displayNotifyService = $displayNotifyService;
         $this->actionFactory = $actionFactory;
+        $this->moduleTemplateFactory = $moduleTemplateFactory;
     }
 
     /**
@@ -413,5 +427,52 @@ class WidgetFactory extends BaseFactory
         }
 
         return $entries;
+    }
+
+    /**
+     * Get all templates for a set of widgets.
+     * @param Widget[] $widgets
+     * @return array
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getTemplatesForWidgets(array $widgets): array
+    {
+        $templates = [];
+        foreach ($widgets as $widget) {
+            if (!empty($module->dataType)) {
+                // Do we have a static one?
+                $templateId = $widget->getOptionValue('templateId', null);
+                if ($templateId !== null) {
+                    $templates[] = $this->moduleTemplateFactory->getByDataTypeAndId(
+                        $module->dataType,
+                        $templateId
+                    );
+                }
+
+                // Does this widget have elements?
+                $elements = $widget->getOptionValue('elements', null);
+                if ($elements !== null) {
+                    // Get all templates used by this widget
+                    $uniqueElements = [];
+                    foreach ($elements['elements'] as $element) {
+                        if (!array_key_exists($element['id'], $uniqueElements)) {
+                            $uniqueElements[$element['id']] = $element;
+                        }
+                    }
+
+                    foreach ($uniqueElements as $templateId => $element) {
+                        try {
+                            $templates[] = $this->moduleTemplateFactory->getByDataTypeAndId(
+                                $module->dataType,
+                                $templateId
+                            );
+                        } catch (NotFoundException $notFoundException) {
+                            $this->getLog()->error('templateId: ' . $templateId . ' not found');
+                        }
+                    }
+                }
+            }
+        }
+        return $templates;
     }
 }

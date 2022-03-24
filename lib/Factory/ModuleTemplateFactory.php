@@ -25,6 +25,7 @@ namespace Xibo\Factory;
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\ModuleTemplate;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Factory for working with Module Templates
@@ -32,9 +33,9 @@ use Xibo\Entity\ModuleTemplate;
 class ModuleTemplateFactory extends BaseFactory
 {
     use ModuleXmlTrait;
-    
+
     /** @var ModuleTemplate[]|null */
-    private $templates = [];
+    private $templates = null;
 
     /** @var \Stash\Interfaces\PoolInterface */
     private $pool;
@@ -53,9 +54,35 @@ class ModuleTemplateFactory extends BaseFactory
         $this->twig = $twig;
     }
 
-    public function getById(string $id): ModuleTemplate
+    /**
+     * @param string $dataType
+     * @param string $id
+     * @return \Xibo\Entity\ModuleTemplate
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function getByDataTypeAndId(string $dataType, string $id): ModuleTemplate
     {
+        foreach ($this->load() as $template) {
+            if ($template->dataType === $dataType && $template->templateId === $id) {
+                return $template;
+            }
+        }
+        throw new NotFoundException(__('Template not found'));
+    }
 
+    /**
+     * @param string $dataType
+     * @return ModuleTemplate[]
+     */
+    public function getByDataType(string $dataType): array
+    {
+        $templates = [];
+        foreach ($this->load() as $template) {
+            if ($template->dataType === $dataType) {
+                $templates[] = $template;
+            }
+        }
+        return $templates;
     }
 
     /**
@@ -65,6 +92,8 @@ class ModuleTemplateFactory extends BaseFactory
     private function load(): array
     {
         if ($this->templates === null) {
+            $this->getLog()->debug('Loading templates');
+
             $files = array_merge(
                 glob(PROJECT_ROOT . '/modules/templates/*.xml'),
                 glob(PROJECT_ROOT . '/custom/modules/templates/*.xml')
@@ -73,7 +102,7 @@ class ModuleTemplateFactory extends BaseFactory
             foreach ($files as $file) {
                 // Create our module entity from this file
                 try {
-                    $this->templates[] = $this->createFromXml($file);
+                    $this->createMultiFromXml($file);
                 } catch (\Exception $exception) {
                     $this->getLog()->error('Unable to create template from '
                         . basename($file) . ', skipping. e = ' . $exception->getMessage());
@@ -85,22 +114,37 @@ class ModuleTemplateFactory extends BaseFactory
     }
 
     /**
+     * Create multiple templates from XML
      * @param string $file
-     * @return \Xibo\Entity\ModuleTemplate
+     * @return void
      */
-    private function createFromXml(string $file): ModuleTemplate
+    private function createMultiFromXml(string $file): void
     {
-        // TODO: cache this into Stash
         $xml = new \DOMDocument();
         $xml->load($file);
 
+        foreach ($xml->childNodes as $node) {
+            if ($node instanceof \DOMElement) {
+                $this->templates[] = $this->createFromXml($node);
+            }
+        }
+    }
+
+    /**
+     * @param \DOMElement $xml
+     * @return \Xibo\Entity\ModuleTemplate
+     */
+    private function createFromXml(\DOMElement $xml): ModuleTemplate
+    {
+        // TODO: cache this into Stash
         $template = new ModuleTemplate($this->getStore(), $this->getLog(), $this);
         $template->templateId = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
         $template->type = $this->getFirstValueOrDefaultFromXmlNode($xml, 'type');
         $template->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
+        $template->title = $this->getFirstValueOrDefaultFromXmlNode($xml, 'title');
         $template->isError = false;
         $template->errors = [];
-        
+
         // Parse property definitions.
         try {
             $template->properties = $this->parseProperties($xml->getElementsByTagName('properties'));
@@ -118,7 +162,7 @@ class ModuleTemplateFactory extends BaseFactory
             $this->getLog()->error('Module ' . $template->templateId
                 . ' has invalid stencils. e: ' .  $e->getMessage());
         }
-        
+
         return $template;
     }
 }

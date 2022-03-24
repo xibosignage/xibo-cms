@@ -252,15 +252,18 @@ class Module implements \JsonSerializable
     }
 
     /**
-     * @param string $setting
-     * @param mixed|null $default
+     * Get a module setting
+     * If the setting does not exist, $default will be returned.
+     * If the setting exists, but is not set, the default value from the setting will be returned
+     * @param string $setting The setting
+     * @param mixed|null $default A default value if the setting does not exist
      * @return mixed
      */
     public function getSetting(string $setting, $default = null)
     {
         foreach ($this->settings as $property) {
             if ($property->id === $setting) {
-                return $property->value;
+                return $property->value ?? $property->default;
             }
         }
 
