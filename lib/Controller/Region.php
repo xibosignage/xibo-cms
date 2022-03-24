@@ -591,6 +591,8 @@ class Region extends Base
         try {
             $region = $this->regionFactory->getById($id);
             $region->load();
+            
+            // TODO: is this region a canvas type?
 
             if ($widgetId !== null) {
                 // Single Widget Requested

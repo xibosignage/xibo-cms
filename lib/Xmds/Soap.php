@@ -1888,40 +1888,58 @@ class Soap
         $layoutId = $sanitizer->getInt('layoutId');
         $regionId = $sanitizer->getString('regionId');
         $mediaId = $sanitizer->getString('mediaId');
-
-
+        
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         // Auth this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This Display is not authorised.");
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         // The MediaId is actually the widgetId
         try {
-            $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget($this->display->displayId, $mediaId);
+            $requiredFile = $this->requiredFileFactory->getByDisplayAndWidget(
+                $this->display->displayId,
+                $mediaId
+            );
+            
+            // TODO: canvas region or not?
+            $region = $this->regionFactory->getById($regionId);
+            $widget = $this->widgetFactory->loadByWidgetId($mediaId);
+            
+            // If this is a canvas region we add all our widgets to this.
+            $widgets = [$widget];
+            
+            // Module is always the first widget
+            $module = $this->moduleFactory->getByType($widget->type);
+            
+            // Get all templates
+            $templates = $this->widgetFactory->getTemplatesForWidgets($widgets);
+            
+            $resource = $this->moduleFactory->createWidgetHtmlRenderer()
+                ->renderOrCache($module, $region, $widgets, $templates, $this->display->displayId);
 
-            $module = $this->moduleFactory->createWithWidget($this->widgetFactory->loadByWidgetId($mediaId), $this->regionFactory->getById($regionId));
-            $resource = $module->getResourceOrCache($this->display->displayId);
-
+            // Log bandwidth
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
             $requiredFile->save();
 
-            if ($resource == '')
+            if ($resource == '') {
                 throw new ControllerNotImplemented();
-        }
-        catch (NotFoundException $notEx) {
+            }
+        } catch (NotFoundException $notEx) {
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
-        }
-        catch (\Exception $e) {
+        } catch (\Exception $e) {
             $this->getLog()->error('Unknown error during getResource. E = ' . $e->getMessage());
             $this->getLog()->debug($e->getTraceAsString());
             throw new \SoapFault('Receiver', 'Unable to get the media resource');

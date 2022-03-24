@@ -23,6 +23,7 @@
         <id>daily-light</id>
         <type>static</type>
         <dataType>calendar-advanced</dataType>
+        <title>Daily Calendar view with Light colours</title>
         <properties>
             <property id="gridColor" type="colour">
                 <title>Grid Colour</title>

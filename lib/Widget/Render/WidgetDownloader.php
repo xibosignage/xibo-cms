@@ -24,7 +24,6 @@ namespace Xibo\Widget\Render;
 
 use GuzzleHttp\Psr7\Stream;
 use Intervention\Image\ImageManagerStatic as Img;
-use Mimey\MimeTypes;
 use Psr\Log\LoggerInterface;
 use Slim\Http\Response as Response;
 use Xibo\Entity\Media;
@@ -71,31 +70,32 @@ class WidgetDownloader
 
     /**
      * Return File
-     * @param \Xibo\Support\Sanitizer\SanitizerInterface $params
      * @param \Xibo\Entity\Media $media
      * @param \Slim\Http\Response $response
+     * @param string|null $contentType An optional content type, if provided the attachment is ignored
+     * @param string|null $attachment An optional attachment, defaults to the stored file name (storedAs)
      * @return \Psr\Http\Message\ResponseInterface|Response
      */
-    public function download(SanitizerInterface $params, Media $media, Response $response): Response
-    {
-        $this->logger->debug('Download for mediaId ' . $media->mediaId);
-
-        $attachment = $params->getString('attachment');
-        $isPreview = ($params->getCheckbox('preview') == 1);
+    public function download(
+        Media $media,
+        Response $response,
+        string $contentType = null,
+        string $attachment = null
+    ): Response {
+        $this->logger->debug('widgetDownloader::download: Download for mediaId ' . $media->mediaId);
 
         // The file path
         $libraryPath = $this->libraryLocation . $media->storedAs;
+
+        $this->logger->debug('widgetDownloader::download: ' . $libraryPath . ', ' . $contentType);
 
         // Set some headers
         $headers = [];
         $headers['Content-Length'] = filesize($libraryPath);
 
-        // Different behaviour depending on whether we are a preview or not.
-        if ($isPreview) {
-            // correctly grab the MIME type of the file we want to serve
-            $mimeTypes = new MimeTypes();
-            $ext = explode('.', $media->storedAs);
-            $headers['Content-Type'] = $mimeTypes->getMimeType($ext[count($ext) - 1]);
+        // If we have been given a content type, then serve that to the browser.
+        if ($contentType !== null) {
+            $headers['Content-Type'] = $contentType;
         } else {
             // This widget is expected to output a file - usually this is for file based media
             // Get the name with library

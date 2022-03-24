@@ -24,9 +24,11 @@ namespace Xibo\Controller;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Factory\ModuleFactory;
+use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -35,11 +37,11 @@ use Xibo\Support\Exception\NotFoundException;
  */
 class Module extends Base
 {
-    /** @var StorageServiceInterface */
-    private $store;
-
     /** @var ModuleFactory */
     private $moduleFactory;
+
+    /** @var \Xibo\Factory\ModuleTemplateFactory */
+    private $moduleTemplateFactory;
 
     /**
      * Set common dependencies.
@@ -47,11 +49,11 @@ class Module extends Base
      * @param ModuleFactory $moduleFactory
      */
     public function __construct(
-        StorageServiceInterface $store,
-        ModuleFactory $moduleFactory
+        ModuleFactory $moduleFactory,
+        ModuleTemplateFactory $moduleTemplateFactory
     ) {
-        $this->store = $store;
         $this->moduleFactory = $moduleFactory;
+        $this->moduleTemplateFactory = $moduleTemplateFactory;
     }
 
     /**
@@ -255,6 +257,26 @@ class Module extends Base
             'message' => __('Cleared the Cache')
         ]);
 
+        return $this->render($request, $response);
+    }
+
+    /**
+     * Get a list of templates available for a particular data type
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @param string $dataType
+     * @return \Slim\Http\Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function templateGrid(Request $request, Response $response, $dataType): Response
+    {
+        if (empty($dataType)) {
+            throw new InvalidArgumentException(__('Please provide a datatype'), 'dataType');
+        }
+
+        $this->getState()->template = 'grid';
+        $this->getState()->recordsTotal = 0;
+        $this->getState()->setData($this->moduleTemplateFactory->getByDataType($dataType));
         return $this->render($request, $response);
     }
 }

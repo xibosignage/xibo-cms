@@ -194,8 +194,6 @@ $app->group('/region', function (RouteCollectorProxy $group) {
  * )
  */
 $app->get('/playlist', ['\Xibo\Controller\Playlist','grid'])->setName('playlist.search');
-// Widgets Order
-$app->get('/playlist/widget', ['\Xibo\Controller\Playlist','widgetGrid'])->setName('playlist.widget.search');
 
 $app->post('/playlist', ['\Xibo\Controller\Playlist','add'])
     ->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.add']))
@@ -207,9 +205,14 @@ $app->group('', function (RouteCollectorProxy $group) use ($app) {
     $group->post('/playlist/copy/{id}', ['\Xibo\Controller\Playlist','copy'])->setName('playlist.copy');
     $group->put('/playlist/setenablestat/{id}', ['\Xibo\Controller\Playlist','setEnableStat'])->setName('playlist.setenablestat');
     $group->put('/playlist/{id}/selectfolder', ['\Xibo\Controller\Playlist','selectFolder'])->setName('playlist.selectfolder');
+
     $group->group('', function (RouteCollectorProxy $group) {
-        $group->post('/playlist/order/{id}', ['\Xibo\Controller\Playlist','order'])->setName('playlist.order');
-        $group->post('/playlist/library/assign/{id}', ['\Xibo\Controller\Playlist','libraryAssign'])->setName('playlist.library.assign');
+        $group->post('/playlist/order/{id}', [
+            '\Xibo\Controller\Playlist', 'order'
+        ])->setName('playlist.order');
+        $group->post('/playlist/library/assign/{id}', [
+            '\Xibo\Controller\Playlist', 'libraryAssign'
+        ])->setName('playlist.library.assign');
     })->addMiddleware(new LayoutLock($app));
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['playlist.modify']));
 
@@ -232,6 +235,7 @@ $app->group('/playlist/widget', function (RouteCollectorProxy $group) {
     $group->put('/{id}/audio', ['\Xibo\Controller\Widget','widgetAudio'])->setName('module.widget.audio');
     $group->delete('/{id}/audio', ['\Xibo\Controller\Widget','widgetAudioDelete']);
     $group->put('/{id}/expiry', ['\Xibo\Controller\Widget','widgetExpiry'])->setName('module.widget.expiry');
+    $group->put('/{id}/elements', ['\Xibo\Controller\Widget','saveElements'])->setName('module.widget.elements');
 
     // Drawer widgets Region
     $group->put('/{id}/target', ['\Xibo\Controller\Widget','widgetSetRegion'])->setName('module.widget.set.region');
@@ -594,6 +598,10 @@ $app->group('', function (RouteCollectorProxy $group) {
  * )
  */
 $app->get('/module', ['\Xibo\Controller\Module','grid'])->setName('module.search');
+$app->get('/module/templates/{dataType}', [
+    '\Xibo\Controller\Module', 'templateGrid'
+])->setName('module.template.search');
+
 $app->group('', function (RouteCollectorProxy $group) {
     $group->put('/module/settings/{id}', ['\Xibo\Controller\Module','settings'])->setName('module.settings');
     $group->put('/module/clear-cache/{id}', ['\Xibo\Controller\Module','clearCache'])->setName('module.clear.cache');

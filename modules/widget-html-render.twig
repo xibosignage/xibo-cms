@@ -36,13 +36,17 @@
 <!--[if IE 9 ]><body class="ie9"><![endif]-->
 <!--[if (gt IE 9)|!(IE)]><!--><body><!--<![endif]-->
 <div id="content">
-{{ stencil|raw }}
-{{ templateStencil|raw }}
+{% for item in twig %}
+    {{ item|raw }}
+{% endfor %}
 </div>
 </body>
 {% if elementGroups %}
 <script type="text/javascript">
-    var elementGroups = {{ elementGroups }};
+    var elements = [];
+    {% for item in elements %}
+    elements.push({{ item|raw }});
+    {% endfor %}
 </script>
 {% endif %}
 {% for item in hbs %}

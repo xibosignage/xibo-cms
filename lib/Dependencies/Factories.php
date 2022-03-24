@@ -463,7 +463,8 @@ class Factories
                     $c->get('widgetAudioFactory'),
                     $c->get('permissionFactory'),
                     $c->get('displayNotifyService'),
-                    $c->get('actionFactory')
+                    $c->get('actionFactory'),
+                    $c->get('moduleTemplateFactory')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;

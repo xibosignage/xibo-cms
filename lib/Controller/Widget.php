@@ -290,13 +290,14 @@ class Widget extends Base
             if (empty($templateId)) {
                 throw new InvalidArgumentException(__('This widget should have a template assigned'), 'templateId');
             }
-            $template = $this->moduleTemplateFactory->getById($templateId);
+            $template = $this->moduleTemplateFactory->getByDataTypeAndId($templateId, $module->dataType);
 
             // Decorate the template with any properties saved in the widget
             $template->decorateProperties($widget);
         }
 
         // Pass to view
+        $this->getLog()->debug('Widget::editWidgetForm: passing to template render');
         $this->getState()->template = '';
         $this->getState()->setData([
             'module' => $module,
@@ -340,12 +341,15 @@ class Widget extends Base
             if (empty($templateId)) {
                 throw new InvalidArgumentException(__('This widget should have a template assigned'), 'templateId');
             }
-            $template = $this->moduleTemplateFactory->getById($templateId);
+            $template = $this->moduleTemplateFactory->getByDataTypeAndId($templateId, $module->dataType);
         }
 
         // We're expecting all of our properties to be supplied for editing.
         $params = $this->getSanitizer($request->getParams());
         foreach ($module->properties as $property) {
+            if ($property->type === 'message') {
+                continue;
+            }
             $property->setValueByType($params)->validate();
         }
 
@@ -355,6 +359,9 @@ class Widget extends Base
         // Assert the template properties
         if ($template !== null) {
             foreach ($template->properties as $property) {
+                if ($property->type === 'message') {
+                    continue;
+                }
                 $property->setValueByType($params)->validate();
             }
             $widget->applyProperties($template->properties);
@@ -927,30 +934,30 @@ class Widget extends Base
      */
     public function getResource(Request $request, Response $response, $regionId, $id)
     {
+        $this->setNoOutput();
+
         $region = $this->regionFactory->getById($regionId);
         if (!$this->getUser()->checkViewable($region)) {
             throw new AccessDeniedException(__('This Region is not shared with you'));
         }
 
-        // 3 options
-        // ---------
-        // render a canvas
-        // render a widget in a region
-        // download a file
-
-        // Render a canvas
-        //  TODO: region type=canvas
-
-        // We have a widget
         $widget = $this->widgetFactory->loadByWidgetId($id);
         if (!$this->getUser()->checkViewable($widget)) {
             throw new AccessDeniedException(__('This Widget is not shared with you'));
         }
 
-        $params = $this->getSanitizer($request->getParams());
         $module = $this->moduleFactory->getByType($widget->type);
 
-        // We either want to render this as HTML
+        // 3 options
+        // ---------
+        // download a file
+        // render a canvas
+        // render a widget in a region
+
+        // Download a file
+        // ---------------
+        // anything that calls this and does not produce some HTML should output its associated
+        // file.
         if ($module->regionSpecific == 0 && $module->renderAs != 'html') {
             // Pull out the media
             $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
@@ -961,41 +968,43 @@ class Widget extends Base
                 $this->getConfig()->getSetting('SENDFILE_MODE')
             );
             $downloader->useLogger($this->getLog()->getLoggerInterface());
-            $response = $downloader->download($params, $media, $response);
-        } else {
-            // TODO: Are we expecting this module to have a template?
-            $templates = [];
-            if (!empty($module->dataType)) {
-                // Do we have a static one?
-                $templateId = $widget->getOptionValue('templateId', null);
-                if ($templateId !== null) {
-                    $templates[] = $this->moduleTemplateFactory->getById('templateId');
-                }
-
-                // Do we have an element group?
-                $elementGroups = $widget->getOptionValue('elementGroups', null);
-                if ($elementGroups !== null) {
-                    // TODO: pull out all of the elements referenced by this group.
-                    //  grab the associated element template.
-                }
-            }
-
-            // Create a renderer to deal with this.
-            try {
-                $resource = $this->moduleFactory
-                    ->createWidgetHtmlRenderer()
-                    ->render($module, $region, $widget, $templates, 0);
-            } catch (\Exception $e) {
-                $this->getLog()->error('Failed to render widget, e: ' . $e->getMessage());
-                throw new ConfigurationException(__('Problem rendering widget'));
-            }
-
-            if (!empty($resource)) {
-                $response->getBody()->write($resource);
-            }
+            return $this->render($request, $downloader->download($media, $response));
         }
 
-        $this->setNoOutput(true);
+        // TODO: region type!
+        /*if ($region->type === 'canvas') {
+            // Render a canvas
+            // ---------------
+            // A canvas takes the first widget from a region (regardless of the widget given)
+            // and plays out all widgets.
+            $widgets = [$widget];
+        } else {*/
+            // Render a widget in a region
+            // ---------------------------
+            // We have a widget
+            $widgets = [$widget];
+        /*}*/
+
+        // Templates
+        $templates = $this->widgetFactory->getTemplatesForWidgets($widgets);
+
+        // Create a renderer to deal with this.
+        try {
+            $renderer = $this->moduleFactory->createWidgetHtmlRenderer();
+            if ($this->getSanitizer($request->getParams())->getCheckbox('preview')) {
+                $resource = $renderer->render($module, $region, $widgets, $templates, 0);
+            } else {
+                $resource = $renderer->renderOrCache($module, $region, $widgets, $templates, 0);
+            }
+        } catch (\Exception $e) {
+            $this->getLog()->error('Failed to render widget, e: ' . $e->getMessage());
+            throw new ConfigurationException(__('Problem rendering widget'));
+        }
+
+        if (!empty($resource)) {
+            $response->getBody()->write($resource);
+        }
+
         return $this->render($request, $response);
     }
 
@@ -1244,9 +1253,80 @@ class Widget extends Base
 
         // Successful
         $this->getState()->hydrate([
+            'httpStatus' => 204,
             'message' => __('Target region set'),
-            'id' => $widget->widgetId,
-            'data' => $widget
+        ]);
+
+        return $this->render($request, $response);
+    }
+
+    /**
+     * @SWG\Put(
+     *  path="/playlist/widget/{widgetId}/elements",
+     *  operationId="widgetSaveElements",
+     *  tags={"widget"},
+     *  summary="Save elements to a widget",
+     *  description="Update a widget with elements associated with it",
+     *  @SWG\Parameter(
+     *      name="widgetId",
+     *      in="path",
+     *      description="Id of the Widget to set region on",
+     *      type="integer",
+     *      required=true
+     *  ),
+     *  @SWG\RequestBody(
+     *      description="JSON representing the elements assigned to this widget"
+     *  ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
+     *
+     * @param Request $request
+     * @param Response $response
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws AccessDeniedException
+     * @throws GeneralException
+     * @throws InvalidArgumentException
+     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\ControllerNotImplemented
+     */
+    public function saveElements(Request $request, Response $response, $id)
+    {
+        $widget = $this->widgetFactory->getById($id);
+        if (!$this->getUser()->checkEditable($widget)) {
+            throw new AccessDeniedException(__('This Widget is not shared with you with edit permission'));
+        }
+
+        // Test to see if we are on a Region Specific Playlist or a standalone
+        $playlist = $this->playlistFactory->getById($widget->playlistId);
+
+        // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
+        if (!$playlist->isRegionPlaylist() || !$playlist->isEditable()) {
+            throw new InvalidArgumentException(__('This Layout is not a Draft, please checkout.'), 'layoutId');
+        }
+
+        // Store the target regionId
+        $widget->load();
+
+        // Save elements
+        $widget->setOptionValue('elements', 'raw', $request->getBody()->getContents());
+
+        // Save
+        $widget->save([
+            'saveWidgetOptions' => true,
+            'saveWidgetAudio' => false,
+            'saveWidgetMedia' => false,
+            'notifyDisplays' => false,
+            'audit' => true
+        ]);
+
+        // Successful
+        $this->getState()->hydrate([
+            'httpStatus' => 204,
+            'message' => __('Saved elements')
         ]);
 
         return $this->render($request, $response);

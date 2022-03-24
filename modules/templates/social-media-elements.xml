@@ -19,7 +19,7 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <templates>
-    <element id="profile-photo">
+    <template id="profile-photo">
         <type>element</type>
         <dataType>social-media</dataType>
         <title>Profile Photo</title>
@@ -31,27 +31,23 @@
 <div class="twitter-profile" style="color:{{color}}"></div>
             ]]></hbs>
         </stencil>
-    </element>
-    <elementGroup id="">
-        <type>stencil</type>
+    </template>
+    <template id="">
+        <type>element-group</type>
         <dataType>social-media</dataType>
         <title>Tweet</title>
         <stencil>
             <width></width>
             <height></height>
             <elements>
-                <element id="element">
-                    <top></top>
-                    <left></left>
+                <element id="profile-photo">
+                    <top>150</top>
+                    <left>350</left>
                     <defaultProperties>
                         <property id=""></property>
                     </defaultProperties>
                 </element>
             </elements>
         </stencil>
-    </elementGroup>
-    <template>
-        <type>static</type>
-        <dataType>social-media</dataType>
     </template>
 </templates>

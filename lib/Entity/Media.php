@@ -22,6 +22,7 @@
 namespace Xibo\Entity;
 
 use Carbon\Carbon;
+use Mimey\MimeTypes;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
@@ -278,7 +279,11 @@ class Media implements \JsonSerializable
         $this->permissions = [];
 
         // We need to do something with the name
-        $this->name = sprintf(__('Copy of %s on %s'), $this->name, Carbon::now()->format(DateFormatHelper::getSystemFormat()));
+        $this->name = sprintf(
+            __('Copy of %s on %s'),
+            $this->name,
+            Carbon::now()->format(DateFormatHelper::getSystemFormat())
+        );
 
         // Set so that when we add, we copy the existing file in the library
         $this->fileName = $this->storedAs;
@@ -290,12 +295,15 @@ class Media implements \JsonSerializable
      * Get Id
      * @return int
      */
-    public function getId()
+    public function getId(): int
     {
         return $this->mediaId;
     }
 
-    public function getPermissionFolderId()
+    /**
+     * @return int
+     */
+    public function getPermissionFolderId(): int
     {
         return $this->permissionsFolderId;
     }
@@ -304,16 +312,27 @@ class Media implements \JsonSerializable
      * Get Owner Id
      * @return int
      */
-    public function getOwnerId()
+    public function getOwnerId(): int
     {
         return $this->ownerId;
+    }
+
+    /**
+     * Get the MIME type for this media
+     * @return string
+     */
+    public function getMimeType(): string
+    {
+        $mimeTypes = new MimeTypes();
+        $ext = explode('.', $this->storedAs);
+        return $mimeTypes->getMimeType($ext[count($ext) - 1]);
     }
 
     /**
      * Sets the Owner
      * @param int $ownerId
      */
-    public function setOwner($ownerId)
+    public function setOwner(int $ownerId)
     {
         $this->ownerId = $ownerId;
     }
