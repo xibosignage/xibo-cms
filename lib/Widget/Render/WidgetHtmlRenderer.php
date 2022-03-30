@@ -269,6 +269,11 @@ class WidgetHtmlRenderer
                 }
             }
 
+            // TODO: canvas widget
+            // TODO: list of widgets will need to be output to the HTML
+            //  we will need the elements associated with those widgets.
+            //  we also need to send some widget options (probably selectively)
+            //  perhaps we need an option for that in the XML?
             // Include elements/element groups - they will already be JSON encoded.
             $twig['elements'][] = $widget->getOptionValue('elements', null);
 

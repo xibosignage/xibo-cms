@@ -27,6 +27,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Xibo\Event\MediaDeleteEvent;
 use Xibo\Event\WidgetAddEvent;
+use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Factory\PermissionFactory;
@@ -921,6 +922,53 @@ class Widget extends Base
 
         // Directly return the response
         return $response;
+    }
+
+    /**
+     * Get Data
+     * @param Request $request
+     * @param Response $response
+     * @param $regionId
+     * @param $id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function getData(Request $request, Response $response, $regionId, $id)
+    {
+        $region = $this->regionFactory->getById($regionId);
+        if (!$this->getUser()->checkViewable($region)) {
+            throw new AccessDeniedException(__('This Region is not shared with you'));
+        }
+
+        $widget = $this->widgetFactory->loadByWidgetId($id);
+        if (!$this->getUser()->checkViewable($widget)) {
+            throw new AccessDeniedException(__('This Widget is not shared with you'));
+        }
+
+        $module = $this->moduleFactory->getByType($widget->type);
+        $dataProvider = $module->createDataProvider($widget);
+        
+        // TODO: what happens with cache? I suppose we do want to cache data in some way, even in this
+        //  preview mode, and certainly via SOAP.
+
+        // Does this module have a data provider?
+        if ($module->isDataProviderExpected()) {
+            $widgetInterface = $module->getWidgetProviderOrNull();
+            if ($widgetInterface !== null) {
+                $widgetInterface->fetchData($dataProvider);
+            } else {
+                $dataProvider->setIsUseEvent();
+            }
+
+            if ($dataProvider->isUseEvent()) {
+                $this->getDispatcher()->dispatch(
+                    WidgetDataRequestEvent::$NAME,
+                    new WidgetDataRequestEvent($dataProvider)
+                );
+            }
+        }
+
+        return $response->withJson($dataProvider->getData());
     }
 
     /**
