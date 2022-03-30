@@ -62,6 +62,12 @@ interface DataProviderInterface
     public function setIsUseEvent(): DataProviderInterface;
 
     /**
+     * Should the data provider try to find its data via an event?
+     * @return bool
+     */
+    public function isUseEvent(): bool;
+
+    /**
      * Get data already added to this provider
      * @return array
      */

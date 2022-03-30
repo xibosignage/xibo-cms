@@ -200,6 +200,10 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
         '\Xibo\Controller\Widget', 'getResource'
     ])->setName('module.getResource');
     
+    $group->get('/playlist/widget/data/{regionId}/{id}', [
+        '\Xibo\Controller\Widget', 'getData'
+    ])->setName('module.getData');
+    
     $group->get('/playlist/widget/form/templateimage/{type}/{templateId}', [
         '\Xibo\Controller\Widget', 'getTemplateImage'
     ])->setName('module.getTemplateImage');

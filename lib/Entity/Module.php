@@ -198,6 +198,15 @@ class Module implements \JsonSerializable
     }
 
     /**
+     * Is a template expected?
+     * @return bool
+     */
+    public function isDataProviderExpected(): bool
+    {
+        return (!empty($this->dataType));
+    }
+
+    /**
      * Get this module's widget provider, or null if there isn't one
      * @return \Xibo\Widget\Provider\WidgetProviderInterface|null
      */
