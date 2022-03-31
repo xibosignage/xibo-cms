@@ -356,9 +356,9 @@ class ModuleFactory extends BaseFactory
                 $settings = json_decode($settings, true);
 
                 foreach ($module->settings as $property) {
-                    foreach ($settings as $setting) {
-                        if ($setting['id'] === $property->id) {
-                            $property->value = $setting['value'];
+                    foreach ($settings as $settingId => $setting) {
+                        if ($settingId === $property->id) {
+                            $property->value = $setting;
                             break;
                         }
                     }

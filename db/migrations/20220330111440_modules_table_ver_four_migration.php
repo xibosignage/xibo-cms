@@ -49,7 +49,7 @@ class ModulesTableVerFourMigration extends AbstractMigration
                 'default' => 1
             ])
             ->addColumn('defaultDuration', 'integer', [
-                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_TINY,
+                'limit' => \Phinx\Db\Adapter\MysqlAdapter::INT_REGULAR,
                 'default' => 60
             ])
             ->addColumn('settings', 'text', [
