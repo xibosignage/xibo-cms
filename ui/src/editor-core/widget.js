@@ -50,7 +50,7 @@ let Widget = function(id, data, regionId = null, layoutObject = null) {
     this.isPermissionsModifiable = data.isPermissionsModifiable;
 
     // widget tags
-    this.tags = data.tags;
+    this.tags = data.tags ? data.tags : [];
 
     // widget media
     this.mediaIds = data.mediaIds;

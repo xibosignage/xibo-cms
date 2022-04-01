@@ -51,7 +51,25 @@
                 {% set helpText %}{% trans "The default duration for Widgets of this Module when the user has elected to not set a specific duration." %}{% endset %}
                 {{ forms.input("defaultDuration", title, module.defaultDuration, helpText) }}
 
-                <div class="form-module-configure-fields"></div>
+                <div class="form-module-configure-fields">
+                    {% for field in module.settings %}
+                        {% if field.type == "checkbox" %}
+                            {% set helpText %}{{ field.helpText }}{% endset %}
+                            {{ forms.checkbox(field.id, field.title, field.value, helpText) }}
+                        {% elseif field.type == "input" %}
+                            {% set helpText %}{{ field.helpText }}{% endset %}
+                            {{ forms.input(field.id, field.title, field.value, helpText) }}
+                        {% elseif field.type == "dropdown" %}
+                            {% set helpText %}{{ field.helpText }}{% endset %}
+                            {{ forms.dropdown(field.id, "single", field.title, field.value, field.options, "name", "title", helpText) }}
+                        {% elseif field.type == "textarea" %}
+                            {% set helpText %}{{ field.helpText }}{% endset %}
+                            {{ forms.textarea(field.id, field.title, field.value, helpText) }}
+                        {% elseif field.type == "hidden" %}
+                            {{ forms.hidden(field.id, field.value) }}
+                        {% endif %}
+                    {% endfor %}
+                </div>
             </form>
         </div>
     </div>
