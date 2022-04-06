@@ -109,5 +109,12 @@
         $('#refreshGrid').click(function () {
             table.ajax.reload();
         });
+
+        function moduleEditFormOpen(dialog) {
+            var moduleSettings = $(dialog).data('extra')['settings'];
+            var $targetContainer = $(dialog).find('.form-module-configure-fields')
+
+            forms.createFields(moduleSettings, $targetContainer);
+        }
     </script>
 {% endblock %}

@@ -12,6 +12,7 @@ const mainConfig = Object.assign({}, config, {
     vendor: './ui/bundle_vendor.js',
     style: './ui/bundle_style.js',
     systemTools: './ui/bundle_tools.js',
+    templates: './ui/bundle_templates.js',
     xibo: './ui/bundle_xibo.js',
     layoutEditor: './ui/src/layout-editor/main.js',
     playlistEditor: './ui/src/playlist-editor/main.js',

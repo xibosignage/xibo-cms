@@ -5,6 +5,7 @@ const messageTemplate = require('../templates/properties-panel-message.hbs');
 const propertiesPanel = require('../templates/properties-panel.hbs');
 const actionsTemplate = require('../templates/actions-form-template.hbs');
 const actionsButtonTemplate = require('../templates/actions-button-template.hbs');
+const widgetFormTemplate = require('../templates/widget-form.hbs');
 
 /**
  * Properties panel contructor
@@ -199,17 +200,17 @@ PropertiesPanel.prototype.makeFormReadOnly = function() {
  */
 PropertiesPanel.prototype.render = function(element, step) {
     const self = this;
+    const elementType = element.type;
 
     // Prevent the panel to render if there's no selected object
     if(typeof element == 'undefined' || $.isEmptyObject(element) || typeof element.type == 'undefined' || typeof element[element.type + 'Id'] == 'undefined') {
         // Clean the property panel html
         this.DOMObject.html('');
-
         return false;
     }
 
-    // Show a message if the module type is disabled
-    if(element.type == 'widget' && !element.enabled) {
+    // Show a message if the module is disabled for a widget rendering
+    if(elementType === 'widget' && !element.enabled) {
         this.DOMObject.html(messageTemplate({
             message: editorsTrans.invalidModule
         }));
@@ -219,19 +220,22 @@ PropertiesPanel.prototype.render = function(element, step) {
     // Reset inline editor to false on each refresh
     this.inlineEditor = false;
 
+    // Show loading template
     this.DOMObject.html(loadingTemplate());
-    let requestPath = urlsForApi[element.type].getForm.url;
 
     // Get toggleable panel
     const $togglePanel = self.DOMObject.parents('.toggle-panel');
 
-    // Hide toggler
+    // Hide toggler during loading
     if($togglePanel.hasClass('opened')) {
         this.DOMObject.siblings('.toggle-container').hide();
     }
 
+    // Build request path
+    let requestPath = urlsForApi[element.type].getForm.url;
     requestPath = requestPath.replace(':id', element[element.type + 'Id']);
 
+    // If we have a step to render, append it to the request path
     if(step !== undefined && typeof step == 'number') {
         requestPath += '?step=' + step;
     } 
@@ -243,24 +247,36 @@ PropertiesPanel.prototype.render = function(element, step) {
     
     // Create a new request
     this.renderRequest = $.get(requestPath).done(function(res) {
-
         const app = self.parent;
 
         // Clear request var after response
         self.renderRequest = undefined;
 
-        // Prevent rendering null html
-        if(res.html === null || res.success === false) {
-            self.DOMObject.html('<div class="unsuccessMessage">' + res.message + '</div>');
+        // Prevent rendering null html ( if it's not a widget )
+        if((elementType != 'widget' && res.html === null) || res.success === false) {
+            self.DOMObject.html('<div class="unsuccessMessage">' + 
+                (res.message) ? res.message : propertiesPanelTrans.somethingWentWrong
+                + '</div>');
             return;
         }
 
-        const htmlTemplate = Handlebars.compile(res.html);
+        // Get template or compile from result
+        let htmlTemplate = '';
+        if(res.html === null) {
+            htmlTemplate = widgetFormTemplate;
+            
+            // Extend element with translation
+            $.extend(element, {
+                trans: propertiesPanelTrans
+            });
+        } else {
+            htmlTemplate = Handlebars.compile(res.html);
+        }
 
         // Create buttons object
         let buttons = {};
         
-        if(app.readOnlyMode === undefined || app.readOnlyMode === false) {
+        if(res.buttons != undefined && res.buttons != '' && (app.readOnlyMode === undefined || app.readOnlyMode === false)) {
             // Process buttons from result
             buttons = formHelpers.widgetFormRenderButtons(res.buttons);
         }
@@ -277,6 +293,7 @@ PropertiesPanel.prototype.render = function(element, step) {
         // Append layout html to the main div
         self.DOMObject.html(html);
 
+        // Add the action tab
         if (app.mainObjectType === 'layout') {
             // the url to Action Add Form
             let actionFormAddRequest = urlsForApi[element.type].addActionForm.url;
@@ -319,6 +336,9 @@ PropertiesPanel.prototype.render = function(element, step) {
         if(viewerExists) {
             self.DOMObject.data('viewerObject', app.viewer);
         }
+
+        // Create the dynamic form fields ( for now just for widget )
+        (element.type === 'widget') && forms.createFields(res.data.module.properties, self.DOMObject.find('#configureTab'));
         
         // Run form open module optional function
         if(element.type === 'widget') {

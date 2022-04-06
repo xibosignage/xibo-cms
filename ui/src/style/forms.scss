@@ -1,0 +1,11 @@
+@import "variables";
+
+.form-help-popup {
+    float: right;
+    padding-top: 6px;
+    color: #74ACFA;
+
+    &.checkbox-popup {
+        padding-top: 3px;
+    }
+}
