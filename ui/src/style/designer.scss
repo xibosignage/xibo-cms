@@ -66,7 +66,7 @@ $unsuccess-message-bg-color: darken($xibo-color-red, 30%);
 $layout-status-popover-message-bg-color: $xibo-color-red;
 
 // Variables
-$properties-panel-width: 400px;
+$properties-panel-width: 320px;
 $designer-overlay-z-index: 1050;
 $designer-z-index-select: 10;
 $timeline-max-height: 230px;
@@ -1164,7 +1164,6 @@ body, .page-content {
                 font-weight: bold;
                 opacity: 50%;
                 padding-bottom: 7px;
-                text-transform: uppercase;
 
                 &.active {
                     opacity: 100%;

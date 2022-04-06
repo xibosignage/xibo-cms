@@ -1586,8 +1586,6 @@ let formHelpers = function() {
      * @param {object} - Buttons from twig file
      */
     this.widgetFormRenderButtons = function(inputButtons) {
-
-
         let buttons = {};
 
         // Process buttons from result
