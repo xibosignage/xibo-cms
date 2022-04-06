@@ -69,6 +69,7 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 $properties-panel-width: 400px;
 $designer-overlay-z-index: 1050;
 $designer-z-index-select: 10;
+$timeline-max-height: 230px;
 
 // CSS
 body, .page-content {
@@ -376,12 +377,11 @@ body, .page-content {
 /* Layout timeline */
 #layout-editor #layout-timeline {
     flex-basis: calc(100% - 40px);
+    max-height: 230px;
     margin: 4px 0;
-    overflow-y: auto;
 
     #timeline-container {
         display: flex;
-        height: 100%;
     }
 
     /* Region Container */
@@ -393,12 +393,22 @@ body, .page-content {
     .timeline-left-panel {
         background-color: $xibo-color-blue-lightest;
         border-radius: 0 0 4px 0;
+        max-height: $timeline-max-height;
+        overflow-y: auto;
+
+        /* Hide toolbar */
+        scrollbar-width: thin; /* For firefox */
+        &::-webkit-scrollbar {
+            width: 0;
+            height: 0;
+        }
     }
 
     #regions-container {
         display: inline-block;
         width: calc(100% - #{$timeline-region-info-width});
-        overflow-x: auto;
+        overflow: auto;
+        max-height: $timeline-max-height;
     }
 
     .empty-timeline {
@@ -463,6 +473,7 @@ body, .page-content {
     #regions-info {
         float: left;
         width: $timeline-region-info-width;
+        margin-bottom: 12px;
 
         .designer-region-info {
             background-color: $xibo-color-blue-pastel;

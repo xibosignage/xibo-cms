@@ -791,14 +791,10 @@ Timeline.prototype.render = function(layout) {
     
     // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour
     regionsContainer.scroll(_.debounce(function() {
-
         // If regions are still not rendered, leave method
         if(self.properties.scrollWidth != $(this).find("#regions").width() || self.beingSorted == true) {
             return;
         }
-
-        // Save vertical scroll position
-        self.properties.scrollVerticalPosition = $(this).scrollTop();
 
         // Get new scroll position ( percentage )
         const newScrollPosition = $(this).scrollLeft() / $(this).find("#regions").width();
@@ -812,6 +808,25 @@ Timeline.prototype.render = function(layout) {
             self.render(layout);
         }
     }, 500));
+
+    // Update left panel with regions vertical position
+    var updateLeftPanelPosition = function(forceUpdate) {
+        if(forceUpdate || regionsContainer.scrollTop() != self.properties.scrollVerticalPosition) {
+            // Save vertical scroll position
+            self.properties.scrollVerticalPosition = regionsContainer.scrollTop();
+
+            // Sync left container with region scroll
+            self.DOMObject.find('.timeline-left-panel').scrollTop(self.properties.scrollVerticalPosition);
+        }
+    };
+
+    // Sync left container with region scroll
+    regionsContainer.scroll(function() {
+        updateLeftPanelPosition(false);
+    });
+
+    // Update on load
+    updateLeftPanelPosition(true);
 
     // If a transition is too small, show icon instead
     const TRANSITION_MIN_WIDTH = 60;
