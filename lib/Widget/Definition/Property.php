@@ -51,18 +51,6 @@ class Property implements \JsonSerializable
     public $playerCompatability;
     
     public $value;
-
-    /**
-     * JSON serialise this property for the purposes of saving the value
-     * @return array
-     */
-    public function jsonSerializeForSaving(): array
-    {
-        return [
-            'id' => $this->id,
-            'value' => $this->value
-        ];
-    }
     
     /** @inheritDoc */
     public function jsonSerialize()
@@ -138,7 +126,10 @@ class Property implements \JsonSerializable
      */
     public function setValueByType(SanitizerInterface $params, string $key = null): Property
     {
-        $this->value = $this->getByType($params, $key);
+        $value = $this->getByType($params, $key);
+        if ($value !== $this->default) {
+            $this->value = $value;
+        }
         return $this;
     }
 
