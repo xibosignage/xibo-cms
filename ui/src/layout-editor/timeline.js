@@ -528,14 +528,14 @@ Timeline.prototype.render = function(layout) {
     this.DOMObject.html(html);
 
     // Load region container
-    const regionsContainer = this.DOMObject.find('#regions-container');
+    const $regionsContainer = this.DOMObject.find('#regions-container');
 
     // Save regions size to guarantee that when the scroll event is called, the region don't reset to 0 ( bugfix )
-    this.properties.scrollWidth = regionsContainer.find("#regions").width();
+    this.properties.scrollWidth = $regionsContainer.find("#regions").width();
 
     // Maintain the previous scroll position
-    regionsContainer.scrollLeft(this.properties.scrollPosition * regionsContainer.find("#regions").width());
-    regionsContainer.scrollTop(this.properties.scrollVerticalPosition);
+    $regionsContainer.scrollLeft(this.properties.scrollPosition * $regionsContainer.find("#regions").width());
+    $regionsContainer.scrollTop(this.properties.scrollVerticalPosition);
 
     // Timeline toggler
     this.DOMObject.parents('.toggle-panel').find('.toggle').off().click(function(e) {
@@ -790,7 +790,7 @@ Timeline.prototype.render = function(layout) {
     }
     
     // When scroll is called ( by scrollbar or .scrollLeft() method calling ), use debounce and process the behaviour
-    regionsContainer.scroll(_.debounce(function() {
+    $regionsContainer.scroll(_.debounce(function() {
         // If regions are still not rendered, leave method
         if(self.properties.scrollWidth != $(this).find("#regions").width() || self.beingSorted == true) {
             return;
@@ -809,24 +809,26 @@ Timeline.prototype.render = function(layout) {
         }
     }, 500));
 
+    const $timelineLeftPanel = self.DOMObject.find('.timeline-left-panel');
+
     // Update left panel with regions vertical position
-    var updateLeftPanelPosition = function(forceUpdate) {
-        if(forceUpdate || regionsContainer.scrollTop() != self.properties.scrollVerticalPosition) {
+    var syncVerticalScrollPosition = function(forceUpdate = false) {
+        if(forceUpdate || $regionsContainer.scrollTop() != self.properties.scrollVerticalPosition) {
             // Save vertical scroll position
-            self.properties.scrollVerticalPosition = regionsContainer.scrollTop();
+            self.properties.scrollVerticalPosition = $regionsContainer.scrollTop();
 
             // Sync left container with region scroll
-            self.DOMObject.find('.timeline-left-panel').scrollTop(self.properties.scrollVerticalPosition);
+            $timelineLeftPanel.scrollTop(self.properties.scrollVerticalPosition);
         }
     };
 
     // Sync left container with region scroll
-    regionsContainer.scroll(function() {
-        updateLeftPanelPosition(false);
+    $regionsContainer.scroll(function() {
+        syncVerticalScrollPosition();
     });
 
     // Update on load
-    updateLeftPanelPosition(true);
+    syncVerticalScrollPosition(true);
 
     // If a transition is too small, show icon instead
     const TRANSITION_MIN_WIDTH = 60;

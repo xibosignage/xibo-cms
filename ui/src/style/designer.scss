@@ -382,26 +382,20 @@ body, .page-content {
 
     #timeline-container {
         display: flex;
+        background-color: $xibo-color-white;
     }
 
     /* Region Container */
     $timeline-region-info-width: 180px;
     $timeline-region-preview-width: 60px;
-    $timeline-timeruler-height: 24px;
+    $timeline-timeruler-height: 28px;
     $timeline-region-height: 48px;
 
     .timeline-left-panel {
         background-color: $xibo-color-blue-lightest;
         border-radius: 0 0 4px 0;
         max-height: $timeline-max-height;
-        overflow-y: auto;
-
-        /* Hide toolbar */
-        scrollbar-width: thin; /* For firefox */
-        &::-webkit-scrollbar {
-            width: 0;
-            height: 0;
-        }
+        overflow: hidden;
     }
 
     #regions-container {
@@ -526,7 +520,7 @@ body, .page-content {
         font-size: 1.15rem;
         line-height: 20px;
         width: $timeline-region-info-width;
-        padding: 2px 4px;
+        padding: 4px 8px;
         background-color: $xibo-color-primary;
         position: -webkit-sticky; /* Safari */
         position: sticky;
