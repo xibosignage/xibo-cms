@@ -182,7 +182,7 @@ class Module extends Base
      */
     public function settings(Request $request, Response $response, $id)
     {
-        if (!$this->getUser()->userTypeId == 1) {
+        if (!$this->getUser()->isSuperAdmin()) {
             throw new AccessDeniedException();
         }
 

@@ -325,7 +325,7 @@ class Module implements \JsonSerializable
             'enabled' => $this->enabled,
             'previewEnabled' => $this->previewEnabled,
             'defaultDuration' => $this->defaultDuration,
-            'settings' => json_encode($this->settings),
+            'settings' => $this->getSettingsForSaving()
         ]);
     }
 
@@ -343,8 +343,22 @@ class Module implements \JsonSerializable
             'enabled' => $this->enabled,
             'previewEnabled' => $this->previewEnabled,
             'defaultDuration' => $this->defaultDuration,
-            'settings' => json_encode($this->settings)
+            'settings' => $this->getSettingsForSaving()
         ]);
+    }
+
+    /**
+     * @return string
+     */
+    private function getSettingsForSaving(): string
+    {
+        $settings = [];
+        foreach ($this->settings as $setting) {
+            if ($setting->value !== null) {
+                $settings[$setting->id] = $setting->value;
+            }
+        }
+        return count($settings) > 0 ? json_encode($settings) : '[]';
     }
 
     /**
