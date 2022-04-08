@@ -70,6 +70,7 @@ $properties-panel-width: 400px;
 $designer-overlay-z-index: 1050;
 $designer-z-index-select: 10;
 $timeline-max-height: 230px;
+$inline-editing-z-index: 1040;
 
 // CSS
 body, .page-content {
@@ -120,6 +121,7 @@ body, .page-content {
 
 .main-panel {
     flex: 1;
+    z-index: 1;
 
     .main-panel-wrapper {
         position: relative;
@@ -365,6 +367,22 @@ body, .page-content {
 
     .show-on-fs {
         display: none;
+    }
+
+    &.inline-edit-mode {
+        .custom-overlay {
+            display: block !important;
+            opacity: 0.3;
+            z-index: $inline-editing-z-index;
+        }
+
+        .main-panel {
+            z-index: calc(#{$inline-editing-z-index} + 10);
+
+            button {
+                display: none;
+            }
+        }
     }
 }
 
@@ -1354,6 +1372,20 @@ body, .page-content {
             & > button {
                 margin: 4px 0;
             }
+        }
+
+        &.form-editor-enabled {
+            .form-container, form {
+                margin-left: -450px !important;
+                padding-left: 450px !important;
+
+                div.cke:hover {
+                    position: absolute;
+                    right: 4px;
+                    width: 810px;
+                    z-index: 3;
+                }
+            } 
         }
     }
 }

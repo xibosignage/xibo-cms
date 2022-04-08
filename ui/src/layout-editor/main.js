@@ -2292,3 +2292,12 @@ lD.handleMessage = function(event) {
         toastr.error(errorMessagesTrans.userSavePreferencesFailed);
     });
 };
+
+lD.enableInlineModeEditing = function() {
+    lD.editorContainer.addClass('inline-edit-mode');
+
+    // Click overlay to save changes
+    lD.editorContainer.find('.custom-overlay').off().on('click', function() {
+        lD.propertiesPanel.save(lD.selectedObject);
+    });
+};
