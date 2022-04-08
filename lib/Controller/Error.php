@@ -64,6 +64,25 @@ class Error extends Base
 
         $message = __('Page not found');
 
+        // Do we need SSL/STS?
+        $whiteListLoadBalancers = $this->getConfig()->getSetting('WHITELIST_LOAD_BALANCERS');
+        $originIp = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+        $forwardedProtoHttps = (
+            strtolower($app->request()->headers('HTTP_X_FORWARDED_PROTO', 'http')) === 'https'
+            && $originIp != ''
+            && (
+                $whiteListLoadBalancers === '' || in_array($originIp, explode(',', $whiteListLoadBalancers))
+            )
+        );
+
+        if ($app->request()->getScheme() == 'https' || $forwardedProtoHttps) {
+            if ($this->getConfig()->getSetting('ISSUE_STS', 0) == 1)
+                $app->response()->header(
+                    'strict-transport-security',
+                    'max-age=' . $this->getConfig()->getSetting('STS_TTL', 600)
+                );
+        }
+
         // Different action depending on the app name
         switch ($app->getName()) {
 
