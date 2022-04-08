@@ -390,10 +390,17 @@ trait ReportTrait
         if ($columns == null || !is_array($columns))
             return null;
 
-        $order = array_map(function ($element) use ($columns) {
-            return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '') ? '`' . $columns[$element['column']]['name'] . '`' : '`' . $columns[$element['column']]['data'] . '`') . (($element['dir'] == 'desc') ? ' DESC' : '');
-        }, $this->getSanitizer()->getStringArray('order'));
+        $order = $this->getSanitizer()->getStringArray('order');
+        if ($order === null || !is_array($order) || count($order) <= 0) {
+            return null;
+        }
 
-        return $order;
+        return array_map(function ($element) use ($columns) {
+            $val = (isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '')
+                ? $columns[$element['column']]['name']
+                : $columns[$element['column']]['data'];
+            $val = preg_replace('/[^A-Za-z0-9_]/', '', $val);
+            return '`' . $val . '`' . (($element['dir'] == 'desc') ? ' DESC' : '');
+        }, $order);
     }
 }
