@@ -32,6 +32,7 @@ use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Xibo\Helper\Environment;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Translate;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ExpiredException;
@@ -112,6 +113,9 @@ class Handlers
             $configService = $container->get('configService');
             $configService->setDependencies($container->get('store'), $container->get('rootUri'));
             $configService->loadTheme();
+
+            // Do we need to issue STS?
+            $response = HttpsDetect::decorateWithStsIfNecessary($configService, $request, $response);
 
             // Prepend our theme files to the view path
             // Does this theme provide an alternative view path?
