@@ -742,7 +742,7 @@ class DataSet implements \JsonSerializable
         // Touch this dataSet
         $dataSetCache = $this->pool->getItem('/dataset/accessed/' . $this->dataSetId);
         $dataSetCache->set('true');
-        $dataSetCache->expiresAfter(intval($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD')) * 1.5);
+        $dataSetCache->expiresAfter(doubleval($this->config->GetSetting('REQUIRED_FILES_LOOKAHEAD')) * 1.5);
         $this->pool->saveDeferred($dataSetCache);
     }
 

@@ -11,6 +11,7 @@ use Jenssegers\Date\Date;
 use Xibo\Entity\User;
 use Xibo\Exception\NotFoundException;
 use Xibo\Exception\TaskRunException;
+use Xibo\Helper\Random;
 
 /**
  * Class StatsArchiveTask
@@ -78,7 +79,7 @@ class StatsArchiveTask implements TaskInterface
         $sql = '
             SELECT stat.*, display.Display, layout.Layout, media.Name AS MediaName
               FROM stat
-                INNER JOIN display
+                LEFT OUTER JOIN display
                 ON stat.DisplayID = display.DisplayID
                 LEFT OUTER JOIN layout
                 ON layout.LayoutID = stat.LayoutID
@@ -102,6 +103,7 @@ class StatsArchiveTask implements TaskInterface
         fputcsv($out, ['Type', 'FromDT', 'ToDT', 'Layout', 'Display', 'Media', 'Tag', 'DisplayId', 'LayoutId', 'WidgetId', 'MediaId']);
 
         // Get records using a cursor so we don't load everything into memory
+        $this->store->getConnection()->setAttribute(\PDO::MYSQL_ATTR_USE_BUFFERED_QUERY, false);
         $statement = $this->store->getConnection()->prepare($sql);
 
         // Exec
@@ -141,7 +143,7 @@ class StatsArchiveTask implements TaskInterface
         unlink($fileName);
 
         // Upload to the library
-        $media = $this->mediaFactory->create(__('Stats Export %s to %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d')), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
+        $media = $this->mediaFactory->create(__('Stats Export %s to %s - %s', $fromDt->format('Y-m-d'), $toDt->format('Y-m-d'), Random::generateString(5)), 'stats.csv.zip', 'genericfile', $this->archiveOwner->getId());
         $media->save();
 
         // Delete the stats, incrementally

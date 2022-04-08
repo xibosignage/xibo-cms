@@ -440,6 +440,7 @@ class Soap
                     INNER JOIN `lkdisplaydg`
                     ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                  WHERE lkdisplaydg.DisplayID = :displayId
+                    AND `media`.released = 1
                 UNION ALL
                 SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize
                   FROM media
@@ -454,14 +455,15 @@ class Soap
                    INNER JOIN layout
                    ON layout.LayoutID = region.layoutId
                  WHERE layout.layoutId IN (%s)
+                    AND `media`.released = 1
                 UNION ALL
                 SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize
                   FROM `media`
-                 WHERE `media`.mediaID IN (
+                 WHERE `media`.released = 1 AND `media`.mediaID IN (
                     SELECT backgroundImageId
                       FROM `layout`
                      WHERE layoutId IN (%s)
-                 )
+                    )
             ";
 
             $params = ['displayId' => $this->display->displayId];
