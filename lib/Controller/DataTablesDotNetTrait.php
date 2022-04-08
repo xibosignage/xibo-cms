@@ -89,10 +89,11 @@ trait DataTablesDotNetTrait
         }
 
         return array_map(function ($element) use ($columns) {
-            return ((isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '')
-                    ? '`' . $columns[$element['column']]['name'] . '`'
-                    : '`' . $columns[$element['column']]['data'] . '`')
-                . (($element['dir'] == 'desc') ? ' DESC' : '');
+            $val = (isset($columns[$element['column']]['name']) && $columns[$element['column']]['name'] != '')
+                ? $columns[$element['column']]['name']
+                : $columns[$element['column']]['data'];
+            $val = preg_replace('/[^A-Za-z0-9_]/', '', $val);
+            return '`' . $val . '`' . (($element['dir'] == 'desc') ? ' DESC' : '');
         }, $order);
     }
 }
