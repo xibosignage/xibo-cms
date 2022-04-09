@@ -75,10 +75,13 @@ class Handlers
                     'help' => $exception->getDescription()
                 ]);
             } else {
+                // Any other exception, check to see if we hide the real message
                 return $response->withJson([
                     'success' => false,
                     'error' => 500,
-                    'message' => $exception->getMessage()
+                    'message' => $displayErrorDetails
+                        ? $exception->getMessage()
+                        : __('Unexpected Error, please contact support.')
                 ]);
             }
         };
@@ -148,9 +151,11 @@ class Handlers
                 }
             } else {
                 // Make a friendly message
-                $message = (!empty($exception->getMessage()))
-                    ? $exception->getMessage()
-                    : __('Unexpected Error, please contact support.');
+                if ($displayErrorDetails || $exception instanceof GeneralException) {
+                    $message = $exception->getMessage();
+                } else {
+                    $message = __('Unexpected Error, please contact support.');
+                }
 
                 // Parse out data for the exception
                 $exceptionData = [
@@ -170,9 +175,11 @@ class Handlers
                 } else {
                     $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
 
+                    // Override the page for an Upgrade Pending Exception
                     if ($exception instanceof UpgradePendingException) {
                         $exceptionClass = 'upgrade-in-progress-page';
                     }
+
                     if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig')) {
                         $template = $exceptionClass;
                     } else {
@@ -212,11 +219,8 @@ class Handlers
      * @param $e
      * @return bool
      */
-    private static function handledError($e)
+    private static function handledError($e): bool
     {
-        if (method_exists($e, 'handledException'))
-            return $e->handledException();
-
         return ($e instanceof InvalidArgumentException
             || $e instanceof ExpiredException
             || $e instanceof AccessDeniedException
