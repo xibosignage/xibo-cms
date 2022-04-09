@@ -144,7 +144,7 @@ class Handlers
                         'message' => __('Sorry we could not find that page.')
                     ], 404);
                 } else {
-                    return $twig->render($response, 'not-found.twig', $viewParams);
+                    return $twig->render($response, 'not-found.twig', $viewParams)->withStatus(404);
                 }
             } else {
                 // Make a friendly message
@@ -164,6 +164,7 @@ class Handlers
                     array_merge($exception->getErrorData(), $exceptionData);
                 }*/
 
+                // Note: these are currently served as 200's, which is expected by the FE.
                 if ($request->isXhr()) {
                     return $response->withJson($exceptionData);
                 } else {
