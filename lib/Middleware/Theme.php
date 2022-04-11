@@ -36,6 +36,7 @@ use Xibo\Helper\ByteFormatter;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Environment;
 use Xibo\Helper\Translate;
+use Xibo\Support\Exception\NotFoundException;
 
 /**
  * Class Theme
@@ -137,6 +138,15 @@ class Theme implements Middleware
             && isset($samlSettings['workflow']['slo'])
             && $samlSettings['workflow']['slo'] == false) {
             $view['hideLogout'] = true;
+        }
+
+        // Disable menu boards if the module isn't installed
+        try {
+            $menuBoard = $container->get('moduleFactory')->getByType('menuboard');
+            $view['hideMenuBoard'] = !$menuBoard->enabled;
+        } catch (NotFoundException $notFoundException) {
+            // Disable
+            $view['hideMenuBoard'] = true;
         }
     }
 }

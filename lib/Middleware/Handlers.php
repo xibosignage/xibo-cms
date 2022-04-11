@@ -30,8 +30,8 @@ use Slim\Exception\HttpSpecializedException;
 use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
 use Xibo\Helper\Environment;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Translate;
 use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\ExpiredException;
@@ -74,10 +74,13 @@ class Handlers
                     'help' => $exception->getDescription()
                 ]);
             } else {
+                // Any other exception, check to see if we hide the real message
                 return $response->withJson([
                     'success' => false,
                     'error' => 500,
-                    'message' => $exception->getMessage()
+                    'message' => $displayErrorDetails
+                        ? $exception->getMessage()
+                        : __('Unexpected Error, please contact support.')
                 ]);
             }
         };
@@ -113,6 +116,9 @@ class Handlers
             $configService->setDependencies($container->get('store'), $container->get('rootUri'));
             $configService->loadTheme();
 
+            // Do we need to issue STS?
+            $response = HttpsDetect::decorateWithStsIfNecessary($configService, $request, $response);
+
             // Prepend our theme files to the view path
             // Does this theme provide an alternative view path?
             if ($configService->getThemeConfig('view_path') != '') {
@@ -140,13 +146,15 @@ class Handlers
                         'message' => __('Sorry we could not find that page.')
                     ], 404);
                 } else {
-                    return $twig->render($response, 'not-found.twig', $viewParams);
+                    return $twig->render($response, 'not-found.twig', $viewParams)->withStatus(404);
                 }
             } else {
                 // Make a friendly message
-                $message = (!empty($exception->getMessage()))
-                    ? $exception->getMessage()
-                    : __('Unexpected Error, please contact support.');
+                if ($displayErrorDetails || $exception instanceof GeneralException) {
+                    $message = $exception->getMessage();
+                } else {
+                    $message = __('Unexpected Error, please contact support.');
+                }
 
                 // Parse out data for the exception
                 $exceptionData = [
@@ -161,19 +169,34 @@ class Handlers
                 }*/
 
                 if ($request->isXhr()) {
+                    // Note: these are currently served as 200's, which is expected by the FE.
                     return $response->withJson($exceptionData);
                 } else {
+                    // What status code?
+                    $statusCode = 500;
+                    if ($exception instanceof GeneralException) {
+                        $statusCode = $exception->getHttpStatusCode();
+                    }
+                    if ($exception instanceof HttpSpecializedException) {
+                        $statusCode = $exception->getCode();
+                    }
+
+                    // Decide which error page we should load
                     $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
 
+                    // Override the page for an Upgrade Pending Exception
                     if ($exception instanceof UpgradePendingException) {
                         $exceptionClass = 'upgrade-in-progress-page';
                     }
+
                     if (file_exists(PROJECT_ROOT . '/views/' . $exceptionClass . '.twig')) {
                         $template = $exceptionClass;
                     } else {
                         $template = 'error';
                     }
-                    return $twig->render($response, $template . '.twig', array_merge($viewParams, $exceptionData));
+
+                    return $twig->render($response, $template . '.twig', array_merge($viewParams, $exceptionData))
+                        ->withStatus($statusCode);
                 }
             }
         };
@@ -207,11 +230,8 @@ class Handlers
      * @param $e
      * @return bool
      */
-    private static function handledError($e)
+    private static function handledError($e): bool
     {
-        if (method_exists($e, 'handledException'))
-            return $e->handledException();
-
         return ($e instanceof InvalidArgumentException
             || $e instanceof ExpiredException
             || $e instanceof AccessDeniedException

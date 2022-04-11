@@ -34,6 +34,7 @@ use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Xibo\Entity\User;
 use Xibo\Helper\Environment;
+use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\NullSession;
 use Xibo\Helper\Session;
 use Xibo\Helper\Translate;
@@ -88,23 +89,10 @@ class State implements Middleware
         $response = $handler->handle($request);
 
         // Do we need SSL/STS?
-        // If we are behind a load balancer we should look at HTTP_X_FORWARDED_PROTO
-        // if a whitelist of IP address is provided, we should check it, otherwise trust
-        $whiteListLoadBalancers = $container->get('configService')->getSetting('WHITELIST_LOAD_BALANCERS');
-        $originIp = $_SERVER['REMOTE_ADDR'] ?? '';
-        $forwardedProtoHttps = (
-            strtolower($request->getHeaderLine('HTTP_X_FORWARDED_PROTO')) === 'https'
-            && $originIp != ''
-            && (
-                $whiteListLoadBalancers === '' || in_array($originIp, explode(',', $whiteListLoadBalancers))
-            )
-        );
-
-        if ($request->getUri()->getScheme() == 'https' || $forwardedProtoHttps) {
-            if ($container->get('configService')->getSetting('ISSUE_STS', 0) == 1) {
-                $response = $response->withHeader('strict-transport-security', 'max-age=' . $container->get('configService')->getSetting('STS_TTL', 600));
-            }
-        } else {
+        if (HttpsDetect::isShouldIssueSts($container->get('configService'), $request)) {
+            $response = HttpsDetect::decorateWithSts($container->get('configService'), $response);
+        } else if (!HttpsDetect::isHttps()) {
+            // We are not HTTPS, should we redirect?
             // Get the current route pattern
             $routeContext = RouteContext::fromRequest($request);
             $route = $routeContext->getRoute();

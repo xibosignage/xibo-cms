@@ -7043,6 +7043,28 @@
                         "description": "successful operation"
                     }
                 }
+            },
+            "delete": {
+                "tags": [
+                    "playlist"
+                ],
+                "summary": "Delete a Playlist",
+                "description": "Delete a Playlist",
+                "operationId": "playlistDelete",
+                "parameters": [
+                    {
+                        "name": "playlistId",
+                        "in": "path",
+                        "description": "The PlaylistId to delete",
+                        "required": true,
+                        "type": "integer"
+                    }
+                ],
+                "responses": {
+                    "204": {
+                        "description": "successful operation"
+                    }
+                }
             }
         },
         "/playlist/copy/{playlistId}": {
@@ -11191,25 +11213,11 @@
                         "type": "string"
                     },
                     {
-                        "name": "mainTemplate_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
                         "name": "itemtemplate",
                         "in": "formData",
                         "description": "Template for each item, replaces [itemsTemplate] in main template, Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
-                    },
-                    {
-                        "name": "itemtemplate_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
                     },
                     {
                         "name": "styleSheet",
@@ -11878,25 +11886,11 @@
                         "type": "string"
                     },
                     {
-                        "name": "currentTemplate_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
-                    },
-                    {
                         "name": "dailyTemplate",
                         "in": "formData",
                         "description": "Replaces [dailyForecast] in main template, Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
-                    },
-                    {
-                        "name": "dailyTemplate_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
                     },
                     {
                         "name": "styleSheet",
@@ -13499,13 +13493,6 @@
                         "description": "Main template, Pass only with overrideTemplate set to 1 ",
                         "required": false,
                         "type": "string"
-                    },
-                    {
-                        "name": "ta_text_advanced",
-                        "in": "formData",
-                        "description": "A flag (0, 1), Should text area by presented as a visual editor?",
-                        "required": false,
-                        "type": "integer"
                     },
                     {
                         "name": "styleSheet",

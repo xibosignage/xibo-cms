@@ -525,16 +525,16 @@ class ModuleFactory extends BaseFactory
 
     /**
      * Get module by name
-     * @param string $name
+     * @param string $moduleType
      * @return Module
      * @throws NotFoundException
      */
-    public function getByType($name)
+    public function getByType($moduleType)
     {
-        $modules = $this->query(['enabled DESC'], ['name' => $name]);
+        $modules = $this->query(['enabled DESC'], ['type' => $moduleType]);
 
         if (count($modules) <= 0) {
-            throw new NotFoundException(sprintf(__('Module type %s does not match any enabled Module'), $name));
+            throw new NotFoundException(sprintf(__('Module type %s does not match any enabled Module'), $moduleType));
         }
 
         return $modules[0];

@@ -37,7 +37,12 @@ class ApplicationsTweaksMigration extends AbstractMigration
         // make sure the oauth_client table uses utf8.
         // without this change, for old CMS instances where it was using latin1,
         // it will cause issues creating FK in the new oauth_lkclientuser table.
-        $this->execute('ALTER TABLE `oauth_clients` CHARACTER SET utf8 COLLATE utf8_general_ci');
+        $this->execute('
+            ALTER TABLE `oauth_clients` CHARACTER SET utf8 COLLATE utf8_general_ci,
+                CHANGE COLUMN `id` `id` VARCHAR(254) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+                CHANGE COLUMN `secret` `secret` VARCHAR(254) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL,
+                CHANGE COLUMN `name` `name` VARCHAR(254) CHARACTER SET utf8 COLLATE utf8_general_ci NOT NULL
+        ');
 
         $this->table('oauth_lkclientuser', ['id' => 'lkClientUserId'])
             ->addColumn('clientId', 'string')

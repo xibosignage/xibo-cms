@@ -28,6 +28,7 @@ use Slim\App;
 use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Routing\RouteContext;
 use Xibo\Entity\User;
+use Xibo\Helper\HttpsDetect;
 
 /**
  * Trait AuthenticationTrait
@@ -171,14 +172,19 @@ trait AuthenticationTrait
     }
 
     /**
-     * @return \Psr\Http\Message\ResponseInterface|\Slim\Http\Response
+     * @param \Psr\Http\Message\ServerRequestInterface $request
+     * @return \Psr\Http\Message\ResponseInterface
      */
-    protected function createResponse()
+    protected function createResponse(Request $request)
     {
         // Create a new response
         $nyholmFactory = new Psr17Factory();
         $decoratedResponseFactory = new DecoratedResponseFactory($nyholmFactory, $nyholmFactory);
-        return $decoratedResponseFactory->createResponse();
+        return HttpsDetect::decorateWithStsIfNecessary(
+            $this->getConfig(),
+            $request,
+            $decoratedResponseFactory->createResponse()
+        );
     }
 
     /**

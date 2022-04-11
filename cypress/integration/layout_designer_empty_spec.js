@@ -9,7 +9,10 @@ describe('Layout Designer (Empty)', function() {
         it('show layout not found if layout does not exist', function() {
 
             // Use a huge id to test a layout not found 
-            cy.visit('/layout/designer/111111111111');
+            cy.visit({
+              url: '/layout/designer/111111111111',
+              failOnStatusCode: false
+            });
 
             // See page not found message
             cy.contains('Layout not found');

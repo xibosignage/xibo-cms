@@ -946,7 +946,7 @@ class Soap
 
         // Default Layout
         $defaultLayoutId = ($this->display->defaultLayoutId === null || $this->display->defaultLayoutId === 0)
-            ? $this->getConfig()->getSetting('DEFAULT_LAYOUT')
+            ? intval($this->getConfig()->getSetting('DEFAULT_LAYOUT', 0))
             : $this->display->defaultLayoutId;
 
         try {
@@ -969,8 +969,13 @@ class Soap
             // If our dependents are nodes, then build a list of layouts we can use to query for nodes
             $layoutDependents = [];
 
-            // Layouts (pop in the default)
-            $layoutIds = [$defaultLayoutId];
+            // Layouts
+            $layoutIds = [];
+
+            // Add the default layout if it isn't empty.
+            if ($defaultLayoutId !== 0) {
+                $layoutIds[] = $defaultLayoutId;
+            }
 
             // Calculate a sync key
             $syncKey = [];

@@ -778,8 +778,8 @@ $app->group('', function (RouteCollectorProxy $group) {
 /**
  * Menu Boards
  * @SWG\Tag(
- *  name="menuBoards",
- *  description="Menu Boards"
+ *  name="menuBoard",
+ *  description="Menu Boards - feature preview, please do not use in production."
  * )
  */
 $app->get('/menuboards', ['\Xibo\Controller\MenuBoard', 'grid'])->setName('menuBoard.search');

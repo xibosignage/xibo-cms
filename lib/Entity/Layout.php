@@ -2150,12 +2150,12 @@ class Layout implements \JsonSerializable
         $libraryLocation = $this->config->getSetting('LIBRARY_LOCATION');
 
         // Delete any thumbs
-        if (file_exists($libraryLocation . $this->getId() . '_layout_thumb.png')) {
-            @unlink($libraryLocation . $this->getId() . '_layout_thumb.png');
+        if (file_exists($libraryLocation . 'thumbs/' . $this->getId() . '_layout_thumb.png')) {
+            @unlink($libraryLocation . 'thumbs/' . $this->getId() . '_layout_thumb.png');
         }
 
-        if (file_exists($libraryLocation . $this->campaignId . '_campaign_thumb.png')) {
-            @unlink($libraryLocation . $this->campaignId . '_campaign_thumb.png');
+        if (file_exists($libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png')) {
+            @unlink($libraryLocation . 'thumbs/' . $this->campaignId . '_campaign_thumb.png');
         }
     }
 
