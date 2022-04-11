@@ -1310,6 +1310,19 @@ function XiboInitialise(scope) {
         // Create color picker
         createColorPicker(this);
     });
+
+    // Handle bootstrap error when a dropdown content renders offscreen
+    $(scope + ' .XiboData').on('shown.bs.dropdown', '.dropdown-menu-container', function(e) {
+        var $dropdownMenuShown = $(this).find('.dropdown-menu.show');
+        setTimeout(function() {
+            if ($dropdownMenuShown.offset().top < 0) {
+                $dropdownMenuShown.offset({
+                    top: 0,
+                    left: $dropdownMenuShown.offset().left
+                });
+            }
+        }, 200);
+    });
 }
 
 /**
