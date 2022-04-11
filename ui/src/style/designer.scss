@@ -165,7 +165,7 @@ body, .page-content {
     }
 
     &.opened {
-        margin-bottom: 0;
+        position: initial;
 
         .hide-closed {
             display: none;
@@ -219,8 +219,9 @@ body, .page-content {
 
 .timeline-panel {
     background: $xibo-color-gray-light;
-    flex-basis: 100%;
-    margin-bottom: -100%;
+    width: 100%;
+    position: absolute;
+    top: calc(100% + 8px);
 
     &.opened .toggle-container {
         height: 2px;
