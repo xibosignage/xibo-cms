@@ -78,10 +78,11 @@ class MenuBoardsMigration extends AbstractMigration
             ->save();
 
         if (!$this->fetchRow('SELECT * FROM module WHERE module = \'menuboard\'')) {
+            // Add disabled for now - feature preview.
             $this->table('module')->insert([
                 'module' => 'menuboard',
                 'name' => 'Menu Board',
-                'enabled' => 1,
+                'enabled' => 0,
                 'regionSpecific' => 1,
                 'description' => 'Module for displaying Menu Boards',
                 'schemaVersion' => 1,
