@@ -30,7 +30,6 @@ use Slim\Exception\HttpSpecializedException;
 use Slim\Http\Factory\DecoratedResponseFactory;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Slim\Routing\RouteContext;
 use Xibo\Helper\Environment;
 use Xibo\Helper\HttpsDetect;
 use Xibo\Helper\Translate;
@@ -169,10 +168,20 @@ class Handlers
                     array_merge($exception->getErrorData(), $exceptionData);
                 }*/
 
-                // Note: these are currently served as 200's, which is expected by the FE.
                 if ($request->isXhr()) {
+                    // Note: these are currently served as 200's, which is expected by the FE.
                     return $response->withJson($exceptionData);
                 } else {
+                    // What status code?
+                    $statusCode = 500;
+                    if ($exception instanceof GeneralException) {
+                        $statusCode = $exception->getHttpStatusCode();
+                    }
+                    if ($exception instanceof HttpSpecializedException) {
+                        $statusCode = $exception->getCode();
+                    }
+
+                    // Decide which error page we should load
                     $exceptionClass = 'error-' . strtolower(str_replace('\\', '-', get_class($exception)));
 
                     // Override the page for an Upgrade Pending Exception
@@ -185,7 +194,9 @@ class Handlers
                     } else {
                         $template = 'error';
                     }
-                    return $twig->render($response, $template . '.twig', array_merge($viewParams, $exceptionData));
+
+                    return $twig->render($response, $template . '.twig', array_merge($viewParams, $exceptionData))
+                        ->withStatus($statusCode);
                 }
             }
         };
