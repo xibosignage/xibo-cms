@@ -121,7 +121,6 @@ body, .page-content {
 
 .main-panel {
     flex: 1;
-    z-index: 1;
 
     .main-panel-wrapper {
         position: relative;
@@ -301,6 +300,7 @@ body, .page-content {
         font-size: 1rem;
         background-color: $xibo-color-white-pure;
         color: $xibo-color-blue;
+        z-index: 1;
 
         &:hover {
             opacity: 1;
