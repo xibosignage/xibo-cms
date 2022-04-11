@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -104,8 +104,12 @@ class AccessTokenRepository implements AccessTokenRepositoryInterface
         // if it is correctly cached, double check that it is still authorized at the request time
         // edge case being new access code requested with not yet expired code,
         // otherwise one of the previous conditions will be met.
+        // Note: we can only do this if one grant type is selected on the client.
         $client = $this->applicationFactory->getClientEntity($data['client']);
-        if ($client->authCode === 1 && !$this->applicationFactory->checkAuthorised($data['client'], $data['userIdentifier'])) {
+        if ($client->clientCredentials === 0
+            && $client->authCode === 1
+            && !$this->applicationFactory->checkAuthorised($data['client'], $data['userIdentifier'])
+        ) {
             return true;
         }
 
