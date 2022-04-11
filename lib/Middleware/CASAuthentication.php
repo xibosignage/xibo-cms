@@ -26,12 +26,10 @@ namespace Xibo\Middleware;
 
 
 use Slim\Middleware;
-use Xibo\Entity\User;
 use Xibo\Exception\AccessDeniedException;
 use Xibo\Exception\NotFoundException;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\LogoutTrait;
-use Xibo\Helper\Random;
 
 /**
  * Class CASAuthentication
@@ -133,6 +131,25 @@ class CASAuthentication extends Middleware
         // Create a function which we will call should the request be for a protected page
         // and the user not yet be logged in.
         $redirectToLogin = function () use ($app) {
+            // Do we need SSL/STS?
+            $whiteListLoadBalancers = $app->configService->getSetting('WHITELIST_LOAD_BALANCERS');
+            $originIp = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '';
+            $forwardedProtoHttps = (
+                strtolower($app->request()->headers('HTTP_X_FORWARDED_PROTO', 'http')) === 'https'
+                && $originIp != ''
+                && (
+                    $whiteListLoadBalancers === '' || in_array($originIp, explode(',', $whiteListLoadBalancers))
+                )
+            );
+
+            if ($app->request()->getScheme() == 'https' || $forwardedProtoHttps) {
+                if ($app->configService->getSetting('ISSUE_STS', 0) == 1)
+                    $app->response()->header(
+                        'strict-transport-security',
+                        'max-age=' . $app->configService->getSetting('STS_TTL', 600)
+                    );
+            }
+
             if ($app->request->isAjax()) {
                 $state = $app->state;
                 /* @var ApplicationState $state */
