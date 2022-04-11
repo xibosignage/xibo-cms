@@ -212,7 +212,6 @@ let formHelpers = function() {
                 }
             } else { // Form editor
                 if($advancedEditorOption !== undefined && !$advancedEditorOption.is(":checked")) {
-
                     // Toggle elements visibility
                     dialog.find('.' + textAreaID + '-advanced-editor-show').hide();
                     dialog.find('.' + textAreaID + '-advanced-editor-hide').show();
@@ -225,12 +224,18 @@ let formHelpers = function() {
 
                     // Setup text area snippets
                     self.setupTextArea(dialog, textAreaID, customNoDataMessage);
+
+                    // Add to the property panel the form editor class
+                    dialog.find('#properties-panel-container').removeClass('form-editor-enabled');
                 } else {
                     // Toggle elements visibility
                     dialog.find('.' + textAreaID + '-advanced-editor-show').show();
                     dialog.find('.' + textAreaID + '-advanced-editor-hide').hide();
 
                     self.setupCKEditor(dialog, null, textAreaID, false, customNoDataMessage);
+
+                    // Remove class form editor from the property panel
+                    dialog.find('#properties-panel-container').addClass('form-editor-enabled');
                 }
             }
         };
@@ -677,6 +682,7 @@ let formHelpers = function() {
         // Conjure up a text editor
         if(inline) {
             CKEDITOR.inline(textAreaId, CKEDITOR_DEFAULT_CONFIG);
+            (self.namespace.enableInlineModeEditing) && self.namespace.enableInlineModeEditing();
         } else {
             CKEDITOR.replace(textAreaId, CKEDITOR_DEFAULT_CONFIG);
         }

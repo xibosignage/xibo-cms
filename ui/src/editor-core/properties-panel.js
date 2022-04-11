@@ -41,6 +41,9 @@ PropertiesPanel.prototype.save = function(element) {
     const app = this.parent;
     const self = this;
 
+    // If main container has inline editing class, remove it
+    app.editorContainer.removeClass('inline-edit-mode');
+
     // If inline editor and viewer exist
     if(this.inlineEditor && (typeof app.viewer != 'undefined')) {
         app.viewer.hideInlineEditor();

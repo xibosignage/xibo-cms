@@ -56,7 +56,7 @@
                             </label>
 
                             <div class="col-sm-10">
-                                <div class="text-center background-image-add editable" data-add-new-background-url="{{ url_for("library.add") }}">
+                                <div class="text-center background-image-add editable">
                                     <div id="bg_not_found_icon">
                                         <i class="fa bg_not_found_icon"></i>
                                         <div>{% trans "No Image set, add from Toolbar or Upload!" %}</div>
@@ -68,7 +68,7 @@
 
                                 <div class="background-image-actions text-center">
                                     <div class="btn-group">
-                                        <button id="backgroundUploadButton" class="btn btn-outline-secondary" type="button">
+                                        <button id="backgroundUploadButton" class="btn btn-outline-secondary" type="button" data-add-new-background-url="{{ url_for("library.add") }}">
                                             <i class="fa fa-upload"></i>
                                             {% trans "Upload" %}
                                         </button>

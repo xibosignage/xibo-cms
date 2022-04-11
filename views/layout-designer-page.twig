@@ -227,8 +227,10 @@
                     layoutEditBackgroundButtonClicked(e, dialog);
                 });
 
-                $('#backgroundRemoveButton:not(.disabled)').on('click', function(e) {
-                    $backgroundImageId.val('').trigger('change');
+                $('#backgroundRemoveButton').on('click', function(e) {
+                    if(!$(this).hasClass('disabled')) {
+                        $backgroundImageId.val('').trigger('change');
+                    }
                 });
 
                 // Handle droppable area

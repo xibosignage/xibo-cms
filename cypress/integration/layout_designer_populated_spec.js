@@ -118,13 +118,13 @@ describe('Layout Designer (Populated)', function() {
 
         cy.wait('@mediaLoad');
 
-        cy.get('#layout-editor-bottombar #navigator-edit-btn').click({force: true});
+        cy.get('#layout-editor-bottombar #navigator-edit-btn').click();
 
         cy.get('#layout-editor-toolbar #media-content-1 .toolbar-card:nth-of-type(2)').find("img").should('be.visible');
 
         // Get a table row, select it and add to the region
         cy.get('#layout-editor-toolbar #media-content-1 .toolbar-card:nth-of-type(2) .select-button').click({force: true}).then(() => {
-            cy.get('#properties-panel-container .background-image-drop').click({force: true}).then(() => {
+            cy.get('#properties-panel-container .background-image-drop').click().then(() => {
 
                 // Save form
                 cy.get('#properties-panel button[data-action="save"]').click();
