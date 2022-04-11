@@ -502,7 +502,7 @@ class Calendar extends ModuleWidget
         if ($this->getOption('calendarType') == 1) {
             // Schedule templates
             $this->setOption('customInterval', $sanitizedParams->getString('customInterval', ['defaultOnEmptyString' => true]));
-            $this->setOption('noEventsMessage', $sanitizedParams->getString('noEventsMessage', ['defaultOnEmptyString' => true]));
+            $this->setOption('noEventsMessage', $sanitizedParams->getString('noEventsMessage'));
             $this->setOption('noEventsBgColor', $sanitizedParams->getString('noEventsBgColor'));
             $this->setOption('noEventsTextColor', $sanitizedParams->getString('noEventsTextColor'));
             $this->setOption('useDateRange', $sanitizedParams->getCheckbox('useDateRange'));
