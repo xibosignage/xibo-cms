@@ -22,13 +22,20 @@ jobs:
         run: |
           docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
           docker push xibosignage/xibo-cms:release-${GITHUB_REF##*/}
-
-  # Do not run in a fork
-  in_fork:
-    name: Skip in a fork
-    runs-on: ubuntu-18.04
-    if: github.repository != 'xibosignage/xibo-cms'
-    steps:
-      - name: Skip
+      - name: Build archive
         run: |
-          echo 'Skipped while in a fork'
+          CONTAINER=$(docker create xibosignage/xibo-cms:release-${GITHUB_REF##*/})
+          echo 'Copying from container.'
+          docker cp "$CONTAINER":/var/www/cms/ xibo-cms-${GITHUB_REF##*/}
+          tar -czf xibo-cms-${GITHUB_REF##*/}.tar.gz xibo-cms-${GITHUB_REF##*/}
+          zip -rq xibo-cms-${GITHUB_REF##*/}.zip xibo-cms-${GITHUB_REF##*/}
+          echo 'Added to archives.'
+          docker rm "$CONTAINER"
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          fail_on_unmatched_files: true
+          files: |
+            **.tar.gz
+            **.zip

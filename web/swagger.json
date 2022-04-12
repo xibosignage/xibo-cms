@@ -16949,8 +16949,8 @@
             "description": "Actions"
         },
         {
-            "name": "menuBoards",
-            "description": "Menu Boards"
+            "name": "menuBoard",
+            "description": "Menu Boards - feature preview, please do not use in production."
         }
     ],
     "externalDocs": {
