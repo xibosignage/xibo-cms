@@ -36,6 +36,12 @@ namespace Xibo\Widget\Provider;
 interface DataProviderInterface
 {
     /**
+     * Get the datatype expected by this provider
+     * @return string
+     */
+    public function getDataType(): string;
+
+    /**
      * Get property
      * Properties are set on Widgets and can be things like "feedUrl"
      *  the property must exist in module properties for this type of widget
@@ -83,8 +89,30 @@ interface DataProviderInterface
     public function addItem(array $item): DataProviderInterface;
 
     /**
+     * Add items to the provider
+     * You should ensure that you provide all properties required by the datatype you are returning
+     * example data types would be: article, social, event, menu, tabular
+     * @param array $items An array containing the item to render in any templates used by this data provider
+     * @return \Xibo\Widget\Provider\DataProviderInterface
+     */
+    public function addItems(array $items): DataProviderInterface;
+
+    /**
      * Clear any data already added to this provider
      * @return \Xibo\Widget\Provider\DataProviderInterface
      */
     public function clearData(): DataProviderInterface;
+
+    /**
+     * Set the cache TTL
+     * @param int $ttlSeconds The time to live in seconds
+     * @return \Xibo\Widget\Provider\DataProviderInterface
+     */
+    public function setCacheTtl(int $ttlSeconds): DataProviderInterface;
+
+    /**
+     * Get the cache TTL
+     * @return int the cache time to live in seconds
+     */
+    public function getCacheTtl(): int;
 }

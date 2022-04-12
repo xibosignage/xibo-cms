@@ -32,6 +32,7 @@ use Xibo\Widget\Provider\DataProvider;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProvider;
 use Xibo\Widget\Provider\DurationProviderInterface;
+use Xibo\Widget\Render\WidgetDataProviderCache;
 use Xibo\Widget\Render\WidgetHtmlRenderer;
 
 /**
@@ -97,7 +98,16 @@ class ModuleFactory extends BaseFactory
     }
 
     /**
-     * @return array
+     * Create a widget data provider cache
+     */
+    public function createWidgetDataProviderCache(): WidgetDataProviderCache
+    {
+        return (new WidgetDataProviderCache($this->pool))
+            ->useLogger($this->getLog()->getLoggerInterface());
+    }
+
+    /**
+     * @return \Xibo\Entity\Module[]
      */
     public function getKeyedArrayOfModules(): array
     {

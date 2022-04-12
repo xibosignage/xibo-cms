@@ -105,6 +105,7 @@ class WidgetHtmlRenderer
             if ($module->preview !== null) {
                 // Parse out our preview (which is always a stencil)
                 // TODO: perhaps this is too much power to hand off to the template
+                //  we could DTO the widget into a plain object?
                 return $this->twig->fetchFromString($module->preview->twig, [
                     'width' => $width,
                     'height' => $height,
@@ -149,7 +150,9 @@ class WidgetHtmlRenderer
         $cachedDt = $this->getCacheDate($displayId);
         $cachePath = $this->cachePath . DIRECTORY_SEPARATOR . $widget->widgetId . DIRECTORY_SEPARATOR;
 
-        // Prefix whatever cacheKey the Module generates with the Region dimensions.
+        // Cache File
+        // ----------
+        // displayId_width_height
         // Widgets may or may not appear in the same Region each time they are previewed due to them potentially
         // being contained in a Playlist.
         // Equally, a Region might be resized, which would also affect the way the Widget looks. Just moving a Region
@@ -308,7 +311,7 @@ class WidgetHtmlRenderer
      */
     private function getCacheDate(int $widgetId): Carbon
     {
-        $item = $this->pool->getItem('/widget/html' . $widgetId);
+        $item = $this->pool->getItem('/widget/html/' . $widgetId);
         $date = $item->get();
 
         // If not cached set it to have cached a long time in the past
@@ -327,7 +330,7 @@ class WidgetHtmlRenderer
     private function setCacheDate(int $widgetId): void
     {
         $now = Carbon::now();
-        $item = $this->pool->getItem('/widget/html' . $widgetId);
+        $item = $this->pool->getItem('/widget/html/' . $widgetId);
 
         $item->set($now->format(DateFormatHelper::getSystemFormat()));
         $item->expiresAt($now->addYear());

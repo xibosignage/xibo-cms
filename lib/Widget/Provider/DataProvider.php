@@ -42,6 +42,9 @@ class DataProvider implements DataProviderInterface
     /** @var array the data */
     private $data = [];
 
+    /** @var int the cache ttl in seconds - default to 7 days */
+    private $cacheTtl = 86400 * 7;
+
     /**
      * Constructor
      * @param \Xibo\Entity\Module $module
@@ -51,6 +54,14 @@ class DataProvider implements DataProviderInterface
     {
         $this->module = $module;
         $this->widget = $widget;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getDataType(): string
+    {
+        return $this->module->dataType;
     }
 
     /**
@@ -98,6 +109,17 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
+    public function addItems(array $items): DataProviderInterface
+    {
+        foreach ($items as $item) {
+            $this->addItem($item);
+        }
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
     public function clearData(): DataProviderInterface
     {
         $this->data = [];
@@ -105,11 +127,27 @@ class DataProvider implements DataProviderInterface
     }
 
     /**
-     * Should we use the event or not?
-     * @return bool
+     * @inheritDoc
      */
     public function isUseEvent(): bool
     {
         return $this->isUseEvent;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function setCacheTtl(int $ttlSeconds): DataProviderInterface
+    {
+        $this->cacheTtl = $ttlSeconds;
+        return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getCacheTtl(): int
+    {
+        return $this->cacheTtl;
     }
 }

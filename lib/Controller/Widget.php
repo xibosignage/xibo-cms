@@ -947,24 +947,28 @@ class Widget extends Base
 
         $module = $this->moduleFactory->getByType($widget->type);
         $dataProvider = $module->createDataProvider($widget);
-        
-        // TODO: dataProvider: what happens with cache? I suppose we do want to cache data in some way, even in this
-        //  preview mode, and certainly via SOAP.
 
         // Does this module have a data provider?
         if ($module->isDataProviderExpected()) {
-            $widgetInterface = $module->getWidgetProviderOrNull();
-            if ($widgetInterface !== null) {
-                $widgetInterface->fetchData($dataProvider);
-            } else {
-                $dataProvider->setIsUseEvent();
-            }
+            // Use the cache if we can.
+            $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
+            if (!$widgetDataProviderCache->decorateWithCache($module, $widget, $dataProvider)) {
+                $widgetInterface = $module->getWidgetProviderOrNull();
+                if ($widgetInterface !== null) {
+                    $widgetInterface->fetchData($dataProvider);
+                } else {
+                    $dataProvider->setIsUseEvent();
+                }
 
-            if ($dataProvider->isUseEvent()) {
-                $this->getDispatcher()->dispatch(
-                    WidgetDataRequestEvent::$NAME,
-                    new WidgetDataRequestEvent($dataProvider)
-                );
+                if ($dataProvider->isUseEvent()) {
+                    $this->getDispatcher()->dispatch(
+                        WidgetDataRequestEvent::$NAME,
+                        new WidgetDataRequestEvent($dataProvider)
+                    );
+                }
+
+                // Save to cache
+                $widgetDataProviderCache->saveToCache($dataProvider);
             }
         }
 
