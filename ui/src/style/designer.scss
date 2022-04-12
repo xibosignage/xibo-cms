@@ -69,6 +69,8 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 $properties-panel-width: 400px;
 $designer-overlay-z-index: 1050;
 $designer-z-index-select: 10;
+$timeline-max-height: 230px;
+$inline-editing-z-index: 1040;
 
 // CSS
 body, .page-content {
@@ -163,7 +165,7 @@ body, .page-content {
     }
 
     &.opened {
-        margin-bottom: 0;
+        position: initial;
 
         .hide-closed {
             display: none;
@@ -217,8 +219,9 @@ body, .page-content {
 
 .timeline-panel {
     background: $xibo-color-gray-light;
-    flex-basis: 100%;
-    margin-bottom: -100%;
+    width: 100%;
+    position: absolute;
+    top: calc(100% + 8px);
 
     &.opened .toggle-container {
         height: 2px;
@@ -298,6 +301,7 @@ body, .page-content {
         font-size: 1rem;
         background-color: $xibo-color-white-pure;
         color: $xibo-color-blue;
+        z-index: 1;
 
         &:hover {
             opacity: 1;
@@ -365,6 +369,22 @@ body, .page-content {
     .show-on-fs {
         display: none;
     }
+
+    &.inline-edit-mode {
+        .custom-overlay {
+            display: block !important;
+            opacity: 0.3;
+            z-index: $inline-editing-z-index;
+        }
+
+        .main-panel {
+            z-index: calc(#{$inline-editing-z-index} + 10);
+
+            button {
+                display: none;
+            }
+        }
+    }
 }
 
 @media (max-width: 768px) {
@@ -376,29 +396,32 @@ body, .page-content {
 /* Layout timeline */
 #layout-editor #layout-timeline {
     flex-basis: calc(100% - 40px);
+    max-height: 230px;
     margin: 4px 0;
-    overflow-y: auto;
 
     #timeline-container {
         display: flex;
-        height: 100%;
+        background-color: $xibo-color-white;
     }
 
     /* Region Container */
     $timeline-region-info-width: 180px;
     $timeline-region-preview-width: 60px;
-    $timeline-timeruler-height: 24px;
+    $timeline-timeruler-height: 28px;
     $timeline-region-height: 48px;
 
     .timeline-left-panel {
         background-color: $xibo-color-blue-lightest;
         border-radius: 0 0 4px 0;
+        max-height: $timeline-max-height;
+        overflow: hidden;
     }
 
     #regions-container {
         display: inline-block;
         width: calc(100% - #{$timeline-region-info-width});
-        overflow-x: auto;
+        overflow: auto;
+        max-height: $timeline-max-height;
     }
 
     .empty-timeline {
@@ -463,6 +486,7 @@ body, .page-content {
     #regions-info {
         float: left;
         width: $timeline-region-info-width;
+        margin-bottom: 12px;
 
         .designer-region-info {
             background-color: $xibo-color-blue-pastel;
@@ -515,7 +539,7 @@ body, .page-content {
         font-size: 1.15rem;
         line-height: 20px;
         width: $timeline-region-info-width;
-        padding: 2px 4px;
+        padding: 4px 8px;
         background-color: $xibo-color-primary;
         position: -webkit-sticky; /* Safari */
         position: sticky;
@@ -1349,6 +1373,20 @@ body, .page-content {
             & > button {
                 margin: 4px 0;
             }
+        }
+
+        &.form-editor-enabled {
+            .form-container, form {
+                margin-left: -450px !important;
+                padding-left: 450px !important;
+
+                div.cke:hover {
+                    position: absolute;
+                    right: 4px;
+                    width: 810px;
+                    z-index: 3;
+                }
+            } 
         }
     }
 }

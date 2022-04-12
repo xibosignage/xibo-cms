@@ -115,7 +115,11 @@ $app->addRoutingMiddleware();
 //
 
 // Add Error Middleware
-$app->addErrorMiddleware(false, true, true)
+$app->addErrorMiddleware(
+    \Xibo\Helper\Environment::isDevMode() || \Xibo\Helper\Environment::isForceDebugging(),
+    true,
+    true
+)
     ->setDefaultErrorHandler(\Xibo\Middleware\Handlers::webErrorHandler($container));
 
 // All application routes

@@ -88,7 +88,7 @@
     "less-loader": "^4.1.0",
     "masonry-layout": "^4.2.2",
     "material-design-icons": "^3.0.1",
-    "moment": "~2.20.1",
+    "moment": "~2.29.2",
     "moment-jalaali": "~0.7.2",
     "moment-timezone": "^0.5.28",
     "persian-date": "^0.3.1-b",

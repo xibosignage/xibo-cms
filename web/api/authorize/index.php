@@ -75,7 +75,11 @@ $app->addRoutingMiddleware();
 $app->add(new \Xibo\Middleware\TrailingSlashMiddleware($app));
 
 // Define Custom Error Handler
-$errorMiddleware = $app->addErrorMiddleware(true, true, true);
+$errorMiddleware = $app->addErrorMiddleware(
+    \Xibo\Helper\Environment::isDevMode() || \Xibo\Helper\Environment::isForceDebugging(),
+    true,
+    true
+);
 $errorMiddleware->setDefaultErrorHandler(\Xibo\Middleware\Handlers::jsonErrorHandler($container));
 
 // Auth Routes

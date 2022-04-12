@@ -32,12 +32,9 @@ use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\MediaFactory;
 use Xibo\Factory\ModuleFactory;
-use Xibo\Factory\PermissionFactory;
 use Xibo\Factory\PlaylistFactory;
-use Xibo\Factory\RegionFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
-use Xibo\Factory\TransitionFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Factory\UserGroupFactory;
 use Xibo\Factory\WidgetFactory;
@@ -889,6 +886,25 @@ class Playlist extends Base
 
     /**
      * Delete
+     *
+     * @SWG\Delete(
+     *  path="/playlist/{playlistId}",
+     *  operationId="playlistDelete",
+     *  tags={"playlist"},
+     *  summary="Delete a Playlist",
+     *  description="Delete a Playlist",
+     *  @SWG\Parameter(
+     *      name="playlistId",
+     *      in="path",
+     *      description="The PlaylistId to delete",
+     *      type="integer",
+     *      required=true
+     *   ),
+     *  @SWG\Response(
+     *      response=204,
+     *      description="successful operation"
+     *  )
+     * )
      * @param Request $request
      * @param Response $response
      * @param $id

@@ -337,11 +337,11 @@ class SAMLAuthentication extends AuthenticationBase
     public function redirectToLogin(Request $request)
     {
         if ($this->isAjax($request)) {
-            return $this->createResponse()->withJson(ApplicationState::asRequiresLogin());
+            return $this->createResponse($request)->withJson(ApplicationState::asRequiresLogin());
         } else {
             // Initiate SAML SSO
             $auth = new Auth($this->getConfig()->samlSettings);
-            return $this->createResponse()->withRedirect($auth->login());
+            return $this->createResponse($request)->withRedirect($auth->login());
         }
     }
 

@@ -1,0 +1,41 @@
+name: Build Tag
+
+on:
+  push:
+    tags:
+      - '*'
+
+jobs:
+  build:
+    name: Build Containers
+    if: github.repository == 'xibosignage/xibo-cms'
+    runs-on: ubuntu-18.04
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v1
+        with:
+          fetch-depth: 1
+      - name: Build Image
+        run: |
+          docker build . -t xibosignage/xibo-cms:release-${GITHUB_REF##*/} --build-arg GIT_COMMIT=${GITHUB_SHA}
+      - name: Push Image
+        run: |
+          docker login --username ${{ secrets.DOCKER_HUB_USERNAME }} --password ${{ secrets.DOCKER_HUB_TOKEN }}
+          docker push xibosignage/xibo-cms:release-${GITHUB_REF##*/}
+      - name: Build archive
+        run: |
+          CONTAINER=$(docker create xibosignage/xibo-cms:release-${GITHUB_REF##*/})
+          echo 'Copying from container.'
+          docker cp "$CONTAINER":/var/www/cms/ xibo-cms-${GITHUB_REF##*/}
+          tar -czf xibo-cms-${GITHUB_REF##*/}.tar.gz xibo-cms-${GITHUB_REF##*/}
+          zip -rq xibo-cms-${GITHUB_REF##*/}.zip xibo-cms-${GITHUB_REF##*/}
+          echo 'Added to archives.'
+          docker rm "$CONTAINER"
+      - name: Release
+        uses: softprops/action-gh-release@v1
+        with:
+          draft: true
+          fail_on_unmatched_files: true
+          files: |
+            **.tar.gz
+            **.zip
