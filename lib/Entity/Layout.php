@@ -1455,15 +1455,18 @@ class Layout implements \JsonSerializable
             }
 
             foreach ($widgets as $widget) {
-                /* @var Widget $widget */
-                $module = $this->moduleFactory->createWithWidget($widget, $region);
+                $module = $this->moduleFactory->getByType($widget->type);
 
                 // Set the Layout Status
                 try {
-                    $moduleStatus = $module->isValid();
-                    if ($module->hasStatusMessage()) {
+                    $module
+                        ->decorateProperties($widget)
+                        ->validateProperties();
+
+                    // TODO: validity: how do we do module status messages?
+                    /*if ($module->hasStatusMessage()) {
                         $this->pushStatusMessage($module->getStatusMessage());
-                    }
+                    }*/
                 } catch (GeneralException $xiboException) {
                     $moduleStatus = ModuleWidget::$STATUS_INVALID;
 
@@ -1508,7 +1511,7 @@ class Layout implements \JsonSerializable
                 }
 
                 // Create media xml node for XLF.
-                $renderAs = $module->getModule()->renderAs;
+                $renderAs = $module->renderAs;
                 $mediaNode = $document->createElement('media');
                 $mediaNode->setAttribute('id', $widget->widgetId);
                 $mediaNode->setAttribute('type', $widget->type);
@@ -1555,11 +1558,17 @@ class Layout implements \JsonSerializable
 
                 // Set a from/to date
                 if ($widget->fromDt != null || $widget->fromDt === Widget::$DATE_MIN) {
-                    $mediaNode->setAttribute('fromDt', Carbon::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat()));
+                    $mediaNode->setAttribute(
+                        'fromDt',
+                        Carbon::createFromTimestamp($widget->fromDt)->format(DateFormatHelper::getSystemFormat())
+                    );
                 }
 
                 if ($widget->toDt != null || $widget->toDt === Widget::$DATE_MAX) {
-                    $mediaNode->setAttribute('toDt', Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat()));
+                    $mediaNode->setAttribute(
+                        'toDt',
+                        Carbon::createFromTimestamp($widget->toDt)->format(DateFormatHelper::getSystemFormat())
+                    );
                 }
 
                 // <editor-fold desc="Proof of Play stats collection">
@@ -1601,7 +1610,10 @@ class Layout implements \JsonSerializable
                 // OFF      INHERIT     NO      Inherited from Layout   // Match - 8
 
                 // Widget stat collection flag
-                $widgetEnableStat = $widget->getOptionValue('enableStat', $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT'));
+                $widgetEnableStat = $widget->getOptionValue(
+                    'enableStat',
+                    $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT')
+                );
 
                 if ($widgetEnableStat === null || $widgetEnableStat === '') {
                     $widgetEnableStat = $this->config->getSetting('WIDGET_STATS_ENABLED_DEFAULT');
@@ -1611,16 +1623,20 @@ class Layout implements \JsonSerializable
 
                 if ($widgetEnableStat == 'On') {
                     $enableStat = 1; // Match - 1
-                    $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
+                    $this->getLog()->debug('For ' . $widget->widgetId . ': Layout '
+                        . (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat
+                        . '. Media node output '. $enableStat);
                 } else if ($widgetEnableStat == 'Off') {
                     $enableStat = 0; // Match - 2
-                    $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
+                    $this->getLog()->debug('For ' . $widget->widgetId . ': Layout '
+                        . (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget ' . $widgetEnableStat
+                        . '. Media node output '. $enableStat);
                 } else if ($widgetEnableStat == 'Inherit') {
                     try {
                         // Media enable stat flag - WIDGET WITH MEDIA
                         $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
 
-                        if (($media->enableStat === null) || ($media->enableStat === "")) {
+                        if (empty($media->enableStat)) {
                             $mediaEnableStat = $this->config->getSetting('MEDIA_STATS_ENABLED_DEFAULT');
                             $this->getLog()->debug('Media enableStat is empty. Get the default setting.');
                         } else {
@@ -1635,22 +1651,43 @@ class Layout implements \JsonSerializable
                             $enableStat = $layoutEnableStat;  // Match - 5 and 6
                         }
 
-                        $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ((isset($mediaEnableStat)) ? (' Media '.$mediaEnableStat) : '') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
+                        $this->getLog()->debug('For ' . $widget->widgetId . ': Layout '
+                            . (($layoutEnableStat == 1) ? 'On': 'Off')
+                            . ((isset($mediaEnableStat)) ? (' Media ' . $mediaEnableStat) : '')
+                            . ' Widget '.$widgetEnableStat
+                            . '. Media node output '. $enableStat);
 
                     } catch (\Exception $e) { //  - WIDGET WITHOUT MEDIA
-                        $this->getLog()->debug($widget->widgetId. ' is not a library media and does not have a media id.');
+                        $this->getLog()->debug($widget->widgetId
+                            . ' is not a library media and does not have a media id.');
                         $enableStat = $layoutEnableStat;  // Match - 7 and 8
 
-                        $this->getLog()->debug('For '.$widget->widgetId.': Layout '. (($layoutEnableStat == 1) ? 'On': 'Off') . ' Widget '.$widgetEnableStat . '. Media node output '. $enableStat);
+                        $this->getLog()->debug('For ' . $widget->widgetId . ': Layout '
+                            . (($layoutEnableStat == 1) ? 'On': 'Off')
+                            . ' Widget ' . $widgetEnableStat
+                            . '. Media node output '. $enableStat);
                     }
                 }
 
-                // automatically set the transitions on the layout xml, we are not saving widgets here to avoid deadlock issues.
+                // automatically set the transitions on the layout xml, we are not saving widgets here to avoid
+                // deadlock issues.
                 if ($this->autoApplyTransitions == 1) {
-                    $widgetTransIn = $widget->getOptionValue('transIn', $this->config->getSetting('DEFAULT_TRANSITION_IN'));
-                    $widgetTransOut = $widget->getOptionValue('transOut', $this->config->getSetting('DEFAULT_TRANSITION_OUT'));
-                    $widgetTransInDuration = $widget->getOptionValue('transInDuration', $this->config->getSetting('DEFAULT_TRANSITION_DURATION'));
-                    $widgetTransOutDuration = $widget->getOptionValue('transOutDuration', $this->config->getSetting('DEFAULT_TRANSITION_DURATION'));
+                    $widgetTransIn = $widget->getOptionValue(
+                        'transIn',
+                        $this->config->getSetting('DEFAULT_TRANSITION_IN')
+                    );
+                    $widgetTransOut = $widget->getOptionValue(
+                        'transOut',
+                        $this->config->getSetting('DEFAULT_TRANSITION_OUT')
+                    );
+                    $widgetTransInDuration = $widget->getOptionValue(
+                        'transInDuration',
+                        $this->config->getSetting('DEFAULT_TRANSITION_DURATION')
+                    );
+                    $widgetTransOutDuration = $widget->getOptionValue(
+                        'transOutDuration',
+                        $this->config->getSetting('DEFAULT_TRANSITION_DURATION')
+                    );
 
                     $widget->setOptionValue('transIn', 'attrib', $widgetTransIn);
                     $widget->setOptionValue('transInDuration', 'attrib', $widgetTransInDuration);
@@ -1671,7 +1708,7 @@ class Layout implements \JsonSerializable
 
                 // Inject the URI
                 $uriInjected = false;
-                if ($module->getModule()->regionSpecific == 0) {
+                if ($module->regionSpecific == 0) {
                     $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
                     $optionNode = $document->createElement('uri', $media->storedAs);
                     $optionsNode->appendChild($optionNode);
@@ -1711,11 +1748,11 @@ class Layout implements \JsonSerializable
 
                 // If we do not have an update interval, should we set a default one?
                 // https://github.com/xibosignage/xibo/issues/2319
-                if (!$hasUpdatedInterval && $module->getModule()->regionSpecific == 1) {
-                    // For the moment we will assume that all update intervals are the same as the cache duration
-                    // remembering that the cache duration is in seconds and the updateInterval in minutes.
+                if (!$hasUpdatedInterval && $module->regionSpecific == 1) {
+                    // TODO: dataProvider: how do we do module cache duration?
+                    //  for the moment assume 30 days
                     $optionsNode->appendChild(
-                        $document->createElement('updateInterval', $module->getCacheDuration() / 60)
+                        $document->createElement('updateInterval', 86400 * 30)
                     );
                 }
 

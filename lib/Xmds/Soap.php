@@ -715,13 +715,12 @@ class Soap
 
                 if ($httpDownloads && $supportsHttpLayouts) {
                     // Serve a link instead (standard HTTP link)
-                    $file->setAttribute("path", $this->generateRequiredFileDownloadPath('L', $layoutId, $playerNonce));
-                    $file->setAttribute("saveAs", $fileName);
-                    $file->setAttribute("download", 'http');
-                }
-                else {
-                    $file->setAttribute("download", 'xmds');
-                    $file->setAttribute("path", $layoutId);
+                    $file->setAttribute('path', $this->generateRequiredFileDownloadPath('L', $layoutId, $playerNonce));
+                    $file->setAttribute('saveAs', $fileName);
+                    $file->setAttribute('download', 'http');
+                } else {
+                    $file->setAttribute('download', 'xmds');
+                    $file->setAttribute('path', $layoutId);
                 }
 
                 // Get the Layout Modified Date
@@ -732,8 +731,8 @@ class Soap
                 $allRegions = array_merge($layout->regions, $layout->drawers);
 
                 // Load the layout XML and work out if we have any ticker / text / dataset media items
-                // Append layout resources before layout so they are downloaded first. 
-                // If layouts are set to expire immediately, the new layout will use the old resources if 
+                // Append layout resources before layout so they are downloaded first.
+                // If layouts are set to expire immediately, the new layout will use the old resources if
                 // the layout is downloaded first.
                 foreach ($allRegions as $region) {
                     $playlist = $region->getPlaylist();
@@ -763,27 +762,23 @@ class Soap
                             $resourcesAdded[] = $widget->widgetId;
 
                             // Add nonce
-                            $getResourceRf = $this->requiredFileFactory->createForGetResource($this->display->displayId, $widget->widgetId)->save();
+                            $getResourceRf = $this->requiredFileFactory
+                                ->createForGetResource($this->display->displayId, $widget->widgetId)
+                                ->save();
                             $newRfIds[] = $getResourceRf->rfId;
 
-                            // Make me a module from the widget, so I can ask it whether it has an updated last accessed
-                            // date or not.
-                            $module = $this->moduleFactory->createWithWidget($widget);
-
                             // Get the widget modified date
-                            // we will use the later of this vs the layout modified date as the updated attribute on
+                            // we will use the latter of this vs the layout modified date as the updated attribute on
                             // required files
-                            $widgetModifiedDt = $module->getModifiedDate($this->display->displayId);
-                            $cachedDt = $module->getCacheDate($this->display->displayId);
+                            $widgetModifiedDt = Carbon::createFromTimestamp($widget->modifiedDt);
 
-                            // Updated date is the greater of layout/widget modified date
-                            $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt)) ? $layoutModifiedDt : $widgetModifiedDt;
-
-                            // Finally compare against the cached date, and see if that has updated us at all
-                            $updatedDt = ($updatedDt->greaterThan($cachedDt)) ? $updatedDt : $cachedDt;
+                            // Updated date is the greatest of layout/widget modified date
+                            $updatedDt = ($layoutModifiedDt->greaterThan($widgetModifiedDt))
+                                ? $layoutModifiedDt
+                                : $widgetModifiedDt;
 
                             // Append this item to required files
-                            $resourceFile = $requiredFilesXml->createElement("file");
+                            $resourceFile = $requiredFilesXml->createElement('file');
                             $resourceFile->setAttribute('type', 'resource');
                             $resourceFile->setAttribute('id', $widget->widgetId);
                             $resourceFile->setAttribute('layoutid', $layoutId);

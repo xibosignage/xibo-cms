@@ -119,7 +119,7 @@ class SubPlaylist implements WidgetProviderInterface
         if ($playlistId == null) {
             return $subPlaylistOptions;
         } else {
-            return isset($subPlaylistOptions[$playlistId]) ? $subPlaylistOptions[$playlistId] : [];
+            return $subPlaylistOptions[$playlistId] ?? [];
         }
     }
 
@@ -484,9 +484,9 @@ class SubPlaylist implements WidgetProviderInterface
 
             // Do we have a number of spots set?
             $options = $this->getSubPlaylistOptions($playlistId);
-            $spots = isset($options['subPlaylistIdSpots']) ? $options['subPlaylistIdSpots'] : null;
-            $spotLength = isset($options['subPlaylistIdSpotLength']) ? intval($options['subPlaylistIdSpotLength']) : null;
-            $spotFill = isset($options['subPlaylistIdSpotFill']) ? $options['subPlaylistIdSpotFill'] : null;
+            $spots = $options['subPlaylistIdSpots'] ?? null;
+            $spotLength = intval($options['subPlaylistIdSpotLength'] ?? null);
+            $spotFill = $options['subPlaylistIdSpotFill'] ?? null;
 
             $this->getLog()->debug($spots . ' spots for playlistId ' . $playlistId);
 

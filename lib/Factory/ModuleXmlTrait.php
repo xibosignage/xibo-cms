@@ -94,6 +94,7 @@ trait ModuleXmlTrait
                 $property = new Property();
                 $property->id = $node->getAttribute('id');
                 $property->type = $node->getAttribute('type');
+                $property->allowLibraryRefs = $node->getAttribute('allowLibraryRefs') === 'true';
                 $property->title = $this->getFirstValueOrDefaultFromXmlNode($node, 'title');
                 $property->helpText = $this->getFirstValueOrDefaultFromXmlNode($node, 'helpText');
 

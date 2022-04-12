@@ -339,8 +339,7 @@ class Controllers
                     $c->get('playlistFactory'),
                     $c->get('moduleFactory'),
                     $c->get('widgetFactory'),
-                    $c->get('layoutFactory'),
-                    $c->get('displayGroupFactory'),
+                    $c->get('mediaFactory'),
                     $c
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));

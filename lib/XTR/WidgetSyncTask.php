@@ -22,7 +22,7 @@
 
 namespace Xibo\XTR;
 
-use Xibo\Entity\Region;
+use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Support\Exception\GeneralException;
@@ -41,11 +41,15 @@ class WidgetSyncTask implements TaskInterface
     /** @var LayoutFactory */
     private $layoutFactory;
 
+    /** @var \Symfony\Component\EventDispatcher\EventDispatcher */
+    private $eventDispatcher;
+
     /** @inheritdoc */
     public function setFactories($container)
     {
         $this->moduleFactory = $container->get('moduleFactory');
         $this->layoutFactory = $container->get('layoutFactory');
+        $this->eventDispatcher = $container->get('dispatcher');
         return $this;
     }
 
@@ -82,7 +86,6 @@ class WidgetSyncTask implements TaskInterface
         // Get a list of Layouts which are currently active, along with the display they are active on
         // get the widgets from each layout and call get resource on them
         while ($row = $smt->fetch(\PDO::FETCH_ASSOC)) {
-
             try {
                 // We have a Layout
                 $layoutId = (int)$row['itemId'];
@@ -112,35 +115,43 @@ class WidgetSyncTask implements TaskInterface
 
                 // Load the layout XML and work out if we have any ticker / text / dataset media items
                 foreach ($layout->regions as $region) {
-                    /* @var Region $region */
                     $playlist = $region->getPlaylist();
                     $playlist->setModuleFactory($this->moduleFactory);
 
                     foreach ($playlist->expandWidgets() as $widget) {
                         // See if we have a cache
-                        if ($widget->type == 'ticker' ||
-                            $widget->type == 'text' ||
-                            $widget->type == 'datasetview' ||
-                            $widget->type == 'webpage' ||
-                            $widget->type == 'embedded' ||
-                            $modules[$widget->type]->renderAs == 'html'
-                        ) {
+                        $module = $this->moduleFactory->getByType($widget->type);
+                        if ($module->isDataProviderExpected()) {
                             $countWidgets++;
 
-                            // Make me a module from the widget
-                            $module = $this->moduleFactory->createWithWidget($widget, $region);
-
                             // Have we done this widget before?
-                            if (in_array($widget->widgetId, $widgetsDone) && !$module->isCacheDisplaySpecific()) {
-                                $this->log->debug('This widgetId ' . $widget->widgetId . ' has been done before and is not display specific, so we skip');
+                            // TODO: dataProvider: what if the data provider is display specific?
+                            if (in_array($widget->widgetId, $widgetsDone)) {
+                                $this->log->debug('This widgetId ' . $widget->widgetId
+                                    . ' has been done before and is not display specific, so we skip');
                                 continue;
                             }
 
                             // Record start time
                             $startTime = microtime(true);
 
-                            // Cache the widget
-                            $module->getResourceOrCache($displayId);
+                            $dataProvider = $module->createDataProvider($widget);
+                            $widgetInterface = $module->getWidgetProviderOrNull();
+                            if ($widgetInterface !== null) {
+                                $widgetInterface->fetchData($dataProvider);
+                            } else {
+                                $dataProvider->setIsUseEvent();
+                            }
+
+                            if ($dataProvider->isUseEvent()) {
+                                $this->eventDispatcher->dispatch(
+                                    WidgetDataRequestEvent::$NAME,
+                                    new WidgetDataRequestEvent($dataProvider)
+                                );
+                            }
+
+                            // TODO: dataProvider: Cache the widget
+                            //  we haven't decided how we are going to work thi cache yet.
 
                             // Record we have done this widget
                             $widgetsDone[] = $widget->widgetId;
@@ -149,10 +160,12 @@ class WidgetSyncTask implements TaskInterface
                             $duration = (microtime(true) - $startTime);
                             $timeCaching = $timeCaching + $duration;
 
-                            $this->log->debug('Took ' . $duration . ' seconds to check and/or cache widgetId ' . $widget->widgetId . ' for displayId ' . $displayId);
+                            $this->log->debug('Took ' . $duration . ' seconds to check and/or cache widgetId '
+                                . $widget->widgetId . ' for displayId ' . $displayId);
 
-                            // Commit so that any images we've downloaded have their cache times updated for the next request
-                            // this makes sense because we've got a file cache that is already written out.
+                            // Commit so that any images we've downloaded have their cache times updated for the
+                            // next request, this makes sense because we've got a file cache that is already written
+                            // out.
                             $this->store->commitIfNecessary();
                         }
                     }

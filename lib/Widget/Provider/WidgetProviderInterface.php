@@ -43,7 +43,7 @@ interface WidgetProviderInterface
      * The widget provider must either addItems to the data provider, or indicate that data is provided by
      * an event instead by setting isUseEvent()
      * If data is to be provided by an event, core will raise the `widget.request.data` event with parameters
-     * indicating this widgets datatype, name, settings and currently configured options
+     * indicating this widget's datatype, name, settings and currently configured options
      * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
      * @return \Xibo\Widget\Provider\WidgetProviderInterface
      */

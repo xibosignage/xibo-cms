@@ -948,7 +948,7 @@ class Widget extends Base
         $module = $this->moduleFactory->getByType($widget->type);
         $dataProvider = $module->createDataProvider($widget);
         
-        // TODO: what happens with cache? I suppose we do want to cache data in some way, even in this
+        // TODO: dataProvider: what happens with cache? I suppose we do want to cache data in some way, even in this
         //  preview mode, and certainly via SOAP.
 
         // Does this module have a data provider?

@@ -47,6 +47,9 @@ class Property implements \JsonSerializable
 
     public $visibility;
 
+    /** @var bool Should library refs be permitted in the value? */
+    public $allowLibraryRefs = false;
+
     /** @var \Xibo\Widget\Definition\PlayerCompatibility */
     public $playerCompatability;
     

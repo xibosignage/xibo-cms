@@ -261,6 +261,22 @@ class Module implements \JsonSerializable
     }
 
     /**
+     * Get all properties which allow library references.
+     * @return \Xibo\Widget\Definition\Property[]
+     */
+    public function getPropertiesAllowingLibraryRefs(): array
+    {
+        $props = [];
+        foreach ($this->properties as $property) {
+            if ($property->allowLibraryRefs) {
+                $props[] = $property;
+            }
+        }
+
+        return $props;
+    }
+
+    /**
      * Get a module setting
      * If the setting does not exist, $default will be returned.
      * If the setting exists, but is not set, the default value from the setting will be returned

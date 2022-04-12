@@ -46,17 +46,17 @@
         </property>
         <property id="isPreNavigate" type="checkbox">
             <title>Preload?</title>
-            <helpText>Should this Widget be loaded entirely off screen so that it is ready when shown? Dynamic content will start running off screen.</helpText>
+            <helpText>Should this Widget be loaded entirely off-screen so that it is ready when shown? Dynamic content will start running off screen.</helpText>
             <default>1</default>
         </property>
-        <property id="embedHtml" type="code">
+        <property id="embedHtml" type="code" allowLibraryRefs="true">
             <title>HTML to embed</title>
             <helpText>Enter text or HTML in the box below.</helpText>
         </property>
-        <property id="embedStyle" type="code">
+        <property id="embedStyle" type="code" allowLibraryRefs="true">
             <title>Custom Style Sheets</title>
         </property>
-        <property id="embedScript" type="code">
+        <property id="embedScript" type="code" allowLibraryRefs="true">
             <title>JavaScript to embed</title>
             <helpText>Please include script tags.</helpText>
         </property>

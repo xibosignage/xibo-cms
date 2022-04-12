@@ -113,12 +113,11 @@ class MediaManager extends Base
         $widgetsCount = $this->widgetFactory->countLast();
 
         foreach ($widgets as $widget) {
-
             // Load the widget
             $widget->load();
 
             // Create a module
-            $module = $this->moduleFactory->createWithWidget($widget);
+            $module = $this->moduleFactory->getByType($widget->type);
 
             // Get a list of Layouts that this playlist uses
             $layouts = $this->layoutFactory->query(null, [
@@ -126,14 +125,14 @@ class MediaManager extends Base
                 'showDrafts' => 1
             ]);
 
-            $layoutNames = array_map(function($layout) {
+            $layoutNames = array_map(function ($layout) {
                 return $layout->layout;
             }, $layouts);
 
             // Get a list of Regions that this playlists uses
             $regions = $this->regionFactory->getByPlaylistId($widget->playlistId);
 
-            $regionNames = array_map(function($region) {
+            $regionNames = array_map(function ($region) {
                 return $region->name;
             }, $regions);
 
@@ -142,9 +141,9 @@ class MediaManager extends Base
                 'layout' => implode(',', $layoutNames),
                 'region' => implode(',', $regionNames),
                 'playlist' => $widget->playlist,
-                'widget' => $module->getName(),
+                'widget' => $widget->getOptionValue('name', $module->name),
                 'widgetId' => $widget->widgetId,
-                'type' => $module->getModuleName(),
+                'type' => $module->name,
                 'displayOrder' => $widget->displayOrder,
                 'thumbnail' => '',
                 'thumbnailUrl' => ''
@@ -160,7 +159,7 @@ class MediaManager extends Base
                 continue;
             }
 
-            // for widgets on Playlist not inside of a region
+            // for widgets on Playlist not inside a region
             $regionWidth = null;
             $regionHeight = null;
 
@@ -185,11 +184,15 @@ class MediaManager extends Base
             $row['thumbnail'] = '';
             $row['thumbnailUrl'] = '';
 
-            if ($module->getModule()->regionSpecific == 0) {
-
+            if ($module->regionSpecific == 0) {
                 if ($widget->type == 'image') {
-                    $download = $this->urlFor($request,'library.download', ['id' => $widget->getPrimaryMediaId()]) . '?preview=1';
-                    $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="' . $download . '"><img src="' . $download . '&isThumb=1" /></i></a>';
+                    $download = $this->urlFor($request, 'library.download', [
+                        'id' => $widget->getPrimaryMediaId()
+                        ]) . '?preview=1';
+                    // TODO: this should be front-end.
+                    $row['thumbnail'] = '<a class="img-replace" data-toggle="lightbox" data-type="image" href="'
+                        . $download . '">';
+                    $row['thumbnail'] .= '<img src="' . $download . '&isThumb=1" /></i></a>';
                     $row['thumbnailUrl'] = $download . '&isThumb=1';
                 }
 
@@ -201,7 +204,10 @@ class MediaManager extends Base
                     'dataAttributes' => [
                         ['name' => 'media-id', 'value' => $widget->getPrimaryMediaId()],
                         ['name' => 'widget-id', 'value' => $widget->widgetId],
-                        ['name' => 'valid-extensions', 'value' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $widget->type]))]
+                        [
+                            'name' => 'valid-extensions',
+                            'value' => implode('|', $this->moduleFactory->getValidExtensions(['type' => $widget->type]))
+                        ]
                     ],
                     'class' => 'MediaManagerReplaceButton'
                 ];

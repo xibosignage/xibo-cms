@@ -34,7 +34,6 @@ use Stash\Interfaces\PoolInterface;
 use Stash\Item;
 use Xibo\Entity\Region;
 use Xibo\Entity\Session;
-use Xibo\Entity\Widget;
 use Xibo\Event\TemplateProviderImportEvent;
 use Xibo\Factory\CampaignFactory;
 use Xibo\Factory\DataSetFactory;
@@ -1525,8 +1524,9 @@ class Layout extends Base
                 // widget and its items.
                 foreach ($layout->regions as $region) {
                     foreach ($region->getPlaylist()->widgets as $widget) {
-                        /* @var Widget $widget */
-                        $widget->module = $this->moduleFactory->createWithWidget($widget, $region);
+                        $module = $this->moduleFactory->getByType($widget->type);
+                        $widget->moduleName = $module->name;
+                        $widget->name = $widget->getOptionValue('name', $module->name);
                     }
                 }
 
@@ -3038,11 +3038,12 @@ class Layout extends Base
                         );
                     } else {
                         // Render just the first widget in the appropriate place
-                        $module = $this->moduleFactory->createWithWidget($widgets[0], $region);
-                        if ($module->getModuleType() === 'image') {
-                            $cover = Img::make($libraryLocation . $module->getMedia()->storedAs);
-                            $proportional = $module->getOption('scaleType') !== 'stretch';
-                            $fit = $module->getOption('scaleType') === 'fit';
+                        $widget = $widgets[0];
+                        if ($widget->type === 'image') {
+                            $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                            $cover = Img::make($libraryLocation . $media->storedAs);
+                            $proportional = $widget->getOptionValue('scaleType', 'stretch') !== 'stretch';
+                            $fit = $widget->getOptionValue('scaleType', 'stretch') === 'fit';
 
                             if ($fit) {
                                 $cover->fit($region->width, $region->height);
@@ -3058,11 +3059,11 @@ class Layout extends Base
                                 );
                             }
                             $image->insert($cover, 'top-left', $region->left, $region->top);
-                        } else if ($module->getModuleType() === 'video'
-                            && file_exists($libraryLocation . $module->getMediaId() . '_videocover.png')
+                        } else if ($widget->type === 'video'
+                            && file_exists($libraryLocation . $widget->getPrimaryMediaId() . '_videocover.png')
                         ) {
                             // Render the video cover
-                            $cover = Img::make($libraryLocation . $module->getMediaId() . '_videocover.png');
+                            $cover = Img::make($libraryLocation . $widget->getPrimaryMediaId() . '_videocover.png');
                             $cover->resize($region->width, $region->height, function ($constraint) {
                                 $constraint->aspectRatio();
                             });
@@ -3078,8 +3079,9 @@ class Layout extends Base
                                     $draw->background('rgba(196, 196, 196, 0.6)');
                                 }
                             );
+                            $module = $this->moduleFactory->getByType($widget->type);
                             $image->text(
-                                $module->getModule()->name,
+                                $widget->getOptionValue('name', $module->name),
                                 $region->left + ($region->width / 2),
                                 $region->top + ($region->height / 2),
                                 function ($font) {

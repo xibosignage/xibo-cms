@@ -36,6 +36,7 @@ use Xibo\Support\Exception\AccessDeniedException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
+use Xibo\Widget\Render\WidgetDownloader;
 
 /**
 * Class PlayerSoftware
@@ -459,21 +460,24 @@ class PlayerSoftware extends Base
         // Get the default SSSP display profile
         $profile = $this->displayProfileFactory->getDefaultByType('sssp');
 
-        // See if it has a version file (if not or we can't load it, 404)
+        // See if it has a version file (if not, or we can't load it, 404)
         $mediaId = $profile->getSetting('versionMediaId');
 
         if ($mediaId !== null) {
             $media = $this->mediaFactory->getById($mediaId);
-
-            // Create a widget from media and call getResource on it
-            $widget = $this->moduleFactory->createWithMedia($media);
-            $response = $widget->download($request, $response);
-
+            
+            // Hand over to the widget downloader
+            $downloader = new WidgetDownloader(
+                $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+                $this->getConfig()->getSetting('SENDFILE_MODE')
+            );
+            $downloader->useLogger($this->getLog()->getLoggerInterface());
+            $response = $downloader->download($media, $response, $media->getMimeType());
         } else {
             return $response->withStatus(404);
         }
 
-        $this->setNoOutput(true);
+        $this->setNoOutput();
 
         return $this->render($request, $response);
     }
@@ -561,9 +565,13 @@ class PlayerSoftware extends Base
 
         if ($mediaId !== null) {
             $media = $this->mediaFactory->getById($mediaId);
-            // Create a widget from media and call getResource on it
-            $widget = $this->moduleFactory->createWithMedia($media);
-            $response = $widget->download($request, $response);
+            // Hand over to the widget downloader
+            $downloader = new WidgetDownloader(
+                $this->getConfig()->getSetting('LIBRARY_LOCATION'),
+                $this->getConfig()->getSetting('SENDFILE_MODE')
+            );
+            $downloader->useLogger($this->getLog()->getLoggerInterface());
+            $response = $downloader->download($media, $response, $media->getMimeType());
         } else {
             return $response->withStatus(404);
         }

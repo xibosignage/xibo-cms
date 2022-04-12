@@ -2435,18 +2435,24 @@ class LayoutFactory extends BaseFactory
      * if it does, then go through them find and replace old media references
      *
      * @param Widget $widget
-     * @param $newMediaId
-     * @param $oldMediaId
+     * @param int $newMediaId
+     * @param int $oldMediaId
      * @throws NotFoundException
      */
-    public function handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId)
+    public function handleWidgetMediaIdReferences(Widget $widget, int $newMediaId, int $oldMediaId)
     {
-        $module = $this->moduleFactory->createWithWidget($widget);
+        $module = $this->moduleFactory->getByType($widget->type);
 
-        if ($module->hasHtmlEditor()) {
-            foreach ($module->getHtmlWidgetOptions() as $option) {
-                $widget->setOptionValue($option, 'cdata', str_replace('[' . $oldMediaId . ']', '[' . $newMediaId . ']', $widget->getOptionValue($option, null)));
-            }
+        foreach ($module->getPropertiesAllowingLibraryRefs() as $property) {
+            $widget->setOptionValue(
+                $property->id,
+                'cdata',
+                str_replace(
+                    '[' . $oldMediaId . ']',
+                    '[' . $newMediaId . ']',
+                    $widget->getOptionValue($property->id, null)
+                )
+            );
         }
     }
 
