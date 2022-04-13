@@ -67,6 +67,7 @@
         <div class="widget-title">{% trans "Connectors" %}</div>
         <div class="widget-body">
             <div id="connectors" class="card-deck">
+                {% if theme.getThemeConfig("app_name") == "Xibo" %}
                 <div class="card p3 mt-2" style="min-width: 250px; max-width: 250px;">
                     <img class="card-img-top" style="max-height: 250px" src="{{ theme.rootUri() }}theme/default/img/connectors/canva_logo.png" alt="Canva">
                     <div class="card-body">
@@ -82,6 +83,7 @@
                         <a class="btn btn-primary" href="https://canva.com" target="_blank">Visit Canva</a>
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
