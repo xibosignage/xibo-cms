@@ -47,6 +47,9 @@ class Property implements \JsonSerializable
 
     public $visibility;
 
+    /** @var string The code type (html/css/javascript/etc) */
+    public $codeType;
+
     /** @var bool Should library refs be permitted in the value? */
     public $allowLibraryRefs = false;
 

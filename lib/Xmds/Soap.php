@@ -796,19 +796,19 @@ class Soap
 
                             // Does this also have an associated data file?
                             // v4 onward
-                            if ($modules[$widget->type]->isDataProviderExpected()
-                                && $this->display->clientCode >= 400
-                            ) {
+                            if ($modules[$widget->type]->isDataProviderExpected()) {
                                 // Output another file node with a different type
-                                $resourceFile = $requiredFilesXml->createElement('file');
-                                $resourceFile->setAttribute('type', 'data');
-                                $resourceFile->setAttribute('id', $widget->widgetId);
-                                $resourceFile->setAttribute('layoutid', $layoutId);
-                                $resourceFile->setAttribute('regionid', $region->regionId);
-                                $resourceFile->setAttribute('mediaid', $widget->widgetId);
-                                // TODO: how do we know whether this has been updated or not?
-                                $resourceFile->setAttribute('updated', $updatedDt->format('U'));
-                                $fileElements->appendChild($resourceFile);
+                                $dataFile = $requiredFilesXml->createElement('file');
+                                $dataFile->setAttribute('type', 'media');
+                                $dataFile->setAttribute('id', $widget->widgetId);
+                                // TODO: how do we get these?
+                                //  can we save an "info" cache key for the size/md5?
+                                //  what if we don't have a cache of this data yet, I suppose we return empty?
+                                $dataFile->setAttribute('size', 0);
+                                $dataFile->setAttribute('md5', '');
+                                $dataFile->setAttribute('download', 'xmds');
+                                $dataFile->setAttribute('path', $widget->widgetId . '.json');
+                                $fileElements->appendChild($dataFile);
                             }
                         }
                     }
