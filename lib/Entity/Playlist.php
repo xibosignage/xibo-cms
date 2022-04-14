@@ -949,7 +949,7 @@ class Playlist implements \JsonSerializable
 
         // Start with our own Widgets
         foreach ($this->widgets as $widget) {
-            // some basic checking on whether this widets date/time are conductive to it being added to the
+            // some basic checking on whether this widgets date/time are conductive to it being added to the
             // list. This is really an "expires" check, because we will rely on the player otherwise
             if ($widget->isExpired()) {
                 continue;
@@ -993,7 +993,7 @@ class Playlist implements \JsonSerializable
                             . ', totalDuration is ' . $totalDuration);
 
                         foreach ($subPlaylistWidgets as $subPlaylistWidget) {
-                            $subPlaylistWidget->calculatedDuration = $cycleDuration;
+                            $subPlaylistWidget->tempCyclePlaybackAverageDuration = $cycleDuration;
                             $widgets[] = $subPlaylistWidget;
                         }
                     } else {

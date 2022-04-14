@@ -1496,7 +1496,13 @@ class Layout implements \JsonSerializable
 
                 if ($region->isDrawer === 0) {
                     // Region duration
-                    $region->duration = $region->duration + $widget->calculatedDuration;
+                    // If we have a cycle playback duration, we use that, otherwise we use the normal calculated
+                    // duration.
+                    if ($widget->tempCyclePlaybackAverageDuration !== null && $widget->tempCyclePlaybackAverageDuration > 0) {
+                        $region->duration = $region->duration + $widget->tempCyclePlaybackAverageDuration;
+                    } else {
+                        $region->duration = $region->duration + $widget->calculatedDuration;
+                    }
 
                     // We also want to add any transition OUT duration
                     // only the OUT duration because IN durations do not get added to the widget duration by the player
