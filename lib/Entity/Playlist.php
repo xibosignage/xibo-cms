@@ -985,6 +985,13 @@ class Playlist implements \JsonSerializable
                         }
 
                         // We split the average across all widgets so that when we add them up again it works out.
+                        // Dividing twice is a little confusing
+                        // Assume a playlist with 5 items, and an equal 10 seconds per item
+                        // That "spot" with cycle playback enabled should take up 10 seconds in total, but the XLF
+                        // still contains all 5 items.
+                        // averageDuration = 50 / 5 = 10
+                        // cycleDuration = 10 / 5 = 2
+                        // When our 5 items are added up to make region duration, it will be 2+2+2+2+2=10
                         $averageDuration = $totalDuration / count($subPlaylistWidgets);
                         $cycleDuration = $averageDuration / count($subPlaylistWidgets);
 
