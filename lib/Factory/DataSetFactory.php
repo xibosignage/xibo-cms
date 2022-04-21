@@ -310,7 +310,7 @@ class DataSetFactory extends BaseFactory
      * @param DataSet $dataSet The Dataset to get Data for
      * @param DataSet|null $dependant The Dataset $dataSet depends on
      * @param bool $enableCaching Should we cache check the results and store the resulting cache
-     * @return \stdClass{entries:[],number:int}
+     * @return \stdClass {entries:[], number:int, isEligibleToTruncate:bool}
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
@@ -327,6 +327,7 @@ class DataSetFactory extends BaseFactory
         $result = new \stdClass();
         $result->entries = [];
         $result->number = 0;
+        $result->isEligibleToTruncate = false;
         
         // Getting all dependant values if needed
         // just an empty array if we don't have a dependent
@@ -459,6 +460,9 @@ class DataSetFactory extends BaseFactory
                     $cacheControlKey->expiresAfter(86400 * 365);
                     $this->pool->saveDeferred($cacheControlKey);
                 }
+
+                // We have passed any caching and therefore expect results
+                $result->isEligibleToTruncate = true;
 
                 if ($dataSet->sourceId === 1) {
                     // Make sure we have JSON in the response
