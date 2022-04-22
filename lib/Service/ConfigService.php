@@ -755,7 +755,7 @@ class ConfigService implements ConfigServiceInterface
             $this->checkEnvironment();
         }
 
-        return $this->envFault;
+        return $this->envFault || !Environment::checkSettingsFileSystemPermissions();
     }
 
     /**
