@@ -1,0 +1,36 @@
+<form class="region-form">
+    <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{{trans.general}}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#positioningTab" role="tab" data-toggle="tab"><span>{{trans.positioning}}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#transitionTab" role="tab" data-toggle="tab"><span>{{trans.transition}}</span></a></li>
+        </ul>
+        <div class="w-100 p-3">
+            <form id="regionFormEdit" class="XiboForm form-horizontal">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="generalTab">
+                        {{> inputs/text value=region.name id="name" title="Name" helpText="An optional name for this widget" }}
+                        {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title="Loop?" helpText="If there is only one item in this region should it loop?" }}
+                        {{> inputs/message messageType="info" title="When should the Region Loop be enabled?"}}
+                        {{> inputs/message messageType="info" title="* If your Region contains more than one Widget, Loop should not be enabled."}}
+                        {{> inputs/message messageType="info" title="* If your Region contains one Widget, and that Widget is a 'fixed' item (eg Text), Loop should not be enabled."}}
+                        {{> inputs/message messageType="info" title="* If your Region contains one Widget, and that Widget needs to update periodically (eg RSS Ticker Widget), Loop can be enabled ONLY if the Widget needs to update MORE frequently than the duration of the overall Layout."}}
+                    </div>
+                    <div class="tab-pane" id="positioningTab">
+                        {{> inputs/number value=region.top id="top" title="Top" helpText="The top position of the Region" }}
+                        {{> inputs/number value=region.left id="left" title="Left" helpText="The left position of the Region" }}
+                        {{> inputs/number value=region.width id="width" title="Width" helpText="The width of the Region" }}
+                        {{> inputs/number value=region.height id="height" title="Height" helpText="The height of the Region" }}
+                        {{> inputs/number value=region.zIndex id="zIndex" title="Layer" helpText="The layering order of this region (z-index). Advanced use only." }}
+                        {{> button id="setFullScreenButton" type="btn-block btn-outline-primary" name="Make this Region full screen, dimensions will be set to %layout.width% by %layout.height%." }}
+                    </div>
+                    <div class="tab-pane" id="transitionTab">
+                        {{> inputs/dropdown value=(getOption region.regionOptions "transitionType") options=(arrMerge (arr (obj code=null transition= "")) transitions.out) optionsValue="code" optionsTitle="transition" id="transitionType" title="Exit Transition?" helpText="What transition should be applied when this region is finished?" }}
+                        {{> inputs/number value=(getOption region.regionOptions "transitionDuration") id="transitionDuration" title="Duration" helpText="The duration for this transition, in milliseconds." renderCondition='{ "target": "#transitionType", "condition": "!=", "value": "" }' }}
+                        {{> inputs/dropdown value=(getOption region.regionOptions "transitionDirection") options=transitions.compassPoints optionsValue="id" optionsTitle="name" id="transitionDirection" title="Direction" helpText="The direction for this transition. Only appropriate for transitions that move, such as Fly." renderCondition='{ "target": "#transitionType", "condition": "!=", "value": "" }' }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</form>

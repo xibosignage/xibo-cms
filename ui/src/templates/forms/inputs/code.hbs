@@ -1,5 +1,8 @@
-<div class="form-group">
-    <label for="{{id}}" class="control-label">{{title}}</label>
+<div class="form-group code-input-group xibo-code-input xibo-form-input" {{#if renderCondition}}data-render-condition="{{renderCondition}}"{{/if}}>
+    <label for="{{id}}" class="control-label"><strong>{{title}}</strong></label>
     <i class="fa fa-question-circle form-help-popup" data-toggle="tooltip" data-placement="top" title="{{helpText}}"></i>
-    <textarea class="form-control" id="{{id}}" name="{{id}}" rows="{{rows}}">{{value}}</textarea>
+    <textarea class="form-control code-input d-none" id="{{id}}" name="{{id}}" rows="{{rows}}" data-code-type="{{codeType}}">{{value}}</textarea>
+    <div class="code-input-editor-container">
+        <div class="code-input-editor"></div>
+    </div>
 </div>

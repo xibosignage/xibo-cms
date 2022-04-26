@@ -1,0 +1,25 @@
+<form class="widget-form">
+    <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="#configureTab" role="tab" data-toggle="tab"><span>{{trans.configure}}</span></a></li>
+            <li class="nav-item d-none"><a class="nav-link" href="#appearanceTab" role="tab" data-toggle="tab"><span>{{trans.appearance}}</span></a></li>
+            <li class="nav-item"><a class="nav-link" href="#advancedTab" role="tab" data-toggle="tab"><span>{{trans.advanced}}</span></a></li>
+        </ul>
+        <div class="w-100 p-3">
+            <form id="widgetFormEdit" class="XiboForm form-horizontal">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="configureTab"></div>
+
+                    <div class="tab-pane" id="appearanceTab"></div>
+
+                    <div class="tab-pane" id="advancedTab">
+                        {{> inputs/text value=name id="name" title="Name" helpText="An optional name for this widget" }}
+                        {{> inputs/checkbox value=useDuration id="useDuration" title="Set a duration?" helpText="Select to provide a specific duration for this Widget" }}
+                        {{> inputs/number value=duration id="duration" title="Duration" helpText="The duration of the widget in seconds" renderCondition='{ "target": "#useDuration", "condition": "==", "value": "1" }' }}
+                        {{> inputs/dropdown value=enableStat options=(arr (obj name='Off' title='Off') (obj name='On' title='On') (obj name='Inherit' title='Inherit')) optionsTitle="title" optionsValue="name" id="enableStat" title="Enable Stats Collection?" helpText="Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</form>

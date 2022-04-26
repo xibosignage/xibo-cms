@@ -221,6 +221,15 @@ Navigator.prototype.saveRegionPropertiesPanel = function() {
     // If form is valid, and it changed, submit it ( add change )
     if(form.valid() && app.propertiesPanel.formSerializedLoadData != formNewData) {
 
+        let requestPath;
+        if(form.attr('action') != undefined && form.attr('method') != undefined) {
+            // Get custom path
+            requestPath = {
+                url: form.attr('action'),
+                type: form.attr('method')
+            };
+        }
+
         app.common.showLoadingScreen();
 
         // Add a save form change to the history array, with previous form state and the new state
@@ -231,10 +240,7 @@ Navigator.prototype.saveRegionPropertiesPanel = function() {
             app.propertiesPanel.formSerializedLoadData, // oldValues
             formNewData, // newValues
             {
-                customRequestPath: {
-                    url: form.attr('action'),
-                    type: form.attr('method')
-                },
+                customRequestPath: requestPath,
                 upload: true // options.upload
             }
         ).then((res) => { // Success

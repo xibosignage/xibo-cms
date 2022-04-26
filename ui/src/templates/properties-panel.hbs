@@ -16,7 +16,7 @@
 
     <div class="button-container text-right">
         {{#each buttons}}
-            <button type="button" id="{{@key}}" data-action="{{action}}" data-sub-action="{{subAction}}" onclick="{{click}}" class="properties-panel-btn btn {{type}}">{{name}}</button>
+            {{>forms/button id=@key}}
         {{/each}}
     </div>
 </div>

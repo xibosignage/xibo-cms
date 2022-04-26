@@ -5,14 +5,18 @@ const messageTemplate = require('../templates/properties-panel-message.hbs');
 const propertiesPanel = require('../templates/properties-panel.hbs');
 const actionsTemplate = require('../templates/actions-form-template.hbs');
 const actionsButtonTemplate = require('../templates/actions-button-template.hbs');
-const widgetFormTemplate = require('../templates/widget-form.hbs');
+const formTemplates = {
+    'widget': require('../templates/forms/widget.hbs'),
+    'region': require('../templates/forms/region.hbs'),
+    'layout': require('../templates/forms/layout.hbs'),
+};
 
 /**
  * Properties panel contructor
+ * @param {object} parent - the parent object
  * @param {object} container - the container to render the panel to
  */
 let PropertiesPanel = function(parent, container) {
-
     this.parent = parent;
     this.DOMObject = container;
 
@@ -22,16 +26,6 @@ let PropertiesPanel = function(parent, container) {
     this.inlineEditor = false;
 
     this.openTabOnRender = '';
-};
-
-/**
- * Call an action on the element object
- * @param {object} element - the element that the form relates to
- */
-PropertiesPanel.prototype.elementAction = function(element, subAction) {
-    const app = this.parent;
-    const mainElement = app.getElementByTypeAndId(element.type, element.id, element.regionId);
-    mainElement[subAction]();
 };
 
 /**
@@ -46,20 +40,28 @@ PropertiesPanel.prototype.save = function(element) {
     app.editorContainer.removeClass('inline-edit-mode');
 
     // If inline editor and viewer exist
-    if(this.inlineEditor && (typeof app.viewer != 'undefined')) {
+    if (this.inlineEditor && (typeof app.viewer != 'undefined')) {
         app.viewer.hideInlineEditor();
     }
 
     // Run form submit module optional function
-    if(element.type === 'widget'){
+    if (element.type === 'widget') {
         formHelpers.widgetFormEditBeforeSubmit(this.DOMObject, element.subType);
-    } 
+    }
 
     const form = $(this.DOMObject).find('form');
 
-    // If form is valid, submit it ( add change )
-    if(form.valid()) {
+    let requestPath;
+    if (form.attr('action') != undefined && form.attr('method') != undefined) {
+        // Get custom path
+        requestPath = {
+            url: form.attr('action'),
+            type: form.attr('method')
+        };
+    }
 
+    // If form is valid, submit it ( add change )
+    if (form.valid()) {
         const formNewData = form.serialize();
 
         app.common.showLoadingScreen();
@@ -75,17 +77,13 @@ PropertiesPanel.prototype.save = function(element) {
             this.formSerializedLoadData, // oldValues
             formNewData, // newValues
             {
-                customRequestPath: {
-                    url: form.attr('action'),
-                    type: form.attr('method')
-                }
+                customRequestPath: requestPath
             }
         ).then((res) => { // Success
-
             app.common.hideLoadingScreen();
 
             // Behavior if successful 
-            if(typeof app.timeline.resetZoom === "function") {
+            if (typeof app.timeline.resetZoom === "function") {
                 // safe to use the function
                 app.timeline.resetZoom();
             }
@@ -101,7 +99,7 @@ PropertiesPanel.prototype.save = function(element) {
 
             // Check if its a drawer widget and if we need to save the target region id
             const $drawerWidgetTargetRegion = this.DOMObject.find('#drawerWidgetTargetRegion');
-            if($drawerWidgetTargetRegion.length > 0 && $drawerWidgetTargetRegion.val() != '') {
+            if ($drawerWidgetTargetRegion.length > 0 && $drawerWidgetTargetRegion.val() != '') {
                 const valueToSave = $drawerWidgetTargetRegion.val();
 
                 let requestPath = urlsForApi[element.type].setRegion.url;
@@ -114,19 +112,19 @@ PropertiesPanel.prototype.save = function(element) {
                         targetRegionId: valueToSave
                     }
                 }).done(function(res) {
-                    if(res.success) {
+                    if (res.success) {
                         toastr.success(res.message);
                         reloadData();
                     } else {
                         // Login Form needed?
-                        if(res.login) {
+                        if (res.login) {
                             window.location.href = window.location.href;
                             location.reload();
                         } else {
                             toastr.error(errorMessagesTrans.formLoadFailed);
-            
+
                             // Just an error we dont know about
-                            if(res.message == undefined) {
+                            if (res.message == undefined) {
                                 console.error(res);
                             } else {
                                 console.error(res.message);
@@ -141,13 +139,12 @@ PropertiesPanel.prototype.save = function(element) {
                 reloadData();
             }
         }).catch((error) => { // Fail/error
-
             app.common.hideLoadingScreen();
 
             // Show error returned or custom message to the user
             let errorMessage = '';
 
-            if(typeof error == 'string') {
+            if (typeof error == 'string') {
                 errorMessage += error;
             } else {
                 errorMessage += error.errorThrown;
@@ -159,7 +156,7 @@ PropertiesPanel.prototype.save = function(element) {
             formHelpers.displayErrorMessage(form, errorMessage, 'danger');
 
             // If Save fails and we have an inline editor opened, reshow it
-            if(app.propertiesPanel.inlineEditor) {
+            if (app.propertiesPanel.inlineEditor) {
                 app.viewer.showInlineEditor();
             }
 
@@ -177,7 +174,7 @@ PropertiesPanel.prototype.save = function(element) {
  * @param {object} element - the element that the form relates to
  */
 PropertiesPanel.prototype.back = function(element) {
-    
+
     // Get current step
     const currentStep = this.DOMObject.find('form').data('formStep');
 
@@ -203,17 +200,9 @@ PropertiesPanel.prototype.makeFormReadOnly = function() {
  */
 PropertiesPanel.prototype.render = function(element, step) {
     const self = this;
-    const elementType = element.type;
-
-    // Prevent the panel to render if there's no selected object
-    if(typeof element == 'undefined' || $.isEmptyObject(element) || typeof element.type == 'undefined' || typeof element[element.type + 'Id'] == 'undefined') {
-        // Clean the property panel html
-        this.DOMObject.html('');
-        return false;
-    }
 
     // Show a message if the module is disabled for a widget rendering
-    if(elementType === 'widget' && !element.enabled) {
+    if (element.type === 'widget' && !element.enabled) {
         this.DOMObject.html(messageTemplate({
             message: editorsTrans.invalidModule
         }));
@@ -226,11 +215,9 @@ PropertiesPanel.prototype.render = function(element, step) {
     // Show loading template
     this.DOMObject.html(loadingTemplate());
 
-    // Get toggleable panel
+    // Get toggleable panel and hide it during loading
     const $togglePanel = self.DOMObject.parents('.toggle-panel');
-
-    // Hide toggler during loading
-    if($togglePanel.hasClass('opened')) {
+    if ($togglePanel.hasClass('opened')) {
         this.DOMObject.siblings('.toggle-container').hide();
     }
 
@@ -239,15 +226,15 @@ PropertiesPanel.prototype.render = function(element, step) {
     requestPath = requestPath.replace(':id', element[element.type + 'Id']);
 
     // If we have a step to render, append it to the request path
-    if(step !== undefined && typeof step == 'number') {
+    if (step !== undefined && typeof step == 'number') {
         requestPath += '?step=' + step;
-    } 
+    }
 
     // If there was still a render request, abort it
-    if(this.renderRequest != undefined) {
+    if (this.renderRequest != undefined) {
         this.renderRequest.abort('requestAborted');
     }
-    
+
     // Create a new request
     this.renderRequest = $.get(requestPath).done(function(res) {
         const app = self.parent;
@@ -255,39 +242,36 @@ PropertiesPanel.prototype.render = function(element, step) {
         // Clear request var after response
         self.renderRequest = undefined;
 
-        // Prevent rendering null html ( if it's not a widget )
-        if((elementType != 'widget' && res.html === null) || res.success === false) {
-            self.DOMObject.html('<div class="unsuccessMessage">' + 
+        // Show uncussess request message
+        if (res.success === false) {
+            self.DOMObject.html('<div class="unsuccessMessage">' +
                 (res.message) ? res.message : propertiesPanelTrans.somethingWentWrong
-                + '</div>');
+            + '</div>');
             return;
         }
 
-        // Get template or compile from result
-        let htmlTemplate = '';
-        if(res.html === null) {
-            htmlTemplate = widgetFormTemplate;
-            
-            // Extend element with translation
-            $.extend(element, {
-                trans: propertiesPanelTrans
-            });
-        } else {
-            htmlTemplate = Handlebars.compile(res.html);
-        }
+        // Render template
+        let htmlTemplate = formTemplates[element.type];
+
+        // Extend element with translation
+        $.extend(res.data, {
+            trans: propertiesPanelTrans
+        });
 
         // Create buttons object
         let buttons = {};
-        
-        if(res.buttons != undefined && res.buttons != '' && (app.readOnlyMode === undefined || app.readOnlyMode === false)) {
+        if (res.buttons != undefined && res.buttons != '' && (app.readOnlyMode === undefined || app.readOnlyMode === false)) {
             // Process buttons from result
             buttons = formHelpers.widgetFormRenderButtons(res.buttons);
+        } else {
+            // Render save button
+            buttons = formHelpers.widgetFormRenderButtons(formTemplates.buttons);
         }
-        
+
         const html = propertiesPanel({
             header: res.dialogTitle,
             style: element.type,
-            form: htmlTemplate(element),
+            form: htmlTemplate(res.data),
             buttons: buttons,
             trans: propertiesPanelTrans,
             isDrawerWidget: element.drawerWidget || false
@@ -296,7 +280,7 @@ PropertiesPanel.prototype.render = function(element, step) {
         // Append layout html to the main div
         self.DOMObject.html(html);
 
-        // Add the action tab
+        // Add the action tab (to layout editor only)
         if (app.mainObjectType === 'layout') {
             // the url to Action Add Form
             let actionFormAddRequest = urlsForApi[element.type].addActionForm.url;
@@ -305,6 +289,7 @@ PropertiesPanel.prototype.render = function(element, step) {
             // append new tab
             let tabName = actionsTranslations.tableHeaders.name;
             const tabList = self.DOMObject.find('.nav-tabs');
+            // TODO: use template for the tab element
             let tabHtml = '<li class="nav-item"><a class="nav-link action-tab" href="#actionTab" role="tab" data-toggle="tab"><span id="actionTabName"></span></a></li>';
             $(tabHtml).appendTo(tabList);
             $('#actionTabName').text(tabName);
@@ -328,7 +313,7 @@ PropertiesPanel.prototype.render = function(element, step) {
             })));
         }
 
-        // Store the extra
+        // Store the extra data
         self.DOMObject.data("extra", res.extra);
 
         // Check if there's a viewer element
@@ -336,55 +321,55 @@ PropertiesPanel.prototype.render = function(element, step) {
         self.DOMObject.data('formEditorOnly', !viewerExists);
 
         // If the viewer exists, save its data  to the DOMObject
-        if(viewerExists) {
+        if (viewerExists) {
             self.DOMObject.data('viewerObject', app.viewer);
         }
 
-        // Create the dynamic form fields ( for now just for widget )
-        (element.type === 'widget') && forms.createFields(res.data.module.properties, self.DOMObject.find('#configureTab'));
-        
+        // Create the dynamic form fields ( for now just for widget ) and common fields
+        if (element.type === 'widget') {
+            forms.createFields(res.data.module.properties, self.DOMObject.find('#configureTab'));
+        }
+
+        // Set condition and handle replacements
+        forms.handleFormReplacements(self.DOMObject.find('form'), res.data);
+        forms.setConditions(self.DOMObject.find('form'));
+
         // Run form open module optional function
-        if(element.type === 'widget') {
+        if (element.type === 'widget') {
             // Pass widget options to the form as data
-            if(element.getOptions != undefined) {
+            if (element.getOptions != undefined) {
                 self.DOMObject.find('form').data('elementOptions', element.getOptions());
             }
 
             formHelpers.widgetFormEditAfterOpen(self.DOMObject, element.subType);
-        } else if(element.type === 'region' && typeof window.regionFormEditOpen === 'function') {
+        } else if (element.type === 'region' && typeof window.regionFormEditOpen === 'function') {
             window.regionFormEditOpen.bind(self.DOMObject)();
         }
 
         // Check for spacing issues on text fields
-        self.DOMObject.find('input[type=text]').each(function(index, el) {
-            formRenderDetectSpacingIssues(el);
-
-            $(el).on("keyup", _.debounce(function() {
-                formRenderDetectSpacingIssues(el);
-            }, 500));
-        });
+        forms.checkForSpacingIssues(self.DOMObject);
 
         // Save form data
         self.formSerializedLoadData = self.DOMObject.find('form').serialize();
 
         // Handle buttons click
-        if(app.readOnlyMode === undefined || app.readOnlyMode === false) {
-            self.DOMObject.find('.properties-panel-btn').click(function(el) {
-                if($(this).data('action')) {
+        if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
+            self.DOMObject.find('.properties-panel-btn').click(function() {
+                if ($(this).data('action')) {
                     self[$(this).data('action')](element, $(this).data('subAction'));
-                }  
+                }
             });
 
             // Handle back button based on form page
-            if(self.DOMObject.find('form').data('formStep') != undefined && self.DOMObject.find('form').data('formStep') > 1) {
-                self.DOMObject.find('button#back').show();
+            if (self.DOMObject.find('form').data('formStep') != undefined && self.DOMObject.find('form').data('formStep') > 1) {
+                self.DOMObject.find('button#back').removeClass('d-none');
             } else {
-                self.DOMObject.find('button#back').hide();
+                self.DOMObject.find('button#back').addClass('d-none');
             }
 
             // Handle keyboard keys
             self.DOMObject.off('keydown').keydown(function(handler) {
-                if(handler.key == 'Enter' && !$(handler.target).is('textarea')) {
+                if (handler.key == 'Enter' && !$(handler.target).is('textarea')) {
                     self.save(element, $(this).data('subAction'));
                 }
             });
@@ -394,15 +379,18 @@ PropertiesPanel.prototype.render = function(element, step) {
         XiboInitialise("#" + self.DOMObject.attr("id"));
 
         // For the layout properties, call background Setup
-        if(element.type == 'layout') {
+        // TODO: Move method to a common JS file
+        if (element.type == 'layout') {
             backGroundFormSetup(self.DOMObject);
         }
 
-        if(app.readOnlyMode != undefined && app.readOnlyMode === true) {
+        // Make form read only
+        if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
             self.makeFormReadOnly();
         }
 
-        if(self.openTabOnRender != '') {
+        // if a tab was previously selected, select it again
+        if (self.openTabOnRender != '') {
             // Open tab
             self.DOMObject.find(self.openTabOnRender).tab('show');
 
@@ -411,16 +399,16 @@ PropertiesPanel.prototype.render = function(element, step) {
         }
 
         // Populate the drawer select if exists
-        if($('.form-editor-controls-target-region').length > 0) {
+        if (self.DOMObject.find('.form-editor-controls-target-region').length > 0) {
             const $selectOptionContainer = self.DOMObject.find('.form-editor-controls-target-region #drawerWidgetTargetRegion');
 
             // Clear container
             $selectOptionContainer.find('option:not(.default-option)').remove();
             const elementTargetRegion = element.targetRegionId || '';
-            for(regionID in lD.layout.regions) {
+            for (regionID in lD.layout.regions) {
                 const region = lD.layout.regions[regionID];
                 let $newOption = $('<option value="' + region.regionId + '">' + region.name + '</option>');
-                if(elementTargetRegion == region.regionId) {
+                if (elementTargetRegion == region.regionId) {
                     $newOption.attr('selected', 'selected');
                 }
                 $newOption.appendTo($selectOptionContainer);
@@ -428,12 +416,12 @@ PropertiesPanel.prototype.render = function(element, step) {
         }
 
         // Open panel if object is an invalid widget
-        if(app.mainObjectType === 'layout' && element.type === 'widget' && element.isValid === 0 && !$togglePanel.hasClass('opened')) {
+        if (app.mainObjectType === 'layout' && element.type === 'widget' && element.isValid === 0 && !$togglePanel.hasClass('opened')) {
             app.togglePanel($togglePanel);
             app.savePrefs();
         }
 
-        // Toggler
+        // Handle toggle panel
         $togglePanel.find('.toggle').off().click(function(e) {
             e.stopPropagation();
             app.togglePanel($togglePanel);
@@ -443,15 +431,13 @@ PropertiesPanel.prototype.render = function(element, step) {
         // Show toggler
         self.DOMObject.siblings('.toggle-container').show();
     }).fail(function(data) {
-
         // Clear request var after response
         self.renderRequest = undefined;
 
-        if(data.statusText != 'requestAborted') {
+        if (data.statusText != 'requestAborted') {
             toastr.error(errorMessagesTrans.getFormFailed, errorMessagesTrans.error);
         }
     });
-
 };
 
 module.exports = PropertiesPanel;
