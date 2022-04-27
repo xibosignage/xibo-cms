@@ -4,6 +4,13 @@
 
     <select class="form-control" id="{{id}}" name="{{id}}">
         {{!-- Set default property values --}}
+        {{#unless optionsValue}}
+            {{set "optionsValue" "name"}}
+        {{/unless}}
+        {{#unless optionsTitle}}
+            {{set "optionsTitle" "title"}}
+        {{/unless}}
+
         {{#each options}}
             <option value="{{lookup this ../optionsValue}}" {{#eq (lookup this ../optionsValue) ../value}}selected{{/eq}}>{{lookup this ../optionsTitle}}</option>
         {{/each}}
