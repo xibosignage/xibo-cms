@@ -161,8 +161,6 @@ $inline-editing-z-index: 1040;
     }
 
     &.opened {
-        position: initial;
-
         .hide-closed {
             display: none;
         }
@@ -216,8 +214,10 @@ $inline-editing-z-index: 1040;
 .timeline-panel {
     background: $xibo-color-gray-light;
     width: 100%;
-    position: absolute;
-    top: calc(100% + 8px);
+
+    &:not(.opened) {
+        height: 6px;
+    }
 
     &.opened .toggle-container {
         height: 2px;
@@ -391,7 +391,8 @@ $inline-editing-z-index: 1040;
 
 /* Layout timeline */
 #layout-editor #layout-timeline {
-    flex-basis: calc(100% - 40px);
+    max-width: calc(100% - 40px);
+    min-width: 50%;
     max-height: 230px;
     margin: 4px 0;
 
@@ -1896,7 +1897,7 @@ $inline-editing-z-index: 1040;
     }
 
     &.drawed {
-        flex-basis: 40%;
+        flex-basis: 50%;
 
         #actions-drawer-toggle {
             background-color: lighten($drawer-toggle-bg-color, 20%);
