@@ -2931,10 +2931,7 @@ class Layout extends Base
     }
 
     /**
-     * This is called when editing a layout.
-     * Saves provided base64 image to the library folder with the naming convention:
-     *  {campaignId}_layout_thumb.png for a draft
-     *  {campaignId}_campaign_thumb.png for a published layout
+     * Add a thumbnail
      * @param Request $request
      * @param Response $response
      * @param $id
@@ -2963,8 +2960,7 @@ class Layout extends Base
             $saveTo = $libraryLocation . 'thumbs/' . $layout->campaignId . '_layout_thumb.png';
         } else {
             // Published
-            // we support uploading the a thumb for the published layout, although we would usually expect this to
-            // be copied over during the publish transaction.
+            // we would usually expect this to be copied over when published.
             $saveTo = $libraryLocation . 'thumbs/' . $layout->campaignId . '_campaign_thumb.png';
         }
 
@@ -3004,18 +3000,20 @@ class Layout extends Base
                                 $draw->background('rgba(196, 196, 196, 0.6)');
                             }
                         );
-                        $image->text(
-                            __('Empty Region'),
-                            $region->left + ($region->width / 2),
-                            $region->top + ($region->height / 2),
-                            function ($font) {
-                                $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
-                                $font->size(84);
-                                $font->color('#000000');
-                                $font->align('center');
-                                $font->valign('center');
-                            }
-                        );
+                        if ($region->width >= 400) {
+                            $image->text(
+                                __('Empty Region'),
+                                $region->left + ($region->width / 2),
+                                $region->top + ($region->height / 2),
+                                function ($font) {
+                                    $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
+                                    $font->size(84);
+                                    $font->color('#000000');
+                                    $font->align('center');
+                                    $font->valign('center');
+                                }
+                            );
+                        }
                     } else {
                         // Render just the first widget in the appropriate place
                         $module = $this->moduleFactory->createWithWidget($widgets[0], $region);
@@ -3037,6 +3035,9 @@ class Layout extends Base
                                     }
                                 );
                             }
+                            if ($proportional) {
+                                $cover->resizeCanvas($region->width, $region->height);
+                            }
                             $image->insert($cover, 'top-left', $region->left, $region->top);
                         } else if ($module->getModuleType() === 'video'
                             && file_exists($libraryLocation . $module->getMediaId() . '_videocover.png')
@@ -3046,6 +3047,7 @@ class Layout extends Base
                             $cover->resize($region->width, $region->height, function ($constraint) {
                                 $constraint->aspectRatio();
                             });
+                            $cover->resizeCanvas($region->width, $region->height);
                             $image->insert($cover, 'top-left', $region->left, $region->top);
                         } else {
                             // Draw the region in the widget colouring
@@ -3058,18 +3060,21 @@ class Layout extends Base
                                     $draw->background('rgba(196, 196, 196, 0.6)');
                                 }
                             );
-                            $image->text(
-                                $module->getModule()->name,
-                                $region->left + ($region->width / 2),
-                                $region->top + ($region->height / 2),
-                                function ($font) {
-                                    $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
-                                    $font->size(84);
-                                    $font->color('#000000');
-                                    $font->align('center');
-                                    $font->valign('center');
-                                }
-                            );
+
+                            if ($region->width >= 400) {
+                                $image->text(
+                                    $module->getModule()->name,
+                                    $region->left + ($region->width / 2),
+                                    $region->top + ($region->height / 2),
+                                    function ($font) {
+                                        $font->file(PROJECT_ROOT . '/modules/fonts/Railway.ttf');
+                                        $font->size(84);
+                                        $font->color('#000000');
+                                        $font->align('center');
+                                        $font->valign('center');
+                                    }
+                                );
+                            }
                         }
 
                         // Put a number of widgets counter in the bottom
