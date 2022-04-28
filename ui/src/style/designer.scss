@@ -73,10 +73,6 @@ $timeline-max-height: 230px;
 $inline-editing-z-index: 1040;
 
 // CSS
-body, .page-content {
-    overflow: hidden;
-    height: 100vh;
-}
 
 #read-only-message {
     display: block;
