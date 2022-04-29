@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -883,8 +883,9 @@ class MediaFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $sanitizedFilter->getInt('start') !== null && $sanitizedFilter->getInt('length', ['default'=> 10]) !== null) {
-            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0]) . ', ' . $sanitizedFilter->getInt('length', ['default'=> 10]);
+        if ($sanitizedFilter->hasParam('start') && $sanitizedFilter->hasParam('length')) {
+            $limit = ' LIMIT ' . $sanitizedFilter->getInt('start', ['default' => 0])
+                . ', ' . $sanitizedFilter->getInt('length', ['default'=> 10]);
         }
 
         $sql = $select . $body . $order . $limit;
