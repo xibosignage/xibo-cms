@@ -142,6 +142,10 @@
                         {% set title %}{% trans "Windows format Calendar?" %}{% endset %}
                         {% set helpText %}{% trans "Does the calendar feed come from Windows - if unsure leave unselected." %}{% endset %}
                         {{ forms.checkbox("windowsFormatCalendar", title, module.getOption("windowsFormatCalendar", 0), helpText) }}
+
+                        {% set title %}{% trans "Exclude weekend days?" %}{% endset %}
+                        {% set helpText %}{% trans "Saturdays and Sundays wont be shown" %}{% endset %}
+                        {{ forms.checkbox("excludeWeekendDays", title, module.getOption("excludeWeekendDays"), helpText, "weekly-control-group monthly-control-group") }}
                     </div>
 
                     <div class="tab-pane" id="appearanceTab">
