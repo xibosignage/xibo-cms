@@ -205,7 +205,6 @@ class State implements Middleware
 
 
         if ($container->get('name') == 'web' || $container->get('name') == 'xtr') {
-
             /** @var Twig $view */
             $view = $container->get('view');
 
@@ -268,6 +267,23 @@ class State implements Middleware
             $container->get('logService')->debug('Configuring %d additional log processors from Config', count($container->get('configService')->logProcessors));
             foreach ($container->get('configService')->logProcessors as $processor) {
                 $container->get('logger')->pushProcessor($processor);
+            }
+        }
+
+        // Dynamically load any connectors?
+        /** @var \Xibo\Factory\ConnectorFactory $connectorFactory */
+        $connectorFactory = $container->get('connectorFactory');
+        foreach ($connectorFactory->query(['isEnabled' => 1, 'isVisible' => 1]) as $connector) {
+            try {
+                // Create a connector and register it with the dispatcher.
+                $connector = $connectorFactory->create($connector);
+                $connector
+                    ->useSettings($container->get('configService')->getConnectorSettings($connector->getSourceName()))
+                    ->useHttpOptions($container->get('configService')->getGuzzleProxy())
+                    ->registerWithDispatcher($container->get('dispatcher'));
+            } catch (\Exception $exception) {
+                // Log and ignore.
+                $container->get('logger')->error('Incorrectly configured connector. e=' . $exception->getMessage());
             }
         }
 

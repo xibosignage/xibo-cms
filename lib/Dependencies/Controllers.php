@@ -536,6 +536,7 @@ class Controllers
                     $c
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
+                $controller->useDispatcher($c->get('dispatcher'));
                 return $controller;
             },
             '\Xibo\Controller\Tag' => function (ContainerInterface $c) {
