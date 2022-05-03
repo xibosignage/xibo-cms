@@ -24,15 +24,13 @@ namespace Xibo\Tests\Helper;
 use Xibo\Service\PlayerActionServiceInterface;
 
 /**
- * Class MockPlayerActionService
+ * Class NullPlayerActionService
  * @package Helper
  */
-class MockPlayerActionService implements PlayerActionServiceInterface
+class NullPlayerActionService implements PlayerActionServiceInterface
 {
     /** @var \Xibo\Service\LogServiceInterface */
     private $log;
-
-    private $displays = [];
 
     /**
      * @inheritdoc
@@ -47,15 +45,7 @@ class MockPlayerActionService implements PlayerActionServiceInterface
      */
     public function sendAction($displays, $action)
     {
-        $this->log->debug('MockPlayerActionService: sendAction');
-
-        if (!is_array($displays)) {
-            $displays = [$displays];
-        }
-
-        foreach ($displays as $display) {
-            $this->displays[] = $display->displayId;
-        }
+        $this->log->debug('NullPlayerActionService: sendAction');
     }
 
     /**
@@ -63,8 +53,7 @@ class MockPlayerActionService implements PlayerActionServiceInterface
      */
     public function getQueue(): array
     {
-        $this->log->debug('MockPlayerActionService: getQueue');
-        return $this->displays;
+        $this->log->debug('NullPlayerActionService: getQueue');
     }
 
     /**
@@ -72,6 +61,6 @@ class MockPlayerActionService implements PlayerActionServiceInterface
      */
     public function processQueue()
     {
-        $this->log->debug('MockPlayerActionService: processQueue');
+        $this->log->debug('NullPlayerActionService: processQueue');
     }
 }

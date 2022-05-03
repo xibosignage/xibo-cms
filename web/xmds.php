@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2019 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,12 +22,8 @@
 
 use Monolog\Logger;
 use Nyholm\Psr7\ServerRequest;
-use Psr\Container\ContainerInterface;
 use Slim\Http\ServerRequest as Request;
-use Symfony\Component\EventDispatcher\EventDispatcher;
-use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\ContainerFactory;
-use Xibo\Listener\OnDisplayGroupLoad\DisplayGroupDisplayListener;
 use Xibo\Support\Exception\NotFoundException;
 
 define('XIBO', true);
@@ -48,18 +44,13 @@ try {
 } catch (Exception $e) {
     die($e->getMessage());
 }
-$uidProcessor =  new \Monolog\Processor\UidProcessor(7);
-$container->set('logger', function () use($uidProcessor) {
-    $logger = new Logger('XMDS');
 
-    // db
-    $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
-
-    $logger->pushProcessor($uidProcessor);
-
-    $logger->pushHandler($dbhandler);
-
-    return $logger;
+// Logger
+$uidProcessor = new \Monolog\Processor\UidProcessor(7);
+$container->set('logger', function () use ($uidProcessor) {
+    return (new Logger('XMDS'))
+        ->pushProcessor($uidProcessor)
+        ->pushHandler(new \Xibo\Helper\DatabaseLogHandler());
 });
 
 // Create a Slim application
@@ -79,6 +70,9 @@ $startTime = microtime(true);
 
 // Set XMR
 \Xibo\Middleware\Xmr::setXmr($app, false);
+
+// Set connectors
+\Xibo\Middleware\State::setConnectors($app);
 
 $container->get('configService')->setDependencies($container->get('store'), '/');
 $container->get('configService')->loadTheme();
@@ -267,16 +261,6 @@ try {
     $logProcessor = new \Xibo\Xmds\LogProcessor($container->get('logger'), $uidProcessor->getUid());
     $container->get('logger')->pushProcessor($logProcessor);
 
-    $container->set('xmdsDispatcher', function (ContainerInterface $container) {
-        $dispatcher = new EventDispatcher();
-
-        $dispatcher->addListener(DisplayGroupLoadEvent::$NAME, (new DisplayGroupDisplayListener(
-            $container->get('displayFactory')
-        )));
-
-        return $dispatcher;
-    });
-
     // Create a SoapServer
     // explicitly define caching.
     if (\Xibo\Helper\Environment::isDevMode()) {
@@ -308,7 +292,7 @@ try {
         $container->get('scheduleFactory'),
         $container->get('dayPartFactory'),
         $container->get('playerVersionFactory'),
-        $container->get('xmdsDispatcher')
+        $container->get('dispatcher')
     );
     // Add manual raw post data parsing, as HTTP_RAW_POST_DATA is deprecated.
     $soap->handle(file_get_contents('php://input'));

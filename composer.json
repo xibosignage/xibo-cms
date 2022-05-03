@@ -47,6 +47,7 @@
     "php": ">=7.2.9",
     "ext-pdo": "*",
     "ext-json": "*",
+    "ext-soap": "*",
     "ext-zip": "*",
     "slim/slim": "^4.3",
     "slim/http": "^1.2",

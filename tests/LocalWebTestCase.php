@@ -447,20 +447,19 @@ class LocalWebTestCase extends PHPUnit_TestCase
     }
 
     /**
-     * This function is using MockPlayerActionService, which returns an array of displayId on processQueue
-     *
+     * Get the queue of actions.
      * @return int[]
-     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function getPlayerActionQueue()
     {
-        /** @var MockPlayerActionService $service */
+        /** @var \Xibo\Service\PlayerActionServiceInterface $service */
         $service = $this->app->getContainer()->get('playerActionService');
 
-        if ($service === null)
-            $this->fail('Test hasnt used the client and therefore cannot determine XMR activity');
+        if ($service === null) {
+            $this->fail('Test has not used the client and therefore cannot determine XMR activity');
+        }
 
-        return $service->processQueue();
+        return $service->getQueue();
     }
 
     /**
