@@ -540,9 +540,10 @@ function XiboInitialise(scope) {
     });
 
     // Initialize tag with values function from xibo-forms.js
-    $(scope + " .tags-with-value").each(function() {
-        tagsWithValues($(this).closest("form").attr('id'));
-    });
+    // this needs to be initialised only once, otherwise some functions in it will be executed multiple times.
+    if ($(scope + " .tags-with-value").length > 0) {
+        tagsWithValues($(scope).find("form").attr('id'));
+    }
 
     $(scope + ' .XiboCommand').each(function () {
         // Get main container
