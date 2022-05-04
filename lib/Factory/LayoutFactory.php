@@ -1446,13 +1446,16 @@ class LayoutFactory extends BaseFactory
                 $dataSet = $dataSetFactory->createEmpty()->hydrate($item);
                 $dataSet->columns = [];
                 $dataSetId = $dataSet->dataSetId;
-
+                $columnWithImages = [];
                 // We must null the ID so that we don't try to load the dataset when we assign columns
                 $dataSet->dataSetId = null;
                 
                 // Hydrate the columns
                 foreach ($item['columns'] as $columnItem) {
                     $this->getLog()->debug(sprintf('Assigning column: %s', json_encode($columnItem)));
+                    if ($columnItem['dataTypeId'] === 5) {
+                        $columnWithImages[] = $columnItem['heading'];
+                    }
                     $dataSet->assignColumn($dataSetFactory->getDataSetColumnFactory()->createEmpty()->hydrate($columnItem));
                 }
 
@@ -1501,6 +1504,14 @@ class LayoutFactory extends BaseFactory
                         foreach ($item['data'] as $itemData) {
                             if (isset($itemData['id'])) {
                                 unset($itemData['id']);
+                            }
+
+                            foreach ($columnWithImages as $columnHeading) {
+                                foreach ($uploadedMediaIds as $old => $new) {
+                                    if ($itemData[$columnHeading] == $old) {
+                                        $itemData[$columnHeading] = $new;
+                                    }
+                                }
                             }
 
                             $existingDataSet->addRow($itemData);
