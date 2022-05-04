@@ -1241,7 +1241,8 @@ class LayoutFactory extends BaseFactory
 
         // Go through each region and add the media (updating the media ids)
         $mappings = json_decode($zip->getFromName('mapping.json'), true);
-
+        $oldMediaIds = [];
+        $newMediaIds = [];
         foreach ($mappings as $file) {
             // Import the Media File
             $intendedMediaName = $file['name'];
@@ -1289,7 +1290,6 @@ class LayoutFactory extends BaseFactory
                     $intendedMediaName = 'import_' . $layout->layout . '_' . uniqid();
                     throw new NotFoundException();
                 }
-
             } catch (NotFoundException $e) {
                 // Create it instead
                 $this->getLog()->debug('Media does not exist in Library, add it ' .  $file['file']);
@@ -1305,7 +1305,6 @@ class LayoutFactory extends BaseFactory
                         $media->tags[] = $this->tagFactory->tagFromString(
                             $tagNode['tag'] . (!empty($tagNode['value']) ? '|' . $tagNode['value'] : '')
                         );
-
                     }
                 }
 
@@ -1323,6 +1322,8 @@ class LayoutFactory extends BaseFactory
             // Find where this is used and swap for the real mediaId
             $oldMediaId = $file['mediaid'];
             $newMediaId = $media->mediaId;
+            $oldMediaIds[] = $oldMediaId;
+            $newMediaIds[] = $newMediaId;
 
             if ($file['background'] == 1) {
                 // Set the background image on the new layout
@@ -1365,64 +1366,68 @@ class LayoutFactory extends BaseFactory
                         // Assign the new ID
                         $widget->assignMedia($newMediaId);
                     }
-
-                    // change mediaId references in applicable widgets, outside of the if condition, because if the Layout is loadByXLF we will not have mediaIds set on Widget at this point
+                    // change mediaId references in applicable widgets, outside of the if condition,
+                    // because if the Layout is loadByXLF we will not have mediaIds set on Widget at this point
                     // the mediaIds array for Widgets with Library references will be correctly populated on getResource call from Player/CMS.
                     // if the Layout was loadByJson then it will already have correct mediaIds array at this point.
                     $this->handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId);
                 }
             }
+        }
+        $uploadedMediaIds = array_combine($oldMediaIds, $newMediaIds);
 
-            // Playlists with media widgets
-            // We will iterate through all Playlists we've created during layout import here and
-            // replace any mediaIds if needed
-            if (isset($playlists) && $playlistDetails !== false) {
-                foreach ($playlists as $playlist) {
-                    /** @var $playlist Playlist */
-                    foreach ($playlist->widgets as $widget) {
-                        $audioIds = $widget->getAudioIds();
+        // Playlists with media widgets
+        // We will iterate through all Playlists we've created during layout import here and
+        // replace any mediaIds if needed
+        if (isset($playlists) && $playlistDetails !== false) {
+            foreach ($playlists as $playlist) {
+                /** @var $playlist Playlist */
+                foreach ($playlist->widgets as $widget) {
+                    $audioIds = $widget->getAudioIds();
 
-                        if (in_array($oldMediaId, $widget->mediaIds)) {
-                            $this->getLog()->debug(sprintf('Playlist import Removing %d and replacing with %d', $oldMediaId, $newMediaId));
-                            // Are we an audio record?
-                            if (in_array($oldMediaId, $audioIds)) {
-                                // Swap the mediaId on the audio record
-                                foreach ($widget->audio as $widgetAudio) {
-                                    if ($widgetAudio->mediaId == $oldMediaId) {
-                                        $widgetAudio->mediaId = $newMediaId;
-                                        break;
+                    foreach ($widget->mediaIds as $mediaId) {
+                        foreach ($uploadedMediaIds as $old => $new) {
+                            if ($mediaId == $old) {
+                                $this->getLog()->debug(sprintf('Playlist import Removing %d and replacing with %d', $old, $new));
+                                // Are we an audio record?
+                                if (in_array($old, $audioIds)) {
+                                    // Swap the mediaId on the audio record
+                                    foreach ($widget->audio as $widgetAudio) {
+                                        if ($widgetAudio->mediaId == $old) {
+                                            $widgetAudio->mediaId = $new;
+                                            break;
+                                        }
                                     }
+                                } else {
+                                    $addedMedia = $this->mediaFactory->getById($new);
+                                    // Non audio
+                                    $widget->setOptionValue('uri', 'attrib', $addedMedia->storedAs);
                                 }
-                            } else {
-                                // Non audio
-                                $widget->setOptionValue('uri', 'attrib', $media->storedAs);
-                            }
 
-                            // Always manage the assignments
-                            // Unassign the old ID
-                            $widget->unassignMedia($oldMediaId);
+                                // Always manage the assignments
+                                // Unassign the old ID
+                                $widget->unassignMedia($old);
 
-                            // Assign the new ID
-                            $widget->assignMedia($newMediaId);
+                                // Assign the new ID
+                                $widget->assignMedia($new);
 
-                            // change mediaId references in applicable widgets in all Playlists we have created on this import.
-                            $this->handleWidgetMediaIdReferences($widget, $newMediaId, $oldMediaId);
-
-                            $widget->save();
-
-                            if (!in_array($widget, $playlist->widgets)) {
-                                $playlist->assignWidget($widget);
-                                $playlist->requiresDurationUpdate = 1;
-                                $playlist->save();
+                                // change mediaId references in applicable widgets in all Playlists we have created on this import.
+                                $this->handleWidgetMediaIdReferences($widget, $new, $old);
                             }
                         }
+                    }
+                    $widget->save();
 
-                        // add Playlist widgets to the $widgets (which already has all widgets from layout regionPlaylists)
-                        // this will be needed if any Playlist has widgets with dataSets
-                        if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
-                            $widgets[] = $widget;
-                            $playlistWidgets[] = $widget;
-                        }
+                    if (!in_array($widget, $playlist->widgets)) {
+                        $playlist->assignWidget($widget);
+                        $playlist->requiresDurationUpdate = 1;
+                        $playlist->save();
+                    }
+                    // add Playlist widgets to the $widgets (which already has all widgets from layout regionPlaylists)
+                    // this will be needed if any Playlist has widgets with dataSets
+                    if ($widget->type == 'datasetview' || $widget->type == 'datasetticker' || $widget->type == 'chart') {
+                        $widgets[] = $widget;
+                        $playlistWidgets[] = $widget;
                     }
                 }
             }
@@ -1662,7 +1667,7 @@ class LayoutFactory extends BaseFactory
      */
     public function createNestedPlaylistWidgets($widgets, $combined, &$playlists)
     {
-        foreach ($widgets as $playlistId => $widgetsDetails ) {
+        foreach ($widgets as $playlistId => $widgetsDetails) {
             foreach ($combined as $old => $new) {
                 if ($old == $playlistId) {
                     $playlistId = $new;
