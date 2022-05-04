@@ -355,4 +355,31 @@ trait EntityTrait
 
         return $result;
     }
+
+    public function handleTagAssign($tagToAssign)
+    {
+        if (!in_array($tagToAssign, $this->tags)) {
+            if (empty($this->tags)) {
+                // case when we do not have any Tags on our object
+                $this->tags[] = $tagToAssign;
+            } else {
+                // go through existing Tags and compare Tag values
+                // case for existing Tag, but with different value
+                foreach ($this->tags as $key => $currentTag) {
+                    if ($currentTag->tagId === $tagToAssign->tagId && $currentTag->value !== $tagToAssign->value) {
+                        array_splice($this->tags, $key, 1);
+                        $this->unassignTags[] = $currentTag;
+                        $this->tags[] = $tagToAssign;
+                    }
+                }
+                // if the Tag is still not in our array, add it now
+                // case for a new Tag
+                if (!in_array($tagToAssign, $this->tags)) {
+                    $this->tags[] = $tagToAssign;
+                }
+            }
+        } else {
+            $this->getLog()->debug('No Tags to assign');
+        }
+    }
 }
