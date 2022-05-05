@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -606,7 +606,7 @@ class ModuleFactory extends BaseFactory
             }
         }
 
-        return $paths;
+        return array_unique($paths);
     }
 
     /**

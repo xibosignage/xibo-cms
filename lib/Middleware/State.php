@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -49,7 +49,6 @@ use Xibo\Twig\TwigMessages;
  */
 class State implements Middleware
 {
-
     /* @var App $app */
     private $app;
 
@@ -84,9 +83,6 @@ class State implements Middleware
         if (Environment::migrationPending() && $request->getUri()->getPath() != '/error') {
             throw new UpgradePendingException();
         }
-
-        // Set connectors
-        State::setConnectors($app);
 
         // Next middleware
         $response = $handler->handle($request);
@@ -296,34 +292,6 @@ class State implements Middleware
                 }
 
                 $app->add($object);
-            }
-        }
-    }
-
-    /**
-     * Set connectors
-     * @param \Slim\App $app
-     * @return void
-     */
-    public static function setConnectors(App $app)
-    {
-        // Dynamically load any connectors?
-        $container = $app->getContainer();
-
-        /** @var \Xibo\Factory\ConnectorFactory $connectorFactory */
-        $connectorFactory = $container->get('connectorFactory');
-        foreach ($connectorFactory->query(['isEnabled' => 1, 'isVisible' => 1]) as $connector) {
-            try {
-                // Create a connector and register it with the dispatcher.
-                $connector = $connectorFactory->create($connector);
-                $connector
-                    ->useSettings($container->get('configService')->getConnectorSettings($connector->getSourceName()))
-                    ->useHttpOptions($container->get('configService')->getGuzzleProxy())
-                    ->registerWithDispatcher($container->get('dispatcher'));
-            } catch (\Exception $exception) {
-                // Log and ignore.
-                $container->get('logger')->error('Incorrectly configured connector. e=' . $exception->getMessage());
-                $container->get('logger')->debug($exception->getTraceAsString());
             }
         }
     }

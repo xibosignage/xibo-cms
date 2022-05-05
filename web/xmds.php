@@ -72,7 +72,7 @@ $startTime = microtime(true);
 \Xibo\Middleware\Xmr::setXmr($app, false);
 
 // Set connectors
-\Xibo\Middleware\State::setConnectors($app);
+\Xibo\Middleware\ConnectorMiddleware::setConnectors($app);
 
 $container->get('configService')->setDependencies($container->get('store'), '/');
 $container->get('configService')->loadTheme();
