@@ -32,6 +32,7 @@
 {% block formButtons %}
     {% trans "Help" %}, XiboHelpRender("{{ help }}")
     {% trans "Cancel" %}, XiboDialogClose()
+    {% trans "Next" %}, XiboDialogApply("#menuBoardProductAddForm")
     {% trans "Save" %}, $("#menuBoardProductAddForm").submit()
 {% endblock %}
 
@@ -81,7 +82,8 @@
                             { name: "data-text-property", value: "name" },
                             { name: "data-filter-options", value: '{"onlyMenuBoardAllowed":1}' },
                             { name: "data-allow-clear", value: "true"},
-                            { name: "data-placeholder", value: "Select an Image or Video"}
+                            { name: "data-placeholder", value: "Select an Image or Video"},
+                            { name: "data-thumbnail", value: "thumbnail"}
                         ] %}
                         {{ forms.dropdown("mediaId", "single", title, "", null, "mediaId", "media", helpText, "pagedSelect", "", "d", "", attributes) }}
                     </div>
