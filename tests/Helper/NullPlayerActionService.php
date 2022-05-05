@@ -54,6 +54,7 @@ class NullPlayerActionService implements PlayerActionServiceInterface
     public function getQueue(): array
     {
         $this->log->debug('NullPlayerActionService: getQueue');
+        return [];
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -70,6 +70,9 @@ $startTime = microtime(true);
 
 // Set XMR
 \Xibo\Middleware\Xmr::setXmr($app, false);
+
+// Set listeners
+\Xibo\Middleware\ListenersMiddleware::setListeners($app);
 
 // Set connectors
 \Xibo\Middleware\ConnectorMiddleware::setConnectors($app);

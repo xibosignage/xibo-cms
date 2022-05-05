@@ -68,6 +68,7 @@ $container->set('name', 'API');
 \Xibo\Middleware\State::setMiddleWare($app);
 
 $app->add(new \Xibo\Middleware\ConnectorMiddleware($app));
+$app->add(new \Xibo\Middleware\ListenersMiddleware($app));
 $app->add(new \Xibo\Middleware\ApiAuthorization($app));
 $app->add(new \Xibo\Middleware\State($app));
 $app->add(new \Xibo\Middleware\Log($app));

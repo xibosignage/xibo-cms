@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,6 +25,7 @@ namespace Xibo\Service;
 
 use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Module;
 use Xibo\Factory\CommandFactory;
 use Xibo\Factory\DataSetColumnFactory;
@@ -58,8 +59,9 @@ interface ModuleServiceInterface
      * @param LogServiceInterface $log
      * @param ConfigServiceInterface $config
      * @param SanitizerService $sanitizer
+     * @param EventDispatcherInterface $eventDispatcher
      */
-    public function __construct($store, $pool, $log, $config, $sanitizer);
+    public function __construct($store, $pool, $log, $config, $sanitizer, $eventDispatcher);
 
     /**
      * @param Module $module

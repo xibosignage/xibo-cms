@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1498,8 +1498,9 @@ class Layout implements \JsonSerializable
                     // Region duration
                     // If we have a cycle playback duration, we use that, otherwise we use the normal calculated
                     // duration.
-                    if ($widget->tempCyclePlaybackAverageDuration !== null && $widget->tempCyclePlaybackAverageDuration > 0) {
-                        $region->duration = $region->duration + $widget->tempCyclePlaybackAverageDuration;
+                    $tempCyclePlaybackAverageDuration = $widget->tempCyclePlaybackAverageDuration ?? 0;
+                    if ($tempCyclePlaybackAverageDuration) {
+                        $region->duration = $region->duration + $tempCyclePlaybackAverageDuration;
                     } else {
                         $region->duration = $region->duration + $widget->calculatedDuration;
                     }

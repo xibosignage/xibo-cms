@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,16 +28,15 @@ use Psr\Container\ContainerInterface;
 use Slim\Views\Twig;
 use Stash\Driver\Composite;
 use Stash\Pool;
+use Symfony\Component\EventDispatcher\EventDispatcher;
 use Xibo\Dependencies\Controllers;
-use Xibo\Dependencies\DispatcherListeners;
 use Xibo\Dependencies\Factories;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\Environment;
 use Xibo\Helper\SanitizerService;
-use Xibo\Middleware\State;
-use Xibo\Service\ConfigService;
 use Xibo\Service\BaseDependenciesService;
+use Xibo\Service\ConfigService;
 use Xibo\Service\HelpService;
 use Xibo\Service\ImageProcessingService;
 use Xibo\Service\MediaService;
@@ -156,7 +155,8 @@ class ContainerFactory
                     $c->get('pool'),
                     $c->get('logService'),
                     $c->get('configService'),
-                    $c->get('sanitizerService')
+                    $c->get('sanitizerService'),
+                    $c->get('dispatcher')
                 );
             },
             'configService' => function (ContainerInterface $c) {
@@ -246,12 +246,14 @@ class ContainerFactory
                 $repository->setStore($c->get('store'));
 
                 return $repository;
+            },
+            'dispatcher' => function (ContainerInterface $c) {
+                return new EventDispatcher();
             }
         ]);
 
         $containerBuilder->addDefinitions(Controllers::registerControllersWithDi());
         $containerBuilder->addDefinitions(Factories::registerFactoriesWithDi());
-        $containerBuilder->addDefinitions(DispatcherListeners::registerDispatcherWithDi());
 
         // Should we compile the container?
         /*if (!Environment::isDevMode()) {

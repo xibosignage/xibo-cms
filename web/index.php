@@ -91,6 +91,7 @@ $container->set('name', 'web');
 //
 $app->add(new \Xibo\Middleware\Actions($app));
 $app->add(new \Xibo\Middleware\ConnectorMiddleware($app));
+$app->add(new \Xibo\Middleware\ListenersMiddleware($app));
 $app->add(new \Xibo\Middleware\Theme($app));
 $app->add(new \Xibo\Middleware\CsrfGuard($app));
 
