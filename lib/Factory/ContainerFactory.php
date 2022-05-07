@@ -39,6 +39,7 @@ use Xibo\Service\BaseDependenciesService;
 use Xibo\Service\ConfigService;
 use Xibo\Service\HelpService;
 use Xibo\Service\ImageProcessingService;
+use Xibo\Service\JwtService;
 use Xibo\Service\MediaService;
 use Xibo\Service\ModuleService;
 use Xibo\Storage\MySqlTimeSeriesStore;
@@ -249,6 +250,10 @@ class ContainerFactory
             },
             'dispatcher' => function (ContainerInterface $c) {
                 return new EventDispatcher();
+            },
+            'jwtService' => function (ContainerInterface $c) {
+                return (new JwtService())
+                    ->useKeys($c->get('configService')->getApiKeyDetails());
             }
         ]);
 

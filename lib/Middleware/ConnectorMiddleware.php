@@ -76,6 +76,7 @@ class ConnectorMiddleware implements MiddlewareInterface
                 $connector
                     ->useSettings($container->get('configService')->getConnectorSettings($connector->getSourceName()))
                     ->useHttpOptions($container->get('configService')->getGuzzleProxy())
+                    ->useJwtService($container->get('jwtService'))
                     ->registerWithDispatcher($container->get('dispatcher'));
             } catch (\Exception $exception) {
                 // Log and ignore.

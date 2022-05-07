@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -595,9 +595,9 @@ class ConfigService implements ConfigServiceInterface
 
             // We use the defaults
             $this->apiKeyPaths = [
-                'publicKeyPath' => $libraryLocation . '/certs/public.key',
-                'privateKeyPath' => $libraryLocation . '/certs/private.key',
-                'encryptionKey' => file_get_contents($libraryLocation . '/certs/encryption.key')
+                'publicKeyPath' => $libraryLocation . 'certs/public.key',
+                'privateKeyPath' => $libraryLocation . 'certs/private.key',
+                'encryptionKey' => file_get_contents($libraryLocation . 'certs/encryption.key')
             ];
         }
 

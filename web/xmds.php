@@ -251,6 +251,52 @@ if (isset($_GET['file'])) {
     exit;
 }
 
+// Connector request?
+if (isset($_GET['connector'])) {
+    try {
+        if (!isset($_GET['token'])) {
+            header('HTTP/1.0 403 Forbidden');
+            exit;
+        }
+
+        // Dispatch an event to check the token
+        $tokenEvent = new \Xibo\Event\XmdsConnectorTokenEvent();
+        $tokenEvent->setToken($_GET['token']);
+        $container->get('dispatcher')->dispatch($tokenEvent, \Xibo\Event\XmdsConnectorTokenEvent::$NAME);
+
+        if (empty($tokenEvent->getWidgetId())) {
+            header('HTTP/1.0 403 Forbidden');
+            exit;
+        }
+
+        // Check the widgetId is permissible, and in required files for the display.
+        /** @var \Xibo\Entity\RequiredFile $file */
+        $file = $container->get('requiredFileFactory')->getByDisplayAndWidget(
+            $tokenEvent->getDisplayId(),
+            $tokenEvent->getWidgetId()
+        );
+
+        // Get the widget
+        $widget = $container->get('widgetFactory')->getById($tokenEvent->getWidgetId());
+
+        // It has been found, so we raise an event here to see if any connector can provide a file for it.
+        $event = new \Xibo\Event\XmdsConnectorFileEvent($widget);
+        $container->get('dispatcher')->dispatch($event, \Xibo\Event\XmdsConnectorFileEvent::$NAME);
+
+        // What now?
+        $emitter = new \Slim\ResponseEmitter();
+        $emitter->emit($event->getResponse());
+    } catch (\Xibo\Support\Exception\GeneralException $e) {
+        header('HTTP/1.0 500 Internal Server Error');
+        echo $e->getMessage();
+    } catch (Exception $e) {
+        $container->get('logService')->error('Unknown Error: ' . $e->getMessage());
+        $container->get('logService')->debug($e->getTraceAsString());
+        header('HTTP/1.0 500 Internal Server Error');
+    }
+    exit;
+}
+
 // Town down all logging
 $container->get('logService')->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
 
