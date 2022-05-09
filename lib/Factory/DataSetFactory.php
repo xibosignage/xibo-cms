@@ -1,9 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
  *
  * This file is part of Xibo.
  *
@@ -93,6 +92,7 @@ class DataSetFactory extends BaseFactory
         return new DataSet(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this->getSanitizerService(),
             $this->config,
             $this->pool,

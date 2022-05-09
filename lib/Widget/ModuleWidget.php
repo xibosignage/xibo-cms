@@ -376,7 +376,7 @@ abstract class ModuleWidget implements ModuleInterface
     public function getDispatcher(): EventDispatcherInterface
     {
         if ($this->dispatcher === null) {
-            $this->getLog()->error('getDispatcher: No dispatcher found, returning an empty one');
+            $this->getLog()->error('getDispatcher: [module] No dispatcher found, returning an empty one');
             $this->dispatcher = new EventDispatcher();
         }
         return $this->dispatcher;

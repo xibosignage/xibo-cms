@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -110,11 +110,12 @@ class MenuBoardProduct implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param MenuBoardProductOptionFactory $menuBoardProductOptionFactory
      */
-    public function __construct($store, $log, $menuBoardProductOptionFactory)
+    public function __construct($store, $log, $dispatcher, $menuBoardProductOptionFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->menuBoardProductOptionFactory = $menuBoardProductOptionFactory;
     }
 

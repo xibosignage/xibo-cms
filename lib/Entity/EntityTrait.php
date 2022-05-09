@@ -24,6 +24,7 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\ObjectVars;
 use Xibo\Service\LogServiceInterface;
@@ -57,18 +58,21 @@ trait EntityTrait
      */
     private $log;
 
+    /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface */
     private $dispatcher;
 
     /**
      * Set common dependencies.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param EventDispatcherInterface $dispatcher
      * @return $this
      */
-    protected function setCommonDependencies($store, $log)
+    protected function setCommonDependencies($store, $log, $dispatcher)
     {
         $this->store = $store;
         $this->log = $log;
+        $this->dispatcher = $dispatcher;
         return $this;
     }
 
@@ -91,12 +95,12 @@ trait EntityTrait
     }
 
     /**
-     * @return EventDispatcher
+     * @return \Symfony\Component\EventDispatcher\EventDispatcherInterface
      */
-    public function getDispatcher(): EventDispatcher
+    public function getDispatcher(): EventDispatcherInterface
     {
         if ($this->dispatcher === null) {
-            $this->getLog()->error('getDispatcher: No dispatcher found, returning an empty one');
+            $this->getLog()->error('getDispatcher: [entity] No dispatcher found, returning an empty one');
             $this->dispatcher = new EventDispatcher();
         }
 

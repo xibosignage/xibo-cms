@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -91,6 +91,7 @@ class WidgetFactory extends BaseFactory
         return new Widget(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this->widgetOptionFactory,
             $this->widgetMediaFactory,
             $this->widgetAudioFactory,

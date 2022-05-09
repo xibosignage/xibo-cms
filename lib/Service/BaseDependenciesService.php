@@ -1,10 +1,31 @@
 <?php
-
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Service;
 
 use Psr\Log\NullLogger;
 use Slim\Views\Twig;
+use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\User;
 use Xibo\Helper\ApplicationState;
 use Xibo\Helper\NullHelpService;
@@ -54,6 +75,9 @@ class BaseDependenciesService
      * @var PdoStorageService
      */
     private $storageService;
+
+    /** @var \Symfony\Component\EventDispatcher\EventDispatcherInterface */
+    private $dispatcher;
 
     public function setLogger(LogServiceInterface $logService)
     {
@@ -108,15 +132,14 @@ class BaseDependenciesService
 
     public function setHelp(HelpService $helpService)
     {
-        if ($this->helpService === null) {
-            $this->helpService = new NullHelpService();
-        }
-
         $this->helpService = $helpService;
     }
 
     public function getHelp() : HelpService
     {
+        if ($this->helpService === null) {
+            $this->helpService = new NullHelpService();
+        }
         return $this->helpService;
     }
 
@@ -132,14 +155,14 @@ class BaseDependenciesService
 
     public function setView(Twig $view)
     {
-        if ($this->view === null) {
-            $this->view = new NullView();
-        }
         $this->view = $view;
     }
 
     public function getView() : Twig
     {
+        if ($this->view === null) {
+            $this->view = new NullView();
+        }
         return $this->view;
     }
 
@@ -151,5 +174,20 @@ class BaseDependenciesService
     public function getStore()
     {
         return $this->storageService;
+    }
+
+    public function setDispatcher(EventDispatcherInterface $dispatcher): BaseDependenciesService
+    {
+        $this->dispatcher = $dispatcher;
+        return $this;
+    }
+
+    public function getDispatcher(): EventDispatcherInterface
+    {
+        if ($this->dispatcher === null) {
+            $this->getLogger()->error('getDispatcher: [base] No dispatcher found, returning an empty one');
+            $this->dispatcher = new EventDispatcher();
+        }
+        return $this->dispatcher;
     }
 }

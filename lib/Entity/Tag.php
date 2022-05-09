@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -118,11 +118,12 @@ class Tag implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->tagFactory = $tagFactory;
     }

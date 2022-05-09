@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -243,13 +243,14 @@ class DisplayGroup implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param DisplayGroupFactory $displayGroupFactory
      * @param PermissionFactory $permissionFactory
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $displayGroupFactory, $permissionFactory, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $displayGroupFactory, $permissionFactory, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->displayGroupFactory = $displayGroupFactory;
         $this->permissionFactory = $permissionFactory;

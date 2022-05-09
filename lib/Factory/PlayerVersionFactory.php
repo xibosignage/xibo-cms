@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2018 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -65,7 +65,14 @@ class PlayerVersionFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new PlayerVersion($this->getStore(), $this->getLog(), $this->config, $this->mediaFactory, $this);
+        return new PlayerVersion(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this->config,
+            $this->mediaFactory,
+            $this
+        );
     }
 
     /**

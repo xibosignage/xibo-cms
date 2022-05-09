@@ -23,7 +23,6 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
 use Xibo\Factory\ActionFactory;
@@ -334,9 +333,6 @@ class Layout implements \JsonSerializable
      */
     private $config;
 
-    /** @var  EventDispatcherInterface */
-    private $dispatcher;
-
     /**
      * @var PermissionFactory
      */
@@ -385,6 +381,7 @@ class Layout implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
@@ -397,9 +394,9 @@ class Layout implements \JsonSerializable
      * @param ActionFactory $actionFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $config, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
+    public function __construct($store, $log, $dispatcher, $config, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
         $this->config = $config;
         $this->permissionFactory = $permissionFactory;
@@ -2097,7 +2094,11 @@ class Layout implements \JsonSerializable
                 if ($this->status === ModuleWidget::$STATUS_INVALID
                     || ($options['exceptionOnEmptyRegion'] && $this->hasEmptyRegion())
                 ) {
+                    $this->getLog()->debug('xlfToDisk: publish failed for layoutId ' . $this->layoutId
+                        . ', status is ' . $this->status);
+
                     $this->audit($this->layoutId, 'Publish layout failed, rollback', ['layoutId' => $this->layoutId]);
+
                     throw new InvalidArgumentException(
                         sprintf(
                             __('There is an error with this Layout: %s'),

@@ -167,7 +167,7 @@ class ConnectorFactory extends BaseFactory
      */
     private function hydrate($row): Connector
     {
-        $connector = new Connector($this->getStore(), $this->getLog());
+        $connector = new Connector($this->getStore(), $this->getLog(), $this->getDispatcher());
         $connector->hydrate($row, [
             'intProperties' => ['isEnabled', 'isVisible']
         ]);

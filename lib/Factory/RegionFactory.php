@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -79,6 +79,7 @@ class RegionFactory extends BaseFactory
         return new Region(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this,
             $this->permissionFactory,
             $this->regionOptionFactory,

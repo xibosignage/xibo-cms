@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -225,6 +225,7 @@ class Playlist implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param PermissionFactory $permissionFactory
      * @param PlaylistFactory $playlistFactory
@@ -232,9 +233,9 @@ class Playlist implements \JsonSerializable
      * @param TagFactory $tagFactory
 
      */
-    public function __construct($store, $log, $config, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $config, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->config = $config;
         $this->permissionFactory = $permissionFactory;
