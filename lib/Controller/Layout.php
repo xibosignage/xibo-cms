@@ -2483,7 +2483,8 @@ class Layout extends Base
             'libraryLimit' => $libraryLimit,
             'libraryQuotaFull' => ($libraryLimit > 0 && $this->mediaService->libraryUsage() > $libraryLimit),
             'routeParser' => RouteContext::fromRequest($request)->getRouteParser(),
-            'mediaService' => $this->mediaService
+            'mediaService' => $this->mediaService,
+            'sanitizerService' => $this->getSanitizerService()
         ];
 
         $this->setNoOutput(true);

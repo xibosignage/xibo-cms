@@ -45,9 +45,16 @@
             var previewTranslations = {};
             // Translations we want always available
             {% autoescape "js" %}
-                previewTranslations.actionControllerTitle = "{{ "Action Controller"|trans }}";
+                previewTranslations.actionControllerTitle = "{{ "Webhook Controller"|trans }}";
                 previewTranslations.navigateToLayout = "{{ "Navigate to layout with code [layoutTag]?"|trans }}";
-                previewTranslations.emptyRegionMessage = "{{ "Empty Region"|trans }}"; 
+                previewTranslations.emptyRegionMessage = "{{ "Empty Region"|trans }}";
+                previewTranslations.next = "{{ "Next Item"|trans }}";
+                previewTranslations.previous = "{{ "Previous Item"|trans }}";
+                previewTranslations.navWidget = "{{ "Navigate to Widget"|trans }}";
+                previewTranslations.navLayout = "{{ "Navigate to Layout"|trans }}";
+                previewTranslations.widgetId = "{{ "Widget ID"|trans }}";
+                previewTranslations.layoutCode = "{{ "Layout Code"|trans }}";
+                previewTranslations.target = "{{ "Target"|trans }}";
             {% endautoescape %}
 
             (function($){

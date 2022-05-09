@@ -540,9 +540,10 @@ function XiboInitialise(scope) {
     });
 
     // Initialize tag with values function from xibo-forms.js
-    $(scope + " .tags-with-value").each(function() {
-        tagsWithValues($(this).closest("form").attr('id'));
-    });
+    // this needs to be initialised only once, otherwise some functions in it will be executed multiple times.
+    if ($(scope + " .tags-with-value").length > 0) {
+        tagsWithValues($(scope).find("form").attr('id'));
+    }
 
     $(scope + ' .XiboCommand').each(function () {
         // Get main container
@@ -3081,10 +3082,16 @@ function makePagedSelect(element, parent) {
                 var $element = element;
 
                 $.each(data.data, function(index, el) {
-                    results.push({
+                    var result = {
                         "id": el[$element.data("idProperty")],
                         "text": el[$element.data("textProperty")]
-                    });
+                    };
+
+                    if ($element.data("thumbnail") !== undefined) {
+                        result.thumbnail = el[$element.data("thumbnail")];
+                    }
+
+                    results.push(result);
                 });
 
                 var page = params.page || 1;
@@ -3097,6 +3104,18 @@ function makePagedSelect(element, parent) {
                     }
                 };
             }
+        },
+        templateResult: function(state) {
+            var stateText = '';
+
+            // Add thumbnail if available
+            if (state.thumbnail) {
+                stateText += "<span class='option-thumbnail mr-3'><img style='width: 100px; height: 60px; object-fit: cover;' src='" + state.thumbnail + "' /></span>";
+            }
+
+            // Add option text
+            stateText += "<span class='option-text'>" + state.text + "</span></span>";
+            return $(stateText);
         }
     });
 
@@ -3526,7 +3545,7 @@ function initJsTreeAjax(container, id, isForm, ttl)
                 localStorage.getItem("hideFolderTree") !== null &&
                 JSON.parse(localStorage.getItem("hideFolderTree")) !== $('#grid-folder-filter').is(":hidden")
             ) {
-                $('#folder-tree-select-folder-button').click();
+                adjustDatatableSize(false);
             }
             // if node has children and User does not have suitable permissions, disable the node
             // If node does NOT have children and User does not have suitable permissions, hide the node completely
@@ -3654,20 +3673,19 @@ function initJsTreeAjax(container, id, isForm, ttl)
                 folderIdInputSelector = '#formFolderId';
             }
 
+            if (selectedFolderId !== undefined && isForm === false) {
+                $("#breadcrumbs").text($(container).jstree().get_path(node[0], ' > ')).hide();
+                $('#folder-tree-clear-selection-button').prop('checked', false)
+            }
+
             // on grids, depending on the selected folder, we need to handle the breadcrumbs
             if ($(folderIdInputSelector).val() != selectedFolderId && isForm === false) {
-
                 if (selectedFolderId !== undefined) {
-                    $("#breadcrumbs").text($(container).jstree().get_path(node[0], ' > ')).hide();
-
-                    $('#folder-tree-clear-selection-button').prop('checked', false)
+                    $(folderIdInputSelector).val(selectedFolderId).trigger('change');
                 } else {
                     $("#breadcrumbs").text('');
                     $('#folder-tree-clear-selection-button').prop('checked', true)
                 }
-
-                $(folderIdInputSelector).val(selectedFolderId);
-                $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
             }
 
             // on form we always want to show the breadcrumbs to current and selected folder
@@ -3677,7 +3695,6 @@ function initJsTreeAjax(container, id, isForm, ttl)
                     $('#selectedFormFolder').text($(container).jstree().get_path(node[0], ' > '));
                 }
             }
-
         });
 
         // on froms that have more than one modal active, this is needed to not confuse bootstrap
@@ -3691,47 +3708,47 @@ function initJsTreeAjax(container, id, isForm, ttl)
 
         // this handler for the search everywhere checkbox on grid pages
         $("#folder-tree-clear-selection-button").on('click', function() {
-
             if ($("#folder-tree-clear-selection-button").is(':checked')) {
-                $(this).prop('checked', true);
                 $(container).jstree("deselect_all");
+                $('.XiboFilter').find('#folderId').val(null).trigger('change');
             } else {
-                $(this).prop('checked', false);
                 $(container).jstree('select_node', 1)
             }
-
         });
 
         // this is handler for the hamburger button on grid pages
-        $('#folder-tree-select-folder-button').off("click").on('click', function() {
+        $('#folder-tree-select-folder-button').off("click").on('click', adjustDatatableSize)
+    }
+}
 
-            // Shrink table to ease animation
-            if($('#grid-folder-filter').is(":hidden")) {
-                $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
+function adjustDatatableSize (reload) {
+    reload = (typeof reload == 'undefined') ? true : reload;
+    // Shrink table to ease animation
+    if($('#grid-folder-filter').is(":hidden")) {
+        $('#datatable-container').addClass('col-sm-10').removeClass('col-sm-12');
+    }
+
+    $('#grid-folder-filter').toggle('fast', function() {
+        if ($(this).is(":hidden")) {
+            if (!$("#folder-tree-clear-selection-button").is(':checked')) {
+                // if folder tree is hidden and select everywhere is not checked, then show breadcrumbs
+                $("#breadcrumbs").show('slow');
             }
 
-            $('#grid-folder-filter').toggle('fast', function() {
-                if ($(this).is(":hidden")) {
+            // if the folder tree is hidden, then make it so datatable can take whole available width
+            $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
+        } else {
+            // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
+            $("#breadcrumbs").hide('slow');
+        }
 
-                    if (!$("#folder-tree-clear-selection-button").is(':checked')) {
-                        // if folder tree is hidden and select everywhere is not checked, then show breadcrumbs
-                        $("#breadcrumbs").show('slow');
-                    }
-
-                    // if the folder tree is hidden, then make it so datatable can take whole available width
-                    $('#datatable-container').addClass('col-sm-12').removeClass('col-sm-10');
-                    $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
-                } else {
-                    // if the tree folder view is visible, then hide breadcrumbs and adjust col-sm class on datatable
-                    $("#breadcrumbs").hide('slow');
-                    $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
-                }
-                // set current state of the folder tree visibility to local storage,
-                // this is then used to hide/show the tree when User navigates to a different grid or reloads this page
-                localStorage.setItem("hideFolderTree", JSON.stringify($('#grid-folder-filter').is(":hidden")));
-            });
-        })
-    }
+        if (reload) {
+            $(this).closest(".XiboGrid").find("table.dataTable").DataTable().ajax.reload();
+        }
+        // set current state of the folder tree visibility to local storage,
+        // this is then used to hide/show the tree when User navigates to a different grid or reloads this page
+        localStorage.setItem("hideFolderTree", JSON.stringify($('#grid-folder-filter').is(":hidden")));
+    });
 }
 
 function disableFolders () {

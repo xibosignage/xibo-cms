@@ -205,6 +205,9 @@ Drawer.prototype.render = function() {
         e.stopPropagation();
         lD.selectObject($(this));
     });
+
+    // Set drawer number of rows in grid to the number of regions in the layout ( with max of 3 rows )
+    this.DOMObject.find('#actions-drawer-widgets').css('grid-template-rows', 'repeat(' + Math.clamp(lD.layout.numRegions, 1, 3) + ', 1fr)');
     
     if(lD.readOnlyMode === false) {
         const $searchInput = this.DOMObject.find('#inputSearch');

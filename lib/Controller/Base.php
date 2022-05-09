@@ -151,8 +151,13 @@ class Base
      */
     protected function getSanitizer($array)
     {
-        $sanitizerService = $this->baseDependenciesService->getSanitizer();
+        $sanitizerService = $this->getSanitizerService();
         return $sanitizerService->getSanitizer($array);
+    }
+
+    public function getSanitizerService(): SanitizerService
+    {
+        return $this->baseDependenciesService->getSanitizer();
     }
 
     /**
