@@ -10320,6 +10320,13 @@
                         "type": "integer"
                     },
                     {
+                        "name": "excludeWeekendDays",
+                        "in": "formData",
+                        "description": "A flag (0, 1), Exclude Saturdays and Sundays from the view?",
+                        "required": false,
+                        "type": "integer"
+                    },
+                    {
                         "name": "updateInterval",
                         "in": "formData",
                         "description": "Update interval in minutes",
