@@ -27,7 +27,7 @@
                             <div class="tab-content">
                                 <div class="tab-pane active" id="general-filter" role="tabpanel">
                                     {% set title %}{% trans "ID" %}{% endset %}
-                                    {{ inline.number("layoutId", title) }}
+                                    {{ inline.number("campaignId", title) }}
 
                                     <div class="form-group mr-1 mb-1">
                                         <label class="control-label mr-1" title="" for="layout" accesskey="">{% trans "Name" %}</label>
@@ -107,6 +107,9 @@
                                         {% set title %}{% trans "Media" %}{% endset %}
                                         {{ inline.input("mediaLike", title) }}
                                     {% endif %}
+
+                                    {% set title %}{% trans "Layout ID" %}{% endset %}
+                                    {{ inline.number("layoutId", title) }}
                                 </div>
                             </div>
                         </form>
@@ -146,6 +149,7 @@
                                         <th>{% trans "Stats?" %}</th>
                                         <th>{% trans "Created" %}</th>
                                         <th>{% trans "Modified" %}</th>
+                                        <th>{% trans "Layout ID" %}</th>
                                         <th>{% trans "Code" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
@@ -171,8 +175,8 @@
             {% endif %}
 
             table = $("#layouts").DataTable({
-                "language": dataTablesLanguage,
-                "lengthMenu": [10, 25, 50, 100, 250, 500],
+                language: dataTablesLanguage,
+                lengthMenu: [10, 25, 50, 100, 250, 500],
                 dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
@@ -183,15 +187,15 @@
                 filter: false,
                 searchDelay: 3000,
                 dataType: 'json',
-                "order": [[1, "asc"]],
+                order: [[1, "asc"]],
                 ajax: {
                     url: "{{ url_for("layout.search") }}",
-                    "data": function (d) {
+                    data: function (d) {
                         $.extend(d, $("#layouts").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
                 },
-                "columns": [
-                    {"data": "layoutId", responsivePriority: 2},
+                columns: [
+                    {"data": "campaignId", responsivePriority: 1},
                     {
                         "data": "layout",
                         responsivePriority: 2,
@@ -309,10 +313,15 @@
                         "visible": false
                     },
                     {
-                        "data": "modifiedDt",
+                        data: "modifiedDt",
                         responsivePriority: 6,
-                        "render": dataTableDateFromIso,
-                        "visible": false
+                        render: dataTableDateFromIso,
+                        visible: true
+                    },
+                    {
+                      data: "layoutId",
+                      visible: false,
+                      responsivePriority: 4
                     },
                     {"data": "code", "visible":false, responsivePriority: 4},
                     {
