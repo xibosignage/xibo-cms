@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -157,7 +157,7 @@ abstract class ModuleWidget implements ModuleInterface
      */
     private $sanitizerService;
 
-    /** @var  EventDispatcherInterface */
+    /** @var EventDispatcherInterface */
     private $dispatcher;
 
     /** @var ModuleFactory  */
@@ -248,15 +248,37 @@ abstract class ModuleWidget implements ModuleInterface
      * @param NotificationFactory $notificationFactory
      * @param Twig $view
      * @param HttpCacheProvider $cacheProvider
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $eventDispatcher
      */
-    public function __construct($store, $pool, $log, $config, $sanitizer, $moduleFactory, $mediaFactory, $dataSetFactory, $dataSetColumnFactory, $transitionFactory, $displayFactory, $commandFactory, $scheduleFactory, $permissionFactory, $userGroupFactory, $playlistFactory, $menuBoardFactory, $menuBoardCategoryFactory, $notificationFactory, Twig $view, HttpCacheProvider $cacheProvider)
-    {
+    public function __construct(
+        $store,
+        $pool,
+        $log,
+        $config,
+        $sanitizer,
+        $moduleFactory,
+        $mediaFactory,
+        $dataSetFactory,
+        $dataSetColumnFactory,
+        $transitionFactory,
+        $displayFactory,
+        $commandFactory,
+        $scheduleFactory,
+        $permissionFactory,
+        $userGroupFactory,
+        $playlistFactory,
+        $menuBoardFactory,
+        $menuBoardCategoryFactory,
+        $notificationFactory,
+        Twig $view,
+        HttpCacheProvider $cacheProvider,
+        EventDispatcherInterface $eventDispatcher
+    ) {
         $this->store = $store;
         $this->pool = $pool;
         $this->logService = $log;
         $this->configService = $config;
         $this->sanitizerService = $sanitizer;
-
         $this->moduleFactory = $moduleFactory;
         $this->mediaFactory = $mediaFactory;
         $this->dataSetFactory = $dataSetFactory;
@@ -273,6 +295,7 @@ abstract class ModuleWidget implements ModuleInterface
         $this->notificationFactory = $notificationFactory;
         $this->view = $view;
         $this->cacheProvider = $cacheProvider;
+        $this->dispatcher = $eventDispatcher;
 
         $this->init();
     }
@@ -348,14 +371,14 @@ abstract class ModuleWidget implements ModuleInterface
     }
 
     /**
-     * @return EventDispatcher
+     * @return EventDispatcherInterface
      */
-    public function getDispatcher(): EventDispatcher
+    public function getDispatcher(): EventDispatcherInterface
     {
         if ($this->dispatcher === null) {
+            $this->getLog()->error('getDispatcher: No dispatcher found, returning an empty one');
             $this->dispatcher = new EventDispatcher();
         }
-
         return $this->dispatcher;
     }
 

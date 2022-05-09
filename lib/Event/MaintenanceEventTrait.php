@@ -19,44 +19,28 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
+namespace Xibo\Event;
 
-
-namespace Xibo\Service;
-
-
-use Xibo\Entity\Display;
-use Xibo\Support\Exception\GeneralException;
-use Xibo\XMR\PlayerAction;
-
-/**
- * Interface PlayerActionServiceInterface
- * @package Xibo\Service
- */
-interface PlayerActionServiceInterface
+trait MaintenanceEventTrait
 {
-    /**
-     * PlayerActionHelper constructor.
-     * @param ConfigServiceInterface
-     * @param LogServiceInterface
-     * @param bool
-     */
-    public function __construct($config, $log, $triggerPlayerActions);
+    private $messages = [];
 
     /**
-     * @param Display[]|Display $displays
-     * @param PlayerAction $action
-     * @throws GeneralException
+     * Add a message to be recorded in the run log
+     * @param string $message
+     * @return \Xibo\Event\Event|\Xibo\Event\MaintenanceEventTrait
      */
-    public function sendAction($displays, $action);
+    public function addMessage(string $message)
+    {
+        $this->messages[] = $message;
+        return $this;
+    }
 
     /**
-     * Get the queue
+     * @return string[]
      */
-    public function getQueue(): array;
-
-    /**
-     * Process the Queue of Actions
-     * @throws GeneralException
-     */
-    public function processQueue();
+    public function getMessages(): array
+    {
+        return $this->messages;
+    }
 }

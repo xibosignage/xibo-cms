@@ -24,7 +24,7 @@
 namespace Xibo\XTR;
 use Carbon\Carbon;
 use Xibo\Controller\Display;
-use Xibo\Controller\Library;
+use Xibo\Event\MaintenanceRegularEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\ModuleFactory;
@@ -111,6 +111,13 @@ class MaintenanceRegularTask implements TaskInterface
         $this->checkOverRequestedFiles();
 
         $this->publishLayouts();
+
+        // Dispatch an event so that consumers can hook into regular maintenance.
+        $event = new MaintenanceRegularEvent();
+        $this->getDispatcher()->dispatch($event, MaintenanceRegularEvent::$NAME);
+        foreach ($event->getMessages() as $message) {
+            $this->appendRunMessage($message);
+        }
     }
 
     /**

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -96,6 +96,7 @@ trait EntityTrait
     public function getDispatcher(): EventDispatcher
     {
         if ($this->dispatcher === null) {
+            $this->getLog()->error('getDispatcher: No dispatcher found, returning an empty one');
             $this->dispatcher = new EventDispatcher();
         }
 

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -90,6 +90,8 @@ $container->set('name', 'web');
 // Middleware (onion, outside inwards and then out again - i.e. the last one is first and last);
 //
 $app->add(new \Xibo\Middleware\Actions($app));
+$app->add(new \Xibo\Middleware\ConnectorMiddleware($app));
+$app->add(new \Xibo\Middleware\ListenersMiddleware($app));
 $app->add(new \Xibo\Middleware\Theme($app));
 $app->add(new \Xibo\Middleware\CsrfGuard($app));
 

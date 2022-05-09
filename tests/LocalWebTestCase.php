@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -139,6 +139,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
         \Xibo\Middleware\State::setState($app, $this->createRequest('GET', '/'));
 
         // Setting Middleware
+        $app->add(new \Xibo\Middleware\ListenersMiddleware($app));
         $app->add(new TestAuthMiddleware($app));
         $app->add(new State($app));
         $app->add($twigMiddleware);
@@ -447,20 +448,19 @@ class LocalWebTestCase extends PHPUnit_TestCase
     }
 
     /**
-     * This function is using MockPlayerActionService, which returns an array of displayId on processQueue
-     *
+     * Get the queue of actions.
      * @return int[]
-     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function getPlayerActionQueue()
     {
-        /** @var MockPlayerActionService $service */
+        /** @var \Xibo\Service\PlayerActionServiceInterface $service */
         $service = $this->app->getContainer()->get('playerActionService');
 
-        if ($service === null)
-            $this->fail('Test hasnt used the client and therefore cannot determine XMR activity');
+        if ($service === null) {
+            $this->fail('Test has not used the client and therefore cannot determine XMR activity');
+        }
 
-        return $service->processQueue();
+        return $service->getQueue();
     }
 
     /**

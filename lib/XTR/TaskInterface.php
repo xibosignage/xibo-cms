@@ -89,6 +89,12 @@ interface TaskInterface
     public function setPool($pool);
 
     /**
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
+     * @return $this
+     */
+    public function setDispatcher($dispatcher);
+
+    /**
      * @param User $user
      * @return $this
      */

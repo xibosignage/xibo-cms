@@ -99,10 +99,14 @@ class Connector extends Base
         }
         $interface = $this->connectorFactory->create($connector);
 
+        // Are some settings provided?
+        $platformProvidesSettings = count($this->getConfig()->getConnectorSettings($interface->getSourceName())) > 0;
+
         $this->getState()->template = $interface->getSettingsFormTwig() ?: 'connector-form-edit';
         $this->getState()->setData([
             'connector' => $connector,
-            'interface' => $interface
+            'interface' => $interface,
+            'platformProvidesSettings' => $platformProvidesSettings
         ]);
 
         return $this->render($request, $response);

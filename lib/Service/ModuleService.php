@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,6 +24,7 @@
 namespace Xibo\Service;
 
 use Stash\Interfaces\PoolInterface;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Helper\HttpCacheProvider;
 use Xibo\Helper\SanitizerService;
 use Xibo\Storage\StorageServiceInterface;
@@ -61,16 +62,20 @@ class ModuleService implements ModuleServiceInterface
      */
     private $sanitizerService;
 
+    /** @var EventDispatcherInterface */
+    private $eventDispatcher;
+
     /**
      * @inheritdoc
      */
-    public function __construct($store, $pool, $log, $config, $sanitizer)
+    public function __construct($store, $pool, $log, $config, $sanitizer, $eventDispatcher)
     {
         $this->store = $store;
         $this->pool = $pool;
         $this->logService = $log;
         $this->configService = $config;
         $this->sanitizerService = $sanitizer;
+        $this->eventDispatcher = $eventDispatcher;
     }
 
     /**
@@ -168,7 +173,8 @@ class ModuleService implements ModuleServiceInterface
             $menuBoardCategoryFactory,
             $notificationFactory,
             $view,
-            $cacheProvider
+            $cacheProvider,
+            $this->eventDispatcher
         );
     }
 }

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1483,7 +1483,14 @@ class Layout implements \JsonSerializable
 
                 if ($region->isDrawer === 0) {
                     // Region duration
-                    $region->duration = $region->duration + $widget->calculatedDuration;
+                    // If we have a cycle playback duration, we use that, otherwise we use the normal calculated
+                    // duration.
+                    $tempCyclePlaybackAverageDuration = $widget->tempCyclePlaybackAverageDuration ?? 0;
+                    if ($tempCyclePlaybackAverageDuration) {
+                        $region->duration = $region->duration + $tempCyclePlaybackAverageDuration;
+                    } else {
+                        $region->duration = $region->duration + $widget->calculatedDuration;
+                    }
 
                     // We also want to add any transition OUT duration
                     // only the OUT duration because IN durations do not get added to the widget duration by the player

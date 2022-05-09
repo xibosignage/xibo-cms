@@ -40,6 +40,7 @@ use Xibo\Widget\ModuleWidget;
  *
  * @SWG\Definition()
  * @property int $isValid Is this Widget valid
+ * @property double $tempCyclePlaybackAverageDuration The average duration if cycle playback is enabled.
  */
 class Widget implements \JsonSerializable
 {

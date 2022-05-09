@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -26,6 +26,7 @@ use GuzzleHttp\Client;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Stash\Interfaces\PoolInterface;
+use Xibo\Service\JwtServiceInterface;
 
 /**
  * Connector trait to assit with basic scaffolding and utility methods.
@@ -43,7 +44,13 @@ trait ConnectorTrait
     private $pool;
 
     /** @var array */
-    private $httpOptions;
+    private $httpOptions = [];
+
+    /** @var array */
+    private $keys = [];
+
+    /** @var JwtServiceInterface */
+    private $jwtService;
 
     /**
      * @param \Psr\Log\LoggerInterface $logger
@@ -118,6 +125,17 @@ trait ConnectorTrait
     {
         $this->httpOptions = $options;
         return $this;
+    }
+
+    public function useJwtService($jwtService): ConnectorInterface
+    {
+        $this->jwtService = $jwtService;
+        return $this;
+    }
+
+    protected function getJwtService(): JwtServiceInterface
+    {
+        return $this->jwtService;
     }
 
     /**

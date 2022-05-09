@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,10 +28,12 @@
     <h3>Pixabay <small> - Stunning free images & royalty free stock</small></h3>
     <p>Images and Videos are available under the <a href="https://pixabay.com/service/license/" target="_blank">Pixabay license</a>.</p>
 
-    <p>An API key is needed to enable this connector. Sign up for a Pixabay account and then use the API key shown
-    on the <a href="https://pixabay.com/api/docs/" target="_blank">documentation</a> page.</p>
+    {% if not platformProvidesSettings %}
+        <p>An API key is needed to enable this connector. Sign up for a Pixabay account and then use the API key shown
+        on the <a href="https://pixabay.com/api/docs/" target="_blank">documentation</a> page.</p>
 
-    {% set title %}{% trans "API Key" %}{% endset %}
-    {% set helpText %}{% trans "Enter your API Key from Pixabay." %}{% endset %}
-    {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
+        {% set title %}{% trans "API Key" %}{% endset %}
+        {% set helpText %}{% trans "Enter your API Key from Pixabay." %}{% endset %}
+        {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
+    {% endif %}
 {% endblock %}
