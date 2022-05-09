@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -688,6 +688,17 @@ class Module extends Base
             'loadWidgets' => true,
             'loadTags' => false
         ]);
+
+        // Is this Playlist the drawer?
+        if ($playlist->isRegionPlaylist() && $type === 'subplaylist') {
+            $region = $this->regionFactory->getById($playlist->regionId);
+            if ($region->isDrawer == 1) {
+                throw new InvalidArgumentException(
+                    __('Sorry you cannot add a sub-playlist to the Drawer'),
+                    'type'
+                );
+            }
+        }
 
         // Create a module to use
         $module = $this->moduleFactory->createForWidget($type, null, $this->getUser()->userId, $id);
