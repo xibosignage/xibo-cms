@@ -292,7 +292,7 @@ class Soap
     public function getDispatcher(): EventDispatcher
     {
         if ($this->dispatcher === null) {
-            $this->getLog()->error('getDispatcher: No dispatcher found, returning an empty one');
+            $this->getLog()->error('getDispatcher: [soap] No dispatcher found, returning an empty one');
             $this->dispatcher = new EventDispatcher();
         }
 

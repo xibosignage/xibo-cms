@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -112,9 +112,9 @@ class Action implements \JsonSerializable
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
      */
-    public function __construct($store, $log)
+    public function __construct($store, $log, $dispatcher)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
     }
 
     public function __clone()

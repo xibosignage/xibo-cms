@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,6 +27,7 @@ use Slim\Http\ServerRequest as Request;
 use Slim\Routing\RouteContext;
 use Slim\Views\Twig;
 use Symfony\Component\EventDispatcher\EventDispatcher;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Twig\Error\LoaderError;
 use Twig\Error\RuntimeError;
 use Twig\Error\SyntaxError;
@@ -186,26 +187,11 @@ class Base
     }
 
     /**
-     * @return EventDispatcher
+     * @return EventDispatcherInterface
      */
-    public function getDispatcher(): EventDispatcher
+    public function getDispatcher(): EventDispatcherInterface
     {
-        if ($this->dispatcher === null) {
-            $this->getLog()->error('getDispatcher: No dispatcher found, returning an empty one');
-            $this->dispatcher = new EventDispatcher();
-        }
-
-        return $this->dispatcher;
-    }
-
-    /**
-     * @param EventDispatcher $dispatcher
-     * @return EventDispatcher
-     */
-    public function useDispatcher(EventDispatcher $dispatcher): EventDispatcher
-    {
-        $this->dispatcher = $dispatcher;
-        return $this->dispatcher;
+        return $this->baseDependenciesService->getDispatcher();
     }
 
     /**

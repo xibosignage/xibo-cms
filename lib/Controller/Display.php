@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -564,7 +564,6 @@ class Display extends Base
             $display->bandwidthLimitFormatted = ByteFormatter::format($display->bandwidthLimit * 1024);
 
             // Current layout from cache
-            $display->setDispatcher($this->getDispatcher());
             $display->getCurrentLayoutId($this->pool, $this->layoutFactory);
 
             if ($this->isApi($request)) {
@@ -1371,7 +1370,6 @@ class Display extends Base
             $display->xmrPubKey = null;
         }
 
-        $display->setDispatcher($this->getDispatcher());
         $display->save();
 
         if ($this->isApi($request)) {
@@ -1426,7 +1424,6 @@ class Display extends Base
             throw new AccessDeniedException();
         }
 
-        $display->setDispatcher($this->getDispatcher());
         $display->delete();
 
         // Return

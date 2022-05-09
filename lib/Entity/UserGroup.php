@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -126,12 +126,13 @@ class UserGroup
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param UserGroupFactory $userGroupFactory
      * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $userGroupFactory, $userFactory)
+    public function __construct($store, $log, $dispatcher, $userGroupFactory, $userFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->userGroupFactory = $userGroupFactory;
         $this->userFactory = $userFactory;

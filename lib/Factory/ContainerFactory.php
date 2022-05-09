@@ -167,6 +167,7 @@ class ContainerFactory
                 return new User(
                     $c->get('store'),
                     $c->get('logService'),
+                    $c->get('dispatcher'),
                     $c->get('configService'),
                     $c->get('userFactory'),
                     $c->get('permissionFactory'),
@@ -237,7 +238,7 @@ class ContainerFactory
                 $controller->setHelp($c->get('helpService'));
                 $controller->setConfig($c->get('configService'));
                 $controller->setView($c->get('view'));
-
+                $controller->setDispatcher($c->get('dispatcher'));
                 return $controller;
             },
             'RepositoryBaseDependenciesService' => function (ContainerInterface $c) {
@@ -245,7 +246,7 @@ class ContainerFactory
                 $repository->setLogger($c->get('logService'));
                 $repository->setSanitizer($c->get('sanitizerService'));
                 $repository->setStore($c->get('store'));
-
+                $repository->setDispatcher($c->get('dispatcher'));
                 return $repository;
             },
             'dispatcher' => function (ContainerInterface $c) {

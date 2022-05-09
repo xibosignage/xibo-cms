@@ -45,6 +45,7 @@
 	"prefer-stable": true,
   "require": {
     "php": ">=7.2.9",
+    "ext-dom": "*",
     "ext-pdo": "*",
     "ext-json": "*",
     "ext-soap": "*",

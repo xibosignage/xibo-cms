@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -114,13 +114,14 @@ class DisplayProfile implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param CommandFactory $commandFactory
      * @param DisplayProfileFactory $displayProfileFactory
      */
-    public function __construct($store, $log, $config, $commandFactory, $displayProfileFactory)
+    public function __construct($store, $log, $dispatcher, $config, $commandFactory, $displayProfileFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->configService = $config;
         $this->commandFactory = $commandFactory;

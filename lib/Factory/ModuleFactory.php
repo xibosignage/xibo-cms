@@ -188,7 +188,7 @@ class ModuleFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Module($this->getStore(), $this->getLog());
+        return new Module($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**

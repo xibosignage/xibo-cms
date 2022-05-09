@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -149,14 +149,15 @@ class Campaign implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param PermissionFactory $permissionFactory
      * @param ScheduleFactory $scheduleFactory
      * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param TagFactory $tagFactory
      */
-    public function __construct($store, $log, $permissionFactory, $scheduleFactory, $displayNotifyService, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $permissionFactory, $scheduleFactory, $displayNotifyService, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->permissionFactory = $permissionFactory;
         $this->scheduleFactory = $scheduleFactory;
         $this->displayNotifyService = $displayNotifyService;
