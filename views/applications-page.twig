@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -100,7 +100,8 @@
 
         var table;
         $(document).ready(function() {
-            table = $("#applications").DataTable({ "language": dataTablesLanguage,
+            table = $("#applications").DataTable({
+                language: dataTablesLanguage,
                 dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
@@ -158,15 +159,11 @@
         }
 
         function connectorFormSubmit() {
-            $('#connectorEditForm').submit(function(e) {
-              e.preventDefault();
-              XiboFormSubmit(this, e, function() {
-                loadConnectors();
-              });
-              return false;
-            }).submit();
+          XiboFormSubmit($('#connectorEditForm'), null, function() {
+            loadConnectors();
+          });
         }
-        
+
         function copyFromSecretInput(dialog) {
             // Initialize the tooltip.
             $('#copy-button').tooltip();

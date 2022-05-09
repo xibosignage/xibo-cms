@@ -44,10 +44,10 @@ trait ConnectorTrait
     private $pool;
 
     /** @var array */
-    private $httpOptions;
+    private $httpOptions = [];
 
     /** @var array */
-    private $keys;
+    private $keys = [];
 
     /** @var JwtServiceInterface */
     private $jwtService;

@@ -51,12 +51,8 @@ class XmdsConnectorFileEvent extends Event
     public function getResponse(): ResponseInterface
     {
         if ($this->response === null) {
-            $onePx = 'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
             $psr17Factory = new Psr17Factory();
-            $this->response = $psr17Factory
-                ->createResponse(200, 'OK')
-                ->withBody($psr17Factory->createStream($onePx))
-                ->withHeader('Content-Length', strlen($onePx));
+            $this->response = $psr17Factory->createResponse(404, 'Not Found');
         }
         return $this->response;
     }

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -91,7 +91,9 @@ class Factories
             },
             'connectorFactory' => function (ContainerInterface $c) {
                 $repository = new \Xibo\Factory\ConnectorFactory(
-                    $c->get('pool')
+                    $c->get('pool'),
+                    $c->get('configService'),
+                    $c->get('jwtService')
                 );
                 $repository->useBaseDependenciesService($c->get('RepositoryBaseDependenciesService'));
                 return $repository;
