@@ -58,7 +58,8 @@
                     { name: "data-text-property", value: "name" },
                     { name: "data-filter-options", value: '{"onlyMenuBoardAllowed":1}' },
                     { name: "data-allow-clear", value: "true"},
-                    { name: "data-placeholder", value: "Select an Image or Video"}
+                    { name: "data-placeholder", value: "Select an Image or Video"},
+                    { name: "data-thumbnail", value: "thumbnail"}
                 ] %}
                 {{ forms.dropdown("mediaId", "single", title, menuBoardCategory.mediaId, [media], "mediaId", "name", helpText, "pagedSelect", "", "d", "", attributes) }}
             </form>

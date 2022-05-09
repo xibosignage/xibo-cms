@@ -486,7 +486,6 @@ class MenuBoard extends ModuleWidget
             ->appendOptions([
                 'type' => $this->getModuleType(),
                 'duration' => $duration,
-                'maxPages' => $table['pages'],
                 'originalWidth' => $this->region->width,
                 'originalHeight' => $this->region->height,
                 'widgetDesignWidth' => $widgetOriginalWidth,
@@ -523,7 +522,6 @@ class MenuBoard extends ModuleWidget
         }
 
         $menu = '';
-        $maxPages = 1;
 
         try {
             // Main menu container
@@ -542,7 +540,7 @@ class MenuBoard extends ModuleWidget
             // Menu categories container
             $menu .= "<div class='menu-board-categories-container' ";
             if ($gridTemplate) {
-                $menu .= "style='display: grid; grid-template: " . $gridTemplate . ";'";
+                $menu .= "style='display: grid; grid-template: " . $gridTemplate . "; flex-grow: 1; overflow: hidden;'";
             }
             if ($templateFlex) {
                 $menu .= "style='" . $templateFlex . "'";
@@ -596,25 +594,11 @@ class MenuBoard extends ModuleWidget
 
                     $menu .= '</div>';
 
-                    // Get max items per category/zone
-                    $maxItems = array_key_exists('max-items', $templateInfo) ? $templateInfo['max-items'][$i] : -1;
-
-                    // Create pages if there are more elements than space for them
-                    $createPages = $maxItems != -1 && sizeof($categoryProductsData) > $maxItems;
-                    $categoryPages = 0;
-
                     // Products
-                    $menu .= '<div class="menu-board-products-container" data-max-items="' . $maxItems . '">';
+                    $menu .= '<div class="menu-board-products-container">';
 
                     // Create products
                     foreach ($categoryProductsData as $key => $categoryProduct) {
-                        // Create product page
-                        if ($createPages && $key % $maxItems == 0) {
-                            $menu .= '<div class="menu-board-product-page">';
-                            $categoryPages++;
-                            $toClosePage = true;
-                        }
-
                         // depending on configured options, we will want to assign different css classes to the MenuBoardProductContainer
                         if ($categoryProduct->availability === 0 && $this->getOption('showUnavailable') == 0) {
                             continue;
@@ -680,23 +664,6 @@ class MenuBoard extends ModuleWidget
 
                         // Close menu-board-product
                         $menu .= '</div>';
-
-                        // If the next item will create a new page, close current
-                        if ($createPages && $toClosePage && ($key + 1) % $maxItems == 0) {
-                            $menu .= '</div>';
-                            $toClosePage = false;
-                        }
-                    }
-
-                    // Save max pages based on this category total pages
-                    if ($categoryPages > $maxPages) {
-                        $maxPages = $categoryPages;
-                    }
-
-                    // If there are pages to be closed...
-                    if ($createPages && $toClosePage) {
-                        $menu .= '</div>';
-                        $toClosePage = false;
                     }
 
                     // Close menu-board-products-container
@@ -714,8 +681,7 @@ class MenuBoard extends ModuleWidget
             $menu .= '</div>';
 
             return [
-                'html' => $menu,
-                'pages' => $maxPages
+                'html' => $menu
             ];
         } catch (NotFoundException $e) {
             $this->getLog()->info(sprintf('Request failed for MenuBoard id=%d. Widget=%d. Due to %s', $menuId, $this->getWidgetId(), $e->getMessage()));

@@ -3082,10 +3082,16 @@ function makePagedSelect(element, parent) {
                 var $element = element;
 
                 $.each(data.data, function(index, el) {
-                    results.push({
+                    var result = {
                         "id": el[$element.data("idProperty")],
                         "text": el[$element.data("textProperty")]
-                    });
+                    };
+
+                    if ($element.data("thumbnail") !== undefined) {
+                        result.thumbnail = el[$element.data("thumbnail")];
+                    }
+
+                    results.push(result);
                 });
 
                 var page = params.page || 1;
@@ -3098,6 +3104,18 @@ function makePagedSelect(element, parent) {
                     }
                 };
             }
+        },
+        templateResult: function(state) {
+            var stateText = '';
+
+            // Add thumbnail if available
+            if (state.thumbnail) {
+                stateText += "<span class='option-thumbnail mr-3'><img style='width: 100px; height: 60px; object-fit: cover;' src='" + state.thumbnail + "' /></span>";
+            }
+
+            // Add option text
+            stateText += "<span class='option-text'>" + state.text + "</span></span>";
+            return $(stateText);
         }
     });
 
