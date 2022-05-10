@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -184,9 +184,9 @@ class Region implements \JsonSerializable
      * @param PlaylistFactory $playlistFactory
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory, $campaignFactory)
+    public function __construct($store, $log, $dispatcher, $regionFactory, $permissionFactory, $regionOptionFactory, $playlistFactory, $actionFactory, $campaignFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->regionFactory = $regionFactory;
         $this->permissionFactory = $permissionFactory;
         $this->regionOptionFactory = $regionOptionFactory;

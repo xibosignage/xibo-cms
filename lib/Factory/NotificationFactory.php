@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -60,7 +60,13 @@ class NotificationFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Notification($this->getStore(), $this->getLog(), $this->userGroupFactory, $this->displayGroupFactory);
+        return new Notification(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this->userGroupFactory,
+            $this->displayGroupFactory
+        );
     }
 
     /**

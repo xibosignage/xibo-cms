@@ -85,6 +85,7 @@ jQuery.fn.extend({
 
     function applyStyleOptions() {
       $('#content').toggleClass('hide-header', options.showHeader != '1');
+      $('#content').toggleClass('hide-weekend', options.excludeWeekendDays === '1');
       $(':root').css('font-size', DEFAULT_FONT_SIZE * DEFAULT_FONT_SCALE);
       options.mainBackgroundColor && $(':root').css('--main-background-color', options.mainBackgroundColor);
       options.gridColor && $(':root').css('--grid-color', options.gridColor);

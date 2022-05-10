@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -83,7 +83,13 @@ class ApplicationFactory extends BaseFactory implements ClientRepositoryInterfac
             throw new \RuntimeException('Missing dependency: ApplicationScopeFactory');
         }
 
-        return new Application($this->getStore(), $this->getLog(), $this->applicationRedirectUriFactory, $this->applicationScopeFactory);
+        return new Application(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this->applicationRedirectUriFactory,
+            $this->applicationScopeFactory
+        );
     }
 
     /**

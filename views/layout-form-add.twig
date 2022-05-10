@@ -23,6 +23,7 @@
 
 {% extends "form-base.twig" %}
 {% import "forms.twig" as forms %}
+{% import "inline.twig" as inline %}
 
 {% block formTitle %}
     {% trans "Add Layout" %}
@@ -45,29 +46,42 @@
                     </div>
                 </div>
             </div>
-            <form id="layoutAddForm" class="stepwizard-form form-horizontal" method="post"
-                  action="{{ url_for("layout.add") }}"
-                  data-redirect="{{ url_for("layout.designer", {id: ':id'}) }}"
-                  data-gettag="{{ url_for("tag.getByName") }}"
-                  data-help-url="{{ help }}"
-                >
-                {{ forms.hidden("layoutId", "0|blank") }}
-                {{ forms.hidden("source") }}
-                {{ forms.hidden("download") }}
+            <div class="panel panel-default stepper-panel" id="layout-create-step-1" data-next="layout-create-step-2">
+                <div class="panel-heading">
+                    <div class="XiboFilter card mb-3 bg-light">
+                        <div class="card-body">
+                            <form id="layout-add-templates-filter" class="form-inline">
+                                {{ inline.input("template", "Template"|trans) }}
 
-                <div class="panel panel-default stepper-panel" id="layout-create-step-1" data-next="layout-create-step-2">
-                    <div class="panel-heading">
-                        <p>{{ "Please select one of the options below."|trans }}</p>
-                    </div>
-                    <div class="panel-body" style="overflow-y: scroll; height: 65vh;">
-                        <div id="layout-add-templates" class="row"></div>
-                    </div>
-                    <div class="panel-footer">
-                        <button class="btn btn-outline-primary float-right mt-2" disabled id="layout-add-templates-more">{{ "More"|trans }}</button>
-                        <div class="spinner-grow d-none float-right mt-2 mr-2" role="status"><span class="sr-only">{{ "Loading..."|trans }}</span></div>
+                                {% set options = [
+                                    { id: "both", name: "All"|trans },
+                                    { id: "local", name: "Local"|trans },
+                                    { id: "remote", name: "Remote"|trans }
+                                ] %}
+                                {{ inline.dropdown("provider", "single", "From", "both", options, "id", "name") }}
+                            </form>
+                        </div>
                     </div>
                 </div>
-                <div class="panel panel-default stepper-panel" style="display:none;" id="layout-create-step-2" data-next="finished">
+                <div class="panel-body" style="overflow-y: scroll; height: 65vh;">
+                    <p>{{ "Please select one of the options below."|trans }}</p>
+                    <div id="layout-add-templates" class="row"></div>
+                </div>
+                <div class="panel-footer">
+                    <button class="btn btn-outline-primary float-right mt-2" disabled id="layout-add-templates-more">{{ "More"|trans }}</button>
+                    <div class="spinner-grow d-none float-right mt-2 mr-2" role="status"><span class="sr-only">{{ "Loading..."|trans }}</span></div>
+                </div>
+            </div>
+            <div class="panel panel-default stepper-panel" style="display:none;" id="layout-create-step-2" data-next="finished">
+                <form id="layoutAddForm" class="stepwizard-form form-horizontal" method="post"
+                      action="{{ url_for("layout.add") }}"
+                      data-redirect="{{ url_for("layout.designer", {id: ':id'}) }}"
+                      data-gettag="{{ url_for("tag.getByName") }}"
+                      data-help-url="{{ help }}"
+                >
+                    {{ forms.hidden("layoutId", "0|blank") }}
+                    {{ forms.hidden("source") }}
+                    {{ forms.hidden("download") }}
                     <div class="panel-body">
                         <ul class="nav nav-tabs" role="tablist">
                             <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{% trans "Organise" %}</span></a></li>
@@ -143,8 +157,8 @@
                             </div>
                         </div>
                     </div>
-                </div>
-            </form>
+                </form>
+            </div>
         </div>
     </div>
 {% endblock %}

@@ -172,6 +172,13 @@ class Calendar extends ModuleWidget
      *      required=false
      *   ),
      *  @SWG\Parameter(
+     *      name="excludeWeekendDays",
+     *      in="formData",
+     *      description="A flag (0, 1), Exclude Saturdays and Sundays from the view?",
+     *      type="integer",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="updateInterval",
      *      in="formData",
      *      description="Update interval in minutes",
@@ -545,6 +552,7 @@ class Calendar extends ModuleWidget
         $this->setOption('aditionalEventsTextColor', $sanitizedParams->getString('aditionalEventsTextColor'));
     
         $this->setOption('excludeAllDay', $sanitizedParams->getCheckbox('excludeAllDay'));
+        $this->setOption('excludeWeekendDays', $sanitizedParams->getCheckbox('excludeWeekendDays'));
         $this->setOption('updateInterval', $sanitizedParams->getInt('updateInterval', ['default' => 120]));
 
         $this->setOption('useEventTimezone', $sanitizedParams->getCheckbox('useEventTimezone'));
@@ -621,6 +629,7 @@ class Calendar extends ModuleWidget
             'startTime' => $this->getOption('startTime'),
             'endTime' => $this->getOption('endTime'),
             'noEventsMessage' => $this->getOption('noEventsMessage'),
+            'excludeWeekendDays' => $this->getOption('excludeWeekendDays'),
             'textScale' => $this->getOption('textScale'),
             'weekdayNameLength' => $this->getOption('weekdayNameLength'),
             'gridStep' => $this->getOption('gridStep', 60),

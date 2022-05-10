@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -84,12 +84,13 @@ class Folder
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param FolderFactory $folderFactory
      * @param PermissionFactory $permissionFactory
      */
-    public function __construct($store, $log, $folderFactory, $permissionFactory)
+    public function __construct($store, $log, $dispatcher, $folderFactory, $permissionFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->setPermissionsClass('Xibo\Entity\Folder');
         $this->folderFactory = $folderFactory;
         $this->permissionFactory = $permissionFactory;

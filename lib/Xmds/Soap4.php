@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -240,7 +240,6 @@ class Soap4 extends Soap
                 $display->licensed = $this->getConfig()->getSetting('DISPLAY_AUTO_AUTH', 0);
                 $display->incSchedule = 0;
                 $display->clientAddress = $this->getIp();
-                $display->setDispatcher($this->getDispatcher());
 
                 if (!$display->isDisplaySlotAvailable()) {
                     $display->licensed = 0;

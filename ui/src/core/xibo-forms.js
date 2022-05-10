@@ -1175,6 +1175,20 @@ function tagsWithValues(formId) {
         tagN = tag.split('|')[0];
         tagV = tag.split('|')[1];
 
+        if ($(formSelector).val().indexOf(tagN) >= 0) {
+            // if we entered a Tag that already exists there are two options
+            // exists without value and entered without value - handled automatically allowDuplicates = false
+            // as we allow entering Tags with value, we need additional handling for that
+
+            // go through tagsinput items and return the one that matches Tag name about to be added
+            let item = $(formSelector).tagsinput('items').filter(item => {
+                return item.split('|')[0].toLowerCase() === tagN.toLowerCase()
+            });
+
+            // remove the existing Tag from tagsinput before adding the new one
+            $(formSelector).tagsinput('remove', item.toString());
+        }
+
         if ($(formSelector).val().indexOf(tagN) === -1 && tagV === undefined) {
             $.ajax({
                 url: $('form#'+formId).data().gettag,

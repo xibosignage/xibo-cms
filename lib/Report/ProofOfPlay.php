@@ -316,8 +316,8 @@ class ProofOfPlay implements ReportInterface
     public function getResults(SanitizerInterface $sanitizedParams)
     {
         $displayId = $sanitizedParams->getInt('displayId');
-        $layoutIds = $sanitizedParams->getIntArray('layoutIds', ['default' => [] ]);
-        $mediaIds = $sanitizedParams->getIntArray('mediaIds', ['default' => [] ]);
+        $layoutIds = $sanitizedParams->getIntArray('layoutId', ['default' => []]);
+        $mediaIds = $sanitizedParams->getIntArray('mediaId', ['default' => []]);
         $type = strtolower($sanitizedParams->getString('type'));
         $tags = $sanitizedParams->getString('tags');
         $tagsType = $sanitizedParams->getString('tagsType');
@@ -331,7 +331,7 @@ class ProofOfPlay implements ReportInterface
         // Get user
         $user = $this->getUser();
 
-        // Disply filter.
+        // Display filter.
         if (!$user->isSuperAdmin()) {
             // Get an array of display id this user has access to.
             $displayIds = $this->getDisplayIdFilter($sanitizedParams);
@@ -370,7 +370,7 @@ class ProofOfPlay implements ReportInterface
         //
         // From and To Date Selection
         // --------------------------
-        // Our report has a range filter which determins whether the user has to enter their own from / to dates
+        // Our report has a range filter which determines whether the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
         $reportFilter = $sanitizedParams->getString('reportFilter');
 
@@ -853,8 +853,8 @@ class ProofOfPlay implements ReportInterface
 
     /**
      * MongoDB proof of play report
-     * @param Carbon $fromDt The filter range from date
-     * @param Carbon $toDt The filter range to date
+     * @param Carbon $filterFromDt The filter range from date
+     * @param Carbon $filterToDt The filter range to date
      * @param $displayIds array
      * @param $layoutIds array
      * @param $mediaIds array
@@ -948,7 +948,6 @@ class ProofOfPlay implements ReportInterface
 
         // Layout Filter
         if (count($layoutIds) != 0) {
-            $this->getLog()->debug(json_encode($layoutIds, JSON_PRETTY_PRINT));
             // Get campaignIds for selected layoutIds
             $campaignIds = [];
             foreach ($layoutIds as $layoutId) {

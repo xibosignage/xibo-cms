@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -70,7 +70,6 @@ class Controllers
                     $c->get('tagFactory'),
                     $c->get('folderFactory')
                 );
-                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -78,7 +77,6 @@ class Controllers
                 $controller = new \Xibo\Controller\Connector(
                     $c->get('connectorFactory')
                 );
-                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -94,7 +92,6 @@ class Controllers
                 $controller = new \Xibo\Controller\Command(
                     $c->get('commandFactory')
                 );
-                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -164,7 +161,6 @@ class Controllers
                     $c->get('dayPartFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                $controller->useDispatcher($c->get('dispatcher'));
                 return $controller;
             },
             '\Xibo\Controller\DisplayGroup' => function (ContainerInterface $c) {
@@ -180,7 +176,6 @@ class Controllers
                     $c->get('campaignFactory'),
                     $c->get('folderFactory')
                 );
-                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -239,7 +234,6 @@ class Controllers
                     $c->get('pool'),
                     $c->get('mediaService')
                 );
-                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -260,7 +254,6 @@ class Controllers
                     $c->get('httpCache'),
                     $c->get('folderFactory')
                 );
-                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useMediaService($c->get('mediaService'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
@@ -293,7 +286,6 @@ class Controllers
                     $c->get('mediaService')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                $controller->useDispatcher($c->get('dispatcher'));
                 return $controller;
             },
             '\Xibo\Controller\MediaManager' => function (ContainerInterface $c) {
@@ -365,7 +357,6 @@ class Controllers
                     $c->get('menuBoardFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                $controller->useDispatcher($c->get('dispatcher'));
                 return $controller;
             },
             '\Xibo\Controller\Notification' => function (ContainerInterface $c) {
@@ -396,7 +387,6 @@ class Controllers
                     $c->get('displayFactory')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
-                $controller->useDispatcher($c->get('dispatcher'));
                 return $controller;
             },
             '\Xibo\Controller\Playlist' => function (ContainerInterface $c) {
@@ -501,7 +491,6 @@ class Controllers
                     $c->get('transitionFactory'),
                     $c->get('userFactory')
                 );
-                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -559,7 +548,6 @@ class Controllers
                     $c->get('tagFactory'),
                     $c->get('resolutionFactory')
                 );
-                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },
@@ -580,7 +568,6 @@ class Controllers
                     $c->get('sessionFactory'),
                     $c->get('mediaService')
                 );
-                $controller->useDispatcher($c->get('dispatcher'));
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;
             },

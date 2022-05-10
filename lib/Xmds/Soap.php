@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -292,6 +292,7 @@ class Soap
     public function getDispatcher(): EventDispatcher
     {
         if ($this->dispatcher === null) {
+            $this->getLog()->error('getDispatcher: [soap] No dispatcher found, returning an empty one');
             $this->dispatcher = new EventDispatcher();
         }
 

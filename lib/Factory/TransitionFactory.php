@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -38,7 +38,7 @@ class TransitionFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new Transition($this->getStore(), $this->getLog());
+        return new Transition($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**

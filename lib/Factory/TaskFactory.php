@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -37,7 +37,7 @@ class TaskFactory extends BaseFactory
      */
     public function create()
     {
-        return new Task($this->getStore(), $this->getLog());
+        return new Task($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**

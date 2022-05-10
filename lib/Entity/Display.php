@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,7 +25,6 @@ namespace Xibo\Entity;
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Stash\Interfaces\PoolInterface;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
@@ -450,14 +449,15 @@ class Display implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param DisplayGroupFactory $displayGroupFactory
      * @param DisplayProfileFactory $displayProfileFactory
      * @param DisplayFactory $displayFactory
      */
-    public function __construct($store, $log, $config, $displayGroupFactory, $displayProfileFactory, $displayFactory, $folderFactory)
+    public function __construct($store, $log, $dispatcher, $config, $displayGroupFactory, $displayProfileFactory, $displayFactory, $folderFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->excludeProperty('mediaInventoryXml');
         $this->setPermissionsClass('Xibo\Entity\DisplayGroup');
         $this->setCanChangeOwner(false);
@@ -470,11 +470,6 @@ class Display implements \JsonSerializable
 
         // Initialise extra validation rules
         v::with('Xibo\\Validation\\Rules\\');
-    }
-
-    public function setDispatcher(EventDispatcherInterface $dispatcher)
-    {
-        $this->dispatcher = $dispatcher;
     }
 
     /**
@@ -722,8 +717,7 @@ class Display implements \JsonSerializable
         // Trigger an update of all dynamic DisplayGroups
         if (($this->hasPropertyChanged('display') || $this->hasPropertyChanged('tags'))) {
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
-                /* @var DisplayGroup $group */
-                $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($group));
+                $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($group), DisplayGroupLoadEvent::$NAME);
                 $group->load();
                 $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true, 'allowNotify' => $allowNotify]);
             }

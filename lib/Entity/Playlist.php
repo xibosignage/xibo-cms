@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -225,6 +225,7 @@ class Playlist implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param PermissionFactory $permissionFactory
      * @param PlaylistFactory $playlistFactory
@@ -232,9 +233,9 @@ class Playlist implements \JsonSerializable
      * @param TagFactory $tagFactory
 
      */
-    public function __construct($store, $log, $config, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
+    public function __construct($store, $log, $dispatcher, $config, $permissionFactory, $playlistFactory, $widgetFactory, $tagFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->config = $config;
         $this->permissionFactory = $permissionFactory;
@@ -527,21 +528,8 @@ class Playlist implements \JsonSerializable
     public function assignTag($tag)
     {
         $this->load();
-
-        if ($this->tags != [$tag]) {
-
-            if (!in_array($tag, $this->tags)) {
-                $this->tags[] = $tag;
-            } else {
-                foreach ($this->tags as $currentTag) {
-                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
-                        $this->tags[] = $tag;
-                    }
-                }
-            }
-        } else {
-            $this->getLog()->debug('No Tags to assign');
-        }
+        $this->handleTagAssign($tag);
+        $this->getLog()->debug(sprintf('Tags after assignment %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -949,7 +937,7 @@ class Playlist implements \JsonSerializable
 
         // Start with our own Widgets
         foreach ($this->widgets as $widget) {
-            // some basic checking on whether this widets date/time are conductive to it being added to the
+            // some basic checking on whether this widgets date/time are conductive to it being added to the
             // list. This is really an "expires" check, because we will rely on the player otherwise
             if ($widget->isExpired()) {
                 continue;
@@ -985,6 +973,13 @@ class Playlist implements \JsonSerializable
                         }
 
                         // We split the average across all widgets so that when we add them up again it works out.
+                        // Dividing twice is a little confusing
+                        // Assume a playlist with 5 items, and an equal 10 seconds per item
+                        // That "spot" with cycle playback enabled should take up 10 seconds in total, but the XLF
+                        // still contains all 5 items.
+                        // averageDuration = 50 / 5 = 10
+                        // cycleDuration = 10 / 5 = 2
+                        // When our 5 items are added up to make region duration, it will be 2+2+2+2+2=10
                         $averageDuration = $totalDuration / count($subPlaylistWidgets);
                         $cycleDuration = $averageDuration / count($subPlaylistWidgets);
 
@@ -993,7 +988,7 @@ class Playlist implements \JsonSerializable
                             . ', totalDuration is ' . $totalDuration);
 
                         foreach ($subPlaylistWidgets as $subPlaylistWidget) {
-                            $subPlaylistWidget->calculatedDuration = $cycleDuration;
+                            $subPlaylistWidget->tempCyclePlaybackAverageDuration = $cycleDuration;
                             $widgets[] = $subPlaylistWidget;
                         }
                     } else {

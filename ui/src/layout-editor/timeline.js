@@ -696,7 +696,6 @@ Timeline.prototype.render = function(layout) {
         }
     });
     
-    
     if(lD.readOnlyMode === false) {
 
         this.DOMObject.find('#regions .designer-region.editable').sortable({

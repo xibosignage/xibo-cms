@@ -33,14 +33,14 @@
                         <td>{{ "Settings File System Permissions"|trans }}</td>
                         <td>
                             {% if isSettingsPathWriteable %}
-                                <span class="fa fa-times"></span>
-                            {% else %}
                                 <span class="fa fa-check"></span>
+                            {% else %}
+                                <span class="fa fa-times"></span>
                             {% endif %}
                         </td>
                         <td>{{ "Write permissions are required for web/settings.php"|trans }}</td>
                     </tr>
-                {% for check in config.CheckEnvironment() %}
+                {% for check in config.checkEnvironment() %}
                     <tr>
                         <td>{{ check.item }}</td>
                         <td>

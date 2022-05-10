@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -67,6 +67,7 @@
         <div class="widget-title">{% trans "Connectors" %}</div>
         <div class="widget-body">
             <div id="connectors" class="card-deck">
+                {% if theme.getThemeConfig("app_name") == "Xibo" %}
                 <div class="card p3 mt-2" style="min-width: 250px; max-width: 250px;">
                     <img class="card-img-top" style="max-height: 250px" src="{{ theme.rootUri() }}theme/default/img/connectors/canva_logo.png" alt="Canva">
                     <div class="card-body">
@@ -82,6 +83,7 @@
                         <a class="btn btn-primary" href="https://canva.com" target="_blank">Visit Canva</a>
                     </div>
                 </div>
+                {% endif %}
             </div>
         </div>
     </div>
@@ -98,7 +100,8 @@
 
         var table;
         $(document).ready(function() {
-            table = $("#applications").DataTable({ "language": dataTablesLanguage,
+            table = $("#applications").DataTable({
+                language: dataTablesLanguage,
                 dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
@@ -156,15 +159,11 @@
         }
 
         function connectorFormSubmit() {
-            $('#connectorEditForm').submit(function(e) {
-              e.preventDefault();
-              XiboFormSubmit(this, e, function() {
-                loadConnectors();
-              });
-              return false;
-            }).submit();
+          XiboFormSubmit($('#connectorEditForm'), null, function() {
+            loadConnectors();
+          });
         }
-        
+
         function copyFromSecretInput(dialog) {
             // Initialize the tooltip.
             $('#copy-button').tooltip();
