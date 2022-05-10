@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2022 Xibo Signage Ltd
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -24,6 +24,7 @@ namespace Xibo\Connector;
 
 use Carbon\Carbon;
 use GuzzleHttp\Client;
+use Illuminate\Support\Str;
 use Parsedown;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\SearchResult;
@@ -134,8 +135,32 @@ class XiboExchangeConnector implements ConnectorInterface
         $providerDetails->message = $this->getTitle();
         $providerDetails->backgroundColor = '';
 
-        for ($i = $start; $i < ($start + $perPage - 1) && $i < count($body); $i++) {
-            $searchResult = $this->createSearchResult($body[$i]);
+        // Filter the body based on search param.
+        if (!empty($event->getSearch())) {
+            $filtered = [];
+            foreach ($body as $template) {
+                if (Str::contains($template->title, $event->getSearch())) {
+                    $filtered[] = $template;
+                    continue;
+                }
+
+                if (!empty($template->description) && Str::contains($template->description, $event->getSearch())) {
+                    $filtered[] = $template;
+                    continue;
+                }
+
+                if (property_exists($template, 'tags') && count($template->tags) > 0) {
+                    if (in_array($event->getSearch(), $template->tags)) {
+                        $filtered[] = $template;
+                    }
+                }
+            }
+        } else {
+            $filtered = $body;
+        }
+
+        for ($i = $start; $i < ($start + $perPage - 1) && $i < count($filtered); $i++) {
+            $searchResult = $this->createSearchResult($filtered[$i]);
             $searchResult->provider = $providerDetails;
             $event->addResult($searchResult);
         }

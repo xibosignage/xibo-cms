@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (C) 2021 Xibo Signage Ltd
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -34,25 +34,31 @@ class TemplateProviderEvent extends Event
 
     /** @var \Xibo\Entity\SearchResults */
     private $results;
+
     /**
      * @var int
      */
     private $start;
+
     /**
      * @var int
      */
     private $length;
+
+    /** @var string|null */
+    private $search;
 
     /**
      * @param \Xibo\Entity\SearchResults $results
      * @param int $start
      * @param int $length
      */
-    public function __construct(SearchResults $results, int $start, int $length)
+    public function __construct(SearchResults $results, int $start, int $length, ?string $search)
     {
         $this->results = $results;
         $this->start = $start;
         $this->length = $length;
+        $this->search = $search;
     }
 
     /**
@@ -89,5 +95,13 @@ class TemplateProviderEvent extends Event
     public function getLength(): int
     {
         return $this->length;
+    }
+
+    /**
+     * @return string|null
+     */
+    public function getSearch(): ?string
+    {
+        return $this->search;
     }
 }

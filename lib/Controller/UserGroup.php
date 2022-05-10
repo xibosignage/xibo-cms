@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -770,19 +770,21 @@ class UserGroup extends Base
     public function assignUser(Request $request, Response $response, $id)
     {
         $this->getLog()->debug(sprintf('Assign User for groupId %d', $id));
-        $sanitizedPaarams = $this->getSanitizer($request->getParams());
+        $sanitizedParams = $this->getSanitizer($request->getParams());
 
         $group = $this->userGroupFactory->getById($id);
-        $group->load();
-
         if (!$this->isEditable($group)) {
             throw new AccessDeniedException();
         }
 
-        $users = $sanitizedPaarams->getIntArray('userId', ['default' => []]);
+        // Load existing memberships.
+        $group->load();
+        $changesMade = false;
+
+        // Parse updated assignments from form.
+        $users = $sanitizedParams->getIntArray('userId', ['default' => []]);
 
         foreach ($users as $userId) {
-
             $this->getLog()->debug(sprintf('Assign User %d for groupId %d', $userId, $id));
 
             $user = $this->userFactory->getById($userId);
@@ -792,14 +794,13 @@ class UserGroup extends Base
             }
 
             $group->assignUser($user);
-            $group->save(['validate' => false]);
+            $changesMade = true;
         }
 
         // Check to see if unassign has been provided.
-        $users = $sanitizedPaarams->getIntArray('unassignUserId', ['default' => []]);
+        $users = $sanitizedParams->getIntArray('unassignUserId', ['default' => []]);
 
         foreach ($users as $userId) {
-
             $this->getLog()->debug(sprintf('Unassign User %d for groupId %d', $userId, $id));
 
             $user = $this->userFactory->getById($userId);
@@ -809,13 +810,19 @@ class UserGroup extends Base
             }
 
             $group->unassignUser($user);
-            $group->save(['validate' => false]);
+            $changesMade = true;
         }
 
+        if ($changesMade) {
+            $group->save(['validate' => false]);
+            $message = sprintf(__('Membership set for %s'), $group->group);
+        } else {
+            $message = sprintf(__('No changes for %s'), $group->group);
+        }
 
         // Return
         $this->getState()->hydrate([
-            'message' => sprintf(__('Membership set for %s'), $group->group),
+            'message' => $message,
             'id' => $group->groupId
         ]);
 

@@ -45,7 +45,6 @@ use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\AccessDeniedException;
-use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\DuplicateEntityException;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -751,10 +750,13 @@ class User implements \JsonSerializable, UserEntityInterface
 
         if ($this->userId == 0) {
             $this->add();
+            $this->audit($this->userId, 'New user added', ['userName' => $this->userName]);
         } else if ($options['passwordUpdate']) {
             $this->updatePassword();
+            $this->audit($this->userId, 'User updated password', false);
         } else if ($this->hash() != $this->hash || $this->hasPropertyChanged('twoFactorRecoveryCodes')) {
             $this->update();
+            $this->audit($this->userId, 'User updated');
         }
 
         // Save user options
@@ -766,7 +768,6 @@ class User implements \JsonSerializable, UserEntityInterface
 
             // Save all Options
             foreach ($this->userOptions as $userOption) {
-                /* @var UserOption $userOption */
                 $userOption->userId = $this->userId;
                 $userOption->save();
             }
@@ -775,11 +776,7 @@ class User implements \JsonSerializable, UserEntityInterface
 
     /**
      * Delete User
-     * @throws ConfigurationException
-     * @throws DuplicateEntityException
-     * @throws GeneralException
-     * @throws InvalidArgumentException
-     * @throws NotFoundException
+     * @throws \Xibo\Support\Exception\GeneralException
      */
     public function delete()
     {
@@ -802,12 +799,13 @@ class User implements \JsonSerializable, UserEntityInterface
 
         // Remove any assignments to groups
         foreach ($this->groups as $group) {
-            /* @var UserGroup $group */
             $group->unassignUser($this);
             $group->save(['validate' => false]);
         }
 
         $this->getStore()->update('DELETE FROM `user` WHERE userId = :userId', ['userId' => $this->userId]);
+
+        $this->audit($this->userId, 'User deleted', false);
     }
 
     /**

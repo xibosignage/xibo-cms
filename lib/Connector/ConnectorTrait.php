@@ -92,7 +92,7 @@ trait ConnectorTrait
     {
         $this->logger->debug('getSetting: ' . $setting);
         if (!array_key_exists($setting, $this->settings)) {
-            $this->logger->debug('getSetting: ' . $setting . ' not present.' . var_export($this->settings, true));
+            $this->logger->debug('getSetting: ' . $setting . ' not present.');
             return $default;
         }
 

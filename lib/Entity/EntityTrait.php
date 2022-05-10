@@ -315,6 +315,7 @@ trait EntityTrait
      * @param $message
      * @param null $changedProperties
      * @param bool $jsonEncodeArrays
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
     protected function audit($entityId, $message, $changedProperties = null, $jsonEncodeArrays = false)
     {
@@ -323,9 +324,11 @@ trait EntityTrait
         if ($changedProperties === null) {
             // No properties provided, so we should work them out
             // If we have originals, then get changed, otherwise get the current object state
-            $changedProperties = (count($this->originalValues) <= 0) ? $this->toArray($jsonEncodeArrays) : $this->getChangedProperties($jsonEncodeArrays);
-        } else if (count($changedProperties) <= 0) {
-            // We provided changed properties, so we only audit if there are some
+            $changedProperties = (count($this->originalValues) <= 0)
+                ? $this->toArray($jsonEncodeArrays)
+                : $this->getChangedProperties($jsonEncodeArrays);
+        } else if ($changedProperties !== false && count($changedProperties) <= 0) {
+            // Only audit if properties have been provided
             return;
         }
 

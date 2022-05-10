@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -375,12 +375,13 @@ class Template extends Base
             $event = new TemplateProviderEvent(
                 $searchResults,
                 $sanitizedQueryParams->getInt('start', ['default' => 0]),
-                $sanitizedQueryParams->getInt('length', ['default' => 15])
+                $sanitizedQueryParams->getInt('length', ['default' => 15]),
+                $sanitizedQueryParams->getString('template')
             );
 
             $this->getLog()->debug('Dispatching event. ' . $event->getName());
             try {
-                $this->getDispatcher()->dispatch($event->getName(), $event);
+                $this->getDispatcher()->dispatch($event, $event->getName());
             } catch (\Exception $exception) {
                 $this->getLog()->error('Template search: Exception in dispatched event: ' . $exception->getMessage());
                 $this->getLog()->debug($exception->getTraceAsString());
