@@ -1,6 +1,7 @@
 const path = require('path');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
+const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 
 const config = {
   // Add common Configurations
@@ -136,6 +137,9 @@ const mainConfig = Object.assign({}, config, {
         },
       ],
     }),
+    new MonacoWebpackPlugin({
+			languages: ['typescript', 'javascript', 'css', 'html']
+		}),
   ],
 });
 

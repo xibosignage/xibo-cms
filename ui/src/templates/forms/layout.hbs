@@ -1,0 +1,54 @@
+<form class="layout-form">
+    <div class="row">
+        <ul class="nav nav-tabs" role="tablist">
+            <li class="nav-item"><a class="nav-link active" href="#generalTab" role="tab" data-toggle="tab"><span>{{trans.general}}</span></a></li>
+        </ul>
+        <div class="w-100 p-3">
+            <form id="layoutFormEdit" class="XiboForm form-horizontal">
+                <div class="tab-content">
+                    <div class="tab-pane active" id="generalTab">
+                        {{> inputs/color value=layout.backgroundColor id="backgroundColor" title="Background Colour" helpText="Use the colour picker to select the background colour" }}
+                        
+                        <div class="form-group">
+                            <label for="backgroundImageContainer" class="control-label">
+                                <strong>Background Image</strong>
+                            </label>
+
+                            <div id="backgroundImageContainer">
+                                <div class="text-center background-image-add editable">
+                                    <div id="bg_not_found_icon">
+                                        <i class="fa bg_not_found_icon"></i>
+                                        <div>No Image set, add from Toolbar or Upload!</div>
+                                    </div>
+
+                                    <img id="bg_image_image" data-url="{{ libraryDownloadURL }}?preview=1&width=200&height=100" alt="Background thumbnail" />
+                                    <div class="background-image-drop">Add background image</div>
+                                </div>
+
+                                <div class="background-image-actions text-center">
+                                    <div class="btn-group">
+                                        <button id="backgroundUploadButton" class="btn btn-outline-secondary" type="button" data-add-new-background-url="{{ libraryAddURL }}">
+                                            <i class="fa fa-upload"></i>
+                                            Upload
+                                        </button>
+
+                                        <button id="backgroundRemoveButton" class="btn btn-outline-danger" type="button">
+                                            <i class="fa fa-remove"></i>
+                                            Remove
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {{> inputs/hidden name="backgroundImageId" value=layout.backgroundId }}
+
+                        {{> inputs/dropdown value=resolution.resolutionId options=resolutions optionsTitle="resolution" optionsValue="resolutionId" id="resolutionId" title="Resolution" helpText="Change the resolution" }}
+                        {{> inputs/number value=layout.backgroundzIndex id="backgroundzIndex" title="Layer" helpText="The layering order of the background image (z-index). Advanced use only." }}
+                        {{> inputs/checkbox value=layout.autoApplyTransitions id="autoApplyTransitions" title="Automatically apply Transitions?" helpText="When enabled, the default Transition type and duration will be applied to all widgets on this Layout." }}
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</form>

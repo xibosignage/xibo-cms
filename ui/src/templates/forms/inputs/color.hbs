@@ -1,5 +1,11 @@
-<div class="form-input colorpicker">
-    <label for="{{id}}" class="control-label">{{name}}</label>
-    <i class="fa fa-question-circle form-help-popup" data-toggle="tooltip" data-placement="top" title="{{helpText}}"></i>
-    <input type="text" class="form-control" id="{{id}}" name="{{id}}" value="{{value}}" />
+<div class="form-group colorpicker-element colorpicker-input xibo-form-input" {{#if renderCondition}}data-render-condition="{{renderCondition}}"{{/if}}>
+    <label for="{{id}}" class="control-label"><strong>{{title}}</strong></label>
+    <i class="fa fa-question-circle form-help-popup" data-toggle="tooltip" data-placement="top"
+        title="{{helpText}}"></i>
+    <div class="input-group">
+        <div class="input-group-prepend">
+            <i class="input-group-text input-group-addon" id="{{id}}_label"></i>
+        </div>
+        <input type="text" class="form-control" id="{{id}}" name="{{id}}" value="{{value}}" />
+    </div>
 </div>

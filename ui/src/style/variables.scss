@@ -1,8 +1,8 @@
 // Global SASS variables 
 
 // Colour palette
-$xibo-color-primary: #273759;
-$xibo-color-primary-lighter: #3D507A;
+$xibo-color-primary: #607bb5;
+$xibo-color-primary-lighter: #7392d4;
 $xibo-color-secondary: #337AB7;
 $xibo-color-white: #F0F2F8;
 $xibo-color-white-pure: #fff;
@@ -52,6 +52,9 @@ $context-menu-bin-btn-hover-color: lighten($xibo-color-red, 20%);
 $context-menu-shadow: darken($xibo-color-primary, 20%);
 
 $loading-overlay-z-index: 4000;
+
+$code-editor-background-color: #1e1e1e;
+$code-editor-border-color: $xibo-color-primary-lighter;
 
 // Variables
 $toolbar-width: 60px;

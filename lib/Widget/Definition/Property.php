@@ -65,6 +65,7 @@ class Property implements \JsonSerializable
             'id' => $this->id,
             'value' => $this->value,
             'type' => $this->type,
+            'codeType' => $this->codeType,
             'title' => $this->title,
             'helpText' => $this->helpText,
             'validation' => $this->validation,

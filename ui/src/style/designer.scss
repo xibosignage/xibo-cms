@@ -137,7 +137,7 @@ $inline-editing-z-index: 1040;
         height: 8px;
 
         .toggle {
-            color: $xibo-color-primary-lighter;
+            color: $xibo-color-primary;
             top: -13px;
             width: 50px;
             height: 13px;
@@ -1366,13 +1366,13 @@ $inline-editing-z-index: 1040;
         .button-container {
             display: flex;
             flex-direction: column-reverse;
-            padding: 0 4px;
+            padding: 1rem 1rem 0.5rem 1rem;
             bottom: 0;
             font-size: 0;
             width: 100%;
 
             & > button {
-                margin: 4px 0;
+                margin-bottom: 0.5rem;
             }
         }
 

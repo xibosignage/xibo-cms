@@ -135,6 +135,9 @@ require('corejs-typeahead/dist/typeahead.jquery.min.js');
 require('jstree/dist/jstree.min.js');
 require('jstree/dist/themes/default/style.min.css');
 
+// Monaco Editor
+window.monaco = require('monaco-editor/esm/vs/editor/editor.api.js');
+
 // Masonry
 window.Masonry = require('masonry-layout');
 

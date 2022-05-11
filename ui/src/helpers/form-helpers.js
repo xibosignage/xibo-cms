@@ -1453,9 +1453,9 @@ let formHelpers = function() {
 
         // Hide/Show back button depending on the type of widget
         if(container.find('form').data('formStep') != undefined && container.find('form').data('formStep') > 1) {
-            container.find('button#back').show();
+            container.find('button#back').removeClass('d-none');
         } else {
-            container.find('button#back').hide();
+            container.find('button#back').addClass('d-none');
         }
     };
 

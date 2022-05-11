@@ -43,4 +43,110 @@ window.forms = {
         // Initialise tooltips
         Common.reloadTooltips($(targetContainer));
     },
+    /**
+     * Handle form field replacements
+     * @param {*} container - The form container
+     */
+    handleFormReplacements: function(container, baseObject) {
+
+        const replaceHTML = function(htmlString) {
+            htmlString = htmlString.replace(/\%\S*\%/g, function(match) {
+                const trimmedMatch = match.slice(1, -1);
+
+                // Repplace trimmed match with the value of the base object
+                return trimmedMatch.split('.').reduce((a, b) => a[b], baseObject);
+            });
+
+            return htmlString
+        }
+
+        // Replace title and alternative title for the elements that have them
+        $(container).find('.xibo-form-input > [title], .xibo-form-btn[title]').each(function() {
+            const $element = $(this);
+            const elementTitle = $element.attr('title');
+            const elementAlternativeTitle = $element.attr('data-original-title');
+
+            // If theres title and it contains a replacement special character
+            if(elementTitle && elementTitle.indexOf('%') > -1) {
+                $element.attr('title', replaceHTML(elementTitle));
+            }
+
+            // If theres an aletrnative title and it contains a replacement special character
+            if(elementAlternativeTitle && elementAlternativeTitle.indexOf('%') > -1) {
+                $element.attr('data-original-title', replaceHTML(elementAlternativeTitle));
+            }
+        });
+
+        // Replace inner html for input direct children
+        $(container).find('.xibo-form-input > *, .xibo-form-btn').each(function() {
+            const $element = $(this);
+            const elementInnerHTML = $element.html();
+
+            // If theres inner html and it contains a replacement special character
+            if(elementInnerHTML && elementInnerHTML.indexOf('%') > -1) {
+                $element.html(replaceHTML(elementInnerHTML));
+            }
+        });
+    },
+    /**
+     * Set the form conditions
+     * @param {object} container - The form container
+     */
+    setConditions: function(container) {
+        $(container).find('.xibo-form-input[data-render-condition]').each(function() {
+            var condition = $(this).data('renderCondition');
+            var $conditionTarget = $(container).find(condition.target)
+            const $self = $(this);
+
+            const checkCondition = function() {
+                // Get condition target value based on type
+                const conditionTargetValue = ($conditionTarget.attr('type') == 'checkbox') ? $conditionTarget.is(":checked") : $conditionTarget.val();
+
+                // If the condition is true
+                if (condition.condition === '==' && conditionTargetValue != condition.value) {
+                    $self.hide();
+                }
+                else if (condition.condition === '!=' && conditionTargetValue == condition.value) {
+                    $self.hide();
+                }
+                else if (condition.condition === '>' && conditionTargetValue <= condition.value) {
+                    $self.hide();
+                }
+                else if (condition.condition === '<' && conditionTargetValue >= condition.value) {
+                    $self.hide();
+                }
+                else if (condition.condition === '>=' && conditionTargetValue < condition.value) {
+                    $self.hide();
+                }
+                else if (condition.condition === '<=' && conditionTargetValue > condition.value) {
+                    $self.hide();
+                }
+                else {
+                    $self.show();
+                }
+            };
+
+            // If condition isn't null or empty
+            if (condition !== null && condition !== '') {
+                // Check on change
+                $conditionTarget.on('change', checkCondition);
+
+                // Check on load
+                checkCondition();
+            }
+        });
+    },
+    /**
+     * Check for spacing issues on the form inputs
+     * @param {object} container - The form container
+     */
+     checkForSpacingIssues: function($container) {
+        $container.find('input[type=text]').each(function(index, el) {
+            formRenderDetectSpacingIssues(el);
+
+            $(el).on("keyup", _.debounce(function() {
+                formRenderDetectSpacingIssues(el);
+            }, 500));
+        });
+    }
 };

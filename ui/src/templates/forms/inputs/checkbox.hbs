@@ -1,5 +1,5 @@
-<div class="form-check pb-3">
-    <input type="checkbox" class="form-check-input" id="{{id}}" name="{{id}}" value="{{value}}" {{#if value}}checked="checked"{{/if}} />
-    <label for="{{id}}" class="form-check-label">{{title}}</label>
+<div class="form-check pb-3 xibo-form-input" {{#if renderCondition}}data-render-condition="{{renderCondition}}"{{/if}}>
+    <input type="checkbox" class="form-check-input" id="{{id}}" name="{{id}}" {{#eq (number value) 1}}checked="checked"{{/eq}} />
+    <label for="{{id}}" class="form-check-label"><strong>{{title}}</strong></label>
     <i class="fa fa-question-circle form-help-popup checkbox-popup" data-toggle="tooltip" data-placement="top" title="{{helpText}}"></i>
 </div>
