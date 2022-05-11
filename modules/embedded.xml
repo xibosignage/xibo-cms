@@ -64,6 +64,7 @@
     <preview></preview>
     <stencil>
         <twig><![CDATA[
+{{embedHtml}}
 <script type="text/javascript">
 {{embedScript}}
 </script>
@@ -71,7 +72,7 @@
 {{embedStyle}}
 </style>
 <script type="text/javascript">
-$(document).ready(function() {
+$(function() {
   if(typeof EmbedInit === "function"){
     EmbedInit();
   }

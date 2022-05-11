@@ -104,18 +104,20 @@ class WidgetHtmlRenderer
 
             if ($module->preview !== null) {
                 // Parse out our preview (which is always a stencil)
-                // TODO: perhaps this is too much power to hand off to the template
-                //  we could DTO the widget into a plain object?
+                $module->decorateProperties($widget, true);
                 return $this->twig->fetchFromString($module->preview->twig, [
                     'width' => $width,
                     'height' => $height,
                     'params' => $params,
-                    'widget' => $widget,
-                    'region' => $region
+                    'options' => $module->getPropertyValues(),
+                    'regionId' => $region->regionId,
+                    'mediaId' => $widget->getPrimaryMedia()[0] ?? null
                 ]);
             } else {
                 // Modules without a preview should render out as HTML
                 return $this->twig->fetch('module-html-preview.twig', [
+                    'width' => $width,
+                    'height' => $height,
                     'regionId' => $region->regionId,
                     'widgetId' => $widget->widgetId
                 ]);
@@ -244,7 +246,7 @@ class WidgetHtmlRenderer
         array $moduleTemplates,
         int $displayId
     ): string {
-        $this->getLog()->debug('getResourceOrCache for displayId ' . $displayId
+        $this->getLog()->debug('render: getResourceOrCache for displayId ' . $displayId
             . ' and regionId ' . $region->regionId);
 
         // Build up some data for twig
@@ -256,14 +258,17 @@ class WidgetHtmlRenderer
 
         // Render each widget out into the html
         foreach ($widgets as $widget) {
+            $this->getLog()->debug('render: widget to process is widgetId: ' . $widget->widgetId);
+
             // Decorate our module with the saved widget properties
-            $module->decorateProperties($widget);
+            // we include the defaults.
+            $module->decorateProperties($widget, true);
 
             // What does our module have
             if ($module->stencil !== null) {
                 // Stencils have access to any module properties
                 if ($module->stencil->twig !== null) {
-                    $twig['twig'] = $this->twig->fetchFromString(
+                    $twig['twig'][] = $this->twig->fetchFromString(
                         $module->stencil->twig,
                         $module->getPropertyValues()
                     );

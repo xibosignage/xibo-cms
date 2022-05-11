@@ -91,7 +91,7 @@
     </properties>
     <preview>
         <twig><![CDATA[
-{% set url = url_for("library.download", {regionId: region.regionId, id: widget.getPrimaryMediaId()}) %}
+{% set url = url_for("library.download", {regionId: regionId, id: mediaId}) %}
 <div style="display:table; width:100%; height: {{ height }}px>
     <div style=" display: table-cell;">
         <div style="text-align:center;">

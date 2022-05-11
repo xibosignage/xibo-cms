@@ -96,19 +96,19 @@
     </properties>
     <preview>
         <twig><![CDATA[
-{% set url = url_for("library.download", {regionId: region.regionId, id: widget.getPrimaryMediaId()}) %}
-{% if widget.getOptionValue("scaleTypeId", "stretch") == "stretch" %}
+{% set url = url_for("library.download", {regionId: regionId, id: mediaId}) %}
+{% if options.scaleTypeId == "stretch" %}
     {% set proportional = 0 %}
 {% else %}
     {% set proportional = 1 %}
 {% endif %}
-{% if widget.getOptionValue("scaleTypeId", "fit") == "fit" %}
+{% if options.scaleTypeId == "fit" %}
     {% set fit = 1 %}
 {% else %}
     {% set fit = 0 %}
 {% endif %}
 <div style="display:table; width:100%; height: {{ height }}px">
-    <div style="text-align:{{ widget.getOptionValue("alignId", "center") }}; display: table-cell; vertical-align: {{ widget.getOptionValue("valignId", "middle") }};">
+    <div style="text-align:{{ options.alignId }}; display: table-cell; vertical-align: {{ options.valignId }};">
         <img src="{{ url }}?preview=1&width={{ width }}&height={{ height }}&proportional={{ proportional }}&fit={{ fit }}" />
     </div>
 </div>
