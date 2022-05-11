@@ -19,21 +19,27 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <templates>
-    <element id="text">
+    <element>
+        <id>text</id>
+        <title>Text</title>
         <type>element</type>
         <dataType>global</dataType>
         <properties>
             <property></property>
         </properties>
     </element>
-    <element id="rectangle">
+    <element>
+        <id>rectangle</id>
+        <title>Rectangle</title>
         <type>element</type>
         <dataType>global</dataType>
         <properties>
             <property></property>
         </properties>
     </element>
-    <element id="star">
+    <element>
+        <id>star</id>
+        <title>Star</title>
         <type>element</type>
         <dataType>global</dataType>
         <properties>

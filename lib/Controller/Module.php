@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -268,7 +268,7 @@ class Module extends Base
      * @return \Slim\Http\Response
      * @throws \Xibo\Support\Exception\GeneralException
      */
-    public function templateGrid(Request $request, Response $response, $dataType): Response
+    public function templateGrid(Request $request, Response $response, string $dataType): Response
     {
         if (empty($dataType)) {
             throw new InvalidArgumentException(__('Please provide a datatype'), 'dataType');
@@ -278,5 +278,35 @@ class Module extends Base
         $this->getState()->recordsTotal = 0;
         $this->getState()->setData($this->moduleTemplateFactory->getByDataType($dataType));
         return $this->render($request, $response);
+    }
+
+    /**
+     * Pulls the image for a templateId
+     * @param \Slim\Http\ServerRequest $request
+     * @param \Slim\Http\Response $response
+     * @param string $dataType
+     * @param string $templateId the template id
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     * @throws \Xibo\Support\Exception\InvalidArgumentException
+     * @throws \Xibo\Support\Exception\NotFoundException
+     */
+    public function templateImage(Request $request, Response $response, string $dataType, string $templateId): Response
+    {
+        if (empty($dataType)) {
+            throw new InvalidArgumentException(__('Please provide a data type'), 'dataType');
+        }
+
+        if (empty($templateId)) {
+            throw new InvalidArgumentException(__('Please provide a templateId'), 'templateId');
+        }
+
+        // Get this template
+        $template = $this->moduleTemplateFactory->getByDataTypeAndId($dataType, $templateId);
+
+        // TODO: does this template have an image?
+        //  moreover how do we actually store those template images.
+
+
+        return $response;
     }
 }

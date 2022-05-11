@@ -22,6 +22,7 @@
 
 namespace Xibo\Entity;
 
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Factory\ModuleTemplateFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -61,14 +62,16 @@ class ModuleTemplate implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param \Xibo\Factory\ModuleTemplateFactory $moduleTemplateFactory
      */
     public function __construct(
         StorageServiceInterface $store,
         LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher,
         ModuleTemplateFactory $moduleTemplateFactory
     ) {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->moduleTemplateFactory = $moduleTemplateFactory;
     }
 

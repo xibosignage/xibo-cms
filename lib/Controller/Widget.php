@@ -905,26 +905,6 @@ class Widget extends Base
     }
 
     /**
-     * Pulls the image for a templateId
-     * @param string $type the datatype of the template
-     * @param string $templateId the template id
-     * @return \Psr\Http\Message\ResponseInterface|Response
-     * @throws \Xibo\Support\Exception\NotFoundException
-     */
-    public function getTemplateImage(string $type, string $templateId)
-    {
-        // TODO: templates
-        $module = $this->moduleFactory->create($type);
-
-        $response = $module->getTemplateImage($templateId);
-
-        $this->setNoOutput(true);
-
-        // Directly return the response
-        return $response;
-    }
-
-    /**
      * Get Data
      * @param Request $request
      * @param Response $response

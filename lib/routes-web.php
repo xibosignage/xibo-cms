@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -203,10 +203,6 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/playlist/widget/data/{regionId}/{id}', [
         '\Xibo\Controller\Widget', 'getData'
     ])->setName('module.getData');
-    
-    $group->get('/playlist/widget/form/templateimage/{type}/{templateId}', [
-        '\Xibo\Controller\Widget', 'getTemplateImage'
-    ])->setName('module.getTemplateImage');
 
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']));
 

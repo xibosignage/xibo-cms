@@ -123,9 +123,15 @@ class ModuleTemplateFactory extends BaseFactory
         $xml = new \DOMDocument();
         $xml->load($file);
 
-        foreach ($xml->childNodes as $node) {
+        foreach ($xml->getElementsByTagName('templates') as $node) {
             if ($node instanceof \DOMElement) {
-                $this->templates[] = $this->createFromXml($node);
+                $this->getLog()->debug('createMultiFromXml: there are ' . count($node->childNodes)
+                    . ' templates in ' . $file);
+                foreach ($node->childNodes as $childNode) {
+                    if ($childNode instanceof \DOMElement) {
+                        $this->templates[] = $this->createFromXml($childNode);
+                    }
+                }
             }
         }
     }
@@ -137,7 +143,7 @@ class ModuleTemplateFactory extends BaseFactory
     private function createFromXml(\DOMElement $xml): ModuleTemplate
     {
         // TODO: cache this into Stash
-        $template = new ModuleTemplate($this->getStore(), $this->getLog(), $this);
+        $template = new ModuleTemplate($this->getStore(), $this->getLog(), $this->getDispatcher(), $this);
         $template->templateId = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
         $template->type = $this->getFirstValueOrDefaultFromXmlNode($xml, 'type');
         $template->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
