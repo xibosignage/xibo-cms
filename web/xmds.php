@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,12 +22,8 @@
 
 use Monolog\Logger;
 use Nyholm\Psr7\ServerRequest;
-use Psr\Container\ContainerInterface;
 use Slim\Http\ServerRequest as Request;
-use Symfony\Component\EventDispatcher\EventDispatcher;
-use Xibo\Event\DisplayGroupLoadEvent;
 use Xibo\Factory\ContainerFactory;
-use Xibo\Listener\OnDisplayGroupLoad\DisplayGroupDisplayListener;
 use Xibo\Support\Exception\NotFoundException;
 
 define('XIBO', true);
@@ -48,18 +44,13 @@ try {
 } catch (Exception $e) {
     die($e->getMessage());
 }
-$uidProcessor =  new \Monolog\Processor\UidProcessor(7);
-$container->set('logger', function () use($uidProcessor) {
-    $logger = new Logger('XMDS');
 
-    // db
-    $dbhandler  =  new \Xibo\Helper\DatabaseLogHandler();
-
-    $logger->pushProcessor($uidProcessor);
-
-    $logger->pushHandler($dbhandler);
-
-    return $logger;
+// Logger
+$uidProcessor = new \Monolog\Processor\UidProcessor(7);
+$container->set('logger', function () use ($uidProcessor) {
+    return (new Logger('XMDS'))
+        ->pushProcessor($uidProcessor)
+        ->pushHandler(new \Xibo\Helper\DatabaseLogHandler());
 });
 
 // Create a Slim application
@@ -79,6 +70,12 @@ $startTime = microtime(true);
 
 // Set XMR
 \Xibo\Middleware\Xmr::setXmr($app, false);
+
+// Set listeners
+\Xibo\Middleware\ListenersMiddleware::setListeners($app);
+
+// Set connectors
+\Xibo\Middleware\ConnectorMiddleware::setConnectors($app);
 
 $container->get('configService')->setDependencies($container->get('store'), '/');
 $container->get('configService')->loadTheme();
@@ -254,6 +251,52 @@ if (isset($_GET['file'])) {
     exit;
 }
 
+// Connector request?
+if (isset($_GET['connector'])) {
+    try {
+        if (!isset($_GET['token'])) {
+            header('HTTP/1.0 403 Forbidden');
+            exit;
+        }
+
+        // Dispatch an event to check the token
+        $tokenEvent = new \Xibo\Event\XmdsConnectorTokenEvent();
+        $tokenEvent->setToken($_GET['token']);
+        $container->get('dispatcher')->dispatch($tokenEvent, \Xibo\Event\XmdsConnectorTokenEvent::$NAME);
+
+        if (empty($tokenEvent->getWidgetId())) {
+            header('HTTP/1.0 403 Forbidden');
+            exit;
+        }
+
+        // Check the widgetId is permissible, and in required files for the display.
+        /** @var \Xibo\Entity\RequiredFile $file */
+        $file = $container->get('requiredFileFactory')->getByDisplayAndWidget(
+            $tokenEvent->getDisplayId(),
+            $tokenEvent->getWidgetId()
+        );
+
+        // Get the widget
+        $widget = $container->get('widgetFactory')->getById($tokenEvent->getWidgetId());
+
+        // It has been found, so we raise an event here to see if any connector can provide a file for it.
+        $event = new \Xibo\Event\XmdsConnectorFileEvent($widget);
+        $container->get('dispatcher')->dispatch($event, \Xibo\Event\XmdsConnectorFileEvent::$NAME);
+
+        // What now?
+        $emitter = new \Slim\ResponseEmitter();
+        $emitter->emit($event->getResponse());
+    } catch (\Xibo\Support\Exception\GeneralException $e) {
+        header('HTTP/1.0 500 Internal Server Error');
+        echo $e->getMessage();
+    } catch (Exception $e) {
+        $container->get('logService')->error('Unknown Error: ' . $e->getMessage());
+        $container->get('logService')->debug($e->getTraceAsString());
+        header('HTTP/1.0 500 Internal Server Error');
+    }
+    exit;
+}
+
 // Town down all logging
 $container->get('logService')->setLevel(\Xibo\Service\LogService::resolveLogLevel('error'));
 
@@ -266,16 +309,6 @@ try {
     // logProcessor
     $logProcessor = new \Xibo\Xmds\LogProcessor($container->get('logger'), $uidProcessor->getUid());
     $container->get('logger')->pushProcessor($logProcessor);
-
-    $container->set('xmdsDispatcher', function (ContainerInterface $container) {
-        $dispatcher = new EventDispatcher();
-
-        $dispatcher->addListener(DisplayGroupLoadEvent::$NAME, (new DisplayGroupDisplayListener(
-            $container->get('displayFactory')
-        )));
-
-        return $dispatcher;
-    });
 
     // Create a SoapServer
     // explicitly define caching.
@@ -308,7 +341,7 @@ try {
         $container->get('scheduleFactory'),
         $container->get('dayPartFactory'),
         $container->get('playerVersionFactory'),
-        $container->get('xmdsDispatcher')
+        $container->get('dispatcher')
     );
     // Add manual raw post data parsing, as HTTP_RAW_POST_DATA is deprecated.
     $soap->handle(file_get_contents('php://input'));

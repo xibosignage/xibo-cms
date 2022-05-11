@@ -526,8 +526,16 @@ class Agenda extends ModuleWidget
                             return true;
                         }
 
-                        // Check if there is an event ongoing
-                        ongoingEvent = (startDate.isBefore(now) && endDate.isAfter(now) && element.noDataMessage != 1);
+                        // if element is the first one and its data message, add it to be shown and skip the rest
+                        if(index === 0 && element.noDataMessage === 1) {
+                            parsedItems.push(element.item);
+                            return true;
+                        }
+
+                        // Check if there is an event ongoing ( set it to true only, if false )
+                        if (!ongoingEvent) {   
+                            ongoingEvent = (startDate.isBefore(now) && endDate.isAfter(now) && element.noDataMessage != 1);
+                        }
                         
                         if (endDate.isAfter(now)) {
                             if (moment(element.startDate).isBefore(now)) {

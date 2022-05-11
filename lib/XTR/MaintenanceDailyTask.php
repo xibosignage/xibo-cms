@@ -24,6 +24,7 @@ namespace Xibo\XTR;
 
 use Carbon\Carbon;
 use Xibo\Controller\Module;
+use Xibo\Event\MaintenanceDailyEvent;
 use Xibo\Factory\DataSetFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Factory\UserFactory;
@@ -83,6 +84,13 @@ class MaintenanceDailyTask implements TaskInterface
 
         // Tidy Cache
         $this->tidyCache();
+
+        // Dispatch an event so that consumers can hook into daily maintenance.
+        $event = new MaintenanceDailyEvent();
+        $this->getDispatcher()->dispatch($event, MaintenanceDailyEvent::$NAME);
+        foreach ($event->getMessages() as $message) {
+            $this->appendRunMessage($message);
+        }
     }
 
     /**

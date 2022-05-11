@@ -262,7 +262,8 @@
             }
 
             // Layout DataTable
-            var layoutTable = $layoutAssignments.DataTable({ "language": dataTablesLanguage,
+            var layoutTable = $layoutAssignments.DataTable({
+                language: dataTablesLanguage,
                 serverSide: true,
                 stateSave: true,
                 stateDuration: 0,
@@ -274,7 +275,7 @@
                 "order": [[ 0, "asc"]],
                 "filter": false,
                 ajax: {
-                    url: "{{ url_for("layout.search") }}",
+                    url: "{{ url_for("layout.search") }}?retired=0",
                     "data": function(d) {
                         $.extend(d, $layoutAssignments.closest(".XiboGrid").find(".layoutAssignFilterOptions form").serializeObject());
                     }

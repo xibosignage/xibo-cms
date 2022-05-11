@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -86,6 +86,7 @@ class DisplayGroupFactory extends BaseFactory
         return new DisplayGroup(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this,
             $this->permissionFactory,
             $this->tagFactory
@@ -456,8 +457,9 @@ class DisplayGroupFactory extends BaseFactory
 
         $limit = '';
         // Paging
-        if ($filterBy !== null && $parsedBody->getInt('start') !== null && $parsedBody->getInt('length') !== null) {
-            $limit = ' LIMIT ' . $parsedBody->getInt('start', ['default' => 0]) . ', ' . $parsedBody->getInt('length', ['default' => 10]);
+        if ($parsedBody->hasParam('start') && $parsedBody->hasParam('length')) {
+            $limit = ' LIMIT ' . $parsedBody->getInt('start')
+                . ', ' . $parsedBody->getInt('length', ['default' => 10]);
         }
 
         $sql = $select . $body . $order . $limit;

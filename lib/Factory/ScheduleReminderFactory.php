@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -57,7 +57,7 @@ class ScheduleReminderFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new ScheduleReminder($this->getStore(), $this->getLog(), $this->config, $this);
+        return new ScheduleReminder($this->getStore(), $this->getLog(), $this->getDispatcher(), $this->config, $this);
     }
 
     /**

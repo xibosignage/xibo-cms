@@ -941,7 +941,7 @@ ul li.active.tab-design:hover a {
 
 .bootstrap-tagsinput {
     min-width: 196px;
-    height: calc(1.5em + 0.75rem + 2px);
+    min-height: calc(1.5em + 0.75rem + 2px);
     padding: 0.375rem 0.75rem;
     line-height: 1.5;
 }

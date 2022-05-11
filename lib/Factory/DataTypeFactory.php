@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -25,9 +25,6 @@ namespace Xibo\Factory;
 
 
 use Xibo\Entity\DataType;
-use Xibo\Helper\SanitizerService;
-use Xibo\Service\LogServiceInterface;
-use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -41,7 +38,7 @@ class DataTypeFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new DataType($this->getStore(), $this->getLog());
+        return new DataType($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**

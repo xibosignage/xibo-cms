@@ -114,7 +114,10 @@ class RemoteDataSetFetchTask implements TaskInterface
 
                     if ($results->number > 0) {
                         // Truncate only if we also fetch new Data
-                        if ($dataSet->isTruncateEnabled() && $runTime >= $dataSet->getNextClearTime()) {
+                        if ($dataSet->isTruncateEnabled()
+                            && $results->isEligibleToTruncate
+                            && $runTime >= $dataSet->getNextClearTime()
+                        ) {
                             $this->log->debug('Truncate ' . $dataSet->dataSet);
                             $dataSet->deleteData();
 
@@ -160,17 +163,19 @@ class RemoteDataSetFetchTask implements TaskInterface
 
                         // notify here
                         $dataSet->notify();
-                    } else {
-                        if ($dataSet->truncateOnEmpty && $dataSet->isTruncateEnabled() && $runTime >= $dataSet->getNextClearTime()) {
-                            $this->log->debug('Truncate ' . $dataSet->dataSet);
-                            $dataSet->deleteData();
+                    } else if ($dataSet->truncateOnEmpty
+                        && $results->isEligibleToTruncate
+                        && $dataSet->isTruncateEnabled()
+                        && $runTime >= $dataSet->getNextClearTime()
+                    ) {
+                        $this->log->debug('Truncate ' . $dataSet->dataSet);
+                        $dataSet->deleteData();
 
-                            // Update the last clear time.
-                            $dataSet->saveLastClear($runTime);
-                            $this->appendRunMessage(__('No results for %s, truncate with no new data enabled', $dataSet->dataSet));
-                        } else {
-                            $this->appendRunMessage(__('No results for %s', $dataSet->dataSet));
-                        }
+                        // Update the last clear time.
+                        $dataSet->saveLastClear($runTime);
+                        $this->appendRunMessage(__('No results for %s, truncate with no new data enabled', $dataSet->dataSet));
+                    } else {
+                        $this->appendRunMessage(__('No results for %s', $dataSet->dataSet));
                     }
 
                     $dataSet->saveLastSync($runTime);

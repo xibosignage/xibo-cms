@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -154,12 +154,13 @@ class Application implements \JsonSerializable, ClientEntityInterface
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ApplicationRedirectUriFactory $applicationRedirectUriFactory
      * @param ApplicationScopeFactory $applicationScopeFactory
      */
-    public function __construct($store, $log, $applicationRedirectUriFactory, $applicationScopeFactory)
+    public function __construct($store, $log, $dispatcher, $applicationRedirectUriFactory, $applicationScopeFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->applicationRedirectUriFactory = $applicationRedirectUriFactory;
         $this->applicationScopeFactory = $applicationScopeFactory;

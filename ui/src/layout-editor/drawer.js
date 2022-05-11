@@ -4,6 +4,8 @@
 const drawerTemplate = require('../templates/drawer.hbs');
 const loadingTemplate = require('../templates/loading.hbs');
 
+const rejectedWidgetTypes = ['subplaylist'];
+
 /**
  * Drawer contructor
  * @param {object} container - the container to render the drawer to
@@ -205,6 +207,9 @@ Drawer.prototype.render = function() {
         e.stopPropagation();
         lD.selectObject($(this));
     });
+
+    // Set drawer number of rows in grid to the number of regions in the layout ( with max of 3 rows )
+    this.DOMObject.find('#actions-drawer-widgets').css('grid-template-rows', 'repeat(' + Math.clamp(lD.layout.numRegions, 1, 3) + ', 1fr)');
     
     if(lD.readOnlyMode === false) {
         const $searchInput = this.DOMObject.find('#inputSearch');
@@ -220,9 +225,16 @@ Drawer.prototype.render = function() {
             this.searchFocus = false;
         }
 
+        // Build selector with rejected widget types
+        let rejectedSelector = ':not(';
+        rejectedWidgetTypes.forEach(function(type, index) {
+            rejectedSelector += (index == 0 ? '' : ', ') + '[data-sub-type="' + type + '"]';
+        });
+        rejectedSelector += ')';
+
         // Drawer content
         this.DOMObject.find('#actions-drawer-content').droppable({
-            accept: '[drop-to="region"]',
+            accept: '[drop-to="region"]' + rejectedSelector,
             tolerance: 'pointer',
             drop: function(event, ui) {
                 if (self.opened) {

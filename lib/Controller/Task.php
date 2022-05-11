@@ -418,6 +418,7 @@ class Task extends Base
                 ->setPool($this->pool)
                 ->setStore($this->store)
                 ->setTimeSeriesStore($this->timeSeriesStore)
+                ->setDispatcher($this->getDispatcher())
                 ->setFactories($this->container)
                 ->setTask($task)
                 ->run();

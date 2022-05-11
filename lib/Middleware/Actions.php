@@ -108,23 +108,6 @@ class Actions implements Middleware
             return $handler->handle($request);
         }
 
-        // Dynamically load any connectors?
-        /** @var \Xibo\Factory\ConnectorFactory $connectorFactory */
-        $connectorFactory = $container->get('connectorFactory');
-        foreach ($connectorFactory->query(['isEnabled' => 1, 'isVisible' => 1]) as $connector) {
-            try {
-                // Create a connector and register it with the dispatcher.
-                $connector = $connectorFactory->create($connector);
-                $connector
-                    ->useSettings($container->get('configService')->getConnectorSettings($connector->getSourceName()))
-                    ->useHttpOptions($container->get('configService')->getGuzzleProxy())
-                    ->registerWithDispatcher($container->get('dispatcher'));
-            } catch (\Exception $exception) {
-                // Log and ignore.
-                $container->get('logger')->error('Incorrectly configured connector. e=' . $exception->getMessage());
-            }
-        }
-
         // Only process notifications if we are a full request
         if (!$this->isAjax($request)) {
             if ($container->get('user')->userId != null

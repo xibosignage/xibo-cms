@@ -41,7 +41,7 @@
         formHelpers.setupDualTypeTextArea(this, 'noDataMessage');
 
         // set date range fields
-        formHelpers.setupCheckboxInputFields($(this).find('form'), '#excludeOnlyCurrent', '', '.exclude-current');
+        formHelpers.setupCheckboxInputFields($(this).find('form'), '#useDateRange', '.date-range', '.interval');
 
         // show only current events hide the exclude all current events option
         formHelpers.setupCheckboxInputFields($(this).find('form'), '#useCurrentTemplate', '.current-event-template');

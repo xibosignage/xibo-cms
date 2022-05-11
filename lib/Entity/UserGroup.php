@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -122,16 +122,20 @@ class UserGroup
      */
     private $userFactory;
 
+    private $assignedUserIds = [];
+    private $unassignedUserIds = [];
+
     /**
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param UserGroupFactory $userGroupFactory
      * @param UserFactory $userFactory
      */
-    public function __construct($store, $log, $userGroupFactory, $userFactory)
+    public function __construct($store, $log, $dispatcher, $userGroupFactory, $userFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->userGroupFactory = $userGroupFactory;
         $this->userFactory = $userFactory;
@@ -199,8 +203,10 @@ class UserGroup
     {
         $this->load();
 
-        if (!in_array($user, $this->users))
+        if (!in_array($user, $this->users)) {
             $this->users[] = $user;
+            $this->assignedUserIds[] = $user->userId;
+        }
     }
 
     /**
@@ -210,7 +216,7 @@ class UserGroup
     public function unassignUser($user)
     {
         $this->load();
-
+        $this->unassignedUserIds[] = $user->userId;
         $this->users = array_udiff($this->users, [$user], function($a, $b) {
             /**
              * @var User $a
@@ -282,14 +288,25 @@ class UserGroup
         if ($options['validate'])
             $this->validate();
 
-        if ($this->groupId == null || $this->groupId == 0)
+        if ($this->groupId == null || $this->groupId == 0) {
             $this->add();
-        else if ($this->hash() != $this->hash)
+            $this->audit($this->groupId, 'User Group added', ['group' => $this->group]);
+        } else if ($this->hash() != $this->hash) {
             $this->edit();
+            $this->audit($this->groupId, 'User Group edited');
+        }
 
         if ($options['linkUsers']) {
             $this->linkUsers();
             $this->unlinkUsers();
+
+            if (count($this->assignedUserIds) > 0) {
+                $this->audit($this->groupId, 'Users assigned', ['userIds' => implode(',', $this->assignedUserIds)]);
+            }
+
+            if (count($this->unassignedUserIds) > 0) {
+                $this->audit($this->groupId, 'Users unassigned', ['userIds' => implode(',', $this->unassignedUserIds)]);
+            }
         }
     }
 
@@ -306,6 +323,10 @@ class UserGroup
             'features' => json_encode($this->features)
         ]);
 
+        $this->audit($this->groupId, 'User Group feature access modified', [
+            'features' => json_encode($this->features)
+        ]);
+
         return $this;
     }
 
@@ -315,14 +336,17 @@ class UserGroup
     public function delete()
     {
         // We must ensure everything is loaded before we delete
-        if ($this->hash == null)
+        if ($this->hash == null) {
             $this->load();
+        }
 
         // Unlink users
         $this->removeAssignments();
 
         $this->getStore()->update('DELETE FROM `permission` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
         $this->getStore()->update('DELETE FROM `group` WHERE groupId = :groupId', ['groupId' => $this->groupId]);
+
+        $this->audit($this->groupId, 'User group deleted.', false);
     }
 
     /**
@@ -443,8 +467,6 @@ class UserGroup
         }
 
         $sql .= ')';
-
-
 
         $this->getStore()->update($sql, $params);
     }

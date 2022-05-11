@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -117,12 +117,13 @@ class ScheduleReminder implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param ScheduleReminderFactory $scheduleReminderFactory
      */
-    public function __construct($store, $log, $config, $scheduleReminderFactory)
+    public function __construct($store, $log, $dispatcher, $config, $scheduleReminderFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->config = $config;
         $this->scheduleReminderFactory = $scheduleReminderFactory;

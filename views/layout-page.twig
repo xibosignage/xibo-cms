@@ -27,7 +27,7 @@
                             <div class="tab-content">
                                 <div class="tab-pane active" id="general-filter" role="tabpanel">
                                     {% set title %}{% trans "ID" %}{% endset %}
-                                    {{ inline.number("layoutId", title) }}
+                                    {{ inline.number("campaignId", title) }}
 
                                     <div class="form-group mr-1 mb-1">
                                         <label class="control-label mr-1" title="" for="layout" accesskey="">{% trans "Name" %}</label>
@@ -107,6 +107,9 @@
                                         {% set title %}{% trans "Media" %}{% endset %}
                                         {{ inline.input("mediaLike", title) }}
                                     {% endif %}
+
+                                    {% set title %}{% trans "Layout ID" %}{% endset %}
+                                    {{ inline.number("layoutId", title) }}
                                 </div>
                             </div>
                         </form>
@@ -146,6 +149,7 @@
                                         <th>{% trans "Stats?" %}</th>
                                         <th>{% trans "Created" %}</th>
                                         <th>{% trans "Modified" %}</th>
+                                        <th>{% trans "Layout ID" %}</th>
                                         <th>{% trans "Code" %}</th>
                                         <th class="rowMenu"></th>
                                     </tr>
@@ -171,8 +175,8 @@
             {% endif %}
 
             table = $("#layouts").DataTable({
-                "language": dataTablesLanguage,
-                "lengthMenu": [10, 25, 50, 100, 250, 500],
+                language: dataTablesLanguage,
+                lengthMenu: [10, 25, 50, 100, 250, 500],
                 dom: dataTablesTemplate,
                 serverSide: true,
                 stateSave: true,
@@ -183,15 +187,15 @@
                 filter: false,
                 searchDelay: 3000,
                 dataType: 'json',
-                "order": [[1, "asc"]],
+                order: [[1, "asc"]],
                 ajax: {
                     url: "{{ url_for("layout.search") }}",
-                    "data": function (d) {
+                    data: function (d) {
                         $.extend(d, $("#layouts").closest(".XiboGrid").find(".FilterDiv form").serializeObject());
                     }
                 },
-                "columns": [
-                    {"data": "layoutId", responsivePriority: 2},
+                columns: [
+                    {"data": "campaignId", responsivePriority: 1},
                     {
                         "data": "layout",
                         responsivePriority: 2,
@@ -309,10 +313,15 @@
                         "visible": false
                     },
                     {
-                        "data": "modifiedDt",
+                        data: "modifiedDt",
                         responsivePriority: 6,
-                        "render": dataTableDateFromIso,
-                        "visible": false
+                        render: dataTableDateFromIso,
+                        visible: true
+                    },
+                    {
+                      data: "layoutId",
+                      visible: false,
+                      responsivePriority: 4
                     },
                     {"data": "code", "visible":false, responsivePriority: 4},
                     {
@@ -495,64 +504,53 @@
           var cardsTemplate = Handlebars.compile($('#template-layout-add-template-cards').html());
           var cardColumn = $(dialog).find('#layout-add-templates');
 
-          // track start/length
-          var masonry;
-          var start = 0;
-          var length = 15;
-
           // Initialise masonary - we do this after we've added our first card.
+          var masonry;
           masonry = new Masonry('#layout-add-templates', {
             percentPosition: true
           });
 
-          // Add full screen, l-bar-right and l-bar-left
-          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
-            title: '{{ "Full screen"|trans }}',
-            description: '{{ "Full screen content"|trans }}',
-            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/full-screen.png',
-            source: 'local',
-            id: '0|full-screen'
-          }));
-          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
-            title: '{{ "L shape left"|trans }}',
-            description: '{{ "3 regions in an L shape, on the left"|trans }}',
-            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/l-bar-left.png',
-            source: 'local',
-            id: '0|l-bar-left'
-          }));
-          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
-            title: '{{ "L shape right"|trans }}',
-            description: '{{ "3 regions in an L shape, on the right"|trans }}',
-            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/l-bar-right.png',
-            source: 'local',
-            id: '0|l-bar-right'
-          }));
+          // filter form
+          var $filter = $('#layout-add-templates-filter');
+          var filter = {
+            start: 0,
+            length: 15,
+          };
+          filter = $.extend(filter, $filter.serializeObject());
 
-          // Add our blank resolution
-          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
-            title: '{{ "Blank"|trans }}',
-            description: '{{ "Add your own regions using the editor"|trans }}',
-            thumbnail: null,
-            source: 'local',
-            id: '0|blank'
-          }));
+          // track start/length
+          $filter.on('change', function() {
+            // Clear everything.
+            masonry.remove(cardColumn.find('.template-card'));
+
+            // Run a new query.
+            filter = $.extend(filter, $filter.serializeObject());
+
+            if (!filter.template && (filter.provider && (filter.provider === 'both' || filter.provider === 'local'))) {
+              loadPredefined(cardsTemplate, cardColumn, masonry, filter);
+            }
+
+            loadTemplates(cardsTemplate, cardColumn, masonry, filter, 'both');
+          });
+
+          if (filter.provider && (filter.provider === 'both' || filter.provider === 'local')) {
+            loadPredefined(cardsTemplate, cardColumn, masonry, filter);
+          }
 
           cardColumn.imagesLoaded(function() {
             // All images loaded
             // Make a request to get our templates.
-            loadTemplates(cardsTemplate, cardColumn, masonry, start, length, 'local', function() {
-              loadTemplates(cardsTemplate, cardColumn, masonry, start, length, 'remote');
-            });
+            loadTemplates(cardsTemplate, cardColumn, masonry, filter, 'both');
           }).progress(function() {
-            // Layout the image card we've laoded
+            // Layout the image card we've loaded
             masonry.layout();
           });
 
           // Add the more button
           $(dialog).find('#layout-add-templates-more').on('click', function(e) {
             e.preventDefault();
-            start = start + length;
-            loadTemplates(cardsTemplate, cardColumn, masonry, start, length, 'both');
+            filter.start = filter.start + filter.length;
+            loadTemplates(cardsTemplate, cardColumn, masonry, filter, 'both');
           });
 
           // Folder selector.
@@ -596,7 +594,41 @@
           });
         }
 
-        function loadTemplates(cardsTemplate, cardColumn, masonry, start, length, provider, next) {
+        function loadPredefined(cardsTemplate, cardColumn, masonry, filter) {
+          // Add full screen, l-bar-right and l-bar-left
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "Full screen"|trans }}',
+            description: '{{ "Full screen content"|trans }}',
+            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/full-screen.png',
+            source: 'local',
+            id: '0|full-screen'
+          }));
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "L shape left"|trans }}',
+            description: '{{ "3 regions in an L shape, on the left"|trans }}',
+            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/l-bar-left.png',
+            source: 'local',
+            id: '0|l-bar-left'
+          }));
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "L shape right"|trans }}',
+            description: '{{ "3 regions in an L shape, on the right"|trans }}',
+            thumbnail: '{{ theme.rootUri() }}theme/default/img/layout_grids/l-bar-right.png',
+            source: 'local',
+            id: '0|l-bar-right'
+          }));
+
+          // Add our blank resolution
+          masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, {
+            title: '{{ "Blank"|trans }}',
+            description: '{{ "Add your own regions using the editor"|trans }}',
+            thumbnail: null,
+            source: 'local',
+            id: '0|blank'
+          }));
+        }
+
+        function loadTemplates(cardsTemplate, cardColumn, masonry, filter) {
           var spinner = cardColumn.closest('.modal').find('.panel-footer .spinner-grow');
           var moreButton = cardColumn.closest('.modal').find('#layout-add-templates-more');
           spinner.removeClass('d-none');
@@ -604,14 +636,9 @@
           $.ajax({
             method: 'GET',
             url: '{{ url_for("template.search.all") }}',
-            data: {
-              start: start,
-              length: length,
-              provider: provider
-            },
+            data: filter,
             success: function(response) {
               if (response && response.data && response.data.length > 0) {
-
                 $.each(response.data, function(index, el) {
                   masonry.addItems(addTemplateCard(cardsTemplate, cardColumn, el));
                 });
@@ -620,16 +647,11 @@
                   masonry.layout();
                 });
 
+                moreButton.prop('disabled', false);
               } else {
                 toastr.info('{{ "There are no more templates to show"|trans }}');
               }
               spinner.addClass('d-none');
-              moreButton.prop('disabled', false);
-
-              // Next?
-              if (next !== undefined && next !== null) {
-                next();
-              }
             }
           });
         }
@@ -653,14 +675,15 @@
             var source = $(this).data('source');
             var download = $(this).data('download');
 
-            $that.closest('form').find('input[name="layoutId"]').val(layoutId);
-            $that.closest('form').find('input[name="source"]').val(source);
-            $that.closest('form').find('input[name="download"]').val(download);
+            var $form = $('#layoutAddForm');
+            $form.find('input[name="layoutId"]').val(layoutId);
+            $form.find('input[name="source"]').val(source);
+            $form.find('input[name="download"]').val(download);
 
             if (layoutId.startsWith("0|")) {
-              $that.closest('form').find('.resolution-group').removeClass('d-none');
+              $form.find('.resolution-group').removeClass('d-none');
             } else {
-              $that.closest('form').find('.resolution-group').addClass('d-none');
+              $form.find('.resolution-group').addClass('d-none');
             }
           });
           cardColumn.append($element);

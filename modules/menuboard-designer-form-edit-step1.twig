@@ -61,6 +61,9 @@
                 {% set helpText %}{% trans "Select the template you would like to apply." %}{% endset %}
                 {{ forms.dropdown("templateId", "single", title, module.getOption("templateId"), module.getTemplatesWithInfo, "id", "value", helpText, "template-selector-control localSelect selectPickerWithImage", null, null, null, [{ name: "data-minimum-results-for-search", value: "Infinity" },{ name: "data-width", value: "100%" }], null, "image", "orientation") }}
 
+                {% set message %}{% trans "(Legacy) Templates are compatible with older Player/Browser versions!" %}{% endset %}
+                {{ forms.message(message, 'p-3 rounded', 'alert-info') }}
+
                 <input type="hidden" name="step" value="1" />
             </form>
         </div>

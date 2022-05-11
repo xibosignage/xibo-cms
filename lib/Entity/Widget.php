@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -40,6 +40,7 @@ use Xibo\Widget\Definition\Property;
  *
  * @SWG\Definition()
  * @property int $isValid Is this Widget valid
+ * @property double $tempCyclePlaybackAverageDuration The average duration if cycle playback is enabled.
  */
 class Widget implements \JsonSerializable
 {
@@ -256,6 +257,7 @@ class Widget implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param WidgetOptionFactory $widgetOptionFactory
      * @param WidgetMediaFactory $widgetMediaFactory
      * @param WidgetAudioFactory $widgetAudioFactory
@@ -263,9 +265,9 @@ class Widget implements \JsonSerializable
      * @param DisplayNotifyServiceInterface $displayNotifyService
      * @param ActionFactory $actionFactory
      */
-    public function __construct($store, $log, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayNotifyService, $actionFactory)
+    public function __construct($store, $log, $dispatcher, $widgetOptionFactory, $widgetMediaFactory, $widgetAudioFactory, $permissionFactory, $displayNotifyService, $actionFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->excludeProperty('module');
         $this->widgetOptionFactory = $widgetOptionFactory;
         $this->widgetMediaFactory = $widgetMediaFactory;

@@ -25,14 +25,8 @@
     function reloadLayoutEditorData() {
         // Reload layout designer data and show the target action tab
         if(lD != undefined) {
-            lD.reloadData(lD.layout);
             lD.propertiesPanel.openTabOnRender = 'a[href="#actionTab"]';
-
-            if(lD.selectedObject.type == 'layout') {
-                lD.selectObject();
-            } else {
-                lD.selectObject($('#' + lD.selectedObject.id), true);
-            }
+            lD.reloadData(lD.layout);
         }
     }
 

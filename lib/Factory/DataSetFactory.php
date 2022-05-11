@@ -1,9 +1,8 @@
 <?php
-/**
- * Copyright (C) 2022 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
- * contributions by LukyLuke aka Lukas Zurschmiede - https://github.com/LukyLuke
  *
  * This file is part of Xibo.
  *
@@ -93,6 +92,7 @@ class DataSetFactory extends BaseFactory
         return new DataSet(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this->getSanitizerService(),
             $this->config,
             $this->pool,
@@ -310,7 +310,7 @@ class DataSetFactory extends BaseFactory
      * @param DataSet $dataSet The Dataset to get Data for
      * @param DataSet|null $dependant The Dataset $dataSet depends on
      * @param bool $enableCaching Should we cache check the results and store the resulting cache
-     * @return \stdClass{entries:[],number:int}
+     * @return \stdClass {entries:[], number:int, isEligibleToTruncate:bool}
      * @throws InvalidArgumentException
      * @throws NotFoundException
      */
@@ -327,6 +327,7 @@ class DataSetFactory extends BaseFactory
         $result = new \stdClass();
         $result->entries = [];
         $result->number = 0;
+        $result->isEligibleToTruncate = false;
         
         // Getting all dependant values if needed
         // just an empty array if we don't have a dependent
@@ -459,6 +460,9 @@ class DataSetFactory extends BaseFactory
                     $cacheControlKey->expiresAfter(86400 * 365);
                     $this->pool->saveDeferred($cacheControlKey);
                 }
+
+                // We have passed any caching and therefore expect results
+                $result->isEligibleToTruncate = true;
 
                 if ($dataSet->sourceId === 1) {
                     // Make sure we have JSON in the response

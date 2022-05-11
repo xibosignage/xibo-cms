@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -112,6 +112,12 @@ class PlayerActionService implements PlayerActionServiceInterface
             // Add to collection
             $this->actions[] = $displayAction;
         }
+    }
+
+    /** @inheritDoc */
+    public function getQueue(): array
+    {
+        return $this->actions;
     }
 
     /**

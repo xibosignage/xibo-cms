@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -130,13 +130,14 @@ class SavedReport implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param MediaFactory $mediaFactory
      * @param SavedReportFactory $savedReportFactory
      */
-    public function __construct($store, $log, $config, $mediaFactory, $savedReportFactory)
+    public function __construct($store, $log, $dispatcher, $config, $mediaFactory, $savedReportFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
 
         $this->config = $config;
         $this->mediaFactory = $mediaFactory;

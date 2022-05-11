@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,7 +23,6 @@ namespace Xibo\Entity;
 
 use Carbon\Carbon;
 use Respect\Validation\Validator as v;
-use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Event\LayoutBuildEvent;
 use Xibo\Event\LayoutBuildRegionEvent;
 use Xibo\Factory\ActionFactory;
@@ -334,9 +333,6 @@ class Layout implements \JsonSerializable
      */
     private $config;
 
-    /** @var  EventDispatcherInterface */
-    private $dispatcher;
-
     /**
      * @var PermissionFactory
      */
@@ -385,6 +381,7 @@ class Layout implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param ConfigServiceInterface $config
      * @param PermissionFactory $permissionFactory
      * @param RegionFactory $regionFactory
@@ -397,9 +394,9 @@ class Layout implements \JsonSerializable
      * @param ActionFactory $actionFactory
      * @param FolderFactory $folderFactory
      */
-    public function __construct($store, $log, $config, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
+    public function __construct($store, $log, $dispatcher, $config, $permissionFactory, $regionFactory, $tagFactory, $campaignFactory, $layoutFactory, $mediaFactory, $moduleFactory, $playlistFactory, $actionFactory, $folderFactory)
     {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->setPermissionsClass('Xibo\Entity\Campaign');
         $this->config = $config;
         $this->permissionFactory = $permissionFactory;
@@ -1152,24 +1149,11 @@ class Layout implements \JsonSerializable
      * @return $this
      * @throws NotFoundException
      */
-    public function assignTag($tag)
+    public function assignTag($tag): Layout
     {
         $this->load();
-
-        if ($this->tags != [$tag]) {
-
-            if (!in_array($tag, $this->tags)) {
-                $this->tags[] = $tag;
-            } else {
-                foreach ($this->tags as $currentTag) {
-                    if ($currentTag === $tag->tagId && $currentTag->value !== $tag->value) {
-                        $this->tags[] = $tag;
-                    }
-                }
-            }
-        } else {
-            $this->getLog()->debug('No Tags to assign');
-        }
+        $this->handleTagAssign($tag);
+        $this->getLog()->debug(sprintf('Tags after assignment %s', json_encode($this->tags)));
 
         return $this;
     }
@@ -1499,7 +1483,14 @@ class Layout implements \JsonSerializable
 
                 if ($region->isDrawer === 0) {
                     // Region duration
-                    $region->duration = $region->duration + $widget->calculatedDuration;
+                    // If we have a cycle playback duration, we use that, otherwise we use the normal calculated
+                    // duration.
+                    $tempCyclePlaybackAverageDuration = $widget->tempCyclePlaybackAverageDuration ?? 0;
+                    if ($tempCyclePlaybackAverageDuration) {
+                        $region->duration = $region->duration + $tempCyclePlaybackAverageDuration;
+                    } else {
+                        $region->duration = $region->duration + $widget->calculatedDuration;
+                    }
 
                     // We also want to add any transition OUT duration
                     // only the OUT duration because IN durations do not get added to the widget duration by the player
@@ -2127,7 +2118,11 @@ class Layout implements \JsonSerializable
                 if ($this->status === ModuleWidget::$STATUS_INVALID
                     || ($options['exceptionOnEmptyRegion'] && $this->hasEmptyRegion())
                 ) {
+                    $this->getLog()->debug('xlfToDisk: publish failed for layoutId ' . $this->layoutId
+                        . ', status is ' . $this->status);
+
                     $this->audit($this->layoutId, 'Publish layout failed, rollback', ['layoutId' => $this->layoutId]);
+
                     throw new InvalidArgumentException(
                         sprintf(
                             __('There is an error with this Layout: %s'),

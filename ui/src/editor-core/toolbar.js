@@ -728,10 +728,16 @@ Toolbar.prototype.selectCard = function(card) {
         if (dropTo === 'all' && subType === 'permissions') {
             $('.ui-droppable.permissionsModifiable').addClass('ui-droppable-active');
         } else {
-            // Prevent adding audio to subplaylist
             let selectorAppend = '';
+
+            // Prevent adding audio to subplaylist
             if (subType == 'audio') {
-                selectorAppend = ':not([data-widget-type="subplaylist"])';
+                selectorAppend += ':not([data-widget-type="subplaylist"])';
+            }
+
+            // Prevent adding subplaylist to drawer
+            if(subType == 'subplaylist') {
+                selectorAppend += ':not(#actions-drawer-content)';
             }
 
             $('[data-type="' + dropTo + '"].ui-droppable.editable' + selectorAppend + 

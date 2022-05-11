@@ -78,7 +78,7 @@ Viewer.prototype.scaleElement = function(element, container) {
 Viewer.prototype.render = function(element) {
 
     // IF preview is playing, refresh the bottombar
-    if (this.previewPlaying) {
+    if (this.previewPlaying && this.parent.selectedObject.type == 'layout') {
         this.parent.bottombar.render(this.parent.selectedObject);
     }
 

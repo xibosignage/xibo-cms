@@ -1,6 +1,6 @@
 <?php
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -27,6 +27,7 @@ use Psr\Http\Server\MiddlewareInterface as Middleware;
 use Psr\Http\Server\RequestHandlerInterface as RequestHandler;
 use Slim\App as App;
 use Xibo\Service\DisplayNotifyService;
+use Xibo\Service\NullDisplayNotifyService;
 use Xibo\Service\PlayerActionService;
 use Xibo\Support\Exception\GeneralException;
 

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2019 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -64,7 +64,14 @@ class SavedReportFactory extends BaseFactory
      */
     public function createEmpty()
     {
-        return new SavedReport($this->getStore(), $this->getLog(), $this->config, $this->mediaFactory, $this);
+        return new SavedReport(
+            $this->getStore(),
+            $this->getLog(),
+            $this->getDispatcher(),
+            $this->config,
+            $this->mediaFactory,
+            $this
+        );
     }
 
     /**

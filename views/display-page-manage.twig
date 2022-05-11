@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -58,6 +58,13 @@
     <div class="row">
         <div class="col-lg-6">
             <div class="widget">
+                {% if display.clientCode < 300 %}
+                    <div class="widget-body medium">
+                        <p class="alert alert-info">
+                            {{ "This player is too old to show faults. Please upgrade it to v3 or later."|trans }}
+                        </p>
+                    </div>
+                {% else %}
                 <div class="widget-title">
                     <button id="refreshLog" class="btn btn-sm pull-right"><span class="fa fa-refresh"></span></button>
                     {% trans "Reported Player Faults" %}
@@ -82,6 +89,7 @@
                         </tbody>
                     </table>
                 </div>
+                {% endif %}
             </div>
         </div>
         <div class="col-lg-6">
@@ -222,8 +230,11 @@
 
         $(document).ready(function() {
             const $playerFaults = $('#playerFaults');
+            if ($playerFaults.length < 0) {
+              return;
+            }
             var table = $playerFaults.DataTable({
-                "language": dataTablesLanguage,
+                language: dataTablesLanguage,
                 dom: dataTablesTemplate,
                 serverSide: true, stateSave: true, stateDuration: 0,
                 stateLoadCallback: dataTableStateLoadCallback,

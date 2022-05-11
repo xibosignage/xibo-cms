@@ -1,4 +1,24 @@
 <?php
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
 
 namespace Xibo\Report;
 
@@ -190,25 +210,19 @@ class TimeConnected implements ReportInterface
     /** @inheritdoc */
     public function getResults(SanitizerInterface $sanitizedParams)
     {
-        $campaignId = $sanitizedParams->getInt('campaignId');
-        $type = strtolower($sanitizedParams->getString('type'));
-        $layoutId = $sanitizedParams->getInt('layoutId');
-        $mediaId = $sanitizedParams->getInt('mediaId');
-        $eventTag = $sanitizedParams->getString('eventTag');
-        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => [] ]);
-
-        $accessibleDisplayIds = [];
+        $displayGroupIds = $sanitizedParams->getIntArray('displayGroupIds', ['default' => []]);
         $displayIds = [];
 
         // Get an array of display id this user has access to.
-        $accessibleDisplayIds[] = $this->getDisplayIdFilter($sanitizedParams);
+        $accessibleDisplayIds = $this->getDisplayIdFilter($sanitizedParams);
 
         if (count($displayGroupIds) > 0) {
             foreach ($displayGroupIds as $displayGroupId) {
                 // Get all displays by Display Group
                 $displays = $this->displayFactory->getByDisplayGroupId($displayGroupId);
                 foreach ($displays as $display) {
-                    if (in_array($display->displayId, $accessibleDisplayIds)) { // User has access to the display
+                    if (in_array($display->displayId, $accessibleDisplayIds)) {
+                        // User has access to the display
                         $displayIds[] = $display->displayId;
                     }
                 }
@@ -221,11 +235,9 @@ class TimeConnected implements ReportInterface
             throw new InvalidArgumentException(__('No displays with View permissions'), 'displays');
         }
 
-        //
-
         // From and To Date Selection
         // --------------------------
-        // Our report has a range filter which determins whether or not the user has to enter their own from / to dates
+        // Our report has a range filter which determines whether the user has to enter their own from / to dates
         // check the range filter first and set from/to dates accordingly.
         $reportFilter = $sanitizedParams->getString('reportFilter');
         // Use the current date as a helper
@@ -303,7 +315,7 @@ class TimeConnected implements ReportInterface
         // Get Results!
         // with keys "result", "periods", "periodStart", "periodEnd"
         // -------------
-        $result = $this->getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds, $campaignId, $type, $layoutId, $mediaId, $eventTag);
+        $result = $this->getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds);
 
         //
         // Output Results
@@ -366,15 +378,10 @@ class TimeConnected implements ReportInterface
      * @param Carbon $fromDt The filter range from date
      * @param Carbon $toDt The filter range to date
      * @param string $groupByFilter Grouping, byhour, bydayofweek and bydayofmonth
-     * @param $displayIds
-     * @param $displayGroupIds
-     * @param $type
-     * @param $layoutId
-     * @param $mediaId
-     * @param $eventTag
+     * @param array $displayIds
      * @return array
      */
-    private function getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds, $displayGroupIds, $type, $layoutId, $mediaId, $eventTag)
+    private function getTimeDisconnectedMySql($fromDt, $toDt, $groupByFilter, $displayIds)
     {
 
         if ($groupByFilter == 'bydayofmonth') {
@@ -448,7 +455,7 @@ class TimeConnected implements ReportInterface
 
         return [
             'result' => $this->getStore()->select($query, []),
-            'periods' => $this->getStore()->select('SELECT * from '.$periods, []),
+            'periods' => $this->getStore()->select('SELECT * from ' . $periods, []),
             'periodStart' => $fromDt->format('Y-m-d H:i:s'),
             'periodEnd' => $toDt->format('Y-m-d H:i:s')
         ];

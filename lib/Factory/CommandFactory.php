@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -49,7 +49,7 @@ class CommandFactory extends BaseFactory
      */
     public function create()
     {
-        return new Command($this->getStore(), $this->getLog());
+        return new Command($this->getStore(), $this->getLog(), $this->getDispatcher());
     }
 
     /**
@@ -194,7 +194,7 @@ class CommandFactory extends BaseFactory
         $sql = $select . $body . $order . $limit;
 
         foreach ($this->getStore()->select($sql, $params) as $row) {
-            $entries[] = (new Command($this->getStore(), $this->getLog()))->hydrate($row);
+            $entries[] = (new Command($this->getStore(), $this->getLog(), $this->getDispatcher()))->hydrate($row);
         }
 
         // Paging

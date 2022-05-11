@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -49,6 +49,7 @@ class MenuBoardCategoryFactory extends BaseFactory
         return new MenuBoardCategory(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this
         );
     }
@@ -62,6 +63,7 @@ class MenuBoardCategoryFactory extends BaseFactory
         return new MenuBoardProduct(
             $this->getStore(),
             $this->getLog(),
+            $this->getDispatcher(),
             $this->menuBoardProductOptionFactory
         );
     }

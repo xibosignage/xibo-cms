@@ -906,6 +906,7 @@ function ActionController(parent, actions, options) {
 
     var $container = $('<div class="action-controller noselect"></div>').appendTo($("#" + parent.containerName));
     $container.append($('<div class="action-controller-title"><button class="toggle"></button><span class="title">' + previewTranslations.actionControllerTitle + '</span></div>'));
+    var $actionsContainer = $('<div class="actions-container"></div>').appendTo($container);
 
     for (var index = 0; index < actions.length; index++) {
         var newAction = actions[index];
@@ -924,12 +925,33 @@ function ActionController(parent, actions, options) {
             $newActionHTML.attr(this.name, this.value);
         });
 
+        // Build HTML for the new action
+        var html = '';
+
+        // Add action type
+        html += '<span class="action-row-title">' + previewTranslations[$newActionHTML.attr('actiontype')];
+        if ($newActionHTML.attr('actiontype') == 'navWidget') {
+            html += ' <span title="' + previewTranslations.widgetId + '">[' + $newActionHTML.attr('widgetId') + ']</span>';
+        } else if ($newActionHTML.attr('actiontype') == 'navLayout') {
+            html += ' <span title="' + previewTranslations.layoutCode + '">[' + $newActionHTML.attr('layoutCode') + ']</span>';
+        }
+        html += '</span>';
+
+        // Add target
+        html += '<span class="action-row-target" title="' + previewTranslations.target + '">' + $newActionHTML.attr('target');
+        if ($newActionHTML.attr('targetid') != '') {
+            html += '(' + $newActionHTML.attr('targetid') + $newActionHTML.attr('layoutcode') + ')';
+        }
+        html += '</span>';
+        
+        // Add HTML string to the action
+        $newActionHTML.html(html);
+
         // Append new action to the controller
-        $newActionHTML.html('<span class="action-row-title">' + $newActionHTML.attr('actiontype') + '</span>' + (($newActionHTML.attr('triggertype') != 'webhook') ? ($newActionHTML.attr('source') + '(' + $newActionHTML.attr('sourceid') + ') > ') : '') + $newActionHTML.attr('target') + '(' + $newActionHTML.attr('targetid') + $newActionHTML.attr('layoutcode') + ')');
         $newActionHTML.addClass('action', newAction.id);
         $newActionHTML.attr('originalId', newAction.id);
         $newActionHTML.attr('id', 'A-' + newAction.id + '-' + nextId());
-        $newActionHTML.appendTo($container);
+        $newActionHTML.appendTo($actionsContainer);
     }
 
     // Enable dragging

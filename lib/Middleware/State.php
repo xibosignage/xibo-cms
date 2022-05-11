@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -49,7 +49,6 @@ use Xibo\Twig\TwigMessages;
  */
 class State implements Middleware
 {
-
     /* @var App $app */
     private $app;
 
@@ -205,7 +204,6 @@ class State implements Middleware
 
 
         if ($container->get('name') == 'web' || $container->get('name') == 'xtr') {
-
             /** @var Twig $view */
             $view = $container->get('view');
 
