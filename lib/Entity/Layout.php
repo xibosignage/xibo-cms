@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1442,15 +1442,21 @@ class Layout implements \JsonSerializable
                 $module = $this->moduleFactory->getByType($widget->type);
 
                 // Set the Layout Status
+                $moduleStatus = ModuleWidget::$STATUS_VALID;
                 try {
                     $module
                         ->decorateProperties($widget)
                         ->validateProperties();
 
-                    // TODO: validity: how do we do module status messages?
-                    /*if ($module->hasStatusMessage()) {
-                        $this->pushStatusMessage($module->getStatusMessage());
-                    }*/
+                    // Is this module file based? If so, check its released status
+                    if ($module->regionSpecific == 0 && $widget->getPrimaryMediaId() != 0) {
+                        $media = $this->mediaFactory->getById($widget->getPrimaryMediaId());
+                        if ($media->released == 0) {
+                            throw new GeneralException(__('%s is pending conversion', $media->name));
+                        } else if ($media->released == 2) {
+                            throw new GeneralException(__('%s is too large. Please ensure that none of the images in your layout are larger than your Resize Limit on their longest edge.', $media->name));
+                        }
+                    }
                 } catch (GeneralException $xiboException) {
                     $moduleStatus = ModuleWidget::$STATUS_INVALID;
 

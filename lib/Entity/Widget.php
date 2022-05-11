@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -379,12 +379,12 @@ class Widget implements \JsonSerializable
      * @return WidgetOption
      * @throws NotFoundException
      */
-    public function getOption($option)
+    public function getOption(string $option): WidgetOption
     {
         foreach ($this->widgetOptions as $widgetOption) {
-            /* @var WidgetOption $widgetOption */
-            if (strtolower($widgetOption->option) == strtolower($option))
+            if (strtolower($widgetOption->option) == strtolower($option)) {
                 return $widgetOption;
+            }
         }
 
         throw new NotFoundException(__('Widget Option not found'));
@@ -396,18 +396,18 @@ class Widget implements \JsonSerializable
      * @param mixed $default
      * @return mixed
      */
-    public function getOptionValue($option, $default)
+    public function getOptionValue(string $option, $default)
     {
         try {
             $widgetOption = $this->getOption($option);
             $widgetOption = (($widgetOption->value) === null) ? $default : $widgetOption->value;
 
-            if (is_integer($default))
+            if (is_integer($default)) {
                 $widgetOption = intval($widgetOption);
+            }
 
             return $widgetOption;
-        }
-        catch (NotFoundException $e) {
+        } catch (NotFoundException $e) {
             return $default;
         }
     }
@@ -418,8 +418,9 @@ class Widget implements \JsonSerializable
      * @param string $type
      * @param mixed $value
      */
-    public function setOptionValue($option, $type, $value)
+    public function setOptionValue(string $option, string $type, $value)
     {
+        $this->getLog()->debug('setOptionValue: ' . $option . ', ' . $type . '. Value = ' . $value);
         try {
             $widgetOption = $this->getOption($option);
             $widgetOption->type = $type;

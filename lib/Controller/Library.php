@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -1561,7 +1561,24 @@ class Library extends Base
 
         $params = $this->getSanitizer($request->getParams());
         if ($params->getCheckbox('preview') == 1) {
-            $response = $downloader->download($media, $response, $media->getMimeType());
+            // Various different behaviours for the different types of file.
+            if ($module->type === 'image') {
+                $response = $downloader->imagePreview(
+                    $params,
+                    $media->storedAs,
+                    $response,
+                    $this->getConfig()->uri('img/error.png', true)
+                );
+            } else if ($module->type === 'video') {
+                $response = $downloader->imagePreview(
+                    $params,
+                    $media->mediaId . '_videocover',
+                    $response,
+                    $this->getConfig()->uri('img/1x1.png', true)
+                );
+            } else {
+                $response = $downloader->download($media, $response, $media->getMimeType());
+            }
         } else {
             $response = $downloader->download($media, $response, null, $params->getString('attachment'));
         }

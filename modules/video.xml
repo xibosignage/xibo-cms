@@ -89,4 +89,19 @@
             <default>0</default>
         </property>
     </properties>
+    <preview>
+        <twig><![CDATA[
+{% set url = url_for("library.download", {regionId: region.regionId, id: widget.getPrimaryMediaId()}) %}
+<div style="display:table; width:100%; height: {{ height }}px>
+    <div style=" display: table-cell;">
+        <div style="text-align:center;">
+            <i class="fa module-preview-icon module-icon-video" style="position:fixed;"></i>
+        </div>
+        <div style="text-align:center;">
+            <img src="{{ url }}?preview=1&width={{ width }}&height={{ height }}&proportional=1" />
+        </div>
+    </div>
+</div>
+		]]></twig>
+    </preview>
 </module>

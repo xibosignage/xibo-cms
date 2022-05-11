@@ -209,25 +209,23 @@ class WidgetDownloader
     /**
      * Output an image preview
      * @param \Xibo\Support\Sanitizer\SanitizerInterface $params
-     * @param \Xibo\Entity\Media $media
+     * @param string $filePath
      * @param \Slim\Http\Response $response
+     * @param string|null $errorThumb
      * @return \Slim\Http\Response|\Psr\Http\Message\ResponseInterface
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
     public function imagePreview(
         SanitizerInterface $params,
-        Media $media,
-        Response $response
+        string $filePath,
+        Response $response,
+        string $errorThumb = null
     ): Response {
         // Image previews call for dynamically generated images as various sizes
         // for example a background image will stretch to the entire region
         // an image widget may be aspect, fit or scale
-        if ($media->mediaType !== 'image') {
-            throw new InvalidArgumentException(__('Expecting an image widget'), 'type');
-        }
-
         try {
-            $filePath = $this->libraryLocation . $media->storedAs;
+            $filePath = $this->libraryLocation . $filePath;
             $width = intval($params->getDouble('width'));
             $height = intval($params->getDouble('height'));
             $proportional = !$params->hasParam('proportional')
@@ -258,10 +256,16 @@ class WidgetDownloader
             }
 
             echo $img->encode();
-            return HttpCacheProvider::withExpires($response, '+1 week');
+            $response = HttpCacheProvider::withExpires($response, '+1 week');
         } catch (\Exception $e) {
-            $this->logger->error('Cannot parse image: ' . $e->getMessage());
-            throw new InvalidArgumentException(__('Cannot parse image.'), 'storedAs');
+            if ($errorThumb !== null) {
+                echo Img::make($errorThumb)->encode();
+            } else {
+                $this->logger->error('Cannot parse image: ' . $e->getMessage());
+                throw new InvalidArgumentException(__('Cannot parse image.'), 'storedAs');
+            }
         }
+
+        return $response;
     }
 }

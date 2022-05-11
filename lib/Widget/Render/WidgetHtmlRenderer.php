@@ -110,7 +110,8 @@ class WidgetHtmlRenderer
                     'width' => $width,
                     'height' => $height,
                     'params' => $params,
-                    'widget' => $widget
+                    'widget' => $widget,
+                    'region' => $region
                 ]);
             } else {
                 // Modules without a preview should render out as HTML

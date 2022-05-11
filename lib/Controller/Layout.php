@@ -1,5 +1,5 @@
 <?php
-/**
+/*
  * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
@@ -2551,7 +2551,7 @@ class Layout extends Base
             'width' => $layout->width,
             'height' => $layout->height,
             'proportional' => 0
-        ]), $media, $response);
+        ]), $media->storedAs, $response);
 
         $this->setNoOutput(true);
         return $this->render($request, $response);
