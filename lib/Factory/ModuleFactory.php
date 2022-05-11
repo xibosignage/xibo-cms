@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -315,6 +315,7 @@ class ModuleFactory extends BaseFactory
     /**
      * Create a module from its XML definition
      * @param string $file the path to the module definition
+     * @param array $modulesWithSettings
      * @return \Xibo\Entity\Module
      */
     private function createFromXml(string $file, array $modulesWithSettings): Module
@@ -323,7 +324,7 @@ class ModuleFactory extends BaseFactory
         $xml = new \DOMDocument();
         $xml->load($file);
 
-        $module = new Module($this->getStore(), $this->getLog(), $this);
+        $module = new Module($this->getStore(), $this->getLog(), $this->getDispatcher(), $this);
         $module->moduleId = $this->getFirstValueOrDefaultFromXmlNode($xml, 'id');
         $module->name = $this->getFirstValueOrDefaultFromXmlNode($xml, 'name');
         $module->author = $this->getFirstValueOrDefaultFromXmlNode($xml, 'author');

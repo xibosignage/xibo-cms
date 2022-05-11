@@ -23,6 +23,7 @@
 namespace Xibo\Entity;
 
 use Respect\Validation\Validator as v;
+use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Factory\ModuleFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -169,14 +170,16 @@ class Module implements \JsonSerializable
      * Entity constructor.
      * @param StorageServiceInterface $store
      * @param LogServiceInterface $log
+     * @param \Symfony\Component\EventDispatcher\EventDispatcherInterface $dispatcher
      * @param \Xibo\Factory\ModuleFactory $moduleFactory
      */
     public function __construct(
         StorageServiceInterface $store,
         LogServiceInterface $log,
+        EventDispatcherInterface $dispatcher,
         ModuleFactory $moduleFactory
     ) {
-        $this->setCommonDependencies($store, $log);
+        $this->setCommonDependencies($store, $log, $dispatcher);
         $this->moduleFactory = $moduleFactory;
     }
 
