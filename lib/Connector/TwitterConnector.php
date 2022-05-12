@@ -23,6 +23,7 @@
 namespace Xibo\Connector;
 
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
+use Xibo\Event\WidgetDataRequestEvent;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -34,6 +35,7 @@ class TwitterConnector implements ConnectorInterface
 
     public function registerWithDispatcher(EventDispatcherInterface $dispatcher): ConnectorInterface
     {
+        $dispatcher->addListener(WidgetDataRequestEvent::$NAME, [$this, 'onDataRequest']);
         return $this;
     }
 
@@ -64,10 +66,33 @@ class TwitterConnector implements ConnectorInterface
 
     public function processSettingsForm(SanitizerInterface $params, array $settings): array
     {
+        $settings['delegated'] = $params->getCheckbox('delegated');
         $settings['apiKey'] = $params->getString('apiKey');
         $settings['apiSecret'] = $params->getString('apiSecret');
         $settings['cachePeriod'] = $params->getInt('cachePeriod');
         $settings['cachePeriodImages'] = $params->getInt('cachePeriodImages');
         return $settings;
+    }
+
+    public function onDataRequest(WidgetDataRequestEvent $event)
+    {
+        if ($event->getDataProvider()->getDataType() === 'twitter') {
+            // Check to see if we're configured for twitter.
+            $apiKey = $this->getSetting('apiKey');
+            $apiSecret = $this->getSetting('apiSecret');
+
+            // TODO: delegated access - user needs to have authenticated.
+            $delegated = $this->getSetting('delegated');
+
+            if (empty($apiKey) || empty($apiSecret)) {
+                $this->getLogger()->debug('onDataRequest: twitter not configured.');
+                return;
+            }
+
+            // Handle this event.
+            $event->stopPropagation();
+
+
+        }
     }
 }

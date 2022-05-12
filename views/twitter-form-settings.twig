@@ -35,6 +35,12 @@
         {% set title %}{% trans "API Secret" %}{% endset %}
         {% set helpText %}{% trans "Enter your API Secret from Twitter." %}{% endset %}
         {{ forms.input("apiSecret", title, interface.getSetting("apiSecret"), helpText) }}
+
+        {% set title %}{% trans "Needs user authorisation?" %}{% endset %}
+        {% set helpText %}{% trans "Should these API keys be used to obtain user authorisation? If unchecked the key owners account will be used." %}{% endset %}
+        {{ forms.checkbox("delegated", title, interface.getSetting("delegated"), helpText) }}
+
+        {{ forms.message("If you change the user authentication option please save and reopen this to complete authorisation."|trans) }}
     {% endif %}
 
     {% set title %}{% trans "Cache Period" %}{% endset %}

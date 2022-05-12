@@ -36,10 +36,29 @@ namespace Xibo\Widget\Provider;
 interface DataProviderInterface
 {
     /**
+     * Get the data source expected by this provider
+     * This will be the Module type that requested the provider
+     * @return string
+     */
+    public function getDataSource(): string;
+
+    /**
      * Get the datatype expected by this provider
      * @return string
      */
     public function getDataType(): string;
+
+    /**
+     * Is this data provider for a preview or a display
+     * @return bool
+     */
+    public function isPreview(): bool;
+
+    /**
+     * Get the displayId this data provider is supplying. This will be 0 if currently providing for a preview.
+     * @return int
+     */
+    public function getDisplayId(): int;
 
     /**
      * Get property

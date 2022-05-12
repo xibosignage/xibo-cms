@@ -35,6 +35,9 @@ class DataProvider implements DataProviderInterface
 
     /** @var \Xibo\Entity\Widget */
     private $widget;
+    
+    /** @var int */
+    private $displayId;
 
     /** @var boolean should we use the event? */
     private $isUseEvent = false;
@@ -49,11 +52,21 @@ class DataProvider implements DataProviderInterface
      * Constructor
      * @param \Xibo\Entity\Module $module
      * @param \Xibo\Entity\Widget $widget
+     * @param int $displayId Provide 0 for preview
      */
-    public function __construct(Module $module, Widget $widget)
+    public function __construct(Module $module, Widget $widget, $displayId)
     {
         $this->module = $module;
         $this->widget = $widget;
+        $this->displayId = $displayId;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getDataSource(): string
+    {
+        return $this->module->type;
     }
 
     /**
@@ -62,6 +75,22 @@ class DataProvider implements DataProviderInterface
     public function getDataType(): string
     {
         return $this->module->dataType;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function isPreview(): bool
+    {
+        return $this->displayId == 0;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function getDisplayId(): int
+    {
+        return $this->displayId;
     }
 
     /**

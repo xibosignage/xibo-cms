@@ -94,6 +94,9 @@ class WidgetDataProviderCache
         DataProviderInterface $dataProvider
     ): bool {
         // TODO: what is the cache key?
+        //  this needs to cater for cases where:
+        //   - we want different data per display
+        //   - we want to be kind to third parties (i.e. rss feeds)
         $this->cache = $this->pool->getItem('/widget/html/' . $widget->widgetId);
         $data = $this->cache->get();
         if ($this->cache->isMiss() || $data === null) {
