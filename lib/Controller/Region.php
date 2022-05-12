@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -65,7 +65,6 @@ class Region extends Base
      */
     private $transitionFactory;
 
-
     /**
      * Set common dependencies.
      * @param RegionFactory $regionFactory
@@ -74,8 +73,13 @@ class Region extends Base
      * @param ModuleFactory $moduleFactory
      * @param LayoutFactory $layoutFactory
      */
-    public function __construct($regionFactory, $widgetFactory, $transitionFactory, $moduleFactory, $layoutFactory)
-    {
+    public function __construct(
+        $regionFactory,
+        $widgetFactory,
+        $transitionFactory,
+        $moduleFactory,
+        $layoutFactory
+    ) {
         $this->regionFactory = $regionFactory;
         $this->widgetFactory = $widgetFactory;
         $this->transitionFactory = $transitionFactory;
@@ -626,7 +630,20 @@ class Region extends Base
             $module = $this->moduleFactory->getByType($widget->type);
             $this->getState()->html = $this->moduleFactory
                 ->createWidgetHtmlRenderer()
-                ->preview($module, $region, $widget, $sanitizedQuery);
+                ->preview(
+                    $module,
+                    $region,
+                    $widget,
+                    $sanitizedQuery,
+                    $this->urlFor(
+                        $request,
+                        'library.download',
+                        [
+                            'regionId' => $region->regionId,
+                            'id' => $widget->getPrimaryMedia()[0] ?? null
+                        ]
+                    ) . '?preview=1'
+                );
 
             $this->getState()->extra['empty'] = false;
             $this->getState()->extra['type'] = $widget->type;

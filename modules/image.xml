@@ -96,7 +96,6 @@
     </properties>
     <preview>
         <twig><![CDATA[
-{% set url = url_for("library.download", {regionId: regionId, id: mediaId}) %}
 {% if options.scaleTypeId == "stretch" %}
     {% set proportional = 0 %}
 {% else %}
@@ -109,7 +108,7 @@
 {% endif %}
 <div style="display:table; width:100%; height: {{ height }}px">
     <div style="text-align:{{ options.alignId }}; display: table-cell; vertical-align: {{ options.valignId }};">
-        <img src="{{ url }}?preview=1&width={{ width }}&height={{ height }}&proportional={{ proportional }}&fit={{ fit }}" />
+        <img src="{{ downloadUrl }}&width={{ width }}&height={{ height }}&proportional={{ proportional }}&fit={{ fit }}" />
     </div>
 </div>
 		]]></twig>

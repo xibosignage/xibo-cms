@@ -87,6 +87,7 @@ class WidgetHtmlRenderer
      * @param \Xibo\Entity\Region $region
      * @param \Xibo\Entity\Widget $widget
      * @param \Xibo\Support\Sanitizer\SanitizerInterface $params
+     * @param string $downloadUrl
      * @return string
      * @throws \Twig\Error\LoaderError
      * @throws \Twig\Error\RuntimeError
@@ -96,7 +97,8 @@ class WidgetHtmlRenderer
         Module $module,
         Region $region,
         Widget $widget,
-        SanitizerInterface $params
+        SanitizerInterface $params,
+        string $downloadUrl
     ): string {
         if ($module->previewEnabled == 1) {
             $width = $params->getDouble('width', ['default' => 0]);
@@ -110,8 +112,7 @@ class WidgetHtmlRenderer
                     'height' => $height,
                     'params' => $params,
                     'options' => $module->getPropertyValues(),
-                    'regionId' => $region->regionId,
-                    'mediaId' => $widget->getPrimaryMedia()[0] ?? null
+                    'downloadUrl' => $downloadUrl
                 ]);
             } else {
                 // Modules without a preview should render out as HTML
