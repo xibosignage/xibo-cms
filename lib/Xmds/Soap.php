@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -742,6 +742,9 @@ class Soap
                     // TODO: canvas region or not?
                     //  if this is a canvas region we should only send the first widget as a resource
                     //  but all widgets with data
+                    //  Importantly our data URLs need to be callable multiple times
+                    //  can we output XmdsConnectorFileEvent tokens?
+                    //  so the URL is xmds.php?connector=true&token=blah
 
                     $playlist = $region->getPlaylist();
                     $playlist->setModuleFactory($this->moduleFactory);
@@ -1933,13 +1936,23 @@ class Soap
                 $this->display->displayId,
                 $mediaId
             );
-            
-            // TODO: canvas region or not?
+
             $region = $this->regionFactory->getById($regionId);
             $widget = $this->widgetFactory->loadByWidgetId($mediaId);
             
             // If this is a canvas region we add all our widgets to this.
-            $widgets = [$widget];
+            if ($region->type === 'canvas') {
+                // Render a canvas
+                // ---------------
+                // A canvas plays all widgets in the region at once.
+                // none of them will be anything other than elements
+                $widgets = $region->getPlaylist()->widgets;
+            } else {
+                // Render a widget in a region
+                // ---------------------------
+                // We have a widget
+                $widgets = [$widget];
+            }
             
             // Module is always the first widget
             $module = $this->moduleFactory->getByType($widget->type);
@@ -1948,7 +1961,13 @@ class Soap
             $templates = $this->widgetFactory->getTemplatesForWidgets($widgets);
             
             $resource = $this->moduleFactory->createWidgetHtmlRenderer()
-                ->renderOrCache($module, $region, $widgets, $templates, $this->display->displayId);
+                ->renderOrCache(
+                    $module,
+                    $region,
+                    $widgets,
+                    $templates,
+                    $this->display->displayId
+                );
 
             // Log bandwidth
             $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);

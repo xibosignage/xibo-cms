@@ -1,0 +1,180 @@
+<!--
+  ~ Copyright (C) 2022 Xibo Signage Ltd
+  ~
+  ~ Xibo - Digital Signage - http://www.xibo.org.uk
+  ~
+  ~ This file is part of Xibo.
+  ~
+  ~ Xibo is free software: you can redistribute it and/or modify
+  ~ it under the terms of the GNU Affero General Public License as published by
+  ~ the Free Software Foundation, either version 3 of the License, or
+  ~ any later version.
+  ~
+  ~ Xibo is distributed in the hope that it will be useful,
+  ~ but WITHOUT ANY WARRANTY; without even the implied warranty of
+  ~ MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+  ~ GNU Affero General Public License for more details.
+  ~
+  ~ You should have received a copy of the GNU Affero General Public License
+  ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+  -->
+<templates>
+    <template id="twitter1">
+        <type>static</type>
+        <dataType>social-media</dataType>
+        <title>Template 6 - text, profile image</title>
+        <properties>
+            <property id="resultContent" type="dropdown" mode="single">
+                <title>Content Type</title>
+                <helpText>This is the intended tweet content type.</helpText>
+                <default>1</default>
+                <options>
+                    <option name="0">All Tweets</option>
+                    <option name="1">Tweets with text only content</option>
+                    <option name="2">Tweets with text and image content</option>
+                </options>
+            </property>
+            <property id="alignH" type="dropdown" mode="single">
+                <title>Horizontal Align</title>
+                <helpText>How should this widget be aligned?</helpText>
+                <default>center</default>
+                <options>
+                    <option name="left">Left</option>
+                    <option name="center">Center</option>
+                    <option name="right">Right</option>
+                </options>
+            </property>
+            <property id="alignV" type="dropdown" mode="single">
+                <title>Vertical Align</title>
+                <helpText>How should this widget be vertically aligned?</helpText>
+                <default>middle</default>
+                <options>
+                    <option name="top">Top</option>
+                    <option name="middle">Middle</option>
+                    <option name="bottom">Bottom</option>
+                </options>
+            </property>
+        </properties>
+        <stencil>
+            <!-- I am not sure if this makes sense here. -->
+            <width></width>
+            <height></height>
+            <padding></padding>
+            <hbs><![CDATA[
+<div class="container twitter-container">
+    <div class="twitter-col col-4">
+        <p class="pic-container center-block">[ProfileImage]</p>
+    </div>
+    <div class="twitter-col col-8">
+        <div class="twitter-col col-12 main-tweet">[Tweet]</div>
+        <div class="twitter-col col-4 twitter-date">[Date]</div>
+        <div class="twitter-col col-5 twitter-location">[Location]</div>
+    </div>
+</div>
+            ]]></hbs>
+            <twig><![CDATA[
+<style>
+.item {
+    float: left;
+}
+
+body {
+    font-family: "Helvetica", "Arial", sans-serif;
+    line-height: 1;
+}
+
+body {
+    background-repeat: no-repeat;
+    background-size: cover;
+    background-position: center;
+}
+
+.emojione {
+    width: 30px;
+    height: 30px
+}
+
+.pic-container img {
+    width: 300px;
+    height: 300px;
+}
+
+.pic-container {
+    position: relative;
+    width: 270px;
+    height: 270px;
+    overflow: hidden;
+}
+
+.pic-container img {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    height: 100%;
+    width: auto;
+    -webkit-transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    transform: translate(-50%, -50%);
+}
+
+.page {
+    width: auto;
+    height: auto;
+}
+
+.twitter-container {
+    width: 960px !important;
+    height: 350px !important;
+    padding-top: 35px;
+    padding-bottom: 40px;
+    border: 1px solid #eee;
+    background-color: rgba(255, 255, 255, 0.6);
+    background: rgba(255, 255, 255, 0.6);
+    color: rgba(255, 255, 255, 0.6);
+}
+
+.main-tweet {
+    font-size: 30px;
+    padding-top: 20px;
+    line-height: 120%;
+    color: #434343;
+    overflow: hidden;
+    max-height: 220px;
+}
+
+.twitter-date, .twitter-location {
+    margin-top: 20px;
+    font-size: 17px;
+    color: #434343;
+    font-weight: bold;
+}
+
+.row {
+    margin-right: -15px;
+    margin-left: -15px;
+}
+
+.col-4 {
+    width: 33.33333333%;
+}
+
+.col-8 {
+    width: 66.66666667%;
+}
+
+.col-5 {
+    width: 41.66666667%;
+}
+
+.twitter-col {
+    float: left;
+    position: relative;
+    min-height: 1px;
+    padding-right: 15px;
+    padding-left: 15px;
+}
+</style>
+            ]]></twig>
+        </stencil>
+    </template>
+</templates>

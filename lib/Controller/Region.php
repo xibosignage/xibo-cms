@@ -170,6 +170,13 @@ class Region extends Base
      *      required=true
      *   ),
      *  @SWG\Parameter(
+     *      name="type",
+     *      in="formData",
+     *      description="The type of region this should be, either playlist or canvas. Default = playlist.",
+     *      type="string",
+     *      required=false
+     *   ),
+     *  @SWG\Parameter(
      *      name="width",
      *      in="formData",
      *      description="The Width, default 250",
@@ -231,7 +238,9 @@ class Region extends Base
 
         // Add a new region
         $region = $this->regionFactory->create(
-            $this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1),
+            $sanitizedParams->getString('type'),
+            $this->getUser()->userId,
+            $layout->layout . '-' . (count($layout->regions) + 1),
             $sanitizedParams->getInt('width', ['default' => 250]),
             $sanitizedParams->getInt('height', ['default' => 250]),
             $sanitizedParams->getInt('top', ['default' => 50]),
@@ -747,7 +756,9 @@ class Region extends Base
         // Add a new region
         // we default to layout width/height/0/0
         $drawer = $this->regionFactory->create(
-            $this->getUser()->userId, $layout->layout . '-' . (count($layout->regions) + 1 . ' - drawer'),
+            'playlist',
+            $this->getUser()->userId,
+            $layout->layout . '-' . (count($layout->regions) + 1 . ' - drawer'),
             $layout->width,
             $layout->height,
             0,

@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -64,6 +64,12 @@ class Region implements \JsonSerializable
      * @var int
      */
     public $ownerId;
+
+    /**
+     * @SWG\Property(description="Region Type, either playlist or canvas")
+     * @var string
+     */
+    public $type;
 
     /**
      * @SWG\Property(description="The name of this Region")
@@ -556,8 +562,8 @@ class Region implements \JsonSerializable
         $this->getLog()->debug('Adding region to LayoutId ' . $this->layoutId);
 
         $sql = '
-            INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`, `isDrawer`) 
-              VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex, :isDrawer)
+            INSERT INTO `region` (`layoutId`, `ownerId`, `name`, `width`, `height`, `top`, `left`, `zIndex`, `isDrawer`, `type`) 
+              VALUES (:layoutId, :ownerId, :name, :width, :height, :top, :left, :zIndex, :isDrawer, :type)
         ';
 
         $this->regionId = $this->getStore()->insert($sql, array(
@@ -569,7 +575,8 @@ class Region implements \JsonSerializable
             'top' => $this->top,
             'left' => $this->left,
             'zIndex' => $this->zIndex,
-            'isDrawer' => $this->isDrawer
+            'isDrawer' => $this->isDrawer,
+            'type' => $this->type
         ));
     }
 
@@ -590,7 +597,8 @@ class Region implements \JsonSerializable
             `left` = :left,
             `zIndex` = :zIndex,
             `duration` = :duration,
-            `isDrawer` = :isDrawer
+            `isDrawer` = :isDrawer,
+            `type` = :type
            WHERE `regionId` = :regionId
         ';
 
@@ -604,6 +612,7 @@ class Region implements \JsonSerializable
             'zIndex' => $this->zIndex,
             'duration' => $this->duration,
             'isDrawer' => $this->isDrawer,
+            'type' => $this->type,
             'regionId' => $this->regionId
         ));
     }

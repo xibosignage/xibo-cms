@@ -170,7 +170,9 @@ class Widget extends Base
 
         // Check we have a permission factory
         if ($this->permissionFactory == null) {
-            throw new ConfigurationException(__('Sorry there is an error with this request, cannot set inherited permissions'));
+            throw new ConfigurationException(
+                __('Sorry there is an error with this request, cannot set inherited permissions')
+            );
         }
 
         // If we are a region Playlist, we need to check whether the owning Layout is a draft or editable
@@ -208,18 +210,24 @@ class Widget extends Base
             $module->defaultDuration
         );
 
-        // Take in a template if the module has a datatype (which means its expecting a template)
-        if (!empty($module->dataType)) {
-            $templateId = $params->getString('templateId', [
-                'throw' => function () {
-                    throw new InvalidArgumentException(__('Please select a template for this widget'), 'templateId');
+        // Get the template
+        if ($module->isTemplateExpected()) {
+            $templateId = $params->getString('templateId');
+            if ($templateId !== 'elements') {
+                // Check it.
+                $template = $this->moduleTemplateFactory->getByDataTypeAndId($templateId, $module->dataType);
+
+                // Make sure its static
+                if ($template->type !== 'static') {
+                    throw new InvalidArgumentException(
+                        __('Expecting a static template'),
+                        'templateId'
+                    );
                 }
-            ]);
+            }
 
-            // Load the template and make sure its valid.
-
-
-            $widget->setOptionValue('template', 'attrib', $templateId);
+            // Set it
+            $widget->setOptionValue('templateId', 'attrib', $templateId);
         }
 
         // Assign this module to this Playlist in the appropriate place (which could be null)
@@ -284,13 +292,11 @@ class Widget extends Base
         // Decorate the module properties with our current widgets data
         $module->decorateProperties($widget);
 
-        // Load a template?
+        // Do we have a static template assigned to this widget?
+        //  we don't worry about elements here, the layout editor manages those for us.
         $template = null;
-        if ($module->isTemplateExpected()) {
-            $templateId = $widget->getOptionValue('templateId', null);
-            if (empty($templateId)) {
-                throw new InvalidArgumentException(__('This widget should have a template assigned'), 'templateId');
-            }
+        $templateId = $widget->getOptionValue('templateId', null);
+        if ($module->isTemplateExpected() && !empty($templateId)) {
             $template = $this->moduleTemplateFactory->getByDataTypeAndId($templateId, $module->dataType);
 
             // Decorate the template with any properties saved in the widget
@@ -298,7 +304,6 @@ class Widget extends Base
         }
 
         // Pass to view
-        $this->getLog()->debug('Widget::editWidgetForm: passing to template render');
         $this->getState()->template = '';
         $this->getState()->setData([
             'module' => $module,
@@ -319,6 +324,7 @@ class Widget extends Base
      */
     public function editWidget(Request $request, Response $response, $id)
     {
+        $params = $this->getSanitizer($request->getParams());
         $widget = $this->widgetFactory->loadByWidgetId($id);
 
         if (!$this->getUser()->checkEditable($widget)) {
@@ -335,18 +341,28 @@ class Widget extends Base
 
         $module = $this->moduleFactory->getByType($widget->type);
 
-        // Load a template?
+        // Should we save a template?
+        // we're allowed to change between static templates, but not between elements and static templates.
+        $existingTemplate = $widget->getOptionValue('templateId', 'elements');
         $template = null;
-        if ($module->isTemplateExpected()) {
-            $templateId = $widget->getOptionValue('templateId', null);
-            if (empty($templateId)) {
-                throw new InvalidArgumentException(__('This widget should have a template assigned'), 'templateId');
-            }
+        $templateId = $params->getString('templateId');
+        if ($existingTemplate !== 'elements' && $module->isTemplateExpected() && !empty($templateId)) {
+            // Check it.
             $template = $this->moduleTemplateFactory->getByDataTypeAndId($templateId, $module->dataType);
+
+            // Make sure its static
+            if ($template->type !== 'static') {
+                throw new InvalidArgumentException(
+                    __('You can only change to another template of the same type'),
+                    'templateId'
+                );
+            }
+
+            // Set it
+            $widget->setOptionValue('templateId', 'attrib', $templateId);
         }
 
         // We're expecting all of our properties to be supplied for editing.
-        $params = $this->getSanitizer($request->getParams());
         foreach ($module->properties as $property) {
             if ($property->type === 'message') {
                 continue;
@@ -942,8 +958,8 @@ class Widget extends Base
 
                 if ($dataProvider->isUseEvent()) {
                     $this->getDispatcher()->dispatch(
-                        WidgetDataRequestEvent::$NAME,
-                        new WidgetDataRequestEvent($dataProvider)
+                        new WidgetDataRequestEvent($dataProvider),
+                        WidgetDataRequestEvent::$NAME
                     );
                 }
 
@@ -1002,20 +1018,19 @@ class Widget extends Base
             $downloader->useLogger($this->getLog()->getLoggerInterface());
             return $this->render($request, $downloader->download($media, $response));
         }
-
-        // TODO: region type!
-        /*if ($region->type === 'canvas') {
+        
+        if ($region->type === 'canvas') {
             // Render a canvas
             // ---------------
-            // A canvas takes the first widget from a region (regardless of the widget given)
-            // and plays out all widgets.
-            $widgets = [$widget];
-        } else {*/
+            // A canvas plays all widgets in the region at once.
+            // none of them will be anything other than elements
+            $widgets = $region->getPlaylist()->widgets;
+        } else {
             // Render a widget in a region
             // ---------------------------
             // We have a widget
             $widgets = [$widget];
-        /*}*/
+        }
 
         // Templates
         $templates = $this->widgetFactory->getTemplatesForWidgets($widgets);
@@ -1024,7 +1039,17 @@ class Widget extends Base
         try {
             $renderer = $this->moduleFactory->createWidgetHtmlRenderer();
             if ($this->getSanitizer($request->getParams())->getCheckbox('preview')) {
-                $resource = $renderer->render($module, $region, $widgets, $templates, 0);
+                $resource = $renderer->render(
+                    $module,
+                    $region,
+                    $widgets,
+                    $templates,
+                    0,
+                    $this->urlFor($request, 'module.getData', [
+                        'regionId' => $region->regionId,
+                        'id' => $widget->widgetId
+                    ])
+                );
             } else {
                 $resource = $renderer->renderOrCache($module, $region, $widgets, $templates, 0);
             }

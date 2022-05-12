@@ -35,12 +35,18 @@
 <!--[if IE 8 ]><body class="ie8"><![endif]-->
 <!--[if IE 9 ]><body class="ie9"><![endif]-->
 <!--[if (gt IE 9)|!(IE)]><!--><body><!--<![endif]-->
-<div id="content">
 {% for item in twig %}
     {{ item|raw }}
 {% endfor %}
-</div>
 </body>
+<script type="text/javascript">
+    window.globalOptions = {
+      originalWidth: {{ width }},
+      originalHeight: {{ height }},
+      duration: {{ duration }}
+    };
+    // url's for dats
+</script>
 {% if elementGroups %}
 <script type="text/javascript">
     var elements = [];
@@ -50,6 +56,6 @@
 </script>
 {% endif %}
 {% for item in hbs %}
-{{ item|raw }}
+    <script type="text/x-handlebars-template">{{ item|raw }}</script>
 {% endfor %}
 </html>

@@ -1,6 +1,6 @@
 {#
 /**
- * Copyright (C) 2020 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -21,24 +21,28 @@
  */
 #}
 
-{% extends "module-form-settings.twig" %}
+{% extends "connector-form-edit.twig" %}
 {% import "forms.twig" as forms %}
 
-{% block moduleFormFields %}
-    {% set title %}{% trans "API Key" %}{% endset %}
-    {% set helpText %}{% trans "Enter your API Key from Twitter." %}{% endset %}
-    {{ forms.input("apiKey", title, module.getSetting("apiKey"), helpText) }}
+{% block connectorFormFields %}
+    <h3>Twitter</h3>
 
-    {% set title %}{% trans "API Secret" %}{% endset %}
-    {% set helpText %}{% trans "Enter your API Secret from Twitter." %}{% endset %}
-    {{ forms.input("apiSecret", title, module.getSetting("apiSecret"), helpText) }}
+    {% if not platformProvidesSettings %}
+        {% set title %}{% trans "API Key" %}{% endset %}
+        {% set helpText %}{% trans "Enter your API Key from Twitter." %}{% endset %}
+        {{ forms.input("apiKey", title, interface.getSetting("apiKey"), helpText) }}
+
+        {% set title %}{% trans "API Secret" %}{% endset %}
+        {% set helpText %}{% trans "Enter your API Secret from Twitter." %}{% endset %}
+        {{ forms.input("apiSecret", title, interface.getSetting("apiSecret"), helpText) }}
+    {% endif %}
 
     {% set title %}{% trans "Cache Period" %}{% endset %}
     {% set helpText %}{% trans "Enter the number of seconds you would like to cache twitter search results." %}{% endset %}
-    {{ forms.input("cachePeriod", title, module.getSetting("cachePeriod", 300), helpText) }}
+    {{ forms.input("cachePeriod", title, interface.getSetting("cachePeriod", 300), helpText) }}
 
     {% set title %}{% trans "Cache Period for Images" %}{% endset %}
     {% set helpText %}{% trans "Enter the number of hours you would like to cache twitter images." %}{% endset %}
-    {{ forms.input("cachePeriodImages", title, module.getSetting("cachePeriodImages", 24), helpText) }}
+    {{ forms.input("cachePeriodImages", title, interface.getSetting("cachePeriodImages", 24), helpText) }}
 
 {% endblock %}

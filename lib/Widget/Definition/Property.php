@@ -44,8 +44,8 @@ class Property implements \JsonSerializable
     /** @var \Xibo\Widget\Definition\Option[] */
     public $options;
 
-
-    public $visibility;
+    /** @var \Xibo\Widget\Definition\Test[]  */
+    public $visibility = [];
 
     /** @var string The code type (html/css/javascript/etc) */
     public $codeType;
@@ -71,7 +71,8 @@ class Property implements \JsonSerializable
             'validation' => $this->validation,
             'default' => $this->default,
             'options' => $this->options,
-            'playerCompatibility' => $this->playerCompatability
+            'playerCompatability' => $this->playerCompatability,
+            'visibility' => $this->visibility
         ];
     }
 

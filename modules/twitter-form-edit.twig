@@ -175,6 +175,7 @@
                         {% set title %}{% trans "Speed" %}{% endset %}
                         {% set helpText %}{% trans "The transition speed of the selected effect in milliseconds (normal = 1000)." %}{% endset %}
                         {{ forms.number("speed", title, module.getOption("speed"), helpText, "effect-controls") }}
+
                         {% set title %}{% trans "Horizontal Align" %}{% endset %}
                         {% set helpText %}{% trans "How should this widget be aligned?" %}{% endset %}
                         {% set left %}{% trans "Left" %}{% endset %}

@@ -144,7 +144,8 @@ class WidgetHtmlRenderer
         Region $region,
         array $widgets,
         array $moduleTemplates,
-        int $displayId
+        int $displayId,
+        ?string $dataUrl = null
     ): string {
         // For caching purposes we always take only the first widget
         $widget = $widgets[0];
@@ -245,7 +246,8 @@ class WidgetHtmlRenderer
         Region $region,
         array $widgets,
         array $moduleTemplates,
-        int $displayId
+        int $displayId,
+        ?string $dataUrl = null
     ): string {
         $this->getLog()->debug('render: getResourceOrCache for displayId ' . $displayId
             . ' and regionId ' . $region->regionId);
@@ -256,6 +258,14 @@ class WidgetHtmlRenderer
         $twig['hbs'] = [];
         $twig['twig'] = [];
         $twig['elements'] = [];
+        $twig['width'] = $region->width;
+        $twig['height'] = $region->height;
+
+        // Output some data for each widget.
+        $twig['data'] = [];
+
+        // Max duration
+        $duration = 0;
 
         // Render each widget out into the html
         foreach ($widgets as $widget) {
@@ -264,6 +274,15 @@ class WidgetHtmlRenderer
             // Decorate our module with the saved widget properties
             // we include the defaults.
             $module->decorateProperties($widget, true);
+
+            // Output some sample data and a data url.
+            $twig['data'] = [
+                'widgetId' => $widget->widgetId,
+                'url' => $dataUrl ?: $widget->widgetId . '.json'
+            ];
+
+            // Watermark duration
+            $duration = max($duration, $widget->calculatedDuration);
 
             // What does our module have
             if ($module->stencil !== null) {
@@ -307,6 +326,9 @@ class WidgetHtmlRenderer
                 }
             }
         }
+
+        // Duration
+        $twig['duration'] = $duration;
 
         // We use the default get resource template.
         return $this->twig->fetch('widget-html-render.twig', $twig);

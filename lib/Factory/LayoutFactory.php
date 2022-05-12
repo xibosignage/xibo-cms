@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -234,6 +234,7 @@ class LayoutFactory extends BaseFactory
         // Add a blank, full screen region
         if ($addRegion) {
             $layout->regions[] = $this->regionFactory->create(
+                'playlist',
                 $ownerId,
                 $name . '-1',
                 $layout->width,
@@ -248,6 +249,7 @@ class LayoutFactory extends BaseFactory
 
     /**
      * @param \Xibo\Entity\Layout $layout
+     * @param string $type
      * @param int $width
      * @param int $height
      * @param int $top
@@ -255,9 +257,10 @@ class LayoutFactory extends BaseFactory
      * @return \Xibo\Entity\Layout
      * @throws \Xibo\Support\Exception\InvalidArgumentException
      */
-    public function addRegion(Layout $layout, int $width, int $height, int $top, int $left): Layout
+    public function addRegion(Layout $layout, string $type, int $width, int $height, int $top, int $left): Layout
     {
         $layout->regions[] = $this->regionFactory->create(
+            $type,
             $layout->ownerId,
             $layout->layout . '-' . count($layout->regions),
             $width,
@@ -569,8 +572,11 @@ class LayoutFactory extends BaseFactory
             if ($regionOwnerId == null) {
                 $regionOwnerId = $layout->ownerId;
             }
+
             // Create the region
+            //  we only import from XLF for older layouts which only had playlist type regions.
             $region = $this->regionFactory->create(
+                'playlist',
                 $regionOwnerId,
                 $regionNode->getAttribute('name'),
                 (double)$regionNode->getAttribute('width'),
@@ -851,6 +857,7 @@ class LayoutFactory extends BaseFactory
 
             // Create the region
             $region = $this->regionFactory->create(
+                $regionJson['type'] ?? 'playlist',
                 $regionOwnerId,
                 $regionJson['name'],
                 (double)$regionJson['width'],
