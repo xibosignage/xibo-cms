@@ -402,6 +402,18 @@ class Widget extends Base
             }
             $widget->applyProperties($template->properties);
         }
+        
+        // Check to see if the media we've assigned exists.
+        foreach ($widget->mediaIds as $mediaId) {
+            try {
+                $this->mediaFactory->getById($mediaId);
+            } catch (NotFoundException $notFoundException) {
+                throw new InvalidArgumentException(sprintf(
+                    __('Your library reference %d does not exist.'),
+                    $mediaId
+                ), 'libraryRef');
+            }
+        }
 
         // We've reached the end, so save
         $widget->save();

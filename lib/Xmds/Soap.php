@@ -304,12 +304,13 @@ class Soap
      * @param $serverKey
      * @param $hardwareKey
      * @param bool $httpDownloads
+     * @param bool $isSupportsDataUrl
      * @return string
-     * @throws NotFoundException
-     * @throws \SoapFault
      * @throws \DOMException
+     * @throws \SoapFault
+     * @throws \Xibo\Support\Exception\NotFoundException
      */
-    protected function doRequiredFiles($serverKey, $hardwareKey, $httpDownloads)
+    protected function doRequiredFiles($serverKey, $hardwareKey, $httpDownloads, bool $isSupportsDataUrl = false)
     {
         $this->logProcessor->setRoute('RequiredFiles');
         $sanitizer = $this->getSanitizer([
@@ -832,21 +833,36 @@ class Soap
                             $fileElements->appendChild($resourceFile);
 
                             // Does this also have an associated data file?
-                            // v4 onward
-                            if ($modules[$widget->type]->isDataProviderExpected()) {
+                            if ($isSupportsDataUrl && $modules[$widget->type]->isDataProviderExpected()) {
+                                // Do we have widget HTML cache? We should
+                                $htmlFile = $libraryLocation . 'widgets' . DIRECTORY_SEPARATOR
+                                    . $widget->widgetId
+                                    . '_'
+                                    . $region->regionId
+                                    . '.html';
+                                $fileSize = filesize($htmlFile);
+
                                 // Output another file node with a different type
                                 $dataFile = $requiredFilesXml->createElement('file');
-                                $dataFile->setAttribute('type', 'media');
+                                $dataFile->setAttribute('type', 'widget');
                                 $dataFile->setAttribute('download', 'xmds');
                                 $dataFile->setAttribute('path', $widget->widgetId);
                                 $dataFile->setAttribute('saveAs', $widget->widgetId . '.json');
                                 $dataFile->setAttribute('id', $widget->widgetId);
+                                $dataFile->setAttribute('regionId', $region->regionId);
+                                $dataFile->setAttribute('size', $fileSize);
+                                $dataFile->setAttribute('md5', md5_file($htmlFile));
 
-                                // TODO: how do we get these?
-                                //  can we save an "info" cache key for the size/md5?
-                                //  what if we don't have a cache of this data yet, I suppose we return empty?
-                                $dataFile->setAttribute('size', 0);
-                                $dataFile->setAttribute('md5', '');
+                                $getResourceRf = $this->requiredFileFactory
+                                    ->createForMedia(
+                                        $this->display->displayId,
+                                        $widget->widgetId,
+                                        $fileSize,
+                                        $htmlFile,
+                                        1
+                                    )
+                                    ->save();
+                                $newRfIds[] = $getResourceRf->rfId;
                                 
                                 $fileElements->appendChild($dataFile);
                             }
@@ -2023,10 +2039,29 @@ class Soap
                 $media[$row['mediaId']] = $row['storedAs'];
             };
 
-            // Decorate for the player
-            $resource = $renderer->decorateForPlayer($resource, $media);
+            // Join in the data for this player if we're an older one.
+            $data = [];
+            foreach ($widgets as $widget) {
+                $dataModule = $this->moduleFactory->getByType($widget->type);
+                if ($dataModule->isDataProviderExpected()) {
+                    // We only ever return cache.
+                    $dataProvider = $module->createDataProvider($widget, $this->display->displayId);
 
-            // TODO: join in the data for this player if we're an older one.
+                    // Use the cache if we can.
+                    try {
+                        $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
+                        $widgetDataProviderCache->decorateWithCache($module, $widget, $dataProvider);
+                    } catch (GeneralException $exception) {
+                        // We ignore this.
+                        $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId);
+                    }
+
+                    $data[$widget->widgetId] = $dataProvider->getData();
+                }
+            }
+
+            // Decorate for the player
+            $resource = $renderer->decorateForPlayer($resource, $media, false, $data);
 
             if ($resource == '') {
                 throw new ControllerNotImplemented();

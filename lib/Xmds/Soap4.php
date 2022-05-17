@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -33,6 +33,7 @@ use Xibo\Support\Exception\NotFoundException;
 /**
  * Class Soap4
  * @package Xibo\Xmds
+ * @phpcs:disable PSR1.Methods.CamelCapsMethodName.NotCamelCaps
  */
 class Soap4 extends Soap
 {
@@ -323,6 +324,7 @@ class Soap4 extends Soap
             'chunkOffset' => $chunkOffset,
             'chunkSize' => $chunkSize
         ]);
+
         // Sanitize
         $serverKey = $sanitizer->getString('serverKey');
         $hardwareKey = $sanitizer->getString('hardwareKey');
@@ -331,29 +333,33 @@ class Soap4 extends Soap
         $chunkOffset = $sanitizer->getDouble('chunkOffset');
         $chunkSize = $sanitizer->getDouble('chunkSize');
 
-        $libraryLocation = $this->getConfig()->getSetting("LIBRARY_LOCATION");
+        $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         // Authenticate this request...
         if (!$this->authDisplay($hardwareKey)) {
-            throw new \SoapFault('Receiver', "This Display is not authorised.");
+            throw new \SoapFault('Receiver', 'This Display is not authorised.');
         }
 
         // Now that we authenticated the Display, make sure we are sticking to our bandwidth limit
         if (!$this->checkBandwidth($this->display->displayId)) {
-            throw new \SoapFault('Receiver', "Bandwidth Limit exceeded");
+            throw new \SoapFault('Receiver', 'Bandwidth Limit exceeded');
         }
 
         if ($this->display->isAuditing()) {
-            $this->getLog()->debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: ' . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
+            $this->getLog()->debug('hardwareKey: ' . $hardwareKey . ', fileId: ' . $fileId . ', fileType: '
+                . $fileType . ', chunkOffset: ' . $chunkOffset . ', chunkSize: ' . $chunkSize);
         }
 
         try {
-            if ($fileType == "layout") {
+            if ($fileType == 'layout') {
                 // Validate the nonce
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndLayout($this->display->displayId, $fileId);
 
@@ -370,20 +376,22 @@ class Soap4 extends Soap
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
-
-            } else if ($fileType == "media") {
+            } else if ($fileType == 'media') {
                 // Validate the nonce
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId);
 
                 $media = $this->mediaFactory->getById($fileId);
                 $this->getLog()->debug(json_encode($media));
 
-                if (!file_exists($libraryLocation . $media->storedAs))
+                if (!file_exists($libraryLocation . $media->storedAs)) {
                     throw new NotFoundException(__('Media exists but file missing from library. ') . $libraryLocation);
+                }
 
                 // Return the Chunk size specified
-                if (!$f = fopen($libraryLocation . $media->storedAs, 'r'))
+                $f = fopen($libraryLocation . $media->storedAs, 'r');
+                if (!$f) {
                     throw new NotFoundException(__('Unable to get file pointer'));
+                }
 
                 fseek($f, $chunkOffset);
 
@@ -392,18 +400,18 @@ class Soap4 extends Soap
                 // Store file size for bandwidth log
                 $chunkSize = strlen($file);
 
-                if ($chunkSize === 0)
+                if ($chunkSize === 0) {
                     throw new NotFoundException(__('Empty file'));
+                }
 
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
-
             } else {
                 throw new NotFoundException(__('Unknown FileType Requested.'));
             }
-        }
-        catch (NotFoundException $e) {
-            $this->getLog()->error('Not found FileId: ' . $fileId . '. FileType: ' . $fileType . '. ' . $e->getMessage());
+        } catch (NotFoundException $e) {
+            $this->getLog()->error('Not found FileId: ' . $fileId . '. FileType: '
+                . $fileType . '. ' . $e->getMessage());
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         }
 

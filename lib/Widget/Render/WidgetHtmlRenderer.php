@@ -165,9 +165,7 @@ class WidgetHtmlRenderer
         $cachePath = $this->cachePath . DIRECTORY_SEPARATOR
             . $widget->widgetId
             . '_'
-            . $region->width
-            . '_'
-            . $region->height
+            . $region->regionId
             . '.html';
 
         // Have we changed since we last cached this widget
@@ -244,19 +242,31 @@ class WidgetHtmlRenderer
      * Decorate the HTML output for a player
      * @param string $output
      * @param array $storedAs A keyed array of library media this widget has access to
+     * @param bool $isSupportsDataUrl
+     * @param array $data A keyed array of data this widget has access to
      * @return string
      */
-    public function decorateForPlayer(string $output, array $storedAs): string
-    {
+    public function decorateForPlayer(
+        string $output,
+        array $storedAs,
+        bool $isSupportsDataUrl = true,
+        array $data = []
+    ): string {
         $matches = [];
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
         foreach ($matches[1] as $match) {
             if ($match === 'ViewPortWidth') {
                 // Player does this itself.
                 continue;
+            } else if ($match === 'Data') {
+                $output = str_replace('[[Data]]', json_encode($data), $output);
             } else if (Str::startsWith($match, 'dataUrl')) {
                 $value = explode('=', $match);
-                $output = str_replace('[[' . $match . ']]', $value[1] . '.json', $output);
+                $replace = $isSupportsDataUrl ? $value[1] . '.json' : $value[1] . '.html';
+                $output = str_replace('[[' . $match . ']]', $replace, $output);
+            } else if (Str::startsWith($match, 'data=')) {
+                $value = explode('=', $match);
+                $output = str_replace('[[' . $match . ']]', $data[$value[1]] ?? [], $output);
             } else if (Str::startsWith($match, 'mediaId')) {
                 $value = explode('=', $match);
                 if (array_key_exists($value[1], $storedAs)) {
@@ -308,7 +318,8 @@ class WidgetHtmlRenderer
             // Output some sample data and a data url.
             $twig['data'][] = [
                 'widgetId' => $widget->widgetId,
-                'url' => '[[dataUrl=' . $widget->widgetId . ']]'
+                'url' => '[[dataUrl=' . $widget->widgetId . ']]',
+                'data' => '[[data=' . $widget->widgetId . ']]'
             ];
 
             // Watermark duration
