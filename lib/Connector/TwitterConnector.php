@@ -92,7 +92,7 @@ class TwitterConnector implements ConnectorInterface
             // Handle this event.
             $event->stopPropagation();
 
-
+            // TODO: how do we manage images?
         }
     }
 }

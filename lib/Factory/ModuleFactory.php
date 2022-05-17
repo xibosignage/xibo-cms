@@ -71,11 +71,12 @@ class ModuleFactory extends BaseFactory
     /**
      * @param \Xibo\Entity\Module $module
      * @param \Xibo\Entity\Widget $widget
+     * @param int $displayId
      * @return \Xibo\Widget\Provider\DataProviderInterface
      */
-    public function createDataProvider(Module $module, Widget $widget): DataProviderInterface
+    public function createDataProvider(Module $module, Widget $widget, int $displayId): DataProviderInterface
     {
-        return new DataProvider($module, $widget);
+        return new DataProvider($module, $widget, $displayId);
     }
 
     /**

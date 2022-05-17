@@ -28,8 +28,8 @@ use Xibo\Factory\ModuleFactory;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
 use Xibo\Support\Exception\InvalidArgumentException;
-use Xibo\Widget\Provider\DataProviderInterface;
-use Xibo\Widget\Provider\DurationProviderInterface;
+use Xibo\Widget\Provider\DataProvider;
+use Xibo\Widget\Provider\DurationProvider;
 use Xibo\Widget\Provider\WidgetProviderInterface;
 
 /**
@@ -220,18 +220,19 @@ class Module implements \JsonSerializable
 
     /**
      * @param \Xibo\Entity\Widget $widget
-     * @return \Xibo\Widget\Provider\DataProviderInterface
+     * @param int $displayId
+     * @return \Xibo\Widget\Provider\DataProvider
      */
-    public function createDataProvider(Widget $widget): DataProviderInterface
+    public function createDataProvider(Widget $widget, int $displayId): DataProvider
     {
-        return $this->moduleFactory->createDataProvider($this, $widget);
+        return $this->moduleFactory->createDataProvider($this, $widget, $displayId);
     }
 
     /**
      * @param string $file a fully qualified path to this file
-     * @return \Xibo\Widget\Provider\DurationProviderInterface
+     * @return \Xibo\Widget\Provider\DurationProvider
      */
-    public function createDurationProvider(string $file): DurationProviderInterface
+    public function createDurationProvider(string $file): DurationProvider
     {
         return $this->moduleFactory->createDurationProvider($file);
     }

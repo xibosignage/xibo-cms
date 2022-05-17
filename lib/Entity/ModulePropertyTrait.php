@@ -46,13 +46,26 @@ trait ModulePropertyTrait
     }
 
     /**
+     * @param bool $decorateLibraryRefs
      * @return array
      */
-    public function getPropertyValues(): array
+    public function getPropertyValues(bool $decorateLibraryRefs = true): array
     {
         $properties = [];
         foreach ($this->properties as $property) {
-            $properties[$property->id] = $property->value;
+            $value = $property->value;
+            // Does this property have library references?
+            if ($decorateLibraryRefs && $property->allowLibraryRefs) {
+                // Parse them out and replace for our special syntax.
+                $matches = [];
+                preg_match_all('/\[(.*?)\]/', $value, $matches);
+                foreach ($matches[1] as $match) {
+                    if (is_numeric($match)) {
+                        $value = str_replace('[' . $match . ']', '[[mediaId=' . $match . ']]', $value);
+                    }
+                }
+            }
+            $properties[$property->id] = $value;
         }
         return $properties;
     }

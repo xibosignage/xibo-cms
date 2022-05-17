@@ -23,6 +23,7 @@
 namespace Xibo\Widget\Render;
 
 use Carbon\Carbon;
+use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Slim\Views\Twig;
@@ -133,6 +134,8 @@ class WidgetHtmlRenderer
     }
 
     /**
+     * Render or cache.
+     * ----------------
      * @param ModuleTemplate[] $moduleTemplates
      * @param \Xibo\Entity\Widget[] $widgets
      * @throws \Twig\Error\SyntaxError
@@ -143,118 +146,145 @@ class WidgetHtmlRenderer
         Module $module,
         Region $region,
         array $widgets,
-        array $moduleTemplates,
-        int $displayId,
-        ?string $dataUrl = null
+        array $moduleTemplates
     ): string {
         // For caching purposes we always take only the first widget
         $widget = $widgets[0];
 
-        // Have we changed since we last cached this widget
-        $modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt);
-        $cachedDt = $this->getCacheDate($displayId);
-        $cachePath = $this->cachePath . DIRECTORY_SEPARATOR . $widget->widgetId . DIRECTORY_SEPARATOR;
+        if (!file_exists($this->cachePath)) {
+            mkdir($this->cachePath, 0777, true);
+        }
 
         // Cache File
         // ----------
-        // displayId_width_height
+        // width_height
         // Widgets may or may not appear in the same Region each time they are previewed due to them potentially
         // being contained in a Playlist.
         // Equally, a Region might be resized, which would also affect the way the Widget looks. Just moving a Region
         // location wouldn't though, which is why we base this on the width/height.
-        $cacheFile = $widget->widgetId
-            . (($displayId === 0) ? '_0' : '')
+        $cachePath = $this->cachePath . DIRECTORY_SEPARATOR
+            . $widget->widgetId
             . '_'
             . $region->width
             . '_'
-            . $region->height;
+            . $region->height
+            . '.html';
+
+        // Have we changed since we last cached this widget
+        $modifiedDt = Carbon::createFromTimestamp($widget->modifiedDt);
+        $cachedDt = Carbon::createFromTimestamp(file_exists($cachePath) ? filemtime($cachePath) : 0);
 
         $this->getLog()->debug('Cache details - modifiedDt: '
             . $modifiedDt->format(DateFormatHelper::getSystemFormat())
-            . ', cacheDt: ' . $cachedDt->format(DateFormatHelper::getSystemFormat())
-            . ', cacheFile: ' . $cacheFile);
+            . ', cachedDt: ' . $cachedDt->format(DateFormatHelper::getSystemFormat())
+            . ', cachePath: ' . $cachePath);
 
-        if (!file_exists($cachePath)) {
-            mkdir($cachePath, 0777, true);
-        }
-
-        if ($modifiedDt->greaterThan($cachedDt)
-            || !file_exists($cachePath . $cacheFile)
-            || !file_get_contents($cachePath . $cacheFile)
-        ) {
+        if ($modifiedDt->greaterThan($cachedDt) || !file_get_contents($cachePath)) {
             $this->getLog()->debug('We will need to regenerate');
 
             // Are we worried about concurrent requests here?
             // these aren't providing any data anymore, so in theory it shouldn't be possible to
             // get locked up here
             // We don't clear cached media here, as that comes along with data.
-            if (file_exists($cachePath . $cacheFile)) {
-                // Store a hash of the existing cache file to determine whether its worth
-                // notifying displays the change
-                $hash = md5_file($cachePath . $cacheFile);
-                unlink($cachePath . $cacheFile);
-
-                $this->getLog()->debug('Cache file ' . $cachePath . $cacheFile
-                    . ' already existed with hash ' . $hash);
-            } else {
-                $hash = '';
+            if (file_exists($cachePath)) {
+                $this->getLog()->debug('Deleting cache file ' . $cachePath . ' which already existed');
+                unlink($cachePath);
             }
 
             // Render
-            // for rendering purposes we always take all widgets
-            $output = $this->render($module, $region, $widgets, $moduleTemplates, $displayId);
+            $output = $this->render($module, $region, $widgets, $moduleTemplates);
 
             // Cache to the library
-            file_put_contents($cachePath . $cacheFile, $output);
-
-            // Should we notify this display of this widget changing?
-            if ($hash !== md5_file($cachePath . $cacheFile)) {
-                $this->getLog()->debug('Cache file was different, we will need to notify the display');
-
-                // Notify
-                $widget->save([
-                    'saveWidgetOptions' => false,
-                    'notify' => false,
-                    'notifyDisplays' => true,
-                    'audit' => false
-                ]);
-            } else {
-                $this->getLog()->debug('Cache file identical no need to notify the display');
-            }
-
-            // Update the cache date
-            $this->setCacheDate($displayId);
+            file_put_contents($cachePath, $output);
 
             $this->getLog()->debug('Generate complete');
 
             return $output;
         } else {
             $this->getLog()->debug('Serving from cache');
-            return file_get_contents($cachePath . $cacheFile);
+            return file_get_contents($cachePath);
         }
     }
 
     /**
+     * Decorate the HTML output for a preview
+     * @param \Xibo\Entity\Region $region
+     * @param string $output
+     * @param string $dataUrl
+     * @param string $libraryUrl
+     * @return string
+     */
+    public function decorateForPreview(Region $region, string $output, string $dataUrl, string $libraryUrl): string
+    {
+        $matches = [];
+        preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
+        foreach ($matches[1] as $match) {
+            if ($match === 'ViewPortWidth') {
+                $output = str_replace('[[ViewPortWidth]]', $region->width, $output);
+            } else if (Str::startsWith($match, 'dataUrl')) {
+                $value = explode('=', $match);
+                $output = str_replace(
+                    '[[' . $match . ']]',
+                    str_replace(':id', $value[1], $dataUrl),
+                    $output
+                );
+            } else if (Str::startsWith($match, 'mediaId')) {
+                $value = explode('=', $match);
+                $output = str_replace(
+                    '[[' . $match . ']]',
+                    str_replace(':id', $value[1], $libraryUrl),
+                    $output
+                );
+            }
+        }
+        return $output;
+    }
+
+    /**
+     * Decorate the HTML output for a player
+     * @param string $output
+     * @param \Xibo\Entity\Media[] $media A keyed array of library media this widget has access to
+     * @return string
+     */
+    public function decorateForPlayer(string $output, array $media): string
+    {
+        $matches = [];
+        preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
+        foreach ($matches[1] as $match) {
+            if ($match === 'ViewPortWidth') {
+                // Player does this itself.
+                continue;
+            } else if (Str::startsWith($match, 'dataUrl')) {
+                $value = explode('=', $match);
+                $output = str_replace('[[' . $match . ']]', $value[1] . '.json', $output);
+            } else if (Str::startsWith($match, 'mediaId')) {
+                $value = explode('=', $match);
+                if (array_key_exists($value[1], $media)) {
+                    $output = str_replace('[[' . $match . ']]', $media[$value[1]]->storedAs, $output);
+                } else {
+                    $output = str_replace('[[' . $match . ']]', '', $output);
+                }
+            }
+        }
+        return $output;
+    }
+
+    /**
+     * Render out the widgets HTML
      * @param \Xibo\Entity\Widget[] $widgets
      * @param ModuleTemplate[] $moduleTemplates
      * @throws \Twig\Error\SyntaxError
      * @throws \Twig\Error\RuntimeError
      * @throws \Twig\Error\LoaderError
      */
-    public function render(
+    private function render(
         Module $module,
         Region $region,
         array $widgets,
-        array $moduleTemplates,
-        int $displayId,
-        ?string $dataUrl = null
+        array $moduleTemplates
     ): string {
-        $this->getLog()->debug('render: getResourceOrCache for displayId ' . $displayId
-            . ' and regionId ' . $region->regionId);
-
         // Build up some data for twig
         $twig = [];
-        $twig['viewPortWidth'] = $displayId === 0 ? $region->width : '[[ViewPortWidth]]';
         $twig['hbs'] = [];
         $twig['twig'] = [];
         $twig['elements'] = [];
@@ -276,9 +306,9 @@ class WidgetHtmlRenderer
             $module->decorateProperties($widget, true);
 
             // Output some sample data and a data url.
-            $twig['data'] = [
+            $twig['data'][] = [
                 'widgetId' => $widget->widgetId,
-                'url' => $dataUrl ?: $widget->widgetId . '.json'
+                'url' => '[[dataUrl=' . $widget->widgetId . ']]'
             ];
 
             // Watermark duration
@@ -298,11 +328,6 @@ class WidgetHtmlRenderer
                 }
             }
 
-            // TODO: canvas widget
-            // TODO: list of widgets will need to be output to the HTML
-            //  we will need the elements associated with those widgets.
-            //  we also need to send some widget options (probably selectively)
-            //  perhaps we need an option for that in the XML?
             // Include elements/element groups - they will already be JSON encoded.
             $twig['elements'][] = $widget->getOptionValue('elements', null);
 
@@ -332,38 +357,5 @@ class WidgetHtmlRenderer
 
         // We use the default get resource template.
         return $this->twig->fetch('widget-html-render.twig', $twig);
-    }
-
-    /**
-     * @param int $widgetId
-     * @return \Carbon\Carbon
-     */
-    private function getCacheDate(int $widgetId): Carbon
-    {
-        $item = $this->pool->getItem('/widget/html/' . $widgetId);
-        $date = $item->get();
-
-        // If not cached set it to have cached a long time in the past
-        if ($date === null) {
-            return Carbon::now()->subYear();
-        }
-
-        // Parse the date
-        return Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $date);
-    }
-
-    /**
-     * @param int $widgetId
-     * @return void
-     */
-    private function setCacheDate(int $widgetId): void
-    {
-        $now = Carbon::now();
-        $item = $this->pool->getItem('/widget/html/' . $widgetId);
-
-        $item->set($now->format(DateFormatHelper::getSystemFormat()));
-        $item->expiresAt($now->addYear());
-
-        $this->pool->save($item);
     }
 }

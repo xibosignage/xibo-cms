@@ -341,6 +341,22 @@ class Widget extends Base
 
         $module = $this->moduleFactory->getByType($widget->type);
 
+        // Handle common parameters.
+        $duration = $params->getInt('duration', ['default' => $module->defaultDuration]);
+        if ($duration < 0) {
+            throw new InvalidArgumentException(__('Duration needs to be a positive value'), 'duration');
+        }
+
+        // Set maximum duration
+        if ($duration > 526000) {
+            throw new InvalidArgumentException(__('Duration must be lower than 526000'), 'duration');
+        }
+
+        $widget->duration = $duration;
+        $widget->useDuration = $params->getCheckbox('useDuration');
+        $widget->setOptionValue('name', 'attrib', $params->getString('name'));
+        $widget->setOptionValue('enableStat', 'attrib', $params->getString('enableStat'));
+
         // Should we save a template?
         // we're allowed to change between static templates, but not between elements and static templates.
         $existingTemplate = $widget->getOptionValue('templateId', 'elements');
@@ -361,6 +377,9 @@ class Widget extends Base
             // Set it
             $widget->setOptionValue('templateId', 'attrib', $templateId);
         }
+
+        // Before we start, clean out any cached media
+        $widget->clearCachedMedia();
 
         // We're expecting all of our properties to be supplied for editing.
         foreach ($module->properties as $property) {
@@ -942,7 +961,16 @@ class Widget extends Base
         }
 
         $module = $this->moduleFactory->getByType($widget->type);
-        $dataProvider = $module->createDataProvider($widget);
+
+        // This is always a preview, so supply displayId 0
+        $dataProvider = $module->createDataProvider($widget, 0);
+        $dataProvider->setMediaFactory(
+            $this->mediaFactory,
+            $this->urlFor($request, 'library.download', [
+                'id' => ':id',
+                'type' => 'image'
+            ])
+        );
 
         // Does this module have a data provider?
         if ($module->isDataProviderExpected()) {
@@ -961,6 +989,25 @@ class Widget extends Base
                         new WidgetDataRequestEvent($dataProvider),
                         WidgetDataRequestEvent::$NAME
                     );
+                }
+                
+                // Do we have images?
+                $media = $dataProvider->getImages();
+                if (count($media) > 0) {
+                    // Process the downloads.
+                    $this->mediaFactory->processDownloads(function ($media) use ($widget) {
+                        // Success
+                        $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
+
+                        // TODO: the module file is in the library now, so we have the MD5/etc and can output
+                        //  it in required files.
+                        //  But assigning it to the widget is wrong, because there could be a different set of files
+                        //  for each display.
+                        //  We should consider making a simple list which attaches media to a display instead.
+                        //  ---
+                        //  In either case, I don't think we need to do that here because this is the preview, meaning
+                        //  this specific set of files won't ever be sent to the player.
+                    });
                 }
 
                 // Save to cache
@@ -1018,7 +1065,7 @@ class Widget extends Base
             $downloader->useLogger($this->getLog()->getLoggerInterface());
             return $this->render($request, $downloader->download($media, $response));
         }
-        
+
         if ($region->type === 'canvas') {
             // Render a canvas
             // ---------------
@@ -1038,28 +1085,32 @@ class Widget extends Base
         // Create a renderer to deal with this.
         try {
             $renderer = $this->moduleFactory->createWidgetHtmlRenderer();
-            if ($this->getSanitizer($request->getParams())->getCheckbox('preview')) {
-                $resource = $renderer->render(
-                    $module,
+            $resource = $renderer->renderOrCache(
+                $module,
+                $region,
+                $widgets,
+                $templates
+            );
+
+            if (!empty($resource)) {
+                $resource = $renderer->decorateForPreview(
                     $region,
-                    $widgets,
-                    $templates,
-                    0,
+                    $resource,
                     $this->urlFor($request, 'module.getData', [
                         'regionId' => $region->regionId,
-                        'id' => $widget->widgetId
-                    ])
+                        'id' => ':id'
+                    ]),
+                    $this->urlFor($request, 'library.download', [
+                        'id' => ':id',
+                        'type' => 'image'
+                    ]) . '?preview=1'
                 );
-            } else {
-                $resource = $renderer->renderOrCache($module, $region, $widgets, $templates, 0);
+
+                $response->getBody()->write($resource);
             }
         } catch (\Exception $e) {
             $this->getLog()->error('Failed to render widget, e: ' . $e->getMessage());
             throw new ConfigurationException(__('Problem rendering widget'));
-        }
-
-        if (!empty($resource)) {
-            $response->getBody()->write($resource);
         }
 
         return $this->render($request, $response);

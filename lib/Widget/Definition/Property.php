@@ -72,7 +72,8 @@ class Property implements \JsonSerializable
             'default' => $this->default,
             'options' => $this->options,
             'playerCompatability' => $this->playerCompatability,
-            'visibility' => $this->visibility
+            'visibility' => $this->visibility,
+            'allowLibraryRefs' => $this->allowLibraryRefs
         ];
     }
 
@@ -215,6 +216,11 @@ class Property implements \JsonSerializable
                         $key
                     );
                 }
+
+            case 'code':
+                // TODO: Need more flexibility from the sanitizer here.
+                //  we want to return HTML, perhaps passing through some basic sanitisation
+                return $params->getString($key);
 
             case 'input':
             default:

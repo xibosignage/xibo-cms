@@ -24,6 +24,7 @@ namespace Xibo\Widget\Provider;
 
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
+use Xibo\Factory\MediaFactory;
 
 /**
  * Xibo default implementation of a Widget Data Provider
@@ -35,6 +36,12 @@ class DataProvider implements DataProviderInterface
 
     /** @var \Xibo\Entity\Widget */
     private $widget;
+
+    /** @var \Xibo\Factory\MediaFactory */
+    private $mediaFactory;
+
+    /** @var string */
+    private $baseUrl;
     
     /** @var int */
     private $displayId;
@@ -45,6 +52,9 @@ class DataProvider implements DataProviderInterface
     /** @var array the data */
     private $data = [];
 
+    /** @var \Xibo\Entity\Media[] */
+    private $media = [];
+
     /** @var int the cache ttl in seconds - default to 7 days */
     private $cacheTtl = 86400 * 7;
 
@@ -54,11 +64,23 @@ class DataProvider implements DataProviderInterface
      * @param \Xibo\Entity\Widget $widget
      * @param int $displayId Provide 0 for preview
      */
-    public function __construct(Module $module, Widget $widget, $displayId)
+    public function __construct(Module $module, Widget $widget, int $displayId)
     {
         $this->module = $module;
         $this->widget = $widget;
         $this->displayId = $displayId;
+    }
+
+    /**
+     * @param \Xibo\Factory\MediaFactory $mediaFactory
+     * @param string|null $baseUrl The base url for any preview images.
+     * @return \Xibo\Widget\Provider\DataProviderInterface
+     */
+    public function setMediaFactory(MediaFactory $mediaFactory, ?string $baseUrl = null): DataProviderInterface
+    {
+        $this->mediaFactory = $mediaFactory;
+        $this->baseUrl = $baseUrl;
+        return $this;
     }
 
     /**
@@ -144,6 +166,29 @@ class DataProvider implements DataProviderInterface
             $this->addItem($item);
         }
         return $this;
+    }
+
+    /**
+     * @inheritDoc
+     */
+    public function addImage(string $id, string $url, int $expiresAt): string
+    {
+        $media = $this->mediaFactory->queueDownload($id, $url, $expiresAt);
+        $this->media[] = $media;
+
+        if ($this->isPreview()) {
+            return str_replace(':id', $media->mediaId, $this->baseUrl);
+        } else {
+            return $media->storedAs;
+        }
+    }
+
+    /**
+     * @return \Xibo\Entity\Media[]
+     */
+    public function getImages(): array
+    {
+        return $this->media;
     }
 
     /**

@@ -307,6 +307,7 @@ class Soap
      * @return string
      * @throws NotFoundException
      * @throws \SoapFault
+     * @throws \DOMException
      */
     protected function doRequiredFiles($serverKey, $hardwareKey, $httpDownloads)
     {
@@ -322,7 +323,10 @@ class Soap
 
         // Check the serverKey matches
         if ($serverKey != $this->getConfig()->getSetting('SERVER_KEY')) {
-            throw new \SoapFault('Sender', 'The Server key you entered does not match with the server key at this address');
+            throw new \SoapFault(
+                'Sender',
+                'The Server key you entered does not match with the server key at this address'
+            );
         }
 
         $libraryLocation = $this->getConfig()->getSetting('LIBRARY_LOCATION');
@@ -375,7 +379,9 @@ class Soap
         // we will use this to drop items from the requirefile table if they are no longer in required files
         $rfIds = array_map(function ($element) {
             return intval($element['rfId']);
-        }, $this->getStore()->select('SELECT rfId FROM `requiredfile` WHERE displayId = :displayId', ['displayId' => $this->display->displayId]));
+        }, $this->getStore()->select('SELECT rfId FROM `requiredfile` WHERE displayId = :displayId', [
+            'displayId' => $this->display->displayId
+        ]));
         $newRfIds = [];
 
         // Build a new RF
@@ -440,7 +446,11 @@ class Soap
             }
 
             // Also look at the schedule
-            foreach ($this->scheduleFactory->getForXmds($this->display->displayId, $this->fromFilter, $this->toFilter) as $row) {
+            foreach ($this->scheduleFactory->getForXmds(
+                $this->display->displayId,
+                $this->fromFilter,
+                $this->toFilter
+            ) as $row) {
                 $parsedRow = $this->getSanitizer($row);
                 $schedule = $this->scheduleFactory->createEmpty()->hydrate($row);
 
@@ -523,13 +533,23 @@ class Soap
             //  4 - Background Images for all Scheduled Layouts
             //  5 - Media linked to display profile (linked through PlayerSoftware)
             $SQL = "
-                SELECT 1 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
-                   FROM `media`
+                SELECT 1 AS DownloadOrder,
+                    `media`.storedAs AS path,
+                    `media`.mediaID AS id,
+                    `media`.`MD5`,
+                    `media`.FileSize,
+                    `media`.released
+                  FROM `media`
                  WHERE media.type = 'font'
                     OR (media.type = 'module' AND media.moduleSystemFile = 1)
                 UNION ALL
-                SELECT 2 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
-                   FROM `media`
+                SELECT 2 AS DownloadOrder,
+                    `media`.storedAs AS path,
+                    `media`.mediaID AS id,
+                    `media`.`MD5`,
+                    `media`.FileSize,
+                    `media`.released
+                  FROM `media`
                     INNER JOIN `lkmediadisplaygroup`
                     ON lkmediadisplaygroup.mediaid = media.MediaID
                     INNER JOIN `lkdgdg`
@@ -538,7 +558,12 @@ class Soap
                     ON lkdisplaydg.DisplayGroupID = `lkdgdg`.childId
                  WHERE lkdisplaydg.DisplayID = :displayId
                 UNION ALL
-                SELECT 3 AS DownloadOrder, storedAs AS path, media.mediaID AS id, media.`MD5`, media.FileSize, media.released
+                SELECT 3 AS DownloadOrder,
+                    `media`.storedAs AS path,
+                    `media`.mediaID AS id,
+                    `media`.`MD5`,
+                    `media`.FileSize,
+                    `media`.released
                   FROM region
                     INNER JOIN playlist
                     ON playlist.regionId = region.regionId
@@ -552,7 +577,12 @@ class Soap
                     ON media.mediaId = lkwidgetmedia.mediaId
                  WHERE region.layoutId IN (%s)
                 UNION ALL
-                SELECT 4 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.FileSize, media.released
+                SELECT 4 AS DownloadOrder,
+                     `media`.storedAs AS path,
+                     `media`.mediaId AS id,
+                     `media`.`MD5`,
+                     `media`.FileSize,
+                     `media`.released
                   FROM `media`
                  WHERE `media`.mediaID IN (
                     SELECT backgroundImageId
@@ -565,10 +595,15 @@ class Soap
 
             if ($playerVersionMediaId != null) {
                 $SQL .= ' UNION ALL 
-                          SELECT 5 AS DownloadOrder, storedAs AS path, media.mediaId AS id, media.`MD5`, media.fileSize, media.released
-                            FROM `media`
-                            WHERE `media`.type = \'playersoftware\' 
-                            AND `media`.mediaId = :playerVersionMediaId
+                    SELECT 5 AS DownloadOrder,
+                        `media`.storedAs AS path,
+                        `media`.mediaId AS id,
+                        `media`.`MD5`,
+                        `media`.fileSize,
+                        `media`.released
+                      FROM `media`
+                     WHERE `media`.type = \'playersoftware\' 
+                        AND `media`.mediaId = :playerVersionMediaId
                 ';
                 $params['playerVersionMediaId'] = $playerVersionMediaId;
             }
@@ -742,9 +777,7 @@ class Soap
                     // TODO: canvas region or not?
                     //  if this is a canvas region we should only send the first widget as a resource
                     //  but all widgets with data
-                    //  Importantly our data URLs need to be callable multiple times
-                    //  can we output XmdsConnectorFileEvent tokens?
-                    //  so the URL is xmds.php?connector=true&token=blah
+                    //  HOW do we manage the lifecycle of widgets with data that changes overtime?
 
                     $playlist = $region->getPlaylist();
                     $playlist->setModuleFactory($this->moduleFactory);
@@ -804,14 +837,17 @@ class Soap
                                 // Output another file node with a different type
                                 $dataFile = $requiredFilesXml->createElement('file');
                                 $dataFile->setAttribute('type', 'media');
+                                $dataFile->setAttribute('download', 'xmds');
+                                $dataFile->setAttribute('path', $widget->widgetId);
+                                $dataFile->setAttribute('saveAs', $widget->widgetId . '.json');
                                 $dataFile->setAttribute('id', $widget->widgetId);
+
                                 // TODO: how do we get these?
                                 //  can we save an "info" cache key for the size/md5?
                                 //  what if we don't have a cache of this data yet, I suppose we return empty?
                                 $dataFile->setAttribute('size', 0);
                                 $dataFile->setAttribute('md5', '');
-                                $dataFile->setAttribute('download', 'xmds');
-                                $dataFile->setAttribute('path', $widget->widgetId . '.json');
+                                
                                 $fileElements->appendChild($dataFile);
                             }
                         }
@@ -823,7 +859,6 @@ class Soap
                 
                 // Add to paths added
                 $pathsAdded[] = $layoutId;
-
             } catch (GeneralException $e) {
                 $this->getLog()->error('Layout not found - ID: ' . $layoutId . ', skipping.');
                 continue;
@@ -878,7 +913,8 @@ class Soap
             try {
                 // Execute this on the default connection
                 $this->getStore()->updateWithDeadlockLoop(
-                    'DELETE FROM `requiredfile` WHERE rfId IN (' . implode(',', array_fill(0, count($rfIds), '?')) . ')',
+                    'DELETE FROM `requiredfile` WHERE rfId IN ('
+                        . implode(',', array_fill(0, count($rfIds), '?')) . ')',
                     $rfIds,
                     'default'
                 );

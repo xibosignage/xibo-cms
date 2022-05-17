@@ -733,6 +733,17 @@ class Widget implements \JsonSerializable
         foreach ($properties as $property) {
             $type = ($property->type === 'code') ? 'raw' : 'attrib';
             $this->setOptionValue($property->id, $type, $property->value);
+
+            if ($property->allowLibraryRefs) {
+                // Parse them out and replace for our special syntax.
+                $matches = [];
+                preg_match_all('/\[(.*?)\]/', $property->value, $matches);
+                foreach ($matches[1] as $match) {
+                    if (is_numeric($match)) {
+                        $this->assignMedia(intval($match));
+                    }
+                }
+            }
         }
 
         return $this;

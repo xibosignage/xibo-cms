@@ -25,7 +25,7 @@
 <head>
     <title>Xibo Open Source Digital Signage</title>
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width={{ viewPortWidth }}" />
+    <meta name="viewport" content="width=[[ViewPortWidth]]" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <!-- Copyright 2006-2022 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
     <!-- TODO: player bundle goes in here -->
@@ -45,7 +45,10 @@
       originalHeight: {{ height }},
       duration: {{ duration }}
     };
-    // url's for dats
+    var widgetData = [];
+    {% for item in data %}
+    widgetData.push({{ item|json_encode|raw }});
+    {% endfor %}
 </script>
 {% if elementGroups %}
 <script type="text/javascript">

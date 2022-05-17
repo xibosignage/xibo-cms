@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -29,6 +29,7 @@ use Xibo\Support\Exception\GeneralException;
 
 /**
  * Class WidgetSyncTask
+ * Keep all widgets which have data up to date
  * @package Xibo\XTR
  */
 class WidgetSyncTask implements TaskInterface
@@ -123,9 +124,11 @@ class WidgetSyncTask implements TaskInterface
                         $module = $this->moduleFactory->getByType($widget->type);
                         if ($module->isDataProviderExpected()) {
                             $countWidgets++;
+                            
+                            // TODO: how do we know if we need to do this data provider?
+                            //  do we ask it if it is up to date?
 
                             // Have we done this widget before?
-                            // TODO: dataProvider: what if the data provider is display specific?
                             if (in_array($widget->widgetId, $widgetsDone)) {
                                 $this->log->debug('This widgetId ' . $widget->widgetId
                                     . ' has been done before and is not display specific, so we skip');
@@ -135,7 +138,8 @@ class WidgetSyncTask implements TaskInterface
                             // Record start time
                             $startTime = microtime(true);
 
-                            $dataProvider = $module->createDataProvider($widget);
+                            // TODO: dataProvider: what if the data provider is display specific?
+                            $dataProvider = $module->createDataProvider($widget, 0);
                             $widgetInterface = $module->getWidgetProviderOrNull();
                             if ($widgetInterface !== null) {
                                 $widgetInterface->fetchData($dataProvider);
@@ -145,13 +149,13 @@ class WidgetSyncTask implements TaskInterface
 
                             if ($dataProvider->isUseEvent()) {
                                 $this->eventDispatcher->dispatch(
-                                    WidgetDataRequestEvent::$NAME,
-                                    new WidgetDataRequestEvent($dataProvider)
+                                    new WidgetDataRequestEvent($dataProvider),
+                                    WidgetDataRequestEvent::$NAME
                                 );
                             }
 
                             // TODO: dataProvider: Cache the widget
-                            //  we haven't decided how we are going to work thi cache yet.
+                            //  we haven't decided how we are going to work this cache yet.
 
                             // Record we have done this widget
                             $widgetsDone[] = $widget->widgetId;

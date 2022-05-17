@@ -117,6 +117,16 @@ interface DataProviderInterface
     public function addItems(array $items): DataProviderInterface;
 
     /**
+     * Add an image to the data provider and return the URL for that image
+     * @param string $id A unique ID for this image, we recommend adding a module/connector specific prefix
+     * @param string $url The URL on which this image should be downloaded
+     * @param int $expiresAt A unix timestamp for when this image should be removed - should be longer than cache ttl
+     * @return string
+     * @throws \Xibo\Support\Exception\GeneralException
+     */
+    public function addImage(string $id, string $url, int $expiresAt): string;
+
+    /**
      * Clear any data already added to this provider
      * @return \Xibo\Widget\Provider\DataProviderInterface
      */

@@ -202,7 +202,7 @@ class WidgetDataProviderCache
 
             // Release lock
             $this->lock->set(false);
-            $this->lock->expiresAfter(10); // Expire straight away (but give it time to save the thing)
+            $this->lock->expiresAfter(10); // Expire straight away (but give time to save)
 
             $this->pool->save($this->lock);
         }
