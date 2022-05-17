@@ -243,10 +243,10 @@ class WidgetHtmlRenderer
     /**
      * Decorate the HTML output for a player
      * @param string $output
-     * @param \Xibo\Entity\Media[] $media A keyed array of library media this widget has access to
+     * @param array $storedAs A keyed array of library media this widget has access to
      * @return string
      */
-    public function decorateForPlayer(string $output, array $media): string
+    public function decorateForPlayer(string $output, array $storedAs): string
     {
         $matches = [];
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
@@ -259,8 +259,8 @@ class WidgetHtmlRenderer
                 $output = str_replace('[[' . $match . ']]', $value[1] . '.json', $output);
             } else if (Str::startsWith($match, 'mediaId')) {
                 $value = explode('=', $match);
-                if (array_key_exists($value[1], $media)) {
-                    $output = str_replace('[[' . $match . ']]', $media[$value[1]]->storedAs, $output);
+                if (array_key_exists($value[1], $storedAs)) {
+                    $output = str_replace('[[' . $match . ']]', $storedAs[$value[1]]['storedAs'], $output);
                 } else {
                     $output = str_replace('[[' . $match . ']]', '', $output);
                 }

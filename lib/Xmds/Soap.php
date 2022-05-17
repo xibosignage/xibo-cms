@@ -1995,23 +1995,46 @@ class Soap
             
             // Get all templates
             $templates = $this->widgetFactory->getTemplatesForWidgets($widgets);
-            
-            $resource = $this->moduleFactory->createWidgetHtmlRenderer()
-                ->renderOrCache(
-                    $module,
-                    $region,
-                    $widgets,
-                    $templates,
-                    $this->display->displayId
-                );
 
-            // Log bandwidth
-            $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
-            $requiredFile->save();
+            $renderer = $this->moduleFactory->createWidgetHtmlRenderer();
+            $resource = $renderer->renderOrCache(
+                $module,
+                $region,
+                $widgets,
+                $templates
+            );
+
+            // Get all linked media for this player.
+            // use a direct query for efficiency
+            $media = [];
+            $widgetIds = implode(',', array_map(function ($el) {
+                return $el->widgetId;
+            }, $widgets));
+
+            $sql = '
+                SELECT mediaId, storedAs 
+                  FROM `media` 
+                    INNER JOIN `lkwidgetmedia`
+                    ON `lkwidgetmedia`.mediaId = `media`.mediaId
+                 WHERE `lkwidgetmedia`.widgetId IN (' . $widgetIds . ')
+            ';
+
+            foreach ($this->getStore()->select($sql, []) as $row) {
+                $media[$row['mediaId']] = $row['storedAs'];
+            };
+
+            // Decorate for the player
+            $resource = $renderer->decorateForPlayer($resource, $media);
+
+            // TODO: join in the data for this player if we're an older one.
 
             if ($resource == '') {
                 throw new ControllerNotImplemented();
             }
+
+            // Log bandwidth
+            $requiredFile->bytesRequested = $requiredFile->bytesRequested + strlen($resource);
+            $requiredFile->save();
         } catch (NotFoundException $notEx) {
             throw new \SoapFault('Receiver', 'Requested an invalid file.');
         } catch (\Exception $e) {
