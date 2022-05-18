@@ -398,6 +398,21 @@ class Soap
         $fileElements->setAttribute('fitlerFrom', $this->fromFilter->format(DateFormatHelper::getSystemFormat()));
         $fileElements->setAttribute('fitlerTo', $this->toFilter->format(DateFormatHelper::getSystemFormat()));
 
+        // Player Bundle
+        // -------------
+        // Output the player bundle
+        $bundlePath = PROJECT_ROOT . '/modules/bundle.js';
+        $file = $requiredFilesXml->createElement('file');
+        $file->setAttribute('type', 'media');
+        $file->setAttribute('download', 'xmds');
+        $file->setAttribute('path', '-1.js');
+        $file->setAttribute('id', '-1');
+        $file->setAttribute('size', filesize($bundlePath));
+        $file->setAttribute('md5', md5_file($bundlePath));
+        $fileElements->appendChild($file);
+        // ------------
+        // Bundle finished
+
         // Default Layout
         $defaultLayoutId = ($this->display->defaultLayoutId === null || $this->display->defaultLayoutId === 0)
             ? $this->getConfig()->getSetting('DEFAULT_LAYOUT')
@@ -2020,8 +2035,8 @@ class Soap
                 $templates
             );
 
-            // Get all linked media for this player.
-            // use a direct query for efficiency
+            // An array of media we have access to.
+            // Get all linked media for this player and this widget.
             $media = [];
             $widgetIds = implode(',', array_map(function ($el) {
                 return $el->widgetId;
@@ -2033,27 +2048,53 @@ class Soap
                     INNER JOIN `lkwidgetmedia`
                     ON `lkwidgetmedia`.mediaId = `media`.mediaId
                  WHERE `lkwidgetmedia`.widgetId IN (' . $widgetIds . ')
+                UNION ALL
+                SELECT mediaId, storedAs
+                  FROM `media`
+                    INNER JOIN `lkmediadisplaygroup`
+                    ON `lkmediadisplaygroup`.mediaId = `media`.mediaId
+                    INNER JOIN `lkdgdg`
+                    ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
+                    INNER JOIN `lkdisplaydg`
+                    ON lkdisplaydg.displayGroupId = `lkdgdg`.childId
+                 WHERE lkdisplaydg.displayId = :displayId
             ';
 
-            foreach ($this->getStore()->select($sql, []) as $row) {
+            // There isn't any point using a prepared statement because the widgetIds are substituted at runtime
+            foreach ($this->getStore()->select($sql, [
+                'displayId' => $this->display->displayId
+            ]) as $row) {
                 $media[$row['mediaId']] = $row['storedAs'];
             };
 
-            // Join in the data for this player if we're an older one.
+            // Join in the data for this player if we're an older one (which we must be).
             $data = [];
             foreach ($widgets as $widget) {
                 $dataModule = $this->moduleFactory->getByType($widget->type);
                 if ($dataModule->isDataProviderExpected()) {
                     // We only ever return cache.
-                    $dataProvider = $module->createDataProvider($widget, $this->display->displayId);
+                    $dataProvider = $module->createDataProvider($widget);
 
                     // Use the cache if we can.
                     try {
                         $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
-                        $widgetDataProviderCache->decorateWithCache($module, $widget, $dataProvider);
+                        $cacheKey = $this->moduleFactory->determineCacheKey(
+                            $module,
+                            $widget,
+                            $this->display->displayId,
+                            $dataProvider,
+                            null
+                        );
+
+                        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
+                            throw new NotFoundException('Cache not ready');
+                        }
+
+                        $data = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
                     } catch (GeneralException $exception) {
                         // We ignore this.
-                        $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId);
+                        $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId
+                            . ', e: ' . $exception->getMessage());
                     }
 
                     $data[$widget->widgetId] = $dataProvider->getData();

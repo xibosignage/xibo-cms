@@ -49,16 +49,16 @@ interface DataProviderInterface
     public function getDataType(): string;
 
     /**
-     * Is this data provider for a preview or a display
-     * @return bool
+     * Get the latitude for this display
+     * @return float
      */
-    public function isPreview(): bool;
+    public function getDisplayLatitude(): float;
 
     /**
-     * Get the displayId this data provider is supplying. This will be 0 if currently providing for a preview.
-     * @return int
+     * Get the longitude for this display
+     * @return float
      */
-    public function getDisplayId(): int;
+    public function getDisplayLongitude(): float;
 
     /**
      * Get property
@@ -102,10 +102,10 @@ interface DataProviderInterface
      * Add an item to the provider
      * You should ensure that you provide all properties required by the datatype you are returning
      * example data types would be: article, social, event, menu, tabular
-     * @param array $item An array containing the item to render in any templates used by this data provider
+     * @param array|object $item An array containing the item to render in any templates used by this data provider
      * @return \Xibo\Widget\Provider\DataProviderInterface
      */
-    public function addItem(array $item): DataProviderInterface;
+    public function addItem($item): DataProviderInterface;
 
     /**
      * Add items to the provider

@@ -111,18 +111,54 @@ class Soap7 extends Soap6
             $dataModule = $this->moduleFactory->getByType($widget->type);
             if ($dataModule->isDataProviderExpected()) {
                 // We only ever return cache.
-                $dataProvider = $module->createDataProvider($widget, $this->display->displayId);
+                $dataProvider = $module->createDataProvider($widget);
 
                 // Use the cache if we can.
                 try {
+                    $cacheKey = $this->moduleFactory->determineCacheKey(
+                        $module,
+                        $widget,
+                        $this->display->displayId,
+                        $dataProvider,
+                        null
+                    );
+
                     $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
-                    $widgetDataProviderCache->decorateWithCache($module, $widget, $dataProvider);
+                    $widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey);
+
+                    if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
+                        throw new NotFoundException('Cache not ready');
+                    }
+
+                    // Get media references
+                    $media = [];
+                    $sql = '
+                        SELECT mediaId, storedAs
+                          FROM `media`
+                            INNER JOIN `lkmediadisplaygroup`
+                            ON `lkmediadisplaygroup`.mediaId = `media`.mediaId
+                            INNER JOIN `lkdgdg`
+                            ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
+                            INNER JOIN `lkdisplaydg`
+                            ON lkdisplaydg.displayGroupId = `lkdgdg`.childId
+                         WHERE lkdisplaydg.displayId = :displayId
+                    ';
+
+                    // There isn't any point using a prepared statement because the widgetIds are substituted at runtime
+                    foreach ($this->getStore()->select($sql, [
+                        'displayId' => $this->display->displayId
+                    ]) as $row) {
+                        $media[$row['mediaId']] = $row['storedAs'];
+                    };
+
+                    $data = $widgetDataProviderCache->decorateForPlayer($dataProvider->getData(), $media);
                 } catch (GeneralException $exception) {
                     // We ignore this.
                     $this->getLog()->debug('Failed to get data cache for widgetId ' . $widget->widgetId);
+                    $data = [];
                 }
 
-                $resource = json_encode($dataProvider->getData());
+                $resource = json_encode($data);
             } else {
                 $resource = '{}';
             }

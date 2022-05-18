@@ -974,60 +974,82 @@ class Widget extends Base
 
         $module = $this->moduleFactory->getByType($widget->type);
 
-        // This is always a preview, so supply displayId 0
-        $dataProvider = $module->createDataProvider($widget, 0);
-        $dataProvider->setMediaFactory(
-            $this->mediaFactory,
+        // This is always a preview
+        if (!$module->isDataProviderExpected()) {
+            return $response->withJson([]);
+        }
+        
+        // Populate the widget with its properties.
+        $widget->load();
+        $module->decorateProperties($widget, true);
+
+        $dataProvider = $module->createDataProvider($widget);
+        $dataProvider->setMediaFactory($this->mediaFactory);
+        $dataProvider->setDisplayProperties(
+            $this->getConfig()->getSetting('DEFAULT_LAT'),
+            $this->getConfig()->getSetting('DEFAULT_LONG')
+        );
+
+        $widgetInterface = $module->getWidgetProviderOrNull();
+        $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
+        $cacheKey = $this->moduleFactory->determineCacheKey(
+            $module,
+            $widget,
+            0,
+            $dataProvider,
+            $widgetInterface
+        );
+
+        $this->getLog()->debug('cacheKey: ' . $cacheKey);
+
+        // Use the cache if we can.
+        if (!$widgetDataProviderCache->decorateWithCache($dataProvider, $cacheKey)) {
+            $this->getLog()->debug('Pulling fresh data');
+
+            if ($widgetInterface !== null) {
+                $widgetInterface->fetchData($dataProvider);
+            } else {
+                $dataProvider->setIsUseEvent();
+            }
+
+            if ($dataProvider->isUseEvent()) {
+                $this->getDispatcher()->dispatch(
+                    new WidgetDataRequestEvent($dataProvider),
+                    WidgetDataRequestEvent::$NAME
+                );
+            }
+
+            // Do we have images?
+            $media = $dataProvider->getImages();
+            if (count($media) > 0) {
+                // Process the downloads.
+                $this->mediaFactory->processDownloads(function ($media) use ($widget) {
+                    // Success
+                    // We don't need to do anything else, references to mediaId will be built when we decorate
+                    // the HTML.
+                    $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
+                });
+            }
+
+            // Save to cache
+            // TODO: we should implement a "has been processed" flag instead as it might be valid to cache no data
+            if (count($dataProvider->getData()) > 0) {
+                $widgetDataProviderCache->saveToCache($dataProvider);
+            }
+        } else {
+            $this->getLog()->debug('Returning cache');
+        }
+
+        // Decorate for output.
+        $data = $widgetDataProviderCache->decorateForPreview(
+            $dataProvider->getData(),
             $this->urlFor($request, 'library.download', [
                 'id' => ':id',
                 'type' => 'image'
             ])
         );
 
-        // Does this module have a data provider?
-        if ($module->isDataProviderExpected()) {
-            // Use the cache if we can.
-            $widgetDataProviderCache = $this->moduleFactory->createWidgetDataProviderCache();
-            if (!$widgetDataProviderCache->decorateWithCache($module, $widget, $dataProvider)) {
-                $widgetInterface = $module->getWidgetProviderOrNull();
-                if ($widgetInterface !== null) {
-                    $widgetInterface->fetchData($dataProvider);
-                } else {
-                    $dataProvider->setIsUseEvent();
-                }
-
-                if ($dataProvider->isUseEvent()) {
-                    $this->getDispatcher()->dispatch(
-                        new WidgetDataRequestEvent($dataProvider),
-                        WidgetDataRequestEvent::$NAME
-                    );
-                }
-                
-                // Do we have images?
-                $media = $dataProvider->getImages();
-                if (count($media) > 0) {
-                    // Process the downloads.
-                    $this->mediaFactory->processDownloads(function ($media) use ($widget) {
-                        // Success
-                        $this->getLog()->debug('Successfully downloaded ' . $media->mediaId);
-
-                        // TODO: the module file is in the library now, so we have the MD5/etc and can output
-                        //  it in required files.
-                        //  But assigning it to the widget is wrong, because there could be a different set of files
-                        //  for each display.
-                        //  We should consider making a simple list which attaches media to a display instead.
-                        //  ---
-                        //  In either case, I don't think we need to do that here because this is the preview, meaning
-                        //  this specific set of files won't ever be sent to the player.
-                    });
-                }
-
-                // Save to cache
-                $widgetDataProviderCache->saveToCache($dataProvider);
-            }
-        }
-
-        return $response->withJson($dataProvider->getData());
+        return $response->withJson($data);
     }
 
     /**
@@ -1108,14 +1130,9 @@ class Widget extends Base
                 $resource = $renderer->decorateForPreview(
                     $region,
                     $resource,
-                    $this->urlFor($request, 'module.getData', [
-                        'regionId' => $region->regionId,
-                        'id' => ':id'
-                    ]),
-                    $this->urlFor($request, 'library.download', [
-                        'id' => ':id',
-                        'type' => 'image'
-                    ]) . '?preview=1'
+                    function (string $route, array $params) use ($request) {
+                        return $this->urlFor($request, $route, $params);
+                    }
                 );
 
                 $response->getBody()->write($resource);

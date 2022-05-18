@@ -27,12 +27,12 @@ use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Slim\Views\Twig;
-use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
 use Xibo\Entity\ModuleTemplate;
 use Xibo\Entity\Region;
 use Xibo\Entity\Widget;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Sanitizer\SanitizerInterface;
 
 /**
@@ -46,22 +46,22 @@ class WidgetHtmlRenderer
     /** @var LoggerInterface */
     private $logger;
 
-    /** @var \Stash\Interfaces\PoolInterface */
-    private $pool;
-
     /** @var \Slim\Views\Twig */
     private $twig;
 
+    /** @var \Xibo\Service\ConfigServiceInterface */
+    private $config;
+
     /**
      * @param string $cachePath
-     * @param \Stash\Interfaces\PoolInterface $pool
      * @param \Slim\Views\Twig $twig
+     * @param \Xibo\Service\ConfigServiceInterface $config
      */
-    public function __construct(string $cachePath, PoolInterface $pool, Twig $twig)
+    public function __construct(string $cachePath, Twig $twig, ConfigServiceInterface $config)
     {
         $this->cachePath = $cachePath;
-        $this->pool = $pool;
         $this->twig = $twig;
+        $this->config = $config;
     }
 
     /**
@@ -208,29 +208,39 @@ class WidgetHtmlRenderer
      * Decorate the HTML output for a preview
      * @param \Xibo\Entity\Region $region
      * @param string $output
-     * @param string $dataUrl
-     * @param string $libraryUrl
+     * @param callable $urlFor
      * @return string
      */
-    public function decorateForPreview(Region $region, string $output, string $dataUrl, string $libraryUrl): string
+    public function decorateForPreview(Region $region, string $output, callable $urlFor): string
     {
         $matches = [];
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
         foreach ($matches[1] as $match) {
-            if ($match === 'ViewPortWidth') {
+            if ($match === 'PlayerBundle') {
+                $output = str_replace('[[PlayerBundle]]', $urlFor('layout.preview.bundle', []), $output);
+            } else if ($match === 'ViewPortWidth') {
                 $output = str_replace('[[ViewPortWidth]]', $region->width, $output);
             } else if (Str::startsWith($match, 'dataUrl')) {
                 $value = explode('=', $match);
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    str_replace(':id', $value[1], $dataUrl),
+                    str_replace(':id', $value[1], $urlFor('module.getData', [
+                        'regionId' => $region->regionId,
+                        'id' => ':id'
+                    ])),
                     $output
                 );
+            } else if (Str::startsWith($match, 'data=')) {
+                // Not needed as this CMS is always capable of providing separate data.
+                $output = str_replace('[[' . $match . ']]', '[]', $output);
             } else if (Str::startsWith($match, 'mediaId')) {
                 $value = explode('=', $match);
                 $output = str_replace(
                     '[[' . $match . ']]',
-                    str_replace(':id', $value[1], $libraryUrl),
+                    str_replace(':id', $value[1], $urlFor('library.download', [
+                        'id' => ':id',
+                        'type' => 'image'
+                    ]) . '?preview=1'),
                     $output
                 );
             }
@@ -255,7 +265,9 @@ class WidgetHtmlRenderer
         $matches = [];
         preg_match_all('/\[\[(.*?)\]\]/', $output, $matches);
         foreach ($matches[1] as $match) {
-            if ($match === 'ViewPortWidth') {
+            if ($match === 'PlayerBundle') {
+                $output = str_replace('[[PlayerBundle]]', '-1.js', $output);
+            } else if ($match === 'ViewPortWidth') {
                 // Player does this itself.
                 continue;
             } else if ($match === 'Data') {
@@ -300,6 +312,7 @@ class WidgetHtmlRenderer
         $twig['elements'] = [];
         $twig['width'] = $region->width;
         $twig['height'] = $region->height;
+        $twig['cmsDateFormat'] = $this->config->getSetting('DATE_FORMAT');
 
         // Output some data for each widget.
         $twig['data'] = [];
@@ -330,12 +343,12 @@ class WidgetHtmlRenderer
                 // Stencils have access to any module properties
                 if ($module->stencil->twig !== null) {
                     $twig['twig'][] = $this->twig->fetchFromString(
-                        $module->stencil->twig,
+                        $this->decorateTranslations($module->stencil->twig),
                         $module->getPropertyValues()
                     );
                 }
                 if ($module->stencil->hbs !== null) {
-                    $twig['hbs'][] = $module->stencil->hbs;
+                    $twig['hbs'][] = $this->decorateTranslations($module->stencil->hbs);
                 }
             }
 
@@ -358,7 +371,7 @@ class WidgetHtmlRenderer
 
                 // Render out any hbs
                 if ($moduleTemplate->stencil->hbs !== null) {
-                    $twig['hbs'][] = $moduleTemplate->stencil->hbs;
+                    $twig['hbs'][] = $this->decorateTranslations($moduleTemplate->stencil->hbs);
                 }
             }
         }
@@ -368,5 +381,28 @@ class WidgetHtmlRenderer
 
         // We use the default get resource template.
         return $this->twig->fetch('widget-html-render.twig', $twig);
+    }
+
+    /**
+     * Decorate translations in template files.
+     * @param string $content
+     * @return string
+     */
+    private function decorateTranslations(string $content): string
+    {
+        $matches = [];
+        preg_match_all('/\|\|.*?\|\|/', $content, $matches);
+        foreach ($matches[0] as $sub) {
+            // Parse out the translateTag
+            $translateTag = str_replace('||', '', $sub);
+
+            // We have a valid translateTag to substitute
+            $replace = __($translateTag);
+
+            // Substitute the replacement we have found (it might be '')
+            $content = str_replace($sub, $replace, $content);
+        }
+
+        return $content;
     }
 }

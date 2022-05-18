@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -268,7 +268,8 @@ class Factories
                 $repository = new \Xibo\Factory\ModuleFactory(
                     $c->get('configService')->getSetting('LIBRARY_LOCATION') . 'widget',
                     $c->get('pool'),
-                    $c->get('view')
+                    $c->get('view'),
+                    $c->get('configService')
                 );
                 $repository
                     ->setAclDependencies(

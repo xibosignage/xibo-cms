@@ -82,7 +82,13 @@ class Module implements \JsonSerializable
     public $dataType;
 
     /**
-     * @SWG\Property(description="A flag indicating whether this module is specific to a Layout or can be uploaded to the Library")
+     * @SWG\Property(description="The cache key used when requesting data")
+     * @var string
+     */
+    public $dataCacheKey;
+
+    /**
+     * @SWG\Property(description="Is specific to a Layout or can be uploaded to the Library?")
      * @var int
      */
     public $regionSpecific;
@@ -106,7 +112,7 @@ class Module implements \JsonSerializable
     public $hasThumbnail;
 
     /**
-     * @SWG\Property(description="A flag indicating whether the module should be rendered natively by the Player or via the CMS (native|html)")
+     * @SWG\Property(description="Should be rendered natively by the Player or via the CMS (native|html)")
      * @var string
      */
     public $renderAs;
@@ -220,12 +226,11 @@ class Module implements \JsonSerializable
 
     /**
      * @param \Xibo\Entity\Widget $widget
-     * @param int $displayId
      * @return \Xibo\Widget\Provider\DataProvider
      */
-    public function createDataProvider(Widget $widget, int $displayId): DataProvider
+    public function createDataProvider(Widget $widget): DataProvider
     {
-        return $this->moduleFactory->createDataProvider($this, $widget, $displayId);
+        return $this->moduleFactory->createDataProvider($this, $widget);
     }
 
     /**

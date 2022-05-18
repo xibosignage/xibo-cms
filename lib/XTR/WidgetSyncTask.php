@@ -139,7 +139,8 @@ class WidgetSyncTask implements TaskInterface
                             $startTime = microtime(true);
 
                             // TODO: dataProvider: what if the data provider is display specific?
-                            $dataProvider = $module->createDataProvider($widget, 0);
+                            $dataProvider = $module->createDataProvider($widget);
+                            $dataProvider->setDisplayProperties();
                             $widgetInterface = $module->getWidgetProviderOrNull();
                             if ($widgetInterface !== null) {
                                 $widgetInterface->fetchData($dataProvider);

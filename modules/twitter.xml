@@ -26,6 +26,7 @@
     <class></class>
     <type>twitter</type>
     <dataType>social-media</dataType>
+    <dataCacheKey>%searchTerm%_%language%_%resultType%_%tweetCount%</dataCacheKey>
     <schemaVersion>2</schemaVersion>
     <assignable>1</assignable>
     <regionSpecific>1</regionSpecific>

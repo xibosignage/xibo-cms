@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -128,5 +128,20 @@ class Preview extends Base
             $this->layoutFactory->concurrentRequestRelease($layout);
         }
         return $this->render($request, $response);
+    }
+
+    /**
+     * Return the player bundle
+     * @param Request $request
+     * @param Response $response
+     * @return \Psr\Http\Message\ResponseInterface|Response
+     */
+    public function playerBundle(Request $request, Response $response)
+    {
+        $bundle = file_get_contents(PROJECT_ROOT . '/modules/bundle.js');
+        $response->getBody()->write($bundle);
+        return $response->withStatus(200)
+            ->withHeader('Content-Size', strlen($bundle))
+            ->withHeader('Content-Type', 'application/javascript');
     }
 }

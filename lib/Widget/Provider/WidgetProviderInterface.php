@@ -58,4 +58,15 @@ interface WidgetProviderInterface
      * @return \Xibo\Widget\Provider\WidgetProviderInterface
      */
     public function fetchDuration(DurationProviderInterface $durationProvider): WidgetProviderInterface;
+
+    /**
+     * Get data cache key
+     * Use this method to return a cache key for this widget. This is typically only relevant when the data cache
+     * should be different based on the value of a setting. For example, if the tweetDistance is set on a Twitter
+     * widget, then the cache should be by displayId. If the cache is always by displayId, then you should supply
+     * the `dataCacheKey` via module config XML instead.
+     * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
+     * @return string|null
+     */
+    public function getDataCacheKey(DataProviderInterface $dataProvider): ?string;
 }

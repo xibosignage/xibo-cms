@@ -27,11 +27,13 @@ use Slim\Views\Twig;
 use Stash\Interfaces\PoolInterface;
 use Xibo\Entity\Module;
 use Xibo\Entity\Widget;
+use Xibo\Service\ConfigServiceInterface;
 use Xibo\Support\Exception\NotFoundException;
 use Xibo\Widget\Provider\DataProvider;
 use Xibo\Widget\Provider\DataProviderInterface;
 use Xibo\Widget\Provider\DurationProvider;
 use Xibo\Widget\Provider\DurationProviderInterface;
+use Xibo\Widget\Provider\WidgetProviderInterface;
 use Xibo\Widget\Render\WidgetDataProviderCache;
 use Xibo\Widget\Render\WidgetHtmlRenderer;
 
@@ -55,28 +57,32 @@ class ModuleFactory extends BaseFactory
     /** @var \Slim\Views\Twig */
     private $twig;
 
+    /** @var \Xibo\Service\ConfigServiceInterface */
+    private $config;
+
     /**
      * Construct a factory
      * @param string $cachePath
      * @param PoolInterface $pool
      * @param \Slim\Views\Twig $twig
+     * @param \Xibo\Service\ConfigServiceInterface $config
      */
-    public function __construct(string $cachePath, PoolInterface $pool, Twig $twig)
+    public function __construct(string $cachePath, PoolInterface $pool, Twig $twig, ConfigServiceInterface $config)
     {
         $this->cachePath = $cachePath;
         $this->pool = $pool;
         $this->twig = $twig;
+        $this->config = $config;
     }
 
     /**
      * @param \Xibo\Entity\Module $module
      * @param \Xibo\Entity\Widget $widget
-     * @param int $displayId
      * @return \Xibo\Widget\Provider\DataProviderInterface
      */
-    public function createDataProvider(Module $module, Widget $widget, int $displayId): DataProviderInterface
+    public function createDataProvider(Module $module, Widget $widget): DataProviderInterface
     {
-        return new DataProvider($module, $widget, $displayId);
+        return new DataProvider($module, $widget);
     }
 
     /**
@@ -94,7 +100,7 @@ class ModuleFactory extends BaseFactory
      */
     public function createWidgetHtmlRenderer(): WidgetHtmlRenderer
     {
-        return (new WidgetHtmlRenderer($this->cachePath, $this->pool, $this->twig))
+        return (new WidgetHtmlRenderer($this->cachePath, $this->twig, $this->config))
             ->useLogger($this->getLog()->getLoggerInterface());
     }
 
@@ -105,6 +111,60 @@ class ModuleFactory extends BaseFactory
     {
         return (new WidgetDataProviderCache($this->pool))
             ->useLogger($this->getLog()->getLoggerInterface());
+    }
+
+    /**
+     * Determine the cache key
+     * @param \Xibo\Entity\Module $module
+     * @param \Xibo\Entity\Widget $widget
+     * @param int $displayId the displayId (0 for preview)
+     * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
+     * @param \Xibo\Widget\Provider\WidgetProviderInterface|null $widgetInterface
+     * @return string
+     */
+    public function determineCacheKey(
+        Module $module,
+        Widget $widget,
+        int $displayId,
+        DataProviderInterface $dataProvider,
+        ?WidgetProviderInterface $widgetInterface
+    ): string {
+        // Determine the cache key
+        $cacheKey = null;
+        if ($widgetInterface !== null) {
+            $cacheKey = $widgetInterface->getDataCacheKey($dataProvider);
+        }
+
+        if ($cacheKey === null) {
+            // Determinthe cache key from the setting in XML.
+            if (empty($module->dataCacheKey)) {
+                // Best we can do here is a cache per widget, but we should log this as an error.
+                $this->getLog()->debug('getData: module without dataCacheKey: ' . $module->moduleId);
+                $cacheKey = $widget->widgetId;
+            } else {
+                // Start with the one provided
+                $cacheKey = $module->dataCacheKey;
+
+                // Parse the cache key for variables.
+                $matches = [];
+                preg_match_all('/%(.*?)%/', $cacheKey, $matches);
+                foreach ($matches[1] as $match) {
+                    if ($match === 'displayId') {
+                        $cacheKey = str_replace('%displayId%', $displayId, $cacheKey);
+                    } else if ($match === 'widgetId') {
+                        $cacheKey = str_replace('%widgetId%', $widget->widgetId, $cacheKey);
+                    } else {
+                        $cacheKey = str_replace(
+                            '%' . $match . '%',
+                            $widget->getOptionValue($match, ''),
+                            $cacheKey
+                        );
+                    }
+                }
+            }
+        }
+
+        return $cacheKey;
     }
 
     /**
@@ -333,6 +393,7 @@ class ModuleFactory extends BaseFactory
         $module->class = $this->getFirstValueOrDefaultFromXmlNode($xml, 'class');
         $module->type = $this->getFirstValueOrDefaultFromXmlNode($xml, 'type');
         $module->dataType = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataType');
+        $module->dataCacheKey = $this->getFirstValueOrDefaultFromXmlNode($xml, 'dataCacheKey');
         $module->schemaVersion = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'schemaVersion'));
         $module->assignable = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'assignable'));
         $module->regionSpecific = intval($this->getFirstValueOrDefaultFromXmlNode($xml, 'regionSpecific'));

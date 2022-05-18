@@ -22,14 +22,14 @@
 
 namespace Xibo\Widget\Render;
 
+use Illuminate\Support\Str;
 use Psr\Log\LoggerInterface;
 use Psr\Log\NullLogger;
 use Stash\Interfaces\PoolInterface;
 use Stash\Invalidation;
 use Stash\Item;
-use Xibo\Entity\Module;
-use Xibo\Entity\Widget;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\ObjectVars;
 use Xibo\Support\Exception\GeneralException;
 use Xibo\Widget\Provider\DataProviderInterface;
 
@@ -82,22 +82,16 @@ class WidgetDataProviderCache
 
     /**
      * Decorate this data provider with cache
-     * @param \Xibo\Entity\Module $module
-     * @param \Xibo\Entity\Widget $widget
      * @param \Xibo\Widget\Provider\DataProviderInterface $dataProvider
+     * @param string $cacheKey
      * @return bool
      * @throws \Xibo\Support\Exception\GeneralException
      */
     public function decorateWithCache(
-        Module $module,
-        Widget $widget,
-        DataProviderInterface $dataProvider
+        DataProviderInterface $dataProvider,
+        string $cacheKey
     ): bool {
-        // TODO: what is the cache key?
-        //  this needs to cater for cases where:
-        //   - we want different data per display
-        //   - we want to be kind to third parties (i.e. rss feeds)
-        $this->cache = $this->pool->getItem('/widget/html/' . $widget->widgetId);
+        $this->cache = $this->pool->getItem('/widget/html/' . $cacheKey);
         $data = $this->cache->get();
         if ($this->cache->isMiss() || $data === null) {
             // Lock it up
@@ -129,6 +123,81 @@ class WidgetDataProviderCache
 
         // Release the cache
         $this->concurrentRequestRelease();
+    }
+
+    /**
+     * Decorate for a preview
+     * @param array $data The data
+     * @param string $libraryUrl
+     * @return array
+     */
+    public function decorateForPreview(array $data, string $libraryUrl): array
+    {
+        foreach ($data as $item) {
+            // This is either an object or an array
+            if (is_array($item)) {
+                for ($i = 0; $i < count($item); $i++) {
+                    $item[$i] = $this->decorateMediaForPreview($libraryUrl, $item[$i]);
+                }
+            } else if (is_object($item)) {
+                foreach (ObjectVars::getObjectVars($item) as $key => $value) {
+                    $item->{$key} = $this->decorateMediaForPreview($libraryUrl, $value);
+                }
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * @param string $libraryUrl
+     * @param string|null $data
+     * @return string
+     */
+    private function decorateMediaForPreview(string $libraryUrl, ?string $data): ?string
+    {
+        if ($data === null) {
+            return null;
+        }
+        $matches = [];
+        preg_match_all('/\[\[(.*?)\]\]/', $data, $matches);
+        foreach ($matches[1] as $match) {
+            if (Str::startsWith($match, 'mediaId')) {
+                $value = explode('=', $match);
+                $data = str_replace(
+                    '[[' . $match . ']]',
+                    str_replace(':id', $value[1], $libraryUrl),
+                    $data
+                );
+            }
+        }
+        return $data;
+    }
+
+    /**
+     * Decorate for a player
+     * @param array $data The data
+     * @param array $storedAs A keyed array of module files this widget has access to
+     * @return array
+     */
+    public function decorateForPlayer(
+        array $data,
+        array $storedAs
+    ): array {
+        for ($i = 0; $i < count($data); $i++) {
+            $matches = [];
+            preg_match_all('/\[\[(.*?)\]\]/', $data[$i], $matches);
+            foreach ($matches[1] as $match) {
+                if (Str::startsWith($match, 'mediaId')) {
+                    $value = explode('=', $match);
+                    if (array_key_exists($value[1], $storedAs)) {
+                        $data[$i] = str_replace('[[' . $match . ']]', $storedAs[$value[1]]['storedAs'], $data[$i]);
+                    } else {
+                        $data[$i] = str_replace('[[' . $match . ']]', '', $data[$i]);
+                    }
+                }
+            }
+        }
+        return $data;
     }
 
     // <editor-fold desc="Request locking">

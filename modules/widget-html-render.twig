@@ -28,7 +28,7 @@
     <meta name="viewport" content="width=[[ViewPortWidth]]" />
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
     <!-- Copyright 2006-2022 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
-    <!-- TODO: player bundle goes in here -->
+    <script type="text/javascript" src="[[PlayerBundle]]"></script>
 </head>
 <!--[if lt IE 7 ]><body class="ie6"><![endif]-->
 <!--[if IE 7 ]><body class="ie7"><![endif]-->
@@ -43,7 +43,8 @@
     window.globalOptions = {
       originalWidth: {{ width }},
       originalHeight: {{ height }},
-      duration: {{ duration }}
+      duration: {{ duration }},
+      cmsDateFormat: '{{ cmsDateFormat }}'
     };
     var widgetData = [];
     {% for item in data %}

@@ -40,12 +40,6 @@ class DataProvider implements DataProviderInterface
     /** @var \Xibo\Factory\MediaFactory */
     private $mediaFactory;
 
-    /** @var string */
-    private $baseUrl;
-    
-    /** @var int */
-    private $displayId;
-
     /** @var boolean should we use the event? */
     private $isUseEvent = false;
 
@@ -58,28 +52,44 @@ class DataProvider implements DataProviderInterface
     /** @var int the cache ttl in seconds - default to 7 days */
     private $cacheTtl = 86400 * 7;
 
+    /** @var float the display latitude */
+    private $latitude;
+
+    /** @var float the display longitude */
+    private $longitude;
+
     /**
      * Constructor
      * @param \Xibo\Entity\Module $module
      * @param \Xibo\Entity\Widget $widget
-     * @param int $displayId Provide 0 for preview
      */
-    public function __construct(Module $module, Widget $widget, int $displayId)
+    public function __construct(Module $module, Widget $widget)
     {
         $this->module = $module;
         $this->widget = $widget;
-        $this->displayId = $displayId;
+    }
+
+    /**
+     * Set the latitue and longitude for this data provider.
+     *  This is primary used if a widget is display specific
+     * @param $latitude
+     * @param $longitude
+     * @return \Xibo\Widget\Provider\DataProviderInterface
+     */
+    public function setDisplayProperties($latitude, $longitude): DataProviderInterface
+    {
+        $this->latitude = $latitude;
+        $this->longitude = $longitude;
+        return $this;
     }
 
     /**
      * @param \Xibo\Factory\MediaFactory $mediaFactory
-     * @param string|null $baseUrl The base url for any preview images.
      * @return \Xibo\Widget\Provider\DataProviderInterface
      */
-    public function setMediaFactory(MediaFactory $mediaFactory, ?string $baseUrl = null): DataProviderInterface
+    public function setMediaFactory(MediaFactory $mediaFactory): DataProviderInterface
     {
         $this->mediaFactory = $mediaFactory;
-        $this->baseUrl = $baseUrl;
         return $this;
     }
 
@@ -102,17 +112,17 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
-    public function isPreview(): bool
+    public function getDisplayLatitude(): float
     {
-        return $this->displayId == 0;
+        return $this->latitude;
     }
 
     /**
      * @inheritDoc
      */
-    public function getDisplayId(): int
+    public function getDisplayLongitude(): float
     {
-        return $this->displayId;
+        return $this->longitude;
     }
 
     /**
@@ -120,7 +130,7 @@ class DataProvider implements DataProviderInterface
      */
     public function getProperty(string $property, $default = null)
     {
-        $this->widget->getOptionValue($property, $default);
+        return $this->widget->getOptionValue($property, $default);
     }
 
     /**
@@ -151,8 +161,16 @@ class DataProvider implements DataProviderInterface
     /**
      * @inheritDoc
      */
-    public function addItem(array $item): DataProviderInterface
+    public function addItem($item): DataProviderInterface
     {
+        if (!is_array($item) && !is_object($item)) {
+            throw new \RuntimeException('Item must be an array or an object');
+        }
+
+        if (is_object($item) && !($item instanceof \JsonSerializable)) {
+            throw new \RuntimeException('Item must be JSON serilizable');
+        }
+
         $this->data[] = $item;
         return $this;
     }
@@ -176,11 +194,7 @@ class DataProvider implements DataProviderInterface
         $media = $this->mediaFactory->queueDownload($id, $url, $expiresAt);
         $this->media[] = $media;
 
-        if ($this->isPreview()) {
-            return str_replace(':id', $media->mediaId, $this->baseUrl);
-        } else {
-            return $media->storedAs;
-        }
+        return '[[mediaId=' . $media->mediaId . ']]';
     }
 
     /**

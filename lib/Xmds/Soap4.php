@@ -377,6 +377,13 @@ class Soap4 extends Soap
                 $requiredFile->bytesRequested = $requiredFile->bytesRequested + $chunkSize;
                 $requiredFile->save();
             } else if ($fileType == 'media') {
+                // Is this a request for the bundle?
+                if ($fileId == '-1') {
+                    $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.js');
+                    $this->logBandwidth($this->display->displayId, Bandwidth::$GETFILE, strlen($file));
+                    return $file;
+                }
+
                 // Validate the nonce
                 $requiredFile = $this->requiredFileFactory->getByDisplayAndMedia($this->display->displayId, $fileId);
 
