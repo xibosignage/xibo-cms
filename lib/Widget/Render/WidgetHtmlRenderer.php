@@ -323,6 +323,8 @@ class WidgetHtmlRenderer
         // Render each widget out into the html
         foreach ($widgets as $widget) {
             $this->getLog()->debug('render: widget to process is widgetId: ' . $widget->widgetId);
+            $this->getLog()->debug('render: ' . count($widgets) . ' widgets, '
+                . count($moduleTemplates) . ' templates');
 
             // Decorate our module with the saved widget properties
             // we include the defaults.
@@ -348,7 +350,7 @@ class WidgetHtmlRenderer
                     );
                 }
                 if ($module->stencil->hbs !== null) {
-                    $twig['hbs'][] = $this->decorateTranslations($module->stencil->hbs);
+                    $twig['hbs']['module'] = $this->decorateTranslations($module->stencil->hbs);
                 }
             }
 
@@ -358,10 +360,11 @@ class WidgetHtmlRenderer
             // If we have a static template, then render that out.
             foreach ($moduleTemplates as $moduleTemplate) {
                 if ($moduleTemplate->type === 'static') {
+                    $this->getLog()->debug('Static template to include: ' . $moduleTemplate->templateId);
                     $moduleTemplate->decorateProperties($widget, true);
                     if ($moduleTemplate->stencil !== null) {
                         if ($moduleTemplate->stencil->twig !== null) {
-                            $twig['twig'] = $this->twig->fetchFromString(
+                            $twig['twig'][] = $this->twig->fetchFromString(
                                 $moduleTemplate->stencil->twig,
                                 $moduleTemplate->getPropertyValues()
                             );
@@ -371,7 +374,8 @@ class WidgetHtmlRenderer
 
                 // Render out any hbs
                 if ($moduleTemplate->stencil->hbs !== null) {
-                    $twig['hbs'][] = $this->decorateTranslations($moduleTemplate->stencil->hbs);
+                    $twig['hbs'][$moduleTemplate->templateId] =
+                        $this->decorateTranslations($moduleTemplate->stencil->hbs);
                 }
             }
         }

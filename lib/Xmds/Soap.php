@@ -2025,7 +2025,7 @@ class Soap
             $module = $this->moduleFactory->getByType($widget->type);
             
             // Get all templates
-            $templates = $this->widgetFactory->getTemplatesForWidgets($widgets);
+            $templates = $this->widgetFactory->getTemplatesForWidgets($module, $widgets);
 
             $renderer = $this->moduleFactory->createWidgetHtmlRenderer();
             $resource = $renderer->renderOrCache(

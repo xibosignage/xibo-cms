@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,7 +23,7 @@
 
 namespace Xibo\Factory;
 
-
+use Xibo\Entity\Module;
 use Xibo\Entity\User;
 use Xibo\Entity\Widget;
 use Xibo\Service\DisplayNotifyServiceInterface;
@@ -432,18 +432,22 @@ class WidgetFactory extends BaseFactory
 
     /**
      * Get all templates for a set of widgets.
+     * @param \Xibo\Entity\Module $module The lead module we're rendering for
      * @param Widget[] $widgets
      * @return array
      * @throws \Xibo\Support\Exception\NotFoundException
      */
-    public function getTemplatesForWidgets(array $widgets): array
+    public function getTemplatesForWidgets(Module $module, array $widgets): array
     {
+        $this->getLog()->debug('getTemplatesForWidgets: ' . count($widgets) . ' widgets, module: '
+            . $module->type . ', dataType: ' . $module->dataType);
+
         $templates = [];
         foreach ($widgets as $widget) {
             if (!empty($module->dataType)) {
                 // Do we have a static one?
                 $templateId = $widget->getOptionValue('templateId', null);
-                if ($templateId !== null) {
+                if ($templateId !== null && $templateId !== 'elements') {
                     $templates[] = $this->moduleTemplateFactory->getByDataTypeAndId(
                         $module->dataType,
                         $templateId

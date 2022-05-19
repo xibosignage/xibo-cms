@@ -129,7 +129,7 @@ class TwitterConnector implements ConnectorInterface
 
                     // Profile image
                     if (!empty($item['user']['profile_image_url'])) {
-                        $id = $item['user']['id_str'] ?: $item['user']['id'];
+                        $id = 'twitter_' . ($item['user']['id_str'] ?: $item['user']['id']);
 
                         // Original Default Image
                         $tweet->userProfileImage = $dataProvider->addImage(
@@ -156,7 +156,11 @@ class TwitterConnector implements ConnectorInterface
 
                         $photoUrl = $mediaObject['media_url'];
                         if (!empty($photoUrl)) {
-                            $tweet->photo = $dataProvider->addImage($mediaObject->id_str, $photoUrl, $expires);
+                            $tweet->photo = $dataProvider->addImage(
+                                'twitter_' . $mediaObject->id_str,
+                                $photoUrl,
+                                $expires
+                            );
                         }
                     }
 

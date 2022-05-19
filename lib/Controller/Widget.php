@@ -215,7 +215,7 @@ class Widget extends Base
             $templateId = $params->getString('templateId');
             if ($templateId !== 'elements') {
                 // Check it.
-                $template = $this->moduleTemplateFactory->getByDataTypeAndId($templateId, $module->dataType);
+                $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $templateId);
 
                 // Make sure its static
                 if ($template->type !== 'static') {
@@ -297,7 +297,7 @@ class Widget extends Base
         $template = null;
         $templateId = $widget->getOptionValue('templateId', null);
         if ($module->isTemplateExpected() && !empty($templateId)) {
-            $template = $this->moduleTemplateFactory->getByDataTypeAndId($templateId, $module->dataType);
+            $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $templateId);
 
             // Decorate the template with any properties saved in the widget
             $template->decorateProperties($widget);
@@ -364,7 +364,7 @@ class Widget extends Base
         $templateId = $params->getString('templateId');
         if ($existingTemplate !== 'elements' && $module->isTemplateExpected() && !empty($templateId)) {
             // Check it.
-            $template = $this->moduleTemplateFactory->getByDataTypeAndId($templateId, $module->dataType);
+            $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $templateId);
 
             // Make sure its static
             if ($template->type !== 'static') {
@@ -1114,7 +1114,7 @@ class Widget extends Base
         }
 
         // Templates
-        $templates = $this->widgetFactory->getTemplatesForWidgets($widgets);
+        $templates = $this->widgetFactory->getTemplatesForWidgets($module, $widgets);
 
         // Create a renderer to deal with this.
         try {

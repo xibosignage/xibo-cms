@@ -67,7 +67,7 @@ class ModuleTemplateFactory extends BaseFactory
                 return $template;
             }
         }
-        throw new NotFoundException(__('Template not found'));
+        throw new NotFoundException(sprintf(__('Template not found for %s and %s'), $dataType, $id));
     }
 
     /**

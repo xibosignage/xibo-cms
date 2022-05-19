@@ -19,7 +19,8 @@
   ~ along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
   -->
 <templates>
-    <template id="twitter1">
+    <template>
+        <id>twitter1</id>
         <type>static</type>
         <dataType>social-media</dataType>
         <title>Template 6 - text, profile image</title>
@@ -56,19 +57,18 @@
             </property>
         </properties>
         <stencil>
-            <!-- I am not sure if this makes sense here. -->
             <width></width>
             <height></height>
             <padding></padding>
             <hbs><![CDATA[
 <div class="container twitter-container">
     <div class="twitter-col col-4">
-        <p class="pic-container center-block">[ProfileImage]</p>
+        <p class="pic-container center-block">{{ProfileImage}}</p>
     </div>
     <div class="twitter-col col-8">
-        <div class="twitter-col col-12 main-tweet">[Tweet]</div>
-        <div class="twitter-col col-4 twitter-date">[Date]</div>
-        <div class="twitter-col col-5 twitter-location">[Location]</div>
+        <div class="twitter-col col-12 main-tweet">{{Tweet}}</div>
+        <div class="twitter-col col-4 twitter-date">{{Date}}</div>
+        <div class="twitter-col col-5 twitter-location">{{Location}}</div>
     </div>
 </div>
             ]]></hbs>

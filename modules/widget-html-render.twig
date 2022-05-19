@@ -59,7 +59,7 @@
     {% endfor %}
 </script>
 {% endif %}
-{% for item in hbs %}
-    <script type="text/x-handlebars-template">{{ item|raw }}</script>
+{% for id, item in hbs %}
+    <script type="text/x-handlebars-template" id="hbs-{{ id }}">{{ item|raw }}</script>
 {% endfor %}
 </html>
