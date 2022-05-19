@@ -63,12 +63,12 @@
             <hbs><![CDATA[
 <div class="container twitter-container">
     <div class="twitter-col col-4">
-        <p class="pic-container center-block">{{ProfileImage}}</p>
+        <p class="pic-container center-block"><img src="{{userProfileImage}}"/></p>
     </div>
     <div class="twitter-col col-8">
-        <div class="twitter-col col-12 main-tweet">{{Tweet}}</div>
-        <div class="twitter-col col-4 twitter-date">{{Date}}</div>
-        <div class="twitter-col col-5 twitter-location">{{Location}}</div>
+        <div class="twitter-col col-12 main-tweet">{{text}}</div>
+        <div class="twitter-col col-4 twitter-date">{{date}}</div>
+        <div class="twitter-col col-5 twitter-location">{{location}}</div>
     </div>
 </div>
             ]]></hbs>

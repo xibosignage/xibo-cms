@@ -26,7 +26,9 @@
   "devDependencies": {
     "cypress": "^9.5.2",
     "eslint": "^7.19.0",
-    "eslint-config-google": "^0.14.0"
+    "eslint-config-google": "^0.14.0",
+    "hls.js": "^1.1.5",
+    "pdfjs-dist": "^2.14.305"
   },
   "dependencies": {
     "@babel/core": "^7.9.6",

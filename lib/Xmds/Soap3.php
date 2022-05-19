@@ -210,7 +210,7 @@ class Soap3 extends Soap
 
                 // Is this a request for the bundle?
                 if ($fileId == '-1') {
-                    $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.js');
+                    $file = file_get_contents(PROJECT_ROOT . '/modules/bundle.min.js');
                     $this->logBandwidth($this->display->displayId, Bandwidth::$GETFILE, strlen($file));
                     return $file;
                 }

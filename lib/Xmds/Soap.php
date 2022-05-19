@@ -401,7 +401,7 @@ class Soap
         // Player Bundle
         // -------------
         // Output the player bundle
-        $bundlePath = PROJECT_ROOT . '/modules/bundle.js';
+        $bundlePath = PROJECT_ROOT . '/modules/bundle.min.js';
         $file = $requiredFilesXml->createElement('file');
         $file->setAttribute('type', 'media');
         $file->setAttribute('download', 'xmds');

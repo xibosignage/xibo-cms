@@ -1,4 +1,26 @@
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
+ *
+ * Xibo - Digital Signage - http://www.xibo.org.uk
+ *
+ * This file is part of Xibo.
+ *
+ * Xibo is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Affero General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * any later version.
+ *
+ * Xibo is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Affero General Public License for more details.
+ *
+ * You should have received a copy of the GNU Affero General Public License
+ * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
 const path = require('path');
+const webpack = require('webpack');
 const CleanWebpackPlugin = require('clean-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
@@ -145,10 +167,11 @@ const mainConfig = Object.assign({}, config, {
 
 const moduleConfig = Object.assign({}, config, {
   entry: {
-    'xibo-calendar-render': './modules/src/xibo-calendar-render.js',
+    bundle: './modules/src/player-bundle.js',
   },
   output: {
     path: path.resolve(__dirname, 'modules'),
+    filename: '[name].min.js',
   },
   target: ['web', 'es5'],
   module: {
@@ -165,10 +188,21 @@ const moduleConfig = Object.assign({}, config, {
           },
         },
       },
+      {
+        test: /\.(css)$/,
+        use: [
+          'style-loader',
+          'css-loader',
+        ],
+      }
     ],
   },
   plugins: [
-    new CleanWebpackPlugin(['modules/xibo-calendar-render.*']),
+    new webpack.ProvidePlugin({
+      $: 'jquery',
+      jQuery: 'jquery',
+    }),
+    new CleanWebpackPlugin(['modules/*.min.js']),
   ],
 });
 

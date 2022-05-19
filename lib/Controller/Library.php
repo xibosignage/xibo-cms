@@ -1529,23 +1529,18 @@ class Library extends Base
         $this->getLog()->debug('Download request for mediaId ' . $id
             . '. Media is a ' . $media->mediaType . ', is system file:' . $media->moduleSystemFile);
 
-        // Permissions check
-        if ($media->mediaType === 'module' && $media->moduleSystemFile === 1) {
-            // grant permissions
-            // (everyone has access to module system files)
-        } else if ($media->mediaType === 'module') {
-            // Make sure that our user has this mediaId assigned to a Widget they can view
-            // we can't test for normal media permissions, because no user has direct access to these "module" files
-            // https://github.com/xibosignage/xibo/issues/1304
-            if (count($this->widgetFactory->query(null, ['mediaId' => $id])) <= 0) {
-                throw new AccessDeniedException();
-            }
-        } else if (!$this->getUser()->checkViewable($media)) {
+        // TODO: Permissions check
+        //  decide how we grant permissions to module files.
+        if ($media->mediaType !== 'module' && !$this->getUser()->checkViewable($media)) {
             throw new AccessDeniedException();
         }
 
         // Make a module
-        $module = $this->moduleFactory->getByType($media->mediaType);
+        if ($media->mediaType === 'module') {
+            $module = $this->moduleFactory->getByType('image');
+        } else {
+            $module = $this->moduleFactory->getByType($media->mediaType);
+        }
 
         // We are not able to download region specific modules
         if ($module->regionSpecific == 1) {

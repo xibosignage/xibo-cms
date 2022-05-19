@@ -232,7 +232,7 @@ class WidgetHtmlRenderer
                 );
             } else if (Str::startsWith($match, 'data=')) {
                 // Not needed as this CMS is always capable of providing separate data.
-                $output = str_replace('[[' . $match . ']]', '[]', $output);
+                $output = str_replace('"[[' . $match . ']]"', '[]', $output);
             } else if (Str::startsWith($match, 'mediaId')) {
                 $value = explode('=', $match);
                 $output = str_replace(
@@ -334,7 +334,8 @@ class WidgetHtmlRenderer
             $twig['data'][] = [
                 'widgetId' => $widget->widgetId,
                 'url' => '[[dataUrl=' . $widget->widgetId . ']]',
-                'data' => '[[data=' . $widget->widgetId . ']]'
+                'data' => '[[data=' . $widget->widgetId . ']]',
+                'templateId' => $widget->getOptionValue('templateId', null)
             ];
 
             // Watermark duration

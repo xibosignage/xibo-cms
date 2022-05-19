@@ -22,43 +22,55 @@
 #}
 <!doctype html>
 <html lang="en">
-<head>
-    <title>Xibo Open Source Digital Signage</title>
-    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    <meta name="viewport" content="width=[[ViewPortWidth]]" />
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <!-- Copyright 2006-2022 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
-    <script type="text/javascript" src="[[PlayerBundle]]"></script>
-</head>
-<!--[if lt IE 7 ]><body class="ie6"><![endif]-->
-<!--[if IE 7 ]><body class="ie7"><![endif]-->
-<!--[if IE 8 ]><body class="ie8"><![endif]-->
-<!--[if IE 9 ]><body class="ie9"><![endif]-->
-<!--[if (gt IE 9)|!(IE)]><!--><body><!--<![endif]-->
-{% for item in twig %}
-    {{ item|raw }}
-{% endfor %}
-</body>
-<script type="text/javascript">
-    window.globalOptions = {
-      originalWidth: {{ width }},
-      originalHeight: {{ height }},
-      duration: {{ duration }},
-      cmsDateFormat: '{{ cmsDateFormat }}'
-    };
-    var widgetData = [];
-    {% for item in data %}
-    widgetData.push({{ item|json_encode|raw }});
+    <head>
+        <title>Xibo Open Source Digital Signage</title>
+        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+        <meta name="viewport" content="width=[[ViewPortWidth]]" />
+        <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+        <!-- Copyright 2006-2022 Xibo Signage Ltd. Part of the Xibo Open Source Digital Signage Solution. Released under the AGPLv3 or later. -->
+        <script type="text/javascript" src="[[PlayerBundle]]"></script>
+        <style type="text/css">
+            body {
+                margin: 0;
+                overflow: hidden;
+                font-family: sans-serif, Arial, Verdana, "Trebuchet MS";
+            }
+            h1, h2, h3, h4, p {
+                margin-top: 0;
+            }
+            #iframe {
+                border: 0;
+            }
+            .cycle-slide p, p.cycle-slide {
+                margin-bottom:0;
+            }
+        </style>
+    </head>
+    <body>
+        <div id="content"></div>
+    {% for item in twig %}
+        {{ item|raw }}
     {% endfor %}
-</script>
-{% if elementGroups %}
-<script type="text/javascript">
-    var elements = [];
-    {% for item in elements %}
-    elements.push({{ item|raw }});
-    {% endfor %}
-</script>
-{% endif %}
+    </body>
+    <script type="text/javascript">
+        window.globalOptions = {
+          originalWidth: {{ width }},
+          originalHeight: {{ height }},
+          duration: {{ duration }},
+          cmsDateFormat: '{{ cmsDateFormat }}'
+        };
+        var widgetData = [];
+        {% for item in data %}
+        widgetData.push({{ item|json_encode|raw }});
+        {% endfor %}
+
+        {% if elementGroups %}
+        var elements = [];
+        {% for item in elements %}
+        elements.push({{ item|raw }});
+        {% endfor %}
+        {% endif %}
+    </script>
 {% for id, item in hbs %}
     <script type="text/x-handlebars-template" id="hbs-{{ id }}">{{ item|raw }}</script>
 {% endfor %}

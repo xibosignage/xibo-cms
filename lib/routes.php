@@ -308,7 +308,7 @@ $app->group('', function (RouteCollectorProxy $group) {
     $group->get('/library/usage/layouts/{id}', ['\Xibo\Controller\Library','usageLayouts'])->setName('library.usage.layouts');
 })->addMiddleware(new \Xibo\Middleware\FeatureAuth($app->getContainer(), ['library.view']));
 
-$app->get('/library/download/{id}[/{type}]', [
+$app->get('/library/download/{id}', [
     '\Xibo\Controller\Library', 'download'
 ])->setName('library.download');
 $app->get('/library/thumbnail/{id}', [
