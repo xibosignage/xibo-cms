@@ -1,6 +1,6 @@
 <?php
 /*
- * Copyright (c) 2022 Xibo Signage Ltd
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -715,7 +715,14 @@ class Media implements \JsonSerializable
      */
     private function deleteRecord()
     {
-        $this->getStore()->update('DELETE FROM media WHERE MediaID = :mediaId', ['mediaId' => $this->mediaId]);
+        // Delete direct assignments to displays. This will be module files assigned by widgets
+        // no need to notify the display as the next time it collects is sufficient to delete these
+        $this->getStore()->update('DELETE FROM `display_media` WHERE mediaID = :mediaId', [
+            'mediaId' => $this->mediaId
+        ]);
+
+        // Delete the media entry itself
+        $this->getStore()->update('DELETE FROM `media` WHERE mediaID = :mediaId', ['mediaId' => $this->mediaId]);
     }
 
     /**

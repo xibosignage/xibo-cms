@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (C) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -22,6 +22,7 @@
 
 namespace Xibo\XTR;
 
+use Psr\Log\LoggerInterface;
 use Stash\Interfaces\PoolInterface;
 use Symfony\Component\EventDispatcher\EventDispatcherInterface;
 use Xibo\Entity\Task;
@@ -78,11 +79,27 @@ trait TaskTrait
         return $this;
     }
 
+    /**
+     * @return \Xibo\Service\ConfigServiceInterface
+     */
+    protected function getConfig(): ConfigServiceInterface
+    {
+        return $this->config;
+    }
+
     /** @inheritdoc */
     public function setLogger($logger)
     {
         $this->log = $logger;
         return $this;
+    }
+
+    /**
+     * @return \Psr\Log\LoggerInterface
+     */
+    private function getLogger(): LoggerInterface
+    {
+        return $this->log->getLoggerInterface();
     }
 
     /**

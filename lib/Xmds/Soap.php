@@ -559,6 +559,17 @@ class Soap
                  WHERE media.type = 'font'
                     OR (media.type = 'module' AND media.moduleSystemFile = 1)
                 UNION ALL
+                SELECT 1 AS DownloadOrder,
+                    `media`.storedAs AS path,
+                    `media`.mediaID AS id,
+                    `media`.`MD5`,
+                    `media`.FileSize,
+                    `media`.released
+                  FROM `media`
+                    INNER JOIN `display_media`
+                    ON `display_media`.mediaid = `media`.mediaId
+                 WHERE `display_media`.displayId = :displayId
+                UNION ALL
                 SELECT 2 AS DownloadOrder,
                     `media`.storedAs AS path,
                     `media`.mediaID AS id,
@@ -2051,13 +2062,9 @@ class Soap
                 UNION ALL
                 SELECT mediaId, storedAs
                   FROM `media`
-                    INNER JOIN `lkmediadisplaygroup`
-                    ON `lkmediadisplaygroup`.mediaId = `media`.mediaId
-                    INNER JOIN `lkdgdg`
-                    ON `lkdgdg`.parentId = `lkmediadisplaygroup`.displayGroupId
-                    INNER JOIN `lkdisplaydg`
-                    ON lkdisplaydg.displayGroupId = `lkdgdg`.childId
-                 WHERE lkdisplaydg.displayId = :displayId
+                    INNER JOIN `display_media`
+                    ON `display_media`.mediaId = `media`.mediaId
+                 WHERE `display_media`.displayId = :displayId
             ';
 
             // There isn't any point using a prepared statement because the widgetIds are substituted at runtime
