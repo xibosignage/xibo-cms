@@ -381,6 +381,7 @@ class Region extends Base
         $region->top = $sanitizedParams->getDouble('top');
         $region->left = $sanitizedParams->getDouble('left');
         $region->zIndex = $sanitizedParams->getInt('zIndex');
+        $region->type = $sanitizedParams->getString('type');
 
         // Loop
         $region->setOptionValue('loop', $sanitizedParams->getCheckbox('loop'));

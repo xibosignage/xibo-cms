@@ -3,7 +3,7 @@
 
 #layout-editor-bottombar  {
     height: 38px;
-    margin: 0px 24px 24px 16px;
+    margin: 0px 16px 16px 16px;
     
     nav {
         border: none;
@@ -100,11 +100,11 @@
             }
         }
 
-        &.designer-region {
+        &.designer-region-selected {
             border-bottom: 3px solid $xibo-color-orange;
         }
 
-        &.designer-widget {
+        &.designer-widget-selected {
             border-bottom: 3px solid $xibo-color-green;
         }
     }

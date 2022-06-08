@@ -1,3 +1,3 @@
 module.exports = function(str) {
-    return Number(str);
+  return Number(str);
 };

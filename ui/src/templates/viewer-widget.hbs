@@ -1,0 +1,9 @@
+<div id="{{id}}" data-type="widget" data-widget-region="{{ regionId }}" class="designer-widget {{containerStyle}} {{type}} droppable {{#if selected}}selected-widget{{/if}}" style="width: {{dimensions.width}}px;
+        height: {{dimensions.height}}px;">
+
+    <div id="viewer-preview"
+        class="widget-preview {{#if editable}}parent-editable{{/if}} {{#if drawer}}drawer-parent{{/if}}"
+        data-parent="region" data-parent-id="{{parentId}}" data-type="{{type}}">
+        {{{res.html}}}
+    </div>
+</div>
