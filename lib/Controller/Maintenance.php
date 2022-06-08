@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -101,6 +101,13 @@ class Maintenance extends Base
             throw new AccessDeniedException(__('Sorry this function is disabled.'));
         }
 
+        $this->getLog()->audit('Media', 0, 'Tidy library started from Settings', [
+            'tidyOldRevisions' => $tidyOldRevisions,
+            'cleanUnusedFiles' => $cleanUnusedFiles,
+            'tidyGenericFiles' => $tidyGenericFiles,
+            'initiator' => $this->getUser()->userId
+        ]);
+
         // Also run a script to tidy up orphaned media in the library
         $library = $this->getConfig()->getSetting('LIBRARY_LOCATION');
         $this->getLog()->debug('Library Location: ' . $library);
@@ -188,8 +195,13 @@ class Maintenance extends Base
             $type = $sanitizedRow->getString('type');
 
             // Ignore any module files or fonts
-            if ($type == 'module' || $type == 'font' || $type == 'playersoftware' || ($type == 'genericfile' && $tidyGenericFiles != 1))
+            if ($type == 'module'
+                || $type == 'font'
+                || $type == 'playersoftware'
+                || ($type == 'genericfile' && $tidyGenericFiles != 1)
+            ) {
                 continue;
+            }
 
             // Collect media revisions that aren't used
             if ($tidyOldRevisions && $this->isSafeToDelete($row) && $row['isedited'] > 0) {
@@ -228,31 +240,36 @@ class Maintenance extends Base
             // Is this file in the system anywhere?
             if (!array_key_exists($file, $media)) {
                 // Totally missing
-                $this->getLog()->debug('Deleting file: ' . $file);
+                $this->getLog()->alert('tidyLibrary: Deleting file which is not in the media table: ' . $file);
 
                 // If not, delete it
                 unlink($libraryLocation . $file);
             }
             else if (array_key_exists($file, $unusedRevisions)) {
-                // It exists but isn't being used any more
-                $this->getLog()->debug('Deleting unused revision media: ' . $media[$file]['mediaid']);
+                // It exists but isn't being used anymore
+                $this->getLog()->alert('tidyLibrary: Deleting unused revision media: ' . $media[$file]['mediaid']);
 
                 $media = $this->mediaFactory->getById($media[$file]['mediaid']);
-                $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
+                $this->getDispatcher()->dispatch(new MediaDeleteEvent($media), MediaDeleteEvent::$NAME);
                 $media->delete();
             }
             else if (array_key_exists($file, $unusedMedia)) {
-                // It exists but isn't being used any more
-                $this->getLog()->debug('Deleting unused media: ' . $media[$file]['mediaid']);
+                // It exists but isn't being used anymore
+                $this->getLog()->alert('tidyLibrary: Deleting unused media: ' . $media[$file]['mediaid']);
 
                 $media = $this->mediaFactory->getById($media[$file]['mediaid']);
-                $this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
+                $this->getDispatcher()->dispatch(new MediaDeleteEvent($media), MediaDeleteEvent::$NAME);
                 $media->delete();
             }
             else {
                 $i--;
             }
         }
+
+        $this->getLog()->audit('Media', 0, 'Tidy library from settings complete', [
+            'countDeleted' => $i,
+            'initiator' => $this->getUser()->userId
+        ]);
 
         // Return
         $this->getState()->hydrate([
@@ -265,8 +282,14 @@ class Maintenance extends Base
         return $this->render($request, $response);
     }
 
-    private function isSafeToDelete($row)
+    private function isSafeToDelete($row): bool
     {
-        return ($row['UsedInLayoutCount'] <= 0 && $row['UsedInDisplayCount'] <= 0 && $row['UsedInBackgroundImageCount'] <= 0 && $row['UsedInDataSetCount'] <= 0 && $row['UsedInMenuBoardCategoryCount'] <= 0 && $row['UsedInMenuBoardProductCount'] <= 0);
+        return ($row['UsedInLayoutCount'] <= 0
+            && $row['UsedInDisplayCount'] <= 0
+            && $row['UsedInBackgroundImageCount'] <= 0
+            && $row['UsedInDataSetCount'] <= 0
+            && $row['UsedInMenuBoardCategoryCount'] <= 0
+            && $row['UsedInMenuBoardProductCount'] <= 0
+        );
     }
 }
