@@ -1,4 +1,4 @@
-//--- Xibo JS files ----
+// --- Xibo JS files ----
 
 // Xibo Tour ( based on bootstrap-tour )
 require('./src/style/tour.scss');

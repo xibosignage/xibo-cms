@@ -18,206 +18,203 @@
  * You should have received a copy of the GNU Affero General Public License
  * along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
  */
-var uploadTemplate = null;
-var videoImageCovers = {};
+let uploadTemplate = null;
+let videoImageCovers = {};
 
 /**
  * Opens the upload form
  * @param options
  */
 function openUploadForm(options) {
+  options = $.extend(true, {}, {
+    templateId: 'template-file-upload',
+    videoImageCovers: true,
+    className: '',
+    animateDialog: true,
+    formOpenedEvent: null,
+    templateOptions: {
+      layoutImport: false,
+      multi: true,
+    },
+  }, options);
 
-    options = $.extend(true, {}, {
-        templateId: "template-file-upload",
-        videoImageCovers: true,
-        className: "",
-        animateDialog: true,
-        formOpenedEvent: null,
-        templateOptions : {
-            layoutImport: false,
-            multi: true
-        }
-    }, options);
+  // Keep a cache of the upload template (unless we are a non-standard form)
+  if (uploadTemplate === null || options.templateId !== 'template-file-upload') {
+    uploadTemplate = Handlebars.compile($('#' + options.templateId).html());
+  }
 
-    // Keep a cache of the upload template (unless we are a non-standard form)
-    if (uploadTemplate === null || options.templateId !== "template-file-upload") {
-        uploadTemplate = Handlebars.compile($("#" + options.templateId).html());
+  // Handle bars and open a dialog
+  const dialog = bootbox.dialog({
+    message: uploadTemplate(options.templateOptions),
+    title: options.title,
+    buttons: options.buttons,
+    className: options.className + ' upload-modal',
+    animate: options.animateDialog,
+    size: 'large',
+  }).on('hidden.bs.modal', function() {
+    // Reset video image covers.
+    videoImageCovers = {};
+  }).attr('id', Date.now());
+
+  setTimeout(function() {
+    console.log('Timeout fired, we should be shown by now');
+
+    // Configure the upload form
+    const form = $(dialog).find('form');
+    let uploadOptions = {
+      url: options.url,
+      disableImageResize: true,
+      previewMaxWidth: 100,
+      previewMaxHeight: 100,
+      previewCrop: true,
+      acceptFileTypes: new RegExp('\\.(' + options.templateOptions.upload.validExt + ')$', 'i'),
+      maxFileSize: options.templateOptions.upload.maxSize,
+    };
+    let refreshSessionInterval;
+
+    $(form).on('keydown', function(event) {
+      if (event.keyCode == 13) {
+        event.preventDefault();
+        return false;
+      }
+    });
+
+    // Video thumbnail capture.
+    if (options.videoImageCovers) {
+      $(dialog).find('#files').on('change', handleVideoCoverImage);
     }
 
-    // Handle bars and open a dialog
-    var dialog = bootbox.dialog({
-        message: uploadTemplate(options.templateOptions),
-        title: options.title,
-        buttons: options.buttons,
-        className: options.className + " upload-modal",
-        animate: options.animateDialog,
-        size: 'large'
-    }).on('hidden.bs.modal', function () {
-        // Reset video image covers.
-        videoImageCovers = {};
-    }).attr("id", Date.now());
+    // If we are not a multi-upload, then limit to 1
+    if (!options.templateOptions.multi) {
+      uploadOptions = $.extend({}, uploadOptions, {
+        maxNumberOfFiles: 1,
+        limitMultiFileUploads: 1,
+      });
+    }
 
-    setTimeout(function() {
-        console.log("Timeout fired, we should be shown by now");
+    // Widget dates?
+    if (options.templateOptions.showWidgetDates) {
+      XiboInitialise('.row-widget-dates');
+    }
 
-        // Configure the upload form
-        var form = $(dialog).find("form");
-        var uploadOptions = {
-            url: options.url,
-            disableImageResize: true,
-            previewMaxWidth: 100,
-            previewMaxHeight: 100,
-            previewCrop: true,
-            acceptFileTypes: new RegExp("\\.(" + options.templateOptions.upload.validExt + ")$", "i"),
-            maxFileSize: options.templateOptions.upload.maxSize
-        };
-        var refreshSessionInterval;
+    // Handle expiry dates fields
+    const expiryDatesStatus = function() {
+      const setExpiryFlag = form.find('#setExpiryDates').is(':checked');
 
-        $(form).on('keydown', function(event) {
-            if(event.keyCode == 13) {
-                event.preventDefault();
-                return false;
-            }
-        });
+      // Hide and disable fiels ( to avoid form submitting)
+      form.find('.row-widget-set-expiry').toggleClass('hidden', !setExpiryFlag);
+      form.find('.row-widget-set-expiry input').prop('disabled', !setExpiryFlag);
+    };
 
-        // Video thumbnail capture.
+    // Call when checkbox changes
+    form.find('#setExpiryDates').on('change', expiryDatesStatus);
+
+    // Call on start
+    expiryDatesStatus();
+
+    // Ready to initialise the widget and bind to some events
+    form
+      .fileupload(uploadOptions)
+      .bind('fileuploadsubmit', function(e, data) {
+        const inputs = data.context.find(':input');
+        if (inputs.filter('[required][value=""]').first().focus().length) {
+          return false;
+        }
+        data.formData = inputs.serializeArray().concat(form.serializeArray());
+
+        inputs.filter('input').prop('disabled', true);
+      })
+      .bind('fileuploadstart', function(e, data) {
+        // Show progress data
+        form.find('.fileupload-progress .progress-extended').show();
+        form.find('.fileupload-progress .progress-end').hide();
+
+        if (form.fileupload('active') <= 0) {
+          refreshSessionInterval = setInterval('XiboPing(\'' + pingUrl + '?refreshSession=true\')', 1000 * 60 * 3);
+        }
+        return true;
+      })
+      .bind('fileuploaddone', function(e, data) {
+        // If the upload was an error, then don't process the remaining methods.
+        if (data.result.files[0].error != null && data.result.files[0].error !== '') {
+          toastr.error(data.result.files[0].error);
+          return;
+        }
+
         if (options.videoImageCovers) {
-            $(dialog).find('#files').on('change', handleVideoCoverImage);
+          saveVideoCoverImage(data);
         }
 
-        // If we are not a multi-upload, then limit to 1
-        if (!options.templateOptions.multi) {
-            uploadOptions = $.extend({}, uploadOptions, {
-                maxNumberOfFiles: 1,
-                limitMultiFileUploads: 1
-            });
+        if (refreshSessionInterval != null && form.fileupload('active') <= 0) {
+          clearInterval(refreshSessionInterval);
         }
 
-        // Widget dates?
-        if (options.templateOptions.showWidgetDates) {
-            XiboInitialise(".row-widget-dates");
+        // Run the callback function for done when we're processing the last uploading element
+        const filesToUploadCount = form.find('tr.template-upload').length;
+        if (filesToUploadCount == 1 && options.uploadDoneEvent !== undefined && options.uploadDoneEvent !== null && typeof options.uploadDoneEvent == 'function') {
+          // Run in a short while.
+          // this gives time for file-upload's own deferreds to run
+          setTimeout(function() {
+            options.uploadDoneEvent(data);
+          }, 300);
         }
-
-        // Handle expiry dates fields
-        var expiryDatesStatus = function() {
-            var setExpiryFlag = form.find('#setExpiryDates').is(":checked");
-
-            // Hide and disable fiels ( to avoid form submitting)
-            form.find('.row-widget-set-expiry').toggleClass('hidden', !setExpiryFlag);
-            form.find('.row-widget-set-expiry input').prop('disabled', !setExpiryFlag);
-        };
-
-        // Call when checkbox changes
-        form.find('#setExpiryDates').on('change', expiryDatesStatus);
-
-        // Call on start
-        expiryDatesStatus();
-
-        // Ready to initialise the widget and bind to some events
-        form
-            .fileupload(uploadOptions)
-            .bind('fileuploadsubmit', function (e, data) {
-                    var inputs = data.context.find(':input');
-                    if (inputs.filter('[required][value=""]').first().focus().length) {
-                        return false;
-                    }
-                    data.formData = inputs.serializeArray().concat(form.serializeArray());
-
-                    inputs.filter("input").prop("disabled", true);
-                })
-            .bind('fileuploadstart', function (e, data) {
-                    // Show progress data
-                    form.find('.fileupload-progress .progress-extended').show();
-                    form.find('.fileupload-progress .progress-end').hide();
-
-                    if (form.fileupload("active") <= 0) {
-                        refreshSessionInterval = setInterval("XiboPing('" + pingUrl + "?refreshSession=true')", 1000 * 60 * 3);
-                    }
-                    return true;
-                })
-            .bind('fileuploaddone', function (e, data) {
-
-                    // If the upload was an error, then don't process the remaining methods.
-                    if (data.result.files[0].error != null && data.result.files[0].error !== "") {
-                        toastr.error(data.result.files[0].error);
-                        return;
-                    }
-
-                    if (options.videoImageCovers) {
-                        saveVideoCoverImage(data);
-                    }
-
-                    if (refreshSessionInterval != null && form.fileupload("active") <= 0) {
-                        clearInterval(refreshSessionInterval);
-                    }
-
-                    // Run the callback function for done when we're processing the last uploading element
-                    var filesToUploadCount = form.find('tr.template-upload').length;
-                    if (filesToUploadCount == 1 && options.uploadDoneEvent !== undefined && options.uploadDoneEvent !== null && typeof options.uploadDoneEvent == 'function') {
-                        // Run in a short while.
-                        // this gives time for file-upload's own deferreds to run
-                        setTimeout(function () {
-                            options.uploadDoneEvent(data);
-                        }, 300);
-                    }
-                })
-            .bind('fileuploadprogressall', function (e, data) {
-                    // Hide progress data and show processing
-                    if (data.total > 0 && data.loaded === data.total) {
-                        form.find('.fileupload-progress .progress-extended').hide();
-                        form.find('.fileupload-progress .progress-end').show();
-                    }
-                })
-            .bind('fileuploadadded fileuploadcompleted fileuploadfinished', function (e, data) {
-                    // Get uploaded and downloaded files and toggle Done button
-                    var filesToUploadCount = form.find('tr.template-upload').length;
-                    var $button = form.parents('.modal:first').find('button.btn-bb-main');
-
-                    if (filesToUploadCount === 0) {
-                        $button.removeAttr('disabled');
-                        videoImageCovers = {};
-                    } else {
-                        $button.attr('disabled', 'disabled');
-                    }
-                })
-            .bind('fileuploaddrop', handleVideoCoverImage);
-
-        if (options.templateOptions.folderSelector) {
-            // Handle creating a folder selector
-            // compile tree folder modal and append it to Form
-
-            // make bootstrap happy.
-            if ($('#folder-tree-form-modal').length != 0) {
-                $('#folder-tree-form-modal').remove();
-            }
-
-            if ($('#folder-tree-form-modal').length === 0) {
-                let folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
-                $('body').append(folderTreeModal({
-                    container: "container-folder-form-tree",
-                    modal: "folder-tree-form-modal"
-                }));
-
-                $("#folder-tree-form-modal").on('hidden.bs.modal', function () {
-                    // Fix for 2nd/overlay modal
-                    $('.modal:visible').length && $(document.body).addClass('modal-open');
-                    
-                    $(this).data('bs.modal', null);
-                });
-            }
-
-            // Init JS Tree
-            initJsTreeAjax($("#folder-tree-form-modal").find('#container-folder-form-tree'), options.initialisedBy, true, 600);
+      })
+      .bind('fileuploadprogressall', function(e, data) {
+        // Hide progress data and show processing
+        if (data.total > 0 && data.loaded === data.total) {
+          form.find('.fileupload-progress .progress-extended').hide();
+          form.find('.fileupload-progress .progress-end').show();
         }
+      })
+      .bind('fileuploadadded fileuploadcompleted fileuploadfinished', function(e, data) {
+        // Get uploaded and downloaded files and toggle Done button
+        const filesToUploadCount = form.find('tr.template-upload').length;
+        const $button = form.parents('.modal:first').find('button.btn-bb-main');
 
-        // Handle any form opened event
-        if (options.formOpenedEvent !== null && options.formOpenedEvent !== undefined) {
-            eval(options.formOpenedEvent)(dialog);
+        if (filesToUploadCount === 0) {
+          $button.removeAttr('disabled');
+          videoImageCovers = {};
+        } else {
+          $button.attr('disabled', 'disabled');
         }
+      })
+      .bind('fileuploaddrop', handleVideoCoverImage);
 
-    }, 500);
+    if (options.templateOptions.folderSelector) {
+      // Handle creating a folder selector
+      // compile tree folder modal and append it to Form
 
-    return dialog;
+      // make bootstrap happy.
+      if ($('#folder-tree-form-modal').length != 0) {
+        $('#folder-tree-form-modal').remove();
+      }
+
+      if ($('#folder-tree-form-modal').length === 0) {
+        const folderTreeModal = Handlebars.compile($('#folder-tree-template').html());
+        $('body').append(folderTreeModal({
+          container: 'container-folder-form-tree',
+          modal: 'folder-tree-form-modal',
+        }));
+
+        $('#folder-tree-form-modal').on('hidden.bs.modal', function() {
+          // Fix for 2nd/overlay modal
+          $('.modal:visible').length && $(document.body).addClass('modal-open');
+
+          $(this).data('bs.modal', null);
+        });
+      }
+
+      // Init JS Tree
+      initJsTreeAjax($('#folder-tree-form-modal').find('#container-folder-form-tree'), options.initialisedBy, true, 600);
+    }
+
+    // Handle any form opened event
+    if (options.formOpenedEvent !== null && options.formOpenedEvent !== undefined) {
+      eval(options.formOpenedEvent)(dialog);
+    }
+  }, 500);
+
+  return dialog;
 }
 
 /**
@@ -226,92 +223,91 @@ function openUploadForm(options) {
  * @param data
  */
 function handleVideoCoverImage(e, data) {
-    // handle click and drag&drop ways
-    var files = data === undefined ? this.files : data.files;
-    var video = null;
+  // handle click and drag&drop ways
+  const files = data === undefined ? this.files : data.files;
+  let video = null;
 
-    // wait a little bit for the preview to be in the form
-    var checkExist = setInterval(function() {
-        if ($('.preview').find('video').length) {
+  // wait a little bit for the preview to be in the form
+  var checkExist = setInterval(function() {
+    if ($('.preview').find('video').length) {
+      // iterate through our files, check if we have videos
+      // if we do, then set params on video object, convert 2nd second of the video to an image
+      // and register onseeked and onpause events
+      Array.from(files).forEach(function(file, index) {
+        if (!file.error && file.type.includes('video')) {
+          video = file.preview;
+          video.name = file.name;
+          video.setAttribute('id', file.name);
+          video.preload = 'metadata';
 
-            // iterate through our files, check if we have videos
-            // if we do, then set params on video object, convert 2nd second of the video to an image
-            // and register onseeked and onpause events
-            Array.from(files).forEach(function(file, index) {
-                if (!file.error && file.type.includes('video')) {
-                    video = file.preview;
-                    video.name = file.name;
-                    video.setAttribute('id', file.name);
-                    video.preload = 'metadata';
-
-                    getVideoImage(video, 2);
-                    video.addEventListener('seeked, pause', seekImage);
-                }
-            });
-
-            //show help text describing this feature.
-            var helpText = translations.videoImageCoverHelpText;
-            var $helpTextSelector = $('.template-upload video:first').closest('tr').find('td span.info');
-            $helpTextSelector.empty();
-            $helpTextSelector.append(helpText);
-
-            clearInterval(checkExist);
+          getVideoImage(video, 2);
+          video.addEventListener('seeked, pause', seekImage);
         }
-    }, 100);
+      });
+
+      // show help text describing this feature.
+      const helpText = translations.videoImageCoverHelpText;
+      const $helpTextSelector = $('.template-upload video:first').closest('tr').find('td span.info');
+      $helpTextSelector.empty();
+      $helpTextSelector.append(helpText);
+
+      clearInterval(checkExist);
+    }
+  }, 100);
 }
 
 function getVideoImage(video, secs) {
-    // both onseeked and onpause call the same function
-    // onseeked will be called with secs = 2 at the start
-    video.onloadedmetadata = function() {
-        this.currentTime = secs
-    };
-    video.onseeked = createImage;
-    video.onpause = createImage;
+  // both onseeked and onpause call the same function
+  // onseeked will be called with secs = 2 at the start
+  video.onloadedmetadata = function() {
+    this.currentTime = secs;
+  };
+  video.onseeked = createImage;
+  video.onpause = createImage;
 }
 
 function seekImage() {
-    // if we paused the video and seeked specific point in the video, generate new image
-    getVideoImage(this, this.currentTime);
+  // if we paused the video and seeked specific point in the video, generate new image
+  getVideoImage(this, this.currentTime);
 }
 
 function createImage() {
-    // this will actually create the image and save it to an object with file name as a key
-    var canvas = document.createElement('canvas');
-    canvas.height = this.videoHeight;
-    canvas.width = this.videoWidth;
-    var ctx = canvas.getContext('2d');
-    ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
+  // this will actually create the image and save it to an object with file name as a key
+  const canvas = document.createElement('canvas');
+  canvas.height = this.videoHeight;
+  canvas.width = this.videoWidth;
+  const ctx = canvas.getContext('2d');
+  ctx.drawImage(this, 0, 0, canvas.width, canvas.height);
 
-    var videoImageCover = new Image();
-    videoImageCover.src = canvas.toDataURL();
+  const videoImageCover = new Image();
+  videoImageCover.src = canvas.toDataURL();
 
-    videoImageCovers[this.name] = videoImageCover.src;
+  videoImageCovers[this.name] = videoImageCover.src;
 }
 
 function saveVideoCoverImage(data) {
-    // this is called when fileUpload is finished
-    // reason being that we need mediaId to save videoCover image correctly.
-    var results = data.result.files[0];
-    var thumbnailData = {};
+  // this is called when fileUpload is finished
+  // reason being that we need mediaId to save videoCover image correctly.
+  const results = data.result.files[0];
+  const thumbnailData = {};
 
-    // we only want to call this for videos (it would not do anything for other types).
-    if (results.mediaType === 'video') {
-        // get mediaId from results (finished upload)
-        thumbnailData['mediaId'] = results.mediaId;
+  // we only want to call this for videos (it would not do anything for other types).
+  if (results.mediaType === 'video') {
+    // get mediaId from results (finished upload)
+    thumbnailData['mediaId'] = results.mediaId;
 
-        // get the base64 image we captured and stored for this file name
-        thumbnailData['image'] = videoImageCovers[results.fileName];
+    // get the base64 image we captured and stored for this file name
+    thumbnailData['image'] = videoImageCovers[results.fileName];
 
-        // remove this key from our object
-        delete videoImageCovers[results.name];
+    // remove this key from our object
+    delete videoImageCovers[results.name];
 
-        // this calls function in library controller that decodes the image and
-        // saves it to library as  "{libraryLocation}/{$mediaId}_{mediaType}cover.png".
-        $.ajax({
-            url: addMediaThumbnailUrl,
-            type: "POST",
-            data: thumbnailData
-        });
-    }
+    // this calls function in library controller that decodes the image and
+    // saves it to library as  "{libraryLocation}/{$mediaId}_{mediaType}cover.png".
+    $.ajax({
+      url: addMediaThumbnailUrl,
+      type: 'POST',
+      data: thumbnailData,
+    });
+  }
 }
