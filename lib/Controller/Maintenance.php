@@ -244,24 +244,21 @@ class Maintenance extends Base
 
                 // If not, delete it
                 unlink($libraryLocation . $file);
-            }
-            else if (array_key_exists($file, $unusedRevisions)) {
+            } else if (array_key_exists($file, $unusedRevisions)) {
                 // It exists but isn't being used anymore
                 $this->getLog()->alert('tidyLibrary: Deleting unused revision media: ' . $media[$file]['mediaid']);
 
-                $media = $this->mediaFactory->getById($media[$file]['mediaid']);
-                $this->getDispatcher()->dispatch(new MediaDeleteEvent($media), MediaDeleteEvent::$NAME);
-                $media->delete();
-            }
-            else if (array_key_exists($file, $unusedMedia)) {
+                $mediaToDelete = $this->mediaFactory->getById($media[$file]['mediaid']);
+                $this->getDispatcher()->dispatch(new MediaDeleteEvent($mediaToDelete), MediaDeleteEvent::$NAME);
+                $mediaToDelete->delete();
+            } else if (array_key_exists($file, $unusedMedia)) {
                 // It exists but isn't being used anymore
                 $this->getLog()->alert('tidyLibrary: Deleting unused media: ' . $media[$file]['mediaid']);
 
-                $media = $this->mediaFactory->getById($media[$file]['mediaid']);
-                $this->getDispatcher()->dispatch(new MediaDeleteEvent($media), MediaDeleteEvent::$NAME);
-                $media->delete();
-            }
-            else {
+                $mediaToDelete = $this->mediaFactory->getById($media[$file]['mediaid']);
+                $this->getDispatcher()->dispatch(new MediaDeleteEvent($mediaToDelete), MediaDeleteEvent::$NAME);
+                $mediaToDelete->delete();
+            } else {
                 $i--;
             }
         }
