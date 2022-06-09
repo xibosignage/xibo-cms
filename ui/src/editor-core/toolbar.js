@@ -812,7 +812,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     const self = this;
     const app = this.parent;
     const filters = self.menuItems[menu].filters;
-    const requestURL = librarySearchUrl + '?assignable=1&retired=0';
     const $mediaContainer = self.DOMObject.find('#media-container-' + menu);
 
     // Request elements based on filters
@@ -853,7 +852,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         const start = self.menuItems[menu].itemCount;
 
         $.ajax({
-            url: requestURL,
+            url: librarySearchUrl,
             type: 'GET',
             data: $.extend({
                 start: start,
