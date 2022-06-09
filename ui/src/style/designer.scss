@@ -427,6 +427,7 @@ $inline-editing-z-index: 1040;
         background-color: $xibo-color-blue-lightest;
         display: table;
         text-align: center;
+        min-height: 86px;
 
         .empty-timeline-message {
             font-size: 1.1rem;
@@ -1749,9 +1750,9 @@ $inline-editing-z-index: 1040;
             grid-auto-flow: column;
             justify-content: start;
             overflow: hidden;
-            height: calc(100% - 34px);
-            gap: 6px;
-            padding: 4px;
+            height: calc(100% - 32px);
+            gap: 5px;
+            padding: 3px;
 
             /* width */
             ::-webkit-scrollbar {
@@ -1777,7 +1778,7 @@ $inline-editing-z-index: 1040;
             .designer-widget {
                 width: 140px;
                 min-width: 140px;
-                height: 46px;
+                height: 54px;
                 position: relative;
                 background: #f9f9f9;
                 color: $timeline-widget-fg-color;
