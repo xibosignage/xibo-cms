@@ -1302,6 +1302,7 @@ $inline-editing-z-index: 1040;
                 }
 
                 #actions_wrapper {
+                    overflow-x: auto;
                     .row > div {
                         padding: 0;
 
