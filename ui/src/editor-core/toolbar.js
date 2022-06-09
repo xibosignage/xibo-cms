@@ -1215,7 +1215,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
 
         // Select upload card
         this.DOMObject.find('.toolbar-card .select-upload').click((e) => {
-            const $card = $(this).parent();
+            const $card = $(e.currentTarget).parent();
             if(!$card.hasClass('card-selected')) {
                 self.selectCard($(e.currentTarget).parent());
             } else {
