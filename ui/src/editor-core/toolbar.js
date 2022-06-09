@@ -985,8 +985,14 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         return false;
     });
 
-    // Bind seach action to refresh the results
-    $mediaContainer.find('.media-search-form select, .media-search-form input[type="text"].input-tag').change(_.debounce(function() {
+    // Bind search action to refresh the results
+    $mediaContainer.find('.media-search-form select').change(_.debounce(function() {
+        filterRefresh(filters);
+    }, 200));
+
+
+    // Bind tags change to refresh the results
+    $mediaContainer.find('.media-search-form input[type="text"].input-tag').on('itemAdded itemRemoved', _.debounce(function() {
         filterRefresh(filters);
     }, 200));
 
