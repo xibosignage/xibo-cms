@@ -318,6 +318,11 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
  * @param {object/number=} [options.positionToAdd = null] - order position for widget
  */
 pE.dropItemAdd = function(droppable, card, {positionToAdd = null} = {}) {
+    // If the draggable is from another toolbar, stop adding
+    if($(card).parents('#playlist-editor-toolbar').length === 0) {
+        return;
+    }
+
     this.playlist.addElement(droppable, card, positionToAdd);
 };
 
