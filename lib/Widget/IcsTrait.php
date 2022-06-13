@@ -69,7 +69,6 @@ trait IcsTrait
                 ]));
 
                 $document = $response->getBody()->getContents();
-
             } catch (RequestException $requestException) {
                 // Log and return empty?
                 $this->getLog()->error('Unable to get feed: ' . $requestException->getMessage());
