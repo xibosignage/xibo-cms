@@ -124,6 +124,15 @@ Bottombar.prototype.render = function(element, data) {
         }
     }
 
+    // If read only mode is enabled
+    if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
+        // Create the read only alert message
+        const $readOnlyMessage = $('<div id="read-only-message" class="alert alert-warning text-center navbar-nav" data-container=".editor-bottom-bar" data-toggle="tooltip" data-placement="bottom" data-title="' + layoutEditorTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutEditorTrans.readOnlyModeTitle + '</strong>:&nbsp;' + layoutEditorTrans.readOnlyModeMessage + '</div>');
+
+        // Prepend the element to the bottom toolbar's content
+        $readOnlyMessage.insertAfter(this.DOMObject.find('.pull-left')).on('click', lD.checkoutLayout);
+    }
+
     // Button handlers
     this.DOMObject.find('#delete-btn').click(function() {
         if(element.isDeletable) {

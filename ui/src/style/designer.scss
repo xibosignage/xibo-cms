@@ -74,15 +74,32 @@ $inline-editing-z-index: 1040;
 
 // CSS
 
-#read-only-message {
-    display: block;
-    margin: 5px 5%;
-    padding: 10px;
-    width: 90%;
-    line-height: 18px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+#layout-editor.view-mode {
+    background-color: $xibo-color-gray-dark;
+
+    #layout-editor-topbar, #layout-editor-bottombar {
+        .navbar {
+            background-color: $xibo-color-gray;
+        }
+
+        #read-only-message {
+            cursor: pointer;
+            display: block;
+            font-size: 1.1rem;
+            margin: 0 16px;
+            padding: 0 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            height: 24px;
+            opacity: 0.85;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
 }
 
 /* Flex structure */
@@ -427,6 +444,7 @@ $inline-editing-z-index: 1040;
         background-color: $xibo-color-blue-lightest;
         display: table;
         text-align: center;
+        min-height: 86px;
 
         .empty-timeline-message {
             font-size: 1.1rem;
@@ -1302,6 +1320,7 @@ $inline-editing-z-index: 1040;
                 }
 
                 #actions_wrapper {
+                    overflow-x: auto;
                     .row > div {
                         padding: 0;
 
@@ -1748,9 +1767,9 @@ $inline-editing-z-index: 1040;
             grid-auto-flow: column;
             justify-content: start;
             overflow: hidden;
-            height: calc(100% - 34px);
-            gap: 6px;
-            padding: 4px;
+            height: calc(100% - 32px);
+            gap: 5px;
+            padding: 3px;
 
             /* width */
             ::-webkit-scrollbar {
@@ -1776,7 +1795,7 @@ $inline-editing-z-index: 1040;
             .designer-widget {
                 width: 140px;
                 min-width: 140px;
-                height: 46px;
+                height: 54px;
                 position: relative;
                 background: #f9f9f9;
                 color: $timeline-widget-fg-color;

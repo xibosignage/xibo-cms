@@ -108,13 +108,13 @@ describe('Layout Designer (Populated)', function() {
         // Create and alias for reload layout
         cy.server();
         cy.route('/layout?layoutId=*').as('reloadLayout');
-        cy.route('/library/search?assignable=1&retired=0&*').as('mediaLoad');
+        cy.route('/library/search?*').as('mediaLoad');
 
         cy.get('#properties-panel #backgroundRemoveButton').click();
 
         // Open library search tab
-        cy.get('#layout-editor-toolbar #btn-menu-0').should('be.visible').click();
-        cy.get('#layout-editor-toolbar #btn-menu-1').should('be.visible').click();
+        cy.get('#layout-editor-toolbar #btn-menu-0').click();
+        cy.get('#layout-editor-toolbar #btn-menu-1').click();
 
         cy.wait('@mediaLoad');
 

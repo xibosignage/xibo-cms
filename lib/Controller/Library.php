@@ -792,6 +792,7 @@ class Library extends Base
                 'notPlayerSoftware' => 1,
                 'notSavedReport' => 1,
                 'assignable' => 1,
+                'retired' => 0,
                 'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
             ], $parsedQueryParams));
 

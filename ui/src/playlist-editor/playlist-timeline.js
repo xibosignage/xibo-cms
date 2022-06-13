@@ -18,7 +18,7 @@ let PlaylistTimeline = function(container) {
 PlaylistTimeline.prototype.render = function() {
 
     // Render timeline template
-    const html = timelineTemplate(pE.playlist);
+    const html = timelineTemplate($.extend({}, pE.playlist, {trans: editorsTrans}));
 
     // Append html to the main div
     this.DOMObject.html(html);
