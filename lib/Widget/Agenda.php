@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2020 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -23,13 +23,10 @@
 namespace Xibo\Widget;
 
 use Carbon\Carbon;
-use GuzzleHttp\Client;
-use GuzzleHttp\Exception\RequestException;
 use ICal\ICal;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
-use Stash\Invalidation;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -39,6 +36,8 @@ use Xibo\Support\Exception\InvalidArgumentException;
  */
 class Agenda extends ModuleWidget
 {
+    use IcsTrait;
+
     /** @inheritdoc */
     public function init()
     {
@@ -582,64 +581,6 @@ class Agenda extends ModuleWidget
     }
 
     /**
-     * Get the feed from Cache or Source
-     * @return bool|string
-     * @throws ConfigurationException
-     */
-    private function getFeed()
-    {
-        // Create a key to use as a caching key for this item.
-        // the rendered feed will be cached, so it is important the key covers all options.
-        $feedUrl = urldecode($this->getOption('uri'));
-
-        /** @var \Stash\Item $cache */
-        $cache = $this->getPool()->getItem($this->makeCacheKey(md5($feedUrl)));
-        $cache->setInvalidationMethod(Invalidation::SLEEP, 5000, 15);
-
-        $this->getLog()->debug('Calendar ' . $feedUrl . '. Cache key: ' . $cache->getKey());
-
-        // Get the document out of the cache
-        $document = $cache->get();
-
-        // Check our cache to see if the key exists
-        if ($cache->isMiss()) {
-            // Invalid local cache
-            $this->getLog()->debug('Cache Miss, getting RSS items');
-
-            // Lock this cache item (120 seconds)
-            $cache->lock(120);
-
-            try {
-                // Create a Guzzle Client to get the Feed XML
-                $client = new Client();
-                $response = $client->get($feedUrl, $this->getConfig()->getGuzzleProxy([
-                    'timeout' => 20 // wait no more than 20 seconds: https://github.com/xibosignage/xibo/issues/1401
-                ]));
-
-                $document = $response->getBody()->getContents();
-
-            } catch (RequestException $requestException) {
-                // Log and return empty?
-                $this->getLog()->error('Unable to get feed: ' . $requestException->getMessage());
-                $this->getLog()->debug($requestException->getTraceAsString());
-
-                throw new ConfigurationException(__('Unable to download feed'));
-            }
-
-            // Add this to the cache.
-            $cache->set($document);
-            $cache->expiresAfter($this->getOption('updateInterval', 360) * 60);
-
-            // Save
-            $this->getPool()->saveDeferred($cache);
-        } else {
-            $this->getLog()->debug('Feed returned from Cache');
-        }
-
-        return $document;
-    }
-
-    /**
      * Parse the feed into an array of templated items
      * @param $feed
      * @param $template
@@ -652,22 +593,11 @@ class Agenda extends ModuleWidget
         $items = [];
 
         // Create an ICal helper and pass it the contents of the file.
-        $iCal = new ICal(false, [
-            'replaceWindowsTimeZoneIds' => ($this->getOption('replaceWindowsTimeZoneIds', 0) == 1)
-        ]);
-
-        try {
-            $iCal->initString($feed);
-        } catch (\Exception $exception) {
-            $this->getLog()->debug($exception->getMessage() . $exception->getTraceAsString());
-
-            throw new ConfigurationException(__('The iCal provided is not valid, please choose a valid feed'));
-        }
-
-        // Before we parse anything - should we use the calendar timezone as a base for our calculations?
-        if ($this->getOption('useCalendarTimezone') == 1) {
-            $iCal->defaultTimeZone = $iCal->calendarTimeZone();
-        }
+        $iCalConfig = [
+            'replaceWindowsTimeZoneIds' => ($this->getOption('replaceWindowsTimeZoneIds', 0) == 1),
+            'defaultSpan' => 1,
+            'filterDaysBefore' => 5
+        ];
 
         // We've got something at least, so prepare the template
         $matches = [];
@@ -698,48 +628,79 @@ class Agenda extends ModuleWidget
         if ($this->getOption('useDateRange')) {
             $rangeStart = $this->getOption('rangeStart');
             $rangeEnd = $this->getOption('rangeEnd');
-            $events = $iCal->eventsFromRange($rangeStart, $rangeEnd);
         } else {
-            $events = $iCal->eventsFromInterval($this->getOption('customInterval', '1 week'));
+            $rangeStart = $startOfDay->copy();
+            $rangeEnd = $rangeStart->copy()->add(
+                \DateInterval::createFromDateString($this->getOption('customInterval', '1 week'))
+            );
         }
 
-        // Go through each event returned
-        foreach ($events as $event) {
-            try {
-                /** @var \ICal\Event $event */
-                $startDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtstart));
-                $endDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtend));
+        // Get the difference between now and the end range.
+        $iCalConfig['filterDaysAfter'] = $startOfDay->diffInDays($rangeEnd) + 2;
 
-                if ($useEventTimezone === 1) {
-                    $startDt->setTimezone($iCal->defaultTimeZone);
-                    $endDt->setTimezone($iCal->defaultTimeZone);
-                }
+        $this->getLog()->debug('Range start: ' . $rangeStart->toDateTimeString()
+            . ', range end: ' . $rangeEnd->toDateTimeString()
+            . ', config: ' . var_export($iCalConfig, true));
 
-                $this->getLog()->debug('Event with ' . $startDt->format('c') . ' / ' . $endDt->format('c') . '. diff in days = ' . $endDt->diff($startDt)->days);
+        try {
+            $iCal = new ICal(false, $iCalConfig);
+            $iCal->initString($feed);
 
-                if ($excludeAllDay && ($endDt->diff($startDt)->days >= 1)) {
-                    continue;
-                }
+            $this->getLog()->debug('Feed initialised');
 
-                // Substitute for all matches in the template
-                $rowString = $this->substituteForEvent($matches, $template, $startDt, $endDt, $dateFormat, $event);
-
-                if ($currentEventTemplate != '') {
-                    $currentEventRow = $this->substituteForEvent($currentEventMatches, $currentEventTemplate, $startDt,
-                        $endDt, $dateFormat, $event);
-                } else {
-                    $currentEventRow = $rowString;
-                }
-
-                $items[] = [
-                    'startDate' => $startDt->format('c'),
-                    'endDate' => $endDt->format('c'),
-                    'item' => $rowString,
-                    'currentEventItem' => $currentEventRow
-                ];
-            } catch (\Exception $exception) {
-                $this->getLog()->error('Unable to parse event. ' . var_export($event, true));
+            // Before we parse anything - should we use the calendar timezone as a base for our calculations?
+            if ($this->getOption('useCalendarTimezone') == 1) {
+                $iCal->defaultTimeZone = $iCal->calendarTimeZone();
             }
+
+            // Get an array of events
+            $events = $iCal->eventsFromRange($rangeStart, $rangeEnd);
+
+            // Go through each event returned
+            foreach ($events as $event) {
+                try {
+                    /** @var \ICal\Event $event */
+                    $startDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtstart));
+                    $endDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtend));
+
+                    if ($useEventTimezone === 1) {
+                        $startDt->setTimezone($iCal->defaultTimeZone);
+                        $endDt->setTimezone($iCal->defaultTimeZone);
+                    }
+
+                    $this->getLog()->debug('Event with ' . $startDt->format('c') . ' / '
+                        . $endDt->format('c') . '. diff in days = ' . $endDt->diff($startDt)->days);
+
+                    if ($excludeAllDay && ($endDt->diff($startDt)->days >= 1)) {
+                        continue;
+                    }
+
+                    // Substitute for all matches in the template
+                    $rowString = $this->substituteForEvent($matches, $template, $startDt, $endDt, $dateFormat, $event);
+
+                    if ($currentEventTemplate != '') {
+                        $currentEventRow = $this->substituteForEvent($currentEventMatches, $currentEventTemplate,
+                            $startDt,
+                            $endDt, $dateFormat, $event);
+                    } else {
+                        $currentEventRow = $rowString;
+                    }
+
+                    $items[] = [
+                        'startDate' => $startDt->format('c'),
+                        'endDate' => $endDt->format('c'),
+                        'item' => $rowString,
+                        'currentEventItem' => $currentEventRow
+                    ];
+                } catch (\Exception $exception) {
+                    $this->getLog()->error('Unable to parse event. ' . var_export($event, true));
+                }
+            }
+        } catch (\Exception $exception) {
+            $this->getLog()->error($exception->getMessage());
+            $this->getLog()->debug($exception->getTraceAsString());
+
+            throw new ConfigurationException(__('The iCal provided is not valid, please choose a valid feed'));
         }
 
         return $items;
