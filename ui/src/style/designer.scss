@@ -74,15 +74,32 @@ $inline-editing-z-index: 1040;
 
 // CSS
 
-#read-only-message {
-    display: block;
-    margin: 5px 5%;
-    padding: 10px;
-    width: 90%;
-    line-height: 18px;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+#layout-editor.view-mode {
+    background-color: $xibo-color-gray-dark;
+
+    #layout-editor-topbar, #layout-editor-bottombar {
+        .navbar {
+            background-color: $xibo-color-gray;
+        }
+
+        #read-only-message {
+            cursor: pointer;
+            display: block;
+            font-size: 1.1rem;
+            margin: 0 16px;
+            padding: 0 12px;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            flex: 1;
+            height: 24px;
+            opacity: 0.85;
+
+            &:hover {
+                opacity: 1;
+            }
+        }
+    }
 }
 
 /* Flex structure */

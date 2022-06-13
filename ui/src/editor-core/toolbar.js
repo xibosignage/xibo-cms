@@ -442,17 +442,8 @@ Toolbar.prototype.render = function() {
 
     // If read only mode is enabled
     if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
-        // Hide edit mode fields
-        this.DOMObject.find('.hide-on-read-only').hide();
-
         // Hide toolbar
         this.DOMObject.hide();
-
-        // Create the read only alert message
-        const $readOnlyMessage = $('<div id="read-only-message" class="alert alert-info btn text-center navbar-nav" data-container=".editor-bottom-bar" data-toggle="tooltip" data-placement="bottom" data-title="' + layoutEditorTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutEditorTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutEditorTrans.readOnlyModeMessage + '</div>');
-
-        // Prepend the element to the bottom toolbar's content
-        $readOnlyMessage.prependTo(this.DOMObject.find('.container-toolbar .navbar-collapse')).click(lD.checkoutLayout);
     } else {
         // Show toolbar
         this.DOMObject.show();
