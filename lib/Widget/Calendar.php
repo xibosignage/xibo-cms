@@ -27,6 +27,7 @@ use ICal\ICal;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Helper\Translate;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\InvalidArgumentException;
@@ -774,8 +775,8 @@ class Calendar extends ModuleWidget
                 $rangeStart = Carbon::now()->startOfMonth();
                 $rangeEnd = Carbon::now()->endOfMonth();
             } else {
-                $rangeStart = $this->getOption('rangeStart');
-                $rangeEnd = $this->getOption('rangeEnd');
+                $rangeStart = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $this->getOption('rangeStart'));
+                $rangeEnd = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $this->getOption('rangeEnd'));
             }
         } else {
             $rangeStart = $startOfDay->copy();
@@ -809,16 +810,18 @@ class Calendar extends ModuleWidget
             foreach ($events as $event) {
                 try {
                     /** @var \ICal\Event $event */
-                    $startDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtstart));
-                    $endDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtend));
-
                     if ($useEventTimezone === 1) {
-                        $startDt->setTimezone($iCal->defaultTimeZone);
-                        $endDt->setTimezone($iCal->defaultTimeZone);
+                        // Use the timezone from the event.
+                        $startDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtstart_array[3]));
+                        $endDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtend_array[3]));
+                    } else {
+                        // Use the parser calculated timezone shift
+                        $startDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtstart_tz));
+                        $endDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtend_tz));
                     }
 
-                    $this->getLog()->debug('Event with ' . $startDt->format('c') . ' / '
-                        . $endDt->format('c') . '. diff in days = ' . $endDt->diff($startDt)->days);
+                    $this->getLog()->debug('Event: ' . $event->summary . ' with '
+                        . $startDt->format('c') . ' / ' . $endDt->format('c'));
 
                     if ($excludeAllDay && ($endDt->diff($startDt)->days >= 1)) {
                         continue;

@@ -27,6 +27,7 @@ use ICal\ICal;
 use Respect\Validation\Validator as v;
 use Slim\Http\Response as Response;
 use Slim\Http\ServerRequest as Request;
+use Xibo\Helper\DateFormatHelper;
 use Xibo\Support\Exception\ConfigurationException;
 use Xibo\Support\Exception\InvalidArgumentException;
 
@@ -626,8 +627,8 @@ class Agenda extends ModuleWidget
 
         // do we use interval or provided date range?
         if ($this->getOption('useDateRange')) {
-            $rangeStart = $this->getOption('rangeStart');
-            $rangeEnd = $this->getOption('rangeEnd');
+            $rangeStart = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $this->getOption('rangeStart'));
+            $rangeEnd = Carbon::createFromFormat(DateFormatHelper::getSystemFormat(), $this->getOption('rangeEnd'));
         } else {
             $rangeStart = $startOfDay->copy();
             $rangeEnd = $rangeStart->copy()->add(
@@ -653,6 +654,8 @@ class Agenda extends ModuleWidget
                 $iCal->defaultTimeZone = $iCal->calendarTimeZone();
             }
 
+            $this->getLog()->debug('Calendar timezone set to: ' . $iCal->defaultTimeZone);
+
             // Get an array of events
             $events = $iCal->eventsFromRange($rangeStart, $rangeEnd);
 
@@ -660,16 +663,18 @@ class Agenda extends ModuleWidget
             foreach ($events as $event) {
                 try {
                     /** @var \ICal\Event $event */
-                    $startDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtstart));
-                    $endDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtend));
-
                     if ($useEventTimezone === 1) {
-                        $startDt->setTimezone($iCal->defaultTimeZone);
-                        $endDt->setTimezone($iCal->defaultTimeZone);
+                        // Use the timezone from the event.
+                        $startDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtstart_array[3]));
+                        $endDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtend_array[3]));
+                    } else {
+                        // Use the parser calculated timezone shift
+                        $startDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtstart_tz));
+                        $endDt = Carbon::instance($iCal->iCalDateToDateTime($event->dtend_tz));
                     }
 
-                    $this->getLog()->debug('Event with ' . $startDt->format('c') . ' / '
-                        . $endDt->format('c') . '. diff in days = ' . $endDt->diff($startDt)->days);
+                    $this->getLog()->debug('Event: ' . $event->summary . ' with '
+                        . $startDt->format('c') . ' / ' . $endDt->format('c'));
 
                     if ($excludeAllDay && ($endDt->diff($startDt)->days >= 1)) {
                         continue;
@@ -679,9 +684,14 @@ class Agenda extends ModuleWidget
                     $rowString = $this->substituteForEvent($matches, $template, $startDt, $endDt, $dateFormat, $event);
 
                     if ($currentEventTemplate != '') {
-                        $currentEventRow = $this->substituteForEvent($currentEventMatches, $currentEventTemplate,
+                        $currentEventRow = $this->substituteForEvent(
+                            $currentEventMatches,
+                            $currentEventTemplate,
                             $startDt,
-                            $endDt, $dateFormat, $event);
+                            $endDt,
+                            $dateFormat,
+                            $event
+                        );
                     } else {
                         $currentEventRow = $rowString;
                     }
