@@ -138,7 +138,8 @@ class Controllers
             '\Xibo\Controller\DayPart' => function (ContainerInterface $c) {
                 $controller =  new \Xibo\Controller\DayPart(
                     $c->get('dayPartFactory'),
-                    $c->get('scheduleFactory')
+                    $c->get('scheduleFactory'),
+                    $c->get('displayNotifyService')
                 );
                 $controller->useBaseDependenciesService($c->get('ControllerBaseDependenciesService'));
                 return $controller;

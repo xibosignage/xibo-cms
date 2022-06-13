@@ -1796,7 +1796,9 @@ class Display extends Base
         $display->screenShotRequested = 1;
         $display->save(['validate' => false, 'audit' => false]);
 
-        if (!empty($display->xmrChannel)) {
+        $xmrPubAddress = $this->getConfig()->getSetting('XMR_PUB_ADDRESS');
+
+        if (!empty($display->xmrChannel) && !empty($xmrPubAddress) && $xmrPubAddress !== 'DISABLED') {
             $this->playerAction->sendAction($display, new ScreenShotAction());
         }
 

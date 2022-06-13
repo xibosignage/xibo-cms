@@ -87,7 +87,7 @@
     "mtdowling/cron-expression": "^1.1",
     "ralouphie/mimey": "^1.0",
     "robmorgan/phinx": "^0.9.2",
-    "johngrogg/ics-parser": "^2.1",
+    "johngrogg/ics-parser": "^3.1",
     "phpseclib/mcrypt_compat": "^1.0",
 	"psr/log": "1.1.*",
     "mongodb/mongodb": "^1.10",
