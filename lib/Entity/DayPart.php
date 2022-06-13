@@ -88,11 +88,13 @@ class DayPart implements \JsonSerializable
 
     /**
      * @param ScheduleFactory $scheduleFactory
+     * @param \Xibo\Service\DisplayNotifyServiceInterface $displayNotifyService
      * @return $this
      */
-    public function setScheduleFactory($scheduleFactory)
+    public function setScheduleFactory($scheduleFactory, DisplayNotifyServiceInterface $displayNotifyService)
     {
         $this->scheduleFactory = $scheduleFactory;
+        $this->displayNotifyService = $displayNotifyService;
         return $this;
     }
     /**

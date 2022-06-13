@@ -125,7 +125,8 @@ class ListenersMiddleware implements MiddlewareInterface
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\DayPartListener(
             $c->get('store'),
             $c->get('dayPartFactory'),
-            $c->get('scheduleFactory')
+            $c->get('scheduleFactory'),
+            $c->get('displayNotifyService')
         ))->useLogger($c->get('logger')));
 
         $dispatcher->addListener(UserDeleteEvent::$NAME, (new \Xibo\Listener\OnUserDelete\DisplayGroupListener(
