@@ -192,7 +192,7 @@ RUN rm /var/www/cms/composer.* && \
     rm /var/www/cms/phpunit.xml && \
     rm /var/www/cms/package.json && \
     rm /var/www/cms/package-lock.json && \
-    rm /var/www/cms/cypress.json && \
+    rm /var/www/cms/cypress.config.js && \
     rm -r /var/www/cms/cypress && \
     rm -r /var/www/cms/ui && \
     rm /var/www/cms/webpack.config.js
