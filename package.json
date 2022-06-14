@@ -24,7 +24,7 @@
   },
   "homepage": "https://github.com/xibosignage/xibo-cms#readme",
   "devDependencies": {
-    "cypress": "^9.5.2",
+    "cypress": "^10.1.0",
     "eslint": "^7.19.0",
     "eslint-config-google": "^0.14.0"
   },
@@ -79,7 +79,7 @@
     "imports-loader": "^0.7.1",
     "jquery": "^3.5.1",
     "jquery-ui": "~1.13.0",
-    "jquery-validation": "~1.19.3",
+    "jquery-validation": "~1.19.4",
     "jstree": "^3.3.10",
     "leaflet": "^1.6.0",
     "leaflet-draw": "^1.0.4",

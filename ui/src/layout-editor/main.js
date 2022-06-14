@@ -1341,6 +1341,11 @@ lD.dropItemAdd = function(droppable, draggable, {positionToAdd = null} = {}) {
     const draggableType = $(draggable).data('type');
     const draggableSubType = $(draggable).data('subType');
 
+    // If the draggable is from another toolbar, stop adding
+    if($(draggable).parents('#layout-editor-toolbar').length === 0) {
+        return;
+    }
+
     let playlistId;
 
     if(draggableType == 'media') { // Adding media from search tab to a region

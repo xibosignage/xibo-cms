@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -792,6 +792,7 @@ class Library extends Base
                 'notPlayerSoftware' => 1,
                 'notSavedReport' => 1,
                 'assignable' => 1,
+                'retired' => 0,
                 'orientation' => $parsedQueryParams->getString('orientation', ['defaultOnEmptyString' => true])
             ], $parsedQueryParams));
 
@@ -1420,21 +1421,30 @@ class Library extends Base
 
         $tidyGenericFiles = $this->getSanitizer($request->getParams())->getCheckbox('tidyGenericFiles');
 
+        $this->getLog()->audit('Media', 0, 'Tidy library started', [
+            'tidyGenericFiles' => $tidyGenericFiles,
+            'initiator' => $this->getUser()->userId
+        ]);
+
         // Get a list of media that is not in use (for this user)
         $media = $this->mediaFactory->query(null, ['unusedOnly' => 1, 'ownerId' => $this->getUser()->userId]);
 
         $i = 0;
         foreach ($media as $item) {
-            /* @var Media $item */
             if ($tidyGenericFiles != 1 && $item->mediaType == 'genericfile') {
                 continue;
             }
 
-            // Eligable for delete
+            // Eligible for delete
             $i++;
-            //$this->getDispatcher()->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($media));
+            $this->getDispatcher()->dispatch(new MediaDeleteEvent($media), MediaDeleteEvent::$NAME);
             $item->delete();
         }
+
+        $this->getLog()->audit('Media', 0, 'Tidy library complete', [
+            'countDeleted' => $i,
+            'initiator' => $this->getUser()->userId
+        ]);
 
         // Return
         $this->getState()->hydrate([

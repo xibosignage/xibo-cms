@@ -165,7 +165,7 @@ describe('Layout Designer (Empty)', function() {
             // Create and alias for reload Layout
             cy.server();
             cy.route('/layout?layoutId=*').as('reloadLayout');
-            cy.route('/library/search?assignable=1&retired=0&*').as('mediaLoad');
+            cy.route('/library/search?*').as('mediaLoad');
 
             cy.get('.timeline-panel.toggle-panel .toggle-container .toggle').click();
 

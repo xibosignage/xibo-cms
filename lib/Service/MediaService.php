@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -415,12 +415,13 @@ class MediaService implements MediaServiceInterface
         // Get a list of all expired files and delete them
         foreach ($this->mediaFactory->query(
             null,
-            ['expires' => Carbon::now()->format('U'),
+            [
+                'expires' => Carbon::now()->format('U'),
                 'allModules' => 1,
                 'length' => 100
             ]
         ) as $entry) {
-            // If the media type is a module, then pretend its a generic file
+            // If the media type is a module, then pretend it's a generic file
             $this->log->info(sprintf('Removing Expired File %s', $entry->name));
             $this->log->audit(
                 'Media',
@@ -433,7 +434,7 @@ class MediaService implements MediaServiceInterface
                         ->format(DateFormatHelper::getSystemFormat())
                 ]
             );
-            $this->dispatcher->dispatch(MediaDeleteEvent::$NAME, new MediaDeleteEvent($entry));
+            $this->dispatcher->dispatch(new MediaDeleteEvent($entry), MediaDeleteEvent::$NAME);
             $entry->delete();
         }
     }

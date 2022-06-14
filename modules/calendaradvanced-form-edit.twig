@@ -136,7 +136,7 @@
                         {{ forms.checkbox("useEventTimezone", title, module.getOption("useEventTimezone", 1), helpText) }}
 
                         {% set title %}{% trans "Use calendar timezone?" %}{% endset %}
-                        {% set helpText %}{% trans "If use event timezone is selected and your calendar feed specifies its own time zone should this be used? Deselecting means the CMS timezone will be used." %}{% endset %}
+                        {% set helpText %}{% trans "If your calendar feed specifies its own time zone, should this be used for events without their own timezone? Deselecting means the CMS timezone will be used." %}{% endset %}
                         {{ forms.checkbox("useCalendarTimezone", title, module.getOption("useCalendarTimezone", 1), helpText) }}
 
                         {% set title %}{% trans "Windows format Calendar?" %}{% endset %}

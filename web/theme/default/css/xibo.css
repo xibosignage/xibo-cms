@@ -946,11 +946,15 @@ ul li.active.tab-design:hover a {
 }
 
 .tags-input-wide .bootstrap-tagsinput {
+    overflow: auto;
     width: 100%;
+    max-height: 400px;
 }
 
 .tags-input-addons-wide .bootstrap-tagsinput {
+    overflow: auto;
     width: 80%;
+    max-height: 400px;
 }
 
 @media (min-width: 768px) {

@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -28,8 +28,8 @@ use Xibo\Event\UserDeleteEvent;
 use Xibo\Factory\DayPartFactory;
 use Xibo\Factory\ScheduleFactory;
 use Xibo\Listener\ListenerLoggerTrait;
+use Xibo\Service\DisplayNotifyServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
-use Xibo\Support\Exception\InvalidArgumentException;
 
 class DayPartListener implements OnUserDeleteInterface
 {
@@ -48,14 +48,19 @@ class DayPartListener implements OnUserDeleteInterface
      */
     private $scheduleFactory;
 
+    /** @var DisplayNotifyServiceInterface */
+    private $displayNotifyService;
+
     public function __construct(
         StorageServiceInterface $storageService,
         DayPartFactory $dayPartFactory,
-        ScheduleFactory $scheduleFactory
+        ScheduleFactory $scheduleFactory,
+        DisplayNotifyServiceInterface $displayNotifyService
     ) {
         $this->storageService = $storageService;
         $this->dayPartFactory = $dayPartFactory;
         $this->scheduleFactory = $scheduleFactory;
+        $this->displayNotifyService = $displayNotifyService;
     }
 
     /**
@@ -88,7 +93,7 @@ class DayPartListener implements OnUserDeleteInterface
                 $dayPart->setOwner($systemUser->userId);
                 $dayPart->save(['recalculateHash' => false]);
             } else {
-                $dayPart->setScheduleFactory($this->scheduleFactory)->delete();
+                $dayPart->setScheduleFactory($this->scheduleFactory, $this->displayNotifyService)->delete();
             }
         }
     }

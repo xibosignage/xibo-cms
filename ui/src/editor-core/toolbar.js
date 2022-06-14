@@ -442,17 +442,8 @@ Toolbar.prototype.render = function() {
 
     // If read only mode is enabled
     if (app.readOnlyMode != undefined && app.readOnlyMode === true) {
-        // Hide edit mode fields
-        this.DOMObject.find('.hide-on-read-only').hide();
-
         // Hide toolbar
         this.DOMObject.hide();
-
-        // Create the read only alert message
-        const $readOnlyMessage = $('<div id="read-only-message" class="alert alert-info btn text-center navbar-nav" data-container=".editor-bottom-bar" data-toggle="tooltip" data-placement="bottom" data-title="' + layoutEditorTrans.readOnlyModeMessage + '" role="alert"><strong>' + layoutEditorTrans.readOnlyModeTitle + '</strong>&nbsp;' + layoutEditorTrans.readOnlyModeMessage + '</div>');
-
-        // Prepend the element to the bottom toolbar's content
-        $readOnlyMessage.prependTo(this.DOMObject.find('.container-toolbar .navbar-collapse')).click(lD.checkoutLayout);
     } else {
         // Show toolbar
         this.DOMObject.show();
@@ -812,7 +803,6 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
     const self = this;
     const app = this.parent;
     const filters = self.menuItems[menu].filters;
-    const requestURL = librarySearchUrl + '?assignable=1&retired=0';
     const $mediaContainer = self.DOMObject.find('#media-container-' + menu);
 
     // Request elements based on filters
@@ -853,7 +843,7 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         const start = self.menuItems[menu].itemCount;
 
         $.ajax({
-            url: requestURL,
+            url: librarySearchUrl,
             type: 'GET',
             data: $.extend({
                 start: start,
@@ -986,8 +976,14 @@ Toolbar.prototype.mediaContentPopulate = function(menu) {
         return false;
     });
 
-    // Bind seach action to refresh the results
-    $mediaContainer.find('.media-search-form select, .media-search-form input[type="text"].input-tag').change(_.debounce(function() {
+    // Bind search action to refresh the results
+    $mediaContainer.find('.media-search-form select').change(_.debounce(function() {
+        filterRefresh(filters);
+    }, 200));
+
+
+    // Bind tags change to refresh the results
+    $mediaContainer.find('.media-search-form input[type="text"].input-tag').on('itemAdded itemRemoved', _.debounce(function() {
         filterRefresh(filters);
     }, 200));
 
@@ -1215,7 +1211,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
 
         // Select upload card
         this.DOMObject.find('.toolbar-card .select-upload').click((e) => {
-            const $card = $(this).parent();
+            const $card = $(e.currentTarget).parent();
             if(!$card.hasClass('card-selected')) {
                 self.selectCard($(e.currentTarget).parent());
             } else {
