@@ -1995,7 +1995,7 @@ $inline-editing-z-index: 1040;
 
 .background-image-add.ui-droppable-active .background-image-drop {
     display: block;
-    z-index: calc(#{$designer-overlay-z-index} + 10);
+    z-index: 10;
 }
 
 div#bg_not_found_icon {
