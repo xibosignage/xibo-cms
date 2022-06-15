@@ -37,6 +37,25 @@ describe('Layout Designer (Populated/Unchanged)', function() {
         cy.get('#properties-panel').contains('Edit Image');
     });
 
+    it('should open the playlist editor and be able to show modals', function() {
+            cy.route('/playlist/widget/form/edit/*').as('reloadWidget');
+            
+            // Open the playlist editor
+            cy.get('#layout-timeline .designer-region-info:first .open-playlist-editor').click();
+
+            // Wait for the widget to load
+            cy.wait('@reloadWidget');
+
+            // Right click on the first widget in the playlist editor
+            cy.get('.editor-modal #timeline-container .playlist-widget:first').rightclick();
+
+            // Open the delete modal for the first widget
+            cy.get('.context-menu-overlay .context-menu-widget .deleteBtn').should('be.visible').click();
+
+            // Modal should be visible
+            cy.get('[data-test="deleteObjectModal"]').should('be.visible');
+    });
+
     it.skip('should revert a saved form to a previous state', () => {
         let oldName;
 
