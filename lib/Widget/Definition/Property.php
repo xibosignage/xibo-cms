@@ -179,7 +179,7 @@ class Property implements \JsonSerializable
     {
         $key = $key ?: $this->id;
 
-        if (!$params->hasParam($key)) {
+        if (!$params->hasParam($key) && $this->type !== 'checkbox') {
             // Clear the stored value and therefore use the default
             return null;
         }
