@@ -731,7 +731,7 @@ class Widget implements \JsonSerializable
     public function applyProperties(array $properties): Widget
     {
         foreach ($properties as $property) {
-            $type = ($property->type === 'code') ? 'raw' : 'attrib';
+            $type = ($property->type === 'code') ? 'cdata' : 'attrib';
             $this->setOptionValue($property->id, $type, $property->value);
 
             if ($property->allowLibraryRefs) {
