@@ -38,7 +38,8 @@
           "php": "7.2.9",
           "ext-zmq": "1",
           "ext-mongodb": "1.11.0",
-          "ext-gd": "1"
+          "ext-gd": "1",
+          "ext-soap": "1"
       }
   },
 	"minimum-stability": "dev",

@@ -4,62 +4,8 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "28a5afd939decb8f30211421a9732e12",
+    "content-hash": "50d3a3901d5067796c80191f44cb3d09",
     "packages": [
-        {
-            "name": "abraham/twitteroauth",
-            "version": "0.6.6",
-            "source": {
-                "type": "git",
-                "url": "https://github.com/abraham/twitteroauth.git",
-                "reference": "fc0766220c79087ac8178625d34e88ca29160d5b"
-            },
-            "dist": {
-                "type": "zip",
-                "url": "https://api.github.com/repos/abraham/twitteroauth/zipball/fc0766220c79087ac8178625d34e88ca29160d5b",
-                "reference": "fc0766220c79087ac8178625d34e88ca29160d5b",
-                "shasum": ""
-            },
-            "require": {
-                "ext-curl": "*",
-                "php": ">=5.5.0"
-            },
-            "require-dev": {
-                "phpmd/phpmd": "2.3.*",
-                "phpunit/phpunit": "4.8.*",
-                "squizlabs/php_codesniffer": "2.3.*"
-            },
-            "type": "library",
-            "autoload": {
-                "psr-4": {
-                    "Abraham\\TwitterOAuth\\": "src"
-                }
-            },
-            "notification-url": "https://packagist.org/downloads/",
-            "license": [
-                "MIT"
-            ],
-            "authors": [
-                {
-                    "name": "Abraham Williams",
-                    "email": "abraham@abrah.am",
-                    "homepage": "https://abrah.am",
-                    "role": "Developer"
-                }
-            ],
-            "description": "The most popular PHP library for use with the Twitter OAuth REST API.",
-            "homepage": "https://twitteroauth.com",
-            "keywords": [
-                "Twitter API",
-                "Twitter oAuth",
-                "api",
-                "oauth",
-                "rest",
-                "social",
-                "twitter"
-            ],
-            "time": "2016-10-10T14:20:30+00:00"
-        },
         {
             "name": "akrabat/ip-address-middleware",
             "version": "1.0.1",
@@ -6204,12 +6150,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/support.git",
-                "reference": "00dbe80d1db63ffd8ce345dd4f5050b401929304"
+                "reference": "348f9ff7bcbfea74c69988ca7c196231dc558d07"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/support/zipball/00dbe80d1db63ffd8ce345dd4f5050b401929304",
-                "reference": "00dbe80d1db63ffd8ce345dd4f5050b401929304",
+                "url": "https://api.github.com/repos/xibosignage/support/zipball/348f9ff7bcbfea74c69988ca7c196231dc558d07",
+                "reference": "348f9ff7bcbfea74c69988ca7c196231dc558d07",
                 "shasum": ""
             },
             "require": {
@@ -6226,6 +6172,7 @@
                 "nesbot/carbon": "If the RespectSanitizer is to be used.",
                 "respect/validation": "If the RespectSanitizer is to be used."
             },
+            "default-branch": true,
             "type": "library",
             "autoload": {
                 "psr-4": {
@@ -6244,10 +6191,10 @@
             "description": "Support functions used throughout the Xibo Signage Platform",
             "homepage": "http://xibo.org.uk",
             "support": {
-                "source": "https://github.com/xibosignage/support/tree/master",
+                "source": "https://github.com/xibosignage/support/tree/v0.2",
                 "issues": "https://github.com/xibosignage/support/issues"
             },
-            "time": "2022-01-25T11:52:37+00:00"
+            "time": "2022-06-28T15:58:39+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
@@ -7943,8 +7890,10 @@
     "prefer-lowest": false,
     "platform": {
         "php": ">=7.2.9",
+        "ext-dom": "*",
         "ext-pdo": "*",
         "ext-json": "*",
+        "ext-soap": "*",
         "ext-zip": "*"
     },
     "platform-dev": [],
@@ -7952,7 +7901,8 @@
         "php": "7.2.9",
         "ext-zmq": "1",
         "ext-mongodb": "1.11.0",
-        "ext-gd": "1"
+        "ext-gd": "1",
+        "ext-soap": "1"
     },
-    "plugin-api-version": "1.1.0"
+    "plugin-api-version": "2.3.0"
 }

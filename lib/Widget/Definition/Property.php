@@ -218,9 +218,7 @@ class Property implements \JsonSerializable
                 }
 
             case 'code':
-                // TODO: Need more flexibility from the sanitizer here.
-                //  we want to return HTML, perhaps passing through some basic sanitisation
-                return $params->getString($key);
+                return $params->getParam($key);
 
             case 'input':
             default:
