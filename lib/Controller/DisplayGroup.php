@@ -1,6 +1,6 @@
 <?php
-/**
- * Copyright (C) 2021 Xibo Signage Ltd
+/*
+ * Copyright (c) 2022 Xibo Signage Ltd
  *
  * Xibo - Digital Signage - http://www.xibo.org.uk
  *
@@ -876,12 +876,16 @@ class DisplayGroup extends Base
     {
         $displayGroup = $this->displayGroupFactory->getById($id);
         $displayGroup->load();
-        $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
 
         if (!$this->getUser()->checkDeleteable($displayGroup)) {
             throw new AccessDeniedException();
         }
 
+        if ($displayGroup->isDisplaySpecific == 1) {
+            throw new AccessDeniedException(__('Displays should be deleted using the Display delete operation'));
+        }
+
+        $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($displayGroup), DisplayGroupLoadEvent::$NAME);
         $displayGroup->delete();
 
         // Return
