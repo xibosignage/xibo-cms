@@ -722,6 +722,10 @@ class Tag extends Base
                     $entity = $entityFactory->getById($id);
                 }
 
+                if ($targetType === 'display' || $targetType === 'displaygroup') {
+                    $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($entity), DisplayGroupLoadEvent::$NAME);
+                }
+
                 foreach ($untags as $untag) {
                     $entity->unassignTag($untag);
                 }
@@ -748,7 +752,7 @@ class Tag extends Base
         // Return
         $this->getState()->hydrate([
             'httpStatus' => 204,
-            'message' => sprintf(__('Tags Edited'))
+            'message' => __('Tags Edited')
         ]);
 
         return $this->render($request, $response);
