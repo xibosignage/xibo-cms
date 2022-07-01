@@ -106,6 +106,11 @@ class Folder
         return $this->permissionsFolderId;
     }
 
+    public function getPermissionFolderIdOrThis(): int
+    {
+        return $this->permissionsFolderId == null ? $this->id : $this->permissionsFolderId;
+    }
+
     /**
      * Get Owner Id
      * @return int

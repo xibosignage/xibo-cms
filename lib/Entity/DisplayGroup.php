@@ -163,17 +163,6 @@ class DisplayGroup implements \JsonSerializable
      */
     public $permissionsFolderId;
 
-    /**
-     * Minimum save options
-     * @var array
-     */
-    public static $saveOptionsMinimum = [
-        'validate' => false,
-        'saveGroup' => true,
-        'manageLinks' => false,
-        'manageDisplayLinks' => false
-    ];
-
     // Child Items the Display Group is linked to
     public $displays = [];
     public $media = [];
@@ -727,7 +716,7 @@ class DisplayGroup implements \JsonSerializable
             }
 
         } else if ($this->isDynamic == 1 && $options['manageDynamicDisplayLinks']) {
-            $this->manageDisplayLinks(true);
+            $this->manageDisplayLinks();
         }
 
         // Set media incomplete if necessary
@@ -923,7 +912,11 @@ class DisplayGroup implements \JsonSerializable
         }
 
         // Unlink
-        $this->unlinkDisplays();
+        //  we never unlink from a display specific display group, unless we're deleting which does not call
+        //  manage display links.
+        if ($this->isDisplaySpecific == 0) {
+            $this->unlinkDisplays();
+        }
 
         // Don't do it again
         $this->notifyRequired = false;
