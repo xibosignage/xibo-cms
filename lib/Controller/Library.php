@@ -2453,10 +2453,10 @@ class Library extends Base
         // check if we have type provided in the request (available via API), if not get the module type from
         // the extension
         if (!empty($type)) {
-            $module = $this->getModuleFactory()->create($type);
+            $module = $this->getModuleFactory()->getByType($type);
         } else {
             $module = $this->getModuleFactory()->getByExtension($ext);
-            $module = $this->getModuleFactory()->create($module->type);
+            $module = $this->getModuleFactory()->getByType($module->type);
         }
 
         // if we were provided with optional Media name set it here, otherwise get it from download info
@@ -2467,7 +2467,7 @@ class Library extends Base
             throw new NotFoundException(
                 sprintf(
                     __('Invalid Module type or extension. Module type %s does not allow for %s extension'),
-                    $module->getModuleType(),
+                    $module->type,
                     $ext
                 )
             );
@@ -2479,8 +2479,8 @@ class Library extends Base
             str_replace(' ', '%20', htmlspecialchars_decode($url)),
             $expires,
             [
-                'fileType' => strtolower($module->getModuleType()),
-                'duration' => $module->determineDuration(),
+                'fileType' => strtolower($module->type),
+                'duration' => $module->defaultDuration,
                 'extension' => $ext,
                 'enableStat' => $enableStat,
                 'folderId' => $folderId,
@@ -2493,7 +2493,7 @@ class Library extends Base
                 // Success
                 $this->getLog()->debug('Successfully uploaded Media from URL, Media Id is ' . $media->mediaId);
                 $libraryFolder = $this->getConfig()->getSetting('LIBRARY_LOCATION');
-                $realDuration = $module->determineDuration($libraryFolder . $media->storedAs);
+                $realDuration = $module->fetchDurationOrDefault($libraryFolder . $media->storedAs);
                 if ($realDuration !== $media->duration) {
                     $media->updateDuration($realDuration);
                 }

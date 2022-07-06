@@ -160,8 +160,8 @@ class WidgetHtmlRenderer
         // width_height
         // Widgets may or may not appear in the same Region each time they are previewed due to them potentially
         // being contained in a Playlist.
-        // Equally, a Region might be resized, which would also affect the way the Widget looks. Just moving a Region
-        // location wouldn't though, which is why we base this on the width/height.
+        // Region width/height only changes in Draft state, so the FE is responsible for asserting the correct
+        // width/height relating scaling params when the preview first loads.
         $cachePath = $this->cachePath . DIRECTORY_SEPARATOR
             . $widget->widgetId
             . '_'
