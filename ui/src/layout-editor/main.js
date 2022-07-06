@@ -296,7 +296,7 @@ $(() => {
       lD.selectedObject.type = 'layout';
 
       // Refresh the designer containers
-      lD.refreshDesigner(true);
+      lD.refreshDesigner(true, true);
 
       // Load preferences
       lD.loadPrefs();
@@ -328,14 +328,6 @@ $(() => {
     }
   });
 
-  // Refresh some modules on window resize
-  $(window).on('resize.designer', _.debounce(function(e) {
-    if (e.target === window) {
-      lD.renderContainer(lD.viewer, lD.selectedObject);
-      lD.renderContainer(lD.drawer);
-    }
-  }, 250));
-
   if (window.addEventListener) {
     window.addEventListener('message', lD.handleMessage);
   } else {
@@ -347,9 +339,18 @@ $(() => {
  * Select a layout object (layout/region/widget)
  * @param {object=} obj - Object to be selected
  * @param {bool=} forceSelect - Select object even if it was already selected
+ * @param {object=} clickPosition - Position of the click
+ * @param {bool=} updateViewer - Reload the viewer
+ * @param {bool=} reloadViewer - Force viewer reload
  */
 lD.selectObject =
-  function(obj = null, forceSelect = false) {
+  function(
+    obj = null,
+    forceSelect = false,
+    clickPosition = null,
+    updateViewer = false,
+    reloadViewer = false,
+  ) {
     // Clear rogue tooltips
     lD.common.clearTooltips();
 
@@ -369,7 +370,7 @@ lD.selectObject =
         this.toolbar.deselectCardsAndDropZones();
 
         // Simulate drop item add
-        this.dropItemAdd(obj, card);
+        this.dropItemAdd(obj, card, clickPosition);
       }
     } else if (
       !$.isEmptyObject(this.toolbar.selectedQueue)
@@ -389,12 +390,15 @@ lD.selectObject =
         });
       } else {
         // Add to layout, but create a new region
-        lD.addRegion().then((res) => {
+        lD.addRegion(clickPosition, 'playlist').then((res) => {
           const playlistId = res.data.regionPlaylist.playlistId;
           // Add media to new region
           lD.importFromProvider(selectedQueue).then((res) => {
+            console.log(res);
             // Add media queue to playlist
-            lD.addMediaToPlaylist(playlistId, res);
+            lD.addMediaToPlaylist(playlistId, res).then((res) => {
+              console.log(res);
+            });
           });
         });
       }
@@ -404,7 +408,10 @@ lD.selectObject =
     } else {
       // Get object properties from the DOM ( or set to layout if not defined )
       const newSelectedId = (obj === null) ? this.layout.id : obj.attr('id');
-      const newSelectedType = (obj === null) ? 'layout' : obj.data('type');
+      const newSelectedType =
+      (obj === null || obj.data('type') === undefined) ?
+        'layout' :
+        obj.data('type');
       const newSelectedParentType =
         (obj === null) ? 'layout' : obj.data('parentType');
 
@@ -475,42 +482,52 @@ lD.selectObject =
         this.selectedObject.type = newSelectedType;
 
         // Refresh the designer containers
-        lD.refreshDesigner();
+        lD.refreshDesigner(false, updateViewer, reloadViewer);
       }
     }
   };
 
 /**
  * Refresh designer
- * @param {boolean} [renderToolbar=false] - Render toolbar
- * @param {boolean} [renderViewer=true] - Render viewer
+ * @param {boolean} [updateToolbar=false] - Render toolbar
+ * @param {boolean} [updateViewer=false] - Update viewer
+ * @param {boolean} [reloadViewer=false] - Reload viewer
  */
-lD.refreshDesigner = function(renderToolbar = false, renderViewer = true) {
+lD.refreshDesigner = function(
+  updateToolbar = false,
+  updateViewer = false,
+  reloadViewer = false,
+) {
   // Remove temporary data
   this.clearTemporaryData();
 
   // Render containers with layout ( default )
-  (renderToolbar) && this.renderContainer(this.toolbar);
-  this.renderContainer(this.topbar);
+  (updateToolbar) && this.toolbar.render();
+  this.topbar.render();
 
   // Refresh bottom bar if no object is selected ( to avoid looping )
   (this.selectedObject.type === 'layout') &&
-    this.renderContainer(this.bottombar, this.selectedObject);
+    this.bottombar.render(this.selectedObject);
 
-  this.renderContainer(this.manager);
-  this.renderContainer(this.propertiesPanel, this.selectedObject);
-  (renderViewer) && this.renderContainer(this.viewer, this.selectedObject);
-  this.renderContainer(this.drawer);
+  this.manager.render();
+  this.propertiesPanel.render(this.selectedObject);
+  (updateViewer || reloadViewer) &&
+    this.viewer.render(reloadViewer);
+  this.drawer.render();
 };
 
 /**
  * Reload API data and replace the layout structure with the new value
- * @param {object} layout  - previous layout
+ * @param {object=} layout  - previous layout
  * @param {boolean} refreshBeforeSelect - refresh before selecting
  * @param {boolean} captureThumbnail - capture thumbnail
+ * @param {boolean} reloadViewer - reload viewer after reloading layout
  */
 lD.reloadData = function(
-  layout, refreshBeforeSelect = false, captureThumbnail = false,
+  layout,
+  refreshBeforeSelect = false,
+  captureThumbnail = false,
+  reloadViewer = false,
 ) {
   const layoutId =
     (typeof layout.layoutId == 'undefined') ? layout : layout.layoutId;
@@ -531,13 +548,22 @@ lD.reloadData = function(
 
       // To select an object that still doesn't exist
       if (refreshBeforeSelect) {
-        lD.refreshDesigner();
+        lD.refreshDesigner(false, true);
       }
+
+      // Force the viewer to reload
+      lD.viewer.reload = true;
 
       // Select the same object ( that will refresh the layout too )
       const selectObjectId = lD.selectedObject.id;
       lD.selectedObject = {};
-      lD.selectObject($('#' + selectObjectId));
+      lD.selectObject(
+        $('#' + selectObjectId),
+        false,
+        null,
+        false,
+        reloadViewer,
+      );
 
       // Reload the form helper connection
       formHelpers.setup(lD, lD.layout);
@@ -620,23 +646,6 @@ lD.enterReadOnlyMode = function() {
 
   // Turn on read only mode
   lD.readOnlyMode = true;
-};
-
-/**
- * Render layout structure to container, if it exists
- * @param {object} container - Container for the layout to be rendered
- * @param {object=} element - Element to be rendered, if not used, render layout
- */
-lD.renderContainer = function(container, element = {}) {
-  // Check container to prevent rendering to an empty container
-  if (!jQuery.isEmptyObject(container)) {
-    // Render element if defined, layout otherwise
-    if (!jQuery.isEmptyObject(element)) {
-      container.render(element);
-    } else {
-      container.render(this.layout);
-    }
-  }
 };
 
 /**
@@ -888,7 +897,7 @@ lD.undoLastAction = function() {
 
     // Refresh designer according to local or API revert
     if (res.localRevert) {
-      lD.refreshDesigner();
+      lD.refreshDesigner(false, true);
     } else {
       lD.reloadData(lD.layout);
     }
@@ -1012,7 +1021,7 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
             ).then((res) => { // Success
               // Behavior if successful
               toastr.success(res.message);
-              lD.reloadData(lD.layout);
+              lD.reloadData(lD.layout, false, false, true);
 
               lD.common.hideLoadingScreen('deleteObject');
             }).catch((error) => { // Fail/error
@@ -1086,12 +1095,14 @@ lD.deleteObject = function(objectType, objectId, objectAuxId = null) {
  * Add action to take after dropping a draggable item
  * @param {object} droppable - Target drop object
  * @param {object} draggable - Dragged object
+ * @param {object=} dropPosition - Position of the drop
  */
-lD.dropItemAdd = function(droppable, draggable) {
+lD.dropItemAdd = function(droppable, draggable, dropPosition) {
   const droppableId = $(droppable).attr('id');
   const draggableType = $(draggable).data('type');
   const draggableSubType = $(draggable).data('subType');
   const draggableData = $(draggable).data();
+  const draggableDataType = $(draggable).data('dataType');
 
   /**
    * Import from provider or add media from library
@@ -1121,8 +1132,11 @@ lD.dropItemAdd = function(droppable, draggable) {
 
       importOrAddMedia(playlistId, draggable, mediaId);
     } else {
+      // TODO: If image, we need to chose if we want to create
+      // a canvas or playlist region, for now we create a playlist
+
       // Add to layout, but create a new region
-      lD.addRegion().then((res) => {
+      lD.addRegion(dropPosition, 'playlist').then((res) => {
         // Deselect cards and drop zones
         lD.toolbar.deselectCardsAndDropZones();
 
@@ -1142,8 +1156,12 @@ lD.dropItemAdd = function(droppable, draggable) {
         draggableData,
       );
     } else {
+      // Check if the module has data type, if not
+      // create a playlist region
+      const regionType = draggableDataType ? 'canvas' : 'playlist';
+
       // Add module to layout, but create a region first
-      lD.addRegion().then((res) => {
+      lD.addRegion(dropPosition, regionType).then((res) => {
         // Deselect cards and drop zones
         lD.toolbar.deselectCardsAndDropZones();
 
@@ -1226,8 +1244,6 @@ lD.addModuleToPlaylist = function(
     const linkToAPI = urlsForApi.playlist.addWidget;
 
     let requestPath = linkToAPI.url;
-
-    lD.common.showLoadingScreen('addModuleToPlaylist');
 
     // Replace type
     requestPath = requestPath.replace(':type', moduleType);
@@ -1849,7 +1865,7 @@ lD.checkHistory = function() {
 lD.togglePanel = function($panel, forceToggle) {
   $panel.toggleClass('opened', forceToggle);
 
-  lD.renderContainer(lD.viewer, lD.selectedObject);
+  lD.viewer.refresh();
 };
 
 /**
@@ -1913,15 +1929,15 @@ lD.importFromProvider = function(items) {
         lD.common.hideLoadingScreen();
 
         // Login Form needed?
-        if (data.login) {
+        if (res.login) {
           window.location.href = window.location.href;
           location.reload();
         } else {
           // Just an error we dont know about
-          if (data.message == undefined) {
-            reject(data);
+          if (res.message == undefined) {
+            reject(res);
           } else {
-            reject(data.message);
+            reject(res.message);
           }
         }
       }
@@ -1967,9 +1983,11 @@ lD.uploadThumbnail = function(targetToAttach) {
 
 /**
  * Add a new region to the layout
+ * @param {object} positionToAdd - Position to add the region to
+ * @param {object} regionType - Region type (playlist or canvas)
  * @return {Promise} - Promise object
  */
-lD.addRegion = function() {
+lD.addRegion = function(positionToAdd, regionType) {
   lD.common.showLoadingScreen();
 
   if (lD.selectedObject.type == 'region') {
@@ -1977,7 +1995,18 @@ lD.addRegion = function() {
     lD.selectObject();
   }
 
-  return lD.layout.addElement('region').catch((error) => {
+  // If region type is not defined, use the default (playlist)
+  if (regionType == undefined) {
+    regionType = 'playlist';
+  }
+
+  return lD.layout.addElement(
+    'region',
+    {
+      positionToAdd: positionToAdd,
+      elementSubtype: regionType,
+    },
+  ).catch((error) => {
     // Show error returned or custom message to the user
     let errorMessage = '';
 
@@ -2003,7 +2032,7 @@ lD.handleMessage = function(event) {
   const messageFromSender = event.data;
   if (messageFromSender == 'viewerStoppedPlaying') {
     // Refresh designer
-    lD.refreshDesigner();
+    lD.refreshDesigner(false, true);
 
     // Show tooltip on play button
     lD.bottombar.showPlayMessage();

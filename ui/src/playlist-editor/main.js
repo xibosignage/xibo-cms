@@ -658,8 +658,8 @@ pE.refreshDesigner = function(renderToolbar = false) {
   this.clearTemporaryData();
 
   // Render containers
-  (renderToolbar) && this.renderContainer(this.toolbar);
-  this.renderContainer(this.manager);
+  (renderToolbar) && this.toolbar.render();
+  this.manager.render();
 
   // If there was a opened menu in the toolbar, open that tab
   if (this.toolbar.openedMenu != -1) {
@@ -669,7 +669,7 @@ pE.refreshDesigner = function(renderToolbar = false) {
   // Render widgets container only if there are widgets on the playlist, if not draw drop area
   if (!$.isEmptyObject(pE.playlist.widgets)) {
     // Render timeline
-    this.renderContainer(this.timeline);
+    this.timeline.render();
 
     // Select the object that was previously selected if it's not selected and exists on the timeline
     if (this.playlist.widgets[this.selectedObject.id] !== undefined && !this.playlist.widgets[this.selectedObject.id].selected) {
@@ -679,7 +679,7 @@ pE.refreshDesigner = function(renderToolbar = false) {
       this.selectObject();
     } else {
       // Render properties panel
-      this.renderContainer(this.propertiesPanel, this.selectedObject);
+      this.propertiesPanel.render(this.selectedObject);
     }
 
     this.editorContainer.find('#editing-container').show();
@@ -694,23 +694,6 @@ pE.refreshDesigner = function(renderToolbar = false) {
     if (this.toolbar.openedMenu == -1) {
       this.toolbar.firstRun = false;
       this.toolbar.openMenu(0, true);
-    }
-  }
-};
-
-/**
- * Render layout structure to container, if it exists
- * @param {object} container - Container for the layout to be rendered
- * @param {object=} element - Element to be rendered, if not used, render layout
- */
-pE.renderContainer = function(container, element = {}) {
-  // Check container to prevent rendering to an empty container
-  if (!jQuery.isEmptyObject(container)) {
-    // Render element if defined, layout otherwise
-    if (!jQuery.isEmptyObject(element)) {
-      container.render(element);
-    } else {
-      container.render();
     }
   }
 };

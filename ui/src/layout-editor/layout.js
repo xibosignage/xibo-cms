@@ -1,5 +1,6 @@
 // LAYOUT Module
 const Region = require('../layout-editor/region.js');
+const Canvas = require('../layout-editor/canvas.js');
 const Widget = require('../editor-core/widget.js');
 
 /**
@@ -87,11 +88,17 @@ Layout.prototype.createDataStructure = function(data) {
   for (const region in data.regions) {
     if (Object.prototype.hasOwnProperty.call(data.regions, region)) {
       let regionDuration = 0;
+      const isPlaylist = (data.regions[region].type === 'playlist');
 
-      const newRegion = new Region(
-        data.regions[region].regionId,
-        data.regions[region],
-      );
+      const newRegion = isPlaylist ?
+        new Region(
+          data.regions[region].regionId,
+          data.regions[region],
+        ) :
+        new Canvas(
+          data.regions[region].regionId,
+          data.regions[region],
+        );
 
       // Save index
       newRegion.index = parseInt(region) + 1;
@@ -141,6 +148,11 @@ Layout.prototype.createDataStructure = function(data) {
 
       // Push Region to the Layout region array
       this.regions[newRegion.id] = newRegion;
+
+      // If not playlist, save region also as canvas to the layout
+      if (!isPlaylist) {
+        this.canvas = this.regions[newRegion.id];
+      }
 
       // update layoutDuration if the current regions is the longest one
       if (regionDuration > layoutDuration) {
@@ -419,10 +431,18 @@ Layout.prototype.delete = function() {
 /**
  * Add a new empty element to the layout
  * @param {string} elementType - element type (widget, region, ...)
- * @param {object =} [positionToAdd] - Position to add the element to
+ * @param {object} options - Position to add the element to
+ * @param {object} [options.positionToAdd] - Position to add the element to
+ * @param {object} [options.elementSubtype] - Element subtype
  * @return {object} - Manager change
  */
-Layout.prototype.addElement = function(elementType, positionToAdd = null) {
+Layout.prototype.addElement = function(
+  elementType,
+  {
+    positionToAdd = null,
+    elementSubtype = null,
+  } = {},
+) {
   let newValues = null;
 
   // / Get position values if they exist
@@ -432,9 +452,9 @@ Layout.prototype.addElement = function(elementType, positionToAdd = null) {
 
   // If element is type region, add type flag
   if (elementType === 'region') {
-    newValues = {
-      type: 'canvas',
-    };
+    newValues = Object.assign(newValues, {
+      type: elementSubtype,
+    });
   }
 
   // Add a create change to the history array, and

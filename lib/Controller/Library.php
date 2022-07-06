@@ -2727,14 +2727,14 @@ class Library extends Base
 
                     // Queue this for upload.
                     // Use a module to make sure our type, etc is supported.
-                    $module = $this->getModuleFactory()->create($import->searchResult->type);
+                    $module = $this->getModuleFactory()->getByType($import->searchResult->type);
                     $import->media = $this->mediaFactory->queueDownload(
                         $import->searchResult->title,
                         str_replace(' ', '%20', htmlspecialchars_decode($import->url)),
                         0,
                         [
-                            'fileType' => strtolower($module->getModuleType()),
-                            'duration' => !(empty($import->searchResult->duration)) ? $import->searchResult->duration : $module->determineDuration(),
+                            'fileType' => strtolower($module->type),
+                            'duration' => !(empty($import->searchResult->duration)) ? $import->searchResult->duration : $module->defaultDuration,
                             'enableStat' => $enableStat,
                             'folderId' => $folderId,
                             'permissionsFolderId' => $permissionsFolderId

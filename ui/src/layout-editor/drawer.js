@@ -358,7 +358,7 @@ Drawer.prototype.saveDimensions = function() {
       lD.layout.drawer.dimensions.height = saveData.height;
 
       // Refresh the viewer to reflect the changes
-      lD.renderContainer(lD.viewer, lD.selectedObject);
+      lD.viewer.render();
     } else {
       // Login Form needed?
       if (res.login) {

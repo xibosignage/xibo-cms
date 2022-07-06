@@ -1341,9 +1341,13 @@ function XiboInitialise(scope) {
             folding: false,
             lineDecorationsWidth: 0,
             lineNumbersMinChars: 0,
+            automaticLayout: true,
+            minimap: {
+                enabled: false
+            },
         });
     
-        newEditor.onDidType(() => {
+        newEditor.onDidChangeModelContent(() => {
             $textArea.val(newEditor.getValue());
         });
     });

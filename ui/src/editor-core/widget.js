@@ -183,14 +183,6 @@ const Widget = function(id, data, regionId = null, layoutObject = null) {
   };
 
   /**
-     * Return the value if the widget is selected or not for the CSS
-     * @return {string} - Selected flag, to change widget selection on templates
-     */
-  this.selectedFlag = function() {
-    return (this.selected) ? 'selected-widget' : '';
-  };
-
-  /**
    * Get widget calculated duration ( could be differente for some widgets )
    * @param {boolean=} [recalculate] - Force the duration to be recalculated
    * @return {number} - Widget duration in seconds

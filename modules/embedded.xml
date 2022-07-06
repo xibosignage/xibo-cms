@@ -64,21 +64,24 @@
     <preview></preview>
     <stencil>
         <twig><![CDATA[
-{{embedHtml}}
-<script type="text/javascript">
-{{embedScript}}
-</script>
-<style>
-{{embedStyle}}
-</style>
-<script type="text/javascript">
-$(function() {
-  if(typeof EmbedInit === "function"){
-    EmbedInit();
-  }
-  {% if scaleContent %}$("body").xiboLayoutScaler(options);{% endif %}
-});
-</script>
-		]]></twig>
+            {{embedHtml|raw}}
+            <script type="text/javascript">
+                {{embedScript|raw}}
+            </script>
+            <style>
+                {{embedStyle}}
+            </style>
+            <script type="text/javascript">
+                $(function() {
+                    if(typeof EmbedInit === "function"){
+                        EmbedInit();
+                    }
+                    {% if scaleContent %}
+                        window.scaleContent = true;
+                        $("body").xiboLayoutScaler(globalOptions);
+                    {% endif %}
+                });
+            </script>
+        ]]></twig>
     </stencil>
 </module>

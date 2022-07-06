@@ -1,6 +1,7 @@
 <div id="{{id}}"
-    data-type="region" 
-    class="designer-region viewer-element-select {{#if selected}}selected-region{{/if}} {{#if isEditable}}editable{{/if}}" 
+    data-type="{{type}}"
+    data-sub-type="{{subType}}" 
+    class="designer-region-{{subType}} {{#eq subType 'playlist'}}viewer-element-select{{/eq}} {{#if isEditable}}editable{{/if}}" 
     data-region-id="{{id}}" 
     style="position:absolute; 
         width: {{ scaledDimensions.width }}px; 

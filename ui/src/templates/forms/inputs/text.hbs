@@ -1,5 +1,7 @@
-<div class="form-group xibo-form-input" {{#if renderCondition}}data-render-condition="{{renderCondition}}"{{/if}}>
+<div class="form-group xibo-form-input" {{#if visibility}}data-visibility="{{visibility}}"{{/if}}>
     <label for="{{id}}" class="control-label"><strong>{{title}}</strong></label>
-    <i class="fa fa-question-circle form-help-popup" data-toggle="tooltip" data-placement="top" title="{{helpText}}"></i>
+    {{#if helpText}}
+        <i class="fa fa-question-circle form-help-popup" data-toggle="tooltip" data-placement="top" title="{{helpText}}"></i>
+    {{/if}}
     <input type="text" class="form-control" id="{{id}}" name="{{id}}" value="{{value}}" />
 </div>

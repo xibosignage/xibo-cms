@@ -13,10 +13,10 @@
                     <div class="tab-pane" id="appearanceTab"></div>
 
                     <div class="tab-pane" id="advancedTab">
-                        {{> inputs/text value=name id="name" title="Name" helpText="An optional name for this widget" }}
-                        {{> inputs/checkbox value=useDuration id="useDuration" title="Set a duration?" helpText="Select to provide a specific duration for this Widget" }}
-                        {{> inputs/number value=duration id="duration" title="Duration" helpText="The duration of the widget in seconds" renderCondition='{ "target": "#useDuration", "condition": "==", "value": "1" }' }}
-                        {{> inputs/dropdown value=enableStat options=(arr (obj name='Off' title='Off') (obj name='On' title='On') (obj name='Inherit' title='Inherit')) optionsTitle="title" optionsValue="name" id="enableStat" title="Enable Stats Collection?" helpText="Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." }}
+                        {{> inputs/text value=commonProperties.name id="name" title="Name" helpText="An optional name for this widget" }}
+                        {{> inputs/checkbox value=commonProperties.useDuration id="useDuration" title="Set a duration?" helpText="Select to provide a specific duration for this Widget" }}
+                        {{> inputs/number value=commonProperties.duration id="duration" title="Duration" helpText="The duration of the widget in seconds" visibility='{ "field": "#useDuration", "type": "eq", "value": "1" }' }}
+                        {{> inputs/dropdown value=commonProperties.enableStat options=(arr (obj name='Off' title='Off') (obj name='On' title='On') (obj name='Inherit' title='Inherit')) optionsTitle="title" optionsValue="name" id="enableStat" title="Enable Stats Collection?" helpText="Enable the collection of Proof of Play statistics for this Widget. Ensure that ‘Enable Stats Collection’ is set to ‘On’ in the Display Settings." }}
                     </div>
                 </div>
             </form>

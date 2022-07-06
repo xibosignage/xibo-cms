@@ -315,8 +315,8 @@ Toolbar.prototype.loadPrefs = function() {
       // Reload tooltips
       app.common.reloadTooltips(app.editorContainer);
 
-      // Refresh designer to reflect the changes
-      app.refreshDesigner(true);
+      // Render toolbar
+      self.render();
     } else {
       // Login Form needed?
       if (res.login) {
@@ -754,7 +754,7 @@ Toolbar.prototype.openMenu = function(menu = -1, forceOpen = false) {
 
     if (app.mainObjectType != 'playlist') {
       // Refresh main containers
-      app.renderContainer(app.viewer, app.selectedObject);
+      app.viewer.update();
     }
   }
 
@@ -1293,11 +1293,8 @@ Toolbar.prototype.toggleMultiselectMode = function(forceSelect = null) {
     // Hide designer overlay
     $('.custom-overlay').hide().unbind();
 
-    // Re-render timeline
-    app.renderContainer(timeline);
-
     // Re-render toolbar
-    app.renderContainer(this);
+    this.render();
   }
 };
 
@@ -1310,7 +1307,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
 
   // If in edit mode
   if (app.readOnlyMode === undefined || app.readOnlyMode === false) {
-    this.DOMObject.find('.toolbar-card').each(function(el) {
+    this.DOMObject.find('.toolbar-card').each(function(idx, el) {
       $(el).draggable({
         cursor: 'crosshair',
         appendTo: $(el).parents('.toolbar-pane:first'),
@@ -1400,7 +1397,7 @@ Toolbar.prototype.handleCardsBehaviour = function() {
           }
         }
 
-        const $card = $(e.target).parent();
+        const $card = $(e.target).parents('.toolbar-card');
         if ($card.hasClass('card-selected')) {
           self.removeFromQueue(self.openedMenu, $card);
         } else {
