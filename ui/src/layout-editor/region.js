@@ -11,6 +11,7 @@ const Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
   this.id = 'region_' + id;
   this.regionId = id;
   this.type = 'region';
+  this.subType = 'playlist';
   this.name = data.name;
 
   this.playlists = data.regionPlaylist;
@@ -43,20 +44,6 @@ const Region = function(id, data, {backgroundColor = '#aaa'} = {}) {
   };
 
   this.zIndex = data.zIndex;
-
-  /**
-   * Return the value if the region is selectd or not for the CSS
-   * @return {string} - CSS value for the selected state
-   */
-  this.selectedFlag = function() {
-    for (const widget in this.widgets) {
-      if (this.widgets[widget].selected === true) {
-        return 'selected-widget';
-      }
-    }
-
-    return (this.selected) ? 'selected-region' : '';
-  };
 };
 
 /**
@@ -90,8 +77,6 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
     }];
 
     // Add a tranform change to the history array
-    // but send the upload flag as false
-    // so that the change is temporarily local
     lD.manager.addChange(
       'transform',
       'region',
@@ -103,7 +88,7 @@ Region.prototype.transform = function(transform, saveToHistory = true) {
         regions: JSON.stringify(newValues),
       },
       {
-        upload: false, // options.upload
+        upload: true, // options.upload
       },
     ).catch((error) => {
       toastr.error(errorMessagesTrans.transformRegionFailed);

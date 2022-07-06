@@ -35,8 +35,7 @@ $(function() {
         });
 
         // TODO: layout scaler
-
-      }
+      },
     });
   });
 });

@@ -24,4 +24,9 @@
             height: 100%;
         }
     }
+
+    /* Fix for monaco editor helper */
+    .monaco-editor .editor-widget.suggest-widget {
+        left: 0 !important;
+    }
 }

@@ -15,6 +15,9 @@ const Viewer = function(parent, container) {
   this.parent = parent;
   this.DOMObject = container;
 
+  // First load
+  this.reload = true;
+
   // Element dimensions inside the viewer container
   this.containerElementDimensions = null;
 
@@ -85,12 +88,29 @@ Viewer.prototype.scaleElement = function(element, container) {
   return elementDimensions;
 };
 
+
 /**
- * Render Viewer
- */
-Viewer.prototype.render = function() {
+ * Render viewer
+ * @param {object} forceReload - Force reload
+*/
+Viewer.prototype.render = function(forceReload = false) {
+  const self = this;
+
+  // Refresh if it's not the reload
+  if (!forceReload && !this.reload) {
+    this.update();
+    return;
+  }
+
+  // Set reload to false
+  this.reload = false;
+
+  // Render the viewer
+  this.DOMObject.html(viewerTemplate());
+
   const viewerContainer = this.DOMObject;
-  // IF preview is playing, refresh the bottombar
+
+  // If preview is playing, refresh the bottombar
   if (this.previewPlaying && this.parent.selectedObject.type == 'layout') {
     this.parent.bottombar.render(this.parent.selectedObject);
   }
@@ -152,24 +172,47 @@ Viewer.prototype.render = function() {
   // Render preview regions/widgets
   for (const regionIndex in lD.layout.regions) {
     if (lD.layout.regions.hasOwnProperty(regionIndex)) {
-      const region = lD.layout.regions[regionIndex];
-      const regionContainer = viewerContainer.find('#' + region.id);
-      for (const widgetIndex in region.widgets) {
-        if (region.widgets.hasOwnProperty(widgetIndex)) {
-          const widget = region.widgets[widgetIndex];
-          // Render widgets on the first widget
-          this.renderWidgetToRegion(widget, regionContainer, region);
-        }
-      }
+      this.renderRegion(lD.layout.regions[regionIndex]);
     }
   }
 
   // Handle droppable regions
-  viewerContainer.find('.layout.droppable').droppable({
+  const $droppableArea = viewerContainer.find('.layout.droppable');
+  $droppableArea.droppable({
     greedy: true,
     tolerance: 'pointer',
     drop: _.debounce(function(event, ui) {
-      lD.dropItemAdd(event.target, ui.draggable[0]);
+      const draggableDimensions = {
+        width: ui.draggable.width(),
+        height: ui.draggable.height(),
+      };
+
+      const droppableAreaPosition = {
+        x: $droppableArea.offset().left,
+        y: $droppableArea.offset().top,
+      };
+
+      // Get position, event location
+      // adjusted with the viewer container
+      // and the helper offset
+      const position = {
+        top: event.pageY -
+          droppableAreaPosition.y -
+          (draggableDimensions.height / 2),
+        left: event.pageX -
+          droppableAreaPosition.x -
+          (draggableDimensions.width / 2),
+      };
+
+      // Scale value to original size ( and parse to int )
+      position.top = parseInt(
+        position.top /
+        self.containerElementDimensions.scale);
+      position.left = parseInt(
+        position.left /
+        self.containerElementDimensions.scale);
+
+      lD.dropItemAdd(event.target, ui.draggable[0], position);
     }, 200),
   });
 
@@ -185,8 +228,25 @@ Viewer.prototype.render = function() {
         return;
       }
 
+      // Get click position
+      const clickPosition = {
+        left: e.pageX -
+          viewerContainer.find('.viewer-element-select').offset().left,
+        top: e.pageY -
+          viewerContainer.find('.viewer-element-select').offset().top,
+      };
+
+      // Scale value to original size ( and parse to int )
+      clickPosition.top = parseInt(
+        clickPosition.top /
+        self.containerElementDimensions.scale);
+      clickPosition.left = parseInt(
+        clickPosition.left /
+        self.containerElementDimensions.scale);
+
       if ($(e.target).hasClass('layout')) {
-        lD.selectObject();
+        lD.selectObject(null, false, clickPosition);
+        self.selectElement();
       } else {
         clicks++;
 
@@ -196,8 +256,9 @@ Viewer.prototype.render = function() {
             clicks = 0;
 
             // Select region ( only if target is not selected )
-            if (!$(e.target).hasClass('selected-region')) {
+            if (!$(e.target).hasClass('selected')) {
               lD.selectObject($(e.target));
+              self.selectElement($(e.target));
             }
           }, 200);
         } else {
@@ -208,6 +269,7 @@ Viewer.prototype.render = function() {
           // Select widget if exists
           if ($(e.target).find('.designer-widget').length > 0) {
             lD.selectObject($(e.target).find('.designer-widget'));
+            self.selectElement($(e.target).find('.designer-widget'));
           }
         }
       }
@@ -232,45 +294,93 @@ Viewer.prototype.render = function() {
       return false;
     });
 
-  // If an element is selected, use it as a target for the moveable
-  this.moveable.target = (this.DOMObject.find('.selected-region').length > 0) ?
-    this.DOMObject.find('.selected-region') :
-    null;
-
   // Handle fullscreen button
   viewerContainer.parent().find('#fullscreenBtn').off().click(function() {
+    this.reload = true;
     this.toggleFullscreen();
   }.bind(this));
+
+  // Refresh on window resize
+  $(window).on('resize', function() {
+    this.update();
+  }.bind(this));
+
+  // Update moveable
+  this.updateMoveable();
+};
+
+/**
+ * Update Viewer
+ */
+Viewer.prototype.update = function() {
+  const $viewerContainer = this.DOMObject;
+  const $viewElement = $viewerContainer.find('.viewer-element');
+
+  // Hide viewer element
+  $viewElement.hide();
+
+  // Apply viewer scale to the layout
+  this.containerElementDimensions =
+    this.scaleElement(lD.layout, $viewerContainer);
+
+  // Apply viewer scale to the layout
+  lD.layout.scale($viewerContainer);
+
+  $viewElement.css({
+    width: this.containerElementDimensions.width,
+    height: this.containerElementDimensions.height,
+    top: this.containerElementDimensions.top,
+    left: this.containerElementDimensions.left,
+    scale: this.containerElementDimensions.scale,
+  });
+
+  // Show viewer element
+  $viewElement.show();
+
+  // Render preview regions/widgets
+  for (const regionIndex in lD.layout.regions) {
+    if (lD.layout.regions.hasOwnProperty(regionIndex)) {
+      this.updateRegion(lD.layout.regions[regionIndex]);
+    }
+  }
+
+  // Update moveable
+  this.updateMoveable();
 };
 
 /**
  * Render widget in region container
- * @param {object} element - widget to render
- * @param {object} container - region container
  * @param {object} region - region object
  */
-Viewer.prototype.renderWidgetToRegion = function(
-  element,
-  container,
+Viewer.prototype.renderRegion = function(
   region,
 ) {
   const self = this;
+  const $container = this.DOMObject.find(`#${region.id}`);
+
+  // Get first widget of the region
+  const widget = region.widgets[Object.keys(region.widgets)[0]];
+
+  // If there's no widget, return
+  if (!widget) {
+    return;
+  }
 
   // If there was still a render request, abort it
   if (
     this.renderRequest != undefined &&
-    this.renderRequest.target == container
+    this.renderRequest.target == $container
   ) {
     this.renderRequest.abort('requestAborted');
   }
 
   // Show loading
-  container.html(loadingTemplate());
+  $container.html(loadingTemplate());
 
   // Apply scaling
   const containerElementDimensions = {
-    width: container.width(),
-    height: container.height(),
+    width: $container.width(),
+    height: $container.height(),
   };
 
   // Get request path
@@ -281,14 +391,19 @@ Viewer.prototype.renderWidgetToRegion = function(
   );
 
   requestPath +=
-    '?widgetId=' + element[element.type + 'Id'] +
+    '?widgetId=' + widget['widgetId'] +
     '&width=' + containerElementDimensions.width +
     '&height=' + containerElementDimensions.height;
 
   // Get HTML for the given element from the API
   this.renderRequest = {
-    target: container,
+    target: $container,
   };
+
+  // If region is selected, update moveable
+  if (region.selected) {
+    this.selectElement($container);
+  }
 
   this.renderRequest.request = $.get(requestPath).done(function(res) {
     // Clear request var after response
@@ -297,34 +412,33 @@ Viewer.prototype.renderWidgetToRegion = function(
     // Prevent rendering null html
     if (!res.success) {
       toastr.error(res.message);
-      container.html(res.message);
+      $container.html(res.message);
       return;
     }
 
-    const elementType = (element.type + '_' + element.subType);
+    const elementType = (widget.type + '_' + widget.subType);
 
     // Replace container html
     const html = viewerWidgetTemplate({
       res: res,
-      id: element.id,
+      id: widget.id,
       regionId: region['id'],
-      dimensions: containerElementDimensions,
       type: elementType,
-      editable: element.isEditable,
-      parentId: element.regionId,
-      selected: element.selected,
+      editable: widget.isEditable,
+      parentId: widget.regionId,
+      selected: widget.selected,
       trans: viewerTrans,
     });
 
     // Append layout html to the container div
-    container.html(html);
+    $container.html(html);
 
     // Handle droppables
-    container.find('.droppable').droppable({
+    $container.find('.droppable').droppable({
       greedy: true,
       tolerance: 'pointer',
       drop: _.debounce(function(event, ui) {
-        lD.dropItemAdd(event.target, ui.draggable[0]);
+        lD.dropItemAdd(event.target, ui.draggable[0], position);
       }, 200),
     });
 
@@ -337,15 +451,52 @@ Viewer.prototype.renderWidgetToRegion = function(
       // Show inline editor controls
       this.showInlineEditor();
     }
+
+    // Force scale region container
+    // by updating region
+    self.updateRegion(region);
   }.bind(this)).fail(function(res) {
     // Clear request var after response
     self.renderRequest = undefined;
 
     if (res.statusText != 'requestAborted') {
       toastr.error(errorMessagesTrans.previewFailed);
-      container.html(errorMessagesTrans.previewFailed);
+      $container.html(errorMessagesTrans.previewFailed);
     }
   });
+};
+
+/**
+ * Update Region
+ * @param {object} region - region object
+ * @param {boolean} updateDimensions - update dimensions
+ */
+Viewer.prototype.updateRegion = function(
+  region,
+) {
+  const $container = this.DOMObject.find(`#${region.id}`);
+
+  // Calculate scaled dimensions
+  region.scaledDimensions = {
+    height: region.dimensions.height * this.containerElementDimensions.scale,
+    left: region.dimensions.left * this.containerElementDimensions.scale,
+    top: region.dimensions.top * this.containerElementDimensions.scale,
+    width: region.dimensions.width * this.containerElementDimensions.scale,
+  };
+
+  // Update region container dimensions
+  $container.css({
+    height: region.scaledDimensions.height,
+    left: region.scaledDimensions.left,
+    top: region.scaledDimensions.top,
+    width: region.scaledDimensions.width,
+  });
+
+  // Update region content
+  this.updateRegionContent(region);
+
+  // Update moveable
+  this.updateMoveable();
 };
 
 /**
@@ -384,33 +535,45 @@ Viewer.prototype.toggleFullscreen = function() {
  * Initialise moveable
  */
 Viewer.prototype.initMoveable = function() {
+  const self = this;
   /**
  * Save the new position of the region
  * @param {object} region - Region object
+ * @param {boolean} updateRegion - Update region rendering
+ * @param {boolean} hasMoved - Has region moved
  */
-  const saveRegionProperties = function(region) {
-    const scale = lD.viewer.containerElementDimensions.scale;
+  const saveRegionProperties = function(
+    region,
+    updateRegion = true,
+    hasMoved = false,
+  ) {
+    const scale = self.containerElementDimensions.scale;
+    const regionId = $(region).attr('id');
     const transform = {
       'width': parseInt($(region).width() / scale),
       'height': parseInt($(region).height() / scale),
-      'top': parseInt($(region).position().top / scale),
-      'left': parseInt($(region).position().left / scale),
     };
+    const regionObject = lD.layout.regions[regionId];
 
-    if ($(region).attr('id') == lD.selectedObject.id) {
-      lD.layout.regions[$(region).attr('id')].transform(transform, false);
+    // Only change top/left if region has moved
+    if (hasMoved) {
+      transform.top = parseInt($(region).position().top / scale);
+      transform.left = parseInt($(region).position().left / scale);
+    } else {
+      transform.top = regionObject.dimensions.top;
+      transform.left = regionObject.dimensions.left;
+    }
+
+    if (regionId == lD.selectedObject.id) {
+      regionObject.transform(transform, false);
 
       if (typeof window.regionChangesForm === 'function') {
         window.regionChangesForm();
         lD.propertiesPanel.saveRegion();
-        lD.viewer.render();
+        (updateRegion) &&
+          lD.viewer.updateRegion(regionObject);
       }
     }
-  };
-
-  // Resize frame helper
-  const resizeFrame = {
-    translate: [0, 0],
   };
 
   // Create moveable
@@ -419,12 +582,17 @@ Viewer.prototype.initMoveable = function() {
     resizable: true,
   });
 
+  // Resize helper
+  resizeFrame = {
+    translate: [0, 0],
+  };
+
   /* draggable */
   this.moveable.on('drag', (e) => {
     e.target.style.left = `${e.left}px`;
     e.target.style.top = `${e.top}px`;
   }).on('dragEnd', (e) => {
-    saveRegionProperties(e.target);
+    saveRegionProperties(e.target, false, true);
   });
 
   /* resizable */
@@ -438,9 +606,179 @@ Viewer.prototype.initMoveable = function() {
     e.target.style.height = `${e.height}px`;
     e.target.style.transform =
       `translate(${beforeTranslate[0]}px, ${beforeTranslate[1]}px)`;
+
+    // Save new dimensions to region object
+    lD.selectedObject.transform({
+      width: parseInt(e.width / self.containerElementDimensions.scale),
+      height: parseInt(e.height / self.containerElementDimensions.scale),
+      top: lD.selectedObject.dimensions.top,
+      left: lD.selectedObject.dimensions.left,
+    }, false);
+
+    // Update region
+    self.updateRegion(lD.selectedObject);
   }).on('resizeEnd', (e) => {
-    saveRegionProperties(e.target);
+    // Change transform translate to the new position
+    const transformSplit = (e.target.style.transform).split(/[(),]+/);
+
+    e.target.style.left =
+      `${parseFloat(e.target.style.left) + parseFloat(transformSplit[1])}px`;
+    e.target.style.top =
+      `${parseFloat(e.target.style.top) + parseFloat(transformSplit[2])}px`;
+
+    // Reset transform
+    e.target.style.transform = '';
+
+    // Check if the region moved when resizing
+    const moved = (
+      parseFloat(transformSplit[1]) != 0 ||
+      parseFloat(transformSplit[2]) != 0
+    );
+
+    saveRegionProperties(e.target, true, moved);
   });
+};
+
+/**
+ * Select element
+ * @param {object} element - Element object
+ */
+Viewer.prototype.selectElement = function(element = null) {
+  // Deselect all elements
+  this.DOMObject.find('.selected').removeClass('selected');
+
+  // Select element if exists
+  if (element) {
+    $(element).addClass('selected');
+  }
+
+  // Update moveable
+  this.updateMoveable();
+};
+
+/**
+ * Update moveable
+ */
+Viewer.prototype.updateMoveable = function() {
+  // Get selected element
+  const $selectedElement = this.DOMObject.find('.selected');
+
+  // Update moveable if region is selected and belongs to the DOM
+  if (
+    $selectedElement &&
+    $selectedElement.hasClass('designer-region-playlist') &&
+    $.contains(document, $selectedElement[0])
+  ) {
+    this.moveable.target = $selectedElement[0];
+    this.moveable.updateRect();
+  } else {
+    this.moveable.target = null;
+  }
+};
+
+/**
+ * Update region content
+ * @param {object} region - Region object
+ */
+Viewer.prototype.updateRegionContent = function(region) {
+  const $container = this.DOMObject.find(`#${region.id}`);
+
+  // Update iframe
+  const updateIframe = function($iframe) {
+    $iframe.css({
+      width: region.scaledDimensions.width,
+      height: region.scaledDimensions.height,
+    });
+
+    // We need to recalculate the scale inside of the iframe
+    $iframe[0].contentWindow
+      .postMessage({
+        method: 'calculateScale',
+        options: {
+          originalWidth: region.dimensions.width,
+          originalHeight: region.dimensions.height,
+        },
+      }, '*');
+  };
+
+  // Get iframe
+  const $iframe = $container.find('iframe');
+
+  // Check if iframe exists, and is loaded
+  if ($iframe.length) {
+    // If iframe globalOptions are not loaded
+    // wait for the iframe to load
+    if (!$iframe[0].contentWindow.window.globalOptions) {
+      // Wait for the iframe to load and update it
+      $iframe[0].onload = function() {
+        updateIframe($iframe);
+      };
+    } else {
+      // Update iframe
+      updateIframe($iframe);
+    }
+  }
+
+  // Process image
+  const $imageContainer = $container.find('[data-type="widget_image"]');
+  if ($imageContainer.length) {
+    const $image = $imageContainer.find('img');
+    const $imageParent = $image.parent();
+    const urlSplit = $image.attr('src').split('&proportional=');
+
+    // If the URL is not parsed
+    if (urlSplit.length > 1) {
+      // Get image properties ( [proportional, fit])
+      // Stretch/fill [0,0]
+      // Centre/contain [1,0]
+      // Fit/cover [1,1]
+      const imgValues = urlSplit[1].split('&fit=');
+      const objectFit = [
+        ['fill', 'none'],
+        ['contain', 'cover'],
+      ];
+
+      // Get object fit value
+      const currentObjectFit = objectFit[imgValues[0]][imgValues[1]];
+
+      // Get object position value
+      // if center/contain, get values
+      // if others, remove object position value
+      const objectPosition = (currentObjectFit === 'contain') ?
+        (
+          $imageParent.css('text-align') +
+          ' ' +
+          $imageParent.css('vertical-align')
+        ) :
+        '';
+
+      // Remove style properties in image's parent
+      // They will be applied in the image itself
+      $imageParent.css({
+        'text-align': '',
+        'vertical-align': '',
+      });
+
+      // Change only onload
+      $image.on('load', () => {
+        // Update image fit
+        $image.css({
+          'object-fit': currentObjectFit,
+          'object-position': objectPosition,
+        });
+      });
+
+      // Change image url to a non styled one
+      // Which triggers the onload event
+      $image.attr('src', urlSplit[0]);
+    }
+
+    // Update image dimensions
+    $image.css({
+      'width': region.scaledDimensions.width,
+      'height': region.scaledDimensions.height,
+    });
+  }
 };
 
 module.exports = Viewer;

@@ -86,7 +86,8 @@ PropertiesPanel.prototype.save = function(element) {
       {
         customRequestPath: requestPath,
       },
-    ).then((res) => { // Success
+    ).then((res) => {
+      // Success
       app.common.hideLoadingScreen();
 
       const resultMessage = res.message;
@@ -96,7 +97,15 @@ PropertiesPanel.prototype.save = function(element) {
 
         const mainObject =
           app.getElementByTypeAndId(app.mainObjectType, app.mainObjectId);
-        app.reloadData(mainObject);
+
+        // If we're saving a widget, reload region on the viewer
+        if (element.type === 'widget') {
+          app.viewer.renderRegion(
+            app.getElementByTypeAndId('region', element.regionId));
+        }
+
+        // Reload data, and refresh viewer if we're saving the layout properties
+        app.reloadData(mainObject, false, false, (element.type === 'layout'));
       };
 
       // Check if its a drawer widget and
@@ -359,7 +368,7 @@ PropertiesPanel.prototype.render = function(element, step) {
 
     // Set condition and handle replacements
     forms.handleFormReplacements(self.DOMObject.find('form'), res.data);
-    forms.setConditions(self.DOMObject.find('form'));
+    forms.setConditions(self.DOMObject.find('form'), res.data);
 
     // Run form open module optional function
     if (element.type === 'widget') {
@@ -517,8 +526,6 @@ PropertiesPanel.prototype.saveRegion = function() {
 
   // If form is valid, and it changed, submit it ( add change )
   if (form.valid() && self.formSerializedLoadData != formNewData) {
-    app.common.showLoadingScreen();
-
     // Add a save form change to the history array
     // with previous form state and the new state
     app.manager.addChange(
@@ -535,11 +542,8 @@ PropertiesPanel.prototype.saveRegion = function() {
         upload: true, // options.upload
       },
     ).then((res) => { // Success
-      app.common.hideLoadingScreen();
       toastr.success(res.message);
     }).catch((error) => { // Fail/error
-      app.common.hideLoadingScreen();
-
       // Show error returned or custom message to the user
       let errorMessage = '';
 

@@ -292,6 +292,13 @@ class Widget extends Base
         // Decorate the module properties with our current widgets data
         $module->decorateProperties($widget);
 
+        // Common properties
+        $properties = [];
+        $properties['name'] = $widget->getOptionValue('name', null);
+        $properties['enableStat'] = $widget->getOptionValue('enableStat', null);
+        $properties['duration'] = $widget->duration;
+        $properties['useDuration'] = $widget->useDuration;
+
         // Do we have a static template assigned to this widget?
         //  we don't worry about elements here, the layout editor manages those for us.
         $template = null;
@@ -308,7 +315,13 @@ class Widget extends Base
         $this->getState()->setData([
             'module' => $module,
             'template' => $template,
-            'media' => $media
+            'media' => $media,
+            'commonProperties' => [
+                'name' => $widget->getOptionValue('name', null),
+                'enableStat' => $widget->getOptionValue('enableStat', null),
+                'duration' => $properties['duration'],
+                'useDuration' => $properties['useDuration']
+            ],
         ]);
 
         return $this->render($request, $response);
@@ -356,6 +369,12 @@ class Widget extends Base
         $widget->useDuration = $params->getCheckbox('useDuration');
         $widget->setOptionValue('name', 'attrib', $params->getString('name'));
         $widget->setOptionValue('enableStat', 'attrib', $params->getString('enableStat'));
+
+        $this->getLog()->debug('--- Widget Edit ---');
+        $this->getLog()->debug('Widget Duration: ' . $widget->duration);
+        $this->getLog()->debug('Use Duration: ' . $widget->useDuration);
+        $this->getLog()->debug('Name: ' . $params->getString('name'));
+        $this->getLog()->debug('enableStat: ' . $params->getString('enableStat'));
 
         // Should we save a template?
         // we're allowed to change between static templates, but not between elements and static templates.

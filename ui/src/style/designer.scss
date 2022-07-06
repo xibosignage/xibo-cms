@@ -453,7 +453,7 @@ $inline-editing-z-index: 1040;
             background: $viewer-player-bg-colour;
         }
 
-        .designer-region {
+        .designer-region-playlist {
             &.empty-region {
                 width: 100%;
                 height: 100%;
@@ -985,8 +985,8 @@ $inline-editing-z-index: 1040;
         @include user-select-none();
     }
 
-    .designer-region {
-        outline: 5px solid $xibo-color-gray-darker;
+    .designer-region-playlist {
+        outline: 4px solid $xibo-color-gray-darker;
 
         &::before {
             content: '';
@@ -995,19 +995,24 @@ $inline-editing-z-index: 1040;
             left: 0;
             width: 100%;
             height: 100%;
-            outline: 3px solid $xibo-color-gray-light;
+            outline: 2px solid $xibo-color-gray-light;
             outline-offset: 1px;
         }
     }
 
-    .designer-region.selected-region:not(.designer-region-info) {
+    .designer-region-playlist.selected:not(.designer-region-info) {
         &::before {
             outline-color: $region-selected-color;
         }
     }
 
-    .designer-widget.selected-widget {
-        outline: 5px solid $xibo-color-gray-darker;
+    .designer-widget {
+        width: 100%;
+        height: 100%;
+    }
+
+    .designer-widget.selected {
+        outline: 4px solid $xibo-color-gray-darker;
 
         &::before {
             content: '';
@@ -1016,18 +1021,18 @@ $inline-editing-z-index: 1040;
             left: 0;
             width: 100%;
             height: 100%;
-            outline: 3px solid $widget-selected-color;
+            outline: 2px solid $widget-selected-color;
             outline-offset: 1px;
         }
     }
 
-    .designer-region:not(.selected-region):hover::before {
+    .designer-region-playlist:not(.selected):hover::before {
         outline-color: $xibo-color-white-pure;
     }
 
     /* Navigator & Viewer */
     #layout-viewer {
-        .designer-region.ui-droppable-active {
+        .designer-region-playlist.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
             background: $region-hover-color  !important;
 
@@ -1120,7 +1125,7 @@ $inline-editing-z-index: 1040;
         display: none;
     }
 
-    .designer-region .preview-paging {
+    .designer-region-playlist .preview-paging {
         z-index: 1;
     }
 }

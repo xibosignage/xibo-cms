@@ -227,6 +227,7 @@ class RegionFactory extends BaseFactory
               `region`.top,
               `region`.left,
               `region`.zIndex,
+              `region`.type,
               `region`.duration,
               `region`.isDrawer
         ';

@@ -105,13 +105,6 @@ module.exports = {
      * @return {object} Module
      */
   getModuleByType: function(type) {
-    let module;
-    modulesList.forEach((element) => {
-      if (element.type == type) {
-        module = element;
-      }
-    });
-
-    return module;
+    return modulesList.find((module) => module.type === type);
   },
 };
