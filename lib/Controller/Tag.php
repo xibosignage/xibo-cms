@@ -35,6 +35,7 @@ use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Factory\UserFactory;
 use Xibo\Support\Exception\AccessDeniedException;
+use Xibo\Support\Exception\InvalidArgumentException;
 use Xibo\Support\Exception\NotFoundException;
 
 /**
@@ -712,12 +713,15 @@ class Tag extends Base
                 case 'display':
                     $entityFactory = $this->displayGroupFactory;
                     break;
+                default:
+                    throw new InvalidArgumentException(__('Edit multiple tags is not supported on this item'), 'targetType');
             }
 
             foreach ($targetIdsArray as $id) {
                 // get the entity by provided id, for display we need different function
+                $this->getLog()->debug('editMultiple: lookup using id: ' . $id . ' for type: ' . $targetType);
                 if ($targetType === 'display') {
-                    $entity = $entityFactory->getByDisplayId($id)[0];
+                    $entity = $entityFactory->getDisplaySpecificByDisplayId($id);
                 } else {
                     $entity = $entityFactory->getById($id);
                 }

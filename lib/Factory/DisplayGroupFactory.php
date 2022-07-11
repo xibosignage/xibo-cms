@@ -110,6 +110,21 @@ class DisplayGroupFactory extends BaseFactory
 
     /**
      * @param int $displayId
+     * @return DisplayGroup
+     * @throws NotFoundException
+     */
+    public function getDisplaySpecificByDisplayId(int $displayId): DisplayGroup
+    {
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId, 'isDisplaySpecific' => 1]);
+
+        if (count($groups) <= 0)
+            throw new NotFoundException();
+
+        return $groups[0];
+    }
+
+    /**
+     * @param int $displayId
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
