@@ -295,8 +295,12 @@ class Soap5 extends Soap4
                             }
 
                             $node = $return->createElement($command->code);
-                            $commandString = $return->createElement('commandString', $command->getCommandString());
-                            $validationString = $return->createElement('validationString', $command->getValidationString());
+                            $commandString = $return->createElement('commandString');
+                            $commandStringCData = $return->createCDATASection($command->getCommandString());
+                            $commandString->appendChild($commandStringCData);
+                            $validationString = $return->createElement('validationString');
+                            $validationStringCData = $return->createCDATASection($command->getValidationString());
+                            $validationString->appendChild($validationStringCData);
 
                             $node->appendChild($commandString);
                             $node->appendChild($validationString);
