@@ -28,10 +28,7 @@ use Carbon\Carbon;
 use Respect\Validation\Validator as v;
 use Xibo\Factory\DisplayFactory;
 use Xibo\Factory\DisplayGroupFactory;
-use Xibo\Factory\LayoutFactory;
-use Xibo\Factory\MediaFactory;
 use Xibo\Factory\PermissionFactory;
-use Xibo\Factory\ScheduleFactory;
 use Xibo\Factory\TagFactory;
 use Xibo\Helper\DateFormatHelper;
 use Xibo\Service\LogServiceInterface;
@@ -209,21 +206,6 @@ class DisplayGroup implements \JsonSerializable
     private $permissionFactory;
 
     /**
-     * @var LayoutFactory
-     */
-    private $layoutFactory;
-
-    /**
-     * @var MediaFactory
-     */
-    private $mediaFactory;
-
-    /**
-     * @var ScheduleFactory
-     */
-    private $scheduleFactory;
-
-    /**
      * @var TagFactory
      */
     private $tagFactory;
@@ -254,6 +236,12 @@ class DisplayGroup implements \JsonSerializable
     public function __clone()
     {
         $this->displayGroupId = null;
+        $this->originalDisplayGroups = [];
+        $this->loaded = false;
+
+        if ($this->isDynamic) {
+            $this->clearDisplays()->clearDisplayGroups();
+        }
     }
 
     /**
@@ -315,6 +303,36 @@ class DisplayGroup implements \JsonSerializable
 
         $this->isDisplaySpecific = 1;
         $this->assignDisplay($display);
+    }
+
+    public function clearDisplays(): DisplayGroup
+    {
+        $this->displays = [];
+        return $this;
+    }
+
+    public function clearDisplayGroups(): DisplayGroup
+    {
+        $this->displayGroups = [];
+        return $this;
+    }
+
+    public function clearTags(): DisplayGroup
+    {
+        $this->tags = [];
+        return $this;
+    }
+
+    public function clearLayouts(): DisplayGroup
+    {
+        $this->layouts = [];
+        return $this;
+    }
+
+    public function clearMedia(): DisplayGroup
+    {
+        $this->media = [];
+        return $this;
     }
 
     /**

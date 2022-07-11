@@ -6218,12 +6218,12 @@
             "source": {
                 "type": "git",
                 "url": "https://github.com/xibosignage/support.git",
-                "reference": "00dbe80d1db63ffd8ce345dd4f5050b401929304"
+                "reference": "348f9ff7bcbfea74c69988ca7c196231dc558d07"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/xibosignage/support/zipball/00dbe80d1db63ffd8ce345dd4f5050b401929304",
-                "reference": "00dbe80d1db63ffd8ce345dd4f5050b401929304",
+                "url": "https://api.github.com/repos/xibosignage/support/zipball/348f9ff7bcbfea74c69988ca7c196231dc558d07",
+                "reference": "348f9ff7bcbfea74c69988ca7c196231dc558d07",
                 "shasum": ""
             },
             "require": {
@@ -6258,10 +6258,10 @@
             "description": "Support functions used throughout the Xibo Signage Platform",
             "homepage": "http://xibo.org.uk",
             "support": {
-                "source": "https://github.com/xibosignage/support/tree/master",
+                "source": "https://github.com/xibosignage/support/tree/v0.2",
                 "issues": "https://github.com/xibosignage/support/issues"
             },
-            "time": "2022-01-25T11:52:37+00:00"
+            "time": "2022-06-28T15:58:39+00:00"
         },
         {
             "name": "xibosignage/xibo-xmr",
