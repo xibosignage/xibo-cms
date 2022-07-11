@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2022-06-13 18:06+0100\n"
+"POT-Creation-Date: 2022-07-11 17:40+0100\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -541,7 +541,7 @@ msgstr ""
 #: cache/45/4524008af038b9a29a908530335998fb29897224b70f725490d83c1510edc002.php:231
 #: cache/40/406ffd9c07f3f2416c367fef5186ab3db409d2d3d308b60e0c5958eceefe5aed.php:174
 #: cache/40/406ffd9c07f3f2416c367fef5186ab3db409d2d3d308b60e0c5958eceefe5aed.php:208
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:245
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:252
 #: cache/ee/ee28276b7f0bc406bc5f608a5c937e3e65487df8eb351c407e9189f47a857805.php:139
 msgid "Description"
 msgstr ""
@@ -1266,8 +1266,8 @@ msgstr ""
 #: cache/45/4524008af038b9a29a908530335998fb29897224b70f725490d83c1510edc002.php:143
 #: cache/45/4516fbb0764cb6465e717ee1dc824dcc142d098699150055f1b9140c17a379ef.php:96
 #: cache/b9/b9ca4a95e9c385ee75a845e48b84baf04fa977decd0a593da2a77ae3af00ee4a.php:90
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:112
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:241
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:119
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:248
 #: cache/88/880561e7270c41c22fa0dcb26d7f4a0c092a02737fe337d684456f25ee090850.php:106
 #: cache/88/8886bbdb5cb477c67e1bc6043e4e8bf3aca1e3a0cdf39b251edf435dd4876ba6.php:139
 #: cache/88/883193352c5c966969b637a084511198a4876ac24aeb2c9e4a7c16c48093e522.php:88
@@ -2915,7 +2915,7 @@ msgid ""
 msgstr ""
 
 #: cache/89/8976b141afae0f4ec11e76dffe8af1172749e3f613724d43d97e728bc23bb168.php:58
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:74
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:75
 msgid "Add Display Group"
 msgstr ""
 
@@ -3007,8 +3007,8 @@ msgstr ""
 #: cache/d0/d0d6bfd680eacbcdea64eb9fdfa0bab5c24d9fd3dbf635fd1e6dedcad6b610cf.php:85
 #: cache/0f/0ff43ac1052be18f00c9a638aba7c151ce93139855aea535e2df4f0a5e080416.php:156
 #: cache/45/4524008af038b9a29a908530335998fb29897224b70f725490d83c1510edc002.php:161
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:178
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:264
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:185
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:271
 #: cache/88/8886bbdb5cb477c67e1bc6043e4e8bf3aca1e3a0cdf39b251edf435dd4876ba6.php:172
 msgid "Tags"
 msgstr ""
@@ -3105,7 +3105,7 @@ msgstr ""
 
 #: cache/89/8976b141afae0f4ec11e76dffe8af1172749e3f613724d43d97e728bc23bb168.php:285
 #: cache/e9/e91f234e2a724f0b47ab8150668caeda0a33746b3a2907b882fc7ab9b474485d.php:291
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:253
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:260
 msgid "Criteria"
 msgstr ""
 
@@ -3118,7 +3118,7 @@ msgstr ""
 
 #: cache/89/8976b141afae0f4ec11e76dffe8af1172749e3f613724d43d97e728bc23bb168.php:303
 #: cache/e9/e91f234e2a724f0b47ab8150668caeda0a33746b3a2907b882fc7ab9b474485d.php:309
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:260
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:267
 msgid "Criteria Tags"
 msgstr ""
 
@@ -3134,7 +3134,7 @@ msgstr ""
 #: cache/4f/4f7b16e2430b02bb0d6e1001027a6fe2d8c73c6856fe17bc313fd4c3c486aa1e.php:276
 #: cache/b2/b2d5999c0f27f72ff6112410d2316f1022cd2b0b837e206c7a3303ff9f4f7afd.php:293
 #: cache/cb/cb5344dbdcd90f782fa1022f814e250d6ad4055b59713d6d39b66c44c4872153.php:240
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:183
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:190
 msgid "Exact match?"
 msgstr ""
 
@@ -3150,7 +3150,7 @@ msgstr ""
 #: cache/4f/4f7b16e2430b02bb0d6e1001027a6fe2d8c73c6856fe17bc313fd4c3c486aa1e.php:281
 #: cache/b2/b2d5999c0f27f72ff6112410d2316f1022cd2b0b837e206c7a3303ff9f4f7afd.php:298
 #: cache/cb/cb5344dbdcd90f782fa1022f814e250d6ad4055b59713d6d39b66c44c4872153.php:245
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:188
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:195
 msgid "When filtering by multiple Tags, which logical operator should be used?"
 msgstr ""
 
@@ -3204,8 +3204,8 @@ msgstr ""
 #: cache/d0/d0d6bfd680eacbcdea64eb9fdfa0bab5c24d9fd3dbf635fd1e6dedcad6b610cf.php:153
 #: cache/40/406ffd9c07f3f2416c367fef5186ab3db409d2d3d308b60e0c5958eceefe5aed.php:166
 #: cache/40/406ffd9c07f3f2416c367fef5186ab3db409d2d3d308b60e0c5958eceefe5aed.php:200
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:102
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:237
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:109
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:244
 msgid "ID"
 msgstr ""
 
@@ -3233,7 +3233,7 @@ msgstr ""
 #: cache/81/811b151edf3aaea72e572b0378d965c92b570eba429e40d033742ca82e089ce2.php:266
 #: cache/c7/c73101de0d47bcb457089313c392e7e5e5d48768a6fba14483f57e6ac97c0190.php:266
 #: cache/40/406ffd9c07f3f2416c367fef5186ab3db409d2d3d308b60e0c5958eceefe5aed.php:170
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:132
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:139
 #: lib/Report/DistributionReport.php:239
 msgid "Display"
 msgstr ""
@@ -3338,7 +3338,7 @@ msgstr ""
 #: lib/Controller/DayPart.php:154 lib/Controller/User.php:335
 #: lib/Controller/Campaign.php:268 lib/Controller/Notification.php:218
 #: lib/Controller/Playlist.php:366 lib/Controller/MediaManager.php:181
-#: lib/Controller/Tag.php:231 lib/Controller/Transition.php:94
+#: lib/Controller/Tag.php:232 lib/Controller/Transition.php:94
 #: lib/Controller/UserGroup.php:150 lib/Controller/Command.php:141
 #: lib/Controller/DataSetRss.php:167 lib/Controller/Layout.php:1689
 #: lib/Controller/DataSet.php:253 lib/Controller/Display.php:659
@@ -4074,6 +4074,7 @@ msgstr ""
 #: cache/51/5196a83e43c3089d0be24c8710cb06fd8fa190e7f4e25d4e5bff59bdd4a503e8.php:97
 #: cache/75/7505dea245c9d032e0adab1c846c291a0165d4fd03f3f9f9b3065bbb4e6c61d6.php:79
 #: cache/0f/0fc4090e1a35bd0ea420ed6d1c8f9002fd1b1a6adb28276ad3ea8d2094f9d8dc.php:606
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:81
 #: cache/ee/ee28276b7f0bc406bc5f608a5c937e3e65487df8eb351c407e9189f47a857805.php:82
 msgid "Refresh"
 msgstr ""
@@ -4243,8 +4244,8 @@ msgstr ""
 #: lib/Controller/DayPart.php:167 lib/Controller/User.php:349
 #: lib/Controller/Campaign.php:306 lib/Controller/Campaign.php:312
 #: lib/Controller/Notification.php:225 lib/Controller/Playlist.php:421
-#: lib/Controller/Playlist.php:427 lib/Controller/Tag.php:238
-#: lib/Controller/Tag.php:244 lib/Controller/UserGroup.php:158
+#: lib/Controller/Playlist.php:427 lib/Controller/Tag.php:239
+#: lib/Controller/Tag.php:245 lib/Controller/UserGroup.php:158
 #: lib/Controller/Command.php:150 lib/Controller/Command.php:156
 #: lib/Controller/DataSetRss.php:175 lib/Controller/Layout.php:1747
 #: lib/Controller/Layout.php:1753 lib/Controller/DataSet.php:269
@@ -5708,7 +5709,7 @@ msgstr ""
 #: cache/75/7505dea245c9d032e0adab1c846c291a0165d4fd03f3f9f9b3065bbb4e6c61d6.php:291
 #: cache/f1/f16c349e4170ca1494188da3ab5bf4af98a4e096b3f11b4b03170caa8a6e9906.php:112
 #: cache/d0/d0d6bfd680eacbcdea64eb9fdfa0bab5c24d9fd3dbf635fd1e6dedcad6b610cf.php:117
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:121
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:128
 #: cache/ee/ee28276b7f0bc406bc5f608a5c937e3e65487df8eb351c407e9189f47a857805.php:119
 msgid "Use Regex?"
 msgstr ""
@@ -5719,7 +5720,7 @@ msgstr ""
 #: cache/8f/8f35f4444d2966c2d4b971cefba6d45fa8fdbeff2b2f8e75af91e1bd1d241e9e.php:167
 #: cache/62/624f53eff5b1b632abf2694673bf89e84abe41b43881708d7f9205f1f367c68d.php:141
 #: cache/cb/cb5344dbdcd90f782fa1022f814e250d6ad4055b59713d6d39b66c44c4872153.php:250
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:193
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:200
 msgid ""
 "A comma separated list of tags to filter by. Enter a Tag value preceded with "
 "| to filter by Tag values. Enter --no-tag to see items without tags."
@@ -5782,7 +5783,7 @@ msgstr ""
 #: cache/1a/1a7a536e390f1471d995bfb44e699663e8df00642852c3af7a9ab8d198c6cfa1.php:184
 #: cache/cb/cb5344dbdcd90f782fa1022f814e250d6ad4055b59713d6d39b66c44c4872153.php:454
 #: cache/5a/5aa24640a7fc32a1654e9e7f10b5403a24767fd6dc700bfa9d96fb41ddfb5cea.php:166
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:216
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:223
 msgid "Search in all folders"
 msgstr ""
 
@@ -5793,7 +5794,7 @@ msgstr ""
 #: cache/62/624f53eff5b1b632abf2694673bf89e84abe41b43881708d7f9205f1f367c68d.php:215
 #: cache/cb/cb5344dbdcd90f782fa1022f814e250d6ad4055b59713d6d39b66c44c4872153.php:456
 #: cache/5a/5aa24640a7fc32a1654e9e7f10b5403a24767fd6dc700bfa9d96fb41ddfb5cea.php:168
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:218
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:225
 msgid "All Folders"
 msgstr ""
 
@@ -5805,7 +5806,7 @@ msgstr ""
 #: cache/1a/1a7a536e390f1471d995bfb44e699663e8df00642852c3af7a9ab8d198c6cfa1.php:170
 #: cache/cb/cb5344dbdcd90f782fa1022f814e250d6ad4055b59713d6d39b66c44c4872153.php:464
 #: cache/5a/5aa24640a7fc32a1654e9e7f10b5403a24767fd6dc700bfa9d96fb41ddfb5cea.php:176
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:226
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:233
 msgid "Open / Close Folder Search options"
 msgstr ""
 
@@ -7638,6 +7639,7 @@ msgid "Copy User Group"
 msgstr ""
 
 #: cache/7e/7e69740011fad9509d560b9729e124db2cc6fda49e354268c374492953f4b479.php:103
+#: cache/23/23523dc86ffeee40b68917b51a9b07483baa468fc98f7935c7d123c8e4d0b804.php:135
 msgid "Copy Members?"
 msgstr ""
 
@@ -7918,8 +7920,8 @@ msgstr ""
 #: cache/60/608e4ee95b612451d84c6da57901e4fb246b4adf200316e2cbe6611a7d41fa5b.php:232
 #: cache/25/2515807d47a7806d10982ca3b380d6e70cf3e995202260d2f23b4fa636174963.php:1062
 #: cache/81/817eb25f9d77eaace3486702998c91e244aca8a3477111bd4f5409edae04fe37.php:354
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:55
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:89
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:56
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:96
 #: lib/Controller/Display.php:881
 msgid "Display Groups"
 msgstr ""
@@ -9761,6 +9763,7 @@ msgstr ""
 #: cache/62/6240b2a1004c53560b5b2a4049429ce76fe650533b338a42ea8b5cf826624f8b.php:94
 #: cache/60/604031041a7a1cf90994c4a1948075e971fb860c066be11dc4a4bc5bdb4b3723.php:88
 #: cache/c7/c7e068c1f6701da68d89c9dae762744acd528b2f775e4bb41e2ca949d46eb6bb.php:94
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:817
 msgid "Are you sure you want to delete?"
 msgstr ""
 
@@ -11494,7 +11497,7 @@ msgstr ""
 #: cache/1a/1a7a536e390f1471d995bfb44e699663e8df00642852c3af7a9ab8d198c6cfa1.php:214
 #: cache/cb/cb5344dbdcd90f782fa1022f814e250d6ad4055b59713d6d39b66c44c4872153.php:614
 #: cache/da/dab48ec5497d1177c77a52234fb59cd65be2f8b6e5bf5e37e8900db8df4e879e.php:598
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:274
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:281
 msgid "Modified Date"
 msgstr ""
 
@@ -12828,10 +12831,6 @@ msgstr ""
 
 #: cache/23/23523dc86ffeee40b68917b51a9b07483baa468fc98f7935c7d123c8e4d0b804.php:117
 msgid "The description for this Display Profile"
-msgstr ""
-
-#: cache/23/23523dc86ffeee40b68917b51a9b07483baa468fc98f7935c7d123c8e4d0b804.php:135
-msgid "Copy Memebers?"
 msgstr ""
 
 #: cache/23/23523dc86ffeee40b68917b51a9b07483baa468fc98f7935c7d123c8e4d0b804.php:140
@@ -14800,6 +14799,7 @@ msgstr ""
 
 #: cache/cb/cb5344dbdcd90f782fa1022f814e250d6ad4055b59713d6d39b66c44c4872153.php:80
 #: cache/51/5196a83e43c3089d0be24c8710cb06fd8fa190e7f4e25d4e5bff59bdd4a503e8.php:95
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:79
 #: cache/ee/ee28276b7f0bc406bc5f608a5c937e3e65487df8eb351c407e9189f47a857805.php:80
 msgid "Refresh the Table"
 msgstr ""
@@ -14927,7 +14927,7 @@ msgstr ""
 
 #: cache/cb/cb5344dbdcd90f782fa1022f814e250d6ad4055b59713d6d39b66c44c4872153.php:610
 #: cache/da/dab48ec5497d1177c77a52234fb59cd65be2f8b6e5bf5e37e8900db8df4e879e.php:594
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:270
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:277
 msgid "Created Date"
 msgstr ""
 
@@ -16994,34 +16994,34 @@ msgid ""
 "move, such as Fly."
 msgstr ""
 
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:70
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:71
 msgid "Add a new Display Group"
 msgstr ""
 
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:140
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:147
 msgid "Return Display Groups that directly contain the selected Display."
 msgstr ""
 
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:150
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:157
 msgid "Nested Display"
 msgstr ""
 
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:155
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:162
 msgid ""
 "Return Display Groups that contain the selected Display somewhere in the "
 "nested Display Group relationship tree."
 msgstr ""
 
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:165
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:172
 msgid "Dynamic Criteria"
 msgstr ""
 
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:249
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:256
 msgid "Is Dynamic?"
 msgstr ""
 
-#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:375
-msgid "Check to confirm deletion"
+#: cache/24/24eb2c2613b6059c6a7884f422b8da4c00b7877b46ceb688c479207a11a9ab8a.php:823
+msgid "Check to confirm deletion of the selected records."
 msgstr ""
 
 #: cache/44/44862460ddf95cfa150f37e9b58b43715821abcca00a0871fb76d95a3b375272.php:56
@@ -18422,12 +18422,12 @@ msgid "Please enter a zoom level"
 msgstr ""
 
 #: lib/Widget/GoogleTraffic.php:253 lib/Widget/ForecastIo.php:1005
-#: lib/Entity/Display.php:610 lib/Controller/Settings.php:337
+#: lib/Entity/Display.php:611 lib/Controller/Settings.php:337
 msgid "The latitude entered is not valid."
 msgstr ""
 
 #: lib/Widget/GoogleTraffic.php:257 lib/Widget/ForecastIo.php:1008
-#: lib/Entity/Display.php:607 lib/Controller/Settings.php:347
+#: lib/Entity/Display.php:608 lib/Controller/Settings.php:347
 msgid "The longitude entered is not valid."
 msgstr ""
 
@@ -18609,26 +18609,26 @@ msgstr ""
 msgid "No file to return"
 msgstr ""
 
-#: lib/Entity/DisplayGroup.php:631
+#: lib/Entity/DisplayGroup.php:638
 msgid "Please enter a display group name"
 msgstr ""
 
-#: lib/Entity/DisplayGroup.php:634 lib/Entity/Layout.php:1085
+#: lib/Entity/DisplayGroup.php:641 lib/Entity/Layout.php:1085
 #: lib/Entity/DataSet.php:753
 msgid "Description can not be longer than 254 characters"
 msgstr ""
 
-#: lib/Entity/DisplayGroup.php:644
+#: lib/Entity/DisplayGroup.php:651
 #, php-format
 msgid ""
 "You already own a display group called \"%s\". Please choose another name."
 msgstr ""
 
-#: lib/Entity/DisplayGroup.php:648
+#: lib/Entity/DisplayGroup.php:655
 msgid "Dynamic Display Groups must have at least one Criteria specified."
 msgstr ""
 
-#: lib/Entity/DisplayGroup.php:945
+#: lib/Entity/DisplayGroup.php:956
 msgid "This assignment creates a circular reference"
 msgstr ""
 
@@ -18926,7 +18926,7 @@ msgstr ""
 msgid "Provided tag value %s, not found in tag %s options"
 msgstr ""
 
-#: lib/Entity/Tag.php:767
+#: lib/Entity/Tag.php:769
 #, php-format
 msgid "Provided Tag %s, requires a value"
 msgstr ""
@@ -18965,11 +18965,11 @@ msgstr ""
 msgid "Please enter a description between 1 and 1000 characters"
 msgstr ""
 
-#: lib/Entity/Folder.php:139
+#: lib/Entity/Folder.php:144
 msgid "Folder needs to have a name, between 1 and 254 characters."
 msgstr ""
 
-#: lib/Entity/Folder.php:143
+#: lib/Entity/Folder.php:148
 msgid "Folder needs a specified parent Folder id"
 msgstr ""
 
@@ -19080,38 +19080,38 @@ msgstr ""
 msgid "Cannot delete because DataSet is in use on one or more Layouts."
 msgstr ""
 
-#: lib/Entity/Display.php:573
+#: lib/Entity/Display.php:574
 msgid "Can not have a display without a name"
 msgstr ""
 
-#: lib/Entity/Display.php:576
+#: lib/Entity/Display.php:577
 msgid "Can not have a display without a hardware key"
 msgstr ""
 
-#: lib/Entity/Display.php:579
+#: lib/Entity/Display.php:580
 msgid ""
 "Wake on Lan is enabled, but you have not specified a time to wake the display"
 msgstr ""
 
-#: lib/Entity/Display.php:583
+#: lib/Entity/Display.php:584
 msgid "BroadCast Address is not a valid IP Address"
 msgstr ""
 
-#: lib/Entity/Display.php:587
+#: lib/Entity/Display.php:588
 msgid "CIDR subnet mask is not a number within the range of 0 to 32."
 msgstr ""
 
-#: lib/Entity/Display.php:595
+#: lib/Entity/Display.php:596
 msgid ""
 "Pattern of secureOn-password is not \"xx-xx-xx-xx-xx-xx\" (x = digit or "
 "CAPITAL letter)"
 msgstr ""
 
-#: lib/Entity/Display.php:613
+#: lib/Entity/Display.php:614
 msgid "Bandwidth limit must be a whole number greater than 0."
 msgstr ""
 
-#: lib/Entity/Display.php:698
+#: lib/Entity/Display.php:699
 #, php-format
 msgid "You have exceeded your maximum number of authorised displays. %d"
 msgstr ""
@@ -19680,14 +19680,14 @@ msgstr ""
 msgid "Assign Layouts"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:684 lib/Controller/DisplayGroup.php:2462
+#: lib/Controller/DisplayGroup.php:684 lib/Controller/DisplayGroup.php:2456
 #: lib/Controller/Template.php:523 lib/Controller/Help.php:191
 #: lib/Controller/DataSetColumn.php:381 lib/Controller/Applications.php:411
 #: lib/Controller/Applications.php:478 lib/Controller/DisplayProfile.php:302
 #: lib/Controller/DisplayProfile.php:644 lib/Controller/DayPart.php:388
 #: lib/Controller/User.php:609 lib/Controller/Campaign.php:480
 #: lib/Controller/Campaign.php:987 lib/Controller/Notification.php:575
-#: lib/Controller/Playlist.php:679 lib/Controller/Tag.php:354
+#: lib/Controller/Playlist.php:679 lib/Controller/Tag.php:355
 #: lib/Controller/Region.php:250 lib/Controller/UserGroup.php:388
 #: lib/Controller/Command.php:354 lib/Controller/Folder.php:177
 #: lib/Controller/DataSetRss.php:336 lib/Controller/Layout.php:540
@@ -19703,12 +19703,12 @@ msgstr ""
 #: lib/Controller/DayPart.php:500 lib/Controller/User.php:876
 #: lib/Controller/Campaign.php:667 lib/Controller/Notification.php:705
 #: lib/Controller/Playlist.php:853 lib/Controller/Connector.php:155
-#: lib/Controller/Tag.php:504 lib/Controller/Transition.php:159
+#: lib/Controller/Tag.php:505 lib/Controller/Transition.php:159
 #: lib/Controller/Region.php:398 lib/Controller/Region.php:567
 #: lib/Controller/UserGroup.php:522 lib/Controller/Command.php:452
 #: lib/Controller/Folder.php:245 lib/Controller/DataSetRss.php:565
 #: lib/Controller/Layout.php:728 lib/Controller/Layout.php:835
-#: lib/Controller/DataSet.php:894 lib/Controller/Display.php:1382
+#: lib/Controller/DataSet.php:894 lib/Controller/Display.php:1384
 #: lib/Controller/MenuBoardCategory.php:418
 #: lib/Controller/PlayerSoftware.php:406 lib/Controller/Task.php:281
 #: lib/Controller/Module.php:378 lib/Controller/Module.php:839
@@ -19718,17 +19718,21 @@ msgstr ""
 msgid "Edited %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:890 lib/Controller/Library.php:960
+#: lib/Controller/DisplayGroup.php:885
+msgid "Displays should be deleted using the Display delete operation"
+msgstr ""
+
+#: lib/Controller/DisplayGroup.php:894 lib/Controller/Library.php:960
 #: lib/Controller/SavedReport.php:289 lib/Controller/Help.php:248
 #: lib/Controller/DataSetColumn.php:673 lib/Controller/Applications.php:617
 #: lib/Controller/DisplayProfile.php:539 lib/Controller/DayPart.php:615
 #: lib/Controller/User.php:993 lib/Controller/Campaign.php:746
 #: lib/Controller/Notification.php:764 lib/Controller/Playlist.php:933
-#: lib/Controller/Tag.php:630 lib/Controller/Region.php:455
+#: lib/Controller/Tag.php:631 lib/Controller/Region.php:455
 #: lib/Controller/UserGroup.php:576 lib/Controller/Command.php:504
 #: lib/Controller/Folder.php:307 lib/Controller/DataSetRss.php:660
 #: lib/Controller/Layout.php:955 lib/Controller/DataSet.php:985
-#: lib/Controller/Display.php:1432 lib/Controller/MenuBoardCategory.php:498
+#: lib/Controller/Display.php:1434 lib/Controller/MenuBoardCategory.php:498
 #: lib/Controller/PlayerSoftware.php:300 lib/Controller/Task.php:328
 #: lib/Controller/Module.php:974 lib/Controller/Resolution.php:448
 #: lib/Controller/ScheduleReport.php:466
@@ -19737,126 +19741,126 @@ msgstr ""
 msgid "Deleted %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:950 lib/Controller/DisplayGroup.php:1065
-#: lib/Controller/DisplayGroup.php:1160 lib/Controller/DisplayGroup.php:1258
+#: lib/Controller/DisplayGroup.php:954 lib/Controller/DisplayGroup.php:1083
+#: lib/Controller/DisplayGroup.php:1178 lib/Controller/DisplayGroup.php:1276
 msgid ""
 "This is a Display specific Display Group and its assignments cannot be "
 "modified."
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:959
+#: lib/Controller/DisplayGroup.php:963
 msgid "Displays cannot be manually assigned to a Dynamic Group"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:973 lib/Controller/DisplayGroup.php:990
-#: lib/Controller/DisplayGroup.php:1086
+#: lib/Controller/DisplayGroup.php:986 lib/Controller/DisplayGroup.php:1008
+#: lib/Controller/DisplayGroup.php:1104
 msgid "Access Denied to Display"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1012
+#: lib/Controller/DisplayGroup.php:1030
 #, php-format
 msgid "Displays assigned to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1077
+#: lib/Controller/DisplayGroup.php:1095
 msgid "Displays cannot be manually unassigned to a Dynamic Group"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1099
+#: lib/Controller/DisplayGroup.php:1117
 #, php-format
 msgid "Displays unassigned from %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1171
+#: lib/Controller/DisplayGroup.php:1189
 msgid "DisplayGroups cannot be manually assigned to a Dynamic Group"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1180 lib/Controller/DisplayGroup.php:1193
-#: lib/Controller/Display.php:1629 lib/Controller/Display.php:1643
+#: lib/Controller/DisplayGroup.php:1198 lib/Controller/DisplayGroup.php:1211
+#: lib/Controller/Display.php:1631 lib/Controller/Display.php:1645
 msgid "Access Denied to DisplayGroup"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1205
+#: lib/Controller/DisplayGroup.php:1223
 #, php-format
 msgid "DisplayGroups assigned to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1269
+#: lib/Controller/DisplayGroup.php:1287
 msgid "DisplayGroups cannot be manually unassigned to a Dynamic Group"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1283
+#: lib/Controller/DisplayGroup.php:1301
 #, php-format
 msgid "DisplayGroups unassigned from %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1394 lib/Controller/DisplayGroup.php:1408
+#: lib/Controller/DisplayGroup.php:1412 lib/Controller/DisplayGroup.php:1426
 msgid ""
 "You have selected media that you no longer have permission to use. Please "
 "reload the form."
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1420
+#: lib/Controller/DisplayGroup.php:1438
 #, php-format
 msgid "Files assigned to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1493
+#: lib/Controller/DisplayGroup.php:1511
 #, php-format
 msgid "Files unassigned from %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1604 lib/Controller/DisplayGroup.php:1616
+#: lib/Controller/DisplayGroup.php:1622 lib/Controller/DisplayGroup.php:1634
 msgid ""
 "You have selected a layout that you no longer have permission to use. Please "
 "reload the form."
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1628
+#: lib/Controller/DisplayGroup.php:1646
 #, php-format
 msgid "Layouts assigned to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1701
+#: lib/Controller/DisplayGroup.php:1719
 #, php-format
 msgid "Layouts unassigned from %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1777 lib/Controller/DisplayGroup.php:1826
-#: lib/Controller/DisplayGroup.php:1981 lib/Controller/DisplayGroup.php:2031
-#: lib/Controller/DisplayGroup.php:2174 lib/Controller/DisplayGroup.php:2276
-#: lib/Controller/DisplayGroup.php:2655
+#: lib/Controller/DisplayGroup.php:1795 lib/Controller/DisplayGroup.php:1844
+#: lib/Controller/DisplayGroup.php:1999 lib/Controller/DisplayGroup.php:2049
+#: lib/Controller/DisplayGroup.php:2192 lib/Controller/DisplayGroup.php:2294
+#: lib/Controller/DisplayGroup.php:2649
 #, php-format
 msgid "Command Sent to %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1913 lib/Controller/DisplayGroup.php:2111
+#: lib/Controller/DisplayGroup.php:1931 lib/Controller/DisplayGroup.php:2129
 msgid "Please provide a Layout ID or Campaign ID"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1923 lib/Controller/DisplayGroup.php:2121
+#: lib/Controller/DisplayGroup.php:1941 lib/Controller/DisplayGroup.php:2139
 msgid "Please provide Layout specific campaign ID"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1929 lib/Controller/DisplayGroup.php:2127
+#: lib/Controller/DisplayGroup.php:1947 lib/Controller/DisplayGroup.php:2145
 msgid "Cannot find layout by campaignId"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:1934 lib/Controller/DisplayGroup.php:2132
+#: lib/Controller/DisplayGroup.php:1952 lib/Controller/DisplayGroup.php:2150
 msgid "Please provide Layout id or Campaign id"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:2299 lib/Controller/DisplayProfile.php:531
+#: lib/Controller/DisplayGroup.php:2317 lib/Controller/DisplayProfile.php:531
 #: lib/Controller/DisplayProfile.php:561 lib/Controller/DisplayProfile.php:620
 msgid "You do not have permission to delete this profile"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:2567
+#: lib/Controller/DisplayGroup.php:2561
 #, php-format
 msgid "Display %s moved to Folder %s"
 msgstr ""
 
-#: lib/Controller/DisplayGroup.php:2647
+#: lib/Controller/DisplayGroup.php:2641
 msgid "Please provide a Trigger Code"
 msgstr ""
 
@@ -20257,8 +20261,8 @@ msgid "You do not have permission to edit these permissions."
 msgstr ""
 
 #: lib/Controller/User.php:1638 lib/Controller/User.php:1771
-#: lib/Controller/User.php:1974 lib/Controller/Display.php:1517
-#: lib/Controller/Display.php:1553 lib/Controller/Display.php:1558
+#: lib/Controller/User.php:1974 lib/Controller/Display.php:1519
+#: lib/Controller/Display.php:1555 lib/Controller/Display.php:1560
 msgid "The array of ids is empty!"
 msgstr ""
 
@@ -20458,15 +20462,19 @@ msgstr ""
 msgid "Uninstalled %s"
 msgstr ""
 
-#: lib/Controller/Tag.php:455
+#: lib/Controller/Tag.php:456
 msgid "Access denied System tags cannot be edited"
 msgstr ""
 
-#: lib/Controller/Tag.php:579
+#: lib/Controller/Tag.php:580
 msgid "Access denied System tags cannot be deleted"
 msgstr ""
 
-#: lib/Controller/Tag.php:751
+#: lib/Controller/Tag.php:717
+msgid "Edit multiple tags is not supported on this item"
+msgstr ""
+
+#: lib/Controller/Tag.php:767
 msgid "Tags Edited"
 msgstr ""
 
@@ -20896,86 +20904,86 @@ msgstr ""
 msgid "Cancel CMS Transfer"
 msgstr ""
 
-#: lib/Controller/Display.php:1595
+#: lib/Controller/Display.php:1597
 msgid "Displays Updated"
 msgstr ""
 
-#: lib/Controller/Display.php:1653
+#: lib/Controller/Display.php:1655
 #, php-format
 msgid "%s assigned to Display Groups"
 msgstr ""
 
-#: lib/Controller/Display.php:1741
+#: lib/Controller/Display.php:1743
 msgid "once it has connected for the first time"
 msgstr ""
 
-#: lib/Controller/Display.php:1807 lib/Controller/Display.php:2491
-#: lib/Controller/Display.php:2615
+#: lib/Controller/Display.php:1809 lib/Controller/Display.php:2493
+#: lib/Controller/Display.php:2617
 #, php-format
 msgid "Request sent for %s"
 msgstr ""
 
-#: lib/Controller/Display.php:1834 lib/Controller/Display.php:1884
+#: lib/Controller/Display.php:1836 lib/Controller/Display.php:1886
 msgid ""
 "This display has no mac address recorded against it yet. Make sure the "
 "display is running."
 msgstr ""
 
-#: lib/Controller/Display.php:1896
+#: lib/Controller/Display.php:1898
 #, php-format
 msgid "Wake on Lan sent for %s"
 msgstr ""
 
-#: lib/Controller/Display.php:1999
+#: lib/Controller/Display.php:2001
 #, php-format
 msgid "Alert for Display %s"
 msgstr ""
 
-#: lib/Controller/Display.php:2000
+#: lib/Controller/Display.php:2002
 #, php-format
 msgid "Display ID %d is offline since %s."
 msgstr ""
 
-#: lib/Controller/Display.php:2093
+#: lib/Controller/Display.php:2095
 #, php-format
 msgid "Authorised set to %d for %s"
 msgstr ""
 
-#: lib/Controller/Display.php:2191
+#: lib/Controller/Display.php:2193
 #, php-format
 msgid "Default Layout with name %s set for %s"
 msgstr ""
 
-#: lib/Controller/Display.php:2279
+#: lib/Controller/Display.php:2281
 msgid "Provided CMS URL is invalid"
 msgstr ""
 
-#: lib/Controller/Display.php:2283
+#: lib/Controller/Display.php:2285
 msgid "New CMS URL can have maximum of 1000 characters"
 msgstr ""
 
-#: lib/Controller/Display.php:2287
+#: lib/Controller/Display.php:2289
 msgid "Provided CMS Key is invalid"
 msgstr ""
 
-#: lib/Controller/Display.php:2296
+#: lib/Controller/Display.php:2298
 msgid "Invalid Two Factor Authentication Code"
 msgstr ""
 
-#: lib/Controller/Display.php:2346
+#: lib/Controller/Display.php:2348
 #, php-format
 msgid "Cancelled CMS Transfer for %s"
 msgstr ""
 
-#: lib/Controller/Display.php:2383
+#: lib/Controller/Display.php:2385
 msgid "Code cannot be empty"
 msgstr ""
 
-#: lib/Controller/Display.php:2408
+#: lib/Controller/Display.php:2410
 msgid "Provided user_code does not exist"
 msgstr ""
 
-#: lib/Controller/Display.php:2484 lib/Controller/Display.php:2608
+#: lib/Controller/Display.php:2486 lib/Controller/Display.php:2610
 msgid "XMR is not configured for this Display"
 msgstr ""
 
