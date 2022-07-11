@@ -951,7 +951,7 @@ class Display extends Base
                         ['name' => 'rowtitle', 'value' => $display->display],
                         ['name' => 'custom-handler', 'value' => 'XiboMultiSelectPermissionsFormOpen'],
                         ['name' => 'custom-handler-url', 'value' => $this->urlFor($request,'display.setBandwidthLimitMultiple.form')],
-                        ['name' => 'content-id-name', 'value' => 'displayGroupId']
+                        ['name' => 'content-id-name', 'value' => 'displayId']
                     ]
                 ];
 
