@@ -84,7 +84,7 @@ class DisplayGroupCopyTest extends LocalWebTestCase
 
     public function testCopyPlain()
     {
-        $response = $this->sendRequest('POST','/displaygroup/' . $this->displayGroup->displayGroupId  . '/copy', [
+        $response = $this->sendRequest('POST', '/displaygroup/' . $this->displayGroup->displayGroupId  . '/copy', [
             'displayGroup' => 'phpunit_' . bin2hex(random_bytes(4)),
             'description' => 'copied',
             'copyMembers' => 0,
@@ -111,7 +111,7 @@ class DisplayGroupCopyTest extends LocalWebTestCase
 
     public function testCopyMembers()
     {
-        $response = $this->sendRequest('POST','/displaygroup/' . $this->displayGroup->displayGroupId  . '/copy', [
+        $response = $this->sendRequest('POST', '/displaygroup/' . $this->displayGroup->displayGroupId  . '/copy', [
             'displayGroup' => 'phpunit_' . bin2hex(random_bytes(4)),
             'description' => 'copied',
             'copyMembers' => 1,

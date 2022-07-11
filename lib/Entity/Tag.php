@@ -758,13 +758,17 @@ class Tag implements \JsonSerializable
             $tagOptionsArray = explode(',', $tagOptionsString);
 
             if (isset($this->value) && !in_array($this->value, $tagOptionsArray)) {
-                throw new InvalidArgumentException(sprintf(__('Provided tag value %s, not found in tag %s options'),
-                    $this->value, $this->tag), 'tags');
+                throw new InvalidArgumentException(
+                    sprintf(__('Provided tag value %s, not found in tag %s options'), $this->value, $this->tag),
+                    'tags'
+                );
             }
 
             if (!isset($this->value) && $this->isRequired == 1) {
-                throw new InvalidArgumentException(sprintf(__('Provided Tag %s, requires a value'), $this->tag),
-                    'tags');
+                throw new InvalidArgumentException(
+                    sprintf(__('Provided Tag %s, requires a value'), $this->tag),
+                    'tags'
+                );
             }
         }
     }

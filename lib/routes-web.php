@@ -192,10 +192,9 @@ $app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
     $group->get('/playlist/widget/tab/{tab}/{id}', ['\Xibo\Controller\Module','getTab'])->setName('module.widget.tab.form');
     $group->get('/playlist/widget/resource/{regionId}/{id}', ['\Xibo\Controller\Module','getResource'])->setName('module.getResource');
     $group->get('/playlist/widget/form/templateimage/{type}/{templateId}', ['\Xibo\Controller\Module','getTemplateImage'])->setName('module.getTemplateImage');
-
 })->addMiddleware(new FeatureAuth($app->getContainer(), ['layout.modify']));
 
-$app->group('', function(\Slim\Routing\RouteCollectorProxy $group) {
+$app->group('', function (\Slim\Routing\RouteCollectorProxy $group) {
     // Module functions
     $group->get('/playlist/widget/form/edit/{id}', ['\Xibo\Controller\Module','editWidgetForm'])->setName('module.widget.edit.form');
     $group->get('/playlist/widget/form/delete/{id}', ['\Xibo\Controller\Module','deleteWidgetForm'])->setName('module.widget.delete.form');

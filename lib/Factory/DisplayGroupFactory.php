@@ -117,8 +117,9 @@ class DisplayGroupFactory extends BaseFactory
     {
         $groups = $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId, 'isDisplaySpecific' => 1]);
 
-        if (count($groups) <= 0)
+        if (count($groups) <= 0) {
             throw new NotFoundException();
+        }
 
         return $groups[0];
     }
