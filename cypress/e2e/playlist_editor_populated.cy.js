@@ -101,7 +101,7 @@ describe('Playlist Editor (Populated)', function() {
         });
     });
 
-    it.skip('should delete a widget using the toolbar bin', () => {
+    it('should delete a widget using the toolbar bin', () => {
         cy.server();
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
@@ -127,7 +127,7 @@ describe('Playlist Editor (Populated)', function() {
         });
     });
 
-    it.skip('should add an audio clip to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
+    it('should add an audio clip to a widget by the context menu, and adds a link to open the form in the timeline', () => {
         
         cy.populateLibraryWithMedia();
 
@@ -135,122 +135,54 @@ describe('Playlist Editor (Populated)', function() {
         cy.server();
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
 
-        // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
+        // Right click to open the context menu and select add audio
+        cy.get('#timeline-container [data-type="widget"]:first-child').should('be.visible').rightclick();
+        cy.get('.context-menu-btn[data-property="Audio"]').should('be.visible').click();
 
-        // Open the audio form
-        cy.dragToElement(
-            '#playlist-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="audio"] .drag-area',
-            '#timeline-container [data-type="widget"]:first-child'
-        ).then(() => {
-
-            // Select the 1st option
-            cy.get('[data-test="widgetPropertiesForm"] #mediaId > option').eq(1).then(($el) => {
-                cy.get('[data-test="widgetPropertiesForm"] #mediaId').select($el.val());
-            });
-
-            // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
-
-            // Check if the widget has the audio icon
-            cy.wait('@reloadPlaylist');
-            cy.get('#timeline-container [data-type="widget"]:first-child')
-                .find('i[data-property="Audio"]').click();
-
-            cy.get('[data-test="widgetPropertiesForm"]').contains('Audio for');
+        // Select the 1st option
+        cy.get('[data-test="widgetPropertiesForm"] #mediaId > option').eq(1).then(($el) => {
+            cy.get('[data-test="widgetPropertiesForm"] #mediaId').select($el.val());
         });
+
+        // Save and close the form
+        cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
+
+        // Check if the widget has the audio icon
+        cy.wait('@reloadPlaylist');
+        cy.get('#timeline-container [data-type="widget"]:first-child')
+            .find('i[data-property="Audio"]').click();
+
+        cy.get('[data-test="widgetPropertiesForm"]').contains('Audio for');
     });
 
     // Skip test for now ( it's failing in the test suite and being tested already in layout designer spec ) 
-    it.skip('attaches expiry dates to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
+    it('attaches expiry dates to a widget by the context menu, and adds a link to open the form in the timeline', () => {
         // Create and alias for reload playlist
         cy.server();
         cy.route('/playlist?playlistId=*').as('reloadPlaylist');
         
-        // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
+        // Right click to open the context menu and select add audio
+        cy.get('#timeline-container [data-type="widget"]:first-child').should('be.visible').rightclick();
+        cy.get('.context-menu-btn[data-property="Expiry"]').should('be.visible').click();
 
-        // Open the expiry form
-        cy.dragToElement(
-            '#playlist-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="expiry"] .drag-area',
-            '#timeline-container [data-type="widget"]:first-child'
-        ).then(() => {
+        // Add dates
+        cy.get('[data-test="widgetPropertiesForm"] .starttime-control .date-clear-button').click();
+        cy.get('[data-test="widgetPropertiesForm"] #fromDt').siblings('.date-open-button').click();
+        cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day:first').click();
 
-            // Add dates
-            cy.get('[data-test="widgetPropertiesForm"] .starttime-control .date-clear-button').click();
-            cy.get('[data-test="widgetPropertiesForm"] #fromDt').siblings('.date-open-button').click();
-            cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day:first').click();
-
-            cy.get('[data-test="widgetPropertiesForm"] .endtime-control .date-clear-button').click();
-            cy.get('[data-test="widgetPropertiesForm"] #toDt').siblings('.date-open-button').click();
-            cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day:first').click();
+        cy.get('[data-test="widgetPropertiesForm"] .endtime-control .date-clear-button').click();
+        cy.get('[data-test="widgetPropertiesForm"] #toDt').siblings('.date-open-button').click();
+        cy.get('.flatpickr-calendar.open .dayContainer .flatpickr-day:first').click();
 
 
-            // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
+        // Save and close the form
+        cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
 
-            // Check if the widget has the expiry dates icon
-            cy.wait('@reloadPlaylist');
-            cy.get('#timeline-container [data-type="widget"]:first-child')
-                .find('i[data-property="Expiry"]').click();
+        // Check if the widget has the expiry dates icon
+        cy.wait('@reloadPlaylist');
+        cy.get('#timeline-container [data-type="widget"]:first-child')
+            .find('i[data-property="Expiry"]').click();
 
-            cy.get('[data-test="widgetPropertiesForm"]').contains('Expiry for');
-        });
-    });
-
-    // NOTE: Test skipped for now until transitions are enabled by default
-    it.skip('adds a transition to a widget by drag and drop, and adds a link to open the form in the timeline', () => {
-        // Create and alias for reload playlist
-        cy.server();
-        cy.route('/playlist?playlistId=*').as('reloadPlaylist');
-
-        // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
-
-        // Open the transition form
-        cy.dragToElement(
-            '#playlist-editor-toolbar .toolbar-pane-content [data-sub-type="transitionIn"] .drag-area',
-            '#timeline-container [data-type="widget"]:nth-child(2)'
-        ).then(() => {
-
-            // Select the 1st option
-            cy.get('[data-test="widgetPropertiesForm"] #transitionType > option').eq(1).then(($el) => {
-                cy.get('[data-test="widgetPropertiesForm"] #transitionType').select($el.val());
-            });
-
-            // Save and close the form
-            cy.get('[data-test="widgetPropertiesForm"] .btn-bb-done').click();
-
-            // Check if the widget has the transition icon
-            cy.wait('@reloadPlaylist').then(() => {
-                cy.get('#timeline-container [data-type="widget"]:nth-child(2)')
-                    .find('i[data-property="Transition"]').click();
-
-                cy.get('[data-test="widgetPropertiesForm"]').contains('Edit in Transition for');
-            });
-        });
-    });
-
-    it.skip('check if the form to attach a transition to a widget by click to add appears', () => {
-        // Create and alias for reload playlist
-        cy.server();
-        cy.route('/playlist?playlistId=*').as('reloadPlaylist');
-
-        // Open toolbar Tools tab
-        cy.get('#playlist-editor-toolbar #btn-menu-0').should('be.visible').click();
-        cy.get('#playlist-editor-toolbar #btn-menu-1').should('be.visible').click();
-
-        // Activate the Add button
-        cy.get('#playlist-editor-toolbar #content-1 .toolbar-pane-content [data-sub-type="transitionIn"] .add-area').invoke('show').click();
-
-            // Click on the widget to add
-        cy.get('#timeline-container [data-type="widget"]:nth-child(2)').click();
-
-        // Check if the right form appears
-        cy.get('[data-test="widgetPropertiesForm"]').contains('Edit in Transition for');
-
+        cy.get('[data-test="widgetPropertiesForm"]').contains('Expiry for');
     });
 });
