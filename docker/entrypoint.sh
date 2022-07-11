@@ -1,5 +1,26 @@
 #!/bin/bash
 
+#
+# Copyright (c) 2022 Xibo Signage Ltd
+#
+# Xibo - Digital Signage - http://www.xibo.org.uk
+#
+# This file is part of Xibo.
+#
+# Xibo is free software: you can redistribute it and/or modify
+# it under the terms of the GNU Affero General Public License as published by
+# the Free Software Foundation, either version 3 of the License, or
+# any later version.
+#
+# Xibo is distributed in the hope that it will be useful,
+# but WITHOUT ANY WARRANTY; without even the implied warranty of
+# MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+# GNU Affero General Public License for more details.
+#
+# You should have received a copy of the GNU Affero General Public License
+# along with Xibo.  If not, see <http://www.gnu.org/licenses/>.
+#
+
 if [ "$CMS_DEV_MODE" == "true" ]
 then
   # Print MySQL connection details
@@ -137,7 +158,7 @@ then
     echo "We will upgrade it, take a backup"
 
     # We're going to run an upgrade. Make a database backup
-    mysqldump -h $MYSQL_HOST -P $MYSQL_PORT -u $MYSQL_USER -p$MYSQL_PASSWORD $MYSQL_DATABASE | gzip > /var/www/backup/db-$(date +"%Y-%m-%d_%H-%M-%S").sql.gz
+    mysqldump -h $MYSQL_HOST -P $MYSQL_PORT -u $MYSQL_USER -p$MYSQL_PASSWORD --hex-blob $MYSQL_DATABASE | gzip > /var/www/backup/db-$(date +"%Y-%m-%d_%H-%M-%S").sql.gz
 
     # Drop app cache on upgrade
     rm -rf /var/www/cms/cache/*

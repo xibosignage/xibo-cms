@@ -115,7 +115,13 @@ class LocalWebTestCase extends PHPUnit_TestCase
         $handlers = [];
         if (isset($_SERVER['PHPUNIT_LOG_TO_FILE']) && $_SERVER['PHPUNIT_LOG_TO_FILE']) {
             $handlers[] = new StreamHandler(PROJECT_ROOT . '/library/log.txt', Logger::DEBUG);
-        } else {
+        }
+
+        if (isset($_SERVER['PHPUNIT_LOG_WEB_TO_CONSOLE']) && $_SERVER['PHPUNIT_LOG_WEB_TO_CONSOLE']) {
+            $handlers[] = new StreamHandler(STDERR, Logger::DEBUG);
+        }
+
+        if (count($handlers) <= 0) {
             $handlers[] = new NullHandler();
         }
 
@@ -438,7 +444,7 @@ class LocalWebTestCase extends PHPUnit_TestCase
         // Create if necessary
         if (self::$logger === null) {
             if (isset($_SERVER['PHPUNIT_LOG_TO_CONSOLE']) && $_SERVER['PHPUNIT_LOG_TO_CONSOLE']) {
-                self::$logger = new Logger('TESTS', [new \Monolog\Handler\StreamHandler(STDERR, Logger::DEBUG)]);
+                self::$logger = new Logger('TESTS', [new StreamHandler(STDERR, Logger::DEBUG)]);
             } else {
                 self::$logger = new NullLogger();
             }
