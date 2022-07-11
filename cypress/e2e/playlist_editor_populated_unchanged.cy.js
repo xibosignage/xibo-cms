@@ -22,13 +22,6 @@ describe('Playlist Editor (Populated/Unchanged)', function() {
         });
     });
 
-    /* Disabled for testing speed reasons
-        after(function() {
-            // Remove the created layout
-            cy.deletePlaylist(this.testPlaylistId);
-        });
-    */
-
     beforeEach(function() {
         cy.login();
         cy.openPlaylistEditorAndLoadPrefs(this.testPlaylistId);
