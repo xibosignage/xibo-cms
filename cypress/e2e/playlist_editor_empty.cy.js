@@ -12,13 +12,6 @@ describe('Playlist Editor (Empty)', function() {
         });
     });
 
-    /* Disabled for testing speed reasons
-        after(function() {
-            // Remove the created layout
-            cy.deletePlaylist(this.testPlaylistId);
-        });
-    */
-
     it('should show the droppable zone and toolbar', function() {
 
         cy.get('#dropzone-container').should('be.visible');

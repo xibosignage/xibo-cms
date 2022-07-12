@@ -32,6 +32,7 @@ use Xibo\Factory\DisplayProfileFactory;
 use Xibo\Factory\FolderFactory;
 use Xibo\Factory\LayoutFactory;
 use Xibo\Helper\DateFormatHelper;
+use Xibo\Helper\Profiler;
 use Xibo\Service\ConfigServiceInterface;
 use Xibo\Service\LogServiceInterface;
 use Xibo\Storage\StorageServiceInterface;
@@ -714,13 +715,24 @@ class Display implements \JsonSerializable
             $this->getLog()->audit('Display', $this->displayId, 'Display Saved', $this->getChangedProperties());
         }
 
-        // Trigger an update of all dynamic DisplayGroups
-        if (($this->hasPropertyChanged('display') || $this->hasPropertyChanged('tags'))) {
+        // Trigger an update of all dynamic DisplayGroups?
+        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('tags')) {
+            // TODO: Can we trigger a task to run which does this in the background?
+            Profiler::start('Display::save::dynamic', $this->getLog());
             foreach ($this->displayGroupFactory->getByIsDynamic(1) as $group) {
                 $this->getDispatcher()->dispatch(new DisplayGroupLoadEvent($group), DisplayGroupLoadEvent::$NAME);
                 $group->load();
-                $group->save(['validate' => false, 'saveGroup' => false, 'manageDisplayLinks' => true, 'allowNotify' => $allowNotify]);
+                $group->save([
+                    'validate' => false,
+                    'saveGroup' => false,
+                    'saveTags' => false,
+                    'manageLinks' => false,
+                    'manageDisplayLinks' => true,
+                    'manageDynamicDisplayLinks' => true,
+                    'allowNotify' => $allowNotify
+                ]);
             }
+            Profiler::end('Display::save::dynamic', $this->getLog());
         }
     }
 
@@ -907,28 +919,45 @@ class Display implements \JsonSerializable
         ]);
 
         // Maintain the Display Group
-        if ($this->hasPropertyChanged('display') || $this->hasPropertyChanged('description') || $this->hasPropertyChanged('tags') || $this->hasPropertyChanged('bandwidthLimit') || $this->hasPropertyChanged('folderId')) {
+        if ($this->hasPropertyChanged('display')
+            || $this->hasPropertyChanged('description')
+            || $this->hasPropertyChanged('tags')
+            || $this->hasPropertyChanged('bandwidthLimit')
+            || $this->hasPropertyChanged('folderId')
+        ) {
             $this->getLog()->debug('Display specific DisplayGroup properties need updating');
 
             $displayGroup = $this->displayGroupFactory->getById($this->displayGroupId);
-            $this->getDispatcher()->dispatch(DisplayGroupLoadEvent::$NAME, new DisplayGroupLoadEvent($displayGroup));
             $displayGroup->load();
             $displayGroup->displayGroup = $this->display;
             $displayGroup->description = $this->description;
-            $displayGroup->replaceTags($this->tags);
             $displayGroup->bandwidthLimit = $this->bandwidthLimit;
-            $displayGroup->folderId = ($this->folderId == null) ? 1 : $this->folderId;
 
-            // if user has disabled folder feature, presumably said user also has no permissions to folder
-            // getById would fail here and prevent submitting edit form in web ui
-            try {
-                $folder = $this->folderFactory->getById($displayGroup->folderId);
-                $displayGroup->permissionsFolderId = ($folder->getPermissionFolderId() == null) ? $folder->id : $folder->getPermissionFolderId();
-            } catch (NotFoundException $exception) {
-                $displayGroup->permissionsFolderId = 1;
+            // Tags
+            $saveTags = false;
+            if ($this->hasPropertyChanged('tags')) {
+                $saveTags = true;
+                $displayGroup->replaceTags($this->tags);
             }
 
-            $displayGroup->save(DisplayGroup::$saveOptionsMinimum);
+            // If the folderId has changed, we should check this user has permissions to the new folderId
+            $displayGroup->folderId = ($this->folderId == null) ? 1 : $this->folderId;
+            if ($this->hasPropertyChanged('folderId')) {
+                $folder = $this->folderFactory->getById($displayGroup->folderId);
+                // We have permission, so assert the new folder's permission id
+                $displayGroup->permissionsFolderId = $folder->getPermissionFolderIdOrThis();
+            }
+
+            // manageDisplayLinks is false because we never update a display specific display group's display links
+            $displayGroup->save([
+                'validate' => false,
+                'saveGroup' => true,
+                'manageLinks' => false,
+                'manageDisplayLinks' => false,
+                'manageDynamicDisplayLinks' => false,
+                'allowNotify' => true,
+                'saveTags' => $saveTags
+            ]);
         } else {
             $this->store->update('UPDATE displaygroup SET `modifiedDt` = :modifiedDt WHERE displayGroupId = :displayGroupId', [
                 'modifiedDt' => Carbon::now()->format(DateFormatHelper::getSystemFormat()),

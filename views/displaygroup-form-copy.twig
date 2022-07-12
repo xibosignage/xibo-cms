@@ -49,7 +49,7 @@
                 {{ forms.input("description", title, description, helpText) }}
 
                 {% if displayGroup.isDynamic == 0 %}
-                    {% set title %}{% trans "Copy Memebers?" %}{% endset %}
+                    {% set title %}{% trans "Copy Members?" %}{% endset %}
                     {% set helpText %}{% trans "Should we copy all members to the new Display Group?" %}{% endset %}
                     {{ forms.checkbox("copyMembers", title, 0, helpText) }}
                 {% endif %}

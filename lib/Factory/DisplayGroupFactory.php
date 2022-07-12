@@ -110,6 +110,22 @@ class DisplayGroupFactory extends BaseFactory
 
     /**
      * @param int $displayId
+     * @return DisplayGroup
+     * @throws NotFoundException
+     */
+    public function getDisplaySpecificByDisplayId(int $displayId): DisplayGroup
+    {
+        $groups = $this->query(null, ['disableUserCheck' => 1, 'displayId' => $displayId, 'isDisplaySpecific' => 1]);
+
+        if (count($groups) <= 0) {
+            throw new NotFoundException();
+        }
+
+        return $groups[0];
+    }
+
+    /**
+     * @param int $displayId
      * @return DisplayGroup[]
      * @throws NotFoundException
      */
@@ -317,11 +333,6 @@ class DisplayGroupFactory extends BaseFactory
 
         $body .= ' WHERE 1 = 1 ';
 
-        // Always include Display specific Display Groups for DOOH.
-        if ($parsedBody->getInt('disableUserCheck') == 0 && ($this->getUser()->userTypeId == 4 || ($this->getUser()->isSuperAdmin() && $this->getUser()->showContentFrom == 2))) {
-            $body .= ' OR `displaygroup`.isDisplaySpecific = 1 ';
-        }
-
         if ($parsedBody->getInt('displayGroupId') !== null) {
             $body .= ' AND displaygroup.displayGroupId = :displayGroupId ';
             $params['displayGroupId'] = $parsedBody->getInt('displayGroupId');
@@ -430,7 +441,16 @@ class DisplayGroupFactory extends BaseFactory
         }
 
         // View Permissions
-        $this->viewPermissionSql('Xibo\Entity\DisplayGroup', $body, $params, '`displaygroup`.displayGroupId', '`displaygroup`.userId', $filterBy, '`displaygroup`.permissionsFolderId');
+        $this->viewPermissionSql(
+            'Xibo\Entity\DisplayGroup',
+            $body,
+            $params,
+            '`displaygroup`.displayGroupId',
+            '`displaygroup`.userId',
+            $filterBy,
+            '`displaygroup`.permissionsFolderId',
+            false
+        );
 
         // Sorting?
         $order = '';
