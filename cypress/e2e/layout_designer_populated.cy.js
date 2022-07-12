@@ -110,9 +110,13 @@ describe('Layout Designer (Populated)', function() {
         cy.server();
         cy.route('/layout?layoutId=*').as('reloadLayout');
         cy.route('/region/form/edit/*').as('reloadRegion');
+        cy.route('**/region/preview/*').as('regionPreview');
 
         // Open navigator edit
         cy.get('#layout-editor-bottombar #navigator-edit-btn').click();
+
+        // Wait for the region to preview
+        cy.wait('@regionPreview');
 
         cy.get('#layout-navigator [data-type="region"]:first').then(($originalRegion) => {
             const regionId = $originalRegion.attr('id');
