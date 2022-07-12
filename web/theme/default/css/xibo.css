@@ -957,6 +957,22 @@ ul li.active.tab-design:hover a {
     max-height: 400px;
 }
 
+.tags-input-addons-wide .bootstrap-tagsinput .tag,
+.tags-input-wide .bootstrap-tagsinput .tag {
+    line-height: 1.4rem;
+    vertical-align: top;
+}
+
+.tags-input-addons-wide .bootstrap-tagsinput pre[aria-hidden="true"],
+.tags-input-wide .bootstrap-tagsinput pre[aria-hidden="true"] {
+    display: none;
+}
+
+.tags-input-addons-wide .bootstrap-tagsinput div[role="listbox"],
+.tags-input-wide .bootstrap-tagsinput div[role="listbox"] {
+    position: relative !important;
+}
+
 @media (min-width: 768px) {
     .form-horizontal .control-label {
         padding-top: 7px;

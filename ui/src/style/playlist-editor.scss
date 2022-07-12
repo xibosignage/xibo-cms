@@ -33,7 +33,7 @@ $playlist-editor-unsuccess-message-bg-color: $xibo-color-red;
     @include set-transparent-color(background, $xibo-color-black, 0.6);
 
     &.toolbar-opened {
-        margin-left: 350px;
+        padding-left: 410px;
     }
 
     .editor-modal-content {
