@@ -111,6 +111,7 @@ class WidgetDataProviderCache
     public function saveToCache(DataProviderInterface $dataProvider): void
     {
         if ($this->cache === null) {
+            $this->concurrentRequestRelease();
             throw new GeneralException('No cache to save');
         }
 
@@ -122,6 +123,14 @@ class WidgetDataProviderCache
         $this->pool->save($this->cache);
 
         // Release the cache
+        $this->concurrentRequestRelease();
+    }
+
+    /**
+     * Notify the provider that there is no cache to save.
+     */
+    public function notifyNoCacheToSave(): void
+    {
         $this->concurrentRequestRelease();
     }
 

@@ -1035,6 +1035,8 @@ class Widget extends Base
             // TODO: we should implement a "has been processed" flag instead as it might be valid to cache no data
             if (count($dataProvider->getData()) > 0) {
                 $widgetDataProviderCache->saveToCache($dataProvider);
+            } else {
+                $widgetDataProviderCache->notifyNoCacheToSave();
             }
         } else {
             $this->getLog()->debug('Returning cache');
