@@ -22,16 +22,21 @@ $(function() {
   // Call the data url and parse out the template.
   $.each(widgetData, function(key, widget) {
     // Load the template
-    const template = Handlebars.compile($('#hbs-' + widget.templateId).html());
+    const template = $('#hbs-' + widget.templateId);
+    const hbs = Handlebars.compile(template.html());
     const $content = $('#content');
     $.ajax({
       method: 'GET',
       url: widget.url,
       success: function(data) {
         $.each(data, function(key, item) {
-          $content.append(template(item));
+          // TODO: parse through the data parser if one exists for this widget.
+          $content.append(hbs(item));
         });
+
+        // TODO: layout scaler
+
       }
-    })
+    });
   });
 });

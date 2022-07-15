@@ -72,6 +72,6 @@
         {% endif %}
     </script>
 {% for id, item in hbs %}
-    <script type="text/x-handlebars-template" id="hbs-{{ id }}">{{ item|raw }}</script>
+    <script type="text/x-handlebars-template" id="hbs-{{ id }}" data-width="{{ item.width }}" data-height="{{ item.height }}">{{ item.content|raw }}</script>
 {% endfor %}
 </html>

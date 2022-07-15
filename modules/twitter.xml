@@ -77,4 +77,9 @@
         </property>
     </properties>
     <preview></preview>
+    <dataParser><![CDATA[
+        const twitterDataParser = function (item, options) {
+
+        }
+    ]]></dataParser>
 </module>

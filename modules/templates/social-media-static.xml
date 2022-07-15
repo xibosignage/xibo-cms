@@ -57,9 +57,8 @@
             </property>
         </properties>
         <stencil>
-            <width></width>
-            <height></height>
-            <padding></padding>
+            <width>960</width>
+            <height>350</height>
             <hbs><![CDATA[
 <div class="container twitter-container">
     <div class="twitter-col col-4">

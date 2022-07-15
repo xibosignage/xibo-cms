@@ -331,6 +331,7 @@ class WidgetHtmlRenderer
             $module->decorateProperties($widget, true);
 
             // Output some sample data and a data url.
+            // TODO: output data parser function
             $twig['data'][] = [
                 'widgetId' => $widget->widgetId,
                 'url' => '[[dataUrl=' . $widget->widgetId . ']]',
@@ -351,7 +352,11 @@ class WidgetHtmlRenderer
                     );
                 }
                 if ($module->stencil->hbs !== null) {
-                    $twig['hbs']['module'] = $this->decorateTranslations($module->stencil->hbs);
+                    $twig['hbs']['module'] = [
+                        'content' => $this->decorateTranslations($module->stencil->hbs),
+                        'width' => $module->stencil->width,
+                        'height' => $module->stencil->height,
+                    ];
                 }
             }
 
@@ -375,8 +380,11 @@ class WidgetHtmlRenderer
 
                 // Render out any hbs
                 if ($moduleTemplate->stencil->hbs !== null) {
-                    $twig['hbs'][$moduleTemplate->templateId] =
-                        $this->decorateTranslations($moduleTemplate->stencil->hbs);
+                    $twig['hbs'][$moduleTemplate->templateId] = [
+                        'content' => $this->decorateTranslations($moduleTemplate->stencil->hbs),
+                        'width' => $moduleTemplate->stencil->width,
+                        'height' => $moduleTemplate->stencil->height,
+                    ];
                 }
             }
         }
