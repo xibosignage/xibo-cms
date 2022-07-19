@@ -59,7 +59,7 @@ trait ModuleXmlTrait
                 } else if ($childNode->nodeName === 'width') {
                     $stencil->width = doubleval($node->textContent);
                 } else if ($childNode->nodeName === 'height') {
-                    $stencil->width = doubleval($node->textContent);
+                    $stencil->height = doubleval($node->textContent);
                 }
             }
 

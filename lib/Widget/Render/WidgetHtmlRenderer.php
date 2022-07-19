@@ -309,6 +309,7 @@ class WidgetHtmlRenderer
         $twig = [];
         $twig['hbs'] = [];
         $twig['twig'] = [];
+        $twig['templateProperties'] = [];
         $twig['elements'] = [];
         $twig['width'] = $region->width;
         $twig['height'] = $region->height;
@@ -330,16 +331,43 @@ class WidgetHtmlRenderer
             // we include the defaults.
             $module->decorateProperties($widget, true);
 
+            // templateId or "elements"
+            $templateId = $widget->getOptionValue('templateId', null);
+            
             // Output some sample data and a data url.
-            // TODO: output data parser function
-            $twig['data'][] = [
+            // TODO: output sample data into "data"
+            $widgetData = [
                 'widgetId' => $widget->widgetId,
                 'url' => '[[dataUrl=' . $widget->widgetId . ']]',
                 'data' => '[[data=' . $widget->widgetId . ']]',
-                'templateId' => $widget->getOptionValue('templateId', null)
+                'templateId' => $templateId
             ];
+            
+            // Find my template
+            if ($templateId !== 'elements') {
+                foreach ($moduleTemplates as $moduleTemplate) {
+                    if ($moduleTemplate->templateId === $templateId) {
+                        $moduleTemplate->decorateProperties($widget, true);
+                        $widgetData['templateProperties'] = $moduleTemplate->getPropertyValues();
+                        
+                        $this->getLog()->debug('Static template to include: ' . $moduleTemplate->templateId);
+                        if ($moduleTemplate->stencil !== null) {
+                            if ($moduleTemplate->stencil->twig !== null) {
+                                $twig['twig'][] = $this->twig->fetchFromString(
+                                    $moduleTemplate->stencil->twig,
+                                    $moduleTemplate->getPropertyValues()
+                                );
+                            }
+                        }
+                        break;
+                    }
+                }
+            }
 
-            // Watermark duration
+            // Add to widgetData
+            $twig['data'][] = $widgetData;
+
+                // Watermark duration
             $duration = max($duration, $widget->calculatedDuration);
 
             // What does our module have
@@ -362,30 +390,17 @@ class WidgetHtmlRenderer
 
             // Include elements/element groups - they will already be JSON encoded.
             $twig['elements'][] = $widget->getOptionValue('elements', null);
+        }
 
-            // If we have a static template, then render that out.
-            foreach ($moduleTemplates as $moduleTemplate) {
-                if ($moduleTemplate->type === 'static') {
-                    $this->getLog()->debug('Static template to include: ' . $moduleTemplate->templateId);
-                    $moduleTemplate->decorateProperties($widget, true);
-                    if ($moduleTemplate->stencil !== null) {
-                        if ($moduleTemplate->stencil->twig !== null) {
-                            $twig['twig'][] = $this->twig->fetchFromString(
-                                $moduleTemplate->stencil->twig,
-                                $moduleTemplate->getPropertyValues()
-                            );
-                        }
-                    }
-                }
-
-                // Render out any hbs
-                if ($moduleTemplate->stencil->hbs !== null) {
-                    $twig['hbs'][$moduleTemplate->templateId] = [
-                        'content' => $this->decorateTranslations($moduleTemplate->stencil->hbs),
-                        'width' => $moduleTemplate->stencil->width,
-                        'height' => $moduleTemplate->stencil->height,
-                    ];
-                }
+        // Render out HBS from templates
+        foreach ($moduleTemplates as $moduleTemplate) {
+            // Render out any hbs
+            if ($moduleTemplate->stencil->hbs !== null) {
+                $twig['hbs'][$moduleTemplate->templateId] = [
+                    'content' => $this->decorateTranslations($moduleTemplate->stencil->hbs),
+                    'width' => $moduleTemplate->stencil->width,
+                    'height' => $moduleTemplate->stencil->height,
+                ];
             }
         }
 

@@ -157,7 +157,7 @@ class TwitterConnector implements ConnectorInterface
                         $photoUrl = $mediaObject['media_url'];
                         if (!empty($photoUrl)) {
                             $tweet->photo = $dataProvider->addImage(
-                                'twitter_' . $mediaObject->id_str,
+                                'twitter_' . ($mediaObject['id_str'] ?? $mediaObject['id']),
                                 $photoUrl,
                                 $expires
                             );
