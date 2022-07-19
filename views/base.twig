@@ -28,7 +28,7 @@
     <body>
         {% block content %}{% endblock %}
         <script type="text/javascript">
-            var calendar_type = "{{ settings.CALENDAR_TYPE }}";
+            var CALENDAR_TYPE = "{{ settings.CALENDAR_TYPE }}";
             var jsLocale = "{{ translate.jsLocale }}";
             var jsShortLocale = "{{ translate.jsShortLocale }}";
         </script>
@@ -119,11 +119,11 @@
             var language = "{{ translate.jsLocale }}";
             var timezone = "{{ settings.defaultTimezone }}";
             var dateFormat = "{{ settings.DATE_FORMAT }}";
-            var jsDateFormat = (calendar_type == "Jalali") ? "{{ settings.DATE_FORMAT_JALALI_JS }}" : "{{ settings.DATE_FORMAT_JS }}";
+            var jsDateFormat = (CALENDAR_TYPE == "Jalali") ? "{{ settings.DATE_FORMAT_JALALI_JS }}" : "{{ settings.DATE_FORMAT_JS }}";
             var timeFormat = "{{ settings.TIME_FORMAT }}";
             var jsTimeFormat = "{{ settings.TIME_FORMAT_JS }}";
             var dateOnlyFormat = "{{ settings.DATE_ONLY_FORMAT }}";
-            var jsDateOnlyFormat = (calendar_type == "Jalali") ? "{{ settings.DATE_ONLY_FORMAT_JALALI_JS }}" : "{{ settings.DATE_ONLY_FORMAT_JS }}";
+            var jsDateOnlyFormat = (CALENDAR_TYPE == "Jalali") ? "{{ settings.DATE_ONLY_FORMAT_JALALI_JS }}" : "{{ settings.DATE_ONLY_FORMAT_JS }}";
             var systemDateFormat = "{{ settings.systemDateFormat }}";
             var systemTimeFormat = "{{ settings.systemTimeFormat }}";
             var clockUrl = "{{ url_for("clock") }}";

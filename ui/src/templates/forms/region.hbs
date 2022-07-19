@@ -9,6 +9,7 @@
             <form id="regionFormEdit" class="XiboForm form-horizontal">
                 <div class="tab-content">
                     <div class="tab-pane active" id="generalTab">
+                        {{> inputs/hidden name="type" value="playlist" }}"
                         {{> inputs/text value=region.name id="name" title="Name" helpText="An optional name for this widget" }}
                         {{> inputs/checkbox value=(getOption region.regionOptions "loop") id="loop" title="Loop?" helpText="If there is only one item in this region should it loop?" }}
                         {{> inputs/message messageType="info" title="When should the Region Loop be enabled?"}}
@@ -26,8 +27,8 @@
                     </div>
                     <div class="tab-pane" id="transitionTab">
                         {{> inputs/dropdown value=(getOption region.regionOptions "transitionType") options=(arrMerge (arr (obj code=null transition= "")) transitions.out) optionsValue="code" optionsTitle="transition" id="transitionType" title="Exit Transition?" helpText="What transition should be applied when this region is finished?" }}
-                        {{> inputs/number value=(getOption region.regionOptions "transitionDuration") id="transitionDuration" title="Duration" helpText="The duration for this transition, in milliseconds." renderCondition='{ "target": "#transitionType", "condition": "!=", "value": "" }' }}
-                        {{> inputs/dropdown value=(getOption region.regionOptions "transitionDirection") options=transitions.compassPoints optionsValue="id" optionsTitle="name" id="transitionDirection" title="Direction" helpText="The direction for this transition. Only appropriate for transitions that move, such as Fly." renderCondition='{ "target": "#transitionType", "condition": "!=", "value": "" }' }}
+                        {{> inputs/number value=(getOption region.regionOptions "transitionDuration") id="transitionDuration" title="Duration" helpText="The duration for this transition, in milliseconds." visibility='{ "field": "#transitionType", "type": "neq", "value": "" }' }}
+                        {{> inputs/dropdown value=(getOption region.regionOptions "transitionDirection") options=transitions.compassPoints optionsValue="id" optionsTitle="name" id="transitionDirection" title="Direction" helpText="The direction for this transition. Only appropriate for transitions that move, such as Fly." visibility='{ "target": "#transitionType", "condition": "!=", "value": "" }' }}
                     </div>
                 </div>
             </form>

@@ -40,6 +40,7 @@ import './xibo-metro-render';
 import './xibo-text-render';
 import './xibo-webpage-render';
 import './xibo-worldclock-render';
+import './render-controller';
 import './player';
 
 // Plugins

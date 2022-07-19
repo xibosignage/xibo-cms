@@ -63,8 +63,8 @@
             <default>0</default>
             <visibility>
                 <test type="and">
-                    <condition field="useDuration" type="eq">1</condition>
-                    <condition field="duration" type="gt">%media.duration%</condition>
+                    <condition field="#useDuration" type="eq">1</condition>
+                    <condition field="#duration" type="gt">%media.duration%</condition>
                 </test>
             </visibility>
         </property>
@@ -91,8 +91,8 @@
     </properties>
     <preview>
         <twig><![CDATA[
-<div style="display:table; width:100%; height: {{ height }}px>
-    <div style=" display: table-cell;">
+<div style="display:table; width:100%; height: {{ height }}px">
+    <div style="display: table-cell;">
         <div style="text-align:center;">
             <i class="fa module-preview-icon module-icon-video" style="position:fixed;"></i>
         </div>

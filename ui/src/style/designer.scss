@@ -6,7 +6,7 @@
 $designer-color-background: $xibo-color-blue-lightest;
 $designer-colour-layout: $xibo-color-blue-lighter;
 $designer-colour-region: $xibo-color-orange;
-$designer-colour-widget: $xibo-color-green; 
+$designer-colour-widget: $xibo-color-green;
 
 $designer-module-bg-color: $xibo-color-white;
 $designer-module-border-color: $xibo-color-black;
@@ -28,20 +28,6 @@ $widget-main-bg-color: $xibo-color-green;
 $widget-main-fg-color: $xibo-color-black;
 $widget-hover-color: darken($widget-main-bg-color, 5%);
 $widget-selected-color: darken($widget-main-bg-color, 15%);
-
-$timeline-widget-bg-color: $xibo-color-white;
-$timeline-widget-fg-color: $xibo-color-black;
-$timeline-widget-fg-color2: darken($xibo-color-gray-dark, 30%);
-$timeline-widget-border-color: $xibo-color-gray-dark;
-$timeline-widget-to-sort-bg-color: $xibo-color-yellow;
-
-$timeline-ghost-bg-color: $xibo-color-gray-dark;
-$timeline-ghost-fg-color: $xibo-color-gray-darker;
-
-$timeline-transition-in-bg-color: darken($xibo-color-green, 30%);
-$timeline-transition-out-bg-color: darken($xibo-color-red, 30%);
-$timeline-transition-in-fg-color: $xibo-color-green;
-$timeline-transition-out-fg-color: $xibo-color-red;
 
 $viewer-player-bg-colour: $xibo-color-black;
 $viewer-preview-text-colour: darken($xibo-color-white, 30%);
@@ -69,7 +55,6 @@ $layout-status-popover-message-bg-color: $xibo-color-red;
 $properties-panel-width: 320px;
 $designer-overlay-z-index: 1050;
 $designer-z-index-select: 10;
-$timeline-max-height: 250px;
 $inline-editing-z-index: 1040;
 
 // CSS
@@ -95,7 +80,7 @@ $inline-editing-z-index: 1040;
         flex-flow: row;
         justify-content: space-between;
     }
-    
+
     .flex-v {
         display: flex;
         flex: 1;
@@ -164,7 +149,7 @@ $inline-editing-z-index: 1040;
         .hide-closed {
             display: none;
         }
-    
+
         .hide-opened {
             display: inline;
         }
@@ -201,6 +186,7 @@ $inline-editing-z-index: 1040;
 
     &.opened {
         width: auto;
+
         .toggle-container {
             width: 0;
         }
@@ -211,22 +197,9 @@ $inline-editing-z-index: 1040;
     flex-basis: 6px !important;
 }
 
-.timeline-panel {
-    background: $xibo-color-gray-light;
-    width: 100%;
-
-    &:not(.opened) {
-        height: 6px;
-    }
-
-    &.opened .toggle-container {
-        height: 2px;
-    }
-}
-
 /* Page content wrapper */
-#content-wrapper .page-content > .row {
-    > div {
+#content-wrapper .page-content>.row {
+    >div {
         margin: 0;
     }
 
@@ -240,12 +213,12 @@ $inline-editing-z-index: 1040;
         }
 
         .user {
-            & > .item {
+            &>.item {
                 width: auto;
                 height: 50px;
                 padding-right: 16px;
 
-                & > a {
+                &>a {
                     padding: 7px 0;
                 }
 
@@ -272,7 +245,7 @@ $inline-editing-z-index: 1040;
             }
         }
 
-        .user-notif > .item > a {
+        .user-notif>.item>a {
             padding: 5px 0;
         }
     }
@@ -286,10 +259,12 @@ $inline-editing-z-index: 1040;
     background-color: $designer-color-background;
 
     /* SCROLLBAR */
-    scrollbar-color: $xibo-color-blue-darker lighten($xibo-color-blue-darker, 30%); /* For firefox */
-    scrollbar-width: thin; /* For firefox */
+    scrollbar-color: $xibo-color-blue-darker lighten($xibo-color-blue-darker, 30%);
+    /* For firefox */
+    scrollbar-width: thin;
+    /* For firefox */
 
-    #fullscreenBtn, #goBackBtn {
+    #fullscreenBtn {
         position: absolute;
         top: 6px;
         right: 6px;
@@ -304,11 +279,6 @@ $inline-editing-z-index: 1040;
         }
     }
 
-    #goBackBtn {
-        left: 6px;
-        right: auto;
-    }
-
     /* width */
     ::-webkit-scrollbar {
         width: 10px;
@@ -320,7 +290,7 @@ $inline-editing-z-index: 1040;
         background: $xibo-color-white;
         @include border-radius(6px);
     }
-    
+
     /* Handle */
     ::-webkit-scrollbar-thumb {
         background: $xibo-color-blue-darker;
@@ -386,414 +356,13 @@ $inline-editing-z-index: 1040;
 @media (max-width: 768px) {
     #layout-editor {
         margin-top: 50px;
-    } 
-}
-
-/* Layout timeline */
-#layout-editor #layout-timeline {
-    max-width: calc(100% - 40px);
-    min-width: 60%;
-    max-height: $timeline-max-height;
-    margin: 4px 0;
-
-    #timeline-container {
-        display: flex;
-        background-color: $xibo-color-white;
-    }
-
-    /* Region Container */
-    $timeline-region-info-width: 180px;
-    $timeline-region-preview-width: 60px;
-    $timeline-timeruler-height: 28px;
-    $timeline-region-height: 48px;
-
-    .timeline-left-panel {
-        background-color: $xibo-color-blue-lightest;
-        border-radius: 0 0 4px 0;
-        max-height: $timeline-max-height;
-        overflow: hidden;
-    }
-
-    #regions-container {
-        display: inline-block;
-        width: calc(100% - #{$timeline-region-info-width});
-        overflow: auto;
-        max-height: $timeline-max-height;
-    }
-
-    .empty-timeline {
-        cursor: pointer;
-        width: 100%;
-        background-color: $xibo-color-blue-lightest;
-        display: table;
-        text-align: center;
-
-        .empty-timeline-message {
-            font-size: 1.1rem;
-            color: $xibo-color-blue;
-            vertical-align: middle;
-            display: table-cell;
-        }
-    }
-
-    #timeruler {
-        width: 100%;
-        height: $timeline-timeruler-height;
-        background-color: $xibo-color-black;
-        overflow: hidden;
-        white-space: nowrap;
-        font-size: 0;
-        opacity: 0.9;
-        position: -webkit-sticky; /* Safari */
-        position: sticky;
-        top: 0;
-        z-index: 1;
-
-        .timeruler-message {
-            color: white;
-            font-size: 13px;
-            padding-left: 6px;
-            line-height: 21px;
-        }
-
-        .step-margin {
-            display: inline-block;
-            height: 10px;
-        }
-
-        .step {
-            display: inline-block;
-            border-left: $xibo-color-white 2px solid;
-            height: 10px;
-            vertical-align: top;
-
-            &.labelled {
-                color: $xibo-color-white;
-                font-size: 0.85rem;
-                height: 18px;
-                line-height: 34px;
-
-                span {
-                    padding-left: 2px;
-                }
-            }
-        }
-    }
-
-    #regions-info {
-        float: left;
-        width: $timeline-region-info-width;
-        margin-bottom: 12px;
-
-        .designer-region-info {
-            background-color: $xibo-color-blue-pastel;
-            color: $xibo-color-white;
-            height: $timeline-region-height;
-            margin: 3px;
-            font-size: 1rem;
-            @include border-radius(4px);
-
-            &.selected-region {
-                color: $designer-colour-region;
-                font-weight: bold;
-            }
-
-            .region-preview {
-                float: left;
-                width: $timeline-region-preview-width;
-                height: $timeline-region-height;
-                margin-left: 6px;
-                overflow: hidden;
-
-                .region-preview-background {
-                    position: relative;
-                    background-color: $xibo-color-black-pure;
-                }
-
-                .region-preview-element {
-                    position: relative;
-                    background-color: $xibo-color-orange-darker;
-                }
-            }
-
-            .region-controls {
-                display: inline-block;
-                padding: 2px 6px;
-                line-height: 22px;
-                width: calc(#{$timeline-region-info-width} - #{$timeline-region-preview-width} - 12px);
-
-                .region-label {
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                    overflow: hidden;
-                }
-            }
-        }
-    }
-
-    /* Controls Container */
-    #timeline-controls {
-        font-size: 1.15rem;
-        line-height: 20px;
-        width: $timeline-region-info-width;
-        padding: 4px 8px;
-        background-color: $xibo-color-primary;
-        position: -webkit-sticky; /* Safari */
-        position: sticky;
-        top: 0;
-        z-index: 1;
-    }
-
-    /* Timeline buttons */
-    .designer-region-info, #timeline-controls {
-        a {
-            cursor: pointer;
-            text-decoration: none;
-            color: $xibo-color-white;
-
-            &:hover {
-                color: darken($color: $xibo-color-white, $amount: 20%);
-            }
-
-            &[disabled] {
-                color: darken($color: $xibo-color-white, $amount: 50%);
-            }
-        }
-
-        span {
-            color: $xibo-color-white;
-            font-size: 1rem;
-            line-height: 1.2rem;
-        }
-    }
-    
-    /* Designer Region */
-    .designer-region {
-        background: $region-main-bg-color;
-        height: 48px;
-        padding: 2px;
-        margin: 3px 0;
-        @include border-radius(4px);
-        display: flex;
-        display: -webkit-box;
-        display: -moz-box;
-
-        &:not(.editable) {
-            @include box-shadow(inset 0 0 6px 4px $xibo-color-gray-dark);
-        }
-
-        .message {
-            color: $region-main-fg-color;
-            font-weight: bold;
-            padding: 10px;
-        }
-    }
-
-    .label-region {
-        height: 40px;
-        padding: 10px 2px 0 0;
-        text-align: right;
-        font-weight: bold;
-        margin-bottom: 4px;
-        color: $region-main-fg-color;
-    }
-
-    /* Designer Widget */
-    .designer-widget {
-        position: relative;
-        background: $timeline-widget-bg-color;
-        color: $timeline-widget-fg-color;
-        font-weight: bold;
-        height: 100%;
-        border: none;
-        @include box-shadow(inset 0 0 0 1px $timeline-widget-border-color);
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
-        padding: 0;
-        @include border-radius(4px);
-
-        .widgetLabel {
-            float: left;
-            height: inherit;
-            color: $designer-module-bg-color;
-            min-width: 20px;
-            height: calc(100% - 2px);
-            text-align: center;
-            opacity: 0.85;
-            padding: 0 4px;
-            margin-left: 4px;
-            margin-top: 1px;
-            font-size: 13px;
-
-            .widgetDuration {
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                overflow: hidden;
-                padding: 0 2px;
-            }
-        }
-
-        .widgetName {
-            font-style: italic;
-            color: $timeline-widget-fg-color;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-            max-width: 90%;
-            padding-left: 4px;
-        }
-
-        .widgetProperties {
-            float: right;
-            position: absolute;
-            z-index: 2;
-            right: 4px;
-            top: 24px;
-        }
-
-        .widget-transition-container {
-            position: absolute;
-            height: 100%;
-            z-index: 1;
-            opacity: 0.8;
-        }
-
-        .widget-transition {
-            cursor: pointer;
-            position: absolute;
-            width: 100%;
-            top: 70%;
-            height: 30%;
-            opacity: 0.3;
-            font-size: 0.65rem;
-            color: $xibo-color-white;
-        }
-
-        .widget-transition:hover {
-            top: 50%;
-            height: 50%;
-            opacity: 0.6;
-            font-size: 1rem;
-        }
-
-        .widget-transition-container.transition-in {
-            left: 0;
-            border-right: $timeline-transition-in-fg-color solid 2px;
-        }
-
-        .widget-transition-container.transition-out {
-            right: 0;
-            border-left: $timeline-transition-out-fg-color solid 2px;
-        }
-
-        .widget-transition.transition-in {
-            background: $timeline-transition-in-bg-color;
-             @include border-radius(80% 0 0 0);
-            text-align: right;
-            padding-right: 5px;
-        }
-
-        .widget-transition.transition-out {
-            background: $timeline-transition-out-bg-color;
-            @include border-radius(0 80% 0 0);
-            text-align: left;
-            padding-left: 5px;
-        }
-
-        &.hideContent > * {
-            display: none;
-        }
-
-        i.editProperty {
-            float: right;
-            cursor: pointer;
-            padding: 2px;
-            color: $widget-main-fg-color;
-        }
-
-        i.editProperty:hover {
-            color: lighten($widget-main-fg-color, 20%);
-        }
-
-        &.invalid-widget:before {
-            @include box-shadow(inset 0px 0px 6px 4px $xibo-color-red);
-            content: ' ';
-            position: absolute;
-            top: 1px;
-            left: 1px;
-            width: calc(100% - 2px);
-            height: calc(100% - 2px);
-            @include border-radius(3px);
-        }
-
-        /* Highlight animation */
-        &:after {
-            content: ' ';
-            position: absolute;
-            opacity: 0;
-            top: 1px;
-            left: 1px;
-            width: calc(100% - 2px);
-            height: calc(100% - 2px);
-            @include border-radius(3px);
-            @include box-shadow(inset 0 0 2px 2px $designer-colour-widget);
-            background-color: darken($designer-colour-widget, 20%);
-            transition: opacity 0.3s;
-        }
-
-        /* Transition to showing the bigger shadow on hover */
-        &.highlighted:after {
-            opacity: 0.6;
-        }
-    }
-
-    /* Designer Widget Ghost */
-    .designer-widget-ghost {
-        @include set-transparent-color(background, $timeline-ghost-bg-color, 0.6);
-        color: $timeline-ghost-fg-color;
-        font-weight: bold;
-        display: flex;
-        height: 100%;
-        opacity: 0.85;
-
-        .widgetName, .widgetSubType {
-            color: $timeline-ghost-fg-color;
-            margin-left: 4px;
-        }    
-    }
-
-    .designer-widget-sortable-highlight {
-        background: $xibo-color-yellow;
-        float: left;
-        width: 20px;
-        height: 100%;
-        border: none;
-    }
-
-    .ghost-padding {
-        @include set-transparent-color(background, $xibo-color-black, 0.2);
-        float: left;
-        height: 100%;
-    }
-
-    .widgetExtension {
-        color: $timeline-ghost-fg-color;
-        padding: 0 4px;
-        font-weight: bold;
-        @include set-transparent-color(background, $xibo-color-white, 0.5);
-        height: 34px;
-        margin-top: 5px;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        white-space: nowrap;
     }
 }
 
 /* Layout Viewer */
 #layout-editor #layout-viewer-container {
-    height: calc(100% - 64px);
-    padding: 16px 24px 0px 16px;
+    height: calc(100% - 54px);
+    padding: 16px 16px 0px 16px;
 
     .main-panel-wrapper {
         border-color: $xibo-color-blue-pastel;
@@ -825,7 +394,7 @@ $inline-editing-z-index: 1040;
         .ckeditor_controls {
             padding: 0 !important;
 
-            > div {
+            >div {
                 padding: 2px 5px;
                 min-width: 240px;
                 margin: 0;
@@ -858,7 +427,7 @@ $inline-editing-z-index: 1040;
         }
 
         .viewer-element {
-            position:relative;
+            position: relative;
             overflow: hidden;
         }
 
@@ -884,8 +453,7 @@ $inline-editing-z-index: 1040;
             background: $viewer-player-bg-colour;
         }
 
-        .designer-region {
-
+        .designer-region-playlist {
             &.empty-region {
                 width: 100%;
                 height: 100%;
@@ -895,8 +463,6 @@ $inline-editing-z-index: 1040;
                 font-size: 2em;
             }
 
-            @include set-transparent-color(background, $xibo-color-gray, 0.6);
-
             &::after {
                 content: ' ';
                 position: absolute;
@@ -904,7 +470,6 @@ $inline-editing-z-index: 1040;
                 left: 0;
                 width: 100%;
                 height: 100%;
-                @include box-shadow(inset 0 0 2px 0px $xibo-color-black);
             }
 
             .loading-icon {
@@ -963,23 +528,14 @@ $inline-editing-z-index: 1040;
                 text-overflow: ellipsis;
             }
 
-            .widget-arrow
-            {
+            .widget-arrow {
                 display: none;
                 cursor: pointer;
                 padding: 2px 3px;
             }
-            
-            &:not(.empty):hover {
-                @include set-transparent-color(background, $xibo-color-white, 0.5);
-                
-                &::after {
-                    @include box-shadow(inset 0 0 2px 1px $xibo-color-black);
-                }
 
-                .preview-paging.active {
-                    opacity: 0.9;
-                }
+            .loading-container {
+                height: 100%;
             }
         }
     }
@@ -995,12 +551,14 @@ $inline-editing-z-index: 1040;
         height: calc(100% - 38px);
         width: 100%;
 
-        #inline-editor-templates, #fullscreenBtn, #goBackBtn {
+        #inline-editor-templates,
+        #fullscreenBtn {
             z-index: calc(#{$designer-overlay-z-index} + 10);
         }
-    
+
         #layout-viewer {
-            position: fixed; /* Stay in place */
+            position: fixed;
+            /* Stay in place */
             z-index: calc(#{$designer-overlay-z-index} + 10);
             left: 8px;
             top: 8px;
@@ -1012,7 +570,7 @@ $inline-editing-z-index: 1040;
         .hide-on-fs {
             display: none;
         }
-    
+
         .show-on-fs {
             display: inline-block;
         }
@@ -1031,7 +589,7 @@ $inline-editing-z-index: 1040;
         text-align: center;
         cursor: pointer;
         width: 100%;
-        height: 100%; 
+        height: 100%;
         @include set-transparent-color(background, $viewer-inline-editor-overlay-bg-colour, 0.2);
         @include box-shadow(inset $viewer-inline-editor-overlay-bg-colour 0px 0px 10px 0px);
 
@@ -1042,7 +600,7 @@ $inline-editing-z-index: 1040;
         .edit-btn-container {
             display: table;
             width: 100%;
-            height: 100%; 
+            height: 100%;
 
             #edit-btn {
                 font-size: 4.3rem;
@@ -1050,7 +608,7 @@ $inline-editing-z-index: 1040;
                 @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 0.8);
                 vertical-align: middle;
                 display: table-cell;
-                
+
                 &:hover {
                     @include set-transparent-color(color, $viewer-inline-editor-overlay-fg-colour, 0.9);
                 }
@@ -1125,26 +683,26 @@ $inline-editing-z-index: 1040;
             overflow-y: auto;
             height: 100%;
 
-            & > .row {
+            &>.row {
                 height: 100%;
 
-                & > div {
+                &>div {
                     height: calc(100% - 65px);
                     padding: 4px !important;
 
-                    & > form {
+                    &>form {
                         height: 100%;
                         overflow-x: hidden;
                         overflow-y: auto;
 
                         .form-group {
 
-                            & > .label {
+                            &>.label {
                                 max-width: 100%;
                                 text-align: left;
                             }
 
-                            & > div {
+                            &>div {
                                 max-width: 100%;
                             }
                         }
@@ -1152,10 +710,10 @@ $inline-editing-z-index: 1040;
                 }
             }
 
-            .nav > li > a {
+            .nav>li>a {
                 color: $xibo-color-secondary;
-                background-color: $xibo-color-white-pure !important;
-                border-color: $xibo-color-secondary !important;
+                background-color: $xibo-color-white-pure  !important;
+                border-color: $xibo-color-secondary  !important;
                 border-width: 0px 0px 2px 0px !important;
                 font-size: 0.9rem;
                 font-weight: bold;
@@ -1173,15 +731,15 @@ $inline-editing-z-index: 1040;
                 border: none;
             }
 
-            .row > div {
+            .row>div {
                 padding: 6px;
                 margin: 0;
             }
 
-            .row > div > form {
+            .row>div>form {
                 padding: 0 6px;
 
-                .row > div  {
+                .row>div {
                     padding: 4px 8px;
                 }
 
@@ -1200,7 +758,18 @@ $inline-editing-z-index: 1040;
                         max-width: 78%;
                     }
 
-                    .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
+                    .col-sm-1,
+                    .col-sm-10,
+                    .col-sm-11,
+                    .col-sm-12,
+                    .col-sm-2,
+                    .col-sm-3,
+                    .col-sm-4,
+                    .col-sm-5,
+                    .col-sm-6,
+                    .col-sm-7,
+                    .col-sm-8,
+                    .col-sm-9 {
                         padding-left: 4px;
                         padding-right: 4px;
                     }
@@ -1217,8 +786,19 @@ $inline-editing-z-index: 1040;
                 .row-special {
                     margin-right: -5px;
                     margin-left: -5px;
-                    
-                    .col-sm-1, .col-sm-10, .col-sm-11, .col-sm-12, .col-sm-2, .col-sm-3, .col-sm-4, .col-sm-5, .col-sm-6, .col-sm-7, .col-sm-8, .col-sm-9 {
+
+                    .col-sm-1,
+                    .col-sm-10,
+                    .col-sm-11,
+                    .col-sm-12,
+                    .col-sm-2,
+                    .col-sm-3,
+                    .col-sm-4,
+                    .col-sm-5,
+                    .col-sm-6,
+                    .col-sm-7,
+                    .col-sm-8,
+                    .col-sm-9 {
                         padding-left: 3px;
                         padding-right: 3px;
                     }
@@ -1240,7 +820,8 @@ $inline-editing-z-index: 1040;
                         display: inline-block;
                     }
 
-                    select, input {
+                    select,
+                    input {
                         padding: 5px;
                         max-width: 90px;
                     }
@@ -1249,7 +830,7 @@ $inline-editing-z-index: 1040;
                         max-width: 120px;
                     }
                 }
-                
+
                 #worldClocksContainer {
                     .form-group {
                         padding: 2px 0;
@@ -1257,7 +838,8 @@ $inline-editing-z-index: 1040;
                         display: inline-block;
                     }
 
-                    select, input[type="text"] {
+                    select,
+                    input[type="text"] {
                         max-width: 95%;
                     }
 
@@ -1301,22 +883,25 @@ $inline-editing-z-index: 1040;
                 }
 
                 #actions_wrapper {
-                    .row > div {
+                    .row>div {
                         padding: 0;
 
-                        .table th, .table td {
+                        .table th,
+                        .table td {
                             padding: 0.5rem;
                         }
                     }
 
-                    .row:nth-of-type(3) > div {
+                    .row:nth-of-type(3)>div {
                         flex: 0 0 100% !important;
                         max-width: 100% !important;
                     }
                 }
 
                 #zonesContainer {
-                    .structure, .categoriesNotAssigned {
+
+                    .structure,
+                    .categoriesNotAssigned {
                         display: grid;
                         width: 100%;
                     }
@@ -1331,7 +916,7 @@ $inline-editing-z-index: 1040;
                             min-height: 90px;
                             margin: 0;
                             background-color: initial;
-                            
+
                             ul {
                                 height: 100%;
                             }
@@ -1371,13 +956,15 @@ $inline-editing-z-index: 1040;
             font-size: 0;
             width: 100%;
 
-            & > button {
+            &>button {
                 margin-bottom: 0.5rem;
             }
         }
 
         &.form-editor-enabled {
-            .form-container, form {
+
+            .form-container,
+            form {
                 margin-left: -450px !important;
                 padding-left: 450px !important;
 
@@ -1387,69 +974,7 @@ $inline-editing-z-index: 1040;
                     width: 810px;
                     z-index: 3;
                 }
-            } 
-        }
-    }
-}
-
-/* Layout Navigator */
-#layout-editor #layout-navigator {
-    display: none;
-    height: calc(100% - 64px);
-    padding: 16px 24px 0px 16px;
-
-    .main-panel-wrapper {
-        border-color: $xibo-color-orange-darker;
-    }
-
-    .layout {
-        overflow: hidden;
-        @include box-shadow(inset 0 0 2px 1px $navigator-shadow-colour);
-    }
-
-    .designer-region {
-        @include box-shadow(inset 0 0 2px 0px $navigator-shadow-colour);
-    }
-
-    .designer-region:not(.editable) {
-        @include box-shadow(inset 0 0 2px 0px $navigator-non-editable-shadow-colour);
-    }
-
-    #layout-navigator-content {
-        background: $xibo-color-black;
-        min-height: 100%;
-    }
-
-    /* Navigator fullscreen */
-    &.fullscreen {
-        @include set-transparent-color(background-color, $xibo-color-black, 0.9);
-        position: fixed;
-        z-index: 1050;
-        left: 0;
-        top: 0;
-        width: 100%;
-        padding: 0;
-        height: calc(100% - 38px);
-
-        #fullscreenBtn {
-            z-index: calc(#{$designer-overlay-z-index} + 10);
-        }
-
-        #layout-navigator-content {
-            z-index: $designer-overlay-z-index; /* Sit on top */
-            left: 8px;
-            top: 8px;
-            width: calc(100% - 16px);
-            height: calc(100% - 54px);
-            @include set-transparent-color(background-color, $xibo-color-black, 0.9);
-        }
-
-        .hide-on-fs {
-            display: none;
-        }
-    
-        .show-on-fs {
-            display: inline-block;
+            }
         }
     }
 }
@@ -1460,67 +985,56 @@ $inline-editing-z-index: 1040;
         @include user-select-none();
     }
 
-    .designer-region.selectable:hover {
-        background: $region-hover-color !important;
-    }
+    .designer-region-playlist {
+        outline: 4px solid $xibo-color-gray-darker;
 
-    /* Timeline */
-    #layout-timeline {
-        .designer-region .designer-region-overlay {
-            display: none;
-            z-index: 2;
+        &::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
             width: 100%;
             height: 100%;
-            left: 0;
-            top: 0;
+            outline: 2px solid $xibo-color-gray-light;
+            outline-offset: 1px;
+        }
+    }
+
+    .designer-region-playlist.selected:not(.designer-region-info) {
+        &::before {
+            outline-color: $region-selected-color;
+        }
+    }
+
+    .designer-widget {
+        width: 100%;
+        height: 100%;
+    }
+
+    .designer-widget.selected {
+        outline: 4px solid $xibo-color-gray-darker;
+
+        &::before {
+            content: '';
             position: absolute;
-            @include border-radius(4px);
-
-            div {
-                position: relative;
-                display: block;
-                float: left;
-                height: 100%;
-            }
-
-            margin-right: -6px;
-
-            .designer-region-overlay-step {
-                background: darken($xibo-color-white, 20%);
-                width: 14px;
-                margin: 0;
-
-                &:hover, &.ui-droppable-hover {
-                    background: $xibo-color-white;
-                    @include box-shadow(0px 0px 3px 1px $xibo-color-white);
-                }
-
-                &:not(:first-child) {
-                    margin-left: -5px;
-                    margin-right: 5px;
-                }
-            }
-        }
-
-        .designer-widget.selectable:hover {
-            background: $widget-hover-color !important;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            outline: 2px solid $widget-selected-color;
+            outline-offset: 1px;
         }
     }
 
-    .selected-region:not(.designer-region-info) {
-        background: $region-selected-color !important;
-    }
-
-    #layout-navigator .designer-region.selected-widget,
-    .designer-widget.selected-widget {
-        background: $widget-selected-color !important;
+    .designer-region-playlist:not(.selected):hover::before {
+        outline-color: $xibo-color-white-pure;
     }
 
     /* Navigator & Viewer */
-    #layout-navigator, #layout-viewer {
-        .designer-region.ui-droppable-active {
+    #layout-viewer {
+        .designer-region-playlist.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
-            background: $region-hover-color !important;
+            background: $region-hover-color  !important;
 
             &.ui-droppable-hover,
             &:hover {
@@ -1534,7 +1048,7 @@ $inline-editing-z-index: 1040;
 
         .widget-preview.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
-            background: $widget-hover-color !important;
+            background: $widget-hover-color  !important;
             width: 100%;
             height: 100%;
 
@@ -1550,83 +1064,11 @@ $inline-editing-z-index: 1040;
 
         .layout.ui-droppable-active {
             @include z-index-set($designer-z-index-select);
-            background: $layout-hover-color !important;
-        }
-
-        .layout.ui-droppable-active.ui-droppable-hover,
-        .layout.ui-droppable-active:hover {
-            background: darken($layout-hover-color, 10%) !important;
-        }
-
-        .layout.ui-droppable-active * {
-            visibility: hidden;
         }
     }
 
     .ui-droppable-active {
         @include box-shadow(inset 0 0 2px $xibo-color-white);
-    }
-
-    /* Timeline */
-    .timeline-panel.opened {
-
-        #layout-timeline .designer-widget.ui-droppable-active {
-            @include z-index-set($designer-z-index-select);
-            background: $widget-hover-color;
-            visibility: visible;
-        }
-        
-        #layout-timeline .designer-widget.ui-droppable-active.ui-droppable-hover,
-        #layout-timeline .designer-widget.ui-droppable-active:hover {
-            background: darken($widget-hover-color, 10%);
-        }
-        
-        #layout-timeline .designer-region.to-sort .designer-widget {
-            background: $timeline-widget-to-sort-bg-color !important;
-        }
-        
-        #layout-timeline .designer-region.ui-droppable-active {
-            @include z-index-set($designer-z-index-select);
-        
-            .designer-region-overlay {
-                background: $region-hover-color;
-                display: block;
-                opacity: 0.75;
-            }
-        
-            &.ui-droppable-hover, &:hover {
-                .designer-region-overlay {
-                    background: darken($region-hover-color, 20%);
-                }
-            }
-        }
-        #actions-drawer-content {
-            &.ui-droppable-active {
-                @include z-index-set($designer-z-index-select);
-                background: $drawer-hover-color;
-
-                &.ui-droppable-hover,
-                &:hover {
-                    background: darken($drawer-hover-color, 20%);
-                }
-
-                * {
-                    visibility: hidden;
-                }
-            }
-
-            .designer-widget {
-                &.ui-droppable-active {
-                    @include z-index-set($designer-z-index-select);
-                    background: $widget-hover-color;
-                    visibility: visible;
-                }
-
-                &.ui-droppable-active:hover {
-                    background: darken($widget-hover-color, 10%);
-                }
-            }
-        }
     }
 
     .ui-droppable-hover {
@@ -1639,7 +1081,7 @@ $inline-editing-z-index: 1040;
     height: calc(100vh - 130px);
     width: 100%;
     position: absolute;
-    
+
     .loading-icon {
         position: relative;
         text-align: center;
@@ -1683,12 +1125,13 @@ $inline-editing-z-index: 1040;
         display: none;
     }
 
-    .designer-region .preview-paging {
+    .designer-region-playlist .preview-paging {
         z-index: 1;
     }
 }
 
-#layout-editor:not(.locked) .show-on-lock, #layout-editor.locked.locked-for-user .show-on-lock {
+#layout-editor:not(.locked) .show-on-lock,
+#layout-editor.locked.locked-for-user .show-on-lock {
     display: none;
 }
 
@@ -1696,238 +1139,6 @@ $inline-editing-z-index: 1040;
 #unlockLayoutModal .modal-content {
     width: 60%;
     margin: 0 auto;
-}
-
-/* Action drawer */
-#layout-editor #actions-drawer {
-    overflow: hidden;
-    display: flex;
-    flex-basis: 40px;
-    transition: flex-basis 600ms ease 0s;
-
-    #actions-drawer-content {
-        background-color: $drawer-bg-color;
-        width: calc(100% - 40px);
-        z-index: 1;
-
-        .actions-drawer-controls {
-            background-color: $drawer-search-bar-color;
-        }
-
-        #actions-drawer-search-bar {
-            height: 32px;
-            margin-bottom: 0;
-            color: $drawer-toggle-fg-color;
-            font-size: 0;
-            padding-right: 2px;
-            min-width: 120px;
-
-            i.fa-search {
-                font-size: 14px;
-                padding: 8px;
-            }
-
-            input {
-                background: center;
-                border: 1px solid #ced4da;
-                color: $drawer-search-bar-color;
-                height: 26px;
-                border-radius: 0.25rem;
-                background-color: #fff;
-                padding-left: 0.5rem;
-                margin: 2.5px 0;
-                font-size: 14px;
-                width: calc(100% - 29px);
-            }
-        }
-
-        #actions-drawer-widgets {
-            display: grid;
-            grid-template-rows: repeat(3, 1fr);
-            grid-auto-flow: column;
-            justify-content: start;
-            overflow: hidden;
-            height: calc(100% - 34px);
-            gap: 6px;
-            padding: 4px;
-
-            /* width */
-            ::-webkit-scrollbar {
-                height: 8px;
-            }
-
-            /* Track */
-            ::-webkit-scrollbar-track {
-                @include border-radius(0);
-            }
-            
-            /* Handle */
-            ::-webkit-scrollbar-thumb {
-                @include border-radius(0);
-            }
-
-            @media screen and (-ms-high-contrast: active), (-ms-high-contrast: none) {
-                & {
-                    padding: 0 2px 0 2px;
-                }
-            }
-
-            .designer-widget {
-                width: 140px;
-                min-width: 140px;
-                height: 46px;
-                position: relative;
-                background: #f9f9f9;
-                color: $timeline-widget-fg-color;
-                font-weight: bold;
-                @include box-shadow(inset 0 0 0 1px $timeline-widget-border-color);
-                overflow: hidden;
-                text-overflow: ellipsis;
-                white-space: nowrap;
-                @include border-radius(4px);
-
-                .widgetLabel {
-                    float: left;
-                    color: $designer-module-bg-color;
-                    width: 22px;
-                    height: calc(100% - 2px);
-                    text-align: center;
-                    opacity: 0.85;
-                    padding: 0 4px;
-                    margin-left: 4px;
-                    margin-top: 1px;
-                    font-size: 13px;
-                }
-
-                .widgetDuration {
-                    margin-top: -3px;
-                }
-
-                .widgetName {
-                    font-style: italic;
-                    color: $timeline-widget-fg-color;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
-                    white-space: nowrap;
-                    max-width: 90%;
-                    padding-left: 4px;
-                    text-align: left;
-                }
-
-                .widgetProperties {
-                    float: right;
-                    position: absolute;
-                    z-index: 2;
-                    right: 4px;
-                    top: 18px;
-                }
-
-                .targetInfo {
-                    position: absolute;
-                    background-color: #32353d;
-                    color: #f9f9f9;
-                    width: 114px;
-                    bottom: 1px;
-                    right: 0;
-                    height: 18px;
-                    opacity: 0.75;
-                    padding: 2px;
-
-                    &.no-target {
-                        color: #ff9191;
-                    }
-
-                    .info-text {
-                        font-size: 13px;
-                        line-height: 13px;
-                        max-width: 90px;
-                        overflow: hidden;
-                        text-overflow: ellipsis;
-                        white-space: nowrap;
-                    }
-                }
-
-                &.hideContent > * {
-                    display: none;
-                }
-
-                i.editProperty {
-                    float: right;
-                    cursor: pointer;
-                    padding: 2px;
-                    color: $widget-main-fg-color;
-                }
-
-                i.editProperty:hover {
-                    color: lighten($widget-main-fg-color, 20%);
-                }
-
-                &.invalid-widget:after {
-                    @include box-shadow(inset 0px 0px 2px 2px $xibo-color-red);
-                }
-
-                &:hover {
-                    background-color: $widget-hover-color;
-                }
-            }
-        }
-
-        .loading-container {
-            position: relative;
-            height: 100px;
-
-            .loading-icon {
-                font-size: 3.6rem;
-            }
-        }
-    }
-    
-    #actions-drawer-toggle {
-        transition: background-color 1s ease 0s;
-        background-color: $drawer-toggle-bg-color;
-        color: $drawer-toggle-fg-color;
-        font-size: 1.3rem;
-        height: 100%;
-        width: 40px;
-        position: relative;
-        @include border-radius(6px 0px 0px 6px);
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-    }
-
-    #actions-drawer-empty-message {
-        position: relative;
-        border: 2px dashed $drawer-fg-color;
-        @include border-radius(6px);
-        color: $drawer-fg-color;
-        line-height: 75px;
-        margin: 0 4px;
-        top: 50%;
-        transform: translateY(-50%);
-        white-space: nowrap;
-        overflow: hidden;
-        text-overflow: ellipsis;
-        height: 100%;
-
-        div {
-            top: 50%;
-            position: relative;
-            transform: translateY(-50%);
-        }
-    }
-
-    &.drawed {
-        flex-basis: 40%;
-
-        #actions-drawer-toggle {
-            background-color: lighten($drawer-toggle-bg-color, 20%);
-        }
-
-        #actions-drawer-widgets {
-            overflow-x: auto !important;
-        }
-    }
 }
 
 /* Layout background image */

@@ -30,13 +30,12 @@ $(function() {
       url: widget.url,
       success: function(data) {
         $.each(data, function(key, item) {
-          // TODO: parse through the data parser if one exists for this widget.
+          // TODO: parse through the data parser if one exists for this widget
           $content.append(hbs(item));
         });
 
         // TODO: layout scaler
-
-      }
+      },
     });
   });
 });

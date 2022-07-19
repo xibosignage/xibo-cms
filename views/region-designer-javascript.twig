@@ -79,9 +79,9 @@
             'height': form.find('#height').val(),
             'top': form.find('#top').val(),
             'left': form.find('#left').val()
-        }, false);
+        }, true);
 
-        app.renderContainer(app.navigator);
+        app.viewer.updateRegion(layout.regions[regionId]);
     }
 
     function formChangesRegionZIndex() {
@@ -89,7 +89,7 @@
         var form = $(app.propertiesPanel.DOMObject).find('form');
         var newZIndex = parseInt(form.find('#zIndex').val());
 
-        app.navigator.DOMObject.find('#' + app.selectedObject.id).css('zIndex', newZIndex);
+        app.viewer.DOMObject.find('#' + app.selectedObject.id).css('zIndex', newZIndex);
         app.selectedObject.zIndex = newZIndex;
     }
 

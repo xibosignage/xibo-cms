@@ -1,3 +1,3 @@
-module.exports = function() {
-    return Array.from(arguments).slice(0, arguments.length-1);
+module.exports = function(...args) {
+  return Array.from(args).slice(0, arguments.length - 1);
 };

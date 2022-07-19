@@ -1,3 +1,3 @@
 module.exports = function({hash}) {
-    return hash;
+  return hash;
 };

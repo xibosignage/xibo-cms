@@ -37,12 +37,12 @@ const PropertiesPanel = require('../editor-core/properties-panel.js');
 const Manager = require('../editor-core/manager.js');
 
 // Include CSS
-if(typeof lD == 'undefined') {
-    // Include the layout designer code if we're in the playlist editor only
-    require('../style/common.scss');
-    require('../style/designer.scss');
-    require('../style/toolbar.scss');
-    require('../style/topbar.scss');
+if (typeof lD == 'undefined') {
+  // Include the layout designer code if we're in the playlist editor only
+  require('../style/common.scss');
+  require('../style/designer.scss');
+  require('../style/toolbar.scss');
+  require('../style/topbar.scss');
 }
 
 require('../style/playlist-editor.scss');
@@ -53,178 +53,167 @@ const Common = require('../editor-core/common.js');
 // Create layout designer namespace (pE)
 window.pE = {
 
-    // Attach common functions to layout designer
-    common: Common,
+  // Attach common functions to layout designer
+  common: Common,
 
-    // Main object info
-    mainObjectType: 'playlist',
-    mainObjectId: '',
+  // Main object info
+  mainObjectType: 'playlist',
+  mainObjectId: '',
 
-    // Playlist
-    playlist: {},
+  // Playlist
+  playlist: {},
 
-    // Editor DOM div
-    editorContainer: {},
+  // Editor DOM div
+  editorContainer: {},
 
-    // Timeline
-    timeline: {},
+  // Timeline
+  timeline: {},
 
-    // Properties Panel
-    propertiesPanel: {},
+  // Properties Panel
+  propertiesPanel: {},
 
-    // Manager
-    manager: {},
+  // Manager
+  manager: {},
 
-    // Selected object
-    selectedObject: {},
+  // Selected object
+  selectedObject: {},
 
-    // Bottom toolbar
-    toolbar: {},
+  // Bottom toolbar
+  toolbar: {},
 
-    //folderId
-    folderId: ''
+  // folderId
+  folderId: '',
 };
 
 // Load Playlist and build app structure
 pE.loadEditor = function() {
+  pE.common.showLoadingScreen();
 
-    pE.common.showLoadingScreen();
+  // Save and change toastr positioning
+  pE.toastrPosition = toastr.options.positionClass;
+  toastr.options.positionClass = 'toast-top-center';
 
-    // Save and change toastr positioning
-    pE.toastrPosition = toastr.options.positionClass;
-    toastr.options.positionClass = 'toast-top-center';
+  // Get DOM main object
+  pE.editorContainer = $('#playlist-editor');
 
-    // Get DOM main object
-    pE.editorContainer = $('#playlist-editor');
+  // If the editor is being loaded from within the layout designer, change the region specific flag
+  pE.regionSpecificQuery = '';
 
-    // If the editor is being loaded from within the layout designer, change the region specific flag
-    pE.regionSpecificQuery = '';
+  if (typeof lD != 'undefined') {
+    pE.regionSpecificQuery = '&regionSpecific=1';
+    pE.mainRegion = pE.editorContainer.parents('#editor-container').data('regionObj');
+  }
 
-    if(typeof lD != 'undefined') {
-        pE.regionSpecificQuery = '&regionSpecific=1';
-        pE.mainRegion = pE.editorContainer.parents('#editor-container').data('regionObj');
-    }
+  // Get playlist id
+  const playlistId = pE.editorContainer.attr('playlist-id');
 
-    // Get playlist id
-    const playlistId = pE.editorContainer.attr("playlist-id");
-    
-    // Update main object id
-    pE.mainObjectId = playlistId;
+  // Update main object id
+  pE.mainObjectId = playlistId;
 
-    // Show loading template
-    pE.editorContainer.html(loadingTemplate());
+  // Show loading template
+  pE.editorContainer.html(loadingTemplate());
 
-    // Load playlist through an ajax request
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
-        .done(function(res) {
+  // Load playlist through an ajax request
+  $.get(urlsForApi.playlist.get.url + '?playlistId=' + playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
+    .done(function(res) {
+      if (res.data != null && res.data.length > 0) {
+        // Append layout html to the main div
+        pE.editorContainer.html(playlistEditorTemplate());
+        // Initialise dropabble containers
+        pE.editorContainer.find('#playlist-timeline, #dropzone-container').droppable({
+          tolerance: 'pointer',
+          accept: '[drop-to="region"]',
+          drop: function(event, ui) {
+            pE.playlist.addElement(event.target, ui.draggable[0]);
+          },
+        }).attr('data-type', 'region');
 
-            if(res.data != null && res.data.length > 0) {
-
-                // Append layout html to the main div
-                pE.editorContainer.html(playlistEditorTemplate());
-                // Initialise dropabble containers
-                pE.editorContainer.find('#playlist-timeline, #dropzone-container').droppable({
-                    tolerance: 'pointer',
-                    accept: '[drop-to="region"]',
-                    drop: function(event, ui) {
-                        pE.playlist.addElement(event.target, ui.draggable[0]);
-                    }
-                }).attr('data-type', 'region');
-
-                // Editor container select ( faking drag and drop ) to add a element to the playlist
-                pE.editorContainer.find('#playlist-timeline, #dropzone-container').click(function(e) {
-                    if(!$.isEmptyObject(pE.toolbar.selectedCard) || !$.isEmptyObject(pE.toolbar.selectedQueue)) {
-                        e.stopPropagation();
-                        pE.selectObject($(this));
-                    }
-                });
-
-                // Initialize timeline and create data structure
-                pE.playlist = new Playlist(playlistId, res.data[0]);
-                // folder Id
-                pE.folderId = pE.playlist.folderId;
-
-                    // Initialize properties panel
-                pE.propertiesPanel = new PropertiesPanel(
-                    pE,
-                    pE.editorContainer.find('#playlist-properties-panel')
-                );
-
-                // Initialize timeline
-                pE.timeline = new PlaylistTimeline(
-                    pE.editorContainer.find('#playlist-timeline')
-                );
-
-                // Append manager to the modal container
-                $("#layout-manager").appendTo("#playlist-editor");
-
-                // Initialize manager
-                if(typeof lD != 'undefined') {
-                    pE.manager = lD.manager;
-                } else {
-                    pE.manager = new Manager(
-                        pE,
-                        $('#playlist-editor').find('#layout-manager'),
-                        false //(serverMode == 'Test') Turn of manager visibility for now
-                    );
-                }
-
-                // Append toolbar to the modal container
-                $("#playlist-editor-toolbar").appendTo("#playlist-editor");
-
-                // Initialize bottom toolbar
-                pE.toolbar = new Toolbar(
-                    pE,
-                    $('#playlist-editor').find('#playlist-editor-toolbar'),
-                    {
-                        deleteSelectedObjectAction: pE.deleteSelectedObject
-                    },
-                    true
-                );
-                pE.toolbar.parent = pE;
-
-                // Default selected 
-                pE.selectObject();
-
-                // Setup helpers
-                formHelpers.setup(pE, pE.playlist);
-
-                // Handle keyboard keys
-                $('body').off('keydown').keydown(function(handler) {
-                    if(!$(handler.target).is($('input'))) {
-
-                        if(handler.key == 'Delete') {
-                            pE.deleteSelectedObject();
-                        }
-                    }
-                });
-
-                // Load user preferences
-                pE.loadAndSavePref('useLibraryDuration', 0);
-
-                pE.common.hideLoadingScreen();
-
-            } else {
-                // Login Form needed?
-                if(res.login) {
-                    window.location.href = window.location.href;
-                    location.reload();
-                } else {
-                    pE.showErrorMessage();
-                }
-            }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-
-            // Output error to console
-            console.error(jqXHR, textStatus, errorThrown);
-
-            pE.showErrorMessage();
+        // Editor container select ( faking drag and drop ) to add a element to the playlist
+        pE.editorContainer.find('#playlist-timeline, #dropzone-container').click(function(e) {
+          if (!$.isEmptyObject(pE.toolbar.selectedCard) || !$.isEmptyObject(pE.toolbar.selectedQueue)) {
+            e.stopPropagation();
+            pE.selectObject($(this));
+          }
         });
-};
 
-// Get Xibo app
-window.getXiboApp = function() {
-    return pE;
+        // Initialize timeline and create data structure
+        pE.playlist = new Playlist(playlistId, res.data[0]);
+        // folder Id
+        pE.folderId = pE.playlist.folderId;
+
+        // Initialize properties panel
+        pE.propertiesPanel = new PropertiesPanel(
+          pE,
+          pE.editorContainer.find('#playlist-properties-panel'),
+        );
+
+        // Initialize timeline
+        pE.timeline = new PlaylistTimeline(
+          pE.editorContainer.find('#playlist-timeline'),
+        );
+
+        // Append manager to the modal container
+        $('#layout-manager').appendTo('#playlist-editor');
+
+        // Initialize manager
+        if (typeof lD != 'undefined') {
+          pE.manager = lD.manager;
+        } else {
+          pE.manager = new Manager(
+            pE,
+            $('#playlist-editor').find('#layout-manager'),
+            false, // (serverMode == 'Test') Turn of manager visibility for now
+          );
+        }
+
+        // Append toolbar to the modal container
+        $('#playlist-editor-toolbar').appendTo('#playlist-editor');
+
+        // Initialize bottom toolbar
+        pE.toolbar = new Toolbar(
+          pE,
+          $('#playlist-editor').find('#playlist-editor-toolbar'),
+          {
+            deleteSelectedObjectAction: pE.deleteSelectedObject,
+          },
+          true,
+        );
+        pE.toolbar.parent = pE;
+
+        // Default selected
+        pE.selectObject();
+
+        // Setup helpers
+        formHelpers.setup(pE, pE.playlist);
+
+        // Handle keyboard keys
+        $('body').off('keydown').keydown(function(handler) {
+          if (!$(handler.target).is($('input'))) {
+            if (handler.key == 'Delete') {
+              pE.deleteSelectedObject();
+            }
+          }
+        });
+
+        // Load user preferences
+        pE.loadAndSavePref('useLibraryDuration', 0);
+
+        pE.common.hideLoadingScreen();
+      } else {
+        // Login Form needed?
+        if (res.login) {
+          window.location.href = window.location.href;
+          location.reload();
+        } else {
+          pE.showErrorMessage();
+        }
+      }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      // Output error to console
+      console.error(jqXHR, textStatus, errorThrown);
+
+      pE.showErrorMessage();
+    });
 };
 
 /**
@@ -235,79 +224,75 @@ window.getXiboApp = function() {
  * @param {number=} [options.positionToAdd = null] - Order position for widget
  */
 pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = null} = {}) {
-    // Clear rogue tooltips
-    pE.common.clearTooltips();
-    
-    // If there is a selected card, use the drag&drop simulate to add that item to a object
-    if(!$.isEmptyObject(this.toolbar.selectedCard)) {
+  // Clear rogue tooltips
+  pE.common.clearTooltips();
 
-        if([obj.data('type'), 'all'].indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
+  // If there is a selected card, use the drag&drop simulate to add that item to a object
+  if (!$.isEmptyObject(this.toolbar.selectedCard)) {
+    if ([obj.data('type'), 'all'].indexOf($(this.toolbar.selectedCard).attr('drop-to')) !== -1) {
+      // Get card object
+      const card = this.toolbar.selectedCard[0];
 
-            // Get card object
-            const card = this.toolbar.selectedCard[0];
+      // Deselect cards and drop zones
+      this.toolbar.deselectCardsAndDropZones();
 
-            // Deselect cards and drop zones
-            this.toolbar.deselectCardsAndDropZones();
-
-            // Simulate drop item add
-            this.dropItemAdd(obj, card, {positionToAdd: positionToAdd});
-        }
-
-    } else if(!$.isEmptyObject(this.toolbar.selectedQueue)) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
-        if(obj.data('type') == 'region') {
-            pE.importFromProvider(this.toolbar.selectedQueue).then((res) =>  {
-                // Add media queue to playlist
-                this.playlist.addMedia(res, positionToAdd);
-            }).catch(function() {
-                toastr.error(errorMessagesTrans.importingMediaFailed);
-            });
-        }
-
-        // Deselect cards and drop zones
-        this.toolbar.deselectCardsAndDropZones();
-    } else {
-        let newSelectedId = {};
-        let newSelectedType = {};
-
-        // Unselect the previous selectedObject object if still selected
-        if(this.selectedObject.selected) {
-            if(this.selectedObject.type == 'widget') {
-                if(this.playlist.widgets[this.selectedObject.id]) {
-                    this.playlist.widgets[this.selectedObject.id].selected = false;
-                }
-            }
-        }
-
-        // If there's no selected object, select a default one ( or nothing if widgets are empty)
-        if(obj == null || typeof obj.data('type') == 'undefined') {
-            if($.isEmptyObject(pE.playlist.widgets) || forceUnselect) {
-                this.selectedObject = {};
-            } else {
-                // Select first widget
-                let newId = Object.keys(this.playlist.widgets)[0];
-
-                this.playlist.widgets[newId].selected = true;
-                this.selectedObject.type = 'widget';
-                this.selectedObject = this.playlist.widgets[newId];
-            }
-        } else {
-
-            // Get object properties from the DOM ( or set to layout if not defined )
-            newSelectedId = obj.attr('id');
-            newSelectedType = obj.data('type');
-
-            // Select new object
-            if(newSelectedType === 'widget') {
-                this.playlist.widgets[newSelectedId].selected = true;
-                this.selectedObject = this.playlist.widgets[newSelectedId];
-            }
-
-            this.selectedObject.type = newSelectedType;
-        }
-
-        // Refresh the designer containers
-        pE.refreshDesigner(true);
+      // Simulate drop item add
+      this.dropItemAdd(obj, card, {positionToAdd: positionToAdd});
     }
+  } else if (!$.isEmptyObject(this.toolbar.selectedQueue)) { // If there's a selected queue, use the drag&drop simulate to add those items to a object
+    if (obj.data('type') == 'region') {
+      pE.importFromProvider(this.toolbar.selectedQueue).then((res) => {
+        // Add media queue to playlist
+        this.playlist.addMedia(res, positionToAdd);
+      }).catch(function() {
+        toastr.error(errorMessagesTrans.importingMediaFailed);
+      });
+    }
+
+    // Deselect cards and drop zones
+    this.toolbar.deselectCardsAndDropZones();
+  } else {
+    let newSelectedId = {};
+    let newSelectedType = {};
+
+    // Unselect the previous selectedObject object if still selected
+    if (this.selectedObject.selected) {
+      if (this.selectedObject.type == 'widget') {
+        if (this.playlist.widgets[this.selectedObject.id]) {
+          this.playlist.widgets[this.selectedObject.id].selected = false;
+        }
+      }
+    }
+
+    // If there's no selected object, select a default one ( or nothing if widgets are empty)
+    if (obj == null || typeof obj.data('type') == 'undefined') {
+      if ($.isEmptyObject(pE.playlist.widgets) || forceUnselect) {
+        this.selectedObject = {};
+      } else {
+        // Select first widget
+        const newId = Object.keys(this.playlist.widgets)[0];
+
+        this.playlist.widgets[newId].selected = true;
+        this.selectedObject.type = 'widget';
+        this.selectedObject = this.playlist.widgets[newId];
+      }
+    } else {
+      // Get object properties from the DOM ( or set to layout if not defined )
+      newSelectedId = obj.attr('id');
+      newSelectedType = obj.data('type');
+
+      // Select new object
+      if (newSelectedType === 'widget') {
+        this.playlist.widgets[newSelectedId].selected = true;
+        this.selectedObject = this.playlist.widgets[newSelectedId];
+      }
+
+      this.selectedObject.type = newSelectedType;
+    }
+
+    // Refresh the designer containers
+    pE.refreshDesigner(true);
+  }
 };
 
 /**
@@ -318,62 +303,58 @@ pE.selectObject = function(obj = null, forceUnselect = false, {positionToAdd = n
  * @param {object/number=} [options.positionToAdd = null] - order position for widget
  */
 pE.dropItemAdd = function(droppable, card, {positionToAdd = null} = {}) {
-    this.playlist.addElement(droppable, card, positionToAdd);
+  this.playlist.addElement(droppable, card, positionToAdd);
 };
 
 /**
  * Revert last action
  */
 pE.undoLastAction = function() {
+  pE.common.showLoadingScreen();
 
-    pE.common.showLoadingScreen();
+  pE.manager.revertChange().then((res) => { // Success
+    pE.common.hideLoadingScreen();
 
-    pE.manager.revertChange().then((res) => { // Success
+    toastr.success(res.message);
 
-        pE.common.hideLoadingScreen();
+    // Refresh designer according to local or API revert
+    if (res.localRevert) {
+      pE.refreshDesigner();
+    } else {
+      pE.reloadData();
+    }
+  }).catch((error) => { // Fail/error
+    pE.common.hideLoadingScreen();
 
-        toastr.success(res.message);
+    // Show error returned or custom message to the user
+    let errorMessage = '';
 
-        // Refresh designer according to local or API revert
-        if(res.localRevert) {
-            pE.refreshDesigner();
-        } else {
-            pE.reloadData();
-        }
-    }).catch((error) => { // Fail/error
+    if (typeof error == 'string') {
+      errorMessage = error;
+    } else {
+      errorMessage = error.errorThrown;
+    }
 
-        pE.common.hideLoadingScreen();
-
-        // Show error returned or custom message to the user
-        let errorMessage = '';
-
-        if(typeof error == 'string') {
-            errorMessage = error;
-        } else {
-            errorMessage = error.errorThrown;
-        }
-
-        toastr.error(errorMessagesTrans.revertFailed.replace('%error%', errorMessage));
-    });
+    toastr.error(errorMessagesTrans.revertFailed.replace('%error%', errorMessage));
+  });
 };
 
 /**
  * Delete selected object
  */
 pE.deleteSelectedObject = function() {
-    if(pE.editorContainer.hasClass('multi-select')) {
-        // Get selected widgets
-        let selectedWidgetsIds = [];
+  if (pE.editorContainer.hasClass('multi-select')) {
+    // Get selected widgets
+    const selectedWidgetsIds = [];
 
-        pE.timeline.DOMObject.find('.playlist-widget.multi-selected').each(function() {
-            selectedWidgetsIds.push($(this).data('widgetId'));
+    pE.timeline.DOMObject.find('.playlist-widget.multi-selected').each(function() {
+      selectedWidgetsIds.push($(this).data('widgetId'));
+    });
 
-        });
-
-        pE.deleteMultipleObjects('widget', selectedWidgetsIds);
-    } else {
-        pE.deleteObject(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']);
-    }
+    pE.deleteMultipleObjects('widget', selectedWidgetsIds);
+  } else {
+    pE.deleteObject(pE.selectedObject.type, pE.selectedObject[pE.selectedObject.type + 'Id']);
+  }
 };
 
 /**
@@ -382,110 +363,102 @@ pE.deleteSelectedObject = function() {
  * @param {number} objectId
  */
 pE.deleteObject = function(objectType, objectId) {
-    const createDeleteModal = function(objectType, objectId, hasMedia = false, showDeleteFromLibrary = false) {
+  const createDeleteModal = function(objectType, objectId, hasMedia = false, showDeleteFromLibrary = false) {
+    bootbox.hideAll();
 
-        bootbox.hideAll();
+    const htmlContent = deleteElementModalContentTemplate({
+      mainMessage: deleteMenuTrans.mainMessage.replace('%obj%', objectType),
+      hasMedia: hasMedia,
+      showDeleteFromLibrary: showDeleteFromLibrary,
+      trans: deleteMenuTrans,
+    });
 
-        const htmlContent = deleteElementModalContentTemplate({
-            mainMessage: deleteMenuTrans.mainMessage.replace('%obj%', objectType),
-            hasMedia: hasMedia,
-            showDeleteFromLibrary: showDeleteFromLibrary,
-            trans: deleteMenuTrans
-        });
+    bootbox.dialog({
+      title: editorsTrans.deleteTitle.replace('%obj%', objectType),
+      message: htmlContent,
+      size: 'large',
+      buttons: {
+        cancel: {
+          label: editorsTrans.no,
+          className: 'btn-white btn-bb-cancel',
+        },
+        confirm: {
+          label: editorsTrans.yes,
+          className: 'btn-danger btn-bb-confirm',
+          callback: function() {
+            // Empty options object
+            let options = null;
 
-        bootbox.dialog({
-            title: editorsTrans.deleteTitle.replace('%obj%', objectType),
-            message: htmlContent,
-            size: 'large',
-            buttons: {
-                cancel: {
-                    label: editorsTrans.no,
-                    className: 'btn-white btn-bb-cancel'
-                },
-                confirm: {
-                    label: editorsTrans.yes,
-                    className: 'btn-danger btn-bb-confirm',
-                    callback: function() {
-
-                        // Empty options object
-                        let options = null;
-
-                        // If delete media is checked, pass that as a param for delete
-                        if($(this).find('input#deleteMedia').is(':checked')) {
-                            options = {
-                                deleteMedia: 1
-                            };
-                        }
-
-                        pE.common.showLoadingScreen('deleteObject');
-
-                        // Delete element from the layout
-                        pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
-
-                            pE.common.hideLoadingScreen('deleteObject');
-
-                            // Behavior if successful 
-                            toastr.success(res.message);
-                            pE.reloadData();
-                        }).catch((error) => { // Fail/error
-
-                            pE.common.hideLoadingScreen('deleteObject');
-
-                            // Show error returned or custom message to the user
-                            let errorMessage = '';
-
-                            if(typeof error == 'string') {
-                                errorMessage = error;
-                            } else {
-                                errorMessage = error.errorThrown;
-                            }
-
-                            toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
-                        });
-
-                    }
-                }
+            // If delete media is checked, pass that as a param for delete
+            if ($(this).find('input#deleteMedia').is(':checked')) {
+              options = {
+                deleteMedia: 1,
+              };
             }
-        }).attr('data-test', 'deleteObjectModal');
-    };
 
-    if(objectType === 'widget') {
+            pE.common.showLoadingScreen('deleteObject');
 
-        const widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + objectId);
+            // Delete element from the layout
+            pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
+              pE.common.hideLoadingScreen('deleteObject');
 
-        if(widgetToDelete.isRegionSpecific()) {
-            createDeleteModal(objectType, objectId);
-        } else {
-            pE.common.showLoadingScreen('checkMediaIsUsed');
+              // Behavior if successful
+              toastr.success(res.message);
+              pE.reloadData();
+            }).catch((error) => { // Fail/error
+              pE.common.hideLoadingScreen('deleteObject');
 
-            const linkToAPI = urlsForApi.media.isUsed;
-            let requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
+              // Show error returned or custom message to the user
+              let errorMessage = '';
 
-            // Request with count as being 2, for the published layout and draft
-            $.get(requestPath + '?count=1')
-                .done(function(res) {
-                    if(res.success) {
-                        createDeleteModal(objectType, objectId, true, !res.data.isUsed);
-                    } else {
-                        if(res.login) {
-                            window.location.href = window.location.href;
-                            location.reload();
-                        } else {
-                            toastr.error(res.message);
-                        }
-                    }
+              if (typeof error == 'string') {
+                errorMessage = error;
+              } else {
+                errorMessage = error.errorThrown;
+              }
 
-                    pE.common.hideLoadingScreen('checkMediaIsUsed');
+              toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
+            });
+          },
+        },
+      },
+    }).attr('data-test', 'deleteObjectModal');
+  };
 
-                }).fail(function(jqXHR, textStatus, errorThrown) {
+  if (objectType === 'widget') {
+    const widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + objectId);
 
-                    pE.common.hideLoadingScreen('checkMediaIsUsed');
+    if (widgetToDelete.isRegionSpecific()) {
+      createDeleteModal(objectType, objectId);
+    } else {
+      pE.common.showLoadingScreen('checkMediaIsUsed');
 
-                    // Output error to console
-                    console.error(jqXHR, textStatus, errorThrown);
-                });
-        }
+      const linkToAPI = urlsForApi.media.isUsed;
+      const requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
+
+      // Request with count as being 2, for the published layout and draft
+      $.get(requestPath + '?count=1')
+        .done(function(res) {
+          if (res.success) {
+            createDeleteModal(objectType, objectId, true, !res.data.isUsed);
+          } else {
+            if (res.login) {
+              window.location.href = window.location.href;
+              location.reload();
+            } else {
+              toastr.error(res.message);
+            }
+          }
+
+          pE.common.hideLoadingScreen('checkMediaIsUsed');
+        }).fail(function(jqXHR, textStatus, errorThrown) {
+          pE.common.hideLoadingScreen('checkMediaIsUsed');
+
+          // Output error to console
+          console.error(jqXHR, textStatus, errorThrown);
+        });
     }
+  }
 };
 
 /**
@@ -493,406 +466,376 @@ pE.deleteObject = function(objectType, objectId) {
  * @param {object[]} objectsToDelete
  */
 pE.deleteMultipleObjects = function(objectsType, objectIds) {
-    const createMultiDeleteModal = function(objectArray) {
-        bootbox.hideAll();
+  const createMultiDeleteModal = function(objectArray) {
+    bootbox.hideAll();
 
-        const htmlContent = deleteMultiElementModalContentTemplate({
-            mainMessage: deleteMenuTrans.deleteMultipleObjects,
-            objectArray: objectArray,
-            trans: deleteMenuTrans
-        });
+    const htmlContent = deleteMultiElementModalContentTemplate({
+      mainMessage: deleteMenuTrans.deleteMultipleObjects,
+      objectArray: objectArray,
+      trans: deleteMenuTrans,
+    });
 
-        // Create buttons object
-        let buttons = {
-            cancel: {
-                label: editorsTrans.no,
-                className: 'btn-white btn-bb-cancel'
-            }
-        };
-
-        // Select all button ( if there are 2 or more checkboxes )
-        if($(htmlContent).find('input[type="checkbox"]').length > 1) {
-            buttons.selectAll = {
-                label: editorsTrans.selectAll,
-                className: 'btn-warning btn-bb-selectall',
-                callback: function() {
-                    $(this).find('input[type="checkbox"]').prop('checked', true);
-                    return false;
-                }
-            };
-        }
-        
-        buttons.confirm = {
-            label: editorsTrans.yes,
-            className: 'btn-danger btn-bb-confirm',
-            callback: function() {
-                const $objects = $(this).find('.multi-delete-element');
-                let deletedElements = 0;
-                let index = 0;
-
-                // Show modal
-                pE.common.showLoadingScreen('deleteObjects');
-
-                // Leave multi select mode
-                pE.toolbar.toggleMultiselectMode(false);
-
-                const deleteObject = function() {
-                    const $element = $($objects[index]);
-
-                    // Empty options object
-                    let options = null;
-                    const objectId = $element.data('id');
-                    const objectType = $element.data('type');
-
-                    // If delete media is checked, pass that as a param for delete
-                    if($element.find('input.deleteMedia').is(':checked')) {
-                        options = {
-                            deleteMedia: 1
-                        };
-                    }
-
-                    // Delete element from the playlist
-                    pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
-                        // Behavior if successful 
-                        toastr.success(res.message)
-                        
-                        deletedElements++;
-
-                        if(deletedElements == $objects.length) {
-                            // Hide loading screen
-                            pE.common.hideLoadingScreen('deleteObjects');
-                            
-                            // Reload data
-                            pE.reloadData();
-
-                            // Hide/close modal
-                            bootbox.hideAll();
-                        } else {
-                            index++;
-                            deleteObject();
-                        }
-                        
-                    }).catch((error) => { // Fail/error
-
-                        pE.common.hideLoadingScreen('deleteObjects');
-
-                        // Show error returned or custom message to the user
-                        let errorMessage = '';
-
-                        if(typeof error == 'string') {
-                            errorMessage = error;
-                        } else {
-                            errorMessage = error.errorThrown;
-                        }
-
-                        toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
-
-                        // Reload data
-                        pE.reloadData();
-
-                        // Hide/close modal
-                        bootbox.hideAll();
-                    });
-                };
-
-                deleteObject();
-
-                return false;
-            }
-        };
-
-        bootbox.dialog({
-            title: editorsTrans.deleteMultipleTitle,
-            message: htmlContent,
-            size: 'large',
-            buttons: buttons
-        }).attr('data-test', 'deleteObjectModal');
+    // Create buttons object
+    const buttons = {
+      cancel: {
+        label: editorsTrans.no,
+        className: 'btn-white btn-bb-cancel',
+      },
     };
 
-    if(objectsType === 'widget') {
+    // Select all button ( if there are 2 or more checkboxes )
+    if ($(htmlContent).find('input[type="checkbox"]').length > 1) {
+      buttons.selectAll = {
+        label: editorsTrans.selectAll,
+        className: 'btn-warning btn-bb-selectall',
+        callback: function() {
+          $(this).find('input[type="checkbox"]').prop('checked', true);
+          return false;
+        },
+      };
+    }
 
-        pE.common.showLoadingScreen('checkMediaIsUsed');
-        let arrayOfWidgets = [];
+    buttons.confirm = {
+      label: editorsTrans.yes,
+      className: 'btn-danger btn-bb-confirm',
+      callback: function() {
+        const $objects = $(this).find('.multi-delete-element');
+        let deletedElements = 0;
         let index = 0;
 
-        const getWidgetStatus = function() {
-            let widgetId = objectIds[index];
-            let widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + widgetId);
-            let linkToAPI = urlsForApi.media.isUsed;
-            let requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
-    
-            if(widgetToDelete.isRegionSpecific()) {
-                arrayOfWidgets.push({
-                    'objectId': widgetId,
-                    'objectType': 'widget',
-                    'objectName': widgetToDelete.widgetName,
-                    'hasMedia': false,
-                    'dataUsed': false
-                });
-    
-                if(arrayOfWidgets.length == objectIds.length) {
-                    createMultiDeleteModal(arrayOfWidgets);
-                    pE.common.hideLoadingScreen('checkMediaIsUsed');
-                } else {
-                    index++;
-                    getWidgetStatus();
-                }
+        // Show modal
+        pE.common.showLoadingScreen('deleteObjects');
+
+        // Leave multi select mode
+        pE.toolbar.toggleMultiselectMode(false);
+
+        const deleteObject = function() {
+          const $element = $($objects[index]);
+
+          // Empty options object
+          let options = null;
+          const objectId = $element.data('id');
+          const objectType = $element.data('type');
+
+          // If delete media is checked, pass that as a param for delete
+          if ($element.find('input.deleteMedia').is(':checked')) {
+            options = {
+              deleteMedia: 1,
+            };
+          }
+
+          // Delete element from the playlist
+          pE.playlist.deleteElement(objectType, objectId, options).then((res) => { // Success
+            // Behavior if successful
+            toastr.success(res.message);
+
+            deletedElements++;
+
+            if (deletedElements == $objects.length) {
+              // Hide loading screen
+              pE.common.hideLoadingScreen('deleteObjects');
+
+              // Reload data
+              pE.reloadData();
+
+              // Hide/close modal
+              bootbox.hideAll();
             } else {
-                // Request with count as being 2, for the published layout and draft
-                $.get(requestPath + '?count=1')
-                    .done(function(res) {
-                        if(res.success) {
-                            arrayOfWidgets.push({
-                                'objectId': widgetId,
-                                'objectType': 'widget',
-                                'objectName': widgetToDelete.widgetName,
-                                'hasMedia': true,
-                                'dataUsed': res.data.isUsed
-                            });
-    
-                            if(arrayOfWidgets.length == objectIds.length) {
-                                createMultiDeleteModal(arrayOfWidgets);
-                                pE.common.hideLoadingScreen('checkMediaIsUsed');
-                            } else {
-                                index++;
-                                getWidgetStatus();
-                            }
-                        } else {
-                            if(res.login) {
-                                window.location.href = window.location.href;
-                                location.reload();
-                            } else {
-                                toastr.error(res.message);
-                            }
-                        }
-                    }).fail(function(jqXHR, textStatus, errorThrown) {
-    
-                        pE.common.hideLoadingScreen('checkMediaIsUsed');
-    
-                        // Output error to console
-                        console.error(jqXHR, textStatus, errorThrown);
-                    });
+              index++;
+              deleteObject();
             }
+          }).catch((error) => { // Fail/error
+            pE.common.hideLoadingScreen('deleteObjects');
+
+            // Show error returned or custom message to the user
+            let errorMessage = '';
+
+            if (typeof error == 'string') {
+              errorMessage = error;
+            } else {
+              errorMessage = error.errorThrown;
+            }
+
+            toastr.error(errorMessagesTrans.deleteFailed.replace('%error%', errorMessage));
+
+            // Reload data
+            pE.reloadData();
+
+            // Hide/close modal
+            bootbox.hideAll();
+          });
         };
 
-        // Start getting widget status
-        getWidgetStatus();
-    }
+        deleteObject();
+
+        return false;
+      },
+    };
+
+    bootbox.dialog({
+      title: editorsTrans.deleteMultipleTitle,
+      message: htmlContent,
+      size: 'large',
+      buttons: buttons,
+    }).attr('data-test', 'deleteObjectModal');
+  };
+
+  if (objectsType === 'widget') {
+    pE.common.showLoadingScreen('checkMediaIsUsed');
+    const arrayOfWidgets = [];
+    let index = 0;
+
+    const getWidgetStatus = function() {
+      const widgetId = objectIds[index];
+      const widgetToDelete = pE.getElementByTypeAndId('widget', 'widget_' + widgetId);
+      const linkToAPI = urlsForApi.media.isUsed;
+      const requestPath = linkToAPI.url.replace(':id', widgetToDelete.mediaIds[0]);
+
+      if (widgetToDelete.isRegionSpecific()) {
+        arrayOfWidgets.push({
+          'objectId': widgetId,
+          'objectType': 'widget',
+          'objectName': widgetToDelete.widgetName,
+          'hasMedia': false,
+          'dataUsed': false,
+        });
+
+        if (arrayOfWidgets.length == objectIds.length) {
+          createMultiDeleteModal(arrayOfWidgets);
+          pE.common.hideLoadingScreen('checkMediaIsUsed');
+        } else {
+          index++;
+          getWidgetStatus();
+        }
+      } else {
+        // Request with count as being 2, for the published layout and draft
+        $.get(requestPath + '?count=1')
+          .done(function(res) {
+            if (res.success) {
+              arrayOfWidgets.push({
+                'objectId': widgetId,
+                'objectType': 'widget',
+                'objectName': widgetToDelete.widgetName,
+                'hasMedia': true,
+                'dataUsed': res.data.isUsed,
+              });
+
+              if (arrayOfWidgets.length == objectIds.length) {
+                createMultiDeleteModal(arrayOfWidgets);
+                pE.common.hideLoadingScreen('checkMediaIsUsed');
+              } else {
+                index++;
+                getWidgetStatus();
+              }
+            } else {
+              if (res.login) {
+                window.location.href = window.location.href;
+                location.reload();
+              } else {
+                toastr.error(res.message);
+              }
+            }
+          }).fail(function(jqXHR, textStatus, errorThrown) {
+            pE.common.hideLoadingScreen('checkMediaIsUsed');
+
+            // Output error to console
+            console.error(jqXHR, textStatus, errorThrown);
+          });
+      }
+    };
+
+    // Start getting widget status
+    getWidgetStatus();
+  }
 };
 
 /**
  * Refresh designer
  * @param {boolean} [renderToolbar=false] - Render toolbar
  */
- pE.refreshDesigner = function(renderToolbar = false) {
-    // Remove temporary data
-    this.clearTemporaryData();
+pE.refreshDesigner = function(renderToolbar = false) {
+  // Remove temporary data
+  this.clearTemporaryData();
 
-    // Render containers
-    (renderToolbar) && this.renderContainer(this.toolbar);
-    this.renderContainer(this.manager);
+  // Render containers
+  (renderToolbar) && this.toolbar.render();
+  this.manager.render();
 
-    // If there was a opened menu in the toolbar, open that tab
-    if(this.toolbar.openedMenu != -1) {
-        this.toolbar.openMenu(this.toolbar.openedMenu, true);
-    }
+  // If there was a opened menu in the toolbar, open that tab
+  if (this.toolbar.openedMenu != -1) {
+    this.toolbar.openMenu(this.toolbar.openedMenu, true);
+  }
 
-    // Render widgets container only if there are widgets on the playlist, if not draw drop area
-    if(!$.isEmptyObject(pE.playlist.widgets)) {
-        // Render timeline
-        this.renderContainer(this.timeline);
+  // Render widgets container only if there are widgets on the playlist, if not draw drop area
+  if (!$.isEmptyObject(pE.playlist.widgets)) {
+    // Render timeline
+    this.timeline.render();
 
-        // Select the object that was previously selected if it's not selected and exists on the timeline
-        if(this.playlist.widgets[this.selectedObject.id] !== undefined && !this.playlist.widgets[this.selectedObject.id].selected) {
-            this.selectObject(this.timeline.DOMObject.find('#' + this.selectedObject.id));
-        } else if(this.playlist.widgets[this.selectedObject.id] === undefined) {
-            //Prevent nothing selected
-            this.selectObject();
-        } else {
-            // Render properties panel
-            this.renderContainer(this.propertiesPanel, this.selectedObject);
-        }
-
-        this.editorContainer.find('#editing-container').show();
-        this.editorContainer.find('#dropzone-container').hide();
+    // Select the object that was previously selected if it's not selected and exists on the timeline
+    if (this.playlist.widgets[this.selectedObject.id] !== undefined && !this.playlist.widgets[this.selectedObject.id].selected) {
+      this.selectObject(this.timeline.DOMObject.find('#' + this.selectedObject.id));
+    } else if (this.playlist.widgets[this.selectedObject.id] === undefined) {
+      // Prevent nothing selected
+      this.selectObject();
     } else {
-        this.editorContainer.find('#dropzone-container').html(dropZoneTemplate());
-
-        this.editorContainer.find('#editing-container').hide();
-        this.editorContainer.find('#dropzone-container').show();
-        
-        // If playlist is empty, open the widget tab
-        if(this.toolbar.openedMenu == -1) {
-            this.toolbar.firstRun = false;
-            this.toolbar.openMenu(0, true);
-        }
+      // Render properties panel
+      this.propertiesPanel.render(this.selectedObject);
     }
-};
 
-/**
- * Render layout structure to container, if it exists
- * @param {object} container - Container for the layout to be rendered
- * @param {object=} element - Element to be rendered, if not used, render layout
- */
-pE.renderContainer = function(container, element = {}) {
-    // Check container to prevent rendering to an empty container
-    if(!jQuery.isEmptyObject(container)) {
+    this.editorContainer.find('#editing-container').show();
+    this.editorContainer.find('#dropzone-container').hide();
+  } else {
+    this.editorContainer.find('#dropzone-container').html(dropZoneTemplate());
 
-        // Render element if defined, layout otherwise
-        if(!jQuery.isEmptyObject(element)) {
-            container.render(element);
-        } else {
-            container.render();
-        }
+    this.editorContainer.find('#editing-container').hide();
+    this.editorContainer.find('#dropzone-container').show();
+
+    // If playlist is empty, open the widget tab
+    if (this.toolbar.openedMenu == -1) {
+      this.toolbar.firstRun = false;
+      this.toolbar.openMenu(0, true);
     }
+  }
 };
 
 /**
  * Reload API data and replace the playlist structure with the new value
  */
 pE.reloadData = function() {
+  pE.common.showLoadingScreen();
 
-    pE.common.showLoadingScreen();
+  $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
+    .done(function(res) {
+      pE.common.hideLoadingScreen();
 
-    $.get(urlsForApi.playlist.get.url + '?playlistId=' + pE.playlist.playlistId + '&embed=widgets,widget_validity,tags,permissions' + pE.regionSpecificQuery)
-        .done(function(res) {
-            pE.common.hideLoadingScreen();
+      if (res.data != null && res.data.length > 0) {
+        pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
+        // folder Id
+        pE.folderId = pE.playlist.folderId;
+        pE.refreshDesigner();
+      } else {
+        if (res.login) {
+          window.location.href = window.location.href;
+          location.reload();
+        } else {
+          pE.showErrorMessage();
+        }
+      }
 
-            if(res.data != null && res.data.length > 0) {
-                pE.playlist = new Playlist(pE.playlist.playlistId, res.data[0]);
-                // folder Id
-                pE.folderId = pE.playlist.folderId;
-                pE.refreshDesigner();
-            } else {
-                if(res.login) {
-                    window.location.href = window.location.href;
-                    location.reload();
-                } else {
-                    pE.showErrorMessage();
-                }
-            }
+      // Reload the form helper connection
+      formHelpers.setup(pE, pE.playlist);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      pE.common.hideLoadingScreen();
 
-            // Reload the form helper connection
-            formHelpers.setup(pE, pE.playlist);
-        }).fail(function(jqXHR, textStatus, errorThrown) {
+      // Output error to console
+      console.error(jqXHR, textStatus, errorThrown);
 
-            pE.common.hideLoadingScreen();
-
-            // Output error to console
-            console.error(jqXHR, textStatus, errorThrown);
-
-            pE.showErrorMessage();
-        });
+      pE.showErrorMessage();
+    });
 };
 
 /**
  * Layout loading error message
  */
 pE.showErrorMessage = function() {
-    // Output error on screen
-    const htmlError = messageTemplate({
-        messageType: 'danger',
-        messageTitle: errorMessagesTrans.error,
-        messageDescription: errorMessagesTrans.loadingPlaylist
-    });
+  // Output error on screen
+  const htmlError = messageTemplate({
+    messageType: 'danger',
+    messageTitle: errorMessagesTrans.error,
+    messageDescription: errorMessagesTrans.loadingPlaylist,
+  });
 
-    pE.editorContainer.html(htmlError);
+  pE.editorContainer.html(htmlError);
 };
 
 /**
  * Save playlist order
  */
 pE.saveOrder = function() {
+  const self = this;
 
-    const self = this;
+  pE.common.showLoadingScreen('saveOrder');
 
-    pE.common.showLoadingScreen('saveOrder');
+  this.playlist.saveOrder(this.editorContainer.find('#timeline-container').find('.playlist-widget')).then((res) => { // Success
+    pE.common.hideLoadingScreen('saveOrder');
 
-    this.playlist.saveOrder(this.editorContainer.find('#timeline-container').find('.playlist-widget')).then((res) => { // Success
+    // Behavior if successful
+    toastr.success(res.message);
 
-        pE.common.hideLoadingScreen('saveOrder');
+    self.reloadData();
+  }).catch((error) => { // Fail/error
+    pE.common.hideLoadingScreen('saveOrder');
 
-        // Behavior if successful            
-        toastr.success(res.message);
+    // Show error returned or custom message to the user
+    let errorMessage = '';
 
-        self.reloadData();
+    if (typeof error == 'string') {
+      errorMessage = error;
+    } else {
+      errorMessage = error.errorThrown;
+    }
 
-    }).catch((error) => { // Fail/error
-
-        pE.common.hideLoadingScreen('saveOrder');
-
-        // Show error returned or custom message to the user
-        let errorMessage = '';
-
-        if(typeof error == 'string') {
-            errorMessage = error;
-        } else {
-            errorMessage = error.errorThrown;
-        }
-
-        toastr.error(errorMessagesTrans.saveOrderFailed.replace('%error%', errorMessage));
-    });
+    toastr.error(errorMessagesTrans.saveOrderFailed.replace('%error%', errorMessage));
+  });
 };
 
 /**
  * Close playlist editor
  */
 pE.close = function() {
-
-    /**
+  /**
      * Clear all object own properties
-     * @param {object} objectToClean 
+     * @param {object} objectToClean
      */
-    const deleteObjectProperties = function(objectToClean) {
-        for(var x in objectToClean) if(objectToClean.hasOwnProperty(x)) delete objectToClean[x];
-    };
+  const deleteObjectProperties = function(objectToClean) {
+    for (const x in objectToClean) if (objectToClean.hasOwnProperty(x)) delete objectToClean[x];
+  };
 
-    // Clear loaded vars
-    this.mainObjectId = '';
-    deleteObjectProperties(this.playlist);
-    deleteObjectProperties(this.editorContainer);
-    deleteObjectProperties(this.timeline);
-    deleteObjectProperties(this.propertiesPanel);
-    deleteObjectProperties(this.selectedObject);
-    deleteObjectProperties(this.toolbar);
+  // Clear loaded vars
+  this.mainObjectId = '';
+  deleteObjectProperties(this.playlist);
+  deleteObjectProperties(this.editorContainer);
+  deleteObjectProperties(this.timeline);
+  deleteObjectProperties(this.propertiesPanel);
+  deleteObjectProperties(this.selectedObject);
+  deleteObjectProperties(this.toolbar);
 
-    // Remove resize event listener related to the toolbar
-    $(window).off('.toolbar-' + this.mainObjectType);
+  // Remove resize event listener related to the toolbar
+  $(window).off('.toolbar-' + this.mainObjectType);
 
-    // Make sure all remaining objects are pure empty JS objects
-    this.playlist = this.editorContainer = this.timeline = this.propertiesPanel = this.manager = this.selectedObject = this.toolbar = {};
+  // Make sure all remaining objects are pure empty JS objects
+  this.playlist = this.editorContainer = this.timeline = this.propertiesPanel = this.manager = this.selectedObject = this.toolbar = {};
 
-    // Restore toastr positioning
-    toastr.options.positionClass = this.toastrPosition;
+  // Restore toastr positioning
+  toastr.options.positionClass = this.toastrPosition;
 
-    $('#editor-container').empty();
+  $('#editor-container').empty();
 };
 
 /**
  * Show loading screen
  */
 pE.showLocalLoadingScreen = function() {
-    // If there are no widgets, render the loading template in the drop zone
-    if($.isEmptyObject(pE.playlist.widgets)) {
-        pE.editorContainer.find('#dropzone-container').html(loadingTemplate());
-    } else {
-        pE.editorContainer.find('#playlist-timeline').html(loadingTemplate());
-    }
+  // If there are no widgets, render the loading template in the drop zone
+  if ($.isEmptyObject(pE.playlist.widgets)) {
+    pE.editorContainer.find('#dropzone-container').html(loadingTemplate());
+  } else {
+    pE.editorContainer.find('#playlist-timeline').html(loadingTemplate());
+  }
 };
 
 /**
  * Clear Temporary Data ( Cleaning cached variables )
  */
 pE.clearTemporaryData = function() {
+  // Fix for remaining ckeditor elements or colorpickers
+  destroyColorPicker(pE.editorContainer.find('.colorpicker-element'));
 
-    // Fix for remaining ckeditor elements or colorpickers
-    destroyColorPicker(pE.editorContainer.find('.colorpicker-element'));
+  // Hide open tooltips
+  pE.editorContainer.find('.tooltip').remove();
 
-    // Hide open tooltips
-    pE.editorContainer.find('.tooltip').remove();
-
-    // Remove text callback editor structure variables
-    formHelpers.destroyCKEditor();
+  // Remove text callback editor structure variables
+  formHelpers.destroyCKEditor();
 };
 
 /**
@@ -901,16 +844,15 @@ pE.clearTemporaryData = function() {
  * @param {number} id
  */
 pE.getElementByTypeAndId = function(type, id) {
+  let element = {};
 
-    let element = {};
+  if (type === 'playlist') {
+    element = pE.playlist;
+  } else if (type === 'widget') {
+    element = pE.playlist.widgets[id];
+  }
 
-    if(type === 'playlist') {
-        element = pE.playlist;
-    } else if(type === 'widget') {
-        element = pE.playlist.widgets[id];
-    }
-
-    return element;
+  return element;
 };
 
 /**
@@ -918,7 +860,7 @@ pE.getElementByTypeAndId = function(type, id) {
  * @return {null}
  */
 pE.getUploadDialogClassName = function() {
-    return "second-dialog";
+  return 'second-dialog';
 };
 
 /**
@@ -927,191 +869,186 @@ pE.getUploadDialogClassName = function() {
  * @param {object=} position - Page menu position
  */
 pE.openContextMenu = function(obj, position = {x: 0, y: 0}) {
+  const objId = $(obj).attr('id');
+  const objType = $(obj).data('type');
 
-    let objId = $(obj).attr('id');
-    let objType = $(obj).data('type');
+  // Get object
+  const playlistObject = pE.getElementByTypeAndId(objType, objId);
 
-    // Get object
-    let playlistObject = pE.getElementByTypeAndId(objType, objId);
+  // Create menu and append to the designer div ( using the object extended with translations )
+  pE.editorContainer.append(contextMenuTemplate(Object.assign(playlistObject, {trans: contextMenuTrans})));
 
-    // Create menu and append to the designer div ( using the object extended with translations )
-    pE.editorContainer.append(contextMenuTemplate(Object.assign(playlistObject, {trans: contextMenuTrans})));
+  // Set menu position ( and fix page limits )
+  const contextMenuWidth = pE.editorContainer.find('.context-menu').outerWidth();
+  const contextMenuHeight = pE.editorContainer.find('.context-menu').outerHeight();
 
-    // Set menu position ( and fix page limits )
-    let contextMenuWidth = pE.editorContainer.find('.context-menu').outerWidth();
-    let contextMenuHeight = pE.editorContainer.find('.context-menu').outerHeight();
+  const positionLeft = ((position.x + contextMenuWidth) > $(window).width()) ? (position.x - contextMenuWidth) : position.x;
+  const positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
 
-    let positionLeft = ((position.x + contextMenuWidth) > $(window).width()) ? (position.x - contextMenuWidth) : position.x;
-    let positionTop = ((position.y + contextMenuHeight) > $(window).height()) ? (position.y - contextMenuHeight) : position.y;
+  pE.editorContainer.find('.context-menu').offset({top: positionTop, left: positionLeft});
 
-    pE.editorContainer.find('.context-menu').offset({top: positionTop, left: positionLeft});
+  // Click overlay to close menu
+  pE.editorContainer.find('.context-menu-overlay').click((ev) => {
+    if ($(ev.target).hasClass('context-menu-overlay')) {
+      pE.editorContainer.find('.context-menu-overlay').remove();
+    }
+  });
 
-    // Click overlay to close menu
-    pE.editorContainer.find('.context-menu-overlay').click((ev) => {
+  // Handle buttons
+  pE.editorContainer.find('.context-menu .context-menu-btn').click((ev) => {
+    const target = $(ev.currentTarget);
 
-        if($(ev.target).hasClass('context-menu-overlay')) {
-            pE.editorContainer.find('.context-menu-overlay').remove();
-        }
-    });
+    if (target.data('action') == 'Delete') {
+      pE.deleteObject(objType, playlistObject[objType + 'Id']);
+    } else {
+      playlistObject.editPropertyForm(target.data('property'), target.data('propertyType'));
+    }
 
-    // Handle buttons
-    pE.editorContainer.find('.context-menu .context-menu-btn').click((ev) => {
-        let target = $(ev.currentTarget);
-
-        if(target.data('action') == 'Delete') {
-            pE.deleteObject(objType, playlistObject[objType + 'Id']);
-        } else {
-            playlistObject.editPropertyForm(target.data('property'), target.data('propertyType'));
-        }
-
-        // Remove context menu
-        pE.editorContainer.find('.context-menu-overlay').remove();
-    });
+    // Remove context menu
+    pE.editorContainer.find('.context-menu-overlay').remove();
+  });
 };
 
 /**
  * Load user preference
  */
 pE.loadAndSavePref = function(prefToLoad, defaultValue = 0) {
+  // Load using the API
+  const linkToAPI = urlsForApi.user.getPref;
 
-    // Load using the API
-    const linkToAPI = urlsForApi.user.getPref;
-
-    // Request elements based on filters
-    const self = this;
-    $.ajax({
-        url: linkToAPI.url + '?preference=' + prefToLoad,
-        type: linkToAPI.type
-    }).done(function(res) {
-
-        if(res.success) {
-            if(res.data.option == prefToLoad) {
-                pE[prefToLoad] = res.data.value;
-            } else {
-                pE[prefToLoad] = defaultValue;
-            }
+  // Request elements based on filters
+  const self = this;
+  $.ajax({
+    url: linkToAPI.url + '?preference=' + prefToLoad,
+    type: linkToAPI.type,
+  }).done(function(res) {
+    if (res.success) {
+      if (res.data.option == prefToLoad) {
+        pE[prefToLoad] = res.data.value;
+      } else {
+        pE[prefToLoad] = defaultValue;
+      }
+    } else {
+      // Login Form needed?
+      if (res.login) {
+        window.location.href = window.location.href;
+        location.reload();
+      } else {
+        // Just an error we dont know about
+        if (res.message == undefined) {
+          console.error(res);
         } else {
-            // Login Form needed?
-            if(res.login) {
-                window.location.href = window.location.href;
-                location.reload();
-            } else {
-                // Just an error we dont know about
-                if(res.message == undefined) {
-                    console.error(res);
-                } else {
-                    console.error(res.message);
-                }
-            }
+          console.error(res.message);
         }
-
-    }).catch(function(jqXHR, textStatus, errorThrown) {
-        console.error(jqXHR, textStatus, errorThrown);
-        toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
-    });
+      }
+    }
+  }).catch(function(jqXHR, textStatus, errorThrown) {
+    console.error(jqXHR, textStatus, errorThrown);
+    toastr.error(errorMessagesTrans.userLoadPreferencesFailed);
+  });
 };
 
 /**
  * Check history and return last step description
  */
- pE.checkHistory = function() {
-    // Check if there are some changes
-    let undoActive = pE.manager.changeHistory.length > 0;
-    let undoActiveTitle = '';
+pE.checkHistory = function() {
+  // Check if there are some changes
+  const undoActive = pE.manager.changeHistory.length > 0;
+  let undoActiveTitle = '';
 
-    // Get last action text for popup
-    if(undoActive) {
-        let lastAction = pE.manager.changeHistory[pE.manager.changeHistory.length - 1];
-        if(typeof historyManagerTrans != "undefined" && historyManagerTrans.revert[lastAction.type] != undefined) {
-            undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
-        } else {
-            undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
-        }
+  // Get last action text for popup
+  if (undoActive) {
+    const lastAction = pE.manager.changeHistory[pE.manager.changeHistory.length - 1];
+    if (typeof historyManagerTrans != 'undefined' && historyManagerTrans.revert[lastAction.type] != undefined) {
+      undoActiveTitle = historyManagerTrans.revert[lastAction.type].replace('%target%', lastAction.target.type);
+    } else {
+      undoActiveTitle = '[' + lastAction.target.type + '] ' + lastAction.type;
     }
+  }
 
-    return {
-        undoActive: undoActive,
-        undoActiveTitle: undoActiveTitle
-    };
+  return {
+    undoActive: undoActive,
+    undoActiveTitle: undoActiveTitle,
+  };
 };
 
 /**
  * Toggle panel and refresh view containers
  * @param {Array.<number, object>} items - list of items to add, either just an id or a provider object
  */
- pE.importFromProvider = function(items) {
-    let requestItems = [];
-    let itemsResult = items;
+pE.importFromProvider = function(items) {
+  const requestItems = [];
+  let itemsResult = items;
 
-    itemsResult.forEach(element => {
-        if(isNaN(element)) {
-            requestItems.push(element);
-        }
-    });
+  itemsResult.forEach((element) => {
+    if (isNaN(element)) {
+      requestItems.push(element);
+    }
+  });
 
-    const linkToAPI = urlsForApi.library.connectorImport;
-    let requestPath = linkToAPI.url;
+  const linkToAPI = urlsForApi.library.connectorImport;
+  const requestPath = linkToAPI.url;
 
-    // Run ajax request and save promise
-    return new Promise(function(resolve, reject) {
-        // If none of the items are from a provider, return the original array
-        if(requestItems.length == 0) {
-            resolve(itemsResult);
-        }
+  // Run ajax request and save promise
+  return new Promise(function(resolve, reject) {
+    // If none of the items are from a provider, return the original array
+    if (requestItems.length == 0) {
+      resolve(itemsResult);
+    }
 
-        pE.common.showLoadingScreen();
+    pE.common.showLoadingScreen();
 
-        $.ajax({
-            url: requestPath,
-            type: linkToAPI.type,
-            dataType: 'json',
-            data: {
-                folderId: pE.playlist.folderId,
-                items: requestItems,
+    $.ajax({
+      url: requestPath,
+      type: linkToAPI.type,
+      dataType: 'json',
+      data: {
+        folderId: pE.playlist.folderId,
+        items: requestItems,
+      },
+    }).done(function(res) {
+      if (res.success) {
+        pE.common.hideLoadingScreen();
+
+        res.data.forEach((newElement) => {
+          let addFlag = true;
+          if (newElement.isError) {
+            addFlag = false;
+            toastr.error(newElement.error, newElement.item.id);
+          }
+
+          itemsResult.forEach((oldElement, key) => {
+            if (isNaN(oldElement) && newElement.item.id == oldElement.id) {
+              itemsResult[key] = (addFlag) ? newElement.media.mediaId : null;
             }
-        }).done(function(res) {
-            if(res.success) {
-                pE.common.hideLoadingScreen();
-
-                res.data.forEach((newElement) => {
-                    let addFlag = true;
-                    if(newElement.isError) {
-                        addFlag = false;
-                        toastr.error(newElement.error, newElement.item.id);
-                    }
-
-                    itemsResult.forEach((oldElement, key) => {
-                        if(isNaN(oldElement) && newElement.item.id == oldElement.id) {
-                            itemsResult[key] = (addFlag) ? newElement.media.mediaId : null;
-                        }
-                    });
-                });
-
-                // Filter null results
-                itemsResult = itemsResult.filter(el => el);
-
-                resolve(itemsResult);
-            } else {
-                pE.common.hideLoadingScreen();
-
-                // Login Form needed?
-                if(data.login) {
-                    window.location.href = window.location.href;
-                    location.reload();
-                } else {
-                    // Just an error we dont know about
-                    if(data.message == undefined) {
-                        reject(data);
-                    } else {
-                        reject(data.message);
-                    }
-                }
-            }
-        }).fail(function(jqXHR, textStatus, errorThrown) {
-            pE.common.hideLoadingScreen();
-
-            // Reject promise and return an object with all values
-            reject({jqXHR, textStatus, errorThrown});
+          });
         });
+
+        // Filter null results
+        itemsResult = itemsResult.filter((el) => el);
+
+        resolve(itemsResult);
+      } else {
+        pE.common.hideLoadingScreen();
+
+        // Login Form needed?
+        if (data.login) {
+          window.location.href = window.location.href;
+          location.reload();
+        } else {
+          // Just an error we dont know about
+          if (data.message == undefined) {
+            reject(data);
+          } else {
+            reject(data.message);
+          }
+        }
+      }
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      pE.common.hideLoadingScreen();
+
+      // Reject promise and return an object with all values
+      reject({jqXHR, textStatus, errorThrown});
     });
+  });
 };
