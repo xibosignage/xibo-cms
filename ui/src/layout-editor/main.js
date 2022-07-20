@@ -394,11 +394,8 @@ lD.selectObject =
           const playlistId = res.data.regionPlaylist.playlistId;
           // Add media to new region
           lD.importFromProvider(selectedQueue).then((res) => {
-            console.log(res);
             // Add media queue to playlist
-            lD.addMediaToPlaylist(playlistId, res).then((res) => {
-              console.log(res);
-            });
+            lD.addMediaToPlaylist(playlistId, res);
           });
         });
       }
@@ -1259,6 +1256,12 @@ lD.addModuleToPlaylist = function(
       };
     }
 
+    // Set template if if exists
+    if (moduleData.templateId) {
+      addOptions = addOptions || {};
+      addOptions.templateId = moduleData.templateId;
+    }
+
     return lD.manager.addChange(
       'addWidget',
       'playlist', // targetType
@@ -1281,7 +1284,9 @@ lD.addModuleToPlaylist = function(
       lD.selectedObject.id =
         'widget_' + lD.selectedObject.regionId + '_' + res.data.widgetId;
       lD.selectedObject.type = 'widget';
-      lD.reloadData(lD.layout, true);
+
+      // Reload data ( and viewer )
+      lD.reloadData(lD.layout, true, false, true);
 
       lD.common.hideLoadingScreen('addModuleToPlaylist');
     }).catch((error) => { // Fail/error
@@ -1364,7 +1369,8 @@ lD.addMediaToPlaylist = function(playlistId, media, addToPosition = null) {
       'widget_' + res.data.regionId + '_' + res.data.newWidgets[0].widgetId;
     lD.selectedObject.type = 'widget';
 
-    lD.reloadData(lD.layout, true);
+    // Reload data ( and viewer )
+    lD.reloadData(lD.layout, true, false, true);
 
     lD.common.hideLoadingScreen('addMediaToPlaylist');
   }).catch((error) => { // Fail/error
@@ -2068,12 +2074,6 @@ lD.loadPrefs = function() {
         self.togglePanel(
           propertiesPanelToggle, loadedData.propertiesPanelStatus);
       }
-
-      self.common.displayTooltips =
-        (
-          loadedData.displayTooltips == 1 ||
-          loadedData.displayTooltips == undefined
-        );
     } else {
       // Login Form needed?
       if (res.login) {

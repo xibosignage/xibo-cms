@@ -1,6 +1,10 @@
 <div id="content-{{menuIndex}}"
     class="toolbar-pane toolbar-{{name}}-pane {{state}} {{#if search}}toolbar-library-pane{{/if}}">
-    <div class="close-content" data-toggle="tooltip" data-placement="right" data-title="{{trans.closeTab}}"><i class="fa fa-arrow-left"></i></div>
+    
+    <div class="content-header">
+        <div class="close-content" data-toggle="tooltip" data-placement="right" data-title="{{trans.closeTab}}"><i class="fa fa-arrow-left"></i></div>
+        <div class="content-title">{{title}}</div>
+    </div>
     {{#if search}}
         {{!-- Show search container --}}
         <div id="media-container-{{menuIndex}}" class="toolbar-pane-container"></div>

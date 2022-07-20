@@ -358,12 +358,25 @@ PropertiesPanel.prototype.render = function(element, step) {
     }
 
     // Create the dynamic form fields
-    // ( for now just for widget ) and common fields
+    // ( for now just for widget )
     if (element.type === 'widget') {
+      // Configure tab
       forms.createFields(
         res.data.module.properties,
         self.DOMObject.find('#configureTab'),
       );
+
+      // Appearance tab ( if template exists )
+      if (res.data.template) {
+        forms.createFields(
+          res.data.template.properties,
+          self.DOMObject.find('#appearanceTab'),
+        );
+
+        // Show the appearance tab
+        self.DOMObject.find('.nav-link[href="#appearanceTab"]')
+          .parent().removeClass('d-none');
+      }
     }
 
     // Set condition and handle replacements

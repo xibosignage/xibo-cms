@@ -1,0 +1,18 @@
+<div class="content-header">
+    <div class="close-submenu close-content" data-toggle="tooltip" data-placement="right" data-title="{{trans.closeTab}}">
+        <i class="fa fa-arrow-left"></i>
+    </div>
+    <div class="content-title">
+        <i class="fa module-icon-{{data.subType}} card-icon"></i>
+        <span>{{data.title}}</span>
+    </div>
+</div>
+<form id="template-search-form" class="template-search-form">
+    <div class="form-group">
+        <label for="template-name" class="mb-0">{{trans.searchFilters.search}}</label>
+        <input id="template-name" name="template-name" type="text" class="form-control input-name"
+            value="{{ filters.name.value }}">
+    </div>
+</form>
+
+<div class="toolbar-pane-container"></div>

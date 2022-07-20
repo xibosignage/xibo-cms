@@ -20,22 +20,47 @@
  */
 $(function() {
   // Call the data url and parse out the template.
-  $.each(widgetData, function(key, widget) {
+  $.each(widgetData, function(_key, widget) {
     // Load the template
-    const template = $('#hbs-' + widget.templateId);
-    const hbs = Handlebars.compile(template.html());
+    const $template = $('#hbs-' + widget.templateId);
+    const hbs = Handlebars.compile($template.html());
     const $content = $('#content');
+
+    // Set some variables
+    // Get template height and width
+    globalOptions.widgetDesignWidth = $template.data('width');
+    globalOptions.widgetDesignHeight = $template.data('height');
+
+    // Save template properties as global options for scaling
+    for (const key in widget.templateProperties) {
+      if (widget.templateProperties.hasOwnProperty(key)) {
+        globalOptions[key] = widget.templateProperties[key];
+      }
+    }
+
+    // Set scale flag to true
+    window.scaleContent = true;
+
     $.ajax({
       method: 'GET',
       url: widget.url,
-      success: function(data) {
-        $.each(data, function(key, item) {
-          // TODO: parse through the data parser if one exists for this widget
+    }).done(function(data) {
+      $.each(data, function(_key, item) {
+        // TODO: parse through the data parser if one exists for this widget
+        // Parse the data if there is a parser function
+        if (typeof dataParser === 'function') {
+          item = dataParser(item, widget.templateProperties);
+        }
+        if (!globalOptions.itemsPerPage || _key < globalOptions.itemsPerPage) {
           $content.append(hbs(item));
-        });
+        }
+      });
 
-        // TODO: layout scaler
-      },
+      // Scale the content
+      $('body').xiboLayoutScaler(globalOptions);
+    }).fail(function(jqXHR, textStatus, errorThrown) {
+      console.log( 'fail' );
+      console.log(jqXHR, textStatus, errorThrown);
     });
   });
 });

@@ -119,6 +119,16 @@ jQuery.fn.extend({
           height: newHeight,
         });
 
+        // Hide content that goes over item per page
+        /*
+        if (options.itemsPerPage > 0) {
+          $(el).find(
+            '.container:nth-child(n+' +
+            (Number(options.itemsPerPage) + 1) +
+            ')').hide();
+        }
+        */
+
         // Handle the scaling
         // What IE are we?
         if ($('body').hasClass('ie7') || $('body').hasClass('ie8')) {

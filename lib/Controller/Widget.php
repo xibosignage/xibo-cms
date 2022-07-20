@@ -370,17 +370,11 @@ class Widget extends Base
         $widget->setOptionValue('name', 'attrib', $params->getString('name'));
         $widget->setOptionValue('enableStat', 'attrib', $params->getString('enableStat'));
 
-        $this->getLog()->debug('--- Widget Edit ---');
-        $this->getLog()->debug('Widget Duration: ' . $widget->duration);
-        $this->getLog()->debug('Use Duration: ' . $widget->useDuration);
-        $this->getLog()->debug('Name: ' . $params->getString('name'));
-        $this->getLog()->debug('enableStat: ' . $params->getString('enableStat'));
-
         // Should we save a template?
         // we're allowed to change between static templates, but not between elements and static templates.
         $existingTemplate = $widget->getOptionValue('templateId', 'elements');
-        $template = null;
         $templateId = $params->getString('templateId');
+        $template = null;
         if ($existingTemplate !== 'elements' && $module->isTemplateExpected() && !empty($templateId)) {
             // Check it.
             $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $templateId);
@@ -395,6 +389,9 @@ class Widget extends Base
 
             // Set it
             $widget->setOptionValue('templateId', 'attrib', $templateId);
+            $existingTemplate = $templateId;
+        } else if ($existingTemplate !== 'elements') {
+            $template = $this->moduleTemplateFactory->getByDataTypeAndId($module->dataType, $existingTemplate);
         }
 
         // Before we start, clean out any cached media

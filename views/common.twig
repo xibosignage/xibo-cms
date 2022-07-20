@@ -275,7 +275,13 @@
                     url: "{{ url_for("library.isused", {id: ':id'}) }}",
                     type: 'GET'
                 }
-            }
+            },
+            module: {
+                getTemplates: {
+                    url: "{{ url_for("module.template.search", {dataType: ':dataType'}) }}",
+                    type: 'GET'
+                },
+            },
         };
 
         {% autoescape "js" %}
@@ -446,8 +452,12 @@
                 },
                 widgets: "{{ "Widgets"|trans }}",
                 favourites: "{{ "Favourites"|trans }}",
+                elements: "{{ "Elements"|trans }}",
+                stencils: "{{ "Stencils"|trans }}",
+                templates: "{{ "Static Templates"|trans }}",
                 closeTab: "{{ "Close content"|trans }}",
                 noWidgetsToShow: "{{ "No widgets to display"|trans }}",
+                noTemplatesToShow: "{{ "No templates to display"|trans }}",
                 noMediaToShow: "{{ "No media to display!" |trans }}",
                 showMore: "{{ "Show more" |trans }}",
                 noShowMore: "{{ "No more results for this filter!" |trans }}",

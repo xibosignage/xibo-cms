@@ -17,6 +17,9 @@
             {{#each menuItems}}
                 <div id="content-{{@index}}" class="content {{#if disabled}}d-none{{/if}}"></div>
             {{/each}}
+
+            {{!-- Submenu content --}}
+            <div id="content-submenu" class="d-none"></div>
         </ul>
 
         {{!-- Bottom buttons --}}

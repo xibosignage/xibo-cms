@@ -100,23 +100,33 @@
             top: 0;
             bottom: 0;
             background: $xibo-color-blue-darker;
-            border-width: 4px 4px 4px 0;
-            border-style: solid;
-            border-color: $xibo-color-blue-darker;
             color: $xibo-color-gray-light;
 
-            .close-content {
-                cursor: pointer;
-                padding: 6px 6px 0 0;
-                font-size: 18px;
-                line-height: 15px;
-                color: $xibo-color-white;
-                text-align: right;
-                transition: 0.3s 0.1s padding-right;
-                
-                &:hover {
-                    color: $xibo-color-white-pure;
-                    padding-right: 12px;
+            .content-header {
+                display: flex;
+                justify-content: space-between;
+                flex-direction: row-reverse;
+
+                .content-title {
+                    font-size: 1.25rem;
+                    font-weight: bold;
+                    padding: 8px;
+                }
+
+                .close-content {
+                    cursor: pointer;
+                    padding: 4px;
+                    margin: 8px;
+                    font-size: 18px;
+                    line-height: 15px;
+                    color: $xibo-color-white;
+                    text-align: right;
+                    transition: 0.3s 0.1s padding-right;
+                    
+                    &:hover {
+                        color: $xibo-color-white-pure;
+                        padding-right: 12px;
+                    }
                 }
             }
 
@@ -193,6 +203,9 @@
                 @include border-radius(4px);
                 font-size: 0.95rem;
 
+                &.toolbar-card-menu {
+                    cursor: pointer;
+                }
 
                 .thumb {
                     width: 100%;
@@ -523,6 +536,15 @@
                             display: block;
                         }
                     }
+                }
+            }
+
+            &.toolbar-elements-pane {
+                .content-header {
+                    background-color: $xibo-color-blue-pastel;
+                    color: $xibo-color-blue-lightest;
+                    border-bottom: 4px solid $xibo-color-blue-lightest;
+                    margin-bottom: 8px;
                 }
             }
         }

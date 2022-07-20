@@ -1,0 +1,25 @@
+<div class="toolbar-pane-content">
+    {{#if elements}}
+        <div class="toolbar-header">{{trans.elements}}</div>
+    {{/if}}
+    {{#each elements}}
+        {{!-- Load element --}}
+        {{> toolbar-card-element trans=../trans}}
+    {{/each}}
+
+    {{#if stencils}}
+        <div class="toolbar-header">{{trans.stencils}}</div>
+    {{/if}}
+    {{#each stencils}}
+        {{!-- Load stencil --}}
+        {{> toolbar-card-stencil trans=../trans}}
+    {{/each}}
+
+    {{#if templates}}
+        <div class="toolbar-header">{{trans.templates}}</div>
+    {{/if}}
+    {{#each templates}}
+        {{!-- Load templates --}}
+        {{> toolbar-card-template trans=../trans}}
+    {{/each}}
+</div>
